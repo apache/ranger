@@ -107,17 +107,13 @@ class TestUsers:
     # Positive Test Cases
     @pytest.mark.positive
     @pytest.mark.get
-    @pytest.mark.parametrize("role", ["admin", "user", "auditor", "keyadmin"])
-    def test_get_users(self, role, request):
-        if role == "keyadmin":
-            auth = self.ranger_key_admin_config
-        elif role == "admin":
-            auth = self.ranger_admin_config
-        elif role == "auditor":
-            auth = self.ranger_auditor_config
-        elif role == "user":
-            auth = self.ranger_user_config
-
+    @pytest.mark.parametrize(
+        "role, auth",
+        [("admin", "ranger_admin_config"),("keyadmin", "ranger_key_admin_config"), ("auditor", "ranger_auditor_config"), ("user", "ranger_user_config")],
+        ids=["admin", "keyadmin", "auditor", "user"],
+    )
+    def test_get_users(self, role, auth, request):
+        auth = getattr(self, auth)
 
         url = f"{self.base_url}/xusers/users"
         response = requests.get(
@@ -137,17 +133,13 @@ class TestUsers:
 
     @pytest.mark.positive
     @pytest.mark.get
-    @pytest.mark.parametrize("role", ["admin", "user", "auditor", "keyadmin"])
-    def test_get_user_count(self, role, request):
-        if role == "keyadmin":
-            auth = self.ranger_key_admin_config
-        elif role == "admin":
-            auth = self.ranger_admin_config
-        elif role == "auditor":
-            auth = self.ranger_auditor_config
-        elif role == "user":
-            auth = self.ranger_user_config
-        
+    @pytest.mark.parametrize(
+        "role, auth",
+        [("admin", "ranger_admin_config"),("keyadmin", "ranger_key_admin_config"), ("auditor", "ranger_auditor_config"), ("user", "ranger_user_config")],
+        ids=["admin", "keyadmin", "auditor", "user"],
+    )
+    def test_get_user_count(self, role, auth, request):
+        auth = getattr(self, auth)
 
         url = f"{self.base_url}/xusers/users/count"
         response = requests.get(
@@ -260,7 +252,6 @@ class TestUsers:
         validate_user_schema(data)
         assert data["id"] == user_id, "Fetched user ID does not match requested ID"
 
-        
     @pytest.mark.positive 
     @pytest.mark.post 
     def test_create_user(self, client_roles): 
@@ -303,10 +294,10 @@ class TestUsers:
 
             verify_data = verify_response.json() 
             assert verify_data["id"] == user_id
+            print(response.json())
         finally:
-            if user_id:
-                delete_user(user_id,  self.ranger_admin_config, self.base_url, self.headers)
-                print("status : ",verify_data["status"], "\n role list : ", verify_data["userRoleList"])
+
+            delete_user(user_id, self.ranger_admin_config, self.base_url, self.headers)
 
     @pytest.mark.positive
     @pytest.mark.post
@@ -345,10 +336,13 @@ class TestUsers:
 
             print(f"\nCreated external user: {username} | ID: {user_id}")
         finally:
-            if user_id:
-                delete_user(user_id,  self.ranger_admin_config, self.base_url, self.headers)
-
-
+            response = requests.delete(
+            f"{self.base_url}/xusers/users/{user_id}",
+            params={"forceDelete": "true"},
+            auth=self.ranger_admin_config,
+            headers={**self.headers, "X-Requested-By": "ranger"}
+            )
+            assert_response(response, 204)
     @pytest.mark.positive
     @pytest.mark.post
     @pytest.mark.parametrize("auth_role", ["admin"])
@@ -359,14 +353,14 @@ class TestUsers:
         test_user, test_id = request.getfixturevalue("temp_secure_user")(["user"])
         print(f"\nCreating a new secure user with userinfo endpoint")
         assert user_exists(test_id, self.ranger_admin_config, self.base_url, self.headers), "User should exist before performing userinfo based creation"
-        
+        grp_name = random.choice(string.ascii_letters) + ''.join(random.choices(string.ascii_letters + string.digits, k=7))
         payload = {
             "xuserInfo": {
                     "name": test_user["name"]  
                 },
             "xgroupInfo": [
                     {
-                    "name": random.choice(string.ascii_letters) + ''.join(random.choices(string.ascii_letters + string.digits, k=7)),
+                    "name": grp_name,
                     "groupType": 1,
                     "groupSource": 1,
                     "description": "this is for test"
@@ -385,17 +379,27 @@ class TestUsers:
             headers=self.headers
         )
 
+
         assert_response(response, 200)
 
         data = response.json()
 
         validate_xgroup_schema(data["xgroupInfo"][0])
 
+
         assert data["xgroupInfo"][0]["name"] == payload["xgroupInfo"][0]["name"], "Response group name should match the test user name"
 
+        grp_id = data["xgroupInfo"][0]["id"]
+        # cleanup  
+        params = {"forceDelete": "true"}
+        del_req = requests.delete(
+            f"{self.base_url}/xusers/groups/{grp_id}",
+            auth=auth,
+            headers=self.headers,
+            params=params
+        )
+        print(f"Deleted group {grp_name} created during test, status code: {del_req.status_code}")
 
-
- 
 
     @pytest.mark.positive
     @pytest.mark.post
@@ -488,6 +492,24 @@ class TestUsers:
                 f"{user}: expected {expected_role}, got {actual_roles}"
 
 
+        # cleanup of created groups
+        for group in [group_admin, group_auditor, group_user]:
+            resp = requests.get(
+                f"{self.base_url}/xusers/groups/groupName/{group}",
+                auth=auth,
+                headers=self.headers
+            )
+            if resp.status_code == 200:
+                group_id = resp.json()["id"]
+                params = {"forceDelete": "true"}
+                requests.delete(
+                    f"{self.base_url}/xusers/groups/{group_id}",
+                    params=params,
+                    auth=auth,
+                    headers={**self.headers, "X-Requested-By": "ranger"}
+                )
+                print(f"Deleted group {group} created during test")
+                assert_response(resp, 200, f"Failed to delete group {group} during cleanup")
         
     @pytest.mark.positive
     @pytest.mark.put

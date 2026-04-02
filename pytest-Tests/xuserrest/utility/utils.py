@@ -330,73 +330,92 @@ def assign_groups_to_user(user_name, group_names, ranger_admin_config, base_url,
             auth=RANGER_CONFIG["auth"],
             headers=RANGER_CONFIG["headers"]
         )
-    print("Assign Groups Response:", response.status_code, response.text)
+    print("Assign Groups Response:", response.status_code)
     assert response.status_code == 200, f"Failed to assign groups to user: {response.text}"
+    
+
     
 
 def fetch_ranger_logs(resp_code=None, lines: int = 80) -> str:
     """
-    Generic Ranger debugging logs.
+    Fetch useful Ranger debug logs.
 
     Sections:
-      1. Recent Activity (always)
-      2. Recent Errors/Warns (system health)
-      3. Response-code related events
+      1. Recent Activity
+      2. Errors / Warnings (system health)
+      3. Recent REST API calls
+      4. Logs related to HTTP response meaning
     """
 
-    # ---- HTTP response meaning map ----
     keyword_map = {
-        # SUCCESS
-        200: "success|create|update|delete|assigned|completed",
-        201: "created|create|success",
-        204: "delete|removed|no content|success",
+    # SUCCESS
+    200: (r"createUser|updateUser|deleteUser|added|updated|removed|success|create|update|delete|assigned|completed"),
+    201: (r"created|create|success"),
+    204: (r"delete|removed|no content|success"),
 
-        # CLIENT ERRORS
-        400: "invalid|validation|bad request|missing",
-        401: "authentication|unauthorized|login failed",
-        403: "denied|forbidden|permission|not allowed",
-        404: "not found",
-        405: "method not allowed|unsupported method",
-        409: "conflict|already exists|duplicate",
+    # FOR CLIENT ERRORS, focus on common patterns and real log snippets
+    400: (r"invalid|validation|bad request|missing"),
 
-        # SERVER ERRORS
-        500: "error|exception|failed",
-        502: "gateway|proxy|upstream",
-        503: "unavailable|timeout|overloaded"
+    # AUTHENTICATION
+
+    401: (r"authentication|login failed|Bad credentials|Invalid username|unauthorized"),
+    # AUTHORIZATION (REAL RANGER STRINGS)
+    403: (r"User is not allowed to access the API|Access denied|not authorized|RESTErrorUtil|Request failed |denied|forbidden|permission|not allowed"),
+
+    # NOT FOUND
+    404: (r"not found|No record"),
+
+    # METHOD
+    405: (r"Request method.*not supported|method not allowed|unsupported method"),
+
+    # CONFLICT
+    409: (r"already exists|duplicate|conflict"),
+
+    # SERVER
+    500: (r"ERROR|Exception|failed|NullPointerException"),
+
+    502: (r"gateway|proxy|upstream"),
+    503: (r"unavailable|timeout|overloaded")
     }
-    if isinstance(resp_code, int):
 
-        resp_filter = keyword_map.get(
-        resp_code,
-        "error|warn|exception|failed|denied"
-        )
+    resp_filter = r"ERROR|WARN|Exception|denied|failed"
+
+    if isinstance(resp_code, int):
+        resp_filter = keyword_map.get(resp_code, resp_filter)
+
     elif isinstance(resp_code, (list, tuple, set)):
-        filters = [keyword_map.get(code, "error|warn|exception|failed|denied") for code in resp_code]
+        filters = [
+            keyword_map.get(code, resp_filter)
+            for code in resp_code
+        ]
         resp_filter = "|".join(filters)
 
+    # Docker command
+    cmd = [
+        "docker", "exec",
+        RANGER_CONTAINER_NAME,
+        "bash", "-c",
+        f"""
+        LOG="{RANGER_LOG_FILE}"
+
+        echo "========== RECENT ACTIVITY =========="
+        tail -n 12 $LOG 2>/dev/null
+
+        echo
+        echo "========== RECENT ERRORS / WARNS =========="
+        grep -i -E "ERROR|WARN|Exception|FATAL" $LOG 2>/dev/null | tail -n 25
+
+        echo
+        echo "========== RECENT API CALLS =========="
+        grep -i -E "REST|XUserREST|ServiceREST|PolicyREST" $LOG 2>/dev/null | tail -n 20
+        echo
+        echo "========== RELATED TO HTTP {resp_code} =========="
+        tail -n $(( {lines} * 5 )) $LOG 2>/dev/null | \
+        grep -i -E "{resp_filter}" -A3 -B3 | tail -n 30
+        """
+    ]
+
     try:
-        cmd = [
-            "docker", "exec",
-            RANGER_CONTAINER_NAME,
-            "bash", "-c",
-            f"""
-            LOG="{RANGER_LOG_FILE}"
-
-            echo "========== RECENT ACTIVITY =========="
-            tail -n {lines} $LOG 2>/dev/null | tail -n 12
-
-            echo
-            echo "========== RECENT ERRORS / WARNS =========="
-            tail -n {lines} $LOG 2>/dev/null | \
-            grep -i -E "error|warn|exception|fatal" -A2 -B2 | tail -n 25
-
-            echo
-            echo "========== RELATED TO HTTP {resp_code} =========="
-            tail -n {lines} $LOG 2>/dev/null | \
-            grep -i -E "{resp_filter}" -A2 -B2 | tail -n 25
-            """
-        ]
-
         result = subprocess.run(
             cmd,
             capture_output=True,
@@ -455,3 +474,51 @@ def build_permission_payload(module_id, module_name, user_perm_list=None, group_
         "userPermList": user_perm_list or [],
         "groupPermList": group_perm_list or []
     }
+
+
+def group_permission_schema(data):
+    assert "startIndex" in data and isinstance(data["startIndex"], int)
+    assert "pageSize" in data and isinstance(data["pageSize"], int)
+    assert "totalCount" in data and isinstance(data["totalCount"], int)
+    assert "resultSize" in data and isinstance(data["resultSize"], int)
+    assert "queryTimeMS" in data and isinstance(data["queryTimeMS"], int)
+    assert "vXGroupPermission" in data
+    print("Group Permission Response Data:", data)
+    if len(data["vXGroupPermission"]) > 0:
+        perm = data["vXGroupPermission"][0]
+        assert "id" in perm and isinstance(perm["id"], int)
+        assert "groupId" in perm and isinstance(perm["groupId"], int)
+        assert "isAllowed" in perm and isinstance(perm["isAllowed"], int) and perm["isAllowed"] in [0, 1]
+        assert "groupName" in perm and isinstance(perm["groupName"], str) and len(perm["groupName"]) <= 767
+
+def user_permission_exists(user_id, module_id, auth, base_url, headers, user_perm_id = None):
+    page_size = 200
+    start_index = 0
+
+    while True:
+        response = requests.get(
+            f"{base_url}/xusers/permission/user",
+            params={"startIndex": start_index, "pageSize": page_size},
+            auth=auth,
+            headers=headers
+        )
+
+        if response.status_code != 200:
+            return False
+
+        data = response.json()
+        permissions = data.get("vXUserPermission", [])
+
+        for p in permissions:
+            if p.get("userId") == user_id and p.get("moduleId") == module_id:
+                if user_perm_id is not None and p.get("id") != user_perm_id:
+                    continue
+                return True
+
+        total = int(data.get("totalCount", 0))
+        start_index += page_size
+
+        if start_index >= total:
+            break
+
+    return False

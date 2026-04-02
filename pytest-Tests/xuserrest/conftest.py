@@ -400,3 +400,169 @@ def temp_permission_module(ranger_config, client_roles):
             pytest.fail(
                 f"Unexpected error deleting permission module {module_id}: {response.text}"
             )
+
+@pytest.fixture(scope="class")
+def temp_group(ranger_config):
+
+    created_group_ids = []
+
+    def _create_group():
+
+        group_name = f"pytest_group_{uuid.uuid4().hex[:8]}"
+
+        payload = {
+            "name": group_name
+        }
+
+        response = requests.post(
+            f"{ranger_config['base_url']}/xusers/groups",
+            json=payload,
+            auth=ranger_config["auth"],
+            headers=ranger_config["headers"]
+        )
+
+        assert response.status_code in (200, 201), response.text
+
+        data = response.json()
+        group_id = data["id"]
+
+        created_group_ids.append(group_id)
+
+        print(f"[Fixture] Created group {group_name} ({group_id})")
+
+        return data, group_id
+
+    yield _create_group
+
+    # -------- CLEANUP ----------
+    for gid in created_group_ids:
+        print(f"[Fixture] Cleaning group {gid}")
+
+        requests.delete(
+            f"{ranger_config['base_url']}/xusers/groups/{gid}",
+            auth=ranger_config["auth"],
+            headers={
+                **ranger_config["headers"],
+                "X-Requested-By": "ranger"
+            }
+        )
+
+@pytest.fixture(scope="class")
+def temp_permission_group(ranger_config):
+
+    created_ids = []
+
+    def _create_permission_group(group_id, module_id):
+
+        payload = {
+            "groupId": group_id,
+            "moduleId": module_id,
+            "isAllowed": 1
+        }
+
+        response = requests.post(
+            f"{ranger_config['base_url']}/xusers/permission/group",
+            json=payload,
+            auth=ranger_config["auth"],
+            headers=ranger_config["headers"]
+        )
+
+        print("CREATE PERMISSION GROUP:",
+              response.status_code, response.text)
+
+        if response.status_code in (200, 201):
+            data = response.json()
+            created_ids.append(data["id"])
+            return data, data["id"]
+
+        if response.status_code == 400 and "duplicate" in response.text.lower():
+            print("[Fixture] Permission already exists — reusing")
+
+            get_resp = requests.get(
+                f"{ranger_config['base_url']}/xusers/permission/group",
+                params={
+                    "groupId": group_id,
+                    "moduleId": module_id
+                },
+                auth=ranger_config["auth"],
+                headers=ranger_config["headers"]
+            )
+
+            assert get_resp.status_code == 200
+
+            data = get_resp.json()["vXGroupPermissions"][0]
+            return data, data["id"]
+
+        pytest.fail(response.text)
+
+    yield _create_permission_group
+    # cleanup
+    for pid in created_ids:
+        requests.delete(
+            f"{ranger_config['base_url']}/xusers/permission/group/{pid}",
+            auth=ranger_config["auth"],
+            headers={
+                **ranger_config["headers"],
+                "X-Requested-By": "ranger"
+            }
+        )
+
+@pytest.fixture(scope="class")
+def temp_permission_user(ranger_config):
+
+    created_ids = []
+
+    def _create_permission_user(user_id, module_id):
+        
+        payload = {
+            "userId": user_id,
+            "moduleId": module_id,
+            "isAllowed": 1
+        }
+
+        response = requests.post(
+            f"{ranger_config['base_url']}/xusers/permission/user",
+            json=payload,
+            auth=ranger_config["auth"],
+            headers=ranger_config["headers"]
+        )
+
+        print("CREATE PERMISSION USER:",
+              response.status_code, response.text)
+
+        if response.status_code in (200, 201):
+            data = response.json()
+            created_ids.append(data["id"])
+            return data, data["id"]
+
+        if response.status_code == 400 and "duplicate" in response.text.lower():
+            print("[Fixture] Permission already exists — reusing")
+
+            get_resp = requests.get(
+                f"{ranger_config['base_url']}/xusers/permission/user",
+                params={
+                    "userId": user_id,
+                    "moduleId": module_id
+                },
+                auth=ranger_config["auth"],
+                headers=ranger_config["headers"]
+            )
+
+            assert get_resp.status_code == 200
+
+            data = get_resp.json()["vXUserPermissions"][0]
+            return data, data["id"]
+
+        pytest.fail(response.text)
+
+    yield _create_permission_user
+    # cleanup
+    for pid in created_ids:
+        requests.delete(
+            f"{ranger_config['base_url']}/xusers/permission/user/{pid}",
+            auth=ranger_config["auth"],
+            headers={
+                **ranger_config["headers"],
+                "X-Requested-By": "ranger"
+            }
+        )
