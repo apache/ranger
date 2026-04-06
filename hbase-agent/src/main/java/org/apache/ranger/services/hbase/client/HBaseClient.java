@@ -191,8 +191,12 @@ public class HBaseClient extends BaseClient {
             ret = Subject.doAs(subj, new PrivilegedAction<List<String>>() {
                 @Override
                 public List<String> run() {
-                    validateWildcardPattern(tableNameMatching, "table pattern");
-                    String safeTablePattern = convertWildcardToRegex(tableNameMatching);
+                    String wildcard = tableNameMatching;
+                    if (wildcard != null) {
+                        wildcard = wildcard.replace(".*", "*");
+                    }
+                    validateWildcardPattern(wildcard, "table pattern");
+                    String safeTablePattern = convertWildcardToRegex(wildcard);
                     List<String> tableList = new ArrayList<>();
                     Admin        admin     = null;
 
@@ -294,8 +298,12 @@ public class HBaseClient extends BaseClient {
 
                     @Override
                     public List<String> run() {
-                        validateWildcardPattern(columnFamilyMatching, "column family pattern");
-                        String safeColumnPattern = convertWildcardToRegex(columnFamilyMatching);
+                        String wildcard = columnFamilyMatching;
+                        if (wildcard != null) {
+                            wildcard = wildcard.replace(".*", "*");
+                        }
+                        validateWildcardPattern(wildcard, "column family pattern");
+                        String safeColumnPattern = convertWildcardToRegex(wildcard);
                         List<String> colfList = new ArrayList<>();
                         Admin        admin    = null;
 

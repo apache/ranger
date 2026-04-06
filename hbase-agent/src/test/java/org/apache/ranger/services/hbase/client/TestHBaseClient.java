@@ -623,7 +623,90 @@ public class TestHBaseClient {
     }
 
     @Test
-    public void test20_validatePattern_rejectsReDoSPatterns() throws Exception {
+    public void test19_getTableList_wildcardReplacement() throws Exception {
+        Map<String, String> props = new HashMap<>();
+        props.put("username", "user");
+
+        try (MockedStatic<HBaseConfiguration> confStatic = Mockito.mockStatic(HBaseConfiguration.class);
+                MockedStatic<Subject> subjectStatic = Mockito.mockStatic(Subject.class);
+                MockedStatic<ConnectionFactory> connFactoryStatic = Mockito.mockStatic(ConnectionFactory.class)) {
+            Configuration conf = Mockito.mock(Configuration.class);
+            confStatic.when(HBaseConfiguration::create).thenReturn(conf);
+
+            Subject subject = Mockito.mock(Subject.class);
+            subjectStatic.when(() -> Subject.doAs(Mockito.any(), Mockito.any(PrivilegedAction.class)))
+                    .thenAnswer(inv -> {
+                        PrivilegedAction<?> action = inv.getArgument(1);
+                        return action.run();
+                    });
+
+            Connection connection = Mockito.mock(Connection.class);
+            Admin admin = Mockito.mock(Admin.class);
+            connFactoryStatic.when(() -> ConnectionFactory.createConnection(Mockito.any(Configuration.class)))
+                    .thenReturn(connection);
+            Mockito.when(connection.getAdmin()).thenReturn(admin);
+
+            TableDescriptor td1 = Mockito.mock(TableDescriptor.class);
+            TableName tn1 = TableName.valueOf("atlas_test");
+            Mockito.when(td1.getTableName()).thenReturn(tn1);
+
+            // We expect the pattern to be "^atlas.*$" because "atlas.*" should be converted to "atlas*" then to "^atlas.*$"
+            Mockito.when(admin.listTableDescriptors(Mockito.any(Pattern.class))).thenAnswer(inv -> {
+                Pattern p = inv.getArgument(0);
+                if (p.pattern().equals("^atlas.*$")) {
+                    return Collections.singletonList(td1);
+                }
+                return Collections.emptyList();
+            });
+
+            HBaseClient client = new TestableHBaseClient("svc", props, subject);
+
+            List<String> ret = client.getTableList("atlas.*", null);
+            assertEquals(Collections.singletonList("atlas_test"), ret);
+        }
+    }
+
+    @Test
+    public void test20_getColumnFamilyList_wildcardReplacement() throws Exception {
+        Map<String, String> props = new HashMap<>();
+        props.put("username", "user");
+
+        try (MockedStatic<HBaseConfiguration> confStatic = Mockito.mockStatic(HBaseConfiguration.class);
+                MockedStatic<Subject> subjectStatic = Mockito.mockStatic(Subject.class);
+                MockedStatic<ConnectionFactory> connFactoryStatic = Mockito.mockStatic(ConnectionFactory.class)) {
+            Configuration conf = Mockito.mock(Configuration.class);
+            confStatic.when(HBaseConfiguration::create).thenReturn(conf);
+
+            Subject subject = Mockito.mock(Subject.class);
+            subjectStatic.when(() -> Subject.doAs(Mockito.any(), Mockito.any(PrivilegedAction.class)))
+                    .thenAnswer(inv -> {
+                        PrivilegedAction<?> action = inv.getArgument(1);
+                        return action.run();
+                    });
+
+            Connection connection = Mockito.mock(Connection.class);
+            Admin admin = Mockito.mock(Admin.class);
+            connFactoryStatic.when(() -> ConnectionFactory.createConnection(Mockito.any(Configuration.class)))
+                    .thenReturn(connection);
+            Mockito.when(connection.getAdmin()).thenReturn(admin);
+
+            TableDescriptor td = Mockito.mock(TableDescriptor.class);
+            TableName tn = TableName.valueOf("t1");
+            Mockito.when(admin.getDescriptor(tn)).thenReturn(td);
+            ColumnFamilyDescriptor cfd1 = mockCfd("cf_test");
+            Mockito.when(td.getColumnFamilies()).thenReturn(new ColumnFamilyDescriptor[] {cfd1});
+
+            HBaseClient client = new TestableHBaseClient("svc", props, subject);
+
+            List<String> tables = new ArrayList<>(Collections.singletonList("t1"));
+            // "cf.*" should be converted to "cf*" then to "^cf.*$" which matches "cf_test"
+            List<String> ret = client.getColumnFamilyList("cf.*", tables, null);
+            assertEquals(Collections.singletonList("cf_test"), ret);
+        }
+    }
+
+    @Test
+    public void test21_validatePattern_rejectsReDoSPatterns() throws Exception {
         Map<String, String> props = new HashMap<>();
         props.put("username", "user");
 
@@ -654,7 +737,7 @@ public class TestHBaseClient {
     }
 
     @Test
-    public void test21_validatePattern_rejectsComplexRegex() throws Exception {
+    public void test22_validatePattern_rejectsComplexRegex() throws Exception {
         Map<String, String> props = new HashMap<>();
         props.put("username", "user");
 
@@ -684,7 +767,7 @@ public class TestHBaseClient {
     }
 
     @Test
-    public void test22_validatePattern_rejectsInjectionAttempts() throws Exception {
+    public void test23_validatePattern_rejectsInjectionAttempts() throws Exception {
         Map<String, String> props = new HashMap<>();
         props.put("username", "user");
 
@@ -715,7 +798,7 @@ public class TestHBaseClient {
     }
 
     @Test
-    public void test23_columnFamilyMatching_rejectsReDoS() throws Exception {
+    public void test24_columnFamilyMatching_rejectsReDoS() throws Exception {
         Map<String, String> props = new HashMap<>();
         props.put("username", "user");
 
@@ -747,7 +830,7 @@ public class TestHBaseClient {
     }
 
     @Test
-    public void test24_convertWildcardToRegex_correctConversion() throws Exception {
+    public void test25_convertWildcardToRegex_correctConversion() throws Exception {
         Map<String, String> props = new HashMap<>();
         props.put("username", "user");
 

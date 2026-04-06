@@ -253,7 +253,7 @@ public abstract class BaseClient {
         }
     }
 
-    protected void validateWildcardPattern(String pattern, String patternType) throws HadoopException {
+    public void agents-common/src/main/java/org/apache/ranger/plugin/client/BaseClient.java validateWildcardPattern(String pattern, String patternType) throws HadoopException {
         if (pattern == null || pattern.isEmpty()) {
             return;
         }
@@ -312,7 +312,7 @@ public abstract class BaseClient {
         return regexBuilder.toString();
     }
 
-    protected String convertWildcardToRegex(String wildcard) {
+    public String convertWildcardToRegex(String wildcard) {
         if (wildcard == null || wildcard.isEmpty()) {
             return ".*";
         }

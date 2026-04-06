@@ -326,4 +326,114 @@ public class TestBaseClient {
             assertEquals(IllegalArgumentException.class, ex.getClass());
         }
     }
+
+    @Test
+    public void test15_convertWildcardToRegex() {
+        class TestClient extends BaseClient {
+            TestClient() {
+                super("test", new HashMap<>());
+            }
+
+            @Override
+            protected void login() {
+            }
+
+            public String convert(String s) {
+                return convertWildcardToRegex(s);
+            }
+        }
+
+        TestClient client = new TestClient();
+        assertEquals("^.*$", client.convert(null));
+        assertEquals("^.*$", client.convert(""));
+        assertEquals("^atlas.*$", client.convert("atlas*"));
+        assertEquals("^atlas\\..*$", client.convert("atlas.*"));
+        assertEquals("^.*atlas.*$", client.convert("*atlas*"));
+        assertEquals("^at.as$", client.convert("at?as"));
+        assertEquals("^atlas\\.$", client.convert("atlas."));
+        assertEquals("^atlas\\$$", client.convert("atlas$"));
+        assertEquals("^atlas\\^$", client.convert("atlas^"));
+        assertEquals("^atlas\\[\\]$", client.convert("atlas[]"));
+    }
+
+    @Test
+    public void test16_convertToSqlPattern() throws Exception {
+        class TestClient extends BaseClient {
+            TestClient() {
+                super("test", new HashMap<>());
+            }
+
+            @Override
+            protected void login() {
+            }
+
+            public String convert(String s) throws Exception {
+                return convertToSqlPattern(s);
+            }
+        }
+
+        TestClient client = new TestClient();
+        assertEquals("%", client.convert(null));
+        assertEquals("%", client.convert(""));
+        assertEquals("atlas%", client.convert("atlas*"));
+        assertEquals("at_as", client.convert("at?as"));
+    }
+
+    @Test
+    public void test17_matchesSqlPattern() throws Exception {
+        class TestClient extends BaseClient {
+            TestClient() {
+                super("test", new HashMap<>());
+            }
+
+            @Override
+            protected void login() {
+            }
+
+            public boolean match(String v, String p) throws Exception {
+                return matchesSqlPattern(v, p);
+            }
+        }
+
+        TestClient client = new TestClient();
+        assertEquals(true, client.match("atlas", null));
+        assertEquals(true, client.match("atlas", "%"));
+        assertEquals(true, client.match("atlas", "atlas%"));
+        assertEquals(true, client.match("atlas_test", "atlas%"));
+        assertEquals(true, client.match("atlas", "at_as"));
+        assertEquals(false, client.match("atlas", "at_a"));
+    }
+
+    @Test
+    public void test18_validateWildcardPattern() {
+        class TestClient extends BaseClient {
+            TestClient() {
+                super("test", new HashMap<>());
+            }
+
+            @Override
+            protected void login() {
+            }
+
+            public void validate(String s) throws Exception {
+                validateWildcardPattern(s, "test");
+            }
+        }
+
+        TestClient client = new TestClient();
+        try {
+            client.validate("atlas*");
+            client.validate("atlas.*");
+            client.validate("atlas?");
+        } catch (Exception e) {
+            org.junit.jupiter.api.Assertions.fail("Should not throw exception for valid patterns");
+        }
+
+        try {
+            client.validate("atlas../test");
+            org.junit.jupiter.api.Assertions.fail("Should throw exception for path traversal");
+        } catch (Exception e) {
+            // Expected
+        }
+    }
 }
