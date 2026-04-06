@@ -38,14 +38,11 @@ public class RangerSamlRegistrationFactory {
     }
 
     public static RelyingPartyRegistration buildWithSigningCredential(RelyingPartyRegistration.Builder builder, String privateKeyPath, String certPath) throws Exception {
-        // If SAML is not configured, return a basic registration without signing credentials
         if (privateKeyPath == null || privateKeyPath.trim().isEmpty() || certPath == null || certPath.trim().isEmpty()) {
             LOG.info("SAML signing credentials not configured, skipping credential setup");
-            return builder
-                    .singleLogoutServiceLocation("{baseUrl}/logout/saml2/slo")
-                    .singleLogoutServiceResponseLocation("{baseUrl}/logout/saml2/slo")
-                    .singleLogoutServiceBinding(Saml2MessageBinding.POST)
-                    .build();
+            throw new IllegalStateException("SAML is enabled but signing credentials are not configured. " +
+                    "Set ranger.saml.sp.key and ranger.saml.sp.cert in ranger-admin-site.xml " +
+                    "before starting Ranger with SAML authentication.");
         }
         RSAPrivateKey privateKey = RsaKeyConverters.pkcs8().convert(new FileSystemResource(privateKeyPath).getInputStream());
         X509Certificate certificate;
