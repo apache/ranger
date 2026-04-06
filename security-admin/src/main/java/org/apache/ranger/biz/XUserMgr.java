@@ -2866,9 +2866,16 @@ public class XUserMgr extends XUserMgrBase {
 							+ " Total memory = " + Runtime.getRuntime().totalMemory()/mb);
 				}
 				for (GroupUserInfo groupUserInfo : groupUserInfoList) {
-					xGroupUserService.createOrDeleteXGroupUsers(groupUserInfo, usersFromDB);
+					if (xGroupUserService.createOrDeleteXGroupUsers(groupUserInfo, usersFromDB)) {
+						updatedGroups++;
+					}
 				}
-				updatedGroups = groupUserInfoList.size();
+
+				logger.debug("No. of groups actually updated = {}", updatedGroups);
+			}
+
+			if (updatedGroups > 0) {
+				updateUserStoreVersion("createOrDeleteXGroupUserList(updatedGroups=" + updatedGroups + ")");
 			}
 		}
 		if (logger.isDebugEnabled()) {
