@@ -1,0 +1,12 @@
+certifi==2026.2.25
+charset-normalizer==3.4.6
+idna==3.11
+iniconfig==2.3.0
+packaging==26.0
+pluggy==1.6.0
+Pygments==2.19.2
+pytest==9.0.2
+requests==2.32.5
+urllib3==2.6.3
+
+pip~=25.3

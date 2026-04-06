@@ -1,28 +1,3 @@
-# Licensed to the Apache Software Foundation (ASF) under one or more
-# contributor license agreements.  See the NOTICE file distributed with
-# this work for additional information regarding copyright ownership.
-# The ASF licenses this file to You under the Apache License, Version 2.0
-# (the "License"); you may not use this file except in compliance with
-# the License.  You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-
-
-# This workflow will build a Java project with Maven, and cache/restore any dependencies to improve the workflow execution time
-# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-java-with-maven
-
-# This workflow uses actions that are not certified by GitHub.
-# They are provided by a third-party and are governed by
-# separate terms of service, privacy policy, and support
-# documentation.
-
-
 import copy
 import os
 base_url="http://localhost:6080/service"
@@ -36,6 +11,9 @@ admin_user = getEnv('XA_ADMIN_USER', 'admin')
 keyadmin_user = getEnv('XA_KEYADMIN_USER', 'keyadmin')
 keyadmin_password = getEnv('XA_KEYADMIN_PASSWORD', 'rangerR0cks!')
 admin_password = getEnv('XA_ADMIN_PASSWORD', 'rangerR0cks!')
+str_variable_dict = {}
+variable_dict = {}
+
 
 is_version_7_3_2 = Version.current_cdh_parcel_version() >= Version.of("7.3.2.0")
 
@@ -44,7 +22,13 @@ headers = {
         'Content-Type': 'application/json',
         'X-XSRF-HEADER': 'valid'
     }
-
+global_dict={}
+admin_user = 'admin'
+admin_password = 'rangerR0cks!'
+admin_auth = HTTPBasicAuth(admin_user, admin_password)
+keyadmin_user='keyadmin'
+keyadmin_password='rangerR0cks!'
+keyadmin_auth = HTTPBasicAuth(keyadmin_user, keyadmin_password)
 
 def return_random_str(length=7):
     """Generates a random string of fixed length """
