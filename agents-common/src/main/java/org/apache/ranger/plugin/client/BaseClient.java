@@ -253,7 +253,7 @@ public abstract class BaseClient {
         }
     }
 
-    public void agents-common/src/main/java/org/apache/ranger/plugin/client/BaseClient.java validateWildcardPattern(String pattern, String patternType) throws HadoopException {
+    public void validateWildcardPattern(String pattern, String patternType) throws HadoopException {
         if (pattern == null || pattern.isEmpty()) {
             return;
         }

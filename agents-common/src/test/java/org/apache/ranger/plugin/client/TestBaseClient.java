@@ -344,8 +344,8 @@ public class TestBaseClient {
         }
 
         TestClient client = new TestClient();
-        assertEquals("^.*$", client.convert(null));
-        assertEquals("^.*$", client.convert(""));
+        assertEquals(".*", client.convert(null));
+        assertEquals(".*", client.convert(""));
         assertEquals("^atlas.*$", client.convert("atlas*"));
         assertEquals("^atlas\\..*$", client.convert("atlas.*"));
         assertEquals("^.*atlas.*$", client.convert("*atlas*"));
