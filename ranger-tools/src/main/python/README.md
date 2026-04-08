@@ -53,7 +53,7 @@ or
 
 ```cd``` into ```python``` directory before executing below commands
 
-Ensure you have ```Python 3.11``` installed.
+Ensure you have ```Python 3.10 or Python 3.11``` installed.
 It is recommended to create a virtual environment using this version and work inside it.
 
 Use the package manager [pip](https://pip.pypa.io/en/stable/) to install requirements for running the performance tests.
