@@ -501,6 +501,6 @@ public class TestRangerSSOAuthenticationFilter {
 
     @Test
     void testJwtIssuersConstant() {
-        assertEquals("ranger.sso.issuers", RangerSSOAuthenticationFilter.JWT_ISSUERS);
+        assertEquals("ranger.sso.issuer", RangerSSOAuthenticationFilter.JWT_ISSUER);
     }
 }
