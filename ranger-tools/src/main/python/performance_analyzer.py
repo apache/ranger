@@ -144,6 +144,16 @@ def performance_analyzer_main(argv_dict):
 
             with open("performance_report.csv", "w") as f:
                 aligned_df.to_csv(f, index=False)
+                access_df['latency'] = pd.to_numeric(access_df['latency'], errors='coerce')
+                avg_latency_df = access_df.groupby('type')['latency'].agg(
+                    count='count',
+                    avg_latency_ms='mean',
+                    min_latency_ms='min',
+                    max_latency_ms='max',
+                    median_latency_ms='median'
+                ).reset_index().round(2)
+                f.write("\n\nAverage Latency by API Type\n")
+                avg_latency_df.to_csv(f, index=False)
 
             with open("performance_report.html", "w") as f:
                 cm = sns.light_palette("red", as_cmap=True)
@@ -154,8 +164,8 @@ def performance_analyzer_main(argv_dict):
                                                    access_logs_timestamp_col_name='time', merge=False)
             print(aligned_df.to_string())
 
-            statistics_df_access = aligned_df.describe()
-            statistics_df_system = system_df.describe()
+            statistics_df_access = aligned_df.describe().add_prefix("access__")
+            statistics_df_system = system_df.describe().add_prefix("system__")
 
             statistics_df = pd.concat([statistics_df_access, statistics_df_system], axis=1)
             df_utils.rename_rows(statistics_df, {"25%": "25th_percentile", "50%": "median", "75%": "75th_percentile"})
@@ -179,6 +189,16 @@ def performance_analyzer_main(argv_dict):
 
             with open(perf_globals.OUTPUT_DIR+"performance_report.csv", "w") as f:
                 aligned_df.to_csv(f, index=False)
+                access_df['latency'] = pd.to_numeric(access_df['latency'], errors='coerce')
+                avg_latency_df = access_df.groupby('type')['latency'].agg(
+                    count='count',
+                    avg_latency_ms='mean',
+                    min_latency_ms='min',
+                    max_latency_ms='max',
+                    median_latency_ms='median'
+                ).reset_index().round(2)
+                f.write("\n\nAverage Latency by API Type\n")
+                avg_latency_df.to_csv(f, index=False)
 
             with open(perf_globals.OUTPUT_DIR+"performance_report.html", "w") as f:
                 cm = sns.light_palette("red", as_cmap=True)
