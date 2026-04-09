@@ -145,7 +145,7 @@ public class RangerRESTUtils {
     private static String getHostname() {
         String hostname = System.getenv("HOSTNAME");
 
-        if (StringUtils.isEmpty(hostname)) {
+        if (StringUtils.isBlank(hostname)) {
             hostname = System.getenv("COMPUTERNAME");
 
             if (StringUtils.isBlank(hostname)) {
