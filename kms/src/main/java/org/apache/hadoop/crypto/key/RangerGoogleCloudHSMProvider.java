@@ -16,7 +16,7 @@
  */
 package org.apache.hadoop.crypto.key;
 
-import com.google.api.gax.rpc.AlreadyExistsException;
+import com.google.api.gax.rpc.NotFoundException;
 import com.google.cloud.kms.v1.CryptoKey;
 import com.google.cloud.kms.v1.CryptoKey.CryptoKeyPurpose;
 import com.google.cloud.kms.v1.CryptoKeyName;
@@ -68,37 +68,36 @@ public class RangerGoogleCloudHSMProvider implements RangerKMSMKI {
 
     @Override
     public boolean generateMasterKey(String unusedPassword) throws Throwable {
-        //The ENCRYPT_DECRYPT key purpose enables symmetric encryption.
-        //All keys with key purpose ENCRYPT_DECRYPT use the GOOGLE_SYMMETRIC_ENCRYPTION algorithm.
-        //No parameters are used with this algorithm.
-        CryptoKey key = CryptoKey.newBuilder()
-                .setPurpose(CryptoKeyPurpose.ENCRYPT_DECRYPT)
-                .setVersionTemplate(CryptoKeyVersionTemplate.newBuilder()
-                        .setProtectionLevel(ProtectionLevel.HSM)
-                        .setAlgorithm(CryptoKeyVersionAlgorithm.GOOGLE_SYMMETRIC_ENCRYPTION))
-                .build();
+        if (this.masterKeyExists()) {
+            return false;
+        } else {
+            //The ENCRYPT_DECRYPT key purpose enables symmetric encryption.
+            //All keys with key purpose ENCRYPT_DECRYPT use the GOOGLE_SYMMETRIC_ENCRYPTION algorithm.
+            //No parameters are used with this algorithm.
+            CryptoKey key = CryptoKey.newBuilder()
+                    .setPurpose(CryptoKeyPurpose.ENCRYPT_DECRYPT)
+                    .setVersionTemplate(CryptoKeyVersionTemplate.newBuilder()
+                            .setProtectionLevel(ProtectionLevel.HSM)
+                            .setAlgorithm(CryptoKeyVersionAlgorithm.GOOGLE_SYMMETRIC_ENCRYPTION))
+                    .build();
 
-        // Create the key.
-        CryptoKey createdKey = null;
-        try {
-            createdKey = client.createCryptoKey(this.keyRingName, this.gcpMasterKeyName, key);
-        } catch (Exception e) {
-            if (e instanceof AlreadyExistsException) {
-                logger.info("MasterKey with the name '{}' already exist.", this.gcpMasterKeyName);
-                return true;
-            } else {
+            // Create the key.
+            CryptoKey createdKey = null;
+            try {
+                createdKey = client.createCryptoKey(this.keyRingName, this.gcpMasterKeyName, key);
+            } catch (Exception e) {
                 throw new RuntimeCryptoException("Failed to create master key with name '" + this.gcpMasterKeyName + "', Error - " + e.getMessage());
             }
+
+            if (createdKey == null) {
+                logger.info("Failed to create master key : {}", this.gcpMasterKeyName);
+                return false;
+            }
+
+            logger.info("Master Key Created Successfully On Google Cloud HSM : {}", this.gcpMasterKeyName);
+
+            return true;
         }
-
-        if (createdKey == null) {
-            logger.info("Failed to create master key : {}", this.gcpMasterKeyName);
-            return false;
-        }
-
-        logger.info("Master Key Created Successfully On Google Cloud HSM : {}", this.gcpMasterKeyName);
-
-        return true;
     }
 
     @Override
@@ -220,5 +219,25 @@ public class RangerGoogleCloudHSMProvider implements RangerKMSMKI {
         Map<String, String> writeAbleEnvMap = (Map<String, String>) field.get(env);
 
         writeAbleEnvMap.put(name, val);
+    }
+
+    private boolean masterKeyExists() throws Throwable {
+        if (this.client == null) {
+            throw new RuntimeCryptoException("Google Cloud KMS client is not initialized; call onInitialization() first.");
+        }
+
+        CryptoKeyName keyName = CryptoKeyName.of(this.gcpProjectId, this.gcpLocationId, this.gcpKeyRingId, this.gcpMasterKeyName);
+
+        try {
+            CryptoKey cryptoKey = this.client.getCryptoKey(keyName);
+            logger.info("Ranger masterKey present with name: {}", cryptoKey.getName());
+            return true;
+        } catch (NotFoundException e) {
+            logger.info("Ranger masterKey not found with name: {}", keyName);
+            return false;
+        } catch (Exception e) {
+            logger.error("Error checking for masterkey: " + e.getMessage());
+            throw e;
+        }
     }
 }

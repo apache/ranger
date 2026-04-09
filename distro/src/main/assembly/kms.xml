@@ -166,7 +166,10 @@
                     <include>com.google.android:annotations</include>
                     <include>io.grpc:grpc-alts</include>
                     <include>io.grpc:grpc-grpclb</include>
+                    <include>com.google.protobuf:protobuf-java:jar:${gcp.protobuf-java.version}</include>
                     <include>com.google.protobuf:protobuf-java-util:jar:${gcp.protobuf-java.version}</include>
+                    <include>com.google.guava:guava:jar:${google.guava.version}</include>
+                    <include>com.google.guava:failureaccess:jar:${google.failureaccess.version}</include>
                     <include>org.conscrypt:conscrypt-openjdk-uber</include>
                     <include>org.threeten:threetenbp</include>
                     <include>io.grpc:grpc-auth</include>
