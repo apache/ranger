@@ -143,10 +143,20 @@ public class RangerRESTUtils {
     }
 
     private static String getHostname() {
-        String hostname = System.getenv("HOSTNAME");
+        String hostname = null;
+
+        try {
+            hostname = System.getenv("HOSTNAME");
+        } catch (SecurityException excp) {
+            LOG.error("Error in getting environment HOSTNAME", excp);
+        }
 
         if (StringUtils.isBlank(hostname)) {
-            hostname = System.getenv("COMPUTERNAME");
+            try {
+                hostname = System.getenv("COMPUTERNAME");
+            } catch (SecurityException excp) {
+                LOG.error("Error in getting environment COMPUTERNAME", excp);
+            }
 
             if (StringUtils.isBlank(hostname)) {
                 try {

@@ -18,7 +18,6 @@
 
 package org.apache.ranger.plugin.audit;
 
-import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.ranger.audit.model.AuthzAuditEvent;
 import org.apache.ranger.audit.provider.AuditHandler;
@@ -35,6 +34,7 @@ import org.apache.ranger.plugin.policyengine.gds.GdsAccessResult;
 import org.apache.ranger.plugin.policyresourcematcher.RangerPolicyResourceMatcher;
 import org.apache.ranger.plugin.service.RangerBasePlugin;
 import org.apache.ranger.plugin.util.RangerAccessRequestUtil;
+import org.apache.ranger.plugin.util.RangerRESTUtils;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Test;
@@ -168,7 +168,7 @@ public class TestRangerDefaultAuditHandler {
         Assertions.assertEquals("clusterA", event.getClusterName());
         Assertions.assertEquals("zone-1", event.getZoneName());
         Assertions.assertEquals(Long.valueOf(7L), event.getPolicyVersion());
-        Assertions.assertTrue(StringUtils.isNotBlank(event.getAgentHostname()));
+        Assertions.assertEquals(new RangerRESTUtils().getAgentHostname(), event.getAgentHostname());
         Assertions.assertNotNull(event.getEventId());
         Assertions.assertEquals(event.getEventId(), result.getAuditLogId());
         Assertions.assertEquals("RangerAudit", event.getLogType());
