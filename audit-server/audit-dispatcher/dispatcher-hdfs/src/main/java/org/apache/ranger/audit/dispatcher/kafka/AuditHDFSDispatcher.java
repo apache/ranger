@@ -18,6 +18,7 @@
  */
 package org.apache.ranger.audit.dispatcher.kafka;
 
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.security.SecureClientLogin;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
@@ -28,7 +29,6 @@ import org.apache.kafka.common.TopicPartition;
 import org.apache.ranger.audit.provider.AuditProviderFactory;
 import org.apache.ranger.audit.provider.MiscUtil;
 import org.apache.ranger.audit.server.AuditServerConstants;
-import org.apache.ranger.audit.server.HdfsDispatcherConfig;
 import org.apache.ranger.audit.utils.AuditServerLogFormatter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -52,16 +52,8 @@ public class AuditHDFSDispatcher extends AuditDispatcherBase {
     private static final Logger LOG = LoggerFactory.getLogger(AuditHDFSDispatcher.class);
 
     private static final String RANGER_AUDIT_HDFS_DISPATCHER_GROUP = AuditServerConstants.DEFAULT_RANGER_AUDIT_HDFS_DISPATCHER_GROUP;
-
-    // Register AuditHDFSDispatcher factory in the audit dispatcher registry
-    static {
-        try {
-            AuditDispatcherRegistry.getInstance().registerFactory(AuditServerConstants.PROP_HDFS_DEST_PREFIX, AuditHDFSDispatcher::new);
-            LOG.info("Registered HDFS dispatcher with AuditDispatcherRegistry");
-        } catch (Exception e) {
-            LOG.error("Failed to register HDFS dispatcher factory", e);
-        }
-    }
+    private static final String CONFIG_CORE_SITE                   = "core-site.xml";
+    private static final String CONFIG_HDFS_SITE                   = "hdfs-site.xml";
 
     private final AtomicBoolean                 running           = new AtomicBoolean(false);
     private final Map<String, DispatcherWorker> dispatcherWorkers = new ConcurrentHashMap<>();
@@ -174,8 +166,8 @@ public class AuditHDFSDispatcher extends AuditDispatcherBase {
         LOG.info("==> AuditHDFSDispatcher.initializeRangerUGI()");
 
         try {
-            HdfsDispatcherConfig auditConfig = HdfsDispatcherConfig.getInstance();
-            String             authType    = auditConfig.get(AuditServerConstants.PROP_HADOOP_AUTHENTICATION_TYPE, "simple");
+            Configuration coreSite = getCoreSiteConfiguration();
+            String        authType = coreSite.get(AuditServerConstants.PROP_HADOOP_AUTHENTICATION_TYPE, "simple");
 
             if (!AuditServerConstants.PROP_HADOOP_AUTH_TYPE_KERBEROS.equalsIgnoreCase(authType)) {
                 LOG.info("Hadoop authentication is not Kerberos ({}), skipping Ranger UGI initialization", authType);
@@ -203,19 +195,18 @@ public class AuditHDFSDispatcher extends AuditDispatcherBase {
             }
 
             // Set Hadoop security configuration from core-site.xml
-            org.apache.hadoop.conf.Configuration coreSite = auditConfig.getCoreSiteConfiguration();
             UserGroupInformation.setConfiguration(coreSite);
 
-            LOG.info("Initializing Ranger UGI for HDFS writes: principal={}, keytab={}", principal, keytab);
+            LOG.info("Initializing Ranger AuditServer UGI for HDFS writes: principal={}, keytab={}", principal, keytab);
 
-            UserGroupInformation rangerUGI = UserGroupInformation.loginUserFromKeytabAndReturnUGI(principal, keytab);
+            UserGroupInformation rangerAuditServerUGI = UserGroupInformation.loginUserFromKeytabAndReturnUGI(principal, keytab);
 
-            MiscUtil.setUGILoginUser(rangerUGI, null);
+            MiscUtil.setUGILoginUser(rangerAuditServerUGI, null);
 
             LOG.info("<== AuditHDFSDispatcher.initializeRangerUGI(): Ranger UGI initialized successfully: user={}, auth={}, hasKerberos={}",
-                    rangerUGI.getUserName(), rangerUGI.getAuthenticationMethod(), rangerUGI.hasKerberosCredentials());
+                            rangerAuditServerUGI.getUserName(), rangerAuditServerUGI.getAuthenticationMethod(), rangerAuditServerUGI.hasKerberosCredentials());
         } catch (IOException e) {
-            LOG.error("Failed to initialize Ranger UGI for HDFS writes", e);
+            LOG.error("Failed to initialize Ranger AuditServer UGI for HDFS writes", e);
             throw e;
         }
     }
@@ -227,13 +218,11 @@ public class AuditHDFSDispatcher extends AuditDispatcherBase {
         LOG.info("==> AuditHDFSDispatcher.addHadoopConfigToProps()");
 
         try {
-            HdfsDispatcherConfig hdfsConfig   = HdfsDispatcherConfig.getInstance();
-            String             configPrefix = "xasecure.audit.destination.hdfs.config.";
-
-            Properties hadoopProps = hdfsConfig.getHadoopPropertiesWithPrefix(configPrefix);
+            String     configPrefix = "xasecure.audit.destination.hdfs.config.";
+            Properties hadoopProps  = getHadoopPropertiesWithPrefix(configPrefix);
             props.putAll(hadoopProps);
 
-            LOG.info("<== AuditHDFSDispatcher.addHadoopConfigToProps(): Added {} Hadoop configuration properties from HdfsDispatcherConfig", hadoopProps.size());
+            LOG.info("<== AuditHDFSDispatcher.addHadoopConfigToProps(): Added {} Hadoop configuration properties", hadoopProps.size());
         } catch (Exception e) {
             LOG.error("Failed to add Hadoop configuration properties to props", e);
         }
@@ -250,6 +239,72 @@ public class AuditHDFSDispatcher extends AuditDispatcherBase {
         initializeOffsetManagement(props, propPrefix);
 
         LOG.info("<== AuditHDFSDispatcher.initDispatcherConfig()");
+    }
+
+    /**
+    * Get Hadoop configuration properties (from core-site.xml and hdfs-site.xml) with a specific prefix.
+    * This is need for the HdfsAuditDestination and its parent classes  for routing the audits to hdfs location.
+    * @param prefix The prefix to add to each property name ("xasecure.audit.destination.hdfs.config.")
+    * @return Properties from core-site.xml and hdfs-site.xml with the specified prefix
+    */
+    private Properties getHadoopPropertiesWithPrefix(String prefix) {
+        LOG.debug("==> AuditHDFSDispatcher.getHadoopPropertiesWithPrefix(prefix={})", prefix);
+
+        Properties prefixedProps = new java.util.Properties();
+        int propsAdded = 0;
+
+        try {
+            // Load core-site.xml separately to get pure Hadoop security properties
+            Configuration coreSite = new Configuration(false);
+            coreSite.addResource(CONFIG_CORE_SITE);
+
+            for (java.util.Map.Entry<String, String> entry : coreSite) {
+                String propName  = entry.getKey();
+                String propValue = entry.getValue();
+
+                if (propValue != null && !propValue.trim().isEmpty()) {
+                    prefixedProps.setProperty(prefix + propName, propValue);
+                    LOG.trace("Added from core-site.xml: {} = {}", propName, propValue);
+                    propsAdded++;
+                }
+            }
+
+            // Load hdfs-site.xml separately to get pure HDFS client properties
+            Configuration hdfsSite = new Configuration(false);
+            hdfsSite.addResource(CONFIG_HDFS_SITE);
+
+            for (java.util.Map.Entry<String, String> entry : hdfsSite) {
+                String propName  = entry.getKey();
+                String propValue = entry.getValue();
+
+                if (propValue != null && !propValue.trim().isEmpty()) {
+                    prefixedProps.setProperty(prefix + propName, propValue);
+                    LOG.trace("Added from hdfs-site.xml: {} = {}", propName, propValue);
+                    propsAdded++;
+                }
+            }
+
+            LOG.debug("<== AuditHDFSDispatcher.getHadoopPropertiesWithPrefix(): Added {} Hadoop properties with prefix '{}'", propsAdded, prefix);
+        } catch (Exception e) {
+            LOG.error("Failed to load Hadoop properties from core-site.xml and hdfs-site.xml", e);
+        }
+
+        return prefixedProps;
+    }
+
+    /**
+    * Get core-site.xml Configuration for UGI initialization.
+    * @return Configuration loaded from core-site.xml
+    */
+    private Configuration getCoreSiteConfiguration() {
+        LOG.debug("==> AuditHDFSDispatcher.getCoreSiteConfiguration()");
+
+        Configuration coreSite = new Configuration(false);
+        coreSite.addResource(CONFIG_CORE_SITE);
+
+        LOG.debug("<== AuditHDFSDispatcher.getCoreSiteConfiguration(): authentication={}", coreSite.get("hadoop.security.authentication"));
+
+        return coreSite;
     }
 
     private void initializeOffsetManagement(Properties props, String propPrefix) {

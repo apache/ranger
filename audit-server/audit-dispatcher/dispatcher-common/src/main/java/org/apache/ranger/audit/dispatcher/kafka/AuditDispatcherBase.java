@@ -79,8 +79,7 @@ public abstract class AuditDispatcherBase implements AuditDispatcher {
         LOG.info("Partition assignment strategy: {}", partitionAssignmentStrategy);
 
         dispatcher = new KafkaConsumer<>(dispatcherProps);
-
-        topicName =  MiscUtil.getStringProperty(props, propPrefix + "." + AuditServerConstants.PROP_TOPIC_NAME, AuditServerConstants.DEFAULT_TOPIC);
+        topicName  = MiscUtil.getStringProperty(props, propPrefix + "." + AuditServerConstants.PROP_TOPIC_NAME, AuditServerConstants.DEFAULT_TOPIC);
     }
 
     @Override

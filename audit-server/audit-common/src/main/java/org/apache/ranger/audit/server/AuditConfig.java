@@ -97,7 +97,7 @@ public class AuditConfig extends Configuration {
         return ret;
     }
 
-    public URL getFileLocation(String fileName) {
+    private URL getFileLocation(String fileName) {
         URL lurl = null;
 
         if (!StringUtils.isEmpty(fileName)) {

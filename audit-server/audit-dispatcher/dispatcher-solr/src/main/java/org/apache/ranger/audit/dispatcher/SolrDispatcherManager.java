@@ -20,127 +20,123 @@
 package org.apache.ranger.audit.dispatcher;
 
 import org.apache.ranger.audit.dispatcher.kafka.AuditDispatcher;
-import org.apache.ranger.audit.dispatcher.kafka.AuditDispatcherRegistry;
+import org.apache.ranger.audit.dispatcher.kafka.AuditDispatcherTracker;
 import org.apache.ranger.audit.provider.MiscUtil;
 import org.apache.ranger.audit.server.AuditServerConstants;
-import org.apache.ranger.audit.server.SolrDispatcherConfig;
 import org.apache.ranger.audit.utils.AuditServerLogFormatter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
-import javax.annotation.PreDestroy;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Properties;
 
 /**
  * Spring component that manages the lifecycle of Solr dispatcher threads.
- * This manager:
- * - Initializes the dispatcher registry
+ * Manager that manages the lifecycle of Solr dispatcher threads.
+ * - Initializes the dispatcher tracker
  * - Creates Solr dispatcher instances
  * - Starts dispatcher threads
  * - Handles graceful shutdown
  */
-@Component
 public class SolrDispatcherManager {
-    private static final Logger LOG = LoggerFactory.getLogger(SolrDispatcherManager.class);
+    private static final Logger LOG                    = LoggerFactory.getLogger(SolrDispatcherManager.class);
+    private static final String CONFIG_DISPATCHER_TYPE = "ranger.audit.dispatcher.type";
 
-    private final AuditDispatcherRegistry dispatcherRegistry = AuditDispatcherRegistry.getInstance();
-    private final List<AuditDispatcher>   dispatchers        = new ArrayList<>();
-    private final List<Thread>            dispatcherThreads  = new ArrayList<>();
+    private final AuditDispatcherTracker tracker = AuditDispatcherTracker.getInstance();
+    private       AuditDispatcher        dispatcher;
+    private       Thread                 dispatcherThread;
 
     @PostConstruct
-    public void init() {
+    public void init(Properties props) {
         LOG.info("==> SolrDispatcherManager.init()");
 
-        String dispatcherType = System.getProperty("ranger.audit.dispatcher.type");
+        String dispatcherType = System.getProperty(CONFIG_DISPATCHER_TYPE);
         if (dispatcherType != null && !dispatcherType.equalsIgnoreCase("solr")) {
             LOG.info("Skipping SolrDispatcherManager initialization since dispatcher type is {}", dispatcherType);
             return;
         }
 
         try {
-            SolrDispatcherConfig config = SolrDispatcherConfig.getInstance();
-            Properties props = config.getProperties();
-
             if (props == null) {
                 LOG.error("Configuration properties are null");
                 throw new RuntimeException("Failed to load configuration");
             }
 
+            boolean isEnabled = MiscUtil.getBooleanProperty(props, "xasecure.audit.destination.solr", false);
+            if (!isEnabled) {
+                LOG.warn("Solr destination is disabled (xasecure.audit.destination.solr=false). No dispatchers will be created.");
+                return;
+            }
+
             // Initialize and register Solr Dispatcher
-            initializeDispatcherClasses(props, AuditServerConstants.PROP_KAFKA_PROP_PREFIX);
+            initializeDispatcher(props, AuditServerConstants.PROP_KAFKA_PROP_PREFIX);
 
-            // Create dispatchers from registry
-            List<AuditDispatcher> createdDispatchers = dispatcherRegistry.createDispatchers(props, AuditServerConstants.PROP_KAFKA_PROP_PREFIX);
-            dispatchers.addAll(createdDispatchers);
-
-            if (dispatchers.isEmpty()) {
-                LOG.warn("No dispatchers were created! Verify that xasecure.audit.destination.solr=true");
+            if (dispatcher == null) {
+                LOG.warn("No dispatcher was created! Verify that xasecure.audit.destination.solr=true and classes are configured correctly.");
             } else {
-                LOG.info("Created {} Solr dispatcher(s)", dispatchers.size());
+                LOG.info("Created Solr dispatcher");
 
-                // Start dispatcher threads
-                startDispatchers();
+                // Register shutdown hook
+                Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+                    LOG.info("JVM shutdown detected, stopping SolrDispatcherManager...");
+                    shutdown();
+                }, "SolrDispatcherManager-ShutdownHook"));
+
+                // Start dispatcher thread
+                startDispatcher();
             }
         } catch (Exception e) {
             LOG.error("Failed to initialize SolrDispatcherManager", e);
             throw new RuntimeException("Failed to initialize SolrDispatcherManager", e);
         }
 
-        LOG.info("<== SolrDispatcherManager.init() - {} dispatcher thread(s) started", dispatcherThreads.size());
+        LOG.info("<== SolrDispatcherManager.init()");
     }
 
-    private void initializeDispatcherClasses(Properties props, String propPrefix) {
-        LOG.info("==> SolrDispatcherManager.initializeDispatcherClasses()");
+    private void initializeDispatcher(Properties props, String propPrefix) {
+        LOG.info("==> SolrDispatcherManager.initializeDispatcher()");
 
         // Get dispatcher classes from configuration
         String clsStr = MiscUtil.getStringProperty(props, propPrefix + "." + AuditServerConstants.PROP_DISPATCHER_CLASSES,
                 "org.apache.ranger.audit.dispatcher.kafka.AuditSolrDispatcher");
 
-        String[] solrDispatcherClasses = clsStr.split(",");
-
-        LOG.info("Initializing {} dispatcher class(es)", solrDispatcherClasses.length);
-
-        for (String solrDispatcherClassName : solrDispatcherClasses) {
-            solrDispatcherClassName = solrDispatcherClassName.trim();
-
-            if (solrDispatcherClassName.isEmpty()) {
-                continue;
-            }
-
-            try {
-                Class<?> dispatcherClass = Class.forName(solrDispatcherClassName);
-                LOG.info("Successfully initialized dispatcher class: {}", dispatcherClass.getName());
-            } catch (ClassNotFoundException e) {
-                LOG.error("Dispatcher class not found: {}. Ensure the class is on the classpath.", solrDispatcherClassName, e);
-            } catch (Exception e) {
-                LOG.error("Error initializing dispatcher class: {}", solrDispatcherClassName, e);
-            }
+        String solrDispatcherClassName = clsStr.split(",")[0].trim();
+        if (solrDispatcherClassName.isEmpty()) {
+            LOG.error("Dispatcher class name is empty");
+            return;
         }
 
-        LOG.info("Registered dispatcher factories: {}", dispatcherRegistry.getRegisteredDestinationTypes());
-        LOG.info("<== SolrDispatcherManager.initializeDispatcherClasses()");
+        try {
+            Class<?> dispatcherClass = Class.forName(solrDispatcherClassName);
+            dispatcher = (AuditDispatcher) dispatcherClass
+                    .getConstructor(Properties.class, String.class)
+                    .newInstance(props, propPrefix);
+            tracker.addActiveDispatcher("solr", dispatcher);
+            LOG.info("Successfully initialized dispatcher class: {}", dispatcherClass.getName());
+        } catch (ClassNotFoundException e) {
+            LOG.error("Dispatcher class not found: {}. Ensure the class is on the classpath.", solrDispatcherClassName, e);
+        } catch (Exception e) {
+            LOG.error("Error initializing dispatcher class: {}", solrDispatcherClassName, e);
+        }
+
+        LOG.info("<== SolrDispatcherManager.initializeDispatcher()");
     }
 
     /**
-     * Start all dispatcher threads
+     * Start dispatcher thread
      */
-    private void startDispatchers() {
-        LOG.info("==> SolrDispatcherManager.startDispatchers()");
+    private void startDispatcher() {
+        LOG.info("==> SolrDispatcherManager.startDispatcher()");
 
         logSolrDispatcherStartup();
 
-        for (AuditDispatcher dispatcher : dispatchers) {
+        if (dispatcher != null) {
             try {
                 String dispatcherName = dispatcher.getClass().getSimpleName();
-                Thread dispatcherThread = new Thread(dispatcher, dispatcherName);
+                dispatcherThread = new Thread(dispatcher, dispatcherName);
                 dispatcherThread.setDaemon(true);
                 dispatcherThread.start();
-                dispatcherThreads.add(dispatcherThread);
 
                 LOG.info("Started {} thread [Thread-ID: {}, Thread-Name: '{}']",
                         dispatcherName, dispatcherThread.getId(), dispatcherThread.getName());
@@ -149,7 +145,7 @@ public class SolrDispatcherManager {
             }
         }
 
-        LOG.info("<== SolrDispatcherManager.startDispatchers() - {} thread(s) started", dispatcherThreads.size());
+        LOG.info("<== SolrDispatcherManager.startDispatcher()");
     }
 
     /**
@@ -158,30 +154,25 @@ public class SolrDispatcherManager {
     private void logSolrDispatcherStartup() {
         LOG.info("################## SOLR DISPATCHER SERVICE STARTUP ######################");
 
-        if (dispatchers.isEmpty()) {
+        if (dispatcher == null) {
             LOG.warn("WARNING: No Solr dispatchers are enabled!");
             LOG.warn("Verify: xasecure.audit.destination.solr=true in configuration");
         } else {
             AuditServerLogFormatter.LogBuilder builder = AuditServerLogFormatter.builder("Solr Dispatcher Status");
-
-            for (AuditDispatcher dispatcher : dispatchers) {
-                String dispatcherType = dispatcher.getClass().getSimpleName();
-                builder.add(dispatcherType, "ENABLED");
-                builder.add("Topic", dispatcher.getTopicName());
-            }
-
+            String dispatcherType = dispatcher.getClass().getSimpleName();
+            builder.add(dispatcherType, "ENABLED");
+            builder.add("Topic", dispatcher.getTopicName());
             builder.logInfo(LOG);
-            LOG.info("Starting {} Solr dispatcher thread(s)...", dispatchers.size());
+
+            LOG.info("Starting Solr dispatcher thread...");
         }
         LOG.info("########################################################################");
     }
 
-    @PreDestroy
     public void shutdown() {
         LOG.info("==> SolrDispatcherManager.shutdown()");
 
-        // Shutdown all dispatchers
-        for (AuditDispatcher dispatcher : dispatchers) {
+        if (dispatcher != null) {
             try {
                 LOG.info("Shutting down dispatcher: {}", dispatcher.getClass().getSimpleName());
                 dispatcher.shutdown();
@@ -191,26 +182,24 @@ public class SolrDispatcherManager {
             }
         }
 
-        // Wait for threads to terminate
-        for (Thread thread : dispatcherThreads) {
-            if (thread.isAlive()) {
-                try {
-                    LOG.info("Waiting for thread to terminate: {}", thread.getName());
-                    thread.join(10000); // Wait up to 10 seconds
-                    if (thread.isAlive()) {
-                        LOG.warn("Thread did not terminate within 10 seconds: {}", thread.getName());
-                    }
-                } catch (InterruptedException e) {
-                    LOG.warn("Interrupted while waiting for thread to terminate: {}", thread.getName(), e);
-                    Thread.currentThread().interrupt();
+        // Wait for thread to terminate
+        if (dispatcherThread != null && dispatcherThread.isAlive()) {
+            try {
+                LOG.info("Waiting for thread to terminate: {}", dispatcherThread.getName());
+                dispatcherThread.join(10000); // Wait up to 10 seconds
+                if (dispatcherThread.isAlive()) {
+                    LOG.warn("Thread did not terminate within 10 seconds: {}", dispatcherThread.getName());
                 }
+            } catch (InterruptedException e) {
+                LOG.warn("Interrupted while waiting for thread to terminate: {}", dispatcherThread.getName(), e);
+                Thread.currentThread().interrupt();
             }
         }
 
-        dispatchers.clear();
-        dispatcherThreads.clear();
-        dispatcherRegistry.clearActiveDispatchers();
+        dispatcher = null;
+        dispatcherThread = null;
+        tracker.clearActiveDispatchers();
 
-        LOG.info("<== SolrDispatcherManager.shutdown() - All Solr dispatchers stopped");
+        LOG.info("<== SolrDispatcherManager.shutdown() - Solr dispatcher stopped");
     }
 }

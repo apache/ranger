@@ -20,163 +20,149 @@
 package org.apache.ranger.audit.dispatcher;
 
 import org.apache.ranger.audit.dispatcher.kafka.AuditDispatcher;
-import org.apache.ranger.audit.dispatcher.kafka.AuditDispatcherRegistry;
+import org.apache.ranger.audit.dispatcher.kafka.AuditDispatcherTracker;
 import org.apache.ranger.audit.provider.MiscUtil;
 import org.apache.ranger.audit.server.AuditServerConstants;
-import org.apache.ranger.audit.server.HdfsDispatcherConfig;
 import org.apache.ranger.audit.utils.AuditServerLogFormatter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Component;
 
-import javax.annotation.PostConstruct;
-import javax.annotation.PreDestroy;
-
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Properties;
 
 /**
  * Spring component that manages the lifecycle of HDFS dispatcher threads.
- * This manager:
- * - Initializes the dispatcher registry
+ * Manager that handles the lifecycle of HDFS dispatcher threads.
+ * - Initializes the dispatcher tracker
  * - Creates HDFS dispatcher instances
  * - Starts dispatcher threads
  * - Handles graceful shutdown
  */
-@Component
 public class HdfsDispatcherManager {
-    private static final Logger LOG = LoggerFactory.getLogger(HdfsDispatcherManager.class);
+    private static final Logger LOG                    = LoggerFactory.getLogger(HdfsDispatcherManager.class);
+    private static final String CONFIG_DISPATCHER_TYPE = "ranger.audit.dispatcher.type";
 
-    private final AuditDispatcherRegistry dispatcherRegistry = AuditDispatcherRegistry.getInstance();
-    private final List<AuditDispatcher>   dispatchers        = new ArrayList<>();
-    private final List<Thread>            dispatcherThreads  = new ArrayList<>();
+    private final AuditDispatcherTracker tracker       = AuditDispatcherTracker.getInstance();
+    private       AuditDispatcher        dispatcher;
+    private       Thread                 dispatcherThread;
 
-    @PostConstruct
-    public void init() {
+    public void init(Properties props) {
         LOG.info("==> HdfsDispatcherManager.init()");
 
-        String dispatcherType = System.getProperty("ranger.audit.dispatcher.type");
+        String dispatcherType = System.getProperty(CONFIG_DISPATCHER_TYPE);
         if (dispatcherType != null && !dispatcherType.equalsIgnoreCase("hdfs")) {
             LOG.info("Skipping HdfsDispatcherManager initialization since dispatcher type is {}", dispatcherType);
             return;
         }
 
         try {
-            HdfsDispatcherConfig config = HdfsDispatcherConfig.getInstance();
-            Properties props = config.getProperties();
-
             if (props == null) {
                 LOG.error("Configuration properties are null");
                 throw new RuntimeException("Failed to load configuration");
             }
 
+            boolean isEnabled = MiscUtil.getBooleanProperty(props, "xasecure.audit.destination.hdfs", false);
+            if (!isEnabled) {
+                LOG.warn("HDFS destination is disabled (xasecure.audit.destination.hdfs=false). No dispatchers will be created.");
+                return;
+            }
+
             // Initialize and register HDFS Dispatcher
-            initializeDispatcherClasses(props, AuditServerConstants.PROP_KAFKA_PROP_PREFIX);
+            initializeDispatcher(props, AuditServerConstants.PROP_KAFKA_PROP_PREFIX);
 
-            // Create dispatchers from registry
-            List<AuditDispatcher> createdDispatchers = dispatcherRegistry.createDispatchers(props, AuditServerConstants.PROP_KAFKA_PROP_PREFIX);
-            dispatchers.addAll(createdDispatchers);
-
-            if (dispatchers.isEmpty()) {
-                LOG.warn("No dispatchers were created! Verify that xasecure.audit.destination.hdfs=true");
+            if (dispatcher == null) {
+                LOG.warn("No dispatcher was created! Verify that xasecure.audit.destination.hdfs=true and classes are configured correctly.");
             } else {
-                LOG.info("Created {} HDFS dispatcher(s)", dispatchers.size());
+                LOG.info("Created HDFS dispatcher");
 
-                // Start dispatcher threads
-                startDispatchers();
+                // Register shutdown hook
+                Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+                    LOG.info("JVM shutdown detected, stopping HdfsDispatcherManager...");
+                    shutdown();
+                }, "HdfsDispatcherManager-ShutdownHook"));
+
+                // Start dispatcher thread
+                startDispatcher();
             }
         } catch (Exception e) {
             LOG.error("Failed to initialize HdfsDispatcherManager", e);
             throw new RuntimeException("Failed to initialize HdfsDispatcherManager", e);
         }
-
-        LOG.info("<== HdfsDispatcherManager.init() - {} dispatcher thread(s) started", dispatcherThreads.size());
+        LOG.info("<== HdfsDispatcherManager.init()");
     }
 
-    private void initializeDispatcherClasses(Properties props, String propPrefix) {
-        LOG.info("==> HdfsDispatcherManager.initializeDispatcherClasses()");
+    private void initializeDispatcher(Properties props, String propPrefix) {
+        LOG.info("==> HdfsDispatcherManager.initializeDispatcher()");
 
-        String clsStr = MiscUtil.getStringProperty(props, propPrefix + "." + AuditServerConstants.PROP_DISPATCHER_CLASSES, "org.apache.ranger.audit.dispatcher.kafka.AuditHDFSDispatcher");
-
+        String   clsStr                = MiscUtil.getStringProperty(props, propPrefix + "." + AuditServerConstants.PROP_DISPATCHER_CLASSES, "org.apache.ranger.audit.dispatcher.kafka.AuditHDFSDispatcher");
         String[] hdfsDispatcherClasses = clsStr.split(",");
 
         LOG.info("Initializing {} dispatcher class(es)", hdfsDispatcherClasses.length);
 
-        for (String hdfsDispatcherClassName : hdfsDispatcherClasses) {
-            hdfsDispatcherClassName = hdfsDispatcherClassName.trim();
-
-            if (hdfsDispatcherClassName.isEmpty()) {
-                continue;
-            }
-
-            try {
-                Class<?> dispatcherClass = Class.forName(hdfsDispatcherClassName);
-                LOG.info("Successfully initialized dispatcher class: {}", dispatcherClass.getName());
-            } catch (ClassNotFoundException e) {
-                LOG.error("Dispatcher class not found: {}. Ensure the class is on the classpath.", hdfsDispatcherClassName, e);
-            } catch (Exception e) {
-                LOG.error("Error initializing dispatcher class: {}", hdfsDispatcherClassName, e);
-            }
+        String hdfsDispatcherClassName = clsStr.split(",")[0].trim();
+        if (hdfsDispatcherClassName.isEmpty()) {
+            LOG.error("Dispatcher class name is empty");
+            return;
         }
 
-        LOG.info("Registered dispatcher factories: {}", dispatcherRegistry.getRegisteredDestinationTypes());
-        LOG.info("<== HdfsDispatcherManager.initializeDispatcherClasses()");
+        try {
+            Class<?> dispatcherClass = Class.forName(hdfsDispatcherClassName);
+            dispatcher = (AuditDispatcher) dispatcherClass
+                        .getConstructor(Properties.class, String.class)
+                        .newInstance(props, propPrefix);
+            tracker.addActiveDispatcher("hdfs", dispatcher);
+            LOG.info("Successfully initialized dispatcher class: {}", dispatcherClass.getName());
+        } catch (ClassNotFoundException e) {
+            LOG.error("Dispatcher class not found: {}. Ensure the class is on the classpath.", hdfsDispatcherClassName, e);
+        } catch (Exception e) {
+            LOG.error("Error initializing dispatcher class: {}", hdfsDispatcherClassName, e);
+        }
+
+        LOG.info("<== HdfsDispatcherManager.initializeDispatcher()");
     }
 
     /**
-     * Start all dispatcher threads
+     * Start dispatcher thread
      */
-    private void startDispatchers() {
-        LOG.info("==> HdfsDispatcherManager.startDispatchers()");
+    private void startDispatcher() {
+        LOG.info("==> HdfsDispatcherManager.startDispatcher()");
 
         logDispatcherStartup();
-
-        for (AuditDispatcher dispatcher : dispatchers) {
-            try {
-                String dispatcherName = dispatcher.getClass().getSimpleName();
-                Thread dispatcherThread = new Thread(dispatcher, dispatcherName);
-                dispatcherThread.setDaemon(true);
-                dispatcherThread.start();
-                dispatcherThreads.add(dispatcherThread);
-
-                LOG.info("Started {} thread [Thread-ID: {}, Thread-Name: '{}']",
-                        dispatcherName, dispatcherThread.getId(), dispatcherThread.getName());
-            } catch (Exception e) {
-                LOG.error("Error starting dispatcher: {}", dispatcher.getClass().getSimpleName(), e);
-            }
+        try {
+            String dispatcherName = dispatcher.getClass().getSimpleName();
+            Thread dispatcherThread = new Thread(dispatcher, dispatcherName);
+            dispatcherThread.setDaemon(true);
+            dispatcherThread.start();
+            LOG.info("Started {} thread [Thread-ID: {}, Thread-Name: '{}']", dispatcherName, dispatcherThread.getId(), dispatcherThread.getName());
+        } catch (Exception e) {
+            LOG.error("Error starting dispatcher: {}", dispatcher.getClass().getSimpleName(), e);
         }
 
-        LOG.info("<== HdfsDispatcherManager.startDispatchers() - {} thread(s) started", dispatcherThreads.size());
+        LOG.info("<== HdfsDispatcherManager.startDispatcher()");
     }
 
     private void logDispatcherStartup() {
         LOG.info("################## HDFS DISPATCHER SERVICE STARTUP ######################");
 
-        if (dispatchers.isEmpty()) {
+        if (dispatcher == null) {
             LOG.warn("WARNING: No HDFS dispatchers are enabled!");
             LOG.warn("Verify: xasecure.audit.destination.hdfs=true in configuration");
         } else {
             AuditServerLogFormatter.LogBuilder builder = AuditServerLogFormatter.builder("HDFS Dispatcher Status");
-
-            for (AuditDispatcher dispatcher : dispatchers) {
-                String dispatcherType = dispatcher.getClass().getSimpleName();
-                builder.add(dispatcherType, "ENABLED");
-                builder.add("Topic", dispatcher.getTopicName());
-            }
-
+            String dispatcherType = dispatcher.getClass().getSimpleName();
+            builder.add(dispatcherType, "ENABLED");
+            builder.add("Topic", dispatcher.getTopicName());
             builder.logInfo(LOG);
-            LOG.info("Starting {} HDFS dispatcher thread(s)...", dispatchers.size());
+            LOG.info("Starting HDFS dispatcher thread...");
         }
+
         LOG.info("########################################################################");
     }
 
-    @PreDestroy
     public void shutdown() {
         LOG.info("==> HdfsDispatcherManager.shutdown()");
 
-        // Shutdown all dispatchers
-        for (AuditDispatcher dispatcher : dispatchers) {
+        // Shutdown dispatcher
+        if (dispatcher != null) {
             try {
                 LOG.info("Shutting down dispatcher: {}", dispatcher.getClass().getSimpleName());
                 dispatcher.shutdown();
@@ -186,26 +172,24 @@ public class HdfsDispatcherManager {
             }
         }
 
-        // Wait for threads to terminate
-        for (Thread thread : dispatcherThreads) {
-            if (thread.isAlive()) {
-                try {
-                    LOG.info("Waiting for thread to terminate: {}", thread.getName());
-                    thread.join(10000); // Wait up to 10 seconds
-                    if (thread.isAlive()) {
-                        LOG.warn("Thread did not terminate within 10 seconds: {}", thread.getName());
-                    }
-                } catch (InterruptedException e) {
-                    LOG.warn("Interrupted while waiting for thread to terminate: {}", thread.getName(), e);
-                    Thread.currentThread().interrupt();
+        // Wait for thread to terminate
+        if (dispatcherThread != null && dispatcherThread.isAlive()) {
+            try {
+                LOG.info("Waiting for thread to terminate: {}", dispatcherThread.getName());
+                dispatcherThread.join(10000); // Wait up to 10 seconds
+                if (dispatcherThread.isAlive()) {
+                    LOG.warn("Thread did not terminate within 10 seconds: {}", dispatcherThread.getName());
                 }
+            } catch (InterruptedException e) {
+                LOG.warn("Interrupted while waiting for thread to terminate: {}", dispatcherThread.getName(), e);
+                Thread.currentThread().interrupt();
             }
         }
 
-        dispatchers.clear();
-        dispatcherThreads.clear();
-        dispatcherRegistry.clearActiveDispatchers();
+        dispatcher = null;
+        dispatcherThread = null;
+        tracker.clearActiveDispatchers();
 
-        LOG.info("<== HdfsDispatcherManager.shutdown() - All HDFS dispatchers stopped");
+        LOG.info("<== HdfsDispatcherManager.shutdown() - HDFS dispatcher stopped");
     }
 }

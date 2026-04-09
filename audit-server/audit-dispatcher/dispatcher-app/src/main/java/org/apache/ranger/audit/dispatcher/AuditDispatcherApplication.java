@@ -23,6 +23,8 @@ import org.apache.ranger.audit.server.AuditConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Properties;
+
 public class AuditDispatcherApplication {
     private static final Logger LOG                = LoggerFactory.getLogger(AuditDispatcherApplication.class);
     private static final String APP_NAME           = "audit-dispatcher";
@@ -60,7 +62,7 @@ public class AuditDispatcherApplication {
         try {
             String dispatcherMgrClass = config.get(CONFIG_PREFIX + dispatcherType + ".class");
             if (dispatcherMgrClass != null && !dispatcherMgrClass.trim().isEmpty()) {
-                initSuccess = initializeDispatcherManager(dispatcherMgrClass);
+                initSuccess = initializeDispatcherManager(dispatcherMgrClass, config.getProperties());
             } else {
                 LOG.error("Unknown dispatcher type: {}. Cannot initialize dispatcher manager.", dispatcherType);
             }
@@ -69,7 +71,8 @@ public class AuditDispatcherApplication {
         }
 
         if (!initSuccess) {
-            LOG.error("Dispatcher initialization failed. The service will continue running to allow log inspection, but no audits will be dispatched.");
+            LOG.error("Dispatcher initialization failed.");
+            System.exit(1);
         }
 
         try {
@@ -83,9 +86,9 @@ public class AuditDispatcherApplication {
         }
     }
 
-    private static boolean initializeDispatcherManager(String dispatcherMgrClass) throws Exception {
+    private static boolean initializeDispatcherManager(String dispatcherMgrClass, Properties props) throws Exception {
         Object manager = Class.forName(dispatcherMgrClass, true, Thread.currentThread().getContextClassLoader()).newInstance();
-        manager.getClass().getMethod("init").invoke(manager);
+        manager.getClass().getMethod("init", Properties.class).invoke(manager, props);
         LOG.info("{} initialized successfully", dispatcherMgrClass);
         return true;
     }

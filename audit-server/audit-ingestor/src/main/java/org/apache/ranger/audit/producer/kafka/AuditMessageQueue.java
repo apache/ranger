@@ -143,10 +143,6 @@ public class AuditMessageQueue extends AuditDestination {
             final String message = MiscUtil.stringify(event);
 
             try {
-                if (topicName == null || kafkaProducer == null) {
-                    init(props, propPrefix);
-                }
-
                 if (kafkaProducer != null) {
                     MiscUtil.executePrivilegedAction((PrivilegedExceptionAction<Void>) () -> {
                         AuditProducer.send(kafkaProducer, topicName, key, message);
@@ -282,8 +278,12 @@ public class AuditMessageQueue extends AuditDestination {
         return allSuccess;
     }
 
-    KafkaProducer<String, String> getKafkaProducer() {
+    public KafkaProducer<String, String> getKafkaProducer() {
         return kafkaProducer;
+    }
+
+    private void setKafkaProducer(KafkaProducer<String, String> kafkaProducer) {
+        this.kafkaProducer = kafkaProducer;
     }
 
     private void startRangerAuditRecoveryThread() {
@@ -327,7 +327,7 @@ public class AuditMessageQueue extends AuditDestination {
             try {
                 auditProducerRunnable = new AuditProducer(props, propPrefix);
                 if (auditProducerRunnable != null) {
-                    kafkaProducer = auditProducerRunnable.getKafkaProducer();
+                    setKafkaProducer(auditProducerRunnable.getKafkaProducer());
                 }
             } catch (Exception e) {
                 LOG.error("Error creating Kafka producer", e);

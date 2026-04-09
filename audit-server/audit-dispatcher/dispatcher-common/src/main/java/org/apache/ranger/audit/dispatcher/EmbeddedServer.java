@@ -470,13 +470,11 @@ public class EmbeddedServer {
 
         // Instead of trying to manually shutdown Spring context, let's rely on Tomcat's
         // normal webapp lifecycle which will trigger ContextLoaderListener.contextDestroyed()
-        // and call @PreDestroy methods automatically
-
         if (server != null) {
             try {
                 LOG.info("Initiating Tomcat server stop to trigger webapp lifecycle shutdown");
                 server.stop();
-                LOG.info("Tomcat server stop completed - Spring @PreDestroy methods should have been called");
+                LOG.info("Tomcat server stop completed");
             } catch (Exception e) {
                 LOG.error("Error stopping Tomcat server during graceful shutdown", e);
 
@@ -495,7 +493,7 @@ public class EmbeddedServer {
 
         // Give some time for Spring components to shutdown through normal lifecycle
         try {
-            Thread.sleep(3000); // Increased to 3 seconds to allow for proper cleanup
+            Thread.sleep(3000);
         } catch (InterruptedException e) {
             LOG.warn("Interrupted while waiting for Spring shutdown", e);
             Thread.currentThread().interrupt();

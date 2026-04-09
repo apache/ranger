@@ -33,19 +33,22 @@ import java.util.List;
 public class AuditDispatcherLauncher {
     private static final Logger LOG = LoggerFactory.getLogger(AuditDispatcherLauncher.class);
 
+    private static final String COMMON_CONFIG_FILE     = "ranger-audit-dispatcher-site.xml";
+    private static final String CONFIG_DISPATCHER_TYPE = "ranger.audit.dispatcher.type";
+
     private AuditDispatcherLauncher() {
     }
 
     public static void main(String[] args) {
         try {
             AuditConfig config = new AuditConfig();
-            config.addResourceIfReadable("ranger-audit-dispatcher-site.xml");
+            config.addResourceIfReadable(COMMON_CONFIG_FILE);
 
-            String dispatcherType = System.getProperty("ranger.audit.dispatcher.type");
+            String dispatcherType = System.getProperty(CONFIG_DISPATCHER_TYPE);
             if (dispatcherType == null) {
-                dispatcherType = config.get("ranger.audit.dispatcher.type");
+                dispatcherType = config.get(CONFIG_DISPATCHER_TYPE);
                 if (dispatcherType != null) {
-                    System.setProperty("ranger.audit.dispatcher.type", dispatcherType);
+                    System.setProperty(CONFIG_DISPATCHER_TYPE, dispatcherType);
                 }
             }
 

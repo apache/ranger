@@ -72,8 +72,8 @@ public class AuditDispatcherRebalanceListener implements ConsumerRebalanceListen
         this.destinationType                  = destinationType;
         this.topicName                        = topicName;
         this.offsetCommitStrategy             = offsetCommitStrategy;
-        this.dispatcherGroupId                  = dispatcherGroupId;
-        this.workerDispatcher                   = workerDispatcher;
+        this.dispatcherGroupId                = dispatcherGroupId;
+        this.workerDispatcher                 = workerDispatcher;
         this.pendingOffsets                   = pendingOffsets;
         this.messagesProcessedSinceLastCommit = messagesProcessedSinceLastCommit;
         this.lastCommitTime                   = lastCommitTime;

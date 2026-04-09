@@ -56,20 +56,9 @@ public class AuditSolrDispatcher extends AuditDispatcherBase {
 
     private static final String RANGER_AUDIT_SOLR_DISPATCHER_GROUP = AuditServerConstants.DEFAULT_RANGER_AUDIT_SOLR_DISPATCHER_GROUP;
 
-    // Register AuditSolrDispatcher factory in the audit dispatcher registry
-    static {
-        try {
-            AuditDispatcherRegistry.getInstance().registerFactory(AuditServerConstants.PROP_SOLR_DEST_PREFIX, AuditSolrDispatcher::new);
-
-            LOG.info("Registered Solr dispatcher factory with AuditDispatcherRegistry");
-        } catch (Exception e) {
-            LOG.error("Failed to register Solr dispatcher factory", e);
-        }
-    }
-
-    private final AtomicBoolean               running         = new AtomicBoolean(false);
-    private final Map<String, DispatcherWorker> dispatcherWorkers = new ConcurrentHashMap<>();
-    private final SolrAuditDestination        solrAuditDestination;
+    private final AtomicBoolean                 running              = new AtomicBoolean(false);
+    private final Map<String, DispatcherWorker> dispatcherWorkers    = new ConcurrentHashMap<>();
+    private final SolrAuditDestination          solrAuditDestination;
 
     private ExecutorService dispatcherThreadPool;
     private int             dispatcherThreadCount = 1;

@@ -20,7 +20,7 @@
 package org.apache.ranger.audit.rest;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.apache.ranger.audit.dispatcher.kafka.AuditDispatcherRegistry;
+import org.apache.ranger.audit.dispatcher.kafka.AuditDispatcherTracker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Scope;
@@ -76,10 +76,10 @@ public class AuditDispatcherHealthREST {
             resp.put("service", "audit-dispatcher-" + (dispatcherType != null ? dispatcherType : "unknown"));
 
             if (dispatcherType != null && !dispatcherType.trim().isEmpty()) {
-                String typeLower = dispatcherType.toLowerCase();
-                boolean isActive = AuditDispatcherRegistry.getInstance().getActiveDispatchers().stream()
+                String auditDispatcherType = dispatcherType.toLowerCase();
+                boolean isActive = AuditDispatcherTracker.getInstance().getActiveDispatchers().stream()
                         .filter(d -> d != null)
-                        .anyMatch(d -> d.getClass().getName().toLowerCase().contains(typeLower));
+                        .anyMatch(d -> d.getClass().getName().toLowerCase().contains(auditDispatcherType));
 
                 if (isActive) {
                     resp.put("status", "UP");
