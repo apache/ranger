@@ -145,11 +145,7 @@ if [ ! -f $DB_DIR/principal ]; then
   echo "Database initialized"
 
   create_keytabs
-<<<<<<< RANGER-5520-patch
-  create_testusers ranger ranger-usersync ranger-tagsync ranger-audit-ingestor ranger-audit-dispatcher-solr ranger-audit-dispatcher-hdfs ranger-hadoop ranger-hive ranger-hbase ranger-kafka ranger-solr ranger-knox ranger-kms ranger-ozone ranger-trino ranger-opensearch
-=======
-  create_testusers ranger ranger-usersync ranger-tagsync ranger-pdp ranger-audit-server ranger-audit-consumer-solr ranger-audit-consumer-hdfs ranger-hadoop ranger-hive ranger-hbase ranger-kafka ranger-solr ranger-knox ranger-kms ranger-ozone ranger-trino ranger-opensearch
->>>>>>> master
+  create_testusers ranger ranger-usersync ranger-tagsync ranger-pdp ranger-audit-ingestor ranger-audit-dispatcher-solr ranger-audit-dispatcher-hdfs ranger-hadoop ranger-hive ranger-hbase ranger-kafka ranger-solr ranger-knox ranger-kms ranger-ozone ranger-trino ranger-opensearch
 else
   echo "KDC DB already exists; skipping create"
 fi

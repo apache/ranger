@@ -121,10 +121,5 @@ docker compose -f docker-compose.ranger.yml -f docker-compose.ranger-usersync.ym
 
 #### To bring up audit server, solr and hdfs consumer. Make sure kafka,solr and hdfs containers are running before bring up audit server.
 ~~~
-<<<<<<< RANGER-5520-patch
 docker compose  -f docker-compose.ranger.yml -f docker-compose.ranger-hadoop.yml -f docker-compose.ranger-kafka.yml -f docker-compose.ranger-audit-ingestor.yml  up -d
 ~~~
-=======
-docker compose  -f docker-compose.ranger.yml -f docker-compose.ranger-hadoop.yml -f docker-compose.ranger-kafka.yml -f docker-compose.ranger-audit-server.yml  up -d
-~~~
->>>>>>> master
