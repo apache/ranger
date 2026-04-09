@@ -19,7 +19,6 @@
 
 package org.apache.ranger.plugin.util;
 
-import com.kstruct.gethostname4j.Hostname;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -73,7 +72,7 @@ public class RangerRESTUtils {
     private static final Logger LOG                                               = LoggerFactory.getLogger(RangerRESTUtils.class);
     private static final int    MAX_PLUGIN_ID_LEN                                 = 255;
 
-    public static        String hostname;
+    public static final String hostname = getHostname();
 
     public String getPluginId(String serviceName, String appId) {
         String hostName;
@@ -143,12 +142,22 @@ public class RangerRESTUtils {
         return ret;
     }
 
-    static {
-        try {
-            hostname = Hostname.getHostname();
-        } catch (Exception e) {
-            LOG.error("ERROR: Unable to find hostname for the agent ", e);
-            hostname = "unknownHost";
+    private static String getHostname() {
+        String hostname = System.getenv("HOSTNAME");
+
+        if (StringUtils.isEmpty(hostname)) {
+            hostname = System.getenv("COMPUTERNAME");
+
+            if (StringUtils.isBlank(hostname)) {
+                try {
+                    hostname = InetAddress.getLocalHost().getHostName();
+                } catch (Exception e) {
+                    LOG.error("ERROR: Unable to find hostname for the agent ", e);
+                    hostname = "unknownHost";
+                }
+            }
         }
+
+        return hostname;
     }
 }
