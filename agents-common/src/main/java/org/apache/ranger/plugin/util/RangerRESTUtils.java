@@ -158,6 +158,6 @@ public class RangerRESTUtils {
             }
         }
 
-        return hostname;
+        return hostname.trim();
     }
 }
