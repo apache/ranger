@@ -1,0 +1,61 @@
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+services:
+  ranger-pdp:
+    build:
+      context: .
+      dockerfile: Dockerfile.ranger-pdp
+      args:
+        - RANGER_BASE_IMAGE=${RANGER_BASE_IMAGE}
+        - RANGER_BASE_VERSION=${RANGER_BASE_VERSION}
+        - PDP_VERSION=${PDP_VERSION}
+    image: ranger-pdp
+    container_name: ranger-pdp
+    hostname: ranger-pdp.rangernw
+    volumes:
+      - ./dist/keytabs/ranger-pdp:/etc/keytabs
+      - ./scripts/kdc/krb5.conf:/etc/krb5.conf
+      - ./scripts/hadoop/core-site.xml:/home/ranger/scripts/core-site.xml:ro
+      - ./dist/version:/home/ranger/dist/version:ro
+      - ./scripts/pdp/logback.xml:/opt/ranger/pdp/conf/logback.xml
+      - ./scripts/pdp/ranger-pdp-site.xml:/opt/ranger/pdp/conf/ranger-pdp-site.xml
+    stdin_open: true
+    tty: true
+    networks:
+      - ranger
+    ports:
+      - "6500:6500"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:6500/health/ready >/dev/null || exit 1"]
+      interval: 20s
+      timeout: 10s
+      retries: 20
+      start_period: 30s
+    depends_on:
+      ranger:
+        condition: service_started
+      ranger-solr:
+        condition: service_started
+    environment:
+      - PDP_VERSION
+      - KERBEROS_ENABLED
+      - DEBUG_PDP=${DEBUG_PDP:-false}
+
+networks:
+  ranger:
+    name: rangernw
+    external: true

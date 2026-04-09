@@ -42,7 +42,7 @@
                     <include>org.apache.hadoop.thirdparty:hadoop-shaded-guava:jar:${hadoop-shaded-guava.version}</include>
                     <include>org.apache.hadoop:hadoop-auth:jar:${hadoop.version}</include>
                     <include>com.google.code.gson:gson</include>
-                    <include>com.sun.jersey:jersey-bundle</include>
+                    <include>com.sun.jersey:jersey-bundle:jar:${jersey-bundle.version}</include>
                     <include>org.eclipse.persistence:eclipselink</include>
                     <include>org.eclipse.persistence:javax.persistence</include>
                     <include>com.googlecode.log4jdbc:log4jdbc</include>

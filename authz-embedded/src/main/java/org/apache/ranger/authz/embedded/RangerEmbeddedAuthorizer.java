@@ -30,15 +30,17 @@ import org.apache.ranger.authz.model.RangerAuthzResult;
 import org.apache.ranger.authz.model.RangerAuthzResult.AccessDecision;
 import org.apache.ranger.authz.model.RangerMultiAuthzRequest;
 import org.apache.ranger.authz.model.RangerMultiAuthzResult;
-import org.apache.ranger.authz.model.RangerResourceInfo;
 import org.apache.ranger.authz.model.RangerResourcePermissions;
+import org.apache.ranger.authz.model.RangerResourcePermissionsRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 import static org.apache.ranger.authz.api.RangerAuthzApiErrorCode.INVALID_REQUEST_SERVICE_NAME_OR_TYPE_MANDATORY;
 import static org.apache.ranger.authz.embedded.RangerEmbeddedAuthzErrorCode.NO_DEFAULT_SERVICE_FOR_SERVICE_TYPE;
@@ -49,7 +51,7 @@ public class RangerEmbeddedAuthorizer extends RangerAuthorizer {
 
     private final RangerAuthzConfig              config;
     private final String                         appType;
-    private final Map<String, RangerAuthzPlugin> plugins = new HashMap<>();
+    private final Map<String, RangerAuthzPlugin> plugins = new ConcurrentHashMap<>();
 
     public RangerEmbeddedAuthorizer(Properties properties) {
         super(properties);
@@ -106,6 +108,15 @@ public class RangerEmbeddedAuthorizer extends RangerAuthorizer {
         }
     }
 
+    @Override
+    public RangerResourcePermissions getResourcePermissions(RangerResourcePermissionsRequest request) throws RangerAuthzException {
+        validateRequest(request);
+
+        RangerAuthzPlugin plugin = getOrCreatePlugin(request.getContext().getServiceName(), request.getContext().getServiceType());
+
+        return plugin.getResourcePermissions(request);
+    }
+
     public RangerAuthzResult authorize(RangerAuthzRequest request, RangerAuthzAuditHandler auditHandler) throws RangerAuthzException {
         validateRequest(request);
 
@@ -122,13 +133,8 @@ public class RangerEmbeddedAuthorizer extends RangerAuthorizer {
         return authorize(request, plugin, auditHandler);
     }
 
-    @Override
-    public RangerResourcePermissions getResourcePermissions(RangerResourceInfo resource, RangerAccessContext context) throws RangerAuthzException {
-        validateAccessContext(context);
-
-        RangerAuthzPlugin plugin = getOrCreatePlugin(context.getServiceName(), context.getServiceType());
-
-        return plugin.getResourcePermissions(resource, context);
+    public Set<String> getLoadedServices() {
+        return new HashSet<>(this.plugins.keySet());
     }
 
     @Override
@@ -206,24 +212,18 @@ public class RangerEmbeddedAuthorizer extends RangerAuthorizer {
         return result;
     }
 
-    private RangerAuthzPlugin getOrCreatePlugin(String serviceName, String serviceType) throws RangerAuthzException {
-        RangerAuthzPlugin ret = plugins.get(serviceName);
+    private RangerAuthzPlugin getOrCreatePlugin(String serviceName, String serviceType) {
+        return plugins.computeIfAbsent(serviceName, k -> createPlugin(serviceName, serviceType));
+    }
 
-        if (ret == null) {
-            synchronized (plugins) {
-                ret = plugins.get(serviceName);
+    private RangerAuthzPlugin createPlugin(String serviceName, String serviceType) {
+        Properties pluginProperties = config.getServiceProperties(serviceName, serviceType);
 
-                if (ret == null) {
-                    Properties pluginProperties = this.config.getServiceProperties(serviceName, serviceType);
+        LOG.debug("properties for service {}: {}", serviceName, pluginProperties);
 
-                    LOG.debug("properties for service {}: {}", serviceName, pluginProperties);
+        RangerAuthzPlugin ret = new RangerAuthzPlugin(serviceType, serviceName, appType, pluginProperties);
 
-                    ret = new RangerAuthzPlugin(serviceType, serviceName, pluginProperties);
-
-                    plugins.put(serviceName, ret);
-                }
-            }
-        }
+        LOG.info("Created plugin: serviceName={}, serviceType={}", serviceName, serviceType);
 
         return ret;
     }

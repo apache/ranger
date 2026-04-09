@@ -242,7 +242,7 @@ function KeyCreate(props) {
         initialValues={{
           attributes: [{ name: "", value: "" }],
           cipher: "AES/CTR/NoPadding",
-          length: "128"
+          length: "256"
         }}
         render={({
           handleSubmit,

@@ -80,6 +80,7 @@ public class KMS {
     private static final String KEY_NAME_VALIDATION     = "[a-z,A-Z,0-9](?!.*--)(?!.*__)(?!.*-_)(?!.*_-)[\\w\\-\\_]*";
     private static final int    MAX_NUM_PER_BATCH       = 10000;
     private static final String GENERATE_DEK_PATH_CONST = "_dek";
+    private static final int    DEFAULT_KEY_SIZE        = 256;
 
     private final KeyProviderCryptoExtension provider;
     private final KMSAudit                   kmsAudit;
@@ -113,7 +114,7 @@ public class KMS {
 
             final String cipher      = (String) jsonKey.get(KMSRESTConstants.CIPHER_FIELD);
             final String material    = (String) jsonKey.get(KMSRESTConstants.MATERIAL_FIELD);
-            final int    length      = (jsonKey.containsKey(KMSRESTConstants.LENGTH_FIELD)) ? (Integer) jsonKey.get(KMSRESTConstants.LENGTH_FIELD) : 0;
+            final int    length      = (jsonKey.containsKey(KMSRESTConstants.LENGTH_FIELD)) ? (Integer) jsonKey.get(KMSRESTConstants.LENGTH_FIELD) : DEFAULT_KEY_SIZE;
             final String description = (String) jsonKey.get(KMSRESTConstants.DESCRIPTION_FIELD);
 
             LOG.debug("Creating key: name={}, cipher={}, keyLength={}, description={}", name, cipher, length, description);

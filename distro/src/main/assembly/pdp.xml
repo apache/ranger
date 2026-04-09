@@ -1,0 +1,207 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one or more
+  contributor license agreements.  See the NOTICE file distributed with
+  this work for additional information regarding copyright ownership.
+  The ASF licenses this file to You under the Apache License, Version 2.0
+  (the "License"); you may not use this file except in compliance with
+  the License.  You may obtain a copy of the License at
+
+      http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+<assembly>
+    <id>pdp</id>
+    <formats>
+        <format>tar.gz</format>
+    </formats>
+    <baseDirectory>${project.parent.name}-${project.version}-pdp</baseDirectory>
+    <includeBaseDirectory>true</includeBaseDirectory>
+
+    <moduleSets>
+        <!-- ranger-pdp main JAR → dist/; selected runtime dependencies → lib/ -->
+        <moduleSet>
+            <useAllReactorProjects>true</useAllReactorProjects>
+            <includes>
+                <include>org.apache.ranger:ranger-pdp</include>
+                <include>org.apache.ranger:credentialbuilder</include>
+                <include>org.apache.ranger:authz-embedded</include>
+                <include>org.apache.ranger:ranger-audit-core</include>
+                <include>org.apache.ranger:ranger-audit-dest-hdfs</include>
+                <include>org.apache.ranger:ranger-audit-dest-solr</include>
+                <include>org.apache.ranger:ranger-authn</include>
+                <include>org.apache.ranger:ranger-authz-api</include>
+                <include>org.apache.ranger:ranger-common-utils</include>
+                <include>org.apache.ranger:ranger-plugin-classloader</include>
+                <include>org.apache.ranger:ranger-plugins-common</include>
+                <include>org.apache.ranger:ranger-plugins-cred</include>
+                <include>org.apache.ranger:ugsync-util</include>
+            </includes>
+            <binaries>
+                <outputDirectory>lib</outputDirectory>
+                <includeDependencies>true</includeDependencies>
+                <unpack>false</unpack>
+                <directoryMode>755</directoryMode>
+                <fileMode>644</fileMode>
+                <includes>
+                    <!-- Embedded Tomcat (HTTP/1.1 + HTTP/2) -->
+                    <include>org.apache.tomcat.embed:tomcat-embed-core:jar:${tomcat.embed.version}</include>
+                    <include>org.apache.tomcat.embed:tomcat-embed-jasper:jar:${tomcat.embed.version}</include>
+                    <include>org.apache.tomcat.embed:tomcat-embed-el:jar:${tomcat.embed.version}</include>
+                    <include>org.apache.tomcat:tomcat-annotations-api:jar:${tomcat.embed.version}</include>
+
+                    <!-- Jersey 2.x (JAX-RS server + Jackson media type) -->
+                    <include>org.glassfish.jersey.core:jersey-server</include>
+                    <include>org.glassfish.jersey.core:jersey-common</include>
+                    <include>org.glassfish.jersey.core:jersey-client</include>
+                    <include>org.glassfish.jersey.containers:jersey-container-servlet-core</include>
+                    <include>org.glassfish.jersey.ext:jersey-entity-filtering</include>
+                    <include>org.glassfish.jersey.inject:jersey-hk2</include>
+                    <include>org.glassfish.jersey.media:jersey-media-json-jackson</include>
+                    <include>jakarta.ws.rs:jakarta.ws.rs-api</include>
+                    <include>javax.inject:javax.inject</include>
+                    <include>javax.validation:validation-api</include>
+
+                    <!--
+                      Jersey-1 client runtime for ranger-plugins-common.
+                      Use client/core only; avoid jersey-bundle to prevent
+                      ASM package clashes with Jersey-2 server scanner.
+                    -->
+                    <include>com.sun.jersey:jersey-client:jar:${jersey-bundle.version}</include>
+                    <include>com.sun.jersey:jersey-core:jar:${jersey-bundle.version}</include>
+
+                    <!-- HK2 (Jersey DI framework) -->
+                    <include>org.glassfish.hk2:hk2-api</include>
+                    <include>org.glassfish.hk2:hk2-locator</include>
+                    <include>org.glassfish.hk2:hk2-utils</include>
+                    <include>org.glassfish.hk2.external:aopalliance-repackaged</include>
+                    <include>org.glassfish.hk2.external:javax.inject</include>
+                    <include>org.glassfish:osgi-resource-locator</include>
+
+                    <!-- Jackson (JSON serialization for authz-api model classes) -->
+                    <include>com.fasterxml.jackson.core:jackson-databind:jar:${fasterxml.jackson.databind.version}</include>
+                    <include>com.fasterxml.jackson.core:jackson-core:jar:${fasterxml.jackson.version}</include>
+                    <include>com.fasterxml.jackson.core:jackson-annotations:jar:${fasterxml.jackson.version}</include>
+                    <include>com.fasterxml.jackson.jaxrs:jackson-jaxrs-json-provider:jar:${fasterxml.jackson.version}</include>
+                    <include>com.fasterxml.jackson.jaxrs:jackson-jaxrs-base:jar:${fasterxml.jackson.version}</include>
+                    <include>com.fasterxml.jackson.module:jackson-module-jaxb-annotations:jar:${fasterxml.jackson.version}</include>
+
+                    <!-- JWT bearer token authentication -->
+                    <include>com.nimbusds:nimbus-jose-jwt:jar:${nimbus-jose-jwt.version}</include>
+                    <include>net.minidev:json-smart</include>
+                    <include>com.nimbusds:content-type</include>
+
+                    <!-- Commons -->
+                    <include>org.apache.commons:commons-lang3:jar:${commons.lang3.version}</include>
+                    <include>commons-codec:commons-codec:jar:${commons.codec.version}</include>
+                    <include>org.apache.commons:commons-collections4:jar:${commons.collections4.version}</include>
+                    <include>commons-collections:commons-collections:jar:${commons.collections.version}</include>
+                    <include>org.apache.commons:commons-configuration2:jar:${commons.configuration.version}</include>
+                    <include>org.apache.commons:commons-compress:jar:${commons.compress.version}</include>
+                    <include>commons-io:commons-io:jar:${commons.io.version}</include>
+                    <include>commons-logging:commons-logging:jar:${commons.logging.version}</include>
+                    <include>org.apache.commons:commons-text:jar:${commons.text.version}</include>
+                    <include>org.eclipse.jetty:jetty-client:jar:${jetty-client.version}</include>
+
+                    <!-- Hadoop client (audit, Kerberos utilities) -->
+                    <include>org.apache.hadoop:hadoop-auth:jar:${hadoop.version}</include>
+                    <include>org.apache.hadoop:hadoop-client-api:jar:${hadoop.version}</include>
+                    <include>org.apache.hadoop:hadoop-client-runtime:jar:${hadoop.version}</include>
+                    <include>org.apache.hadoop.thirdparty:hadoop-shaded-guava</include>
+
+                    <!-- XML / StAX -->
+                    <include>org.codehaus.woodstox:stax2-api:jar:${codehaus.woodstox.stax2api.version}</include>
+                    <include>com.fasterxml.woodstox:woodstox-core:jar:${fasterxml.woodstox.version}</include>
+
+                    <!-- Audit sinks -->
+                    <include>org.apache.solr:solr-solrj</include>
+                    <include>org.apache.httpcomponents:httpmime:jar:${httpcomponents.httpmime.version}</include>
+                    <include>org.apache.httpcomponents:httpclient:jar:${httpcomponents.httpclient.version}</include>
+                    <include>org.apache.httpcomponents:httpcore:jar:${httpcomponents.httpcore.version}</include>
+                    <include>org.apache.zookeeper:zookeeper:jar:${zookeeper.version}</include>
+                    <include>org.noggit:noggit</include>
+
+                    <!-- Native libs (hostname lookup) -->
+                    <include>com.kstruct:gethostname4j</include>
+                    <include>net.java.dev.jna:jna</include>
+                    <include>net.java.dev.jna:jna-platform</include>
+
+                    <!-- Logging -->
+                    <include>org.slf4j:slf4j-api:jar:${slf4j.version}</include>
+                    <include>ch.qos.logback:logback-classic:jar:${logback.version}</include>
+                    <include>ch.qos.logback:logback-core:jar:${logback.version}</include>
+                </includes>
+                <excludes>
+                    <!-- avoid jersey-bundle because it conflicts with Jersey-2 -->
+                    <exclude>com.sun.jersey:jersey-bundle</exclude>
+                </excludes>
+            </binaries>
+        </moduleSet>
+
+    </moduleSets>
+
+    <fileSets>
+        <!-- Default config template (copy to conf/ and customise) -->
+        <fileSet>
+            <directoryMode>755</directoryMode>
+            <fileMode>600</fileMode>
+            <outputDirectory>conf.dist</outputDirectory>
+            <directory>${project.parent.basedir}/pdp/conf.dist</directory>
+        </fileSet>
+
+        <!-- Empty runtime config dir (populated by installer / operator) -->
+        <fileSet>
+            <directoryMode>750</directoryMode>
+            <fileMode>640</fileMode>
+            <outputDirectory>conf</outputDirectory>
+            <directory>${project.parent.basedir}/pdp/conf.dist</directory>
+            <excludes>
+                <exclude>**/*</exclude>
+            </excludes>
+        </fileSet>
+
+        <!-- Empty logs dir -->
+        <fileSet>
+            <directoryMode>755</directoryMode>
+            <outputDirectory>logs</outputDirectory>
+            <directory>${project.parent.basedir}/pdp/conf.dist</directory>
+            <excludes>
+                <exclude>**/*</exclude>
+            </excludes>
+        </fileSet>
+
+        <!-- Version file (generated by distro build) -->
+        <fileSet>
+            <directoryMode>755</directoryMode>
+            <outputDirectory></outputDirectory>
+            <directory>${project.build.directory}</directory>
+            <includes>
+                <include>version</include>
+            </includes>
+            <fileMode>444</fileMode>
+        </fileSet>
+    </fileSets>
+
+    <files>
+        <!-- Service control script (placed at root; symlinked to /usr/bin during install) -->
+        <file>
+            <source>${project.parent.basedir}/pdp/scripts/ranger-pdp-services.sh</source>
+            <outputDirectory></outputDirectory>
+            <destName>ranger-pdp-services.sh</destName>
+            <fileMode>755</fileMode>
+        </file>
+
+        <!-- Init-style wrapper (delegates to ranger-pdp-services.sh via su) -->
+        <file>
+            <source>${project.parent.basedir}/pdp/scripts/ranger-pdp.sh</source>
+            <outputDirectory></outputDirectory>
+            <destName>ranger-pdp</destName>
+            <fileMode>755</fileMode>
+        </file>
+    </files>
+</assembly>

@@ -37,9 +37,9 @@ jobs:
     runs-on: ubuntu-22.04
     timeout-minutes: 60
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - name: Cache for maven dependencies
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: |
             ~/.m2/repository/*/*/*
@@ -48,7 +48,7 @@ jobs:
           restore-keys: |
             maven-repo-
       - name: Set up JDK 8
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           java-version: '8'
           distribution: 'temurin'
@@ -61,13 +61,13 @@ jobs:
           chmod +x coverage.sh && ./coverage.sh
 
       - name: upload coverage results
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: jacoco
           path: target/coverage/all/*
 
       - name: Upload artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: target-8
           path: target/*
@@ -78,9 +78,9 @@ jobs:
     runs-on: ubuntu-22.04
     timeout-minutes: 60
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - name: Cache for maven dependencies
-        uses: actions/cache/restore@v4
+        uses: actions/cache/restore@v5
         with:
           path: |
             ~/.m2/repository/*/*/*
@@ -89,14 +89,14 @@ jobs:
           restore-keys: |
             maven-repo-
       - name: Set up JDK 11
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           java-version: '11'
           distribution: 'temurin'
       - name: build (11)
         run: mvn -T 8 clean verify -pl '!knox-agent' --no-transfer-progress -B -V
       - name: Upload artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: target-11
           path: target/*
@@ -107,9 +107,9 @@ jobs:
     runs-on: ubuntu-24.04 # bumping os version for more disk space
     timeout-minutes: 60 # bumping timeout to allow containers to come up
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - name: Download build-8 artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: target-8
       
@@ -181,9 +181,9 @@ jobs:
     runs-on: ubuntu-24.04 # bumping os version for more disk space
     timeout-minutes: 60 # bumping timeout to allow containers to come up
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - name: Download build-8 artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: target-8
 
@@ -198,7 +198,7 @@ jobs:
         run: docker system prune --all --force --volumes
 
       - name: Cache downloaded archives
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: dev-support/ranger-docker/downloads
           key: ${{ runner.os }}-ranger-downloads-${{ hashFiles('dev-support/ranger-docker/.env') }}

@@ -1,0 +1,240 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" href="configuration.xsl"?>
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one or more
+  contributor license agreements.  See the NOTICE file distributed with
+  this work for additional information regarding copyright ownership.
+  The ASF licenses this file to You under the Apache License, Version 2.0
+  (the "License"); you may not use this file except in compliance with
+  the License.  You may obtain a copy of the License at
+
+      http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+<!-- Ranger PDP Server - Docker Configuration -->
+<configuration>
+  <property>
+    <name>ranger.pdp.port</name>
+    <value>6500</value>
+  </property>
+
+  <property>
+    <name>ranger.pdp.log.dir</name>
+    <value>/var/log/ranger/pdp</value>
+  </property>
+
+  <property>
+    <name>ranger.pdp.service.*.delegation.users</name>
+    <value>ranger</value>
+  </property>
+
+  <!-- Only delegation users are allowed call on behalf of other users -->
+  <property>
+    <name>ranger.pdp.service.dev_hdfs.delegation.users</name>
+    <value>hdfs</value>
+  </property>
+
+  <property>
+    <name>ranger.pdp.service.dev_hive.delegation.users</name>
+    <value>hive</value>
+  </property>
+
+  <property>
+    <name>ranger.pdp.service.dev_hbase.delegation.users</name>
+    <value>hbase</value>
+  </property>
+
+  <property>
+    <name>ranger.pdp.service.dev_kafka.delegation.users</name>
+    <value>kafka</value>
+  </property>
+
+  <property>
+    <name>ranger.pdp.service.dev_trino.delegation.users</name>
+    <value>trino</value>
+  </property>
+
+  <property>
+    <name>ranger.pdp.service.dev_polaris.delegation.users</name>
+    <value>polaris</value>
+  </property>
+
+  <!-- SSL/TLS: disabled for Docker dev environment -->
+  <property>
+    <name>ranger.pdp.ssl.enabled</name>
+    <value>false</value>
+  </property>
+
+  <!-- HTTP/2 -->
+  <property>
+    <name>ranger.pdp.http2.enabled</name>
+    <value>true</value>
+  </property>
+
+  <!-- Connector concurrency / queue limits -->
+  <property>
+    <name>ranger.pdp.http.connector.maxThreads</name>
+    <value>200</value>
+  </property>
+
+  <property>
+    <name>ranger.pdp.http.connector.minSpareThreads</name>
+    <value>20</value>
+  </property>
+
+  <property>
+    <name>ranger.pdp.http.connector.acceptCount</name>
+    <value>100</value>
+  </property>
+
+  <property>
+    <name>ranger.pdp.http.connector.maxConnections</name>
+    <value>10000</value>
+  </property>
+
+  <!-- Authentication for incoming REST requests -->
+  <property>
+    <name>ranger.pdp.authn.types</name>
+    <value>header,jwt,kerberos</value>
+  </property>
+
+  <!-- HTTP Header authentication -->
+  <property>
+    <name>ranger.pdp.authn.header.enabled</name>
+    <value>false</value>
+  </property>
+
+  <property>
+    <name>ranger.pdp.authn.header.username</name>
+    <value>X-Forwarded-User</value>
+  </property>
+
+  <!-- JWT bearer token authentication for incoming REST requests -->
+  <property>
+    <name>ranger.pdp.authn.jwt.enabled</name>
+    <value>false</value>
+  </property>
+
+    <property>
+    <name>ranger.pdp.authn.jwt.provider.url</name>
+    <value/>
+  </property>
+
+  <!-- Kerberos / SPNEGO authentication for incoming REST requests -->
+  <property>
+    <name>ranger.pdp.authn.kerberos.enabled</name>
+    <value>true</value>
+  </property>
+
+    <property>
+    <name>ranger.pdp.authn.kerberos.spnego.principal</name>
+    <value>HTTP/ranger-pdp.rangernw@EXAMPLE.COM</value>
+  </property>
+
+  <property>
+    <name>ranger.pdp.authn.kerberos.spnego.keytab</name>
+    <value>/etc/keytabs/HTTP.keytab</value>
+  </property>
+
+  <property>
+    <name>ranger.pdp.authn.kerberos.name.rules</name>
+    <value>DEFAULT</value>
+  </property>
+
+  <!-- Connection to Ranger Admin Server -->
+  <property>
+    <name>ranger.authz.default.policy.rest.url</name>
+    <value>http://ranger:6080</value>
+  </property>
+
+  <property>
+    <name>ranger.authz.default.policy.rest.client.username</name>
+    <value>admin</value>
+  </property>
+
+  <property>
+    <name>ranger.authz.default.policy.rest.client.password</name>
+    <value>rangerR0cks!</value>
+  </property>
+
+  <property>
+    <name>ranger.authz.default.policy.cache.dir</name>
+    <value>/etc/ranger/cache</value>
+  </property>
+
+  <!-- Audit logs -->
+  <property>
+    <name>ranger.authz.audit.is.enabled</name>
+    <value>true</value>
+  </property>
+
+  <property>
+    <name>ranger.authz.audit.log.status.log.enabled</name>
+    <value>true</value>
+  </property>
+
+  <property>
+    <name>ranger.authz.audit.destination.solr</name>
+    <value>true</value>
+  </property>
+
+  <property>
+    <name>ranger.authz.audit.destination.solr.urls</name>
+    <value>http://ranger-solr:8983/solr/ranger_audits</value>
+  </property>
+
+  <property>
+    <name>ranger.authz.audit.destination.solr.batch.filespool.dir</name>
+    <value>/var/log/ranger/pdp/audit/solr/spool</value>
+  </property>
+
+  <property>
+    <name>ranger.authz.audit.destination.solr.force.use.inmemory.jaas.config</name>
+    <value>true</value>
+  </property>
+
+  <property>
+    <name>ranger.authz.audit.jaas.Client.loginModuleName</name>
+    <value>com.sun.security.auth.module.Krb5LoginModule</value>
+  </property>
+
+  <property>
+    <name>ranger.authz.audit.jaas.Client.loginModuleControlFlag</name>
+    <value>required</value>
+  </property>
+
+  <property>
+    <name>ranger.authz.audit.jaas.Client.option.serviceName</name>
+    <value>HTTP</value>
+  </property>
+
+  <property>
+    <name>ranger.authz.audit.jaas.Client.option.useKeyTab</name>
+    <value>true</value>
+  </property>
+
+  <property>
+    <name>ranger.authz.audit.jaas.Client.option.storeKey</name>
+    <value>false</value>
+  </property>
+
+  <property>
+    <name>ranger.authz.audit.jaas.Client.option.useTicketCache</name>
+    <value>true</value>
+  </property>
+
+  <property>
+    <name>ranger.authz.audit.jaas.Client.option.keyTab</name>
+    <value>/etc/keytabs/rangerpdp.keytab</value>
+  </property>
+
+  <property>
+    <name>ranger.authz.audit.jaas.Client.option.principal</name>
+    <value>rangerpdp/ranger-pdp.rangernw@EXAMPLE.COM</value>
+  </property>
+</configuration>
