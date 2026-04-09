@@ -304,9 +304,9 @@ public abstract class RangerJwtAuthHandler implements RangerAuthHandler {
     }
 
     /**
-     * Validate whether any of the accepted issuer claims is present in the issued
-     * token claims list for issuer. Override this method in subclasses in order
-     * to customize the audience validation behavior.
+     * Validate whether issuer present in token matches configured issuer
+     * Override this method in subclasses in order
+     * to customize the issuer validation behavior.
      *
      * @param jwtToken the JWT token from which the JWT issuer will be obtained
      * @return true if an expected issuer is present, otherwise false
@@ -315,19 +315,12 @@ public abstract class RangerJwtAuthHandler implements RangerAuthHandler {
         boolean valid = false;
         try {
             String tokenIssuer = jwtToken.getJWTClaimsSet().getIssuer();
-            // if no expected issuer is configured then consider any issuer acceptable
-            if (StringUtils.isBlank(issuer)) {
+            // accept if no issuer was configured or the present issuer matches the configured issuer
+            if (StringUtils.isBlank(issuer) || issuer.equals(tokenIssuer)) {
                 valid = true;
+                LOG.debug("JWT token issuer has been successfully validated.");
             } else {
-                // if any of the configured issuers is found then consider it acceptable
-                if (issuer.equals(tokenIssuer)) {
-                    if (LOG.isDebugEnabled()) {
-                        LOG.debug("JWT token issuer has been successfully validated.");
-                    }
-                    valid = true;
-                } else {
-                    LOG.warn("JWT issuer validation failed.");
-                }
+                LOG.warn("JWT issuer validation failed.");
             }
         } catch (ParseException pe) {
             LOG.warn("Unable to parse the JWT token.", pe);
