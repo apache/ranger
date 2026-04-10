@@ -24,7 +24,6 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 
 import org.apache.commons.lang3.StringUtils;
-import com.kstruct.gethostname4j.Hostname;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -87,17 +86,7 @@ public class RangerRESTUtils {
 
 	public static final String REST_PARAM_CAPABILITIES   = "pluginCapabilities";
 
-	public static String hostname;
-
-	static {
-		try {
-			hostname = Hostname.getHostname();
-		}
-		catch(Exception e) {
-			LOG.error("ERROR: Unable to find hostname for the agent ", e);
-			hostname = "unknownHost";
-		}
-	}
+	public static final String hostname = getHostname();
 
     public String getPluginId(String serviceName, String appId) {
         String hostName = null;
@@ -160,4 +149,32 @@ public class RangerRESTUtils {
 
 		return ret;
 	}
+
+    private static String getHostname() {
+        String hostname = null;
+
+        try {
+            hostname = System.getenv("HOSTNAME");
+        } catch (SecurityException excp) {
+            LOG.error("Error in getting environment HOSTNAME", excp);
+        }
+
+        if (StringUtils.isBlank(hostname)) {
+            try {
+                hostname = System.getenv("COMPUTERNAME");
+            } catch (SecurityException excp) {
+                LOG.error("Error in getting environment COMPUTERNAME", excp);
+            }
+
+            if (StringUtils.isBlank(hostname)) {
+                try {
+                    hostname = InetAddress.getLocalHost().getHostName();
+                } catch (Exception e) {
+                    LOG.error("ERROR: unable to find hostname", e);
+                }
+            }
+        }
+
+        return StringUtils.isBlank(hostname) ? "unknownHost" : hostname.trim();
+    }
 }
