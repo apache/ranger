@@ -162,12 +162,11 @@ public class RangerRESTUtils {
                 try {
                     hostname = InetAddress.getLocalHost().getHostName();
                 } catch (Exception e) {
-                    LOG.error("ERROR: Unable to find hostname for the agent ", e);
-                    hostname = "unknownHost";
+                    LOG.error("ERROR: unable to find hostname", e);
                 }
             }
         }
 
-        return hostname.trim();
+        return StringUtils.isBlank(hostname) ? "unknownHost" : hostname.trim();
     }
 }
