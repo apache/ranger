@@ -108,10 +108,46 @@ public class TestRangerOzoneAuthorizer {
         assertEquals(RangerInlinePolicy.Mode.INLINE, inlinePolicy.getMode());
         assertNotNull(inlinePolicy.getGrants());
 
-        RequestContext ctxListWithoutSessionPolicy = new RequestContext(hostname, ipAddress, user1, OZONE_SERVICE_ID, IAccessAuthorizer.ACLIdentityType.ANONYMOUS, IAccessAuthorizer.ACLType.LIST, OWNER_NAME);
-        RequestContext ctxReadWithoutSessionPolicy = new RequestContext(hostname, ipAddress, user1, OZONE_SERVICE_ID, IAccessAuthorizer.ACLIdentityType.ANONYMOUS, IAccessAuthorizer.ACLType.READ, OWNER_NAME);
-        RequestContext ctxListWithSessionPolicy    = new RequestContext(hostname, ipAddress, user1, OZONE_SERVICE_ID, IAccessAuthorizer.ACLIdentityType.ANONYMOUS, IAccessAuthorizer.ACLType.LIST, OWNER_NAME, false, sessionPolicy);
-        RequestContext ctxReadWithSessionPolicy    = new RequestContext(hostname, ipAddress, user1, OZONE_SERVICE_ID, IAccessAuthorizer.ACLIdentityType.ANONYMOUS, IAccessAuthorizer.ACLType.READ, OWNER_NAME, false, sessionPolicy);
+        RequestContext ctxListWithoutSessionPolicy = RequestContext.newBuilder()
+                                                      .setHost(hostname)
+                                                      .setIp(ipAddress)
+                                                      .setClientUgi(user1)
+                                                      .setServiceId(OZONE_SERVICE_ID)
+                                                      .setAclType(IAccessAuthorizer.ACLIdentityType.ANONYMOUS)
+                                                      .setAclRights(IAccessAuthorizer.ACLType.LIST)
+                                                      .setOwnerName(OWNER_NAME)
+                                                      .build();
+        RequestContext ctxReadWithoutSessionPolicy = RequestContext.newBuilder()
+                                                      .setHost(hostname)
+                                                      .setIp(ipAddress)
+                                                      .setClientUgi(user1)
+                                                      .setServiceId(OZONE_SERVICE_ID)
+                                                      .setAclType(IAccessAuthorizer.ACLIdentityType.ANONYMOUS)
+                                                      .setAclRights(IAccessAuthorizer.ACLType.READ)
+                                                      .setOwnerName(OWNER_NAME)
+                                                      .build();
+        RequestContext ctxListWithSessionPolicy    = RequestContext.newBuilder()
+                                                      .setHost(hostname)
+                                                      .setIp(ipAddress)
+                                                      .setClientUgi(user1)
+                                                      .setServiceId(OZONE_SERVICE_ID)
+                                                      .setAclType(IAccessAuthorizer.ACLIdentityType.ANONYMOUS)
+                                                      .setAclRights(IAccessAuthorizer.ACLType.LIST)
+                                                      .setOwnerName(OWNER_NAME)
+                                                      .setRecursiveAccessCheck(false)
+                                                      .setSessionPolicy(sessionPolicy)
+                                                      .build();
+        RequestContext ctxReadWithSessionPolicy    = RequestContext.newBuilder()
+                                                      .setHost(hostname)
+                                                      .setIp(ipAddress)
+                                                      .setClientUgi(user1)
+                                                      .setServiceId(OZONE_SERVICE_ID)
+                                                      .setAclType(IAccessAuthorizer.ACLIdentityType.ANONYMOUS)
+                                                      .setAclRights(IAccessAuthorizer.ACLType.READ)
+                                                      .setOwnerName(OWNER_NAME)
+                                                      .setRecursiveAccessCheck(false)
+                                                      .setSessionPolicy(sessionPolicy)
+                                                      .build();
 
         // user1 doesn't have access without session-policy
         assertFalse(ozoneAuthorizer.checkAccess(vol1, ctxListWithoutSessionPolicy), "session-policy should not allow list on volume vol1");
@@ -144,10 +180,46 @@ public class TestRangerOzoneAuthorizer {
         assertEquals(RangerInlinePolicy.Mode.INLINE, inlinePolicy.getMode());
         assertNull(inlinePolicy.getGrants());
 
-        RequestContext ctxListWithoutSessionPolicy = new RequestContext(hostname, ipAddress, user1, OZONE_SERVICE_ID, IAccessAuthorizer.ACLIdentityType.ANONYMOUS, IAccessAuthorizer.ACLType.LIST, OWNER_NAME);
-        RequestContext ctxReadWithoutSessionPolicy = new RequestContext(hostname, ipAddress, user1, OZONE_SERVICE_ID, IAccessAuthorizer.ACLIdentityType.ANONYMOUS, IAccessAuthorizer.ACLType.READ, OWNER_NAME);
-        RequestContext ctxListWithSessionPolicy    = new RequestContext(hostname, ipAddress, user1, OZONE_SERVICE_ID, IAccessAuthorizer.ACLIdentityType.ANONYMOUS, IAccessAuthorizer.ACLType.LIST, OWNER_NAME, false, sessionPolicy);
-        RequestContext ctxReadWithSessionPolicy    = new RequestContext(hostname, ipAddress, user1, OZONE_SERVICE_ID, IAccessAuthorizer.ACLIdentityType.ANONYMOUS, IAccessAuthorizer.ACLType.READ, OWNER_NAME, false, sessionPolicy);
+        RequestContext ctxListWithoutSessionPolicy = RequestContext.newBuilder()
+                                                      .setHost(hostname)
+                                                      .setIp(ipAddress)
+                                                      .setClientUgi(user1)
+                                                      .setServiceId(OZONE_SERVICE_ID)
+                                                      .setAclType(IAccessAuthorizer.ACLIdentityType.ANONYMOUS)
+                                                      .setAclRights(IAccessAuthorizer.ACLType.LIST)
+                                                      .setOwnerName(OWNER_NAME)
+                                                      .build();
+        RequestContext ctxReadWithoutSessionPolicy = RequestContext.newBuilder()
+                                                      .setHost(hostname)
+                                                      .setIp(ipAddress)
+                                                      .setClientUgi(user1)
+                                                      .setServiceId(OZONE_SERVICE_ID)
+                                                      .setAclType(IAccessAuthorizer.ACLIdentityType.ANONYMOUS)
+                                                      .setAclRights(IAccessAuthorizer.ACLType.READ)
+                                                      .setOwnerName(OWNER_NAME)
+                                                      .build();
+        RequestContext ctxListWithSessionPolicy    = RequestContext.newBuilder()
+                                                      .setHost(hostname)
+                                                      .setIp(ipAddress)
+                                                      .setClientUgi(user1)
+                                                      .setServiceId(OZONE_SERVICE_ID)
+                                                      .setAclType(IAccessAuthorizer.ACLIdentityType.ANONYMOUS)
+                                                      .setAclRights(IAccessAuthorizer.ACLType.LIST)
+                                                      .setOwnerName(OWNER_NAME)
+                                                      .setRecursiveAccessCheck(false)
+                                                      .setSessionPolicy(sessionPolicy)
+                                                      .build();
+        RequestContext ctxReadWithSessionPolicy    = RequestContext.newBuilder()
+                                                      .setHost(hostname)
+                                                      .setIp(ipAddress)
+                                                      .setClientUgi(user1)
+                                                      .setServiceId(OZONE_SERVICE_ID)
+                                                      .setAclType(IAccessAuthorizer.ACLIdentityType.ANONYMOUS)
+                                                      .setAclRights(IAccessAuthorizer.ACLType.READ)
+                                                      .setOwnerName(OWNER_NAME)
+                                                      .setRecursiveAccessCheck(false)
+                                                      .setSessionPolicy(sessionPolicy)
+                                                      .build();
 
         // user1 doesn't have access without session-policy
         assertFalse(ozoneAuthorizer.checkAccess(vol1, ctxListWithoutSessionPolicy), "session-policy should not allow list on volume vol1");
@@ -184,8 +256,28 @@ public class TestRangerOzoneAuthorizer {
         assertTrue(inlinePolicy.getGrants().contains(new RangerInlinePolicy.Grant(null, new HashSet<>(Arrays.asList("volume:vol1", "bucket:vol1/buck1")), Collections.singleton("list"))));
         assertTrue(inlinePolicy.getGrants().contains(new RangerInlinePolicy.Grant(null, Collections.singleton("key:vol1/buck1/key1"), Collections.singleton("read"))));
 
-        RequestContext ctxListWithSessionPolicy = new RequestContext(hostname, ipAddress, user1, OZONE_SERVICE_ID, IAccessAuthorizer.ACLIdentityType.ANONYMOUS, IAccessAuthorizer.ACLType.LIST, OWNER_NAME, false, sessionPolicy);
-        RequestContext ctxReadWithSessionPolicy = new RequestContext(hostname, ipAddress, user1, OZONE_SERVICE_ID, IAccessAuthorizer.ACLIdentityType.ANONYMOUS, IAccessAuthorizer.ACLType.READ, OWNER_NAME, false, sessionPolicy);
+        RequestContext ctxListWithSessionPolicy = RequestContext.newBuilder()
+                                                      .setHost(hostname)
+                                                      .setIp(ipAddress)
+                                                      .setClientUgi(user1)
+                                                      .setServiceId(OZONE_SERVICE_ID)
+                                                      .setAclType(IAccessAuthorizer.ACLIdentityType.ANONYMOUS)
+                                                      .setAclRights(IAccessAuthorizer.ACLType.LIST)
+                                                      .setOwnerName(OWNER_NAME)
+                                                      .setRecursiveAccessCheck(false)
+                                                      .setSessionPolicy(sessionPolicy)
+                                                      .build();
+        RequestContext ctxReadWithSessionPolicy = RequestContext.newBuilder()
+                                                      .setHost(hostname)
+                                                      .setIp(ipAddress)
+                                                      .setClientUgi(user1)
+                                                      .setServiceId(OZONE_SERVICE_ID)
+                                                      .setAclType(IAccessAuthorizer.ACLIdentityType.ANONYMOUS)
+                                                      .setAclRights(IAccessAuthorizer.ACLType.READ)
+                                                      .setOwnerName(OWNER_NAME)
+                                                      .setRecursiveAccessCheck(false)
+                                                      .setSessionPolicy(sessionPolicy)
+                                                      .build();
 
         // user1 should have access with sessionPolicy
         assertTrue(ozoneAuthorizer.checkAccess(vol1, ctxListWithSessionPolicy), "session-policy should allow list on volume vol1");
