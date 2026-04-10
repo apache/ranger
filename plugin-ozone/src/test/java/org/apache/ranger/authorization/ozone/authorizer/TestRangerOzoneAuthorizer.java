@@ -70,12 +70,12 @@ public class TestRangerOzoneAuthorizer {
     private final OzoneGrant grantRead = new OzoneGrant(Collections.singleton(key1), Collections.singleton(IAccessAuthorizer.ACLType.READ));
 
     private final RequestContext.Builder reqCtxBuilder = RequestContext.newBuilder()
-      .setHost(hostname)
-      .setIp(ipAddress)
-      .setClientUgi(user1)
-      .setServiceId(OZONE_SERVICE_ID)
-      .setAclType(IAccessAuthorizer.ACLIdentityType.ANONYMOUS)
-      .setOwnerName(OWNER_NAME);
+            .setHost(hostname)
+            .setIp(ipAddress)
+            .setClientUgi(user1)
+            .setServiceId(OZONE_SERVICE_ID)
+            .setAclType(IAccessAuthorizer.ACLIdentityType.ANONYMOUS)
+            .setOwnerName(OWNER_NAME);
 
     @BeforeAll
     public static void setUpBeforeClass() {
