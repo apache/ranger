@@ -101,7 +101,7 @@ public abstract class RangerJwtAuthHandler implements RangerAuthHandler {
             audiences = Arrays.asList(audiencesStr.split(","));
         }
 
-        // setup issuers if configured
+        // setup issuer if configured
         String issuerStr = config.getProperty(KEY_JWT_ISS);
         if (StringUtils.isNotBlank(issuerStr)) {
             issuer = issuerStr.trim();
