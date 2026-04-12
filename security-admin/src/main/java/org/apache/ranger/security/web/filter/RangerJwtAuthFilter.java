@@ -18,6 +18,10 @@
  */
 package org.apache.ranger.security.web.filter;
 
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.security.UserGroupInformation;
+import org.apache.hadoop.security.authorize.AuthorizationException;
+import org.apache.hadoop.security.authorize.ProxyUsers;
 import org.apache.ranger.authz.handler.RangerAuth;
 import org.apache.ranger.authz.handler.jwt.RangerDefaultJwtAuthHandler;
 import org.apache.ranger.authz.handler.jwt.RangerJwtAuthHandler;
@@ -75,6 +79,9 @@ public class RangerJwtAuthFilter extends RangerDefaultJwtAuthHandler implements 
             config.setProperty(RangerJwtAuthHandler.KEY_JWT_AUDIENCES, PropertiesUtil.getProperty(RangerSSOAuthenticationFilter.JWT_AUDIENCES, ""));
 
             super.initialize(config);
+
+            Configuration conf = getProxyuserConfiguration();
+            ProxyUsers.refreshSuperUserGroupsConfiguration(conf, "ranger.proxyuser.");
         } catch (Exception e) {
             LOG.error("Failed to initialize Ranger Admin JWT Auth Filter.", e);
         }
@@ -115,6 +122,36 @@ public class RangerJwtAuthFilter extends RangerDefaultJwtAuthHandler implements 
         } else {
             LOG.warn("<<<=== RangerJwtAuthFilter.doFilter() - Failed to authenticate request using Ranger JWT authentication framework.");
         }
+    }
+
+    @Override
+    protected boolean isProxyEnabled() {
+        return PropertiesUtil.getBooleanProperty("ranger.authentication.allow.trustedproxy", false);
+    }
+
+    @Override
+    protected boolean authorizeProxyUser(String realUser, String doAsUser, String remoteAddr) {
+        try {
+            UserGroupInformation ugi = UserGroupInformation.createRemoteUser(realUser);
+            ugi = UserGroupInformation.createProxyUser(doAsUser, ugi);
+            ProxyUsers.authorize(ugi, remoteAddr);
+            LOG.debug("RangerJwtAuthFilter.authorizeProxyUser(): ProxyUsers.authorize SUCCEEDED for realUser=[{}], doAs=[{}]",
+                    realUser, doAsUser);
+            return true;
+        } catch (AuthorizationException ex) {
+            LOG.warn("JWT ProxyUsers.authorize failed for doAs=[{}], realUser=[{}]: {}", doAsUser, realUser, ex.getMessage());
+            return false;
+        }
+    }
+
+    private Configuration getProxyuserConfiguration() {
+        Configuration conf = new Configuration(false);
+        PropertiesUtil.getPropertiesMap().forEach((k, v) -> {
+            if (k.startsWith("ranger.proxyuser.")) {
+                conf.set(k, v);
+            }
+        });
+        return conf;
     }
 
     @Override
