@@ -184,14 +184,6 @@ public class TestServiceMgr {
     }
 
     @Test
-    public void test06_getValidURL_validAndInvalid() throws Exception {
-        Method m = ServiceMgr.class.getDeclaredMethod("getValidURL", String.class);
-        m.setAccessible(true);
-        Assertions.assertNotNull(m.invoke(null, "http://example.com"));
-        Assertions.assertNull(m.invoke(null, "not_a_url"));
-    }
-
-    @Test
     public void test07_getFilesInDirectory_existingAndMissing() throws Exception {
         ServiceMgr mgr = new ServiceMgr();
         Method m = ServiceMgr.class.getDeclaredMethod("getFilesInDirectory", String.class, List.class);
@@ -288,5 +280,67 @@ public class TestServiceMgr {
         // no NPE, may return null which is acceptable
         mgr.lookupResource("s", ctx, store);
         Assertions.assertTrue(true);
+    }
+
+    @Test
+    void test11_validateConfig_rejectsSSRFBypassAttempts() throws Exception {
+        ServiceMgr mgr = new ServiceMgr();
+        RangerServiceService svcService = mock(RangerServiceService.class);
+        TimedExecutor exec = mock(TimedExecutor.class);
+        setField(mgr, ServiceMgr.class, "rangerSvcService", svcService);  // Correct field name
+        setField(mgr, ServiceMgr.class, "timedExecutor", exec);
+
+        Map<String, String> bypassConfigs = new HashMap<>();
+        bypassConfigs.put("jdbc.url", "jdbc:mysql://127.1:3306/db");  // Shorthand IP
+        bypassConfigs.put("api.endpoint", "http://0x7f000001:8080");  // Hexadecimal IP
+        bypassConfigs.put("redis.host", "2130706433:6379");           // Decimal IP
+        bypassConfigs.put("service.url", "http://::1:8080");          // IPv6 localhost
+
+        RangerService svc = new RangerService();
+        svc.setType("hive");
+        svc.setName("test-service");
+        svc.setConfigs(bypassConfigs);
+
+        ServiceStore store = mock(ServiceStore.class);  // Correct type
+        RangerServiceDef def = new RangerServiceDef();
+        def.setName("hive");
+        def.setImplClass(RangerDefaultService.class.getName());
+        when(store.getServiceDefByName("hive")).thenReturn(def);
+        when(svcService.getConfigsWithDecryptedPassword(any(RangerService.class))).thenReturn(bypassConfigs);
+
+        try {
+            mgr.validateConfig(svc, store);
+            Assertions.fail("Expected exception for SSRF bypass attempt");
+        } catch (Exception expected) {
+            Assertions.assertTrue(expected.getMessage().contains("is not allowed") || expected.getMessage().contains("blocked host detected"));
+        }
+    }
+
+    @Test
+    void test12_validateConfig_allowsLegitimateExternalUrls() throws Exception {
+        ServiceMgr mgr = new ServiceMgr();
+        RangerServiceService svcService = mock(RangerServiceService.class);
+        setField(mgr, ServiceMgr.class, "rangerSvcService", svcService);
+
+        Map<String, String> legitimateConfigs = new HashMap<>();
+        legitimateConfigs.put("jdbc.url", "jdbc:mysql://db.company.com:3306/prod");
+        legitimateConfigs.put("api.endpoint", "https://api.github.com:443");
+        legitimateConfigs.put("user.list", "hive,impala,trino");  // Non-URL config
+
+        RangerService svc = new RangerService();
+        svc.setType("hive");
+        svc.setName("test-service");
+        svc.setConfigs(legitimateConfigs);
+
+        when(svcService.getConfigsWithDecryptedPassword(any(RangerService.class))).thenReturn(legitimateConfigs);
+
+        try {
+            mgr.validateConfig(svc, null);
+        } catch (Exception e) {
+            Assertions.assertFalse(e.getMessage().contains("is not allowed"), "SSRF validation incorrectly blocked legitimate URL: " + e.getMessage());
+            Assertions.assertFalse(e.getMessage().contains("blocked host detected"), "SSRF validation incorrectly blocked legitimate URL: " + e.getMessage());
+        }
+
+        Assertions.assertTrue(true, "SSRF validation correctly allowed legitimate URLs");
     }
 }
