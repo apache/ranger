@@ -763,11 +763,6 @@
             <name>jetbrains-intellij-dependencies</name>
             <url>https://packages.jetbrains.team/maven/p/ij/intellij-dependencies</url>
         </repository>
-        <repository>
-            <id>ozone-2.1.0-rc</id>
-            <name>ozone-2.1.0-rc</name>
-            <url>https://repository.apache.org/content/repositories/orgapacheozone-1061</url>
-        </repository>
     </repositories>
     <distributionManagement>
         <repository>
