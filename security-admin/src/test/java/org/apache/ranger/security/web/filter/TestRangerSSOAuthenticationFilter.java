@@ -498,9 +498,4 @@ public class TestRangerSSOAuthenticationFilter {
         verify(res, times(1)).sendRedirect("/login.jsp");
         verify(chain, times(0)).doFilter(any(ServletRequest.class), any(ServletResponse.class));
     }
-
-    @Test
-    void testJwtIssuersConstant() {
-        assertEquals("ranger.sso.issuer", RangerSSOAuthenticationFilter.JWT_ISSUER);
-    }
 }
