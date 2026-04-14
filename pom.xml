@@ -99,6 +99,7 @@
 
         <!-- GCP HSM -->
         <google.cloud.kms>2.3.0</google.cloud.kms>
+        <google.failureaccess.version>1.0.3</google.failureaccess.version>
         <google.guava.version>33.4.8-jre</google.guava.version>
         <google.re2j.version>1.2</google.re2j.version>
         <googlecode.log4jdbc.version>1.2</googlecode.log4jdbc.version>
