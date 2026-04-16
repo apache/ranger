@@ -134,6 +134,83 @@
         <value>UNIX</value>
         <description />
     </property>
+    <!-- Kerberos Properties Start-->
+    <property>
+        <name>ranger.spnego.kerberos.principal</name>
+        <value>HTTP/ranger.rangernw@EXAMPLE.COM</value>
+        <description />
+    </property>
+    <property>
+        <name>ranger.spnego.kerberos.keytab</name>
+        <value>/etc/keytabs/HTTP.keytab</value>
+        <description />
+    </property>
+    <property>
+        <name>ranger.admin.kerberos.token.valid.seconds</name>
+        <value>30</value>
+        <description />
+    </property>
+    <property>
+        <name>ranger.admin.kerberos.principal</name>
+        <value>rangeradmin/ranger.rangernw@EXAMPLE.COM</value>
+        <description />
+    </property>
+    <property>
+        <name>ranger.admin.kerberos.keytab</name>
+        <value>/etc/keytabs/rangeradmin.keytab</value>
+        <description />
+    </property>
+    <property>
+        <name>ranger.lookup.kerberos.principal</name>
+        <value>rangerlookup/ranger.rangernw@EXAMPLE.COM</value>
+        <description />
+    </property>
+    <property>
+        <name>ranger.lookup.kerberos.keytab</name>
+        <value>/etc/keytabs/rangerlookup.keytab</value>
+        <description />
+    </property>
+    <property>
+        <name>xasecure.audit.jaas.Client.loginModuleName</name>
+        <value>com.sun.security.auth.module.Krb5LoginModule</value>
+        <description />
+    </property>
+    <property>
+        <name>xasecure.audit.jaas.Client.loginModuleControlFlag</name>
+        <value>required</value>
+        <description />
+    </property>
+    <property>
+        <name>xasecure.audit.jaas.Client.option.useKeyTab</name>
+        <value>true</value>
+        <description />
+    </property>
+    <property>
+        <name>xasecure.audit.jaas.Client.option.storeKey</name>
+        <value>true</value>
+        <description />
+    </property>
+    <property>
+        <name>xasecure.audit.jaas.Client.option.useTicketCache</name>
+        <value>true</value>
+        <description />
+    </property>
+    <property>
+        <name>xasecure.audit.jaas.Client.option.serviceName</name>
+        <value>ranger</value>
+        <description />
+    </property>
+    <property>
+        <name>xasecure.audit.jaas.Client.option.keyTab</name>
+        <value>/etc/keytabs/rangeradmin.keytab</value>
+        <description />
+    </property>
+    <property>
+        <name>xasecure.audit.jaas.Client.option.principal</name>
+        <value>rangeradmin/ranger.rangernw@EXAMPLE.COM</value>
+        <description />
+    </property>
+    <!-- Kerberos Properties End-->
     <property>
         <name>ranger.ldap.url</name>
         <value>ldap://</value>
