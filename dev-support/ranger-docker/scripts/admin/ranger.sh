@@ -4,116 +4,18 @@ set -euo pipefail
 
 RANGER_HOME="${RANGER_HOME:-/opt/ranger}"
 RANGER_ADMIN_DIR="${RANGER_HOME}/admin"
-CONF_DIR="${RANGER_ADMIN_CONF:-${RANGER_ADMIN_DIR}/ews/webapp/WEB-INF/classes/conf}"
-CONFIGS_DIR="${RANGER_ADMIN_DIR}/configs"
-CONFIG_XML_DEST="${CONF_DIR}/ranger-admin-site.xml"
-ADMIN_XML_HELPER="/home/ranger/scripts/ranger_admin_xml_config.py"
 USER_PASSWORD_BOOTSTRAP_HELPER="/home/ranger/scripts/user_password_bootstrap.py"
 SERVICES_MARKER="/opt/ranger/.rangeradminservicescreated"
 
 # if kerberos is enabled, below keytabs must be mounted:
 # rangeradmin.keytab, rangerlookup.keytab, HTTP.keytab, and testusers.keytab
 
-sync_admin_configs() {
-  local conf_file
-  mkdir -p "${CONF_DIR}"
+configure_java_opts() {
+  local db_password="${RANGER_ADMIN_DB_PASSWORD:-}"
 
-  for conf_file in \
-    "ranger-admin-site.xml" \
-    "core-site.xml" \
-    "ranger-admin-default-site.xml"; do
-    if [ -f "${CONFIGS_DIR}/${conf_file}" ]; then
-      cp -f "${CONFIGS_DIR}/${conf_file}" "${CONF_DIR}/${conf_file}"
-    fi
-  done
-}
-
-xml_prop() {
-  local key="$1"
-  local file="${2:-${CONFIG_XML_DEST}}"
-
-  [ -f "${file}" ] || return 0
-  python3 "${ADMIN_XML_HELPER}" get-property --file "${file}" --name "${key}"
-}
-
-get_config_value() {
-  local env_key="$1"
-  local xml_key="$2"
-  local default_value="${3:-}"
-  local value="${!env_key:-}"
-
-  if [ -n "${value}" ]; then
-    printf '%s\n' "${value}"
-    return 0
+  if [ -n "${db_password}" ]; then
+    export JAVA_OPTS="${JAVA_OPTS:-} -Dranger.jpa.jdbc.password=${db_password}"
   fi
-
-  value="$(xml_prop "${xml_key}")"
-  if [ -n "${value}" ]; then
-    printf '%s\n' "${value}"
-    return 0
-  fi
-
-  printf '%s\n' "${default_value}"
-}
-
-sync_db_password_property() {
-  local pass="${RANGER_ADMIN_DB_PASSWORD:-}"
-
-  if [ -z "${pass}" ] || [ ! -f "${CONFIG_XML_DEST}" ]; then
-    return 0
-  fi
-
-  python3 "${ADMIN_XML_HELPER}" set-property \
-    --file "${CONFIG_XML_DEST}" \
-    --name "ranger.jpa.jdbc.password" \
-    --value "${pass}" \
-    --create
-}
-
-ensure_jdbc_driver() {
-  # ensure the JDBC driver is visible to the webapp classloader.
-  local src
-  src="$(get_config_value "SQL_CONNECTOR_JAR" "ranger.jdbc.sqlconnectorjar" "/usr/share/java/postgresql.jar")"
-  local libdir="${RANGER_ADMIN_DIR}/ews/webapp/WEB-INF/lib"
-
-  if [ -f "${src}" ]; then
-    mkdir -p "${libdir}" 2>/dev/null || true
-    if [ ! -f "${libdir}/$(basename "${src}")" ]; then
-      cp -f "${src}" "${libdir}/" 2>/dev/null || true
-    fi
-  fi
-}
-
-prepare_admin_runtime() {
-  local log_dir="${RANGER_ADMIN_LOG_DIR:-/var/log/ranger}"
-  local logback_conf="${RANGER_ADMIN_LOGBACK_CONF_FILE:-${CONF_DIR}/logback.xml}"
-  local pid_dir="${RANGER_PID_DIR_PATH:-/var/run/ranger}"
-  local env_logdir="${CONF_DIR}/ranger-admin-env-logdir.sh"
-  local env_logback="${CONF_DIR}/ranger-admin-env-logback-conf-file.sh"
-  local legacy_log_dir="${RANGER_ADMIN_DIR}/ews/logs"
-  local conf_dist_dir="${RANGER_ADMIN_DIR}/ews/webapp/WEB-INF/classes/conf.dist"
-
-  export RANGER_ADMIN_LOG_DIR="${log_dir}"
-  export RANGER_ADMIN_LOGBACK_CONF_FILE="${logback_conf}"
-  export RANGER_PID_DIR_PATH="${pid_dir}"
-
-  mkdir -p "${CONF_DIR}" "${log_dir}" "${pid_dir}"
-
-  for conf_file in "security-applicationContext.xml" "logback.xml"; do
-    if [ -f "${conf_dist_dir}/${conf_file}" ]; then
-      cp -f "${conf_dist_dir}/${conf_file}" "${CONF_DIR}/${conf_file}"
-    fi
-  done
-
-  if [ ! -e "${legacy_log_dir}" ]; then
-    ln -s "${log_dir}" "${legacy_log_dir}" 2>/dev/null || mkdir -p "${legacy_log_dir}"
-  fi
-
-  printf 'export RANGER_ADMIN_LOG_DIR=%s\n' "${RANGER_ADMIN_LOG_DIR}" > "${env_logdir}"
-  chmod 755 "${env_logdir}"
-
-  printf 'export RANGER_ADMIN_LOGBACK_CONF_FILE=%s\n' "${RANGER_ADMIN_LOGBACK_CONF_FILE}" > "${env_logback}"
-  chmod 755 "${env_logback}"
 }
 
 admin_pid() {
@@ -156,10 +58,7 @@ wait_for_admin() {
 }
 
 cd "${RANGER_ADMIN_DIR}"
-sync_admin_configs
-sync_db_password_property
-ensure_jdbc_driver
-prepare_admin_runtime
+configure_java_opts
 
 python3 "/home/ranger/scripts/dba.py"
 ./ews/ranger-admin-services.sh start

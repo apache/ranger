@@ -39,12 +39,22 @@ RUN    tar xvfz /home/ranger/dist/ranger-${RANGER_VERSION}-admin.tar.gz --direct
     && rm -f /opt/ranger/admin/dba_script.py \
     && rm -f /opt/ranger/admin/db_setup.py \
     && mkdir -p /var/run/ranger /var/log/ranger /usr/share/java/ \
+    && mkdir -p ${RANGER_HOME}/admin/ews/webapp/WEB-INF/classes/conf \
+    && rm -rf ${RANGER_HOME}/admin/ews/logs \
+    && ln -s /var/log/ranger ${RANGER_HOME}/admin/ews/logs \
     && chown -R ranger:ranger ${RANGER_HOME}/admin/ ${RANGER_SCRIPTS}/ /var/run/ranger/ /var/log/ranger/ \
     && chmod 755 ${RANGER_SCRIPTS}/ranger.sh
 
+# Copy config files
+COPY ./scripts/admin/configs/logback.xml                     ${RANGER_HOME}/admin/ews/webapp/WEB-INF/classes/conf
+COPY ./scripts/admin/configs/security-applicationContext.xml ${RANGER_HOME}/admin/ews/webapp/WEB-INF/classes/conf
+
 FROM ranger AS ranger_postgres
 COPY ./downloads/postgresql-42.2.16.jre7.jar         /home/ranger/dist/
-RUN mv /home/ranger/dist/postgresql-42.2.16.jre7.jar /usr/share/java/postgresql.jar
+RUN mv /home/ranger/dist/postgresql-42.2.16.jre7.jar /usr/share/java/postgresql.jar &&\
+    chown ranger:ranger /usr/share/java/postgresql.jar
+ENV SQL_CONNECTOR_JAR=/usr/share/java/postgresql.jar
+ENV DB_FLAVOR=POSTGRES
 
 FROM ranger AS ranger_mysql
 COPY ./downloads/mysql-connector-java-8.0.28.jar  /home/ranger/dist/
@@ -61,6 +71,13 @@ COPY ./downloads/mssql-jdbc-12.8.1.jre8.jar            /home/ranger/dist/
 RUN mv /home/ranger/dist/mssql-jdbc-12.8.1.jre8.jar    /usr/share/java/mssql.jar
 
 FROM ranger_${RANGER_DB_TYPE}
+
+USER root
+RUN mkdir -p "${RANGER_HOME}/admin/ews/webapp/WEB-INF/lib" && \
+    if [ -n "${SQL_CONNECTOR_JAR:-}" ] && [ -f "${SQL_CONNECTOR_JAR}" ]; then \
+      cp -f "${SQL_CONNECTOR_JAR}" "${RANGER_HOME}/admin/ews/webapp/WEB-INF/lib/"; \
+    fi && \
+    chown -R ranger:ranger "${RANGER_HOME}/admin/ews/webapp/WEB-INF/lib" || true
 
 USER ranger
 

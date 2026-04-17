@@ -16,10 +16,9 @@ services:
       - ./dist/keytabs/ranger:/etc/keytabs
       - ./dist/version:/home/ranger/dist/version:ro
       - ./scripts/kdc/krb5.conf:/etc/krb5.conf:ro
-      - ./scripts/hadoop/core-site.xml:/home/ranger/scripts/core-site.xml:ro
-      - ./scripts/admin/core-site.xml:/opt/ranger/admin/configs/core-site.xml:ro
-      - ./scripts/admin/ranger-admin-site.xml:/opt/ranger/admin/configs/ranger-admin-site.xml:ro
-      - ./scripts/admin/ranger-admin-default-site.xml:/opt/ranger/admin/configs/ranger-admin-default-site.xml:ro
+      - ./scripts/hadoop/core-site.xml:/opt/ranger/admin/ews/webapp/WEB-INF/classes/conf/core-site.xml:ro
+      - ./scripts/admin/ranger-admin-site.xml:/opt/ranger/admin/ews/webapp/WEB-INF/classes/conf/ranger-admin-site.xml:ro
+      - ./scripts/admin/ranger-admin-default-site.xml:/opt/ranger/admin/ews/webapp/WEB-INF/classes/conf/ranger-admin-default-site.xml:ro
     stdin_open: true
     tty: true
     networks:
