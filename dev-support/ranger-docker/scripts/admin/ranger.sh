@@ -11,6 +11,9 @@ ADMIN_XML_HELPER="/home/ranger/scripts/ranger_admin_xml_config.py"
 USER_PASSWORD_BOOTSTRAP_HELPER="/home/ranger/scripts/user_password_bootstrap.py"
 SERVICES_MARKER="/opt/ranger/.rangeradminservicescreated"
 
+# if kerberos is enabled, below keytabs must be mounted:
+# rangeradmin.keytab, rangerlookup.keytab, HTTP.keytab, and testusers.keytab
+
 sync_admin_configs() {
   local conf_file
   mkdir -p "${CONF_DIR}"
