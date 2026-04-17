@@ -16,8 +16,10 @@ import os
 import re
 import shlex
 import shutil
+import socket
 import subprocess
 import sys
+import time
 import hashlib
 from dataclasses import dataclass
 
@@ -140,7 +142,8 @@ def _run_command(query: str) -> str:
 def _log_jisql(query: str, db_password: str) -> None:
     """Log a Jisql command with the password masked."""
     if JISQL_DEBUG:
-        logger.info("JISQL %s", query.replace(f" -p '{db_password}'", " -p '********'"))
+        masked_query = query.replace(f" -p '{db_password}'", " -p '********'")
+        logger.info(f"JISQL {masked_query}")
 
 
 def _validate_identifier(name: str) -> str:
@@ -196,7 +199,57 @@ def load_runtime_config() -> dict:
 # Database abstraction
 # ---------------------------------------------------------------------------
 class BaseDB:
-    """Interface that every DB flavour must implement."""
+    """Shared DB bootstrap utilities plus flavour-specific extension points."""
+
+    flavor = "UNKNOWN"
+    default_port = ""
+
+    def __init__(self, *, host: str):
+        self.host = host
+
+    def _resolve_host_and_port(self) -> tuple[str, str]:
+        """Split the configured host string into host and port parts."""
+        host, _, port = self.host.partition(":")
+        return host, port or self.default_port
+
+    def _can_reach_socket(self) -> bool:
+        """Return True if the DB host:port accepts TCP connections."""
+        host, port = self._resolve_host_and_port()
+        try:
+            with socket.create_connection((host, int(port)), timeout=2):
+                return True
+        except OSError:
+            return False
+
+    def _command_succeeds(self, args: list[str], env: dict | None = None) -> bool:
+        """Run a command and return True when it exits successfully."""
+        try:
+            result = subprocess.run(args, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, env=env, check=False)
+        except OSError:
+            return False
+        return result.returncode == 0
+
+    def _is_ready(self, db_name: str, db_user: str, db_password: str) -> bool:
+        """Return True when the target DB is accepting connections."""
+        raise NotImplementedError
+
+    def wait_until_ready(self, db_name: str, db_user: str, db_password: str, timeout_s: int = 600) -> None:
+        """Wait until the database is reachable or raise ConnectionError."""
+        host, port = self._resolve_host_and_port()
+        logger.info(f"Waiting for DB connectivity (flavor={self.flavor} host={host} port={port} db={db_name}) with timeout {timeout_s}s")
+
+        start = time.time()
+        while True:
+            if self._is_ready(db_name, db_user, db_password):
+                logger.info("DB is reachable")
+                return
+
+            elapsed = int(time.time() - start)
+            if elapsed >= timeout_s:
+                raise ConnectionError(f"Timed out after {timeout_s}s waiting for DB connectivity (flavor={self.flavor} host={host} port={port} db={db_name})")
+
+            logger.info(f"Waiting for DB connectivity... elapsed={elapsed}s remaining={timeout_s - elapsed}s")
+            time.sleep(5)
 
     def check_connection(self, db_name, db_user, db_password):
         logger.info("---------- Verifying DB connection ----------")
@@ -211,8 +264,11 @@ class BaseDB:
 class PostgresDB(BaseDB):
     """PostgreSQL-specific implementation of the DB bootstrap interface."""
 
+    flavor = "POSTGRES"
+    default_port = "5432"
+
     def __init__(self, *, host: str, sql_connector_jar: str, java_bin: str, ssl: SSLConfig):
-        self.host = host
+        super().__init__(host=host)
         self.sql_connector_jar = sql_connector_jar
         self.java_bin = java_bin.strip("'")
         self.ssl = ssl
@@ -225,6 +281,19 @@ class PostgresDB(BaseDB):
             return db_name
         match = _JDBC_DB_NAME_RE.search(self.ssl.override_jdbc_connection_string)
         return match.group(1) if match else db_name
+
+    def _is_ready(self, db_name: str, db_user: str, db_password: str) -> bool:
+        """Return True when PostgreSQL is accepting connections."""
+        host, port = self._resolve_host_and_port()
+        env = dict(os.environ, PGPASSWORD=db_password)
+
+        if shutil.which("pg_isready"):
+            return self._command_succeeds(["pg_isready", "-h", host, "-p", port, "-U", db_user, "-d", db_name], env=env)
+
+        if shutil.which("psql"):
+            return self._command_succeeds(["psql", f"host={host} port={port} user={db_user} dbname={db_name} sslmode=disable", "-v", "ON_ERROR_STOP=1", "-tAc", "select 1"], env=env)
+
+        return self._can_reach_socket()
 
     def _build_jisql_classpath(self) -> str:
         """Locate Jisql lib directories and build a Java classpath."""
@@ -286,7 +355,7 @@ class PostgresDB(BaseDB):
 
     def check_connection(self, db_name: str, db_user: str, db_password: str) -> bool:
         """Verify that we can reach the database. Raises ConnectionError on failure."""
-        logger.info("Checking connection to database %s", db_name)
+        logger.info(f"Checking connection to database {db_name}")
         cmd = self._get_jisql_cmd(db_user, db_password, db_name)
         query = f'{cmd} -query "SELECT 1;"'
         _log_jisql(query, db_password)
@@ -307,7 +376,7 @@ class PostgresDB(BaseDB):
         if not os.path.isfile(file_name):
             raise FileNotFoundError(f"DB schema file not found: {display_name}")
 
-        logger.info("Importing schema to %s from file: %s", db_name, display_name)
+        logger.info(f"Importing schema to {db_name} from file: {display_name}")
         cmd = self._get_jisql_cmd(db_user, db_password, db_name)
         query = f"{cmd} -input {file_name}"
         _log_jisql(query, db_password)
@@ -315,12 +384,12 @@ class PostgresDB(BaseDB):
         ret = subprocess.call(shlex.split(query))
         if ret != 0:
             raise SchemaImportError(f"Schema import failed for {display_name}")
-        logger.info("%s imported successfully", display_name)
+        logger.info(f"{display_name} imported successfully")
 
     def check_table(self, db_name: str, db_user: str, db_password: str, table_name: str) -> bool:
         """Return True if *table_name* exists in *db_name*."""
         db_name = self._resolve_db_name(db_name)
-        logger.info("Verifying table %s in database %s", table_name, db_name)
+        logger.info(f"Verifying table {table_name} in database {db_name}")
 
         cmd = self._get_jisql_cmd(db_user, db_password, db_name)
         query = (
@@ -332,19 +401,19 @@ class PostgresDB(BaseDB):
         try:
             output = _run_command(query)
             if output and table_name.lower() in output.lower():
-                logger.info("Table %s exists in %s", table_name, db_name)
+                logger.info(f"Table {table_name} exists in {db_name}")
                 return True
-            logger.info("Table %s does not exist in %s", table_name, db_name)
+            logger.info(f"Table {table_name} does not exist in {db_name}")
             return False
         except (subprocess.SubprocessError, OSError) as exc:
-            logger.error("Error checking table: %s", exc)
+            logger.error(f"Error checking table: {exc}")
             return False
 
     def check_sequence(self, db_name: str, db_user: str, db_password: str, sequence_name: str) -> bool:
         """Return True if *sequence_name* exists in *db_name*."""
         db_name = self._resolve_db_name(db_name)
         seq = _validate_identifier(sequence_name).lower()
-        logger.info("Verifying sequence %s in database %s", seq, db_name)
+        logger.info(f"Verifying sequence {seq} in database {db_name}")
 
         cmd = self._get_jisql_cmd(db_user, db_password, db_name)
         query = (
@@ -356,12 +425,12 @@ class PostgresDB(BaseDB):
         try:
             output = _run_command(query)
             if output and seq in output.lower():
-                logger.info("Sequence %s exists in %s", seq, db_name)
+                logger.info(f"Sequence {seq} exists in {db_name}")
                 return True
-            logger.info("Sequence %s does not exist in %s", seq, db_name)
+            logger.info(f"Sequence {seq} does not exist in {db_name}")
             return False
         except (subprocess.SubprocessError, OSError) as exc:
-            logger.error("Error checking sequence: %s", exc)
+            logger.error(f"Error checking sequence: {exc}")
             return False
 
     def ensure_sequence(self, db_name: str, db_user: str, db_password: str, sequence_name: str) -> bool:
@@ -375,7 +444,7 @@ class PostgresDB(BaseDB):
             return True
 
         seq = _validate_identifier(sequence_name).lower()
-        logger.warning("Attempting to create missing sequence: %s", seq)
+        logger.warning(f"Attempting to create missing sequence: {seq}")
         cmd = self._get_jisql_cmd(db_user, db_password, db_name)
 
         for sql in (f"CREATE SEQUENCE {seq};", f"CREATE SEQUENCE IF NOT EXISTS {seq};"):
@@ -384,13 +453,13 @@ class PostgresDB(BaseDB):
             try:
                 subprocess.call(shlex.split(query))
             except (subprocess.SubprocessError, OSError) as exc:
-                logger.warning("Sequence create raised: %s", exc)
+                logger.warning(f"Sequence create raised: {exc}")
 
             if self.check_sequence(db_name, db_user, db_password, sequence_name):
-                logger.info("Sequence %s is present", seq)
+                logger.info(f"Sequence {seq} is present")
                 return True
 
-        logger.error("Failed to ensure required sequence: %s", seq)
+        logger.error(f"Failed to ensure required sequence: {seq}")
         return False
 
     def update_portal_user_password(self, db_name: str, db_user: str, db_password: str, login_id: str, plain_password: str) -> None:
@@ -407,7 +476,7 @@ class PostgresDB(BaseDB):
             f"SET password='{encoded_password}' "
             f"WHERE login_id='{login_id}';\""
         )
-        logger.info("Setting initial password for Ranger user %s from environment", login_id)
+        logger.info(f"Setting initial password for Ranger user {login_id} from environment")
         _log_jisql(query, db_password)
 
         ret = subprocess.call(shlex.split(query))
@@ -424,7 +493,7 @@ def _resolve_java_bin() -> str:
     if java_home:
         return os.path.join(java_home, "bin", "java")
     java_bin = shutil.which("java") or "java"
-    logger.warning("JAVA_HOME not set; using JAVA_BIN=%s", java_bin)
+    logger.warning(f"JAVA_HOME not set; using JAVA_BIN={java_bin}")
     return java_bin
 
 
@@ -441,7 +510,7 @@ def _resolve_schema_file(core_file_rel: str) -> str:
     else:
         path = os.path.join(RANGER_HOME, core_file_rel)
 
-    logger.info("Schema file path: %s", path)
+    logger.info(f"Schema file path: {path}")
     if not os.path.isfile(path):
         raise ConfigError(f"Schema file not found: {path} (RANGER_HOME={RANGER_HOME})")
     return path
@@ -471,7 +540,7 @@ def main(argv: list[str]) -> None:
         raise ConfigError("Ranger Admin docker currently supports only PostgreSQL")
 
     java_bin = _resolve_java_bin()
-    logger.info("DB FLAVOR: %s", db_flavor)
+    logger.info(f"DB FLAVOR: {db_flavor}")
 
     ssl = _extract_ssl_config(config)
     _validate_ssl_files(ssl)
@@ -480,6 +549,8 @@ def main(argv: list[str]) -> None:
 
     db = PostgresDB(host=config["db_host"], sql_connector_jar=config["SQL_CONNECTOR_JAR"], java_bin=java_bin, ssl=ssl)
     schema_file = _resolve_schema_file(config["postgres_core_file"])
+
+    db.wait_until_ready(db_name, db_user, db_password)
 
     logger.info("--------- Verifying Ranger DB connection ---------")
     db.check_connection(db_name, db_user, db_password)
@@ -491,7 +562,7 @@ def main(argv: list[str]) -> None:
     if db.check_table(db_name, db_user, db_password, VERSION_TABLE):
         logger.info("Database schema already initialised")
         if not db.ensure_sequence(db_name, db_user, db_password, CRITICAL_SEQUENCE):
-            logger.warning("Critical sequence %s still missing, but schema appears initialised. Service creation may fail.", CRITICAL_SEQUENCE)
+            logger.warning(f"Critical sequence {CRITICAL_SEQUENCE} still missing, but schema appears initialised. Service creation may fail.")
         return
 
     logger.info("--------- Importing Ranger Core DB Schema ---------")
@@ -502,7 +573,7 @@ def main(argv: list[str]) -> None:
         raise SchemaImportError(f"Schema import completed but {VERSION_TABLE} table not found")
 
     if not db.ensure_sequence(db_name, db_user, db_password, CRITICAL_SEQUENCE):
-        raise SchemaImportError( f"Sequence {CRITICAL_SEQUENCE} required for service creation. Schema import/patch may be incomplete.")
+        raise SchemaImportError(f"Sequence {CRITICAL_SEQUENCE} required for service creation. Schema import/patch may be incomplete.")
 
     logger.info("Database schema imported successfully")
 
@@ -511,5 +582,5 @@ if __name__ == "__main__":
     try:
         main(sys.argv)
     except (ConfigError, ConnectionError, SchemaImportError) as exc:
-        logger.error("%s", exc)
+        logger.error(f"{exc}")
         sys.exit(1)
