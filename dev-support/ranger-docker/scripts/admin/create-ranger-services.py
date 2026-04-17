@@ -2,11 +2,19 @@ from apache_ranger.model.ranger_service import RangerService
 from apache_ranger.client.ranger_client import RangerClient
 from json import JSONDecodeError
 import socket
+import os
+import sys
+
+skipMe = os.getenv("SKIP_CREATE_SAMPLE_SERVICES","false").lower() == "true"
+
+if skipMe:
+    print("INFO: Skipping sample ranger services ...")
+    sys.exit(0)
 
 current_host_name = socket.gethostname()
 
 if not current_host_name:
-	current_host_name = "ranger"
+    current_host_name = "ranger"
 
 ranger_client = RangerClient('http://' + current_host_name  + ':6080', ('admin', 'rangerR0cks!'))
 
