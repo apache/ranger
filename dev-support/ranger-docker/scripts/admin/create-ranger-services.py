@@ -1,8 +1,14 @@
 from apache_ranger.model.ranger_service import RangerService
 from apache_ranger.client.ranger_client import RangerClient
 from json import JSONDecodeError
+import socket
 
-ranger_client = RangerClient('http://ranger:6080', ('admin', 'rangerR0cks!'))
+current_host_name = socket.gethostname()
+
+if not current_host_name:
+	current_host_name = "ranger"
+
+ranger_client = RangerClient('http://' + current_host_name  + ':6080', ('admin', 'rangerR0cks!'))
 
 
 def service_not_exists(service):
