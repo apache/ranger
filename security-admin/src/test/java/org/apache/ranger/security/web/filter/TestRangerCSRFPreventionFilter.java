@@ -93,7 +93,7 @@ public class TestRangerCSRFPreventionFilter {
         filter.doFilter(mockReq, mockRes, mockChain);
 
         Mockito.verify(mockRes, atLeastOnce()).sendError(HttpServletResponse.SC_BAD_REQUEST, EXPECTED_MESSAGE);
-        Mockito.verifyZeroInteractions(mockChain);
+        Mockito.verifyNoInteractions(mockChain);
     }
 
     @Test
@@ -169,7 +169,7 @@ public class TestRangerCSRFPreventionFilter {
         RangerCSRFPreventionFilter filter = new RangerCSRFPreventionFilter();
         filter.doFilter(mockReq, mockRes, mockChain);
 
-        Mockito.verifyZeroInteractions(mockChain);
+        Mockito.verifyNoInteractions(mockChain);
     }
 
     @Test
@@ -207,7 +207,7 @@ public class TestRangerCSRFPreventionFilter {
         RangerCSRFPreventionFilter filter = new RangerCSRFPreventionFilter();
         filter.doFilter(mockReq, mockRes, mockChain);
 
-        Mockito.verifyZeroInteractions(mockChain);
+        Mockito.verifyNoInteractions(mockChain);
     }
 
     @Test

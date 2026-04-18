@@ -23,6 +23,7 @@ import org.apache.ranger.common.SearchUtil;
 import org.apache.ranger.common.db.BaseDao;
 import org.apache.ranger.entity.XXAuthSession;
 import org.apache.ranger.view.VXAuthSession;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
@@ -41,7 +42,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @TestMethodOrder(MethodOrderer.MethodName.class)
 public class TestAuthSessionService {
     @InjectMocks
-    AuthSessionService authSessionService = new AuthSessionService();
+    AuthSessionService authSessionService;
 
     @Mock
     VXAuthSession vXAuthSession;
@@ -59,7 +60,12 @@ public class TestAuthSessionService {
     SearchUtil searchUtil;
 
     @Mock
-    BaseDao entityDao;
+    BaseDao<XXAuthSession> entityDao;
+
+    @BeforeEach
+    void wireEntityDao() {
+        authSessionService.entityDao = entityDao;
+    }
 
     @Test
     public void test1GetResourceName() {

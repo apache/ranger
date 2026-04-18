@@ -54,7 +54,7 @@
             <artifactId>nimbus-jose-jwt</artifactId>
             <version>${nimbus-jose-jwt.version}</version>
         </dependency>
-        <!-- Jersey-1 client pieces needed by ranger-plugins-common -->
+        <!-- Shared deps with ranger-plugins-common (Jersey 2 client stack is declared there) -->
         <dependency>
             <groupId>commons-codec</groupId>
             <artifactId>commons-codec</artifactId>

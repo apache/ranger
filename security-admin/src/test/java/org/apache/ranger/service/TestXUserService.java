@@ -40,7 +40,6 @@ import org.junit.jupiter.api.TestMethodOrder;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.Collections;
@@ -82,16 +81,16 @@ class TestXUserService {
     @Mock
     private org.apache.ranger.common.db.BaseDao<XXUser> entityDao;
 
+    @BeforeEach
+    void wireEntityDao() {
+        svc.entityDao = entityDao;
+    }
+
     @Test
     public void testSearchFieldsInitialized() {
         XUserService svc = new XUserService();
         assertNotNull(svc.searchFields);
         assertFalse(svc.searchFields.isEmpty());
-    }
-
-    @BeforeEach
-    void init() {
-        MockitoAnnotations.initMocks(this);
     }
 
     @Test
