@@ -988,7 +988,7 @@ public class TestSecurityZoneREST {
         Boolean result = spySecurityZoneREST.updateSecurityZone(zoneId, changeRequest);
 
         Assertions.assertTrue(result);
-        verify(spySecurityZoneREST, times(2)).getSecurityZone(anyLong());
+        verify(spySecurityZoneREST, times(1)).getSecurityZone(anyLong());
         verify(securityZoneStore, times(1)).updateSecurityZoneById(any(RangerSecurityZone.class));
     }
 

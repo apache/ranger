@@ -37,9 +37,9 @@ import org.apache.ranger.plugin.model.RangerValiditySchedule;
 import org.apache.ranger.view.VXResponse;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.InjectMocks;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.Collections;
 import java.util.HashSet;
@@ -53,6 +53,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.startsWith;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 
@@ -61,8 +62,9 @@ import static org.mockito.Mockito.when;
  * @description : Unit Test cases for RangerGdsDataShareInDatasetService
  */
 
+@ExtendWith(MockitoExtension.class)
 public class TestRangerGdsDataShareInDatasetService {
-    @InjectMocks private RangerGdsDataShareInDatasetService svc = spy(new RangerGdsDataShareInDatasetService());
+    private RangerGdsDataShareInDatasetService svc;
 
     @Mock private RangerDaoManager                 daoMgr;
     @Mock private XXGdsDataShareDao                xxGdsDataShareDao;
@@ -74,9 +76,15 @@ public class TestRangerGdsDataShareInDatasetService {
 
     @BeforeEach
     void init() {
-        MockitoAnnotations.initMocks(this);
-        when(daoMgr.getXXGdsDataShare()).thenReturn(xxGdsDataShareDao);
-        when(daoMgr.getXXGdsDataset()).thenReturn(xxGdsDatasetDao);
+        RangerGdsDataShareInDatasetService real = new RangerGdsDataShareInDatasetService();
+        real.daoMgr          = daoMgr;
+        real.entityDao       = entityDao;
+        real.guidUtil        = guidUtil;
+        real.restErrorUtil   = restErrorUtil;
+        real.xxPortalUserDao = xxPortalUserDao;
+        svc = spy(real);
+        lenient().when(daoMgr.getXXGdsDataShare()).thenReturn(xxGdsDataShareDao);
+        lenient().when(daoMgr.getXXGdsDataset()).thenReturn(xxGdsDatasetDao);
     }
 
     @Test

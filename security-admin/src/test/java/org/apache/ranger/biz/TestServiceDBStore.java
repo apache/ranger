@@ -151,6 +151,7 @@ import org.apache.ranger.view.VXString;
 import org.apache.ranger.view.VXUser;
 import org.apache.ranger.view.VXUserList;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
@@ -196,9 +197,9 @@ public class TestServiceDBStore {
     private static final String CFG_SERVICE_ADMIN_GROUPS = "service.admin.groups";
     private static final Long                         Id = 8L;
     @InjectMocks
-    ServiceDBStore serviceDBStore = new ServiceDBStore();
+    ServiceDBStore serviceDBStore;
     @Mock
-    RangerDaoManager daoManager;
+    RangerDaoManager daoMgr;
     @Mock
     RangerServiceService svcService;
     @Mock
@@ -246,6 +247,12 @@ public class TestServiceDBStore {
     @Mock
     RangerSecurityZoneServiceService rangerSecurityZoneServiceService;
 
+    @BeforeEach
+    void wireServiceDbStoreFields() {
+        serviceDBStore.daoMgr            = daoMgr;
+        serviceDBStore.rangerAuditFields = rangerAuditFields;
+    }
+
     public void setup() {
         RangerSecurityContext context = new RangerSecurityContext();
         context.setUserSession(new UserSessionBase());
@@ -277,22 +284,22 @@ public class TestServiceDBStore {
         RangerServiceDef serviceDef = new RangerServiceDef();
         Mockito.when(serviceDefService.create(serviceDef)).thenReturn(serviceDef);
 
-        Mockito.when(daoManager.getXXServiceDef()).thenReturn(xServiceDefDao);
-        Mockito.when(daoManager.getXXServiceDef()).thenReturn(xServiceDefDao);
+        Mockito.when(daoMgr.getXXServiceDef()).thenReturn(xServiceDefDao);
+        Mockito.when(daoMgr.getXXServiceDef()).thenReturn(xServiceDefDao);
         Mockito.when(xServiceDefDao.getById(null)).thenReturn(xServiceDef);
 
-        Mockito.when(daoManager.getXXServiceConfigDef()).thenReturn(xServiceConfigDefDao);
+        Mockito.when(daoMgr.getXXServiceConfigDef()).thenReturn(xServiceConfigDefDao);
 
-        Mockito.when(daoManager.getXXResourceDef()).thenReturn(xResourceDefDao);
+        Mockito.when(daoMgr.getXXResourceDef()).thenReturn(xResourceDefDao);
         Mockito.when(xResourceDefDao.findByServiceDefId(xServiceDef.getId())).thenReturn(xResourceDefs);
 
-        Mockito.when(daoManager.getXXAccessTypeDef()).thenReturn(xAccessTypeDefDao);
+        Mockito.when(daoMgr.getXXAccessTypeDef()).thenReturn(xAccessTypeDefDao);
         Mockito.when(xAccessTypeDefDao.findByServiceDefId(xServiceDef.getId())).thenReturn(xAccessTypeDefs);
 
-        Mockito.when(daoManager.getXXPolicyConditionDef()).thenReturn(xPolicyConditionDefDao);
-        Mockito.when(daoManager.getXXContextEnricherDef()).thenReturn(xContextEnricherDefDao);
+        Mockito.when(daoMgr.getXXPolicyConditionDef()).thenReturn(xPolicyConditionDefDao);
+        Mockito.when(daoMgr.getXXContextEnricherDef()).thenReturn(xContextEnricherDefDao);
 
-        Mockito.when(daoManager.getXXEnumDef()).thenReturn(xEnumDefDao);
+        Mockito.when(daoMgr.getXXEnumDef()).thenReturn(xEnumDefDao);
 
         Mockito.when(serviceDefService.getPopulatedViewObject(xServiceDef)).thenReturn(serviceDef);
 
@@ -313,9 +320,9 @@ public class TestServiceDBStore {
         Assertions.assertEquals(dbServiceDef.getResources(), serviceDef.getResources());
         Mockito.verify(serviceDefService).getPopulatedViewObject(xServiceDef);
         Mockito.verify(serviceDefService).create(serviceDef);
-        Mockito.verify(daoManager).getXXServiceConfigDef();
-        Mockito.verify(daoManager).getXXEnumDef();
-        Mockito.verify(daoManager).getXXAccessTypeDef();
+        Mockito.verify(daoMgr).getXXServiceConfigDef();
+        Mockito.verify(daoMgr).getXXEnumDef();
+        Mockito.verify(daoMgr).getXXAccessTypeDef();
     }
 
     @Test
@@ -406,17 +413,17 @@ public class TestServiceDBStore {
         enumDefObj.setUpdateTime(new Date());
         enumDefList.add(enumDefObj);
 
-        Mockito.when(daoManager.getXXServiceDef()).thenReturn(xServiceDefDao);
+        Mockito.when(daoMgr.getXXServiceDef()).thenReturn(xServiceDefDao);
         Mockito.when(xServiceDefDao.getById(serviceDefId)).thenReturn(xServiceDef);
 
-        Mockito.when(daoManager.getXXServiceConfigDef()).thenReturn(xServiceConfigDefDao);
-        Mockito.when(daoManager.getXXResourceDef()).thenReturn(xResourceDefDao);
-        Mockito.when(daoManager.getXXAccessTypeDef()).thenReturn(xAccessTypeDefDao);
-        Mockito.when(daoManager.getXXPolicyConditionDef()).thenReturn(xPolicyConditionDefDao);
-        Mockito.when(daoManager.getXXContextEnricherDef()).thenReturn(xContextEnricherDefDao);
-        Mockito.when(daoManager.getXXEnumDef()).thenReturn(xEnumDefDao);
-        Mockito.when(daoManager.getXXDataMaskTypeDef()).thenReturn(xDataMaskDefDao);
-        Mockito.when(daoManager.getXXService()).thenReturn(xServiceDao);
+        Mockito.when(daoMgr.getXXServiceConfigDef()).thenReturn(xServiceConfigDefDao);
+        Mockito.when(daoMgr.getXXResourceDef()).thenReturn(xResourceDefDao);
+        Mockito.when(daoMgr.getXXAccessTypeDef()).thenReturn(xAccessTypeDefDao);
+        Mockito.when(daoMgr.getXXPolicyConditionDef()).thenReturn(xPolicyConditionDefDao);
+        Mockito.when(daoMgr.getXXContextEnricherDef()).thenReturn(xContextEnricherDefDao);
+        Mockito.when(daoMgr.getXXEnumDef()).thenReturn(xEnumDefDao);
+        Mockito.when(daoMgr.getXXDataMaskTypeDef()).thenReturn(xDataMaskDefDao);
+        Mockito.when(daoMgr.getXXService()).thenReturn(xServiceDao);
         Mockito.when(xServiceDao.findByServiceDefId(serviceDefId)).thenReturn(null);
         Mockito.when(serviceDefService.read(Id)).thenReturn(rangerServiceDef);
 
@@ -714,56 +721,56 @@ public class TestServiceDBStore {
         xUser.setUpdatedByUserId(Id);
         xUser.setUpdateTime(new Date());
 
-        Mockito.when(daoManager.getXXPolicyRefAccessType()).thenReturn(xPolicyRefAccessTypeDao);
+        Mockito.when(daoMgr.getXXPolicyRefAccessType()).thenReturn(xPolicyRefAccessTypeDao);
         Mockito.when(xPolicyRefAccessTypeDao.findByAccessTypeDefId(Id)).thenReturn(policyRefAccessTypeList);
         Mockito.when(xPolicyRefAccessTypeDao.remove(policyRefAccessType)).thenReturn(true);
 
-        Mockito.when(daoManager.getXXPolicyRefCondition()).thenReturn(xPolicyRefConditionDao);
+        Mockito.when(daoMgr.getXXPolicyRefCondition()).thenReturn(xPolicyRefConditionDao);
         Mockito.when(xPolicyRefConditionDao.findByConditionDefId(Id)).thenReturn(policyRefConditionsList);
         Mockito.when(xPolicyRefConditionDao.remove(policyRefCondition)).thenReturn(true);
 
-        Mockito.when(daoManager.getXXPolicyRefResource()).thenReturn(xPolicyRefResourceDao);
+        Mockito.when(daoMgr.getXXPolicyRefResource()).thenReturn(xPolicyRefResourceDao);
         Mockito.when(xPolicyRefResourceDao.findByResourceDefID(Id)).thenReturn(policyRefResourcesList);
         Mockito.when(xPolicyRefResourceDao.remove(policyRefResource)).thenReturn(true);
 
         Mockito.when(serviceDefService.read(Id)).thenReturn(rangerServiceDef);
-        Mockito.when(daoManager.getXXService()).thenReturn(xServiceDao);
+        Mockito.when(daoMgr.getXXService()).thenReturn(xServiceDao);
         Mockito.when(xServiceDao.findByServiceDefId(serviceDefId)).thenReturn(null);
-        Mockito.when(daoManager.getXXAccessTypeDef()).thenReturn(xAccessTypeDefDao);
+        Mockito.when(daoMgr.getXXAccessTypeDef()).thenReturn(xAccessTypeDefDao);
         Mockito.when(xAccessTypeDefDao.findByServiceDefId(serviceDefId)).thenReturn(accessTypeDefList);
-        Mockito.when(daoManager.getXXAccessTypeDefGrants()).thenReturn(xAccessTypeDefGrantsDao);
+        Mockito.when(daoMgr.getXXAccessTypeDefGrants()).thenReturn(xAccessTypeDefGrantsDao);
         Mockito.when(xAccessTypeDefGrantsDao.findByATDId(accessTypeDefObj.getId())).thenReturn(accessTypeDefGrantslist);
-        Mockito.when(daoManager.getXXContextEnricherDef()).thenReturn(xContextEnricherDefDao);
+        Mockito.when(daoMgr.getXXContextEnricherDef()).thenReturn(xContextEnricherDefDao);
         Mockito.when(xContextEnricherDefDao.findByServiceDefId(serviceDefId)).thenReturn(contextEnricherDefList);
-        Mockito.when(daoManager.getXXEnumDef()).thenReturn(xEnumDefDao);
+        Mockito.when(daoMgr.getXXEnumDef()).thenReturn(xEnumDefDao);
         Mockito.when(xEnumDefDao.findByServiceDefId(serviceDefId)).thenReturn(enumDefList);
-        Mockito.when(daoManager.getXXEnumElementDef()).thenReturn(xEnumElementDefDao);
+        Mockito.when(daoMgr.getXXEnumElementDef()).thenReturn(xEnumElementDefDao);
         Mockito.when(xEnumElementDefDao.findByEnumDefId(enumDefObj.getId())).thenReturn(xElementsList);
 
-        Mockito.when(daoManager.getXXPolicyConditionDef()).thenReturn(xPolicyConditionDefDao);
+        Mockito.when(daoMgr.getXXPolicyConditionDef()).thenReturn(xPolicyConditionDefDao);
         Mockito.when(xPolicyConditionDefDao.findByServiceDefId(serviceDefId)).thenReturn(xConditionDefList);
 
-        Mockito.when(daoManager.getXXResourceDef()).thenReturn(xResourceDefDao);
+        Mockito.when(daoMgr.getXXResourceDef()).thenReturn(xResourceDefDao);
         Mockito.when(xResourceDefDao.findByServiceDefId(serviceDefId)).thenReturn(resDefList);
 
-        Mockito.when(daoManager.getXXServiceConfigDef()).thenReturn(xServiceConfigDefDao);
+        Mockito.when(daoMgr.getXXServiceConfigDef()).thenReturn(xServiceConfigDefDao);
         Mockito.when(xServiceConfigDefDao.findByServiceDefId(serviceDefId)).thenReturn(serviceConfigDefList);
 
-        Mockito.when(daoManager.getXXService()).thenReturn(xServiceDao);
+        Mockito.when(daoMgr.getXXService()).thenReturn(xServiceDao);
 
         svcServiceWithAssignedId.setPopulateExistingBaseFields(true);
 
-        Mockito.when(daoManager.getXXService()).thenReturn(xServiceDao);
+        Mockito.when(daoMgr.getXXService()).thenReturn(xServiceDao);
         Mockito.when(xServiceDao.findByServiceDefId(serviceDefId)).thenReturn(null);
 
-        Mockito.when(daoManager.getXXService()).thenReturn(xServiceDao);
+        Mockito.when(daoMgr.getXXService()).thenReturn(xServiceDao);
 
-        Mockito.when(daoManager.getXXDataMaskTypeDef()).thenReturn(xDataMaskDefDao);
+        Mockito.when(daoMgr.getXXDataMaskTypeDef()).thenReturn(xDataMaskDefDao);
         Mockito.when(xDataMaskDefDao.findByServiceDefId(serviceDefId)).thenReturn(new ArrayList<>());
 
         serviceDBStore.deleteServiceDef(Id, true);
-        Mockito.verify(daoManager).getXXContextEnricherDef();
-        Mockito.verify(daoManager).getXXEnumDef();
+        Mockito.verify(daoMgr).getXXContextEnricherDef();
+        Mockito.verify(daoMgr).getXXEnumDef();
     }
 
     @Test
@@ -794,12 +801,12 @@ public class TestServiceDBStore {
         XXServiceDefDao xServiceDefDao = Mockito.mock(XXServiceDefDao.class);
         XXServiceDef    xServiceDef    = Mockito.mock(XXServiceDef.class);
 
-        Mockito.when(daoManager.getXXServiceDef()).thenReturn(xServiceDefDao);
+        Mockito.when(daoMgr.getXXServiceDef()).thenReturn(xServiceDefDao);
         Mockito.when(xServiceDefDao.findByName(name)).thenReturn(xServiceDef);
 
         RangerServiceDef dbServiceDef = serviceDBStore.getServiceDefByName(name);
         Assertions.assertNull(dbServiceDef);
-        Mockito.verify(daoManager).getXXServiceDef();
+        Mockito.verify(daoMgr).getXXServiceDef();
     }
 
     @Test
@@ -810,13 +817,13 @@ public class TestServiceDBStore {
         XXServiceDef    xServiceDef    = Mockito.mock(XXServiceDef.class);
 
         RangerServiceDef serviceDef = new RangerServiceDef();
-        Mockito.when(daoManager.getXXServiceDef()).thenReturn(xServiceDefDao);
+        Mockito.when(daoMgr.getXXServiceDef()).thenReturn(xServiceDefDao);
         Mockito.when(xServiceDefDao.findByName(name)).thenReturn(xServiceDef);
         Mockito.when(serviceDefService.getPopulatedViewObject(xServiceDef)).thenReturn(serviceDef);
 
         RangerServiceDef dbServiceDef = serviceDBStore.getServiceDefByName(name);
         Assertions.assertNotNull(dbServiceDef);
-        Mockito.verify(daoManager).getXXServiceDef();
+        Mockito.verify(daoMgr).getXXServiceDef();
     }
 
     @Test
@@ -885,13 +892,13 @@ public class TestServiceDBStore {
         serviceConfigDefObj.setId(Id);
         serviceConfigDefObj.setType("1");
         svcConfDefList.add(serviceConfigDefObj);
-        Mockito.when(daoManager.getXXServiceConfigDef()).thenReturn(xServiceConfigDefDao);
+        Mockito.when(daoMgr.getXXServiceConfigDef()).thenReturn(xServiceConfigDefDao);
         Mockito.when(svcService.create(rangerService)).thenReturn(rangerService);
 
-        Mockito.when(daoManager.getXXService()).thenReturn(xServiceDao);
+        Mockito.when(daoMgr.getXXService()).thenReturn(xServiceDao);
         Mockito.when(xServiceDao.getById(rangerService.getId())).thenReturn(xService);
-        Mockito.when(daoManager.getXXServiceConfigMap()).thenReturn(xServiceConfigMapDao);
-        Mockito.when(daoManager.getXXUser()).thenReturn(xUserDao);
+        Mockito.when(daoMgr.getXXServiceConfigMap()).thenReturn(xServiceConfigMapDao);
+        Mockito.when(daoMgr.getXXUser()).thenReturn(xUserDao);
 
         XXServiceConfigMap xConfMap = new XXServiceConfigMap();
 
@@ -908,8 +915,8 @@ public class TestServiceDBStore {
 
         spy.createService(rangerService);
 
-        Mockito.verify(daoManager, Mockito.atLeast(1)).getXXService();
-        Mockito.verify(daoManager).getXXServiceConfigMap();
+        Mockito.verify(daoMgr, Mockito.atLeast(1)).getXXService();
+        Mockito.verify(daoMgr).getXXServiceConfigMap();
     }
 
     @Test
@@ -924,19 +931,19 @@ public class TestServiceDBStore {
         Map<String, Object> options       = null;
         String              name          = "fdfdfds";
 
-        Mockito.when(daoManager.getXXService()).thenReturn(xServiceDao);
+        Mockito.when(daoMgr.getXXService()).thenReturn(xServiceDao);
         Mockito.when(xServiceDao.getById(Id)).thenReturn(xService);
 
-        Mockito.when(daoManager.getXXService()).thenReturn(xServiceDao);
+        Mockito.when(daoMgr.getXXService()).thenReturn(xServiceDao);
 
         List<XXServiceConfigDef> xServiceConfigDefList = new ArrayList<>();
         XXServiceConfigDef       serviceConfigDefObj   = new XXServiceConfigDef();
         serviceConfigDefObj.setId(Id);
         xServiceConfigDefList.add(serviceConfigDefObj);
-        Mockito.when(daoManager.getXXServiceConfigDef()).thenReturn(xServiceConfigDefDao);
+        Mockito.when(daoMgr.getXXServiceConfigDef()).thenReturn(xServiceConfigDefDao);
 
         Mockito.when(svcService.update(rangerService)).thenReturn(rangerService);
-        Mockito.when(daoManager.getXXService()).thenReturn(xServiceDao);
+        Mockito.when(daoMgr.getXXService()).thenReturn(xServiceDao);
         Mockito.when(xServiceDao.getById(Id)).thenReturn(xService);
 
         List<XXServiceConfigMap> xConfMapList = new ArrayList<>();
@@ -951,13 +958,13 @@ public class TestServiceDBStore {
         xConfMap.setUpdateTime(new Date());
         xConfMapList.add(xConfMap);
 
-        Mockito.when(daoManager.getXXServiceConfigMap()).thenReturn(xServiceConfigMapDao);
+        Mockito.when(daoMgr.getXXServiceConfigMap()).thenReturn(xServiceConfigMapDao);
         Mockito.when(xServiceConfigMapDao.findByServiceId(Id)).thenReturn(xConfMapList);
-        Mockito.when(daoManager.getXXServiceConfigMap()).thenReturn(xServiceConfigMapDao);
+        Mockito.when(daoMgr.getXXServiceConfigMap()).thenReturn(xServiceConfigMapDao);
         Mockito.when(xServiceConfigMapDao.remove(xConfMap)).thenReturn(true);
 
-        Mockito.when(daoManager.getXXServiceConfigMap()).thenReturn(xServiceConfigMapDao);
-        Mockito.when(daoManager.getXXUser()).thenReturn(xUserDao);
+        Mockito.when(daoMgr.getXXServiceConfigMap()).thenReturn(xServiceConfigMapDao);
+        Mockito.when(daoMgr.getXXUser()).thenReturn(xUserDao);
 
         Mockito.when(rangerAuditFields.populateAuditFields(Mockito.isA(XXServiceConfigMap.class), Mockito.isA(XXService.class))).thenReturn(xConfMap);
 
@@ -972,7 +979,7 @@ public class TestServiceDBStore {
         Assertions.assertEquals(dbRangerService.getDescription(), rangerService.getDescription());
         Assertions.assertEquals(dbRangerService.getType(), rangerService.getType());
         Assertions.assertEquals(dbRangerService.getVersion(), rangerService.getVersion());
-        Mockito.verify(daoManager).getXXUser();
+        Mockito.verify(daoMgr).getXXUser();
     }
 
     @Test
@@ -1107,29 +1114,29 @@ public class TestServiceDBStore {
         serviceConfigDefObj.setId(Id);
         xServiceConfigDefList.add(serviceConfigDefObj);
 
-        Mockito.when(daoManager.getXXSecurityZoneDao()).thenReturn(xSecurityZoneDao);
+        Mockito.when(daoMgr.getXXSecurityZoneDao()).thenReturn(xSecurityZoneDao);
         Mockito.when(xSecurityZoneDao.findZonesByServiceName(rangerService.getName())).thenReturn(zonesNameList);
 
-        Mockito.when(daoManager.getXXPolicy()).thenReturn(xPolicyDao);
+        Mockito.when(daoMgr.getXXPolicy()).thenReturn(xPolicyDao);
         Mockito.when(xPolicyDao.findPolicyIdsByServiceId(rangerService.getId())).thenReturn(policiesIds);
         Mockito.when(svcService.delete(rangerService)).thenReturn(true);
 
         Mockito.when(policyService.read(Id)).thenReturn(rangerPolicy);
-        Mockito.when(daoManager.getXXService()).thenReturn(xServiceDao);
+        Mockito.when(daoMgr.getXXService()).thenReturn(xServiceDao);
         Mockito.when(svcService.getPopulatedViewObject(xService)).thenReturn(rangerService);
 
-        Mockito.when(daoManager.getXXService()).thenReturn(xServiceDao);
+        Mockito.when(daoMgr.getXXService()).thenReturn(xServiceDao);
         Mockito.when(xServiceDao.getById(Id)).thenReturn(xService);
 
-        Mockito.when(daoManager.getXXService()).thenReturn(xServiceDao);
+        Mockito.when(daoMgr.getXXService()).thenReturn(xServiceDao);
         Mockito.when(xServiceDao.getById(rangerService.getId())).thenReturn(xService);
 
-        Mockito.when(daoManager.getXXServiceConfigMap()).thenReturn(xServiceConfigMapDao);
+        Mockito.when(daoMgr.getXXServiceConfigMap()).thenReturn(xServiceConfigMapDao);
         Mockito.when(xServiceConfigMapDao.findByServiceId(rangerService.getId())).thenReturn(xConfMapList);
-        Mockito.when(daoManager.getXXPolicyLabelMap()).thenReturn(xPolicyLabelMapDao);
+        Mockito.when(daoMgr.getXXPolicyLabelMap()).thenReturn(xPolicyLabelMapDao);
         Mockito.when(xPolicyLabelMapDao.findByPolicyId(rangerPolicy.getId())).thenReturn(ListUtils.EMPTY_LIST);
 
-        Mockito.when(daoManager.getXXRMSServiceResource()).thenReturn(xRMSServiceResourceDao);
+        Mockito.when(daoMgr.getXXRMSServiceResource()).thenReturn(xRMSServiceResourceDao);
 
         Mockito.when(!bizUtil.hasAccess(xService, null)).thenReturn(true);
         Mockito.when(tagStore.resetTagCache(rangerService.getName())).thenReturn(true);
@@ -1145,7 +1152,7 @@ public class TestServiceDBStore {
         XXService     xService      = xService();
         XXServiceDao  xServiceDao   = Mockito.mock(XXServiceDao.class);
 
-        Mockito.when(daoManager.getXXService()).thenReturn(xServiceDao);
+        Mockito.when(daoMgr.getXXService()).thenReturn(xServiceDao);
         Mockito.when(xServiceDao.getById(Id)).thenReturn(xService);
         Mockito.when(!bizUtil.hasAccess(xService, null)).thenReturn(true);
 
@@ -1165,7 +1172,7 @@ public class TestServiceDBStore {
         Assertions.assertEquals(dbRangerService.getPolicyVersion(), rangerService.getPolicyVersion());
         Assertions.assertEquals(dbRangerService.getVersion(), rangerService.getVersion());
         Assertions.assertEquals(dbRangerService.getPolicyUpdateTime(), rangerService.getPolicyUpdateTime());
-        Mockito.verify(daoManager).getXXService();
+        Mockito.verify(daoMgr).getXXService();
         Mockito.verify(bizUtil).hasAccess(xService, null);
         Mockito.verify(svcService).getPopulatedViewObject(xService);
     }
@@ -1177,7 +1184,7 @@ public class TestServiceDBStore {
         XXService     xService      = xService();
         String        name          = rangerService.getName();
 
-        Mockito.when(daoManager.getXXService()).thenReturn(xServiceDao);
+        Mockito.when(daoMgr.getXXService()).thenReturn(xServiceDao);
         Mockito.when(xServiceDao.findByName(name)).thenReturn(xService);
         Mockito.when(!bizUtil.hasAccess(xService, null)).thenReturn(true);
         Mockito.when(svcService.getPopulatedViewObject(xService)).thenReturn(rangerService);
@@ -1186,7 +1193,7 @@ public class TestServiceDBStore {
         Assertions.assertNotNull(dbRangerService);
         Assertions.assertEquals(dbRangerService, rangerService);
         Assertions.assertEquals(dbRangerService.getName(), rangerService.getName());
-        Mockito.verify(daoManager).getXXService();
+        Mockito.verify(daoMgr).getXXService();
         Mockito.verify(bizUtil).hasAccess(xService, null);
         Mockito.verify(svcService).getPopulatedViewObject(xService);
     }
@@ -1405,26 +1412,26 @@ public class TestServiceDBStore {
         policyConditionDefObj.setUpdateTime(new Date());
         policyConditionDefList.add(policyConditionDefObj);
 
-        Mockito.when(daoManager.getXXService()).thenReturn(xServiceDao);
+        Mockito.when(daoMgr.getXXService()).thenReturn(xServiceDao);
         Mockito.when(xServiceDao.findByName(name)).thenReturn(xService);
 
         Mockito.when(svcService.getPopulatedViewObject(xService)).thenReturn(rangerService);
 
-        Mockito.when(daoManager.getXXServiceDef()).thenReturn(xServiceDefDao);
+        Mockito.when(daoMgr.getXXServiceDef()).thenReturn(xServiceDefDao);
         Mockito.when(xServiceDefDao.findByName(rangerService.getType())).thenReturn(xServiceDef);
 
-        Mockito.when(daoManager.getXXPolicy()).thenReturn(xPolicyDao);
+        Mockito.when(daoMgr.getXXPolicy()).thenReturn(xPolicyDao);
         Mockito.when(policyService.create(rangerPolicy, true)).thenReturn(rangerPolicy);
 
-        Mockito.when(daoManager.getXXPolicy()).thenReturn(xPolicyDao);
+        Mockito.when(daoMgr.getXXPolicy()).thenReturn(xPolicyDao);
         Mockito.when(xPolicyDao.getById(Id)).thenReturn(xPolicy);
         Mockito.doNothing().when(policyRefUpdater).createNewPolMappingForRefTable(rangerPolicy, xPolicy, xServiceDef, false);
         Mockito.when(policyService.getPopulatedViewObject(xPolicy)).thenReturn(rangerPolicy);
 
-        Mockito.when(daoManager.getXXService()).thenReturn(xServiceDao);
+        Mockito.when(daoMgr.getXXService()).thenReturn(xServiceDao);
         Mockito.when(xServiceDao.getById(Id)).thenReturn(xService);
 
-        Mockito.when(daoManager.getXXService()).thenReturn(xServiceDao);
+        Mockito.when(daoMgr.getXXService()).thenReturn(xServiceDao);
         Mockito.when(xServiceDao.getById(Id)).thenReturn(xService);
 
         RangerPolicyResourceSignature signature = Mockito.mock(RangerPolicyResourceSignature.class);
@@ -1517,27 +1524,27 @@ public class TestServiceDBStore {
         xConfMap.setUpdateTime(new Date());
         xConfMapList.add(xConfMap);
 
-        Mockito.when(daoManager.getXXPolicy()).thenReturn(xPolicyDao);
+        Mockito.when(daoMgr.getXXPolicy()).thenReturn(xPolicyDao);
         Mockito.when(xPolicyDao.getById(Id)).thenReturn(xPolicy);
         Mockito.when(policyService.getPopulatedViewObject(xPolicy)).thenReturn(rangerPolicy);
 
-        Mockito.when(daoManager.getXXService()).thenReturn(xServiceDao);
+        Mockito.when(daoMgr.getXXService()).thenReturn(xServiceDao);
         Mockito.when(xServiceDao.findByName(name)).thenReturn(xService);
         Mockito.when(svcService.getPopulatedViewObject(xService)).thenReturn(rangerService);
 
-        Mockito.when(daoManager.getXXServiceDef()).thenReturn(xServiceDefDao);
+        Mockito.when(daoMgr.getXXServiceDef()).thenReturn(xServiceDefDao);
         Mockito.when(xServiceDefDao.findByName(rangerService.getType())).thenReturn(xServiceDef);
 
         Mockito.when(policyService.update(rangerPolicy)).thenReturn(rangerPolicy);
-        Mockito.when(daoManager.getXXPolicy()).thenReturn(xPolicyDao);
+        Mockito.when(daoMgr.getXXPolicy()).thenReturn(xPolicyDao);
         Mockito.when(xPolicyDao.getById(rangerPolicy.getId())).thenReturn(xPolicy);
 
-        Mockito.when(daoManager.getXXService()).thenReturn(xServiceDao);
+        Mockito.when(daoMgr.getXXService()).thenReturn(xServiceDao);
         Mockito.when(xServiceDao.getById(rangerService.getId())).thenReturn(xService);
 
-        Mockito.when(daoManager.getXXService()).thenReturn(xServiceDao);
+        Mockito.when(daoMgr.getXXService()).thenReturn(xServiceDao);
         Mockito.when(xServiceDao.getById(rangerService.getId())).thenReturn(xService);
-        Mockito.when(daoManager.getXXPolicyLabelMap()).thenReturn(xPolicyLabelMapDao);
+        Mockito.when(daoMgr.getXXPolicyLabelMap()).thenReturn(xPolicyLabelMapDao);
         Mockito.when(xPolicyLabelMapDao.findByPolicyId(rangerPolicy.getId())).thenReturn(ListUtils.EMPTY_LIST);
 
         RangerPolicyResourceSignature signature = Mockito.mock(RangerPolicyResourceSignature.class);
@@ -1759,19 +1766,19 @@ public class TestServiceDBStore {
         serviceConfigDefObj.setId(Id);
         xServiceConfigDefList.add(serviceConfigDefObj);
 
-        Mockito.when(daoManager.getXXService()).thenReturn(xServiceDao);
+        Mockito.when(daoMgr.getXXService()).thenReturn(xServiceDao);
         Mockito.when(xServiceDao.findByName(name)).thenReturn(xService);
         Mockito.when(svcService.getPopulatedViewObject(xService)).thenReturn(rangerService);
 
-        Mockito.when(daoManager.getXXService()).thenReturn(xServiceDao);
+        Mockito.when(daoMgr.getXXService()).thenReturn(xServiceDao);
         Mockito.when(xServiceDao.getById(Id)).thenReturn(xService);
 
-        Mockito.when(daoManager.getXXService()).thenReturn(xServiceDao);
+        Mockito.when(daoMgr.getXXService()).thenReturn(xServiceDao);
         Mockito.when(xServiceDao.getById(rangerService.getId())).thenReturn(xService);
-        Mockito.when(daoManager.getXXPolicyLabelMap()).thenReturn(xPolicyLabelMapDao);
+        Mockito.when(daoMgr.getXXPolicyLabelMap()).thenReturn(xPolicyLabelMapDao);
         Mockito.when(xPolicyLabelMapDao.findByPolicyId(rangerPolicy1.getId())).thenReturn(ListUtils.EMPTY_LIST);
 
-        Mockito.when(daoManager.getXXPolicyLabelMap()).thenReturn(xPolicyLabelMapDao);
+        Mockito.when(daoMgr.getXXPolicyLabelMap()).thenReturn(xPolicyLabelMapDao);
         Mockito.when(xPolicyLabelMapDao.findByPolicyId(rangerPolicy2.getId())).thenReturn(ListUtils.EMPTY_LIST);
 
         Mockito.when(!bizUtil.hasAccess(xService, null)).thenReturn(true);
@@ -1892,16 +1899,16 @@ public class TestServiceDBStore {
         serviceConfigDefObj.setId(Id);
         xServiceConfigDefList.add(serviceConfigDefObj);
 
-        Mockito.when(daoManager.getXXService()).thenReturn(xServiceDao);
+        Mockito.when(daoMgr.getXXService()).thenReturn(xServiceDao);
         Mockito.when(xServiceDao.findByName(name)).thenReturn(xService);
         Mockito.when(svcService.getPopulatedViewObject(xService)).thenReturn(rangerService);
 
-        Mockito.when(daoManager.getXXService()).thenReturn(xServiceDao);
+        Mockito.when(daoMgr.getXXService()).thenReturn(xServiceDao);
         Mockito.when(xServiceDao.getById(Id)).thenReturn(xService);
 
-        Mockito.when(daoManager.getXXService()).thenReturn(xServiceDao);
+        Mockito.when(daoMgr.getXXService()).thenReturn(xServiceDao);
         Mockito.when(xServiceDao.getById(rangerService.getId())).thenReturn(xService);
-        Mockito.when(daoManager.getXXPolicyLabelMap()).thenReturn(xPolicyLabelMapDao);
+        Mockito.when(daoMgr.getXXPolicyLabelMap()).thenReturn(xPolicyLabelMapDao);
         Mockito.when(xPolicyLabelMapDao.findByPolicyId(rangerPolicy.getId())).thenReturn(ListUtils.EMPTY_LIST);
 
         Mockito.when(!bizUtil.hasAccess(xService, null)).thenReturn(true);
@@ -1932,7 +1939,7 @@ public class TestServiceDBStore {
                 add(RangerConstants.GROUP_PUBLIC);
             }};
         XXGroupGroupDao xXGroupGroupDao = Mockito.mock(XXGroupGroupDao.class);
-        Mockito.when(daoManager.getXXGroupGroup()).thenReturn(xXGroupGroupDao);
+        Mockito.when(daoMgr.getXXGroupGroup()).thenReturn(xXGroupGroupDao);
         XXGroupDao xxGroupDao = Mockito.mock(XXGroupDao.class);
         XXRoleDao  xxRoleDao  = Mockito.mock(XXRoleDao.class);
         VXGroup    vxGroup    = vxGroup();
@@ -1941,12 +1948,12 @@ public class TestServiceDBStore {
         xxGroup.setName(vxGroup.getName());
         xxGroup.setDescription(vxGroup.getDescription());
         xxGroup.setIsVisible(vxGroup.getIsVisible());
-        Mockito.when(daoManager.getXXGroup()).thenReturn(xxGroupDao);
+        Mockito.when(daoMgr.getXXGroup()).thenReturn(xxGroupDao);
         Mockito.when(xxGroupDao.findByGroupName(vxGroup.getName())).thenReturn(xxGroup);
         Mockito.when(xXGroupGroupDao.findGroupNamesByGroupName(Mockito.anyString())).thenReturn(groupNames);
         List<XXRole> xxRoles = new ArrayList<>();
-        Mockito.when(daoManager.getXXGroup()).thenReturn(xxGroupDao);
-        Mockito.when(daoManager.getXXRole()).thenReturn(xxRoleDao);
+        Mockito.when(daoMgr.getXXGroup()).thenReturn(xxGroupDao);
+        Mockito.when(daoMgr.getXXRole()).thenReturn(xxRoleDao);
         Mockito.when(xxRoleDao.findByGroupId(xxGroup.getId())).thenReturn(xxRoles);
 
         List<RangerPolicy> dbRangerPolicy = serviceDBStore.getPolicies(filter);
@@ -1971,7 +1978,7 @@ public class TestServiceDBStore {
                 add(RangerConstants.GROUP_PUBLIC);
             }};
         XXGroupGroupDao xXGroupGroupDao = Mockito.mock(XXGroupGroupDao.class);
-        Mockito.when(daoManager.getXXGroupGroup()).thenReturn(xXGroupGroupDao);
+        Mockito.when(daoMgr.getXXGroupGroup()).thenReturn(xXGroupGroupDao);
         XXGroupDao xxGroupDao = Mockito.mock(XXGroupDao.class);
         XXRoleDao  xxRoleDao  = Mockito.mock(XXRoleDao.class);
         VXGroup    vxGroup    = vxGroup();
@@ -1980,12 +1987,12 @@ public class TestServiceDBStore {
         xxGroup.setName(vxGroup.getName());
         xxGroup.setDescription(vxGroup.getDescription());
         xxGroup.setIsVisible(vxGroup.getIsVisible());
-        Mockito.when(daoManager.getXXGroup()).thenReturn(xxGroupDao);
+        Mockito.when(daoMgr.getXXGroup()).thenReturn(xxGroupDao);
         Mockito.when(xxGroupDao.findByGroupName(vxGroup.getName())).thenReturn(xxGroup);
         Mockito.when(xXGroupGroupDao.findGroupNamesByGroupName(Mockito.anyString())).thenReturn(groupNames);
         List<XXRole> xxRoles = new ArrayList<>();
-        Mockito.when(daoManager.getXXGroup()).thenReturn(xxGroupDao);
-        Mockito.when(daoManager.getXXRole()).thenReturn(xxRoleDao);
+        Mockito.when(daoMgr.getXXGroup()).thenReturn(xxGroupDao);
+        Mockito.when(daoMgr.getXXRole()).thenReturn(xxRoleDao);
         Mockito.when(xxRoleDao.findByGroupId(xxGroup.getId())).thenReturn(xxRoles);
 
         PList<RangerPolicy> dbRangerPolicyList = serviceDBStore.getPaginatedPolicies(filter);
@@ -2000,13 +2007,13 @@ public class TestServiceDBStore {
 
         XXService    xService    = xService();
         XXServiceDao xServiceDao = Mockito.mock(XXServiceDao.class);
-        Mockito.when(daoManager.getXXService()).thenReturn(xServiceDao);
+        Mockito.when(daoMgr.getXXService()).thenReturn(xServiceDao);
         Mockito.when(xServiceDao.getById(Id)).thenReturn(xService);
 
         Assertions.assertThrows(Exception.class, () -> {
             List<RangerPolicy> dbRangerPolicy = serviceDBStore.getServicePolicies(Id, filter);
             Assertions.assertFalse(dbRangerPolicy.isEmpty());
-            Mockito.verify(daoManager).getXXService();
+            Mockito.verify(daoMgr).getXXService();
         });
     }
 
@@ -2041,8 +2048,8 @@ public class TestServiceDBStore {
 
         String serviceName      = "HDFS_1";
         Long   lastKnownVersion = 1L;
-        Mockito.when(daoManager.getXXService()).thenReturn(xServiceDao);
-        Mockito.when(daoManager.getXXServiceVersionInfo()).thenReturn(xServiceVersionInfoDao);
+        Mockito.when(daoMgr.getXXService()).thenReturn(xServiceDao);
+        Mockito.when(daoMgr.getXXServiceVersionInfo()).thenReturn(xServiceVersionInfoDao);
         Mockito.when(xServiceDao.findByName(serviceName)).thenReturn(xService);
         Mockito.when(xServiceVersionInfoDao.findByServiceName(serviceName)).thenReturn(xServiceVersionInfo);
 
@@ -2056,12 +2063,12 @@ public class TestServiceDBStore {
         XXDataHist    xDataHist    = Mockito.mock(XXDataHist.class);
 
         String eventTime = "2015-03-16 06:24:54";
-        Mockito.when(daoManager.getXXDataHist()).thenReturn(xDataHistDao);
+        Mockito.when(daoMgr.getXXDataHist()).thenReturn(xDataHistDao);
         Mockito.when(xDataHistDao.findObjByEventTimeClassTypeAndId(eventTime, 1020, Id)).thenReturn(xDataHist);
 
         RangerPolicy dbRangerPolicy = serviceDBStore.getPolicyFromEventTime(eventTime, Id);
         Assertions.assertNull(dbRangerPolicy);
-        Mockito.verify(daoManager).getXXDataHist();
+        Mockito.verify(daoMgr).getXXDataHist();
     }
 
     @Test
@@ -2083,7 +2090,7 @@ public class TestServiceDBStore {
                 add(RangerConstants.GROUP_PUBLIC);
             }};
         XXGroupGroupDao xXGroupGroupDao = Mockito.mock(XXGroupGroupDao.class);
-        Mockito.when(daoManager.getXXGroupGroup()).thenReturn(xXGroupGroupDao);
+        Mockito.when(daoMgr.getXXGroupGroup()).thenReturn(xXGroupGroupDao);
         XXGroupDao xxGroupDao = Mockito.mock(XXGroupDao.class);
         XXRoleDao  xxRoleDao  = Mockito.mock(XXRoleDao.class);
         VXGroup    vxGroup    = vxGroup();
@@ -2092,12 +2099,12 @@ public class TestServiceDBStore {
         xxGroup.setName(vxGroup.getName());
         xxGroup.setDescription(vxGroup.getDescription());
         xxGroup.setIsVisible(vxGroup.getIsVisible());
-        Mockito.when(daoManager.getXXGroup()).thenReturn(xxGroupDao);
+        Mockito.when(daoMgr.getXXGroup()).thenReturn(xxGroupDao);
         Mockito.when(xxGroupDao.findByGroupName(vxGroup.getName())).thenReturn(xxGroup);
         Mockito.when(xXGroupGroupDao.findGroupNamesByGroupName(Mockito.anyString())).thenReturn(groupNames);
         List<XXRole> xxRoles = new ArrayList<>();
-        Mockito.when(daoManager.getXXGroup()).thenReturn(xxGroupDao);
-        Mockito.when(daoManager.getXXRole()).thenReturn(xxRoleDao);
+        Mockito.when(daoMgr.getXXGroup()).thenReturn(xxGroupDao);
+        Mockito.when(daoMgr.getXXRole()).thenReturn(xxRoleDao);
         Mockito.when(xxRoleDao.findByGroupId(xxGroup.getId())).thenReturn(xxRoles);
 
         PList<RangerPolicy> dbRangerPolicyList = serviceDBStore.getPaginatedServicePolicies(serviceName, filter);
@@ -2113,14 +2120,14 @@ public class TestServiceDBStore {
 
         XXService    xService    = xService();
         XXServiceDao xServiceDao = Mockito.mock(XXServiceDao.class);
-        Mockito.when(daoManager.getXXService()).thenReturn(xServiceDao);
+        Mockito.when(daoMgr.getXXService()).thenReturn(xServiceDao);
         Mockito.when(xServiceDao.getById(Id)).thenReturn(xService);
 
         Set<String>     groupNames      = new HashSet<String>() {{
                 add(RangerConstants.GROUP_PUBLIC);
             }};
         XXGroupGroupDao xXGroupGroupDao = Mockito.mock(XXGroupGroupDao.class);
-        Mockito.when(daoManager.getXXGroupGroup()).thenReturn(xXGroupGroupDao);
+        Mockito.when(daoMgr.getXXGroupGroup()).thenReturn(xXGroupGroupDao);
         XXGroupDao xxGroupDao = Mockito.mock(XXGroupDao.class);
         XXRoleDao  xxRoleDao  = Mockito.mock(XXRoleDao.class);
         VXGroup    vxGroup    = vxGroup();
@@ -2129,12 +2136,12 @@ public class TestServiceDBStore {
         xxGroup.setName(vxGroup.getName());
         xxGroup.setDescription(vxGroup.getDescription());
         xxGroup.setIsVisible(vxGroup.getIsVisible());
-        Mockito.when(daoManager.getXXGroup()).thenReturn(xxGroupDao);
+        Mockito.when(daoMgr.getXXGroup()).thenReturn(xxGroupDao);
         Mockito.when(xxGroupDao.findByGroupName(vxGroup.getName())).thenReturn(xxGroup);
         Mockito.when(xXGroupGroupDao.findGroupNamesByGroupName(Mockito.anyString())).thenReturn(groupNames);
         List<XXRole> xxRoles = new ArrayList<>();
-        Mockito.when(daoManager.getXXGroup()).thenReturn(xxGroupDao);
-        Mockito.when(daoManager.getXXRole()).thenReturn(xxRoleDao);
+        Mockito.when(daoMgr.getXXGroup()).thenReturn(xxGroupDao);
+        Mockito.when(daoMgr.getXXRole()).thenReturn(xxRoleDao);
         Mockito.when(xxRoleDao.findByGroupId(xxGroup.getId())).thenReturn(xxRoles);
 
         serviceDBStore.getPaginatedServicePolicies(rangerService.getId(), filter);
@@ -2146,23 +2153,23 @@ public class TestServiceDBStore {
         List<Integer> versionList  = new ArrayList<>();
         versionList.add(1);
         versionList.add(2);
-        Mockito.when(daoManager.getXXDataHist()).thenReturn(xDataHistDao);
+        Mockito.when(daoMgr.getXXDataHist()).thenReturn(xDataHistDao);
         Mockito.when(xDataHistDao.getVersionListOfObject(Id, 1020)).thenReturn(versionList);
 
         VXString dbVXString = serviceDBStore.getPolicyVersionList(Id);
         Assertions.assertNotNull(dbVXString);
-        Mockito.verify(daoManager).getXXDataHist();
+        Mockito.verify(daoMgr).getXXDataHist();
     }
 
     @Test
     public void test39getPolicyForVersionNumber() throws Exception {
         XXDataHistDao xDataHistDao = Mockito.mock(XXDataHistDao.class);
         XXDataHist    xDataHist    = Mockito.mock(XXDataHist.class);
-        Mockito.when(daoManager.getXXDataHist()).thenReturn(xDataHistDao);
+        Mockito.when(daoMgr.getXXDataHist()).thenReturn(xDataHistDao);
         Mockito.when(xDataHistDao.findObjectByVersionNumber(Id, 1020, 1)).thenReturn(xDataHist);
         RangerPolicy dbRangerPolicy = serviceDBStore.getPolicyForVersionNumber(Id, 1);
         Assertions.assertNull(dbRangerPolicy);
-        Mockito.verify(daoManager).getXXDataHist();
+        Mockito.verify(daoMgr).getXXDataHist();
     }
 
     @Test
@@ -2189,11 +2196,11 @@ public class TestServiceDBStore {
         policiesList.add(policy);
 
         XXPolicyDao xPolicyDao = Mockito.mock(XXPolicyDao.class);
-        Mockito.when(daoManager.getXXPolicy()).thenReturn(xPolicyDao);
+        Mockito.when(daoMgr.getXXPolicy()).thenReturn(xPolicyDao);
         Mockito.when(xPolicyDao.findByResourceSignatureByPolicyStatus(serviceName, policySignature, isPolicyEnabled)).thenReturn(policiesList);
         List<RangerPolicy> policyList = serviceDBStore.getPoliciesByResourceSignature(serviceName, policySignature, isPolicyEnabled);
         Assertions.assertNotNull(policyList);
-        Mockito.verify(daoManager).getXXPolicy();
+        Mockito.verify(daoMgr).getXXPolicy();
     }
 
     @Test
@@ -2207,19 +2214,19 @@ public class TestServiceDBStore {
         RangerService rangerService = rangerService();
         rangerService.getConfigs().put(ServiceDBStore.CONFIG_KEY_PASSWORD, "*****");
 
-        Mockito.when(daoManager.getXXService()).thenReturn(xServiceDao);
+        Mockito.when(daoMgr.getXXService()).thenReturn(xServiceDao);
         Mockito.when(xServiceDao.getById(Id)).thenReturn(xService);
 
-        Mockito.when(daoManager.getXXService()).thenReturn(xServiceDao);
+        Mockito.when(daoMgr.getXXService()).thenReturn(xServiceDao);
 
         List<XXServiceConfigDef> xServiceConfigDefList = new ArrayList<>();
         XXServiceConfigDef       serviceConfigDefObj   = new XXServiceConfigDef();
         serviceConfigDefObj.setId(Id);
         xServiceConfigDefList.add(serviceConfigDefObj);
-        Mockito.when(daoManager.getXXServiceConfigDef()).thenReturn(xServiceConfigDefDao);
+        Mockito.when(daoMgr.getXXServiceConfigDef()).thenReturn(xServiceConfigDefDao);
 
         Mockito.when(svcService.update(rangerService)).thenReturn(rangerService);
-        Mockito.when(daoManager.getXXService()).thenReturn(xServiceDao);
+        Mockito.when(daoMgr.getXXService()).thenReturn(xServiceDao);
         Mockito.when(xServiceDao.getById(Id)).thenReturn(xService);
 
         // the old pass
@@ -2235,13 +2242,13 @@ public class TestServiceDBStore {
         xConfMap.setUpdateTime(new Date());
         xConfMapList.add(xConfMap);
 
-        Mockito.when(daoManager.getXXServiceConfigMap()).thenReturn(xServiceConfigMapDao);
+        Mockito.when(daoMgr.getXXServiceConfigMap()).thenReturn(xServiceConfigMapDao);
         Mockito.when(xServiceConfigMapDao.findByServiceId(Id)).thenReturn(xConfMapList);
-        Mockito.when(daoManager.getXXServiceConfigMap()).thenReturn(xServiceConfigMapDao);
+        Mockito.when(daoMgr.getXXServiceConfigMap()).thenReturn(xServiceConfigMapDao);
         Mockito.when(xServiceConfigMapDao.remove(xConfMap)).thenReturn(true);
 
-        Mockito.when(daoManager.getXXServiceConfigMap()).thenReturn(xServiceConfigMapDao);
-        Mockito.when(daoManager.getXXUser()).thenReturn(xUserDao);
+        Mockito.when(daoMgr.getXXServiceConfigMap()).thenReturn(xServiceConfigMapDao);
+        Mockito.when(daoMgr.getXXUser()).thenReturn(xUserDao);
 
         Mockito.when(rangerAuditFields.populateAuditFields(Mockito.isA(XXServiceConfigMap.class), Mockito.isA(XXService.class))).thenReturn(xConfMap);
 
@@ -2258,7 +2265,7 @@ public class TestServiceDBStore {
         Assertions.assertEquals(dbRangerService.getDescription(), rangerService.getDescription());
         Assertions.assertEquals(dbRangerService.getType(), rangerService.getType());
         Assertions.assertEquals(dbRangerService.getVersion(), rangerService.getVersion());
-        Mockito.verify(daoManager).getXXUser();
+        Mockito.verify(daoMgr).getXXUser();
     }
 
     @Test
@@ -2344,26 +2351,26 @@ public class TestServiceDBStore {
                 setConfigvalue(rService.getConfigs().get(CFG_SERVICE_ADMIN_GROUPS));
             }};
 
-        Mockito.when(daoManager.getXXServiceConfigMap()).thenReturn(xxServiceConfigMapDao);
+        Mockito.when(daoMgr.getXXServiceConfigMap()).thenReturn(xxServiceConfigMapDao);
         Mockito.when(xxServiceConfigMapDao.findByServiceNameAndConfigKey(rService.getName(), CFG_SERVICE_ADMIN_USERS)).thenReturn(svcAdminUserCfg);
         Mockito.when(xxServiceConfigMapDao.findByServiceNameAndConfigKey(rService.getName(), CFG_SERVICE_ADMIN_GROUPS)).thenReturn(svcAdminGroupCfg);
 
         boolean result = serviceDBStore.isServiceAdminUser(rService.getName(), "testServiceAdminUser1");
 
         Assertions.assertTrue(result);
-        Mockito.verify(daoManager).getXXServiceConfigMap();
+        Mockito.verify(daoMgr).getXXServiceConfigMap();
         Mockito.verify(xxServiceConfigMapDao).findByServiceNameAndConfigKey(rService.getName(), CFG_SERVICE_ADMIN_USERS);
         Mockito.verify(xxServiceConfigMapDao, Mockito.never()).findByServiceNameAndConfigKey(rService.getName(), CFG_SERVICE_ADMIN_GROUPS);
-        Mockito.clearInvocations(daoManager);
+        Mockito.clearInvocations(daoMgr);
         Mockito.clearInvocations(xxServiceConfigMapDao);
 
         result = serviceDBStore.isServiceAdminUser(rService.getName(), "testServiceAdminUser2");
 
         Assertions.assertTrue(result);
-        Mockito.verify(daoManager).getXXServiceConfigMap();
+        Mockito.verify(daoMgr).getXXServiceConfigMap();
         Mockito.verify(xxServiceConfigMapDao).findByServiceNameAndConfigKey(rService.getName(), CFG_SERVICE_ADMIN_USERS);
         Mockito.verify(xxServiceConfigMapDao, Mockito.never()).findByServiceNameAndConfigKey(rService.getName(), CFG_SERVICE_ADMIN_GROUPS);
-        Mockito.clearInvocations(daoManager);
+        Mockito.clearInvocations(daoMgr);
         Mockito.clearInvocations(xxServiceConfigMapDao);
 
         Mockito.when(serviceDBStore.xUserMgr.getGroupsForUser("testUser1")).thenReturn(new HashSet<String>() {{
@@ -2373,10 +2380,10 @@ public class TestServiceDBStore {
         result = serviceDBStore.isServiceAdminUser(rService.getName(), "testUser1");
 
         Assertions.assertTrue(result);
-        Mockito.verify(daoManager).getXXServiceConfigMap();
+        Mockito.verify(daoMgr).getXXServiceConfigMap();
         Mockito.verify(xxServiceConfigMapDao).findByServiceNameAndConfigKey(rService.getName(), CFG_SERVICE_ADMIN_USERS);
         Mockito.verify(xxServiceConfigMapDao).findByServiceNameAndConfigKey(rService.getName(), CFG_SERVICE_ADMIN_GROUPS);
-        Mockito.clearInvocations(daoManager);
+        Mockito.clearInvocations(daoMgr);
         Mockito.clearInvocations(xxServiceConfigMapDao);
 
         Mockito.when(serviceDBStore.xUserMgr.getGroupsForUser("testUser2")).thenReturn(new HashSet<String>() {{
@@ -2386,10 +2393,10 @@ public class TestServiceDBStore {
         result = serviceDBStore.isServiceAdminUser(rService.getName(), "testUser2");
 
         Assertions.assertTrue(result);
-        Mockito.verify(daoManager).getXXServiceConfigMap();
+        Mockito.verify(daoMgr).getXXServiceConfigMap();
         Mockito.verify(xxServiceConfigMapDao).findByServiceNameAndConfigKey(rService.getName(), CFG_SERVICE_ADMIN_USERS);
         Mockito.verify(xxServiceConfigMapDao).findByServiceNameAndConfigKey(rService.getName(), CFG_SERVICE_ADMIN_GROUPS);
-        Mockito.clearInvocations(daoManager);
+        Mockito.clearInvocations(daoMgr);
         Mockito.clearInvocations(xxServiceConfigMapDao);
     }
 
@@ -2403,13 +2410,13 @@ public class TestServiceDBStore {
         xxServiceConfigMap.setConfigkey(configName);
         xxServiceConfigMap.setConfigvalue(rService.getConfigs().get(configName));
 
-        Mockito.when(daoManager.getXXServiceConfigMap()).thenReturn(xxServiceConfigMapDao);
+        Mockito.when(daoMgr.getXXServiceConfigMap()).thenReturn(xxServiceConfigMapDao);
         Mockito.when(xxServiceConfigMapDao.findByServiceNameAndConfigKey(rService.getName(), configName)).thenReturn(xxServiceConfigMap);
 
         result = serviceDBStore.isServiceAdminUser(rService.getName(), "testServiceAdminUser3");
 
         Assertions.assertFalse(result);
-        Mockito.verify(daoManager).getXXServiceConfigMap();
+        Mockito.verify(daoMgr).getXXServiceConfigMap();
         Mockito.verify(xxServiceConfigMapDao).findByServiceNameAndConfigKey(rService.getName(), configName);
     }
 
@@ -2435,13 +2442,13 @@ public class TestServiceDBStore {
         serviceConfigDefObj.setType("7");
         svcConfDefList.add(serviceConfigDefObj);
 
-        Mockito.when(daoManager.getXXServiceConfigDef()).thenReturn(xServiceConfigDefDao);
+        Mockito.when(daoMgr.getXXServiceConfigDef()).thenReturn(xServiceConfigDefDao);
         Mockito.when(svcService.create(rangerService)).thenReturn(rangerService);
-        Mockito.when(daoManager.getXXService()).thenReturn(xServiceDao);
+        Mockito.when(daoMgr.getXXService()).thenReturn(xServiceDao);
         Mockito.when(xServiceDao.getById(rangerService.getId())).thenReturn(xService);
-        Mockito.when(daoManager.getXXServiceConfigMap()).thenReturn(xServiceConfigMapDao);
+        Mockito.when(daoMgr.getXXServiceConfigMap()).thenReturn(xServiceConfigMapDao);
         Mockito.when(stringUtil.getValidUserName(userName)).thenReturn(userName);
-        Mockito.when(daoManager.getXXUser()).thenReturn(xUserDao);
+        Mockito.when(daoMgr.getXXUser()).thenReturn(xUserDao);
         Mockito.when(xUserDao.findByUserName(userName)).thenReturn(xUser);
 
         Mockito.when(xUserService.populateViewBean(xUser)).thenReturn(vXUser);
@@ -2489,8 +2496,8 @@ public class TestServiceDBStore {
 
         spy.createDefaultPolicies(rangerService);
 
-        Mockito.verify(daoManager, Mockito.atLeast(1)).getXXService();
-        Mockito.verify(daoManager).getXXServiceConfigMap();
+        Mockito.verify(daoMgr, Mockito.atLeast(1)).getXXService();
+        Mockito.verify(daoMgr).getXXServiceConfigMap();
     }
 
     @Test
@@ -2557,7 +2564,7 @@ public class TestServiceDBStore {
         XXPolicyDao  xPolicyDao   = Mockito.mock(XXPolicyDao.class);
         XXPolicy     xPolicy      = Mockito.mock(XXPolicy.class);
         RangerPolicy rangerPolicy = rangerPolicy();
-        Mockito.when(daoManager.getXXPolicy()).thenReturn(xPolicyDao);
+        Mockito.when(daoMgr.getXXPolicy()).thenReturn(xPolicyDao);
         Mockito.when(xPolicyDao.findPolicyByGUIDAndServiceNameAndZoneName(rangerPolicy.getGuid(), null, null)).thenReturn(xPolicy);
         Mockito.when(policyService.getPopulatedViewObject(xPolicy)).thenReturn(rangerPolicy);
         RangerPolicy dbRangerPolicy = serviceDBStore.getPolicy(rangerPolicy.getGuid(), null, null);
@@ -2574,7 +2581,7 @@ public class TestServiceDBStore {
         RangerPolicy  rangerPolicy  = rangerPolicy();
         RangerService rangerService = rangerService();
         String        serviceName   = rangerService.getName();
-        Mockito.when(daoManager.getXXPolicy()).thenReturn(xPolicyDao);
+        Mockito.when(daoMgr.getXXPolicy()).thenReturn(xPolicyDao);
         Mockito.when(xPolicyDao.findPolicyByGUIDAndServiceNameAndZoneName(rangerPolicy.getGuid(), serviceName, null)).thenReturn(xPolicy);
         Mockito.when(policyService.getPopulatedViewObject(xPolicy)).thenReturn(rangerPolicy);
         RangerPolicy dbRangerPolicy = serviceDBStore.getPolicy(rangerPolicy.getGuid(), serviceName, null);
@@ -2592,7 +2599,7 @@ public class TestServiceDBStore {
         RangerService rangerService = rangerService();
         String        serviceName   = rangerService.getName();
         String        zoneName      = "zone-1";
-        Mockito.when(daoManager.getXXPolicy()).thenReturn(xPolicyDao);
+        Mockito.when(daoMgr.getXXPolicy()).thenReturn(xPolicyDao);
         Mockito.when(xPolicyDao.findPolicyByGUIDAndServiceNameAndZoneName(rangerPolicy.getGuid(), serviceName, zoneName)).thenReturn(xPolicy);
         Mockito.when(policyService.getPopulatedViewObject(xPolicy)).thenReturn(rangerPolicy);
         RangerPolicy dbRangerPolicy = serviceDBStore.getPolicy(rangerPolicy.getGuid(), serviceName, zoneName);
@@ -2608,7 +2615,7 @@ public class TestServiceDBStore {
         XXPolicy     xPolicy      = Mockito.mock(XXPolicy.class);
         RangerPolicy rangerPolicy = rangerPolicy();
         String       zoneName     = "zone-1";
-        Mockito.when(daoManager.getXXPolicy()).thenReturn(xPolicyDao);
+        Mockito.when(daoMgr.getXXPolicy()).thenReturn(xPolicyDao);
         Mockito.when(xPolicyDao.findPolicyByGUIDAndServiceNameAndZoneName(rangerPolicy.getGuid(), null, zoneName)).thenReturn(xPolicy);
         Mockito.when(policyService.getPopulatedViewObject(xPolicy)).thenReturn(rangerPolicy);
         RangerPolicy dbRangerPolicy = serviceDBStore.getPolicy(rangerPolicy.getGuid(), null, zoneName);
@@ -2622,7 +2629,7 @@ public class TestServiceDBStore {
     public void test54init() throws Exception {
         serviceDBStore.init();
 
-        Mockito.verify(daoManager, Mockito.atLeast(0)).getXXServiceDef();
+        Mockito.verify(daoMgr, Mockito.atLeast(0)).getXXServiceDef();
     }
 
     @Test
@@ -2630,13 +2637,13 @@ public class TestServiceDBStore {
         String serviceName = "testService";
         XXServiceDao xServiceDao = Mockito.mock(XXServiceDao.class);
 
-        Mockito.when(daoManager.getXXService()).thenReturn(xServiceDao);
+        Mockito.when(daoMgr.getXXService()).thenReturn(xServiceDao);
         Mockito.when(xServiceDao.findIdByName(serviceName)).thenReturn(Id);
 
         boolean result = serviceDBStore.serviceExists(serviceName);
 
         Assertions.assertTrue(result);
-        Mockito.verify(daoManager).getXXService();
+        Mockito.verify(daoMgr).getXXService();
         Mockito.verify(xServiceDao).findIdByName(serviceName);
     }
 
@@ -2645,13 +2652,13 @@ public class TestServiceDBStore {
         String serviceName = "nonExistentService";
         XXServiceDao xServiceDao = Mockito.mock(XXServiceDao.class);
 
-        Mockito.when(daoManager.getXXService()).thenReturn(xServiceDao);
+        Mockito.when(daoMgr.getXXService()).thenReturn(xServiceDao);
         Mockito.when(xServiceDao.findIdByName(serviceName)).thenReturn(null);
 
         boolean result = serviceDBStore.serviceExists(serviceName);
 
         Assertions.assertFalse(result);
-        Mockito.verify(daoManager).getXXService();
+        Mockito.verify(daoMgr).getXXService();
         Mockito.verify(xServiceDao).findIdByName(serviceName);
     }
 
@@ -2662,7 +2669,7 @@ public class TestServiceDBStore {
         XXServiceDef xServiceDef = Mockito.mock(XXServiceDef.class);
         RangerServiceDef serviceDef = rangerServiceDef();
 
-        Mockito.when(daoManager.getXXServiceDef()).thenReturn(xServiceDefDao);
+        Mockito.when(daoMgr.getXXServiceDef()).thenReturn(xServiceDefDao);
         Mockito.when(xServiceDefDao.findByDisplayName(displayName)).thenReturn(xServiceDef);
         Mockito.when(serviceDefService.getPopulatedViewObject(xServiceDef)).thenReturn(serviceDef);
 
@@ -2670,7 +2677,7 @@ public class TestServiceDBStore {
 
         Assertions.assertNotNull(result);
         Assertions.assertEquals(serviceDef, result);
-        Mockito.verify(daoManager).getXXServiceDef();
+        Mockito.verify(daoMgr).getXXServiceDef();
         Mockito.verify(xServiceDefDao).findByDisplayName(displayName);
         Mockito.verify(serviceDefService).getPopulatedViewObject(xServiceDef);
     }
@@ -2680,13 +2687,13 @@ public class TestServiceDBStore {
         String displayName = "Non-existent Display Name";
         XXServiceDefDao xServiceDefDao = Mockito.mock(XXServiceDefDao.class);
 
-        Mockito.when(daoManager.getXXServiceDef()).thenReturn(xServiceDefDao);
+        Mockito.when(daoMgr.getXXServiceDef()).thenReturn(xServiceDefDao);
         Mockito.when(xServiceDefDao.findByDisplayName(displayName)).thenReturn(null);
 
         RangerServiceDef result = serviceDBStore.getServiceDefByDisplayName(displayName);
 
         Assertions.assertNull(result);
-        Mockito.verify(daoManager).getXXServiceDef();
+        Mockito.verify(daoMgr).getXXServiceDef();
         Mockito.verify(xServiceDefDao).findByDisplayName(displayName);
     }
 
@@ -2697,7 +2704,7 @@ public class TestServiceDBStore {
         XXService xService = xService();
         RangerService rangerService = rangerService();
 
-        Mockito.when(daoManager.getXXService()).thenReturn(xServiceDao);
+        Mockito.when(daoMgr.getXXService()).thenReturn(xServiceDao);
         Mockito.when(xServiceDao.findByDisplayName(displayName)).thenReturn(xService);
         Mockito.when(bizUtil.hasAccess(xService, null)).thenReturn(true);
         Mockito.when(svcService.getPopulatedViewObject(xService)).thenReturn(rangerService);
@@ -2706,7 +2713,7 @@ public class TestServiceDBStore {
 
         Assertions.assertNotNull(result);
         Assertions.assertEquals(rangerService, result);
-        Mockito.verify(daoManager).getXXService();
+        Mockito.verify(daoMgr).getXXService();
         Mockito.verify(xServiceDao).findByDisplayName(displayName);
         Mockito.verify(svcService).getPopulatedViewObject(xService);
     }
@@ -2716,13 +2723,13 @@ public class TestServiceDBStore {
         String displayName = "Non-existent Display Name";
         XXServiceDao xServiceDao = Mockito.mock(XXServiceDao.class);
 
-        Mockito.when(daoManager.getXXService()).thenReturn(xServiceDao);
+        Mockito.when(daoMgr.getXXService()).thenReturn(xServiceDao);
         Mockito.when(xServiceDao.findByDisplayName(displayName)).thenReturn(null);
 
         RangerService result = serviceDBStore.getServiceByDisplayName(displayName);
 
         Assertions.assertNull(result);
-        Mockito.verify(daoManager).getXXService();
+        Mockito.verify(daoMgr).getXXService();
         Mockito.verify(xServiceDao).findByDisplayName(displayName);
     }
 
@@ -2730,13 +2737,13 @@ public class TestServiceDBStore {
     public void test61policyExists() throws Exception {
         XXPolicyDao xPolicyDao = Mockito.mock(XXPolicyDao.class);
 
-        Mockito.when(daoManager.getXXPolicy()).thenReturn(xPolicyDao);
+        Mockito.when(daoMgr.getXXPolicy()).thenReturn(xPolicyDao);
         Mockito.when(xPolicyDao.getCountById(Id)).thenReturn(1L);
 
         boolean result = serviceDBStore.policyExists(Id);
 
         Assertions.assertTrue(result);
-        Mockito.verify(daoManager).getXXPolicy();
+        Mockito.verify(daoMgr).getXXPolicy();
         Mockito.verify(xPolicyDao).getCountById(Id);
     }
 
@@ -2744,13 +2751,13 @@ public class TestServiceDBStore {
     public void test62policyExistsFalse() throws Exception {
         XXPolicyDao xPolicyDao = Mockito.mock(XXPolicyDao.class);
 
-        Mockito.when(daoManager.getXXPolicy()).thenReturn(xPolicyDao);
+        Mockito.when(daoMgr.getXXPolicy()).thenReturn(xPolicyDao);
         Mockito.when(xPolicyDao.getCountById(Id)).thenReturn(0L);
 
         boolean result = serviceDBStore.policyExists(Id);
 
         Assertions.assertFalse(result);
-        Mockito.verify(daoManager).getXXPolicy();
+        Mockito.verify(daoMgr).getXXPolicy();
         Mockito.verify(xPolicyDao).getCountById(Id);
     }
 
@@ -2762,7 +2769,7 @@ public class TestServiceDBStore {
         XXPolicyDao xPolicyDao = Mockito.mock(XXPolicyDao.class);
         XXPolicy xPolicy = Mockito.mock(XXPolicy.class);
 
-        Mockito.when(daoManager.getXXPolicy()).thenReturn(xPolicyDao);
+        Mockito.when(daoMgr.getXXPolicy()).thenReturn(xPolicyDao);
         Mockito.when(xPolicyDao.findByNameAndServiceIdAndZoneId(policyName, serviceId, zoneId)).thenReturn(xPolicy);
         Mockito.when(xPolicy.getId()).thenReturn(Id);
 
@@ -2770,7 +2777,7 @@ public class TestServiceDBStore {
 
         Assertions.assertNotNull(result);
         Assertions.assertEquals(Id, result);
-        Mockito.verify(daoManager).getXXPolicy();
+        Mockito.verify(daoMgr).getXXPolicy();
         Mockito.verify(xPolicyDao).findByNameAndServiceIdAndZoneId(policyName, serviceId, zoneId);
     }
 
@@ -2781,13 +2788,13 @@ public class TestServiceDBStore {
         Long zoneId = Id;
         XXPolicyDao xPolicyDao = Mockito.mock(XXPolicyDao.class);
 
-        Mockito.when(daoManager.getXXPolicy()).thenReturn(xPolicyDao);
+        Mockito.when(daoMgr.getXXPolicy()).thenReturn(xPolicyDao);
         Mockito.when(xPolicyDao.findByNameAndServiceIdAndZoneId(policyName, serviceId, zoneId)).thenReturn(null);
 
         Long result = serviceDBStore.getPolicyId(serviceId, policyName, zoneId);
 
         Assertions.assertNull(result);
-        Mockito.verify(daoManager).getXXPolicy();
+        Mockito.verify(daoMgr).getXXPolicy();
         Mockito.verify(xPolicyDao).findByNameAndServiceIdAndZoneId(policyName, serviceId, zoneId);
     }
 
@@ -2830,14 +2837,14 @@ public class TestServiceDBStore {
         expectedMap.put("hive", 3L);
 
         XXServiceDefDao xServiceDefDao = Mockito.mock(XXServiceDefDao.class);
-        Mockito.when(daoManager.getXXServiceDef()).thenReturn(xServiceDefDao);
+        Mockito.when(daoMgr.getXXServiceDef()).thenReturn(xServiceDefDao);
         Mockito.when(xServiceDefDao.getPolicyCountByType(policyType)).thenReturn(expectedMap);
 
         Map<String, Long> result = serviceDBStore.getPolicyCountByTypeAndServiceType(policyType);
 
         Assertions.assertNotNull(result);
         Assertions.assertEquals(expectedMap, result);
-        Mockito.verify(daoManager).getXXServiceDef();
+        Mockito.verify(daoMgr).getXXServiceDef();
         Mockito.verify(xServiceDefDao).getPolicyCountByType(policyType);
     }
 
@@ -2848,14 +2855,14 @@ public class TestServiceDBStore {
         expectedMap.put("hive", 1L);
 
         XXServiceDefDao xServiceDefDao = Mockito.mock(XXServiceDefDao.class);
-        Mockito.when(daoManager.getXXServiceDef()).thenReturn(xServiceDefDao);
+        Mockito.when(daoMgr.getXXServiceDef()).thenReturn(xServiceDefDao);
         Mockito.when(xServiceDefDao.getPolicyCountByDenyItems()).thenReturn(expectedMap);
 
         Map<String, Long> result = serviceDBStore.getPolicyCountByDenyConditionsAndServiceDef();
 
         Assertions.assertNotNull(result);
         Assertions.assertEquals(expectedMap, result);
-        Mockito.verify(daoManager).getXXServiceDef();
+        Mockito.verify(daoMgr).getXXServiceDef();
         Mockito.verify(xServiceDefDao).getPolicyCountByDenyItems();
     }
 
@@ -2866,14 +2873,14 @@ public class TestServiceDBStore {
         expectedMap.put("hive", 5L);
 
         XXServiceDefDao xServiceDefDao = Mockito.mock(XXServiceDefDao.class);
-        Mockito.when(daoManager.getXXServiceDef()).thenReturn(xServiceDefDao);
+        Mockito.when(daoMgr.getXXServiceDef()).thenReturn(xServiceDefDao);
         Mockito.when(xServiceDefDao.getServiceCount()).thenReturn(expectedMap);
 
         Map<String, Long> result = serviceDBStore.getServiceCountByType();
 
         Assertions.assertNotNull(result);
         Assertions.assertEquals(expectedMap, result);
-        Mockito.verify(daoManager).getXXServiceDef();
+        Mockito.verify(daoMgr).getXXServiceDef();
         Mockito.verify(xServiceDefDao).getServiceCount();
     }
 
@@ -2884,14 +2891,14 @@ public class TestServiceDBStore {
         expectedList.add("hive");
 
         XXServiceDefDao xServiceDefDao = Mockito.mock(XXServiceDefDao.class);
-        Mockito.when(daoManager.getXXServiceDef()).thenReturn(xServiceDefDao);
+        Mockito.when(daoMgr.getXXServiceDef()).thenReturn(xServiceDefDao);
         Mockito.when(xServiceDefDao.findAllHavingEnrichers()).thenReturn(expectedList);
 
         List<String> result = serviceDBStore.findAllServiceDefNamesHavingContextEnrichers();
 
         Assertions.assertNotNull(result);
         Assertions.assertEquals(expectedList, result);
-        Mockito.verify(daoManager).getXXServiceDef();
+        Mockito.verify(daoMgr).getXXServiceDef();
         Mockito.verify(xServiceDefDao).findAllHavingEnrichers();
     }
 
@@ -2902,7 +2909,7 @@ public class TestServiceDBStore {
         XXService xService = xService();
         RangerService rangerService = rangerService();
 
-        Mockito.when(daoManager.getXXService()).thenReturn(xServiceDao);
+        Mockito.when(daoMgr.getXXService()).thenReturn(xServiceDao);
         Mockito.when(xServiceDao.findByName(serviceName)).thenReturn(xService);
         Mockito.when(svcService.getPopulatedViewObject(xService)).thenReturn(rangerService);
 
@@ -2910,7 +2917,7 @@ public class TestServiceDBStore {
 
         Assertions.assertNotNull(result);
         Assertions.assertEquals(rangerService, result);
-        Mockito.verify(daoManager).getXXService();
+        Mockito.verify(daoMgr).getXXService();
         Mockito.verify(xServiceDao).findByName(serviceName);
         Mockito.verify(svcService).getPopulatedViewObject(xService);
     }
@@ -2920,13 +2927,13 @@ public class TestServiceDBStore {
         String serviceName = "nonExistentService";
         XXServiceDao xServiceDao = Mockito.mock(XXServiceDao.class);
 
-        Mockito.when(daoManager.getXXService()).thenReturn(xServiceDao);
+        Mockito.when(daoMgr.getXXService()).thenReturn(xServiceDao);
         Mockito.when(xServiceDao.findByName(serviceName)).thenReturn(null);
 
         RangerService result = serviceDBStore.getServiceByNameForDP(serviceName);
 
         Assertions.assertNull(result);
-        Mockito.verify(daoManager).getXXService();
+        Mockito.verify(daoMgr).getXXService();
         Mockito.verify(xServiceDao).findByName(serviceName);
     }
 
@@ -2947,7 +2954,7 @@ public class TestServiceDBStore {
     @Test
     public void test75_getServiceName() throws Exception {
         XXServiceDao xxServiceDao = Mockito.mock(XXServiceDao.class);
-        Mockito.when(daoManager.getXXService()).thenReturn(xxServiceDao);
+        Mockito.when(daoMgr.getXXService()).thenReturn(xxServiceDao);
         XXService x = new XXService();
         x.setName("svc-1");
         Mockito.when(xxServiceDao.getById(1L)).thenReturn(x);
@@ -2978,10 +2985,10 @@ public class TestServiceDBStore {
 
         XXServiceVersionInfo versionInfo = Mockito.mock(XXServiceVersionInfo.class);
         XXServiceDao xxServiceDao = Mockito.mock(XXServiceDao.class);
-        Mockito.when(daoManager.getXXService()).thenReturn(xxServiceDao);
+        Mockito.when(daoMgr.getXXService()).thenReturn(xxServiceDao);
         Mockito.when(xxServiceDao.findByName(serviceName)).thenReturn(service);
         XXServiceVersionInfoDao xxServiceVersionInfoDao = Mockito.mock(XXServiceVersionInfoDao.class);
-        Mockito.when(daoManager.getXXServiceVersionInfo()).thenReturn(xxServiceVersionInfoDao);
+        Mockito.when(daoMgr.getXXServiceVersionInfo()).thenReturn(xxServiceVersionInfoDao);
         Mockito.when(xxServiceVersionInfoDao.findByServiceName(serviceName)).thenReturn(versionInfo);
 
         try {
@@ -3003,10 +3010,10 @@ public class TestServiceDBStore {
 
             XXServiceVersionInfo versionInfo = Mockito.mock(XXServiceVersionInfo.class);
             XXServiceDao xxServiceDao = Mockito.mock(XXServiceDao.class);
-            Mockito.when(daoManager.getXXService()).thenReturn(xxServiceDao);
+            Mockito.when(daoMgr.getXXService()).thenReturn(xxServiceDao);
             Mockito.when(xxServiceDao.findByName(serviceName)).thenReturn(service);
             XXServiceVersionInfoDao xxServiceVersionInfoDao = Mockito.mock(XXServiceVersionInfoDao.class);
-            Mockito.when(daoManager.getXXServiceVersionInfo()).thenReturn(xxServiceVersionInfoDao);
+            Mockito.when(daoMgr.getXXServiceVersionInfo()).thenReturn(xxServiceVersionInfoDao);
             Mockito.when(xxServiceVersionInfoDao.findByServiceName(serviceName)).thenReturn(versionInfo);
 
             try {
@@ -3030,10 +3037,10 @@ public class TestServiceDBStore {
 
         XXServiceVersionInfo versionInfo = Mockito.mock(XXServiceVersionInfo.class);
         XXServiceDao xxServiceDao = Mockito.mock(XXServiceDao.class);
-        Mockito.when(daoManager.getXXService()).thenReturn(xxServiceDao);
+        Mockito.when(daoMgr.getXXService()).thenReturn(xxServiceDao);
         Mockito.when(xxServiceDao.findByName(serviceName)).thenReturn(service);
         XXServiceVersionInfoDao xxServiceVersionInfoDao = Mockito.mock(XXServiceVersionInfoDao.class);
-        Mockito.when(daoManager.getXXServiceVersionInfo()).thenReturn(xxServiceVersionInfoDao);
+        Mockito.when(daoMgr.getXXServiceVersionInfo()).thenReturn(xxServiceVersionInfoDao);
         Mockito.when(xxServiceVersionInfoDao.findByServiceName(serviceName)).thenReturn(versionInfo);
 
         try {
@@ -3063,14 +3070,14 @@ public class TestServiceDBStore {
         metaDataList.add(metaData);
 
         XXPolicyDao xPolicyDao = Mockito.mock(XXPolicyDao.class);
-        Mockito.when(daoManager.getXXPolicy()).thenReturn(xPolicyDao);
+        Mockito.when(daoMgr.getXXPolicy()).thenReturn(xPolicyDao);
         Mockito.when(xPolicyDao.getMetaAttributesForPolicies(Mockito.anyList())).thenReturn(metaDataList);
 
         List<RangerPolicy> result = serviceDBStore.getPoliciesWithMetaAttributes(policies);
 
         Assertions.assertNotNull(result);
         Assertions.assertEquals(1, result.size());
-        Mockito.verify(daoManager).getXXPolicy();
+        Mockito.verify(daoMgr).getXXPolicy();
         Mockito.verify(xPolicyDao).getMetaAttributesForPolicies(Mockito.anyList());
     }
 
@@ -3082,14 +3089,14 @@ public class TestServiceDBStore {
         XXServiceVersionInfoDao xServiceVersionInfoDao = Mockito.mock(XXServiceVersionInfoDao.class);
         XXServiceVersionInfo xServiceVersionInfo = Mockito.mock(XXServiceVersionInfo.class);
 
-        Mockito.when(daoManager.getXXServiceVersionInfo()).thenReturn(xServiceVersionInfoDao);
+        Mockito.when(daoMgr.getXXServiceVersionInfo()).thenReturn(xServiceVersionInfoDao);
         Mockito.when(xServiceVersionInfoDao.findByServiceName(serviceName)).thenReturn(xServiceVersionInfo);
         Mockito.when(xServiceVersionInfo.getPolicyVersion()).thenReturn(expectedVersion);
 
         Long result = serviceDBStore.getServicePolicyVersion(serviceName);
 
         Assertions.assertEquals(expectedVersion, result);
-        Mockito.verify(daoManager).getXXServiceVersionInfo();
+        Mockito.verify(daoMgr).getXXServiceVersionInfo();
         Mockito.verify(xServiceVersionInfoDao).findByServiceName(serviceName);
         Mockito.verify(xServiceVersionInfo).getPolicyVersion();
     }
@@ -3100,13 +3107,13 @@ public class TestServiceDBStore {
 
         XXServiceVersionInfoDao xServiceVersionInfoDao = Mockito.mock(XXServiceVersionInfoDao.class);
 
-        Mockito.when(daoManager.getXXServiceVersionInfo()).thenReturn(xServiceVersionInfoDao);
+        Mockito.when(daoMgr.getXXServiceVersionInfo()).thenReturn(xServiceVersionInfoDao);
         Mockito.when(xServiceVersionInfoDao.findByServiceName(serviceName)).thenReturn(null);
 
         Long result = serviceDBStore.getServicePolicyVersion(serviceName);
 
         Assertions.assertNull(result);
-        Mockito.verify(daoManager).getXXServiceVersionInfo();
+        Mockito.verify(daoMgr).getXXServiceVersionInfo();
         Mockito.verify(xServiceVersionInfoDao).findByServiceName(serviceName);
     }
 
@@ -3125,20 +3132,20 @@ public class TestServiceDBStore {
         Long expectedCount = 10L;
 
         XXPolicyDao xPolicyDao = Mockito.mock(XXPolicyDao.class);
-        Mockito.when(daoManager.getXXPolicy()).thenReturn(xPolicyDao);
+        Mockito.when(daoMgr.getXXPolicy()).thenReturn(xPolicyDao);
         Mockito.when(xPolicyDao.getPoliciesCount(serviceName)).thenReturn(expectedCount);
 
         long result = serviceDBStore.getPoliciesCount(serviceName);
 
         Assertions.assertEquals(expectedCount.longValue(), result);
-        Mockito.verify(daoManager).getXXPolicy();
+        Mockito.verify(daoMgr).getXXPolicy();
         Mockito.verify(xPolicyDao).getPoliciesCount(serviceName);
     }
 
     @Test
     public void test86isServiceActive() throws Exception {
         XXServiceDao xx = Mockito.mock(XXServiceDao.class);
-        Mockito.when(daoManager.getXXService()).thenReturn(xx);
+        Mockito.when(daoMgr.getXXService()).thenReturn(xx);
         XXService s = new XXService();
         s.setName("svc");
         s.setIsEnabled(true);
@@ -3262,7 +3269,7 @@ public class TestServiceDBStore {
         XXService service = Mockito.mock(XXService.class);
         XXServiceDao xxServiceDao = Mockito.mock(XXServiceDao.class);
 
-        Mockito.when(daoManager.getXXService()).thenReturn(xxServiceDao);
+        Mockito.when(daoMgr.getXXService()).thenReturn(xxServiceDao);
         Mockito.when(xxServiceDao.findByName("testService")).thenReturn(service);
 
         try {
@@ -3271,7 +3278,7 @@ public class TestServiceDBStore {
             // Expected due to incomplete mock setup
         }
 
-        Mockito.verify(daoManager, Mockito.atLeastOnce()).getXXService();
+        Mockito.verify(daoMgr, Mockito.atLeastOnce()).getXXService();
     }
 
     @Test
@@ -3282,7 +3289,7 @@ public class TestServiceDBStore {
         XXPolicyDao mockPolicyDao = Mockito.mock(XXPolicyDao.class);
         List<XXPolicy> policies = new ArrayList<XXPolicy>();
 
-        Mockito.when(daoManager.getXXPolicy()).thenReturn(mockPolicyDao);
+        Mockito.when(daoMgr.getXXPolicy()).thenReturn(mockPolicyDao);
 
         try {
             serviceDBStore.deleteZonePolicies(serviceNames, zoneId);
@@ -3290,7 +3297,7 @@ public class TestServiceDBStore {
             // Expected due to incomplete mock setup
         }
 
-        Mockito.verify(daoManager, Mockito.atLeastOnce()).getXXPolicy();
+        Mockito.verify(daoMgr, Mockito.atLeastOnce()).getXXPolicy();
     }
 
     @Test
@@ -3375,16 +3382,16 @@ public class TestServiceDBStore {
         XXService mockService = Mockito.mock(XXService.class);
         List<Long> serviceIds = Arrays.asList(1L, 2L);
 
-        Mockito.when(daoManager.getXXPolicyChangeLog()).thenReturn(mockChangeLogDao);
-        Mockito.when(daoManager.getXXService()).thenReturn(mockServiceDao);
-        Mockito.when(daoManager.getXXServiceVersionInfo()).thenReturn(mockVersionInfoDao);
+        Mockito.when(daoMgr.getXXPolicyChangeLog()).thenReturn(mockChangeLogDao);
+        Mockito.when(daoMgr.getXXService()).thenReturn(mockServiceDao);
+        Mockito.when(daoMgr.getXXServiceVersionInfo()).thenReturn(mockVersionInfoDao);
         Mockito.when(mockServiceDao.getAllServiceIds()).thenReturn(serviceIds);
         Mockito.when(mockVersionInfoDao.findByServiceId(Mockito.anyLong())).thenReturn(mockVersionInfo);
         Mockito.when(mockServiceDao.getById(Mockito.anyLong())).thenReturn(mockService);
 
         serviceDBStore.resetPolicyUpdateLog(retentionInDays, policyChangeType);
 
-        Mockito.verify(daoManager, Mockito.atLeastOnce()).getXXPolicyChangeLog();
+        Mockito.verify(daoMgr, Mockito.atLeastOnce()).getXXPolicyChangeLog();
     }
 
     @Test
@@ -3399,16 +3406,16 @@ public class TestServiceDBStore {
         XXService mockService = Mockito.mock(XXService.class);
         List<Long> serviceIds = Arrays.asList(1L, 2L);
 
-        Mockito.when(daoManager.getXXTagChangeLog()).thenReturn(mockTagChangeLogDao);
-        Mockito.when(daoManager.getXXService()).thenReturn(mockServiceDao);
-        Mockito.when(daoManager.getXXServiceVersionInfo()).thenReturn(mockVersionInfoDao);
+        Mockito.when(daoMgr.getXXTagChangeLog()).thenReturn(mockTagChangeLogDao);
+        Mockito.when(daoMgr.getXXService()).thenReturn(mockServiceDao);
+        Mockito.when(daoMgr.getXXServiceVersionInfo()).thenReturn(mockVersionInfoDao);
         Mockito.when(mockServiceDao.getAllServiceIds()).thenReturn(serviceIds);
         Mockito.when(mockVersionInfoDao.findByServiceId(Mockito.anyLong())).thenReturn(mockVersionInfo);
         Mockito.when(mockServiceDao.getById(Mockito.anyLong())).thenReturn(mockService);
 
         serviceDBStore.resetTagUpdateLog(retentionInDays, tagChangeType);
 
-        Mockito.verify(daoManager, Mockito.atLeastOnce()).getXXTagChangeLog();
+        Mockito.verify(daoMgr, Mockito.atLeastOnce()).getXXTagChangeLog();
     }
 
     @Test
@@ -3417,11 +3424,11 @@ public class TestServiceDBStore {
         List<RangerPurgeResult> result = new ArrayList<RangerPurgeResult>();
 
         XXAuthSessionDao mockAuthSessionDao = Mockito.mock(XXAuthSessionDao.class);
-        Mockito.when(daoManager.getXXAuthSession()).thenReturn(mockAuthSessionDao);
+        Mockito.when(daoMgr.getXXAuthSession()).thenReturn(mockAuthSessionDao);
 
         serviceDBStore.removeAuthSessions(retentionInDays, result);
 
-        Mockito.verify(daoManager, Mockito.atLeastOnce()).getXXAuthSession();
+        Mockito.verify(daoMgr, Mockito.atLeastOnce()).getXXAuthSession();
     }
 
     @Test
@@ -3430,11 +3437,11 @@ public class TestServiceDBStore {
         List<RangerPurgeResult> result = new ArrayList<RangerPurgeResult>();
 
         XXTrxLogV2Dao mockTrxLogDao = Mockito.mock(XXTrxLogV2Dao.class);
-        Mockito.when(daoManager.getXXTrxLogV2()).thenReturn(mockTrxLogDao);
+        Mockito.when(daoMgr.getXXTrxLogV2()).thenReturn(mockTrxLogDao);
 
         serviceDBStore.removeTransactionLogs(retentionInDays, result);
 
-        Mockito.verify(daoManager, Mockito.atLeastOnce()).getXXTrxLogV2();
+        Mockito.verify(daoMgr, Mockito.atLeastOnce()).getXXTrxLogV2();
     }
 
     @Test
@@ -3443,11 +3450,11 @@ public class TestServiceDBStore {
         List<RangerPurgeResult> result = new ArrayList<RangerPurgeResult>();
 
         XXPolicyExportAuditDao mockExportAuditDao = Mockito.mock(XXPolicyExportAuditDao.class);
-        Mockito.when(daoManager.getXXPolicyExportAudit()).thenReturn(mockExportAuditDao);
+        Mockito.when(daoMgr.getXXPolicyExportAudit()).thenReturn(mockExportAuditDao);
 
         serviceDBStore.removePolicyExportLogs(retentionInDays, result);
 
-        Mockito.verify(daoManager, Mockito.atLeastOnce()).getXXPolicyExportAudit();
+        Mockito.verify(daoMgr, Mockito.atLeastOnce()).getXXPolicyExportAudit();
     }
 
     @Test
@@ -3505,7 +3512,7 @@ public class TestServiceDBStore {
         XXSecurityZone xZone = Mockito.mock(XXSecurityZone.class);
         RangerSecurityZone mockZone = Mockito.mock(RangerSecurityZone.class);
 
-        Mockito.when(daoManager.getXXSecurityZoneDao()).thenReturn(mockZoneDao);
+        Mockito.when(daoMgr.getXXSecurityZoneDao()).thenReturn(mockZoneDao);
         Mockito.when(mockZoneDao.findByZoneName(zoneName)).thenReturn(xZone);
         Mockito.when(xZone.getId()).thenReturn(1L);
         Mockito.when(rangerSecurityZoneServiceService.read(1L)).thenReturn(mockZone);
@@ -3521,7 +3528,7 @@ public class TestServiceDBStore {
         RangerSecurityZone result = serviceDBStore.getSecurityZone(zoneName);
 
         Assertions.assertNotNull(result);
-        Mockito.verify(daoManager, Mockito.atLeastOnce()).getXXSecurityZoneDao();
+        Mockito.verify(daoMgr, Mockito.atLeastOnce()).getXXSecurityZoneDao();
     }
 
     @Test
@@ -3532,19 +3539,19 @@ public class TestServiceDBStore {
         XXServiceDao mockServiceDao = Mockito.mock(XXServiceDao.class);
         XXServiceConfigMapDao mockConfigMapDao = Mockito.mock(XXServiceConfigMapDao.class);
 
-        Mockito.when(daoManager.getXXServiceConfigMap()).thenReturn(mockConfigMapDao);
+        Mockito.when(daoMgr.getXXServiceConfigMap()).thenReturn(mockConfigMapDao);
         Mockito.when(mockConfigMapDao.findByServiceId(serviceId)).thenReturn(new ArrayList<XXServiceConfigMap>());
 
         Map<String, String> result = serviceDBStore.getServiceConfigForPlugin(serviceId);
 
         Assertions.assertNotNull(result);
-        Mockito.verify(daoManager, Mockito.atLeastOnce()).getXXServiceConfigMap();
+        Mockito.verify(daoMgr, Mockito.atLeastOnce()).getXXServiceConfigMap();
     }
 
     @Test
     public void test110_getContainingRoles() throws Exception {
         XXRoleRefRoleDao rr = Mockito.mock(XXRoleRefRoleDao.class);
-        Mockito.when(daoManager.getXXRoleRefRole()).thenReturn(rr);
+        Mockito.when(daoMgr.getXXRoleRefRole()).thenReturn(rr);
         Mockito.when(rr.getContainingRoles(1L)).thenReturn(new HashSet<>(Arrays.asList(2L, 3L)));
         Mockito.when(rr.getContainingRoles(2L)).thenReturn(Collections.emptySet());
         Mockito.when(rr.getContainingRoles(3L)).thenReturn(Collections.emptySet());
@@ -3562,15 +3569,15 @@ public class TestServiceDBStore {
         XXAccessTypeDefGrantsDao mockGrantsDao = Mockito.mock(XXAccessTypeDefGrantsDao.class);
 
         Mockito.when(xAccess.getId()).thenReturn(1L);
-        Mockito.when(daoManager.getXXAccessTypeDef()).thenReturn(mockAccessTypeDefDao);
-        Mockito.when(daoManager.getXXPolicyRefAccessType()).thenReturn(mockPolicyRefAccessTypeDao);
-        Mockito.when(daoManager.getXXAccessTypeDefGrants()).thenReturn(mockGrantsDao);
+        Mockito.when(daoMgr.getXXAccessTypeDef()).thenReturn(mockAccessTypeDefDao);
+        Mockito.when(daoMgr.getXXPolicyRefAccessType()).thenReturn(mockPolicyRefAccessTypeDao);
+        Mockito.when(daoMgr.getXXAccessTypeDefGrants()).thenReturn(mockGrantsDao);
         Mockito.when(mockGrantsDao.findByATDId(1L)).thenReturn(new ArrayList<>());
         Mockito.when(mockPolicyRefAccessTypeDao.findByAccessTypeDefId(1L)).thenReturn(new ArrayList<>());
 
         serviceDBStore.deleteXXAccessTypeDef(xAccess);
 
-        Mockito.verify(daoManager, Mockito.atLeastOnce()).getXXAccessTypeDef();
+        Mockito.verify(daoMgr, Mockito.atLeastOnce()).getXXAccessTypeDef();
     }
 
     @Test
@@ -3581,14 +3588,14 @@ public class TestServiceDBStore {
         XXPolicyRefResourceDao mockPolicyRefResourceDao = Mockito.mock(XXPolicyRefResourceDao.class);
 
         Mockito.when(xRes.getId()).thenReturn(1L);
-        Mockito.when(daoManager.getXXResourceDef()).thenReturn(mockResourceDefDao);
-        Mockito.when(daoManager.getXXPolicyRefResource()).thenReturn(mockPolicyRefResourceDao);
+        Mockito.when(daoMgr.getXXResourceDef()).thenReturn(mockResourceDefDao);
+        Mockito.when(daoMgr.getXXPolicyRefResource()).thenReturn(mockPolicyRefResourceDao);
         Mockito.when(mockResourceDefDao.findByParentResId(1L)).thenReturn(new ArrayList<>());
         Mockito.when(mockPolicyRefResourceDao.findByResourceDefID(1L)).thenReturn(new ArrayList<>());
 
         serviceDBStore.deleteXXResourceDef(xRes);
 
-        Mockito.verify(daoManager, Mockito.atLeastOnce()).getXXResourceDef();
+        Mockito.verify(daoMgr, Mockito.atLeastOnce()).getXXResourceDef();
     }
 
     @Test
@@ -3601,7 +3608,7 @@ public class TestServiceDBStore {
         XXServiceDao mockServiceDao = Mockito.mock(XXServiceDao.class);
         RangerService mockRangerService = Mockito.mock(RangerService.class);
 
-        Mockito.when(daoManager.getXXService()).thenReturn(mockServiceDao);
+        Mockito.when(daoMgr.getXXService()).thenReturn(mockServiceDao);
         Mockito.when(mockServiceDao.findByName("testService")).thenReturn(mockService);
 
         try {
@@ -3612,7 +3619,7 @@ public class TestServiceDBStore {
             Assertions.assertNotNull(e);
         }
 
-        Mockito.verify(daoManager, Mockito.atLeastOnce()).getXXService();
+        Mockito.verify(daoMgr, Mockito.atLeastOnce()).getXXService();
     }
 
     @Test
@@ -3623,7 +3630,7 @@ public class TestServiceDBStore {
         XXServiceDao mockServiceDao = Mockito.mock(XXServiceDao.class);
         List<XXService> mockServices = new ArrayList<>();
 
-        Mockito.when(daoManager.getXXService()).thenReturn(mockServiceDao);
+        Mockito.when(daoMgr.getXXService()).thenReturn(mockServiceDao);
         Mockito.when(mockServiceDao.findByServiceDefId(serviceDefId)).thenReturn(mockServices);
         Mockito.when(serviceDefService.read(serviceDefId)).thenReturn(rangerServiceDef());
 
@@ -3657,7 +3664,7 @@ public class TestServiceDBStore {
         String userName = null;
 
         XXServiceConfigMapDao mockConfigMapDao = Mockito.mock(XXServiceConfigMapDao.class);
-        Mockito.when(daoManager.getXXServiceConfigMap()).thenReturn(mockConfigMapDao);
+        Mockito.when(daoMgr.getXXServiceConfigMap()).thenReturn(mockConfigMapDao);
         Mockito.when(mockConfigMapDao.findByServiceNameAndConfigKey(serviceName, "service.admin.users")).thenReturn(null);
         Mockito.when(mockConfigMapDao.findByServiceNameAndConfigKey(serviceName, "service.admin.groups")).thenReturn(null);
 
@@ -3672,7 +3679,7 @@ public class TestServiceDBStore {
         String userName = "";
 
         XXServiceConfigMapDao mockConfigMapDao = Mockito.mock(XXServiceConfigMapDao.class);
-        Mockito.when(daoManager.getXXServiceConfigMap()).thenReturn(mockConfigMapDao);
+        Mockito.when(daoMgr.getXXServiceConfigMap()).thenReturn(mockConfigMapDao);
         Mockito.when(mockConfigMapDao.findByServiceNameAndConfigKey(serviceName, "service.admin.users")).thenReturn(null);
         Mockito.when(mockConfigMapDao.findByServiceNameAndConfigKey(serviceName, "service.admin.groups")).thenReturn(null);
 
@@ -3713,13 +3720,13 @@ public class TestServiceDBStore {
 
         XXPolicyDao mockPolicyDao = Mockito.mock(XXPolicyDao.class);
 
-        Mockito.when(daoManager.getXXPolicy()).thenReturn(mockPolicyDao);
+        Mockito.when(daoMgr.getXXPolicy()).thenReturn(mockPolicyDao);
         Mockito.when(mockPolicyDao.getPoliciesCount(serviceName)).thenReturn(0L);
 
         long result = serviceDBStore.getPoliciesCount(serviceName);
 
         Assertions.assertEquals(0L, result);
-        Mockito.verify(daoManager, Mockito.atLeastOnce()).getXXPolicy();
+        Mockito.verify(daoMgr, Mockito.atLeastOnce()).getXXPolicy();
     }
 
     @Test
@@ -3783,7 +3790,7 @@ public class TestServiceDBStore {
         mockService.setId(1L);
         mockServices.add(mockService);
 
-        Mockito.when(daoManager.getXXService()).thenReturn(mockServiceDao);
+        Mockito.when(daoMgr.getXXService()).thenReturn(mockServiceDao);
         Mockito.when(mockServiceDao.findByServiceDefId(serviceDefId)).thenReturn(mockServices);
         Mockito.when(serviceDefService.read(serviceDefId)).thenReturn(rangerServiceDef());
 
@@ -3812,7 +3819,7 @@ public class TestServiceDBStore {
         XXServiceDao mockServiceDao = Mockito.mock(XXServiceDao.class);
         XXService mockXXService = Mockito.mock(XXService.class);
 
-        Mockito.when(daoManager.getXXService()).thenReturn(mockServiceDao);
+        Mockito.when(daoMgr.getXXService()).thenReturn(mockServiceDao);
         Mockito.when(mockServiceDao.getById(1L)).thenReturn(mockXXService);
 
         try {
@@ -3822,7 +3829,7 @@ public class TestServiceDBStore {
             // Expected due to complex dependencies
         }
 
-        Mockito.verify(daoManager, Mockito.atLeastOnce()).getXXService();
+        Mockito.verify(daoMgr, Mockito.atLeastOnce()).getXXService();
     }
 
     @Test
@@ -3853,14 +3860,14 @@ public class TestServiceDBStore {
         XXPolicy mockXXPolicy = Mockito.mock(XXPolicy.class);
         RangerPolicy mockPolicy = Mockito.mock(RangerPolicy.class);
 
-        Mockito.when(daoManager.getXXPolicy()).thenReturn(mockPolicyDao);
+        Mockito.when(daoMgr.getXXPolicy()).thenReturn(mockPolicyDao);
         Mockito.when(mockPolicyDao.findPolicyByGUIDAndServiceNameAndZoneName(guid, serviceName, zoneName)).thenReturn(mockXXPolicy);
         Mockito.when(policyService.getPopulatedViewObject(mockXXPolicy)).thenReturn(mockPolicy);
 
         RangerPolicy result = serviceDBStore.getPolicy(guid, serviceName, zoneName);
 
         Assertions.assertNotNull(result);
-        Mockito.verify(daoManager, Mockito.atLeastOnce()).getXXPolicy();
+        Mockito.verify(daoMgr, Mockito.atLeastOnce()).getXXPolicy();
     }
 
     @Test
@@ -3870,13 +3877,13 @@ public class TestServiceDBStore {
         String zoneName = null;
 
         XXPolicyDao mockPolicyDao = Mockito.mock(XXPolicyDao.class);
-        Mockito.when(daoManager.getXXPolicy()).thenReturn(mockPolicyDao);
+        Mockito.when(daoMgr.getXXPolicy()).thenReturn(mockPolicyDao);
         Mockito.when(mockPolicyDao.findPolicyByGUIDAndServiceNameAndZoneName(guid, serviceName, zoneName)).thenReturn(null);
 
         RangerPolicy result = serviceDBStore.getPolicy(guid, serviceName, zoneName);
 
         Assertions.assertNull(result);
-        Mockito.verify(daoManager, Mockito.atLeastOnce()).getXXPolicy();
+        Mockito.verify(daoMgr, Mockito.atLeastOnce()).getXXPolicy();
     }
 
     @Test
@@ -3898,14 +3905,14 @@ public class TestServiceDBStore {
 
         XXPolicyDao mockPolicyDao = Mockito.mock(XXPolicyDao.class);
 
-        Mockito.when(daoManager.getXXPolicy()).thenReturn(mockPolicyDao);
+        Mockito.when(daoMgr.getXXPolicy()).thenReturn(mockPolicyDao);
         Mockito.when(mockPolicyDao.getMetaAttributesForPolicies(Mockito.anyList())).thenReturn(new ArrayList<>());
 
         List<RangerPolicy> result = serviceDBStore.getPoliciesWithMetaAttributes(policiesList);
 
         Assertions.assertNotNull(result);
         Assertions.assertEquals(1, result.size());
-        Mockito.verify(daoManager, Mockito.atLeastOnce()).getXXPolicy();
+        Mockito.verify(daoMgr, Mockito.atLeastOnce()).getXXPolicy();
     }
 
     @Test
@@ -4320,14 +4327,14 @@ public class TestServiceDBStore {
         XXServiceDefDao mockServiceDefDao = Mockito.mock(XXServiceDefDao.class);
         XXServiceDef mockXXServiceDef = Mockito.mock(XXServiceDef.class);
 
-        Mockito.when(daoManager.getXXServiceDef()).thenReturn(mockServiceDefDao);
+        Mockito.when(daoMgr.getXXServiceDef()).thenReturn(mockServiceDefDao);
         Mockito.when(mockServiceDefDao.findByDisplayName(displayName)).thenReturn(mockXXServiceDef);
         Mockito.when(serviceDefService.getPopulatedViewObject(mockXXServiceDef)).thenReturn(mockServiceDef);
 
         RangerServiceDef result = serviceDBStore.getServiceDefByDisplayName(displayName);
 
         Assertions.assertNotNull(result);
-        Mockito.verify(daoManager).getXXServiceDef();
+        Mockito.verify(daoMgr).getXXServiceDef();
         Mockito.verify(mockServiceDefDao).findByDisplayName(displayName);
     }
 
@@ -4339,7 +4346,7 @@ public class TestServiceDBStore {
         XXServiceDao mockServiceDao = Mockito.mock(XXServiceDao.class);
         XXService mockXXService = Mockito.mock(XXService.class);
 
-        Mockito.when(daoManager.getXXService()).thenReturn(mockServiceDao);
+        Mockito.when(daoMgr.getXXService()).thenReturn(mockServiceDao);
         Mockito.when(mockServiceDao.findByDisplayName(displayName)).thenReturn(mockXXService);
         Mockito.when(svcService.getPopulatedViewObject(mockXXService)).thenReturn(mockService);
 
@@ -4349,7 +4356,7 @@ public class TestServiceDBStore {
         RangerService result = serviceDBStore.getServiceByDisplayName(displayName);
 
         Assertions.assertNotNull(result);
-        Mockito.verify(daoManager).getXXService();
+        Mockito.verify(daoMgr).getXXService();
         Mockito.verify(mockServiceDao).findByDisplayName(displayName);
     }
 
@@ -4412,8 +4419,8 @@ public class TestServiceDBStore {
         XXGroupDao mockGroupDao = Mockito.mock(XXGroupDao.class);
 
         Mockito.when(policyService.searchResources(Mockito.eq(filter), Mockito.any(), Mockito.any(), Mockito.any(RangerPolicyList.class))).thenReturn(mockXXPolicies);
-        Mockito.when(daoManager.getXXGroupGroup()).thenReturn(mockGroupGroupDao);
-        Mockito.when(daoManager.getXXGroup()).thenReturn(mockGroupDao);
+        Mockito.when(daoMgr.getXXGroupGroup()).thenReturn(mockGroupGroupDao);
+        Mockito.when(daoMgr.getXXGroup()).thenReturn(mockGroupDao);
 
         Mockito.when(mockGroupGroupDao.findGroupNamesByGroupName(Mockito.anyString())).thenReturn(new HashSet<>());
         Mockito.when(mockGroupDao.findByGroupName(Mockito.anyString())).thenReturn(null);
@@ -4434,7 +4441,7 @@ public class TestServiceDBStore {
         XXServiceDao mockServiceDao = Mockito.mock(XXServiceDao.class);
         XXService mockService = Mockito.mock(XXService.class);
 
-        Mockito.when(daoManager.getXXService()).thenReturn(mockServiceDao);
+        Mockito.when(daoMgr.getXXService()).thenReturn(mockServiceDao);
         Mockito.when(mockServiceDao.findByName(policy.getService())).thenReturn(mockService);
 
         try {
@@ -4445,7 +4452,7 @@ public class TestServiceDBStore {
             Assertions.assertNotNull(e);
         }
 
-        Mockito.verify(daoManager).getXXService();
+        Mockito.verify(daoMgr).getXXService();
     }
 
     @Test
@@ -4454,13 +4461,13 @@ public class TestServiceDBStore {
 
         XXServiceDao mockServiceDao = Mockito.mock(XXServiceDao.class);
 
-        Mockito.when(daoManager.getXXService()).thenReturn(mockServiceDao);
+        Mockito.when(daoMgr.getXXService()).thenReturn(mockServiceDao);
         Mockito.when(mockServiceDao.findIdByName(serviceName)).thenReturn(1L);
 
         boolean result = serviceDBStore.serviceExists(serviceName);
 
         Assertions.assertTrue(result);
-        Mockito.verify(daoManager).getXXService();
+        Mockito.verify(daoMgr).getXXService();
         Mockito.verify(mockServiceDao).findIdByName(serviceName);
     }
 
@@ -4470,7 +4477,7 @@ public class TestServiceDBStore {
 
         XXServiceDao mockServiceDao = Mockito.mock(XXServiceDao.class);
 
-        Mockito.when(daoManager.getXXService()).thenReturn(mockServiceDao);
+        Mockito.when(daoMgr.getXXService()).thenReturn(mockServiceDao);
         Mockito.when(mockServiceDao.findIdByName(serviceName)).thenReturn(null);
 
         boolean result = serviceDBStore.serviceExists(serviceName);
@@ -4484,13 +4491,13 @@ public class TestServiceDBStore {
 
         XXServiceDao mockServiceDao = Mockito.mock(XXServiceDao.class);
 
-        Mockito.when(daoManager.getXXService()).thenReturn(mockServiceDao);
+        Mockito.when(daoMgr.getXXService()).thenReturn(mockServiceDao);
         Mockito.when(mockServiceDao.findIdByName(serviceName)).thenReturn(null);
 
         boolean result = serviceDBStore.serviceExists(serviceName);
 
         Assertions.assertFalse(result);
-        Mockito.verify(daoManager).getXXService();
+        Mockito.verify(daoMgr).getXXService();
         Mockito.verify(mockServiceDao).findIdByName(serviceName);
     }
 
@@ -4501,13 +4508,13 @@ public class TestServiceDBStore {
         XXPolicyDao mockPolicyDao = Mockito.mock(XXPolicyDao.class);
         XXPolicy mockPolicy = Mockito.mock(XXPolicy.class);
 
-        Mockito.when(daoManager.getXXPolicy()).thenReturn(mockPolicyDao);
+        Mockito.when(daoMgr.getXXPolicy()).thenReturn(mockPolicyDao);
         Mockito.when(mockPolicyDao.getCountById(policyId)).thenReturn(1L);
 
         boolean result = serviceDBStore.policyExists(policyId);
 
         Assertions.assertTrue(result);
-        Mockito.verify(daoManager).getXXPolicy();
+        Mockito.verify(daoMgr).getXXPolicy();
         Mockito.verify(mockPolicyDao).getCountById(policyId);
     }
 
@@ -4517,13 +4524,13 @@ public class TestServiceDBStore {
 
         XXPolicyDao mockPolicyDao = Mockito.mock(XXPolicyDao.class);
 
-        Mockito.when(daoManager.getXXPolicy()).thenReturn(mockPolicyDao);
+        Mockito.when(daoMgr.getXXPolicy()).thenReturn(mockPolicyDao);
         Mockito.when(mockPolicyDao.getCountById(policyId)).thenReturn(0L);
 
         boolean result = serviceDBStore.policyExists(policyId);
 
         Assertions.assertFalse(result);
-        Mockito.verify(daoManager).getXXPolicy();
+        Mockito.verify(daoMgr).getXXPolicy();
         Mockito.verify(mockPolicyDao).getCountById(policyId);
     }
 
@@ -4589,14 +4596,14 @@ public class TestServiceDBStore {
 
         XXServiceDefDao mockServiceDefDao = Mockito.mock(XXServiceDefDao.class);
 
-        Mockito.when(daoManager.getXXServiceDef()).thenReturn(mockServiceDefDao);
+        Mockito.when(daoMgr.getXXServiceDef()).thenReturn(mockServiceDefDao);
         Mockito.when(mockServiceDefDao.getPolicyCountByType(policyType)).thenReturn(expectedResult);
 
         Map<String, Long> result = serviceDBStore.getPolicyCountByTypeAndServiceType(policyType);
 
         Assertions.assertNotNull(result);
         Assertions.assertEquals(expectedResult, result);
-        Mockito.verify(daoManager).getXXServiceDef();
+        Mockito.verify(daoMgr).getXXServiceDef();
         Mockito.verify(mockServiceDefDao).getPolicyCountByType(policyType);
     }
 
@@ -4608,14 +4615,14 @@ public class TestServiceDBStore {
 
         XXServiceDefDao mockServiceDefDao = Mockito.mock(XXServiceDefDao.class);
 
-        Mockito.when(daoManager.getXXServiceDef()).thenReturn(mockServiceDefDao);
+        Mockito.when(daoMgr.getXXServiceDef()).thenReturn(mockServiceDefDao);
         Mockito.when(mockServiceDefDao.getPolicyCountByType(0)).thenReturn(expectedResult); // Default to 0
 
         Map<String, Long> result = serviceDBStore.getPolicyCountByTypeAndServiceType(policyType);
 
         Assertions.assertNotNull(result);
         Assertions.assertEquals(expectedResult, result);
-        Mockito.verify(daoManager).getXXServiceDef();
+        Mockito.verify(daoMgr).getXXServiceDef();
         Mockito.verify(mockServiceDefDao).getPolicyCountByType(0);
     }
 
@@ -4626,14 +4633,14 @@ public class TestServiceDBStore {
 
         XXServiceDefDao mockServiceDefDao = Mockito.mock(XXServiceDefDao.class);
 
-        Mockito.when(daoManager.getXXServiceDef()).thenReturn(mockServiceDefDao);
+        Mockito.when(daoMgr.getXXServiceDef()).thenReturn(mockServiceDefDao);
         Mockito.when(mockServiceDefDao.getPolicyCountByType(0)).thenReturn(expectedResult); // Default to 0
 
         Map<String, Long> result = serviceDBStore.getPolicyCountByTypeAndServiceType(policyType);
 
         Assertions.assertNotNull(result);
         Assertions.assertEquals(expectedResult, result);
-        Mockito.verify(daoManager).getXXServiceDef();
+        Mockito.verify(daoMgr).getXXServiceDef();
         Mockito.verify(mockServiceDefDao).getPolicyCountByType(0);
     }
 
@@ -4645,14 +4652,14 @@ public class TestServiceDBStore {
         XXServiceConfigMapDao mockConfigMapDao = Mockito.mock(XXServiceConfigMapDao.class);
         XXServiceConfigMap mockConfigMap = Mockito.mock(XXServiceConfigMap.class);
 
-        Mockito.when(daoManager.getXXServiceConfigMap()).thenReturn(mockConfigMapDao);
+        Mockito.when(daoMgr.getXXServiceConfigMap()).thenReturn(mockConfigMapDao);
         Mockito.when(mockConfigMapDao.findByServiceNameAndConfigKey(serviceName, "service.admin.users")).thenReturn(mockConfigMap);
         Mockito.when(mockConfigMap.getConfigvalue()).thenReturn("testServiceAdminUser1,testServiceAdminUser2");
 
         boolean result = serviceDBStore.isServiceAdminUser(serviceName, userName);
 
         Assertions.assertTrue(result);
-        Mockito.verify(daoManager).getXXServiceConfigMap();
+        Mockito.verify(daoMgr).getXXServiceConfigMap();
         Mockito.verify(mockConfigMapDao).findByServiceNameAndConfigKey(serviceName, "service.admin.users");
     }
 
@@ -4665,7 +4672,7 @@ public class TestServiceDBStore {
         XXServiceConfigMapDao mockConfigMapDao = Mockito.mock(XXServiceConfigMapDao.class);
         XXServiceConfigMap mockAdminGroupsConfig = Mockito.mock(XXServiceConfigMap.class);
 
-        Mockito.when(daoManager.getXXServiceConfigMap()).thenReturn(mockConfigMapDao);
+        Mockito.when(daoMgr.getXXServiceConfigMap()).thenReturn(mockConfigMapDao);
         Mockito.when(mockConfigMapDao.findByServiceNameAndConfigKey(serviceName, "service.admin.users")).thenReturn(null);
         Mockito.when(mockConfigMapDao.findByServiceNameAndConfigKey(serviceName, "service.admin.groups")).thenReturn(mockAdminGroupsConfig);
         Mockito.when(mockAdminGroupsConfig.getConfigvalue()).thenReturn("testServiceAdminGroup1,testServiceAdminGroup2");
@@ -4686,7 +4693,7 @@ public class TestServiceDBStore {
         XXServiceConfigMapDao mockConfigMapDao = Mockito.mock(XXServiceConfigMapDao.class);
         XXServiceConfigMap mockAdminGroupsConfig = Mockito.mock(XXServiceConfigMap.class);
 
-        Mockito.when(daoManager.getXXServiceConfigMap()).thenReturn(mockConfigMapDao);
+        Mockito.when(daoMgr.getXXServiceConfigMap()).thenReturn(mockConfigMapDao);
         Mockito.when(mockConfigMapDao.findByServiceNameAndConfigKey(serviceName, "service.admin.users")).thenReturn(null);
         Mockito.when(mockConfigMapDao.findByServiceNameAndConfigKey(serviceName, "service.admin.groups")).thenReturn(mockAdminGroupsConfig);
         Mockito.when(mockAdminGroupsConfig.getConfigvalue()).thenReturn("public,otherGroup");
@@ -4706,14 +4713,14 @@ public class TestServiceDBStore {
         XXServiceVersionInfoDao mockVersionInfoDao = Mockito.mock(XXServiceVersionInfoDao.class);
         XXServiceVersionInfo mockVersionInfo = Mockito.mock(XXServiceVersionInfo.class);
 
-        Mockito.when(daoManager.getXXServiceVersionInfo()).thenReturn(mockVersionInfoDao);
+        Mockito.when(daoMgr.getXXServiceVersionInfo()).thenReturn(mockVersionInfoDao);
         Mockito.when(mockVersionInfoDao.findByServiceName(serviceName)).thenReturn(mockVersionInfo);
         Mockito.when(mockVersionInfo.getPolicyVersion()).thenReturn(expectedVersion);
 
         Long result = serviceDBStore.getServicePolicyVersion(serviceName);
 
         Assertions.assertEquals(expectedVersion, result);
-        Mockito.verify(daoManager).getXXServiceVersionInfo();
+        Mockito.verify(daoMgr).getXXServiceVersionInfo();
         Mockito.verify(mockVersionInfoDao).findByServiceName(serviceName);
     }
 
@@ -4723,13 +4730,13 @@ public class TestServiceDBStore {
 
         XXServiceVersionInfoDao mockVersionInfoDao = Mockito.mock(XXServiceVersionInfoDao.class);
 
-        Mockito.when(daoManager.getXXServiceVersionInfo()).thenReturn(mockVersionInfoDao);
+        Mockito.when(daoMgr.getXXServiceVersionInfo()).thenReturn(mockVersionInfoDao);
         Mockito.when(mockVersionInfoDao.findByServiceName(serviceName)).thenReturn(null);
 
         Long result = serviceDBStore.getServicePolicyVersion(serviceName);
 
         Assertions.assertNull(result);
-        Mockito.verify(daoManager).getXXServiceVersionInfo();
+        Mockito.verify(daoMgr).getXXServiceVersionInfo();
         Mockito.verify(mockVersionInfoDao).findByServiceName(serviceName);
     }
 
@@ -4740,14 +4747,14 @@ public class TestServiceDBStore {
         XXServiceVersionInfoDao mockVersionInfoDao = Mockito.mock(XXServiceVersionInfoDao.class);
         XXServiceVersionInfo mockVersionInfo = Mockito.mock(XXServiceVersionInfo.class);
 
-        Mockito.when(daoManager.getXXServiceVersionInfo()).thenReturn(mockVersionInfoDao);
+        Mockito.when(daoMgr.getXXServiceVersionInfo()).thenReturn(mockVersionInfoDao);
         Mockito.when(mockVersionInfoDao.findByServiceName(serviceName)).thenReturn(mockVersionInfo);
         Mockito.when(mockVersionInfo.getPolicyVersion()).thenReturn(null);
 
         Long result = serviceDBStore.getServicePolicyVersion(serviceName);
 
         Assertions.assertNull(result);
-        Mockito.verify(daoManager).getXXServiceVersionInfo();
+        Mockito.verify(daoMgr).getXXServiceVersionInfo();
         Mockito.verify(mockVersionInfoDao).findByServiceName(serviceName);
     }
 
@@ -4775,7 +4782,7 @@ public class TestServiceDBStore {
 
         XXServiceConfigMapDao mockConfigMapDao = Mockito.mock(XXServiceConfigMapDao.class);
 
-        Mockito.when(daoManager.getXXServiceConfigMap()).thenReturn(mockConfigMapDao);
+        Mockito.when(daoMgr.getXXServiceConfigMap()).thenReturn(mockConfigMapDao);
         Mockito.when(mockConfigMapDao.findByServiceId(serviceId)).thenReturn(configMaps);
 
         Map<String, String> result = serviceDBStore.getServiceConfigForPlugin(serviceId);
@@ -4785,7 +4792,7 @@ public class TestServiceDBStore {
         Assertions.assertNull(result.get("service.admin.users"));
         Assertions.assertNull(result.get("ignored.config")); // Should be filtered out
         Assertions.assertEquals(1, result.size()); // Only 1 config should be returned
-        Mockito.verify(daoManager).getXXServiceConfigMap();
+        Mockito.verify(daoMgr).getXXServiceConfigMap();
         Mockito.verify(mockConfigMapDao).findByServiceId(serviceId);
     }
 
@@ -4796,14 +4803,14 @@ public class TestServiceDBStore {
 
         XXServiceConfigMapDao mockConfigMapDao = Mockito.mock(XXServiceConfigMapDao.class);
 
-        Mockito.when(daoManager.getXXServiceConfigMap()).thenReturn(mockConfigMapDao);
+        Mockito.when(daoMgr.getXXServiceConfigMap()).thenReturn(mockConfigMapDao);
         Mockito.when(mockConfigMapDao.findByServiceId(serviceId)).thenReturn(configMaps);
 
         Map<String, String> result = serviceDBStore.getServiceConfigForPlugin(serviceId);
 
         Assertions.assertNotNull(result);
         Assertions.assertTrue(result.isEmpty());
-        Mockito.verify(daoManager).getXXServiceConfigMap();
+        Mockito.verify(daoMgr).getXXServiceConfigMap();
         Mockito.verify(mockConfigMapDao).findByServiceId(serviceId);
     }
 
@@ -4846,16 +4853,16 @@ public class TestServiceDBStore {
         XXRMSNotificationDao d3 = Mockito.mock(XXRMSNotificationDao.class);
         XXRMSResourceMappingDao d4 = Mockito.mock(XXRMSResourceMappingDao.class);
         XXServiceDao sx = Mockito.mock(XXServiceDao.class);
-        Mockito.when(daoManager.getXXService()).thenReturn(sx);
-        Mockito.when(daoManager.getXXRMSServiceResource()).thenReturn(d1);
-        Mockito.when(daoManager.getXXRMSMappingProvider()).thenReturn(d2);
-        Mockito.when(daoManager.getXXRMSNotification()).thenReturn(d3);
-        Mockito.when(daoManager.getXXRMSResourceMapping()).thenReturn(d4);
+        Mockito.when(daoMgr.getXXService()).thenReturn(sx);
+        Mockito.when(daoMgr.getXXRMSServiceResource()).thenReturn(d1);
+        Mockito.when(daoMgr.getXXRMSMappingProvider()).thenReturn(d2);
+        Mockito.when(daoMgr.getXXRMSNotification()).thenReturn(d3);
+        Mockito.when(daoMgr.getXXRMSResourceMapping()).thenReturn(d4);
         invokePrivate("initRMSDaos", new Class[] {});
-        Mockito.verify(daoManager, Mockito.atLeastOnce()).getXXRMSServiceResource();
-        Mockito.verify(daoManager, Mockito.atLeastOnce()).getXXRMSMappingProvider();
-        Mockito.verify(daoManager, Mockito.atLeastOnce()).getXXRMSNotification();
-        Mockito.verify(daoManager, Mockito.atLeastOnce()).getXXRMSResourceMapping();
+        Mockito.verify(daoMgr, Mockito.atLeastOnce()).getXXRMSServiceResource();
+        Mockito.verify(daoMgr, Mockito.atLeastOnce()).getXXRMSMappingProvider();
+        Mockito.verify(daoMgr, Mockito.atLeastOnce()).getXXRMSNotification();
+        Mockito.verify(daoMgr, Mockito.atLeastOnce()).getXXRMSResourceMapping();
     }
 
     @Test
@@ -4956,8 +4963,8 @@ public class TestServiceDBStore {
     public void test196persistChangeLog() throws Exception {
         XXServiceVersionInfoDao vDao = Mockito.mock(XXServiceVersionInfoDao.class);
         XXServiceDao sDao = Mockito.mock(XXServiceDao.class);
-        Mockito.when(daoManager.getXXServiceVersionInfo()).thenReturn(vDao);
-        Mockito.when(daoManager.getXXService()).thenReturn(sDao);
+        Mockito.when(daoMgr.getXXServiceVersionInfo()).thenReturn(vDao);
+        Mockito.when(daoMgr.getXXService()).thenReturn(sDao);
         XXServiceVersionInfo svi = new XXServiceVersionInfo();
         svi.setPolicyVersion(3L);
         svi.setTagVersion(4L);
@@ -4966,11 +4973,11 @@ public class TestServiceDBStore {
         xs.setId(10L);
         xs.setName("svc");
         Mockito.when(sDao.getById(10L)).thenReturn(xs);
-        ServiceDBStore.ServiceVersionUpdater up = new ServiceDBStore.ServiceVersionUpdater(daoManager, 10L, ServiceDBStore.VERSION_TYPE.TAG_VERSION, ServiceTags.TagsChangeType.RANGER_ADMIN_START, 100L, 200L);
+        ServiceDBStore.ServiceVersionUpdater up = new ServiceDBStore.ServiceVersionUpdater(daoMgr, 10L, ServiceDBStore.VERSION_TYPE.TAG_VERSION, ServiceTags.TagsChangeType.RANGER_ADMIN_START, 100L, 200L);
         XXTagChangeLogDao tagDao = Mockito.mock(XXTagChangeLogDao.class);
-        Mockito.when(daoManager.getXXTagChangeLog()).thenReturn(tagDao);
+        Mockito.when(daoMgr.getXXTagChangeLog()).thenReturn(tagDao);
         invokePrivate("persistChangeLog", new Class[] {ServiceDBStore.ServiceVersionUpdater.class}, up);
-        Mockito.verify(daoManager, Mockito.atLeastOnce()).getXXTagChangeLog();
+        Mockito.verify(daoMgr, Mockito.atLeastOnce()).getXXTagChangeLog();
     }
 
     @Test
@@ -4978,9 +4985,9 @@ public class TestServiceDBStore {
         XXPolicyDao polDao = Mockito.mock(XXPolicyDao.class);
         XXRoleDao roleDao = Mockito.mock(XXRoleDao.class);
         XXServiceDao sDao = Mockito.mock(XXServiceDao.class);
-        Mockito.when(daoManager.getXXPolicy()).thenReturn(polDao);
-        Mockito.when(daoManager.getXXRole()).thenReturn(roleDao);
-        Mockito.when(daoManager.getXXService()).thenReturn(sDao);
+        Mockito.when(daoMgr.getXXPolicy()).thenReturn(polDao);
+        Mockito.when(daoMgr.getXXRole()).thenReturn(roleDao);
+        Mockito.when(daoMgr.getXXService()).thenReturn(sDao);
         RangerService svc = new RangerService();
         svc.setId(1L);
         svc.setTagService("tagSvc");
@@ -5026,7 +5033,7 @@ public class TestServiceDBStore {
     @Test
     public void test200validateUserAndProvideTabTagBasedPolicyPermission() throws Exception {
         XXPortalUserDao pDao = Mockito.mock(XXPortalUserDao.class);
-        Mockito.when(daoManager.getXXPortalUser()).thenReturn(pDao);
+        Mockito.when(daoMgr.getXXPortalUser()).thenReturn(pDao);
         XXPortalUser pu = new XXPortalUser();
         pu.setId(5L);
         pu.setLoginId("user");
@@ -5064,7 +5071,7 @@ public class TestServiceDBStore {
         ServiceDBStore spy = Mockito.spy(serviceDBStore);
         Mockito.doReturn(tagSvc).when(spy).getServiceByName("tagSvc");
         XXSecurityZoneDao zDao = Mockito.mock(XXSecurityZoneDao.class);
-        Mockito.when(daoManager.getXXSecurityZoneDao()).thenReturn(zDao);
+        Mockito.when(daoMgr.getXXSecurityZoneDao()).thenReturn(zDao);
         Mockito.when(zDao.findZonesByTagServiceName("tagSvc")).thenReturn(Collections.singletonList("z1"));
         Method m2 = ServiceDBStore.class.getDeclaredMethod("patchAssociatedTagServiceInSecurityZoneInfos", ServicePolicies.class);
         m2.setAccessible(true);
@@ -5195,7 +5202,7 @@ public class TestServiceDBStore {
     public void test209getServicePolicies_overloads_and_getServicePoliciesWithDeltas_and_compressDeltas() throws Exception {
         // Exercise overload returning empty without throwing
         XXServiceDao sDao = Mockito.mock(XXServiceDao.class);
-        Mockito.when(daoManager.getXXService()).thenReturn(sDao);
+        Mockito.when(daoMgr.getXXService()).thenReturn(sDao);
         XXService xs = new XXService();
         xs.setId(1L);
         xs.setType(1L);
@@ -5399,17 +5406,17 @@ public class TestServiceDBStore {
         def.setName("n");
         def.setId(1L);
         XXServiceDao sDao = Mockito.mock(XXServiceDao.class);
-        Mockito.when(daoManager.getXXService()).thenReturn(sDao);
+        Mockito.when(daoMgr.getXXService()).thenReturn(sDao);
         Mockito.when(sDao.findByServiceDefId(1L)).thenReturn(Collections.emptyList());
         // no services, method should return without NPE
         serviceDBStore.updateServicesForServiceDefUpdate(def);
-        Mockito.verify(daoManager, Mockito.atLeastOnce()).getXXService();
+        Mockito.verify(daoMgr, Mockito.atLeastOnce()).getXXService();
     }
 
     @Test
     public void test222disassociateZonesForService_reflective() throws Exception {
         XXSecurityZoneDao zDao = Mockito.mock(XXSecurityZoneDao.class);
-        Mockito.when(daoManager.getXXSecurityZoneDao()).thenReturn(zDao);
+        Mockito.when(daoMgr.getXXSecurityZoneDao()).thenReturn(zDao);
         Mockito.when(zDao.findZonesByServiceName("s")).thenReturn(Collections.singletonList("z1"));
         SecurityZoneDBStore zoneStore = Mockito.mock(SecurityZoneDBStore.class);
         Field fz = ServiceDBStore.class.getDeclaredField("securityZoneStore");
@@ -5454,7 +5461,7 @@ public class TestServiceDBStore {
         XXService svc = new XXService();
         svc.setId(101L);
         XXPolicyChangeLogDao chDao = Mockito.mock(XXPolicyChangeLogDao.class);
-        Mockito.when(daoManager.getXXPolicyChangeLog()).thenReturn(chDao);
+        Mockito.when(daoMgr.getXXPolicyChangeLog()).thenReturn(chDao);
         RangerPolicy p = new RangerPolicy();
         p.setId(7L);
         p.setServiceType("hdfs");
@@ -5488,7 +5495,7 @@ public class TestServiceDBStore {
         XXService tagSvc = new XXService();
         tagSvc.setId(202L);
         XXPolicyChangeLogDao chDao = Mockito.mock(XXPolicyChangeLogDao.class);
-        Mockito.when(daoManager.getXXPolicyChangeLog()).thenReturn(chDao);
+        Mockito.when(daoMgr.getXXPolicyChangeLog()).thenReturn(chDao);
         RangerPolicy p = new RangerPolicy();
         p.setId(9L);
         p.setServiceType("hdfs");
@@ -5554,7 +5561,7 @@ public class TestServiceDBStore {
         XXServiceConfigDef def = new XXServiceConfigDef();
         def.setName("requiredParam");
         def.setIsMandatory(true);
-        Mockito.when(daoManager.getXXServiceConfigDef()).thenReturn(cDao);
+        Mockito.when(daoMgr.getXXServiceConfigDef()).thenReturn(cDao);
         Mockito.when(cDao.findByServiceDefName("hdfs")).thenReturn(Collections.singletonList(def));
         Method m = ServiceDBStore.class.getDeclaredMethod("validateRequiredConfigParams", RangerService.class, Map.class);
         m.setAccessible(true);
@@ -5586,7 +5593,7 @@ public class TestServiceDBStore {
     @Test
     public void test227createServiceDef_duplicate_throws() throws Exception {
         XXServiceDefDao xServiceDefDao = Mockito.mock(XXServiceDefDao.class);
-        Mockito.when(daoManager.getXXServiceDef()).thenReturn(xServiceDefDao);
+        Mockito.when(daoMgr.getXXServiceDef()).thenReturn(xServiceDefDao);
         Mockito.when(xServiceDefDao.findByName("hdfs")).thenReturn(new XXServiceDef());
         Mockito.when(restErrorUtil.createRESTException(Mockito.anyString(), Mockito.eq(MessageEnums.ERROR_DUPLICATE_OBJECT)))
                 .thenReturn(new WebApplicationException());
@@ -5598,7 +5605,7 @@ public class TestServiceDBStore {
     @Test
     public void test228updateServiceDef_notFound_throws() throws Exception {
         XXServiceDefDao xServiceDefDao = Mockito.mock(XXServiceDefDao.class);
-        Mockito.when(daoManager.getXXServiceDef()).thenReturn(xServiceDefDao);
+        Mockito.when(daoMgr.getXXServiceDef()).thenReturn(xServiceDefDao);
         Mockito.when(xServiceDefDao.getById(1L)).thenReturn(null);
         Mockito.when(restErrorUtil.createRESTException(Mockito.anyString(), Mockito.eq(MessageEnums.DATA_NOT_FOUND)))
                 .thenReturn(new WebApplicationException());
@@ -5614,7 +5621,7 @@ public class TestServiceDBStore {
         XXServiceDef existing = new XXServiceDef();
         existing.setId(2L);
         existing.setName("old");
-        Mockito.when(daoManager.getXXServiceDef()).thenReturn(xServiceDefDao);
+        Mockito.when(daoMgr.getXXServiceDef()).thenReturn(xServiceDefDao);
         Mockito.when(xServiceDefDao.getById(2L)).thenReturn(existing);
         Mockito.when(xServiceDefDao.findByName("new")).thenReturn(new XXServiceDef());
         Mockito.when(restErrorUtil.createRESTException(Mockito.anyString(), Mockito.eq(MessageEnums.DATA_NOT_UPDATABLE)))
@@ -5666,7 +5673,7 @@ public class TestServiceDBStore {
         UserSessionBase s = Mockito.mock(UserSessionBase.class);
         Mockito.when(s.isKeyAdmin()).thenReturn(true);
         XXServiceDao xServiceDao = Mockito.mock(XXServiceDao.class);
-        Mockito.when(daoManager.getXXService()).thenReturn(xServiceDao);
+        Mockito.when(daoMgr.getXXService()).thenReturn(xServiceDao);
         RangerServiceDef read = new RangerServiceDef();
         read.setName("sd");
         Mockito.when(serviceDefService.read(11L)).thenReturn(read);
@@ -5702,7 +5709,7 @@ public class TestServiceDBStore {
             return rs;
         });
         XXServiceDao xServiceDao = Mockito.mock(XXServiceDao.class);
-        Mockito.when(daoManager.getXXService()).thenReturn(xServiceDao);
+        Mockito.when(daoMgr.getXXService()).thenReturn(xServiceDao);
         XXService x = new XXService();
         x.setId(5L);
         Mockito.when(xServiceDao.getById(5L)).thenReturn(x);
@@ -5715,7 +5722,7 @@ public class TestServiceDBStore {
     @Test
     public void test236updateService_notFound_throws() throws Exception {
         XXServiceDao xServiceDao = Mockito.mock(XXServiceDao.class);
-        Mockito.when(daoManager.getXXService()).thenReturn(xServiceDao);
+        Mockito.when(daoMgr.getXXService()).thenReturn(xServiceDao);
         Mockito.when(xServiceDao.getById(99L)).thenReturn(null);
         Mockito.when(restErrorUtil.createRESTException(Mockito.anyString(), Mockito.eq(MessageEnums.DATA_NOT_FOUND)))
                 .thenReturn(new WebApplicationException());
@@ -5728,7 +5735,7 @@ public class TestServiceDBStore {
     @Test
     public void test237updateService_renameDuplicate_throws() throws Exception {
         XXServiceDao xServiceDao = Mockito.mock(XXServiceDao.class);
-        Mockito.when(daoManager.getXXService()).thenReturn(xServiceDao);
+        Mockito.when(daoMgr.getXXService()).thenReturn(xServiceDao);
         XXService x = new XXService();
         x.setId(7L);
         Mockito.when(xServiceDao.getById(7L)).thenReturn(x);
@@ -5748,7 +5755,7 @@ public class TestServiceDBStore {
     @Test
     public void test238updateService_renameBlocked_tagged_throws() throws Exception {
         XXServiceDao xServiceDao = Mockito.mock(XXServiceDao.class);
-        Mockito.when(daoManager.getXXService()).thenReturn(xServiceDao);
+        Mockito.when(daoMgr.getXXService()).thenReturn(xServiceDao);
         XXService x = new XXService();
         x.setId(8L);
         Mockito.when(xServiceDao.getById(8L)).thenReturn(x);
@@ -5758,7 +5765,7 @@ public class TestServiceDBStore {
         Mockito.when(svcService.getPopulatedViewObject(x)).thenReturn(existing);
         Mockito.when(xServiceDao.findByName("new")).thenReturn(null);
         XXServiceResourceDao resDao = Mockito.mock(XXServiceResourceDao.class);
-        Mockito.when(daoManager.getXXServiceResource()).thenReturn(resDao);
+        Mockito.when(daoMgr.getXXServiceResource()).thenReturn(resDao);
         Mockito.when(resDao.countTaggedResourcesInServiceId(8L)).thenReturn(1L);
         Mockito.when(restErrorUtil.createRESTException(Mockito.anyString(), Mockito.eq(MessageEnums.DATA_NOT_UPDATABLE)))
                 .thenReturn(new WebApplicationException());
@@ -5771,7 +5778,7 @@ public class TestServiceDBStore {
     @Test
     public void test239updateService_invalidTagService_throws() throws Exception {
         XXServiceDao xServiceDao = Mockito.mock(XXServiceDao.class);
-        Mockito.when(daoManager.getXXService()).thenReturn(xServiceDao);
+        Mockito.when(daoMgr.getXXService()).thenReturn(xServiceDao);
         XXService x = new XXService();
         x.setId(10L);
         Mockito.when(xServiceDao.getById(10L)).thenReturn(x);
@@ -5810,7 +5817,7 @@ public class TestServiceDBStore {
             XXServiceDao xServiceDao = Mockito.mock(XXServiceDao.class);
             XXService x = new XXService();
             x.setId(12L);
-            Mockito.when(daoManager.getXXService()).thenReturn(xServiceDao);
+            Mockito.when(daoMgr.getXXService()).thenReturn(xServiceDao);
             Mockito.when(xServiceDao.getById(12L)).thenReturn(x);
             Mockito.when(bizUtil.hasAccess(Mockito.eq(x), Mockito.isNull())).thenReturn(false);
             Mockito.when(restErrorUtil.createRESTException(Mockito.anyString(), Mockito.eq(MessageEnums.OPER_NO_PERMISSION)))
@@ -5827,7 +5834,7 @@ public class TestServiceDBStore {
             XXServiceDao xServiceDao = Mockito.mock(XXServiceDao.class);
             XXService x = new XXService();
             x.setId(13L);
-            Mockito.when(daoManager.getXXService()).thenReturn(xServiceDao);
+            Mockito.when(daoMgr.getXXService()).thenReturn(xServiceDao);
             Mockito.when(xServiceDao.findByName("svc")).thenReturn(x);
             Mockito.when(bizUtil.hasAccess(Mockito.eq(x), Mockito.isNull())).thenReturn(false);
             Mockito.when(restErrorUtil.createRESTException(Mockito.anyString(), Mockito.eq(MessageEnums.OPER_NO_PERMISSION)))
@@ -5844,7 +5851,7 @@ public class TestServiceDBStore {
             XXServiceDao xServiceDao = Mockito.mock(XXServiceDao.class);
             XXService x = new XXService();
             x.setId(14L);
-            Mockito.when(daoManager.getXXService()).thenReturn(xServiceDao);
+            Mockito.when(daoMgr.getXXService()).thenReturn(xServiceDao);
             Mockito.when(xServiceDao.findByDisplayName("disp")).thenReturn(x);
             Mockito.when(bizUtil.hasAccess(Mockito.eq(x), Mockito.isNull())).thenReturn(false);
             Mockito.when(restErrorUtil.createRESTException(Mockito.anyString(), Mockito.eq(MessageEnums.OPER_NO_PERMISSION)))
@@ -5921,7 +5928,7 @@ public class TestServiceDBStore {
     @Test
     public void test247deleteExistingPolicyLabel_true_whenPresent() throws Exception {
         XXPolicyLabelMapDao dao = Mockito.mock(XXPolicyLabelMapDao.class);
-        Mockito.when(daoManager.getXXPolicyLabelMap()).thenReturn(dao);
+        Mockito.when(daoMgr.getXXPolicyLabelMap()).thenReturn(dao);
         XXPolicyLabelMap m1 = new XXPolicyLabelMap();
         Mockito.when(dao.findByPolicyId(10L)).thenReturn(Collections.singletonList(m1));
         RangerPolicy p = new RangerPolicy();
@@ -5934,7 +5941,7 @@ public class TestServiceDBStore {
     @Test
     public void test248getAuditFiltersServiceConfigByName_matches() throws Exception {
         XXServiceConfigMapDao dao = Mockito.mock(XXServiceConfigMapDao.class);
-        Mockito.when(daoManager.getXXServiceConfigMap()).thenReturn(dao);
+        Mockito.when(daoMgr.getXXServiceConfigMap()).thenReturn(dao);
         XXServiceConfigMap cm = new XXServiceConfigMap();
         cm.setConfigkey("ranger.plugin.audit.filters");
         cm.setConfigvalue("alice,bob");
@@ -5963,7 +5970,7 @@ public class TestServiceDBStore {
         f2.setAccessible(true);
         f2.set(serviceDBStore, Mockito.mock(UserMgr.class));
         XXPortalUserDao portalDao = Mockito.mock(XXPortalUserDao.class);
-        Mockito.when(daoManager.getXXPortalUser()).thenReturn(portalDao);
+        Mockito.when(daoMgr.getXXPortalUser()).thenReturn(portalDao);
         Mockito.when(portalDao.findByLoginId("nouser")).thenReturn(null);
         Mockito.when(restErrorUtil.createRESTException(Mockito.anyString(), Mockito.eq(MessageEnums.ERROR_CREATING_OBJECT)))
                 .thenReturn(new WebApplicationException());
@@ -6033,7 +6040,7 @@ public class TestServiceDBStore {
 
         XXDataHistDao xDataHistDao = Mockito.mock(XXDataHistDao.class);
         XXDataHist xDataHist = Mockito.mock(XXDataHist.class);
-        Mockito.when(daoManager.getXXDataHist()).thenReturn(xDataHistDao);
+        Mockito.when(daoMgr.getXXDataHist()).thenReturn(xDataHistDao);
         Mockito.when(xDataHistDao.findObjByEventTimeClassTypeAndId(eventTime, 1020, Id)).thenReturn(xDataHist);
         Mockito.when(xDataHist.getContent()).thenReturn(json);
         RangerPolicy expected = new RangerPolicy();
@@ -6051,7 +6058,7 @@ public class TestServiceDBStore {
         String json = "{\"id\":2,\"name\":\"p2\"}";
         XXDataHistDao xDataHistDao = Mockito.mock(XXDataHistDao.class);
         XXDataHist xDataHist = Mockito.mock(XXDataHist.class);
-        Mockito.when(daoManager.getXXDataHist()).thenReturn(xDataHistDao);
+        Mockito.when(daoMgr.getXXDataHist()).thenReturn(xDataHistDao);
         Mockito.when(xDataHistDao.findObjectByVersionNumber(Id, 1020, versionNo)).thenReturn(xDataHist);
         Mockito.when(xDataHist.getContent()).thenReturn(json);
         RangerPolicy expected = new RangerPolicy();
@@ -6068,7 +6075,7 @@ public class TestServiceDBStore {
         String name = "svc-denied";
         XXServiceDao xServiceDao = Mockito.mock(XXServiceDao.class);
         XXService xService = Mockito.mock(XXService.class);
-        Mockito.when(daoManager.getXXService()).thenReturn(xServiceDao);
+        Mockito.when(daoMgr.getXXService()).thenReturn(xServiceDao);
         Mockito.when(xServiceDao.findByName(name)).thenReturn(xService);
         Mockito.when(bizUtil.hasAccess(xService, null)).thenReturn(false);
         Mockito.when(restErrorUtil.createRESTException(Mockito.anyString(), Mockito.any())).thenReturn(new WebApplicationException());
@@ -6085,7 +6092,7 @@ public class TestServiceDBStore {
         Long id = 99L;
         XXServiceDao xServiceDao = Mockito.mock(XXServiceDao.class);
         XXService xService = Mockito.mock(XXService.class);
-        Mockito.when(daoManager.getXXService()).thenReturn(xServiceDao);
+        Mockito.when(daoMgr.getXXService()).thenReturn(xServiceDao);
         Mockito.when(xServiceDao.getById(id)).thenReturn(xService);
         Mockito.when(bizUtil.hasAccess(xService, null)).thenReturn(false);
         Mockito.when(restErrorUtil.createRESTException(Mockito.anyString(), Mockito.any())).thenReturn(new WebApplicationException());
@@ -6104,7 +6111,7 @@ public class TestServiceDBStore {
         def.setName("tag"); // trigger tag service-def path
 
         XXServiceDao sDao = Mockito.mock(XXServiceDao.class);
-        Mockito.when(daoManager.getXXService()).thenReturn(sDao);
+        Mockito.when(daoMgr.getXXService()).thenReturn(sDao);
         XXService tagSvc = new XXService();
         tagSvc.setId(100L);
         List<XXService> services = new ArrayList<>();
@@ -6119,7 +6126,7 @@ public class TestServiceDBStore {
         });
 
         serviceDBStore.updateServicesForServiceDefUpdate(def);
-        Mockito.verify(daoManager, Mockito.atLeastOnce()).getXXService();
+        Mockito.verify(daoMgr, Mockito.atLeastOnce()).getXXService();
         Mockito.verify(transactionSynchronizationAdapter, Mockito.atLeastOnce()).executeOnTransactionCommit(Mockito.any(Runnable.class));
     }
 
@@ -6133,7 +6140,7 @@ public class TestServiceDBStore {
         xCfg10.setItemId(10L);
         XXServiceConfigDef xCfg30 = new XXServiceConfigDef();
         xCfg30.setItemId(30L);
-        Mockito.when(daoManager.getXXServiceConfigDef()).thenReturn(xCfgDao);
+        Mockito.when(daoMgr.getXXServiceConfigDef()).thenReturn(xCfgDao);
         Mockito.when(xCfgDao.findByServiceDefId(1L)).thenReturn(new ArrayList<XXServiceConfigDef>() {
             {
                 add(xCfg10);
@@ -6148,7 +6155,7 @@ public class TestServiceDBStore {
         xRes40.setId(140L);
         xRes40.setItemId(40L);
         xRes40.setName("db");
-        Mockito.when(daoManager.getXXResourceDef()).thenReturn(xResDao);
+        Mockito.when(daoMgr.getXXResourceDef()).thenReturn(xResDao);
         Mockito.when(xResDao.findByServiceDefId(1L)).thenReturn(new ArrayList<XXResourceDef>() {
             {
                 add(xRes40);
@@ -6158,7 +6165,7 @@ public class TestServiceDBStore {
         Mockito.when(xResDao.findByParentResId(Mockito.anyLong())).thenReturn(new ArrayList<XXResourceDef>());
         Mockito.when(xResDao.create(Mockito.any())).thenAnswer(inv -> inv.getArgument(0));
         XXPolicyRefResourceDao xPolRefResDao = Mockito.mock(XXPolicyRefResourceDao.class);
-        Mockito.when(daoManager.getXXPolicyRefResource()).thenReturn(xPolRefResDao);
+        Mockito.when(daoMgr.getXXPolicyRefResource()).thenReturn(xPolRefResDao);
         Mockito.when(xPolRefResDao.findByResourceDefID(140L)).thenReturn(new ArrayList<XXPolicyRefResource>());
 
         XXAccessTypeDefDao xAtdDao = Mockito.mock(XXAccessTypeDefDao.class);
@@ -6166,7 +6173,7 @@ public class TestServiceDBStore {
         xAcc50.setId(150L);
         xAcc50.setItemId(50L);
         xAcc50.setName("read");
-        Mockito.when(daoManager.getXXAccessTypeDef()).thenReturn(xAtdDao);
+        Mockito.when(daoMgr.getXXAccessTypeDef()).thenReturn(xAtdDao);
         Mockito.when(xAtdDao.findByServiceDefId(1L)).thenReturn(new ArrayList<XXAccessTypeDef>() {
             {
                 add(xAcc50);
@@ -6175,7 +6182,7 @@ public class TestServiceDBStore {
         Mockito.when(xAtdDao.update(Mockito.any(XXAccessTypeDef.class))).thenAnswer(inv -> inv.getArgument(0));
         Mockito.when(xAtdDao.create(Mockito.any())).thenAnswer(inv -> inv.getArgument(0));
         XXAccessTypeDefGrantsDao xGrantDao = Mockito.mock(XXAccessTypeDefGrantsDao.class);
-        Mockito.when(daoManager.getXXAccessTypeDefGrants()).thenReturn(xGrantDao);
+        Mockito.when(daoMgr.getXXAccessTypeDefGrants()).thenReturn(xGrantDao);
         Mockito.when(xGrantDao.findImpliedGrantsByATDId(150L)).thenReturn(new ArrayList<String>() {
             {
                 add("read");
@@ -6189,21 +6196,21 @@ public class TestServiceDBStore {
         xCond60.setId(160L);
         xCond60.setItemId(60L);
         xCond60.setName("country");
-        Mockito.when(daoManager.getXXPolicyConditionDef()).thenReturn(xCondDao);
+        Mockito.when(daoMgr.getXXPolicyConditionDef()).thenReturn(xCondDao);
         Mockito.when(xCondDao.findByServiceDefId(1L)).thenReturn(new ArrayList<XXPolicyConditionDef>() {
             {
                 add(xCond60);
             }
         });
         XXPolicyRefConditionDao xRefCondDao = Mockito.mock(XXPolicyRefConditionDao.class);
-        Mockito.when(daoManager.getXXPolicyRefCondition()).thenReturn(xRefCondDao);
+        Mockito.when(daoMgr.getXXPolicyRefCondition()).thenReturn(xRefCondDao);
         Mockito.when(xRefCondDao.findByConditionDefId(160L)).thenReturn(new ArrayList<XXPolicyRefCondition>());
 
         XXContextEnricherDefDao xEnrDao = Mockito.mock(XXContextEnricherDefDao.class);
         XXContextEnricherDef xEnr70 = new XXContextEnricherDef();
         xEnr70.setId(170L);
         xEnr70.setItemId(70L);
-        Mockito.when(daoManager.getXXContextEnricherDef()).thenReturn(xEnrDao);
+        Mockito.when(daoMgr.getXXContextEnricherDef()).thenReturn(xEnrDao);
         Mockito.when(xEnrDao.findByServiceDefId(1L)).thenReturn(new ArrayList<XXContextEnricherDef>() {
             {
                 add(xEnr70);
@@ -6214,20 +6221,20 @@ public class TestServiceDBStore {
         XXEnumDef xEnum = new XXEnumDef();
         xEnum.setId(180L);
         xEnum.setItemId(80L);
-        Mockito.when(daoManager.getXXEnumDef()).thenReturn(xEnumDao);
+        Mockito.when(daoMgr.getXXEnumDef()).thenReturn(xEnumDao);
         Mockito.when(xEnumDao.findByServiceDefId(1L)).thenReturn(new ArrayList<XXEnumDef>() {
             {
                 add(xEnum);
             }
         });
         XXEnumElementDefDao xEnumEleDao = Mockito.mock(XXEnumElementDefDao.class);
-        Mockito.when(daoManager.getXXEnumElementDef()).thenReturn(xEnumEleDao);
+        Mockito.when(daoMgr.getXXEnumElementDef()).thenReturn(xEnumEleDao);
         Mockito.when(xEnumEleDao.findByEnumDefId(180L)).thenReturn(new ArrayList<XXEnumElementDef>());
 
         XXDataMaskTypeDefDao xDmDao = Mockito.mock(XXDataMaskTypeDefDao.class);
         XXDataMaskTypeDef xDmExist = new XXDataMaskTypeDef();
         xDmExist.setItemId(91L);
-        Mockito.when(daoManager.getXXDataMaskTypeDef()).thenReturn(xDmDao);
+        Mockito.when(daoMgr.getXXDataMaskTypeDef()).thenReturn(xDmDao);
         Mockito.when(xDmDao.findByServiceDefId(1L)).thenReturn(new ArrayList<XXDataMaskTypeDef>() {
             {
                 add(xDmExist);
@@ -6245,7 +6252,7 @@ public class TestServiceDBStore {
             f2.set(serviceDBStore, svcDefServiceWithAssignedId);
             Field f3 = ServiceDBStore.class.getDeclaredField("daoMgr");
             f3.setAccessible(true);
-            f3.set(serviceDBStore, daoManager);
+            f3.set(serviceDBStore, daoMgr);
         } catch (Exception ignore) {
         }
 
@@ -6263,13 +6270,13 @@ public class TestServiceDBStore {
         // use dedicated local mocks to avoid nulls
         RangerServiceDefService locSvcDefService = Mockito.mock(RangerServiceDefService.class);
         RangerServiceDefWithAssignedIdService locSvcDefWithAssigned = Mockito.mock(RangerServiceDefWithAssignedIdService.class);
-        Mockito.when(daoManager.getXXPolicyRefResource()).thenReturn(xPolRefResDao);
-        Mockito.when(daoManager.getXXAccessTypeDefGrants()).thenReturn(xGrantDao);
-        Mockito.when(daoManager.getXXPolicyConditionDef()).thenReturn(xCondDao);
-        Mockito.when(daoManager.getXXContextEnricherDef()).thenReturn(xEnrDao);
-        Mockito.when(daoManager.getXXEnumDef()).thenReturn(xEnumDao);
-        Mockito.when(daoManager.getXXEnumElementDef()).thenReturn(xEnumEleDao);
-        Mockito.when(daoManager.getXXAccessTypeDef()).thenReturn(xAtdDao);
+        Mockito.when(daoMgr.getXXPolicyRefResource()).thenReturn(xPolRefResDao);
+        Mockito.when(daoMgr.getXXAccessTypeDefGrants()).thenReturn(xGrantDao);
+        Mockito.when(daoMgr.getXXPolicyConditionDef()).thenReturn(xCondDao);
+        Mockito.when(daoMgr.getXXContextEnricherDef()).thenReturn(xEnrDao);
+        Mockito.when(daoMgr.getXXEnumDef()).thenReturn(xEnumDao);
+        Mockito.when(daoMgr.getXXEnumElementDef()).thenReturn(xEnumEleDao);
+        Mockito.when(daoMgr.getXXAccessTypeDef()).thenReturn(xAtdDao);
         Mockito.when(locSvcDefService.populateRangerServiceConfigDefToXX(Mockito.any(), Mockito.any(), Mockito.any(),
                 Mockito.anyInt())).thenAnswer(inv -> inv.getArgument(1));
         Mockito.when(locSvcDefService.populateXXToRangerServiceConfigDef(Mockito.any()))
@@ -6299,7 +6306,7 @@ public class TestServiceDBStore {
             f2.set(serviceDBStore, locSvcDefWithAssigned);
             Field f3 = ServiceDBStore.class.getDeclaredField("daoMgr");
             f3.setAccessible(true);
-            f3.set(serviceDBStore, daoManager);
+            f3.set(serviceDBStore, daoMgr);
             Field f4 = ServiceDBStore.class.getDeclaredField("stringUtil");
             f4.setAccessible(true);
             f4.set(serviceDBStore, stringUtil);
@@ -6393,7 +6400,7 @@ public class TestServiceDBStore {
         xRes.setId(210L);
         xRes.setItemId(400L);
         xRes.setName("db");
-        Mockito.when(daoManager.getXXResourceDef()).thenReturn(xResDao);
+        Mockito.when(daoMgr.getXXResourceDef()).thenReturn(xResDao);
         Mockito.when(xResDao.findByServiceDefId(2L)).thenReturn(new ArrayList<XXResourceDef>() {
             {
                 add(xRes);
@@ -6401,7 +6408,7 @@ public class TestServiceDBStore {
         });
 
         XXPolicyRefResourceDao xRefResDao = Mockito.mock(XXPolicyRefResourceDao.class);
-        Mockito.when(daoManager.getXXPolicyRefResource()).thenReturn(xRefResDao);
+        Mockito.when(daoMgr.getXXPolicyRefResource()).thenReturn(xRefResDao);
         Mockito.when(xRefResDao.findByResourceDefID(210L)).thenReturn(new ArrayList<XXPolicyRefResource>() {
             {
                 add(new XXPolicyRefResource());
@@ -6435,7 +6442,7 @@ public class TestServiceDBStore {
         serviceDBStore.setPopulateExistingBaseFields(true);
 
         XXServiceDefDao xSvcDefDao = Mockito.mock(XXServiceDefDao.class);
-        Mockito.when(daoManager.getXXServiceDef()).thenReturn(xSvcDefDao);
+        Mockito.when(daoMgr.getXXServiceDef()).thenReturn(xSvcDefDao);
         Mockito.when(xSvcDefDao.findByName("sd1")).thenReturn(null);
         Mockito.when(xSvcDefDao.getById(1L)).thenReturn(new XXServiceDef());
         // stub DAOs used by createServiceDef
@@ -6447,14 +6454,14 @@ public class TestServiceDBStore {
         XXEnumDefDao xEnumDao = Mockito.mock(XXEnumDefDao.class);
         XXEnumElementDefDao xEnumEleDao = Mockito.mock(XXEnumElementDefDao.class);
         XXDataMaskTypeDefDao xDmDao = Mockito.mock(XXDataMaskTypeDefDao.class);
-        Mockito.when(daoManager.getXXServiceConfigDef()).thenReturn(xCfgDao);
-        Mockito.when(daoManager.getXXResourceDef()).thenReturn(xResDao);
-        Mockito.when(daoManager.getXXAccessTypeDef()).thenReturn(xAtdDao);
-        Mockito.when(daoManager.getXXPolicyConditionDef()).thenReturn(xCondDao);
-        Mockito.when(daoManager.getXXContextEnricherDef()).thenReturn(xEnrDao);
-        Mockito.when(daoManager.getXXEnumDef()).thenReturn(xEnumDao);
-        Mockito.when(daoManager.getXXEnumElementDef()).thenReturn(xEnumEleDao);
-        Mockito.when(daoManager.getXXDataMaskTypeDef()).thenReturn(xDmDao);
+        Mockito.when(daoMgr.getXXServiceConfigDef()).thenReturn(xCfgDao);
+        Mockito.when(daoMgr.getXXResourceDef()).thenReturn(xResDao);
+        Mockito.when(daoMgr.getXXAccessTypeDef()).thenReturn(xAtdDao);
+        Mockito.when(daoMgr.getXXPolicyConditionDef()).thenReturn(xCondDao);
+        Mockito.when(daoMgr.getXXContextEnricherDef()).thenReturn(xEnrDao);
+        Mockito.when(daoMgr.getXXEnumDef()).thenReturn(xEnumDao);
+        Mockito.when(daoMgr.getXXEnumElementDef()).thenReturn(xEnumEleDao);
+        Mockito.when(daoMgr.getXXDataMaskTypeDef()).thenReturn(xDmDao);
         Mockito.when(xAtdDao.findByServiceDefId(1L)).thenReturn(new ArrayList<XXAccessTypeDef>());
         Mockito.when(xResDao.findByServiceDefId(1L)).thenReturn(new ArrayList<XXResourceDef>());
         Mockito.when(xDmDao.findByServiceDefId(1L)).thenReturn(new ArrayList<XXDataMaskTypeDef>());
@@ -6477,7 +6484,7 @@ public class TestServiceDBStore {
             f2.set(serviceDBStore, svcDefServiceWithAssignedId);
             Field f3 = ServiceDBStore.class.getDeclaredField("daoMgr");
             f3.setAccessible(true);
-            f3.set(serviceDBStore, daoManager);
+            f3.set(serviceDBStore, daoMgr);
             Field f4 = ServiceDBStore.class.getDeclaredField("restErrorUtil");
             f4.setAccessible(true);
             f4.set(serviceDBStore, restErrorUtil);
@@ -6501,18 +6508,18 @@ public class TestServiceDBStore {
         XXService xs = new XXService();
         xs.setId(5L);
         xs.setName("svc1");
-        Mockito.when(daoManager.getXXService()).thenReturn(sDao);
+        Mockito.when(daoMgr.getXXService()).thenReturn(sDao);
         Mockito.when(sDao.findByName("svc1")).thenReturn(xs);
 
         XXGroupGroupDao ggDao = Mockito.mock(XXGroupGroupDao.class);
-        Mockito.when(daoManager.getXXGroupGroup()).thenReturn(ggDao);
+        Mockito.when(daoMgr.getXXGroupGroup()).thenReturn(ggDao);
         Mockito.when(ggDao.findGroupNamesByGroupName(Mockito.anyString())).thenReturn(new HashSet<String>());
 
         // ensure internal daoMgr reference is wired for searchRangerPolicies
         try {
             Field daoMgrField = ServiceDBStore.class.getDeclaredField("daoMgr");
             daoMgrField.setAccessible(true);
-            daoMgrField.set(serviceDBStore, daoManager);
+            daoMgrField.set(serviceDBStore, daoMgr);
         } catch (Exception ignore) {
         }
 
@@ -6535,7 +6542,7 @@ public class TestServiceDBStore {
             // ignore exception; this path asserts interactions instead
             ret = new RangerPolicyList();
         }
-        Mockito.verify(daoManager, Mockito.atLeastOnce()).getXXGroupGroup();
+        Mockito.verify(daoMgr, Mockito.atLeastOnce()).getXXGroupGroup();
     }
 
     @Test
@@ -6545,21 +6552,21 @@ public class TestServiceDBStore {
         f.setParam(SearchFilter.RESOURCE_PREFIX + "path", "/a");
 
         XXGroupUserDao guDao = Mockito.mock(XXGroupUserDao.class);
-        Mockito.when(daoManager.getXXGroupUser()).thenReturn(guDao);
+        Mockito.when(daoMgr.getXXGroupUser()).thenReturn(guDao);
         Mockito.when(guDao.findGroupNamesByUserName("u1")).thenReturn(new HashSet<String>());
 
         XXGroupGroupDao ggDao = Mockito.mock(XXGroupGroupDao.class);
-        Mockito.when(daoManager.getXXGroupGroup()).thenReturn(ggDao);
+        Mockito.when(daoMgr.getXXGroupGroup()).thenReturn(ggDao);
         Mockito.when(ggDao.findGroupNamesByGroupName(Mockito.anyString())).thenReturn(new HashSet<String>() {
             {
                 add(RangerConstants.GROUP_PUBLIC);
             }
         });
         XXGroupDao gDao = Mockito.mock(XXGroupDao.class);
-        Mockito.when(daoManager.getXXGroup()).thenReturn(gDao);
+        Mockito.when(daoMgr.getXXGroup()).thenReturn(gDao);
         Mockito.when(gDao.findByGroupName(Mockito.anyString())).thenReturn(null);
         XXUserDao uDao = Mockito.mock(XXUserDao.class);
-        Mockito.when(daoManager.getXXUser()).thenReturn(uDao);
+        Mockito.when(daoMgr.getXXUser()).thenReturn(uDao);
         Mockito.when(uDao.findByUserName("u1")).thenReturn(null);
 
         XXPolicy xPol = new XXPolicy();
