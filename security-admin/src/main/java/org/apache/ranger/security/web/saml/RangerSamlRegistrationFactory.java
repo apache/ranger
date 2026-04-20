@@ -27,6 +27,8 @@ import org.springframework.security.saml2.provider.service.registration.RelyingP
 import org.springframework.security.saml2.provider.service.registration.Saml2MessageBinding;
 
 import java.io.FileInputStream;
+import java.security.KeyStore;
+import java.security.PrivateKey;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 import java.security.interfaces.RSAPrivateKey;
@@ -50,6 +52,32 @@ public class RangerSamlRegistrationFactory {
             certificate = (X509Certificate) CertificateFactory.getInstance("X.509").generateCertificate(fis);
         }
         Saml2X509Credential signingCredential = Saml2X509Credential.signing(privateKey, certificate);
+        return builder
+                .signingX509Credentials(c -> c.add(signingCredential))
+                .singleLogoutServiceLocation("{baseUrl}/logout/saml2/slo")
+                .singleLogoutServiceResponseLocation("{baseUrl}/logout/saml2/slo")
+                .singleLogoutServiceBinding(Saml2MessageBinding.POST)
+                .build();
+    }
+
+    public static RelyingPartyRegistration buildFromKeystore(RelyingPartyRegistration.Builder builder, String keystorePath,
+                                                             String alias, String password) throws Exception {
+        if (keystorePath == null || keystorePath.trim().isEmpty()) {
+            throw new IllegalArgumentException("ranger.service.https.attrib.keystore.file must not be null or empty");
+        }
+        if (alias == null || alias.trim().isEmpty()) {
+            throw new IllegalArgumentException("ranger.service.https.attrib.keystore.keyalias must not be null or empty");
+        }
+        if (password == null || password.trim().isEmpty()) {
+            throw new IllegalArgumentException("ranger.service.https.attrib.keystore.pass must not be null or empty");
+        }
+        KeyStore ks = KeyStore.getInstance("JKS");
+        try (FileInputStream fis = new FileInputStream(keystorePath)) {
+            ks.load(fis, password.toCharArray());
+        }
+        PrivateKey privateKey = (PrivateKey) ks.getKey(alias, password.toCharArray());
+        X509Certificate cert = (X509Certificate) ks.getCertificate(alias);
+        Saml2X509Credential signingCredential = Saml2X509Credential.signing((RSAPrivateKey) privateKey, cert);
         return builder
                 .signingX509Credentials(c -> c.add(signingCredential))
                 .singleLogoutServiceLocation("{baseUrl}/logout/saml2/slo")

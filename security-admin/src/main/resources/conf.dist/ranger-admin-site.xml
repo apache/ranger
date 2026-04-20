@@ -481,16 +481,6 @@
 		<description>IdP metadata file location (file: or http: URI)</description>
 	</property>
 	<property>
-		<name>ranger.saml.sp.key</name>
-		<value></value>
-		<description>Absolute path to the SP private key (PKCS8 PEM) used to sign AuthnRequests</description>
-	</property>
-	<property>
-		<name>ranger.saml.sp.cert</name>
-		<value></value>
-		<description>Absolute path to the SP public certificate (X.509 PEM)</description>
-	</property>
-	<property>
 		<name>ranger.saml.success.url</name>
 		<value>/index.html</value>
 		<description>URL to redirect to after successful SAML authentication</description>

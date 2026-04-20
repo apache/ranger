@@ -120,8 +120,16 @@ http://www.springframework.org/schema/security/spring-security-oauth2-2.0.xsd">
             <security:custom-filter position="FORM_LOGIN_FILTER" ref="customUsernamePasswordAuthenticationFilter"/>
             <security:custom-filter position="LAST" ref="userContextFormationFilter"/>
             <security:access-denied-handler error-page="/login.jsp"/>
-            <security:logout delete-cookies="${ranger.admin.cookie.name}" logout-url="/logout"
-                             success-handler-ref="rangerDelegatingLogoutSuccessHandler"/>
+            <!-- For SAML SLO (POST binding), the session must remain valid for the IdP round-trip.
+                 invalidate-session="false" prevents premature session invalidation so that
+                 Saml2RelyingPartyInitiatedLogoutSuccessHandler can store the LogoutRequest in
+                 the current session, and Saml2LogoutResponseFilter can find it when the IdP
+                 POSTs back the LogoutResponse. The session and cookie are cleared by
+                 Saml2LogoutResponseFilter's internal SecurityContextLogoutHandler after
+                 successful LogoutResponse validation. -->
+            <security:logout logout-url="/logout"
+                             success-handler-ref="rangerDelegatingLogoutSuccessHandler"
+                             invalidate-session="false"/>
             <http-basic entry-point-ref="rangerDelegatingEntryPoint"/>
         </security:http>
 
@@ -215,10 +223,11 @@ http://www.springframework.org/schema/security/spring-security-oauth2-2.0.xsd">
 
         <beans:bean id="relyingPartyRegistration"
                     class="org.apache.ranger.security.web.saml.RangerSamlRegistrationFactory"
-                    factory-method="buildWithSigningCredential">
+                    factory-method="buildFromKeystore">
             <beans:constructor-arg ref="samlRegistrationBuilderWithEntityId"/>
-            <beans:constructor-arg value="${ranger.saml.sp.key}"/>
-            <beans:constructor-arg value="${ranger.saml.sp.cert}"/>
+            <beans:constructor-arg value="${ranger.service.https.attrib.keystore.file}"/>
+            <beans:constructor-arg value="${ranger.service.https.attrib.keystore.keyalias}"/>
+            <beans:constructor-arg value="${ranger.service.https.attrib.keystore.pass}"/>
         </beans:bean>
 
         <beans:bean id="relyingPartyRegistrationRepository"
