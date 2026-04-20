@@ -42,7 +42,8 @@ import {
   Loader,
   scrollToError,
   selectInputCustomStyles,
-  trimInputValue
+  trimInputValue,
+  ConfirmationClearIndicator
 } from "Components/CommonComponents";
 import {
   difference,
@@ -706,6 +707,12 @@ class ServiceForm extends Component {
                 isClearable={true}
                 styles={selectInputCustomStyles}
                 isMulti
+                clearConfirmMessage={
+                  additionalConfig.type == "user" ? "Users" : "Groups"
+                }
+                components={{
+                  ClearIndicator: ConfirmationClearIndicator
+                }}
               />
             </Col>
           </Row>

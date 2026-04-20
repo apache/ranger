@@ -49,7 +49,8 @@ import {
   scrollToError,
   selectInputCustomStyles,
   selectInputCustomErrorStyles,
-  trimInputValue
+  trimInputValue,
+  ConfirmationClearIndicator
 } from "Components/CommonComponents";
 import usePrompt from "Hooks/usePrompt";
 import { getServiceDef } from "Utils/appState";
@@ -873,11 +874,13 @@ const SecurityZoneForm = () => {
                               isMulti
                               components={{
                                 DropdownIndicator: () => null,
-                                IndicatorSeparator: () => null
+                                IndicatorSeparator: () => null,
+                                ClearIndicator: ConfirmationClearIndicator
                               }}
                               isClearable={true}
                               placeholder="Select Users"
                               tabSelectsValue={false}
+                              clearConfirmMessage="Users"
                             />
                           </Col>
                         </Row>
@@ -918,11 +921,13 @@ const SecurityZoneForm = () => {
                               isMulti
                               components={{
                                 DropdownIndicator: () => null,
-                                IndicatorSeparator: () => null
+                                IndicatorSeparator: () => null,
+                                ClearIndicator: ConfirmationClearIndicator
                               }}
                               isClearable={true}
                               placeholder="Select Groups"
                               tabSelectsValue={false}
+                              clearConfirmMessage="Groups"
                             />
                           </Col>
                         </Row>
@@ -963,11 +968,13 @@ const SecurityZoneForm = () => {
                               isMulti
                               components={{
                                 DropdownIndicator: () => null,
-                                IndicatorSeparator: () => null
+                                IndicatorSeparator: () => null,
+                                ClearIndicator: ConfirmationClearIndicator
                               }}
                               isClearable={true}
                               placeholder="Select Roles"
                               tabSelectsValue={false}
+                              clearConfirmMessage="Roles"
                             />
                             {meta.touched && meta.error && (
                               <span className="invalid-field">
@@ -1013,11 +1020,13 @@ const SecurityZoneForm = () => {
                               isMulti
                               components={{
                                 DropdownIndicator: () => null,
-                                IndicatorSeparator: () => null
+                                IndicatorSeparator: () => null,
+                                ClearIndicator: ConfirmationClearIndicator
                               }}
                               isClearable={true}
                               placeholder="Select Users"
                               tabSelectsValue={false}
+                              clearConfirmMessage="Users"
                             />
                           </Col>
                         </Row>
@@ -1058,11 +1067,13 @@ const SecurityZoneForm = () => {
                               isMulti
                               components={{
                                 DropdownIndicator: () => null,
-                                IndicatorSeparator: () => null
+                                IndicatorSeparator: () => null,
+                                ClearIndicator: ConfirmationClearIndicator
                               }}
                               isClearable={true}
                               placeholder="Select Groups"
                               tabSelectsValue={false}
+                              clearConfirmMessage="Groups"
                             />
                           </Col>
                         </Row>
@@ -1103,11 +1114,13 @@ const SecurityZoneForm = () => {
                               isMulti
                               components={{
                                 DropdownIndicator: () => null,
-                                IndicatorSeparator: () => null
+                                IndicatorSeparator: () => null,
+                                ClearIndicator: ConfirmationClearIndicator
                               }}
                               isClearable={true}
                               placeholder="Select Roles"
                               tabSelectsValue={false}
+                              clearConfirmMessage="Roles"
                             />
                             {meta.error && meta.touched && (
                               <span className="invalid-field">
