@@ -220,6 +220,8 @@ export const SideBarBody = (props) => {
       if (checkKnoxSSOresp?.status == "419") {
         setUserProfile(null);
         window.location.replace("login.jsp");
+      } else {
+        handleLogout(null);
       }
       console.error(`Error occurred while logout! ${error}`);
     }
@@ -227,6 +229,17 @@ export const SideBarBody = (props) => {
 
   const handleLogout = async (checkKnoxSSOVal) => {
     try {
+      // For SAML, we must do a full browser navigation to /logout so Spring Security
+      // can perform the SLO redirect chain (Ranger -> IdP -> back to Ranger).
+      // An AJAX call cannot follow the cross-domain SLO redirect, which causes the
+      // IdP session to remain active and results in an automatic re-login loop.
+      const currentUserProfile = getUserProfile();
+      const authMethod = currentUserProfile?.configProperties?.authenticationMethod;
+      if (authMethod?.toUpperCase() === "SAML") {
+        window.location.replace("logout");
+        return;
+      }
+
       await fetchApi({
         url: "logout",
         baseURL: "",
@@ -234,7 +247,7 @@ export const SideBarBody = (props) => {
           "cache-control": "no-cache"
         }
       });
-      if (checkKnoxSSOVal !== undefined || checkKnoxSSOVal !== null) {
+      if (checkKnoxSSOVal !== undefined && checkKnoxSSOVal !== null) {
         if (checkKnoxSSOVal?.toString() == "false") {
           window.location.replace("locallogin");
           window.localStorage.clear();

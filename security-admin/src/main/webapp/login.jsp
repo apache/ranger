@@ -14,6 +14,19 @@
   See the License for the specific language governing permissions and
   limitations under the License.
 -->
+<%@ page import="org.apache.ranger.common.PropertiesUtil" %>
+<%
+    String authMethod = PropertiesUtil.getProperty("ranger.authentication.method", "NONE");
+    // Only auto-redirect to IdP if we are NOT coming back from a logout.
+    // After a successful logout, samlPostLogoutRedirectHandler sends the user here
+    // with ?loggedOut=true so we show the login page instead of looping back to the IdP.
+    String loggedOut = request.getParameter("loggedOut");
+    if ("SAML".equalsIgnoreCase(authMethod) && !"true".equals(loggedOut)) {
+        String entityId = PropertiesUtil.getProperty("ranger.saml.entity.id", "ranger-saml");
+        response.sendRedirect(request.getContextPath() + "/saml2/authenticate/" + entityId);
+        return;
+    }
+%>
 <!DOCTYPE html>
 <!--[if lt IE 7]><html class="no-js lt-ie9 lt-ie8 lt-ie7"><![endif]-->
 <!--[if IE 7]><html class="no-js lt-ie9 lt-ie8"><![endif]-->

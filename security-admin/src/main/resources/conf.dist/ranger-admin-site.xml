@@ -453,4 +453,36 @@
 		<name>xasecure.audit.jaas.Client.option.principal</name>
 		<value></value>
 	</property>
+	<property>
+		<name>ranger.saml.attribute.username</name>
+		<value>NameID</value>
+	</property>
+	<property>
+		<name>ranger.saml.attribute.role</name>
+		<value>groups</value>
+	</property>
+	<property>
+		<name>ranger.saml.default.role</name>
+		<value>ROLE_USER</value>
+	</property>
+	<property>
+		<name>ranger.saml.admin.group</name>
+		<value>ranger-admins</value>
+	</property>
+	<!-- SAML SP / IdP file paths and identity -->
+	<property>
+		<name>ranger.saml.entity.id</name>
+		<value>ranger-saml</value>
+		<description>SAML SP Entity ID must match the Client ID registered in the IdP (e.g. Keycloak)</description>
+	</property>
+	<property>
+		<name>ranger.saml.idp.metadata.location</name>
+		<value></value>
+		<description>IdP metadata file location (file: or http: URI)</description>
+	</property>
+	<property>
+		<name>ranger.saml.success.url</name>
+		<value>/index.html</value>
+		<description>URL to redirect to after successful SAML authentication</description>
+	</property>
 </configuration>

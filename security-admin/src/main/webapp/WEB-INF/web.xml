@@ -22,6 +22,10 @@
     <welcome-file>index.html</welcome-file>
   </welcome-file-list>
   <context-param>
+    <param-name>contextInitializerClasses</param-name>
+    <param-value>org.apache.ranger.security.context.RangerApplicationContextInitializer</param-value>
+  </context-param>
+  <context-param>
     <param-name>contextConfigLocation</param-name>
     <param-value>META-INF/applicationContext.xml
 			WEB-INF/classes/conf/security-applicationContext.xml
