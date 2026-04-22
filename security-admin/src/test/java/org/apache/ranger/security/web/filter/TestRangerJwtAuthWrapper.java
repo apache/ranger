@@ -29,16 +29,21 @@ import org.junit.jupiter.api.TestMethodOrder;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
+import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import java.io.IOException;
+import java.lang.reflect.Field;
+import java.util.Collections;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.atLeastOnce;
@@ -123,5 +128,125 @@ public class TestRangerJwtAuthWrapper {
 
         verify(jwtFilter, never()).doFilter(any(ServletRequest.class), any(ServletResponse.class), any(FilterChain.class));
         verify(chain, times(1)).doFilter(req, res);
+    }
+
+    @Test
+    void testDoFilter_invokesJwtFilter_whenBearerHeaderPresent() throws Exception {
+        RangerContextHolder.resetSecurityContext();
+        SecurityContextHolder.clearContext();
+        PropertiesUtil.getPropertiesMap().put("ranger.sso.enabled", "false");
+
+        HttpServletRequest req = Mockito.mock(HttpServletRequest.class);
+        HttpServletResponse res = Mockito.mock(HttpServletResponse.class);
+        FilterChain chain = Mockito.mock(FilterChain.class);
+
+        Mockito.when(req.getHeader("Authorization")).thenReturn("Bearer token");
+
+        RangerJwtAuthFilter jwt = Mockito.mock(RangerJwtAuthFilter.class);
+
+        RangerJwtAuthWrapper wrapper = new RangerJwtAuthWrapper();
+        setField(wrapper, "rangerJwtAuthFilter", jwt);
+
+        wrapper.doFilter(req, res, chain);
+
+        verify(jwt, times(1)).doFilter(req, res, chain);
+        verify(chain, times(1)).doFilter(req, res);
+    }
+
+    @Test
+    void testDoFilter_skipsJwt_whenAlreadyAuthenticated_evenIfBearerHeaderPresent() throws Exception {
+        PropertiesUtil.getPropertiesMap().put("ranger.sso.enabled", "false");
+
+        // mark request authenticated
+        SecurityContextHolder.getContext().setAuthentication(
+                new UsernamePasswordAuthenticationToken(
+                        "kafka",
+                        "",
+                        Collections.singletonList(new SimpleGrantedAuthority("ROLE_USER"))));
+
+        HttpServletRequest req = Mockito.mock(HttpServletRequest.class);
+        HttpServletResponse res = Mockito.mock(HttpServletResponse.class);
+        FilterChain chain = Mockito.mock(FilterChain.class);
+        RangerJwtAuthFilter jwt = Mockito.mock(RangerJwtAuthFilter.class);
+        RangerJwtAuthWrapper wrapper = new RangerJwtAuthWrapper();
+        setField(wrapper, "rangerJwtAuthFilter", jwt);
+
+        wrapper.doFilter(req, res, chain);
+
+        verify(jwt, never()).doFilter(req, res, chain);
+        verify(chain, times(1)).doFilter(req, res);
+    }
+
+    @Test
+    void testDoFilter_skipsJwtFilter_whenNoBearerAndNoCookie() throws Exception {
+        PropertiesUtil.getPropertiesMap().put("ranger.sso.enabled", "false");
+
+        HttpServletRequest req = Mockito.mock(HttpServletRequest.class);
+        HttpServletResponse res = Mockito.mock(HttpServletResponse.class);
+        FilterChain chain = Mockito.mock(FilterChain.class);
+
+        // no bearer header, no cookies
+        Mockito.when(req.getHeader("Authorization")).thenReturn(null);
+        Mockito.when(req.getCookies()).thenReturn(null);
+
+        RangerJwtAuthFilter jwt = Mockito.mock(RangerJwtAuthFilter.class);
+        RangerJwtAuthWrapper wrapper = new RangerJwtAuthWrapper();
+        setField(wrapper, "rangerJwtAuthFilter", jwt);
+
+        wrapper.doFilter(req, res, chain);
+
+        verify(jwt, never()).doFilter(req, res, chain);
+        verify(chain, times(1)).doFilter(req, res);
+    }
+
+    @Test
+    void testDoFilter_invokesJwtFilter_whenJwtCookiePresent() throws Exception {
+        PropertiesUtil.getPropertiesMap().put("ranger.sso.enabled", "false");
+
+        HttpServletRequest req = Mockito.mock(HttpServletRequest.class);
+        HttpServletResponse res = Mockito.mock(HttpServletResponse.class);
+        FilterChain chain = Mockito.mock(FilterChain.class);
+
+        Mockito.when(req.getHeader("Authorization")).thenReturn(null);
+        Mockito.when(req.getCookies()).thenReturn(new Cookie[] {new Cookie("hadoop-jwt", "abc")});
+        RangerJwtAuthFilter jwt = Mockito.mock(RangerJwtAuthFilter.class);
+        RangerJwtAuthWrapper wrapper = new RangerJwtAuthWrapper();
+        setField(wrapper, "rangerJwtAuthFilter", jwt);
+
+        wrapper.doFilter(req, res, chain);
+
+        verify(jwt, times(1)).doFilter(req, res, chain);
+        verify(chain, times(1)).doFilter(req, res);
+    }
+
+    @Test
+    void testDoFilter_redirectsToLogin_whenJwtAttemptedButUnauthenticated_andBrowserAgent() throws Exception {
+        PropertiesUtil.getPropertiesMap().put("ranger.sso.enabled", "false");
+        System.setProperty("ranger.default.browser-useragents", "Mozilla");
+
+        HttpServletRequest req = Mockito.mock(HttpServletRequest.class);
+        HttpServletResponse res = Mockito.mock(HttpServletResponse.class);
+        FilterChain chain = Mockito.mock(FilterChain.class);
+
+        Mockito.when(req.getHeader("Authorization")).thenReturn("Bearer token");
+        Mockito.when(req.getHeader("User-Agent")).thenReturn("Mozilla/5.0");
+
+        RangerJwtAuthFilter jwt = Mockito.mock(RangerJwtAuthFilter.class);
+        Mockito.doNothing().when(jwt).doFilter(req, res, chain);
+
+        RangerJwtAuthWrapper wrapper = new RangerJwtAuthWrapper();
+        wrapper.initialize(); // loads browser agents from properties/system property
+        setField(wrapper, "rangerJwtAuthFilter", jwt);
+
+        wrapper.doFilter(req, res, chain);
+
+        verify(res, times(1)).sendRedirect("/login.jsp");
+        verify(chain, times(1)).doFilter(req, res);
+    }
+
+    private static void setField(Object target, String fieldName, Object value) throws Exception {
+        Field f = target.getClass().getDeclaredField(fieldName);
+        f.setAccessible(true);
+        f.set(target, value);
     }
 }
