@@ -1,16 +1,31 @@
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+#  Unless required by applicable law or agreed to in writing, software
+#  distributed under the License is distributed on an "AS IS" BASIS,
+#  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#  See the License for the specific language governing permissions and
+#  limitations under the License. See accompanying LICENSE file.
+#
+
 from apache_ranger.model.ranger_service import RangerService
-from apache_ranger.client.ranger_client import RangerClient
 from json import JSONDecodeError
 
-ranger_client = RangerClient('http://ranger:6080', ('admin', 'rangerR0cks!'))
+from log_config import configure_logging, get_logger
+from ranger_admin_xml_config import get_ranger_client
 
+logger = get_logger(__name__)
 
-def service_not_exists(service):
+def service_not_exists(ranger_client, service):
     try:
         svc = ranger_client.get_service(service.name)
     except JSONDecodeError:
-        return 1
-    return 0 if svc is not None else 1
+        return True
+    return svc is None
 
 
 hdfs = RangerService({'name': 'dev_hdfs', 'type': 'hdfs',
@@ -148,11 +163,24 @@ solr = RangerService({'name': 'dev_solr', 'type': 'solr',
                                  'ranger.plugin.super.users': 'solr',
                                  'ranger.plugin.solr.policy.refresh.synchronous':'true'}})
 
-services = [hdfs, yarn, hive, hbase, kafka, knox, kms, trino, ozone, solr]
-for service in services:
-    try:
-        if service_not_exists(service):
-            ranger_client.create_service(service)
-            print(f" {service.name} service created!")
-    except Exception as e:
-        print(f"An exception occured: {e}")
+def main() -> int:
+    configure_logging()
+    ranger_client = get_ranger_client()
+    services = [hdfs, yarn, hive, hbase, kafka, knox, kms, trino, ozone, solr]
+
+    for service in services:
+        try:
+            if service_not_exists(ranger_client, service):
+                ranger_client.create_service(service)
+                logger.info("%s service created", service.name)
+            else:
+                logger.info("%s service already exists", service.name)
+        except Exception:
+            logger.exception("Failed to reconcile Ranger service %s", service.name)
+            return 1
+
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

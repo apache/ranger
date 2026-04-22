@@ -1,0 +1,523 @@
+<configuration>
+    <property>
+        <name>ranger.externalurl</name>
+        <value>http://ranger-admin:6080</value>
+        <description />
+    </property>
+    <property>
+        <name>ranger.scheduler.enabled</name>
+        <value>true</value>
+        <description />
+    </property>
+    <property>
+        <name>ranger.jdbc.sqlconnectorjar</name>
+        <value>/usr/share/java/postgresql.jar</value>
+        <description>SQL connector JAR file path for the dockerized Ranger Admin runtime</description>
+    </property>
+    <property>
+        <name>ranger.jpa.jdbc.driver</name>
+        <value>org.postgresql.Driver</value>
+        <description />
+    </property>
+    <property>
+        <name>ranger.jpa.jdbc.url</name>
+        <value>jdbc:postgresql://ranger-db:5432/ranger</value>
+        <description />
+    </property>
+    <property>
+        <name>ranger.jpa.jdbc.user</name>
+        <value>rangeradmin</value>
+        <description />
+    </property>
+    <property>
+        <name>ranger.jpa.jdbc.dialect</name>
+        <value>org.eclipse.persistence.platform.database.PostgreSQLPlatform</value>
+        <description>JPA database dialect for PostgreSQL</description>
+    </property>
+    <property>
+        <name>ranger.jpa.jdbc.maxpoolsize</name>
+        <value>40</value>
+        <description>Maximum connection pool size</description>
+    </property>
+    <property>
+        <name>ranger.jpa.jdbc.minpoolsize</name>
+        <value>5</value>
+        <description>Minimum connection pool size</description>
+    </property>
+    <property>
+        <name>ranger.jpa.jdbc.idletimeout</name>
+        <value>300000</value>
+        <description>Idle connection timeout in milliseconds (5 minutes)</description>
+    </property>
+    <property>
+        <name>ranger.jpa.jdbc.maxlifetime</name>
+        <value>1800000</value>
+        <description>Maximum connection lifetime in milliseconds (30 minutes)</description>
+    </property>
+    <property>
+        <name>ranger.jpa.jdbc.preferredtestquery</name>
+        <value>select 1</value>
+        <description>Query used to test database connections</description>
+    </property>
+    <property>
+        <name>ranger.jpa.jdbc.connectiontimeout</name>
+        <value>30000</value>
+        <description>Connection timeout in milliseconds (30 seconds)</description>
+    </property>
+    <property>
+        <name>ranger.jpa.jdbc.batch-clear.enable</name>
+        <value>true</value>
+        <description>Enable bulk mode optimization for batch operations</description>
+    </property>
+    <property>
+        <name>ranger.jpa.jdbc.batch-clear.size</name>
+        <value>10</value>
+        <description>Batch size (in number of policies) to flush and clear JDBC statements during batch policy import/delete</description>
+    </property>
+    <property>
+        <name>ranger.jpa.jdbc.batch-persist.size</name>
+        <value>500</value>
+        <description>Batch size (in number of objects) to flush and clear JDBC statements during JPA persistence</description>
+    </property>
+    <property>
+        <name>ranger.jpa.jdbc.credential.alias</name>
+        <value>ranger.db.password</value>
+        <description>Credential alias for database password in credential store</description>
+    </property>
+    <property>
+        <name>ranger.credential.provider.path</name>
+        <value>/etc/ranger/admin/rangeradmin.jceks</value>
+        <description>Path to credential provider keystore file</description>
+    </property>
+    <property>
+        <name>ranger.jpa.audit.jdbc.dialect</name>
+        <value>org.eclipse.persistence.platform.database.PostgreSQLPlatform</value>
+        <description>JPA database dialect for audit database (PostgreSQL)</description>
+    </property>
+    <property>
+        <name>ranger.jpa.audit.jdbc.credential.alias</name>
+        <value>ranger.auditdb.password</value>
+        <description>Credential alias for audit database password in credential store</description>
+    </property>
+    <property>
+        <name>ranger.jpa.showsql</name>
+        <value>false</value>
+        <description>Enable SQL query logging (for debugging)</description>
+    </property>
+    <property>
+        <name>ranger.env.local</name>
+        <value>true</value>
+        <description>Local environment flag</description>
+    </property>
+    <property>
+        <name>ranger.db.maxrows.default</name>
+        <value>200</value>
+        <description>Default maximum rows returned from database queries</description>
+    </property>
+    <property>
+        <name>ranger.db.min_inlist</name>
+        <value>20</value>
+        <description>Minimum items for IN clause optimization</description>
+    </property>
+    <property>
+        <name>ranger.db.defaultDateformat</name>
+        <value>yyyy-MM-dd</value>
+        <description>Default date format for database operations</description>
+    </property>
+    <property>
+        <name>ranger.service.http.enabled</name>
+        <value>true</value>
+        <description />
+    </property>
+    <property>
+        <name>ranger.authentication.method</name>
+        <value>UNIX</value>
+        <description />
+    </property>
+    <!-- Kerberos Properties Start-->
+    <property>
+        <name>ranger.spnego.kerberos.principal</name>
+        <value>HTTP/ranger.rangernw@EXAMPLE.COM</value>
+        <description />
+    </property>
+    <property>
+        <name>ranger.spnego.kerberos.keytab</name>
+        <value>/etc/keytabs/HTTP.keytab</value>
+        <description />
+    </property>
+    <property>
+        <name>ranger.admin.kerberos.token.valid.seconds</name>
+        <value>30</value>
+        <description />
+    </property>
+    <property>
+        <name>ranger.admin.kerberos.principal</name>
+        <value>rangeradmin/ranger.rangernw@EXAMPLE.COM</value>
+        <description />
+    </property>
+    <property>
+        <name>ranger.admin.kerberos.keytab</name>
+        <value>/etc/keytabs/rangeradmin.keytab</value>
+        <description />
+    </property>
+    <property>
+        <name>ranger.lookup.kerberos.principal</name>
+        <value>rangerlookup/ranger.rangernw@EXAMPLE.COM</value>
+        <description />
+    </property>
+    <property>
+        <name>ranger.lookup.kerberos.keytab</name>
+        <value>/etc/keytabs/rangerlookup.keytab</value>
+        <description />
+    </property>
+    <property>
+        <name>xasecure.audit.jaas.Client.loginModuleName</name>
+        <value>com.sun.security.auth.module.Krb5LoginModule</value>
+        <description />
+    </property>
+    <property>
+        <name>xasecure.audit.jaas.Client.loginModuleControlFlag</name>
+        <value>required</value>
+        <description />
+    </property>
+    <property>
+        <name>xasecure.audit.jaas.Client.option.useKeyTab</name>
+        <value>true</value>
+        <description />
+    </property>
+    <property>
+        <name>xasecure.audit.jaas.Client.option.storeKey</name>
+        <value>true</value>
+        <description />
+    </property>
+    <property>
+        <name>xasecure.audit.jaas.Client.option.useTicketCache</name>
+        <value>true</value>
+        <description />
+    </property>
+    <property>
+        <name>xasecure.audit.jaas.Client.option.serviceName</name>
+        <value>ranger</value>
+        <description />
+    </property>
+    <property>
+        <name>xasecure.audit.jaas.Client.option.keyTab</name>
+        <value>/etc/keytabs/rangeradmin.keytab</value>
+        <description />
+    </property>
+    <property>
+        <name>xasecure.audit.jaas.Client.option.principal</name>
+        <value>rangeradmin/ranger.rangernw@EXAMPLE.COM</value>
+        <description />
+    </property>
+    <!-- Kerberos Properties End-->
+    <property>
+        <name>ranger.ldap.url</name>
+        <value>ldap://</value>
+        <description />
+    </property>
+    <property>
+        <name>ranger.ldap.user.dnpattern</name>
+        <value>uid={0},ou=users,dc=xasecure,dc=net</value>
+        <description />
+    </property>
+    <property>
+        <name>ranger.ldap.group.searchbase</name>
+        <value>ou=groups,dc=xasecure,dc=net</value>
+        <description />
+    </property>
+    <property>
+        <name>ranger.ldap.group.searchfilter</name>
+        <value>(member=uid={0},ou=users,dc=xasecure,dc=net)</value>
+        <description />
+    </property>
+    <property>
+        <name>ranger.ldap.group.roleattribute</name>
+        <value>cn</value>
+        <description />
+    </property>
+    <property>
+        <name>ranger.ldap.base.dn</name>
+        <value />
+        <description>LDAP base dn or search base</description>
+    </property>
+    <property>
+        <name>ranger.ldap.bind.dn</name>
+        <value />
+        <description>LDAP bind dn or manager dn</description>
+    </property>
+    <property>
+        <name>ranger.ldap.bind.password</name>
+        <value />
+        <description>LDAP bind password</description>
+    </property>
+    <property>
+        <name>ranger.ldap.default.role</name>
+        <value>ROLE_USER</value>
+    </property>
+    <property>
+        <name>ranger.ldap.referral</name>
+        <value />
+        <description>follow or ignore</description>
+    </property>
+    <property>
+        <name>ranger.ldap.ad.domain</name>
+        <value>example.com</value>
+        <description />
+    </property>
+    <property>
+        <name>ranger.ldap.ad.url</name>
+        <value />
+        <description>ldap://</description>
+    </property>
+    <property>
+        <name>ranger.ldap.ad.base.dn</name>
+        <value>dc=example,dc=com</value>
+        <description>AD base dn or search base</description>
+    </property>
+    <property>
+        <name>ranger.ldap.ad.bind.dn</name>
+        <value>cn=administrator,ou=users,dc=example,dc=com</value>
+        <description>AD bind dn or manager dn</description>
+    </property>
+    <property>
+        <name>ranger.ldap.ad.bind.password</name>
+        <value />
+        <description>AD bind password</description>
+    </property>
+    <property>
+        <name>ranger.ldap.ad.referral</name>
+        <value />
+        <description>follow or ignore</description>
+    </property>
+    <property>
+        <name>ranger.service.https.attrib.ssl.enabled</name>
+        <value>false</value>
+    </property>
+    <property>
+        <name>ranger.service.https.attrib.keystore.keyalias</name>
+        <value>myKey</value>
+    </property>
+    <property>
+        <name>ranger.service.https.attrib.keystore.pass</name>
+        <value>_</value>
+    </property>
+    <property>
+        <name>ranger.service.host</name>
+        <value>localhost</value>
+    </property>
+    <property>
+        <name>ranger.service.http.port</name>
+        <value>6080</value>
+    </property>
+    <property>
+        <name>ranger.service.https.port</name>
+        <value>6080</value>
+    </property>
+    <property>
+        <name>ranger.service.https.attrib.keystore.file</name>
+        <value>/etc/ranger/admin/keys/server.jks</value>
+    </property>
+    <property>
+        <name>ranger.ldap.user.searchfilter</name>
+        <value>(uid={0})</value>
+        <description />
+    </property>
+    <property>
+        <name>ranger.ldap.ad.user.searchfilter</name>
+        <value>(sAMAccountName={0})</value>
+        <description />
+    </property>
+    <property>
+        <name>ranger.authentication.allow.trustedproxy</name>
+        <value>false</value>
+    </property>
+    <property>
+        <name>ranger.sso.providerurl</name>
+        <value />
+    </property>
+    <property>
+        <name>ranger.sso.enabled</name>
+        <value>true</value>
+    </property>
+    <property>
+        <name>ranger.sso.browser.useragent</name>
+        <value>Mozilla,chrome</value>
+    </property>
+    <property>
+        <name>ranger.supportedcomponents</name>
+        <value />
+    </property>
+    <property>
+        <name>ranger.downloadpolicy.session.log.enabled</name>
+        <value>false</value>
+    </property>
+    <property>
+        <name>ranger.kms.service.user.hdfs</name>
+        <value>hdfs</value>
+    </property>
+    <property>
+        <name>ranger.kms.service.user.hive</name>
+        <value>hive</value>
+    </property>
+    <property>
+        <name>ranger.kms.service.user.om</name>
+        <value>om</value>
+    </property>
+    <property>
+        <name>ranger.kms.service.user.kudu</name>
+        <value>kudu</value>
+    </property>
+    <property>
+        <name>ranger.audit.hive.query.visibility</name>
+        <value>true</value>
+        <description />
+    </property>
+    <property>
+        <name>ranger.service.https.attrib.keystore.credential.alias</name>
+        <value>keyStoreCredentialAlias</value>
+    </property>
+    <property>
+        <name>ranger.tomcat.ciphers</name>
+        <value />
+    </property>
+    <property>
+        <name>ranger.admin.cookie.name</name>
+        <value>RANGERADMINSESSIONID</value>
+    </property>
+    <property>
+        <name>ranger.plugins.hdfs.serviceuser</name>
+        <value>hdfs</value>
+    </property>
+    <property>
+        <name>ranger.plugins.hive.serviceuser</name>
+        <value>hive</value>
+    </property>
+    <property>
+        <name>ranger.plugins.knox.serviceuser</name>
+        <value>knox</value>
+    </property>
+    <property>
+        <name>ranger.plugins.yarn.serviceuser</name>
+        <value>yarn</value>
+    </property>
+    <property>
+        <name>ranger.plugins.kafka.serviceuser</name>
+        <value>kafka</value>
+    </property>
+    <property>
+        <name>ranger.plugins.kraft.serviceuser</name>
+        <value>kraft</value>
+    </property>
+    <property>
+        <name>ranger.plugins.mirror_maker.serviceuser</name>
+        <value>kafka_mirror_maker</value>
+    </property>
+    <property>
+        <name>ranger.plugins.kudu.serviceuser</name>
+        <value>kudu</value>
+    </property>
+    <property>
+        <name>ranger.plugins.cruise_control.serviceuser</name>
+        <value>cruisecontrol</value>
+    </property>
+    <property>
+        <name>ranger.plugins.cruise_control_mr.serviceuser</name>
+        <value>cc_metric_reporter</value>
+    </property>
+    <property>
+        <name>ranger.plugins.schemaregistry.serviceuser</name>
+        <value>schemaregistry</value>
+    </property>
+    <property>
+        <name>ranger.plugins.streams_messaging_manager.serviceuser</name>
+        <value>streamsmsgmgr</value>
+    </property>
+    <property>
+        <name>ranger.plugins.streams_replication_manager.serviceuser</name>
+        <value>streamsrepmgr</value>
+    </property>
+    <property>
+        <name>ranger.plugins.sql_stream_builder.serviceuser</name>
+        <value>ssb</value>
+    </property>
+    <property>
+        <name>ranger.plugins.nifi.serviceuser</name>
+        <value>nifi</value>
+    </property>
+    <property>
+        <name>ranger.plugins.atlas.serviceuser</name>
+        <value>atlas</value>
+    </property>
+    <property>
+        <name>ranger.plugins.nifiregistry.serviceuser</name>
+        <value>nifiregistry</value>
+    </property>
+    <property>
+        <name>ranger.plugins.impala.serviceuser</name>
+        <value>impala</value>
+    </property>
+    <property>
+        <name>ranger.plugins.ozone.serviceuser</name>
+        <value>om</value>
+    </property>
+    <property>
+        <name>ranger.plugins.solr.serviceuser</name>
+        <value>solr</value>
+    </property>
+    <property>
+        <name>ranger.plugins.tagsync.serviceuser</name>
+        <value>rangertagsync</value>
+    </property>
+    <property>
+        <name>ranger.plugins.hue.serviceuser</name>
+        <value>hue</value>
+    </property>
+    <property>
+        <name>ranger.plugins.trino.serviceuser</name>
+        <value>trino</value>
+    </property>
+    <property>
+        <name>ranger.plugins.polaris.serviceuser</name>
+        <value>polaris</value>
+    </property>
+    <property>
+        <name>ranger.default.policy.groups</name>
+        <value>c_ranger_admin_groups</value>
+    </property>
+    <property>
+        <name>ranger.contextName</name>
+        <value>/</value>
+        <description />
+    </property>
+    <property>
+        <name>ranger.audit.source.type</name>
+        <value>solr</value>
+        <description>solr (indexed audits) or db (legacy RDBMS)</description>
+    </property>
+    <property>
+        <name>ranger.audit.solr.urls</name>
+        <value>http://ranger-solr:8983/solr/ranger_audits</value>
+        <description>Standalone Solr audit (HTTP); core created by udf Solr image</description>
+    </property>
+    <property>
+        <name>ranger.audit.solr.zookeepers</name>
+        <value />
+        <description>Empty for Solr HTTP mode (no SolrCloud ZK)</description>
+    </property>
+    <property>
+        <name>ranger.audit.solr.collection.name</name>
+        <value>ranger_audits</value>
+        <description />
+    </property>
+    <property>
+        <name>ranger.solr.audit.user</name>
+        <value />
+        <description />
+    </property>
+    <property>
+        <name>ranger.solr.audit.user.password</name>
+        <value />
+        <description />
+    </property>
+</configuration>

@@ -16,8 +16,9 @@ services:
       - ./dist/keytabs/ranger:/etc/keytabs
       - ./dist/version:/home/ranger/dist/version:ro
       - ./scripts/kdc/krb5.conf:/etc/krb5.conf:ro
-      - ./scripts/hadoop/core-site.xml:/home/ranger/scripts/core-site.xml:ro
-      - ./scripts/admin/ranger-admin-install-${RANGER_DB_TYPE}.properties:/opt/ranger/admin/install.properties
+      - ./scripts/hadoop/core-site.xml:/opt/ranger/admin/ews/webapp/WEB-INF/classes/conf/core-site.xml:ro
+      - ./scripts/admin/ranger-admin-site.xml:/opt/ranger/admin/ews/webapp/WEB-INF/classes/conf/ranger-admin-site.xml:ro
+      - ./scripts/admin/ranger-admin-default-site.xml:/opt/ranger/admin/ews/webapp/WEB-INF/classes/conf/ranger-admin-default-site.xml:ro
     stdin_open: true
     tty: true
     networks:
@@ -38,6 +39,10 @@ services:
       - RANGER_DB_TYPE
       - KERBEROS_ENABLED
       - DEBUG_ADMIN=${DEBUG_ADMIN:-false}
+      - RANGER_ADMIN_DB_PASSWORD=rangerR0cks!
+      - RANGER_ADMIN_PASSWORD=rangerR0cks!
+      - RANGER_USERSYNC_PASSWORD=rangerR0cks!
+      - RANGER_TAGSYNC_PASSWORD=rangerR0cks!
     command:
       - /home/ranger/scripts/ranger.sh
 
