@@ -56,7 +56,6 @@ public class RangerHSM implements RangerKMSMKI {
     private String   mkAlias;
     private int      mkKeySize;
 
-
     public RangerHSM() {
     }
 
