@@ -417,15 +417,15 @@ public class TestRangerKRBAuthenticationFilter {
         HttpServletResponse res = Mockito.mock(HttpServletResponse.class);
         FilterChain chain = Mockito.mock(FilterChain.class);
 
-        when(res.containsHeader("Set-Cookie")).thenReturn(false);
-        when(req.getParameter("suser")).thenReturn("keyadmin");
-        when(req.getPathInfo()).thenReturn("/public/v2/api/service/list");
+        when(res.containsHeader("Set-Cookie")).thenReturn(true);
+        when(res.getHeaders("Set-Cookie")).thenReturn(
+                Collections.singletonList("hadoop.auth=u=keyadmin&x=y; Path=/"));
+        when(req.getParameterMap()).thenReturn(Collections.emptyMap());
         when(req.getHeaderNames()).thenReturn(Collections.emptyEnumeration());
 
         filter.doFilter(chain, req, res);
 
-        Authentication a = SecurityContextHolder.getContext().getAuthentication();
-        assertNotNull(a);
+        assertNotNull(SecurityContextHolder.getContext().getAuthentication());
         verify(chain, times(1)).doFilter(req, res);
     }
 
