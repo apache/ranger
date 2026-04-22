@@ -24,12 +24,14 @@ import org.apache.commons.lang3.StringUtils;
 import java.util.Properties;
 
 public class RangerAuthzConfig {
-    public static final String PROP_APP_TYPE             = "ranger.authz.app.type";
-    public static final String PROP_INIT_SERVICES        = "ranger.authz.init.services";
-    public static final String PROP_PREFIX_DEFAULT       = "ranger.authz.default.";
-    public static final String PROP_PREFIX_AUDIT         = "ranger.authz.audit.";
-    public static final String PROP_PREFIX_SERVICE       = "ranger.authz.service.";
-    public static final String PROP_PREFIX_SERVICE_TYPE  = "ranger.authz.servicetype.";
+    public static final String PROP_APP_TYPE              = "ranger.authz.app.type";
+    public static final String PROP_INIT_SERVICES         = "ranger.authz.init.services";
+    public static final String PROP_PREFIX_DEFAULT        = "ranger.authz.default.";
+    public static final String PROP_PREFIX_AUDIT          = "ranger.authz.audit.";
+    public static final String PROP_PREFIX_SERVICE        = "ranger.authz.service.";
+    public static final String PROP_PREFIX_SERVICE_TYPE   = "ranger.authz.servicetype.";
+    public static final String PROP_PREFIX_XASECURE       = "xasecure.";
+    public static final String PROP_PREFIX_XASECURE_AUDIT = "xasecure.audit.";
 
     private final Properties properties;
 
@@ -58,9 +60,16 @@ public class RangerAuthzConfig {
             if (propName.startsWith(PROP_PREFIX_AUDIT)) {
                 String propValue      = properties.getProperty(propName);
                 String propSuffix     = propName.substring(PROP_PREFIX_AUDIT.length());
-                String pluginPropName = "xasecure.audit." + propSuffix;
+                String pluginPropName = PROP_PREFIX_XASECURE_AUDIT + propSuffix;
 
                 ret.setProperty(pluginPropName, propValue);
+            }
+        }
+
+        // add legacy audit configurations
+        for (String propName : properties.stringPropertyNames()) {
+            if (propName.startsWith(PROP_PREFIX_XASECURE_AUDIT)) {
+                ret.setProperty(propName, properties.getProperty(propName));
             }
         }
 
@@ -112,6 +121,20 @@ public class RangerAuthzConfig {
                 String pluginPropName = pluginPropPrefix + propSuffix;
 
                 ret.setProperty(pluginPropName, propValue);
+            }
+        }
+
+        // add legacy configurations that start with pluginPropPrefix ("ranger.plugin." + serviceType + ".")
+        for (String propName : properties.stringPropertyNames()) {
+            if (propName.startsWith(pluginPropPrefix)) {
+                ret.setProperty(propName, properties.getProperty(propName));
+            }
+        }
+
+        // add legacy configurations that start with "xasecure."
+        for (String propName : properties.stringPropertyNames()) {
+            if (propName.startsWith(PROP_PREFIX_XASECURE) && !propName.startsWith(PROP_PREFIX_XASECURE_AUDIT)) {
+                ret.setProperty(propName, properties.getProperty(propName));
             }
         }
 
