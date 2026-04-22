@@ -52,6 +52,7 @@ import org.apache.ranger.security.context.RangerSecurityContext;
 import org.apache.ranger.service.RangerRoleService;
 import org.apache.ranger.service.XUserService;
 import org.apache.ranger.view.RangerRoleList;
+import org.apache.ranger.view.RoleUsersGroupsRequest;
 import org.apache.ranger.view.VXUser;
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 import org.junit.jupiter.api.AfterEach;
@@ -320,10 +321,31 @@ public class TestRoleREST {
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
-        RangerRole returnedRole = roleRest.addUsersAndGroups(roleId, users, groups, isAdmin);
+        RangerRole returnedRole = roleRest.addUsersAndGroups(roleId, users, groups, isAdmin, null);
         Assertions.assertNotNull(returnedRole);
         Assertions.assertEquals(returnedRole.getUsers().size(), users.size());
         Assertions.assertEquals(returnedRole.getGroups().size(), groups.size());
+    }
+
+    @Test
+    public void test10aAddUsersAndGroupsJsonBodyOverridesQuery() {
+        RangerRole rangerRole = createRole();
+        RoleUsersGroupsRequest body = new RoleUsersGroupsRequest();
+        body.setUsers(new ArrayList<>(Arrays.asList("body-user")));
+        body.setGroups(new ArrayList<>());
+        body.setIsAdmin(Boolean.FALSE);
+        Mockito.when(bizUtil.isUserRangerAdmin(Mockito.anyString())).thenReturn(true);
+        try {
+            Mockito.when(roleStore.getRole(Mockito.anyLong())).thenReturn(rangerRole);
+            Mockito.when(roleStore.updateRole(Mockito.any(RangerRole.class), Mockito.anyBoolean())).then(AdditionalAnswers.returnsFirstArg());
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+        List<String> queryUsers = new ArrayList<>(Arrays.asList("query-user"));
+        RangerRole returnedRole = roleRest.addUsersAndGroups(roleId, queryUsers, new ArrayList<>(), Boolean.TRUE, body);
+        Assertions.assertNotNull(returnedRole);
+        Assertions.assertTrue(returnedRole.getUsers().stream().anyMatch(m -> "body-user".equals(m.getName()) && !m.getIsAdmin()));
+        Assertions.assertFalse(returnedRole.getUsers().stream().anyMatch(m -> "query-user".equals(m.getName())));
     }
 
     @Test
@@ -350,7 +372,7 @@ public class TestRoleREST {
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
-        RangerRole returnedRole = roleRest.removeUsersAndGroups(roleId, users, groups);
+        RangerRole returnedRole = roleRest.removeUsersAndGroups(roleId, users, groups, null);
         Assertions.assertNotNull(returnedRole);
         Assertions.assertEquals(createdRoleUsers, users);
         Assertions.assertEquals(createdRoleGroups, groups);
@@ -388,7 +410,7 @@ public class TestRoleREST {
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
-        RangerRole returnedRole = roleRest.removeAdminFromUsersAndGroups(roleId, users, groups);
+        RangerRole returnedRole = roleRest.removeAdminFromUsersAndGroups(roleId, users, groups, null);
         Assertions.assertNotNull(returnedRole);
         Assertions.assertEquals(createdRoleUsers, users);
         Assertions.assertEquals(createdRoleGroups, groups);
@@ -634,7 +656,7 @@ public class TestRoleREST {
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
-        RangerRole returnedRole = roleRest.addUsersAndGroups(roleId, users, groups, isAdmin);
+        RangerRole returnedRole = roleRest.addUsersAndGroups(roleId, users, groups, isAdmin, null);
         Assertions.assertNotNull(returnedRole);
         Assertions.assertEquals(returnedRole.getGroups().size(), groups.size() + currentGroupsCount);
     }
@@ -646,7 +668,7 @@ public class TestRoleREST {
             List<String> users   = new ArrayList<>(Arrays.asList("{OWNER}", "test-role3"));
             List<String> groups  = new ArrayList<>(Arrays.asList("test-group2", "test-group3"));
             Boolean      isAdmin = Boolean.TRUE;
-            roleRest.addUsersAndGroups(roleId, users, groups, isAdmin);
+            roleRest.addUsersAndGroups(roleId, users, groups, isAdmin, null);
         });
     }
 
@@ -660,7 +682,7 @@ public class TestRoleREST {
             for (RangerRole.RoleMember roleMember : rangerRole.getUsers()) {
                 createdRoleUsers.add(roleMember.getName());
             }
-            roleRest.removeUsersAndGroups(roleId, users, groups);
+            roleRest.removeUsersAndGroups(roleId, users, groups, null);
         });
     }
 
@@ -677,7 +699,7 @@ public class TestRoleREST {
             for (RangerRole.RoleMember roleMember : rangerRole.getUsers()) {
                 createdRoleUsers.add(roleMember.getName());
             }
-            roleRest.removeAdminFromUsersAndGroups(roleId, users, groups);
+            roleRest.removeAdminFromUsersAndGroups(roleId, users, groups, null);
         });
     }
 
@@ -1523,7 +1545,7 @@ public class TestRoleREST {
             throw new RuntimeException(e);
         }
 
-        RangerRole returnedRole = roleRest.addUsersAndGroups(roleId, users, groups, isAdmin);
+        RangerRole returnedRole = roleRest.addUsersAndGroups(roleId, users, groups, isAdmin, null);
         Assertions.assertNotNull(returnedRole);
     }
 
@@ -1542,7 +1564,7 @@ public class TestRoleREST {
             throw new RuntimeException(e);
         }
 
-        RangerRole returnedRole = roleRest.removeUsersAndGroups(roleId, users, groups);
+        RangerRole returnedRole = roleRest.removeUsersAndGroups(roleId, users, groups, null);
         Assertions.assertNotNull(returnedRole);
     }
 

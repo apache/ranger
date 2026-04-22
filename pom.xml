@@ -275,11 +275,31 @@
                 <groupId>org.apache.hadoop</groupId>
                 <artifactId>hadoop-client-api</artifactId>
                 <version>${hadoop.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>com.sun.jersey</groupId>
+                        <artifactId>*</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>com.sun.jersey.contribs</groupId>
+                        <artifactId>*</artifactId>
+                    </exclusion>
+                </exclusions>
             </dependency>
             <dependency>
                 <groupId>org.apache.hadoop</groupId>
                 <artifactId>hadoop-client-runtime</artifactId>
                 <version>${hadoop.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>com.sun.jersey</groupId>
+                        <artifactId>*</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>com.sun.jersey.contribs</groupId>
+                        <artifactId>*</artifactId>
+                    </exclusion>
+                </exclusions>
             </dependency>
             <dependency>
                 <groupId>org.apache.hadoop</groupId>
@@ -291,7 +311,7 @@
                         <artifactId>*</artifactId>
                     </exclusion>
                     <exclusion>
-                        <groupId>com.sun.jersey.contrib</groupId>
+                        <groupId>com.sun.jersey.contribs</groupId>
                         <artifactId>*</artifactId>
                     </exclusion>
                     <exclusion>
@@ -318,7 +338,7 @@
                         <artifactId>*</artifactId>
                     </exclusion>
                     <exclusion>
-                        <groupId>com.sun.jersey.contrib</groupId>
+                        <groupId>com.sun.jersey.contribs</groupId>
                         <artifactId>*</artifactId>
                     </exclusion>
                     <exclusion>
@@ -587,6 +607,17 @@
                                         <exclude>com.sun.jersey.contribs:*:*:*:runtime</exclude>
                                         <exclude>com.sun.jersey.contribs:*:*:*:provided</exclude>
                                     </excludes>
+                                    <!-- Allow Jersey 1 on test scope only (e.g. Hadoop MiniDFSCluster); runtime uses Jersey 2 -->
+                                    <includes>
+                                        <include>com.sun.jersey:*:*:*:test</include>
+                                        <include>com.sun.jersey.contribs:*:*:*:test</include>
+                                        <!-- Transitives of the 1.19.4 test stack are often still modeled as compile; only these
+                                             coordinates are used (hdfs-agent minicluster, nestedstructure test shims). -->
+                                        <include>com.sun.jersey:jersey-core:jar:1.19.4:*</include>
+                                        <include>com.sun.jersey:jersey-client:jar:1.19.4:*</include>
+                                        <include>com.sun.jersey:jersey-server:jar:1.19.4:*</include>
+                                        <include>com.sun.jersey:jersey-servlet:jar:1.19.4:*</include>
+                                    </includes>
                                     <searchTransitive>true</searchTransitive>
                                     <message>❌ Banned dependencies detected!
                                         
@@ -651,6 +682,7 @@
                         <exclude>.gitignore/**</exclude>
                         <exclude>.svn/**</exclude>
                         <exclude>.idea/**</exclude>
+                        <exclude>**/.mvn/maven.config</exclude>
                         <exclude>dev-support/**</exclude>
                         <exclude>**/.gitignore/**</exclude>
                         <exclude>**/.project/**</exclude>

@@ -180,80 +180,72 @@ public class YarnClient extends BaseClient {
                             return null;
                         }
 
-                        Client client = null;
-                        Response response = null;
                         // Use RangerJersey2ClientBuilder instead of unsafe ClientBuilder.newClient() to prevent MOXy usage
-                        client = RangerJersey2ClientBuilder.newClient();
-                        for (String currentUrl : yarnQUrls) {
-                            if (currentUrl == null || currentUrl.trim().isEmpty()) {
-                                continue;
-                            }
-
-                            String url = currentUrl.trim() + YARN_LIST_API_ENDPOINT;
-                            try {
-                                response = getQueueResponse(url, client);
-
-                                if (response != null && response.getStatus() == 200) {
-                                    break;
-                                } else if (response != null) {
-                                    response.close();
-                                }
-                            } catch (Throwable t) {
-                                String msgDesc = "Exception while getting Yarn Queue List."
-                                        + " URL : " + url;
-                                LOG.error(msgDesc, t);
-                            }
-                        }
-
-                        List<String> lret = new ArrayList<>();
+                        Client client = RangerJersey2ClientBuilder.newClient();
                         try {
-                            if (response != null && response.getStatus() == 200) {
-                                String                jsonString    = response.readEntity(String.class);
-                                Gson                  gson          = new GsonBuilder().setPrettyPrinting().create();
-                                YarnSchedulerResponse yarnQResponse = gson.fromJson(jsonString, YarnSchedulerResponse.class);
-                                if (yarnQResponse != null) {
-                                    List<String> yarnQueueList = yarnQResponse.getQueueNames();
-                                    if (yarnQueueList != null) {
-                                        for (String yarnQueueName : yarnQueueList) {
-                                            if (existingQueueList != null && existingQueueList.contains(yarnQueueName)) {
-                                                continue;
-                                            }
-                                            if (queueNameMatching == null || queueNameMatching.isEmpty() || yarnQueueName.startsWith(queueNameMatching)) {
-                                                LOG.debug("getQueueList():Adding yarnQueue {}", yarnQueueName);
-
-                                                lret.add(yarnQueueName);
-                                            }
-                                        }
-                                    }
+                            for (String currentUrl : yarnQUrls) {
+                                if (currentUrl == null || currentUrl.trim().isEmpty()) {
+                                    continue;
                                 }
-                            } else {
-                                String msgDesc = "Unable to get a valid response for expected mime type : [" + EXPECTED_MIME_TYPE + "] URL : " + yarnQUrl + " - got null response.";
-                                LOG.error(msgDesc);
 
-                                HadoopException hdpException = new HadoopException(msgDesc);
-                                hdpException.generateResponseDataMap(false, msgDesc, msgDesc + errMsg, null, null);
-                                throw hdpException;
+                                String url = currentUrl.trim() + YARN_LIST_API_ENDPOINT;
+                                try (Response response = getQueueResponse(url, client)) {
+                                    if (response == null) {
+                                        continue;
+                                    }
+
+                                    if (response.getStatus() == 200) {
+                                        List<String> lret = new ArrayList<>();
+                                        try {
+                                            String                jsonString    = response.readEntity(String.class);
+                                            Gson                  gson          = new GsonBuilder().setPrettyPrinting().create();
+                                            YarnSchedulerResponse yarnQResponse = gson.fromJson(jsonString, YarnSchedulerResponse.class);
+                                            if (yarnQResponse != null) {
+                                                List<String> yarnQueueList = yarnQResponse.getQueueNames();
+                                                if (yarnQueueList != null) {
+                                                    for (String yarnQueueName : yarnQueueList) {
+                                                        if (existingQueueList != null && existingQueueList.contains(yarnQueueName)) {
+                                                            continue;
+                                                        }
+                                                        if (queueNameMatching == null || queueNameMatching.isEmpty() || yarnQueueName.startsWith(queueNameMatching)) {
+                                                            LOG.debug("getQueueList():Adding yarnQueue {}", yarnQueueName);
+
+                                                            lret.add(yarnQueueName);
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        } catch (HadoopException he) {
+                                            throw he;
+                                        } catch (Throwable t) {
+                                            String            msgDesc        = "Exception while getting Yarn Queue List. URL : " + yarnQUrl;
+                                            HadoopException   hdpException   = new HadoopException(msgDesc, t);
+
+                                            LOG.error(msgDesc, t);
+
+                                            hdpException.generateResponseDataMap(false, BaseClient.getMessage(t), msgDesc + errMsg, null, null);
+                                            throw hdpException;
+                                        }
+                                        return lret;
+                                    }
+                                } catch (HadoopException he) {
+                                    throw he;
+                                } catch (Throwable t) {
+                                    String msgDesc = "Exception while getting Yarn Queue List."
+                                            + " URL : " + url;
+                                    LOG.error(msgDesc, t);
+                                }
                             }
-                        } catch (HadoopException he) {
-                            throw he;
-                        } catch (Throwable t) {
-                            String msgDesc = "Exception while getting Yarn Queue List. URL : " + yarnQUrl;
-                            HadoopException hdpException = new HadoopException(msgDesc, t);
-
-                            LOG.error(msgDesc, t);
-
-                            hdpException.generateResponseDataMap(false, BaseClient.getMessage(t), msgDesc + errMsg, null, null);
-                            throw hdpException;
                         } finally {
-                            if (response != null) {
-                                response.close();
-                            }
-
-                            if (client != null) {
-                                client.close();
-                            }
+                            client.close();
                         }
-                        return lret;
+
+                        String msgDesc = "Unable to get a valid response for expected mime type : [" + EXPECTED_MIME_TYPE + "] URL : " + yarnQUrl + " - got null response.";
+                        LOG.error(msgDesc);
+
+                        HadoopException hdpException = new HadoopException(msgDesc);
+                        hdpException.generateResponseDataMap(false, msgDesc, msgDesc + errMsg, null, null);
+                        throw hdpException;
                     }
 
                     private Response getQueueResponse(String url, Client client) {
