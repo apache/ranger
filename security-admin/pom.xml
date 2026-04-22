@@ -369,10 +369,14 @@
                     <groupId>com.fasterxml.jackson.module</groupId>
                     <artifactId>*</artifactId>
                 </exclusion>
-                <!-- Exclude Jersey 1.x - project uses Jersey 2.x -->
+                <!-- Jersey 1.x: exclude entire group (YARN can pull jersey-core, jersey-client, not only jersey-guice) -->
+                <exclusion>
+                    <groupId>com.sun.jersey</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
                 <exclusion>
                     <groupId>com.sun.jersey.contribs</groupId>
-                    <artifactId>jersey-guice</artifactId>
+                    <artifactId>*</artifactId>
                 </exclusion>
                 <exclusion>
                     <groupId>io.netty</groupId>
