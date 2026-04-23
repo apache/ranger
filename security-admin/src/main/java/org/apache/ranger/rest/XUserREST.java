@@ -111,6 +111,8 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -407,13 +409,7 @@ public class XUserREST {
     @Produces("application/json")
     @PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.SEARCH_X_USERS + "\")")
     public VXUserList searchXUsers(@Context HttpServletRequest request, @QueryParam("syncSource") String syncSource, @QueryParam("userRole") String userRole) {
-        String         userRoleParamName = RangerConstants.ROLE_USER;
         SearchCriteria searchCriteria    = searchUtil.extractCommonCriterias(request, xUserService.sortFields);
-        String         userName          = null;
-
-        if (request.getUserPrincipal() != null) {
-            userName = request.getUserPrincipal().getName();
-        }
 
         searchUtil.extractString(request, searchCriteria, "name", "User name", null);
         searchUtil.extractString(request, searchCriteria, "emailAddress", "Email Address", null);
@@ -426,40 +422,47 @@ public class XUserREST {
         searchUtil.extractRoleString(request, searchCriteria, "userRole", "Role", null);
         searchUtil.extractString(request, searchCriteria, "syncSource", "Sync Source", null);
 
-        if (CollectionUtils.isNotEmpty(userRolesList) && CollectionUtils.size(userRolesList) == 1 && userRolesList.get(0).equalsIgnoreCase(userRoleParamName)) {
-            if (!(searchCriteria.getParamList().containsKey("name"))) {
-                searchCriteria.addParam("name", userName);
-            } else if ((searchCriteria.getParamList().containsKey("name")) && userName != null && userName.contains((String) searchCriteria.getParamList().get("name"))) {
-                searchCriteria.addParam("name", userName);
-            }
-        }
-
         UserSessionBase userSession = ContextUtil.getCurrentUserSession();
 
         if (userSession != null && userSession.getLoginId() != null) {
             VXUser loggedInVXUser = xUserService.getXUserByUserName(userSession.getLoginId());
 
             if (loggedInVXUser != null && loggedInVXUser.getUserRoleList().size() == 1) {
-                if (loggedInVXUser.getUserRoleList().contains(RangerConstants.ROLE_SYS_ADMIN) || loggedInVXUser.getUserRoleList().contains(RangerConstants.ROLE_ADMIN_AUDITOR)) {
-                    boolean hasRole = false;
+                Collection<String> roles   = loggedInVXUser.getUserRoleList();
+                List<String> allowedSysAdminRoles = Arrays.asList(RangerConstants.ROLE_SYS_ADMIN, RangerConstants.ROLE_ADMIN_AUDITOR, RangerConstants.ROLE_USER);
+                List<String> allowedKeyAdminRoles = Arrays.asList(RangerConstants.ROLE_KEY_ADMIN, RangerConstants.ROLE_KEY_ADMIN_AUDITOR, RangerConstants.ROLE_USER);
 
-                    hasRole = !userRolesList.contains(RangerConstants.ROLE_SYS_ADMIN) ? userRolesList.add(RangerConstants.ROLE_SYS_ADMIN) : hasRole;
-                    hasRole = !userRolesList.contains(RangerConstants.ROLE_ADMIN_AUDITOR) ? userRolesList.add(RangerConstants.ROLE_ADMIN_AUDITOR) : hasRole;
-                    hasRole = !userRolesList.contains(RangerConstants.ROLE_USER) ? userRolesList.add(RangerConstants.ROLE_USER) : hasRole;
+                if (roles.contains(RangerConstants.ROLE_SYS_ADMIN) || roles.contains(RangerConstants.ROLE_ADMIN_AUDITOR)) {
+                    boolean isSysAdmin         = roles.contains(RangerConstants.ROLE_SYS_ADMIN);
+                    boolean isRangerUserSync   = "rangerusersync".equalsIgnoreCase(userSession.getLoginId());
 
-                    if (loggedInVXUser.getUserRoleList().contains(RangerConstants.ROLE_SYS_ADMIN) && "rangerusersync".equalsIgnoreCase(userSession.getLoginId())) {
-                        hasRole = !userRolesList.contains(RangerConstants.ROLE_KEY_ADMIN) ? userRolesList.add(RangerConstants.ROLE_KEY_ADMIN) : hasRole;
-                        hasRole = !userRolesList.contains(RangerConstants.ROLE_KEY_ADMIN_AUDITOR) ? userRolesList.add(RangerConstants.ROLE_KEY_ADMIN_AUDITOR) : hasRole;
+                    if (CollectionUtils.isNotEmpty(userRolesList)) {
+                        boolean hasDisallowedRole  = userRolesList.stream().anyMatch(role -> !allowedSysAdminRoles.contains(role));
+                        if (isSysAdmin && !isRangerUserSync && hasDisallowedRole) {
+                            logger.warn("Access denied: SYS_ADMIN [{}] tried to access KEY_ADMIN users: {}", userSession.getLoginId(), userRolesList);
+                            throw restErrorUtil.create403RESTException("Logged-In user is not allowed to access requested user data.");
+                        }
+                    } else {
+                        userRolesList.addAll(allowedSysAdminRoles);
+                        if (isSysAdmin && isRangerUserSync) {
+                            userRolesList.addAll(allowedKeyAdminRoles);
+                        }
                     }
-                } else if (loggedInVXUser.getUserRoleList().contains(RangerConstants.ROLE_KEY_ADMIN) || loggedInVXUser.getUserRoleList().contains(RangerConstants.ROLE_KEY_ADMIN_AUDITOR)) {
-                    boolean hasRole = false;
+                } else if (roles.contains(RangerConstants.ROLE_KEY_ADMIN) || roles.contains(RangerConstants.ROLE_KEY_ADMIN_AUDITOR)) {
+                    if (CollectionUtils.isNotEmpty(userRolesList)) {
+                        boolean hasDisallowedRole = userRolesList.stream().anyMatch(role -> !allowedKeyAdminRoles.contains(role));
+                        if (hasDisallowedRole) {
+                            logger.warn("Access denied: KEY_ADMIN [{}] tried to access SYS_ADMIN users: {}", userSession.getLoginId(), userRolesList);
+                            throw restErrorUtil.create403RESTException("Logged-In user is not allowed to access requested user data.");
+                        }
+                    } else {
+                        userRolesList.addAll(allowedKeyAdminRoles);
+                    }
+                } else if (roles.contains(RangerConstants.ROLE_USER)) {
+                    boolean invalidRoles = CollectionUtils.isNotEmpty(userRolesList) && (userRolesList.size() != 1 || !userRolesList.contains(RangerConstants.ROLE_USER));
+                    boolean invalidUserRole = userRole != null && !RangerConstants.ROLE_USER.equals(userRole);
 
-                    hasRole = !userRolesList.contains(RangerConstants.ROLE_KEY_ADMIN) ? userRolesList.add(RangerConstants.ROLE_KEY_ADMIN) : hasRole;
-                    hasRole = !userRolesList.contains(RangerConstants.ROLE_KEY_ADMIN_AUDITOR) ? userRolesList.add(RangerConstants.ROLE_KEY_ADMIN_AUDITOR) : hasRole;
-                    hasRole = !userRolesList.contains(RangerConstants.ROLE_USER) ? userRolesList.add(RangerConstants.ROLE_USER) : hasRole;
-                } else if (loggedInVXUser.getUserRoleList().contains(RangerConstants.ROLE_USER)) {
-                    if ((CollectionUtils.isNotEmpty(userRolesList) && (userRolesList.size() != 1 || !userRolesList.contains(RangerConstants.ROLE_USER)))
-                            || (userRole != null && !RangerConstants.ROLE_USER.equals(userRole))) {
+                    if (invalidRoles || invalidUserRole) {
                         throw restErrorUtil.create403RESTException("Logged-In user is not allowed to access requested user data.");
                     }
 
@@ -469,7 +472,7 @@ public class XUserREST {
                         throw restErrorUtil.create403RESTException("Logged-In user is not allowed to access requested user data.");
                     }
 
-                    if (loggedInVXUser != null && !xUserMgr.hasAccessToModule(RangerConstants.MODULE_USER_GROUPS)) {
+                    if (!xUserMgr.hasAccessToModule(RangerConstants.MODULE_USER_GROUPS)) {
                         loggedInVXUser = xUserMgr.getMaskedVXUser(loggedInVXUser);
                     }
 
