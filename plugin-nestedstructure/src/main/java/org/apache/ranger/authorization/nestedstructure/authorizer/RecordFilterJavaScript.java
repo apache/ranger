@@ -54,6 +54,26 @@ public class RecordFilterJavaScript {
 
     private static final AtomicBoolean LOGGED_HOST_ACCESS_WARNING = new AtomicBoolean();
 
+    /**
+     * Supported JavaScript engine names, in order of preference.
+     * Graal.js is preferred for its security model and ECMAScript compliance.
+     * Nashorn is available as a fallback on older JVMs.
+     * js and JavaScript are generic names that may map to available engines.
+     */
+    private static final String ENGINE_GRAAL_JS = "graal.js";
+    private static final String ENGINE_NASHORN = "nashorn";
+    private static final String ENGINE_JS = "js";
+    private static final String ENGINE_JAVASCRIPT = "JavaScript";
+    private static final String ENGINE_JAVASCRIPT_LOWERCASE = "javascript";
+
+    private static final String[] SUPPORTED_ENGINES = {
+            ENGINE_GRAAL_JS,
+            ENGINE_NASHORN,
+            ENGINE_JS,
+            ENGINE_JAVASCRIPT,
+            ENGINE_JAVASCRIPT_LOWERCASE
+    };
+
     private RecordFilterJavaScript() {
     }
 
@@ -146,10 +166,8 @@ public class RecordFilterJavaScript {
     }
 
     private static ScriptEngine resolveJavaScriptEngine(ScriptEngineManager mgr) {
-        String[] tryNames = {"graal.js", "nashorn", "js", "JavaScript", "javascript"};
-
-        for (String name : tryNames) {
-            ScriptEngine engine = mgr.getEngineByName(name);
+        for (String engineName : SUPPORTED_ENGINES) {
+            ScriptEngine engine = mgr.getEngineByName(engineName);
 
             if (engine != null) {
                 return engine;
@@ -165,7 +183,7 @@ public class RecordFilterJavaScript {
         }
 
         try {
-            return "graal.js".equalsIgnoreCase(engine.getFactory().getEngineName());
+            return ENGINE_GRAAL_JS.equalsIgnoreCase(engine.getFactory().getEngineName());
         } catch (Exception e) {
             return false;
         }

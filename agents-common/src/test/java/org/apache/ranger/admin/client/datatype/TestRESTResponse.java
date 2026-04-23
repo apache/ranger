@@ -78,18 +78,16 @@ public class TestRESTResponse {
     }
 
     @Test
-    public void test04_fromClientResponse_parsesBodyAndSetsStatus() throws Exception {
-        // Test with a null response to ensure default behavior works
-        RESTResponse nullResp = RESTResponse.fromClientResponse(null);
-        assertNotNull(nullResp);
-        assertEquals(0, nullResp.getHttpStatusCode());
+    public void test04_fromClientResponse_parsesBodyAndSetsStatus() {
+        Response clientResponse = mock(Response.class);
+        when(clientResponse.getStatus()).thenReturn(201);
+        when(clientResponse.readEntity(String.class)).thenReturn("{\"statusCode\":0,\"msgDesc\":\"done\"}");
 
-        // Test with a valid JSON string directly
-        String jsonResponse = "{\"statusCode\":0,\"msgDesc\":\"done\"}";
-        RESTResponse fromJson = RESTResponse.fromJson(jsonResponse);
-        assertNotNull(fromJson);
-        assertEquals(0, fromJson.getStatusCode());
-        assertEquals("done", fromJson.getMsgDesc());
+        RESTResponse resp = RESTResponse.fromClientResponse(clientResponse);
+        assertNotNull(resp);
+        assertEquals(201, resp.getHttpStatusCode());
+        assertEquals(0, resp.getStatusCode());
+        assertEquals("done", resp.getMsgDesc());
     }
 
     @Test

@@ -70,6 +70,23 @@ import java.util.concurrent.TimeUnit;
 public class RangerRESTClient {
     private static final Logger LOG = LoggerFactory.getLogger(RangerRESTClient.class);
 
+    public enum HttpMethod {
+        GET("GET"),
+        POST("POST"),
+        PUT("PUT"),
+        DELETE("DELETE");
+
+        private final String method;
+
+        HttpMethod(String method) {
+            this.method = method;
+        }
+
+        public String getMethod() {
+            return method;
+        }
+    }
+
     public static final String RANGER_PROP_POLICYMGR_URL                     = "ranger.service.store.rest.url";
     public static final String RANGER_PROP_POLICYMGR_SSLCONFIG_FILENAME      = "ranger.service.store.rest.ssl.config.file";
     public static final String RANGER_POLICYMGR_CLIENT_KEY_FILE                  = "xasecure.policymgr.clientssl.keystore";
@@ -367,35 +384,35 @@ public class RangerRESTClient {
     }
 
     public Response get(String relativeUrl, Map<String, String> params) throws Exception {
-        return performRequest("GET", relativeUrl, params, null, null);
+        return performRequest(HttpMethod.GET, relativeUrl, params, null, null);
     }
 
     public Response get(String relativeUrl, Map<String, String> params, Cookie sessionId) throws Exception {
-        return performRequest("GET", relativeUrl, params, null, sessionId);
+        return performRequest(HttpMethod.GET, relativeUrl, params, null, sessionId);
     }
 
     public Response post(String relativeUrl, Map<String, String> params, Object obj) throws Exception {
-        return performRequest("POST", relativeUrl, params, obj, null);
+        return performRequest(HttpMethod.POST, relativeUrl, params, obj, null);
     }
 
     public Response post(String relativeURL, Map<String, String> params, Object obj, Cookie sessionId) throws Exception {
-        return performRequest("POST", relativeURL, params, obj, sessionId);
+        return performRequest(HttpMethod.POST, relativeURL, params, obj, sessionId);
     }
 
     public Response delete(String relativeUrl, Map<String, String> params) throws Exception {
-        return performRequest("DELETE", relativeUrl, params, null, null);
+        return performRequest(HttpMethod.DELETE, relativeUrl, params, null, null);
     }
 
     public Response delete(String relativeURL, Map<String, String> params, Cookie sessionId) throws Exception {
-        return performRequest("DELETE", relativeURL, params, null, sessionId);
+        return performRequest(HttpMethod.DELETE, relativeURL, params, null, sessionId);
     }
 
     public Response put(String relativeUrl, Map<String, String> params, Object obj) throws Exception {
-        return performRequest("PUT", relativeUrl, params, obj, null);
+        return performRequest(HttpMethod.PUT, relativeUrl, params, obj, null);
     }
 
     public Response put(String relativeURL, Object request, Cookie sessionId) throws Exception {
-        return performRequest("PUT", relativeURL, null, request, sessionId);
+        return performRequest(HttpMethod.PUT, relativeURL, null, request, sessionId);
     }
 
     public int getLastKnownActiveUrlIndex() {
@@ -481,7 +498,7 @@ public class RangerRESTClient {
         return builder;
     }
 
-    private Response performRequest(String method, String relativeUrl, Map<String, String> params, Object requestBody, Cookie sessionId) throws Exception {
+    private Response performRequest(HttpMethod method, String relativeUrl, Map<String, String> params, Object requestBody, Cookie sessionId) throws Exception {
         Response finalResponse = null;
         int      startIndex    = this.lastKnownActiveUrlIndex;
         int      retryAttempt  = 0;
@@ -492,11 +509,11 @@ public class RangerRESTClient {
             try {
                 Invocation.Builder builder = createInvocationBuilder(currentIndex, relativeUrl, params, sessionId);
 
-                if ("POST".equalsIgnoreCase(method)) {
+                if (HttpMethod.POST == method) {
                     finalResponse = builder.post(Entity.entity(requestBody, MediaType.APPLICATION_JSON));
-                } else if ("PUT".equalsIgnoreCase(method)) {
+                } else if (HttpMethod.PUT == method) {
                     finalResponse = builder.put(Entity.entity(requestBody, MediaType.APPLICATION_JSON));
-                } else if ("DELETE".equalsIgnoreCase(method)) {
+                } else if (HttpMethod.DELETE == method) {
                     finalResponse = builder.delete();
                 } else {
                     finalResponse = builder.get();
@@ -722,12 +739,9 @@ public class RangerRESTClient {
     }
 
     private KeyManager[] getKeyManagers() {
-        KeyManager[] kmList = null;
-
         String keyStoreFilepwd = getCredential(mKeyStoreURL, mKeyStoreAlias);
 
-        kmList = getKeyManagers(mKeyStoreFile, keyStoreFilepwd);
-        return kmList;
+        return getKeyManagers(mKeyStoreFile, keyStoreFilepwd);
     }
 
     private TrustManager[] getTrustManagers() {
