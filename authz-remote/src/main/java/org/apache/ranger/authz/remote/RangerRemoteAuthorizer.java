@@ -34,7 +34,7 @@ import java.util.Properties;
 
 import static org.apache.ranger.authz.api.RangerAuthzApiErrorCode.INVALID_REQUEST_SERVICE_NAME_OR_TYPE_MANDATORY;
 import static org.apache.ranger.authz.remote.RangerRemoteAuthzErrorCode.INVALID_PROPERTY_VALUE;
-import static org.apache.ranger.authz.remote.RangerRemoteAuthzErrorCode.REMOTE_REQUEST_FAILED;
+import static org.apache.ranger.authz.remote.RangerRemoteAuthzErrorCode.REMOTE_CLIENT_CLOSE_FAILED;
 
 public class RangerRemoteAuthorizer extends RangerAuthorizer {
     private final RangerRemoteAuthzConfig config;
@@ -49,10 +49,6 @@ public class RangerRemoteAuthorizer extends RangerAuthorizer {
 
     @Override
     public void init() throws RangerAuthzException {
-        config.getPdpUrl();
-        config.getConnectTimeoutMs();
-        config.getReadTimeoutMs();
-
         this.client = new RangerPdpClient(config);
     }
 
@@ -66,7 +62,7 @@ public class RangerRemoteAuthorizer extends RangerAuthorizer {
             try {
                 client.close();
             } catch (Exception e) {
-                throw new RangerAuthzException(REMOTE_REQUEST_FAILED, e, RangerRemoteAuthzConfig.PROP_REMOTE_URL);
+                throw new RangerAuthzException(REMOTE_CLIENT_CLOSE_FAILED, e, e.getMessage() != null ? e.getMessage() : e.getClass().getName());
             }
         }
     }
@@ -96,31 +92,8 @@ public class RangerRemoteAuthorizer extends RangerAuthorizer {
     protected void validateAccessContext(RangerAccessContext context) throws RangerAuthzException {
         super.validateAccessContext(context);
 
-        String serviceName = context.getServiceName();
-        String serviceType = context.getServiceType();
-
-        if (StringUtils.isBlank(serviceName)) {
-            if (StringUtils.isBlank(serviceType)) {
-                throw new RangerAuthzException(INVALID_REQUEST_SERVICE_NAME_OR_TYPE_MANDATORY);
-            }
-
-            serviceName = config.getDefaultServiceNameForServiceType(serviceType);
-
-            if (StringUtils.isBlank(serviceName)) {
-                throw new RangerAuthzException(INVALID_PROPERTY_VALUE, RangerRemoteAuthzConfig.PROP_PREFIX_SERVICE_TYPE + serviceType + ".default.service", serviceName);
-            }
-
-            context.setServiceName(serviceName);
-        }
-
-        if (StringUtils.isBlank(serviceType)) {
-            serviceType = config.getServiceTypeForService(serviceName);
-
-            if (StringUtils.isBlank(serviceType)) {
-                throw new RangerAuthzException(INVALID_PROPERTY_VALUE, RangerRemoteAuthzConfig.PROP_PREFIX_SERVICE + serviceName + ".servicetype", serviceType);
-            }
-
-            context.setServiceType(serviceType);
+        if (StringUtils.isBlank(context.getServiceName()) || StringUtils.isBlank(context.getServiceType())) {
+            throw new RangerAuthzException(INVALID_REQUEST_SERVICE_NAME_OR_TYPE_MANDATORY);
         }
     }
 

@@ -22,10 +22,12 @@ package org.apache.ranger.authz.remote;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.ranger.authz.api.RangerAuthzException;
 
+import java.util.AbstractMap;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Properties;
+import java.util.stream.Collectors;
 
 import static org.apache.ranger.authz.remote.RangerRemoteAuthzErrorCode.INVALID_PROPERTY_VALUE;
 import static org.apache.ranger.authz.remote.RangerRemoteAuthzErrorCode.MISSING_AUTH_CONFIG;
@@ -49,9 +51,6 @@ public class RangerRemoteAuthzConfig {
     public static final String PROP_REMOTE_AUTH_KERBEROS_KEYTAB              = "ranger.authz.remote.auth.kerberos.keytab";
     public static final String PROP_REMOTE_AUTH_KERBEROS_DEBUG               = "ranger.authz.remote.auth.kerberos.debug";
 
-    public static final String PROP_PREFIX_SERVICE                           = "ranger.authz.service.";
-    public static final String PROP_PREFIX_SERVICE_TYPE                      = "ranger.authz.servicetype.";
-
     private static final String AUTHZ_PATH_PREFIX = "/authz/v1";
 
     private static final int DEFAULT_CONNECT_TIMEOUT_MS = 5_000;
@@ -63,22 +62,15 @@ public class RangerRemoteAuthzConfig {
 
     public RangerRemoteAuthzConfig(Properties properties) {
         this.properties = properties != null ? properties : new Properties();
-        Map<String, String> ret = new LinkedHashMap<>();
 
-        for (String propName : this.properties.stringPropertyNames()) {
-            if (!propName.startsWith(PROP_REMOTE_HEADER_PREFIX)) {
-                continue;
-            }
-
-            String headerName  = propName.substring(PROP_REMOTE_HEADER_PREFIX.length());
-            String headerValue = this.properties.getProperty(propName);
-
-            if (StringUtils.isNotBlank(headerName) && headerValue != null) {
-                ret.put(headerName, headerValue);
-            }
-        }
-
-        this.headers = Collections.unmodifiableMap(ret);
+        this.headers = Collections.unmodifiableMap(
+                this.properties.stringPropertyNames().stream()
+                        .filter(propName -> propName.startsWith(PROP_REMOTE_HEADER_PREFIX))
+                        .map(propName -> new AbstractMap.SimpleEntry<>(
+                                propName.substring(PROP_REMOTE_HEADER_PREFIX.length()),
+                                this.properties.getProperty(propName)))
+                        .filter(e -> StringUtils.isNotBlank(e.getKey()) && StringUtils.isNotBlank(e.getValue()))
+                        .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (a, b) -> a, LinkedHashMap::new)));
     }
 
     public String getPdpUrl() throws RangerAuthzException {
@@ -173,14 +165,6 @@ public class RangerRemoteAuthzConfig {
 
     public Map<String, String> getHeaders() {
         return headers;
-    }
-
-    public String getServiceTypeForService(String serviceName) {
-        return properties.getProperty(PROP_PREFIX_SERVICE + serviceName + ".servicetype");
-    }
-
-    public String getDefaultServiceNameForServiceType(String serviceType) {
-        return properties.getProperty(PROP_PREFIX_SERVICE_TYPE + serviceType + ".default.service");
     }
 
     private boolean getBooleanProperty(String propertyName, boolean defaultValue) throws RangerAuthzException {

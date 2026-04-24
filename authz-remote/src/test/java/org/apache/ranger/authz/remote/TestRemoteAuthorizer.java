@@ -71,7 +71,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 
 public class TestRemoteAuthorizer {
     @Test
-    public void testAuthorizeOverTlsUsesConfiguredHeadersAndServiceLookup() throws Exception {
+    public void testAuthorizeOverTlsUsesConfiguredHeaders() throws Exception {
         try (StubPdpServer server = StubPdpServer.createHttps()) {
             server.respond("/authz/v1/authorize", 200,
                     "{\"requestId\":\"req-1\",\"decision\":\"ALLOW\",\"permissions\":{\"select\":{\"permission\":\"select\",\"access\":{\"decision\":\"ALLOW\",\"policy\":{\"id\":7,\"version\":3}},\"additionalInfo\":{\"source\":\"pdp\"}}}}");
@@ -82,7 +82,7 @@ public class TestRemoteAuthorizer {
             try {
                 authorizer.init();
 
-                RangerAccessContext accessContext = new RangerAccessContext("hive", null, 123L, "10.0.0.1",
+                RangerAccessContext accessContext = new RangerAccessContext("hive", "dev_hive", 123L, "10.0.0.1",
                         Collections.singletonList("10.0.0.2"), stringMap("requestData", "show tables"));
                 RangerAuthzRequest request = new RangerAuthzRequest("req-1", new RangerUserInfo("alice"),
                         new RangerAccessInfo(resource("table:default/sales", "column:id", "column:name"), "QUERY", linkedSet("select")),
@@ -101,7 +101,7 @@ public class TestRemoteAuthorizer {
     }
 
     @Test
-    public void testAuthorizeMultiResolvesServiceTypeFromServiceName() throws Exception {
+    public void testAuthorizeMulti() throws Exception {
         try (StubPdpServer server = StubPdpServer.createHttp()) {
             server.respond("/authz/v1/authorizeMulti", 200,
                     "{\"requestId\":\"req-2\",\"decision\":\"PARTIAL\",\"accesses\":["
@@ -114,7 +114,7 @@ public class TestRemoteAuthorizer {
             try {
                 authorizer.init();
 
-                RangerAccessContext accessContext = new RangerAccessContext(null, "dev_hive", 456L, null, null, null);
+                RangerAccessContext accessContext = new RangerAccessContext("hive", "dev_hive", 456L, null, null, null);
                 RangerMultiAuthzRequest multiRequest = new RangerMultiAuthzRequest("req-2", new RangerUserInfo("alice"),
                         Arrays.asList(
                                 new RangerAccessInfo(resource("table:default/sales"), "QUERY", linkedSet("select")),
@@ -203,8 +203,6 @@ public class TestRemoteAuthorizer {
         props.setProperty(RangerRemoteAuthzConfig.PROP_REMOTE_SSL_TRUSTSTORE_PASSWORD, "changeit");
         props.setProperty(RangerRemoteAuthzConfig.PROP_REMOTE_SSL_TRUSTSTORE_TYPE, "PKCS12");
         props.setProperty(RangerRemoteAuthzConfig.PROP_REMOTE_HEADER_PREFIX + "X-Request-Source", "integration-test");
-        props.setProperty(RangerRemoteAuthzConfig.PROP_PREFIX_SERVICE_TYPE + "hive.default.service", "dev_hive");
-        props.setProperty(RangerRemoteAuthzConfig.PROP_PREFIX_SERVICE + "dev_hive.servicetype", "hive");
 
         return props;
     }
@@ -213,8 +211,6 @@ public class TestRemoteAuthorizer {
         Properties props = new Properties();
 
         props.setProperty(RangerRemoteAuthzConfig.PROP_REMOTE_URL, baseUrl);
-        props.setProperty(RangerRemoteAuthzConfig.PROP_PREFIX_SERVICE_TYPE + "hive.default.service", "dev_hive");
-        props.setProperty(RangerRemoteAuthzConfig.PROP_PREFIX_SERVICE + "dev_hive.servicetype", "hive");
 
         return props;
     }

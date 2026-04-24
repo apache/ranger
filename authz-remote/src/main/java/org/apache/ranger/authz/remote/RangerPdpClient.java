@@ -62,9 +62,10 @@ import java.security.PrivilegedExceptionAction;
 import java.util.Map;
 
 import static org.apache.ranger.authz.remote.RangerRemoteAuthType.KERBEROS;
+import static org.apache.ranger.authz.remote.RangerRemoteAuthzErrorCode.FAILED_TO_DESERIALIZE_RESPONSE;
+import static org.apache.ranger.authz.remote.RangerRemoteAuthzErrorCode.FAILED_TO_SERIALIZE_REQUEST;
 import static org.apache.ranger.authz.remote.RangerRemoteAuthzErrorCode.REMOTE_CALL_UNSUCCESSFUL;
 import static org.apache.ranger.authz.remote.RangerRemoteAuthzErrorCode.REMOTE_REQUEST_FAILED;
-import static org.apache.ranger.authz.remote.RangerRemoteAuthzErrorCode.REMOTE_RESPONSE_INVALID;
 import static org.apache.ranger.authz.remote.RangerRemoteAuthzErrorCode.TLS_CONFIGURATION_FAILED;
 
 class RangerPdpClient implements Closeable {
@@ -78,30 +79,30 @@ class RangerPdpClient implements Closeable {
     private final CloseableHttpClient     httpClient;
     private final RangerRemoteAuthType    authType;
     private final RangerRemoteKerberosContext kerberosContext;
+    private final String                  apiEndpointAuthorize;
+    private final String                  apiEndpointAuthorizeMulti;
+    private final String                  apiEndpointResourcePermissions;
 
     RangerPdpClient(RangerRemoteAuthzConfig config) throws RangerAuthzException {
-        this.config          = config;
-        this.authType        = config.getAuthType();
-        this.kerberosContext = authType == KERBEROS ? RangerRemoteKerberosContext.create(config) : null;
-        this.httpClient      = createHttpClient(config, kerberosContext);
+        this.config                         = config;
+        this.authType                       = config.getAuthType();
+        this.kerberosContext                = authType == KERBEROS ? RangerRemoteKerberosContext.create(config) : null;
+        this.apiEndpointAuthorize           = config.getEndpointUrl(PATH_AUTHORIZE);
+        this.apiEndpointAuthorizeMulti      = config.getEndpointUrl(PATH_AUTHORIZE_MULTI);
+        this.apiEndpointResourcePermissions = config.getEndpointUrl(PATH_RESOURCE_PERMISSIONS);
+        this.httpClient                     = createHttpClient(config, kerberosContext);
     }
 
     RangerAuthzResult authorize(RangerAuthzRequest request) throws RangerAuthzException {
-        String endpoint = config.getEndpointUrl(PATH_AUTHORIZE);
-
-        return post(endpoint, request, RangerAuthzResult.class);
+        return post(apiEndpointAuthorize, request, RangerAuthzResult.class);
     }
 
     RangerMultiAuthzResult authorize(RangerMultiAuthzRequest request) throws RangerAuthzException {
-        String endpoint = config.getEndpointUrl(PATH_AUTHORIZE_MULTI);
-
-        return post(endpoint, request, RangerMultiAuthzResult.class);
+        return post(apiEndpointAuthorizeMulti, request, RangerMultiAuthzResult.class);
     }
 
     RangerResourcePermissions getResourcePermissions(RangerResourcePermissionsRequest request) throws RangerAuthzException {
-        String endpoint = config.getEndpointUrl(PATH_RESOURCE_PERMISSIONS);
-
-        return post(endpoint, request, RangerResourcePermissions.class);
+        return post(apiEndpointResourcePermissions, request, RangerResourcePermissions.class);
     }
 
     private <T> T post(String endpoint, Object payload, Class<T> responseType) throws RangerAuthzException {
@@ -110,7 +111,7 @@ class RangerPdpClient implements Closeable {
         try {
             requestBody = OBJECT_MAPPER.writeValueAsString(payload);
         } catch (IOException e) {
-            throw new RangerAuthzException(REMOTE_RESPONSE_INVALID, e, "request-body");
+            throw new RangerAuthzException(FAILED_TO_SERIALIZE_REQUEST, e, "request-body");
         }
 
         HttpPost request = new HttpPost(endpoint);
@@ -135,7 +136,7 @@ class RangerPdpClient implements Closeable {
             try {
                 return OBJECT_MAPPER.readValue(responseBody, responseType);
             } catch (IOException e) {
-                throw new RangerAuthzException(REMOTE_RESPONSE_INVALID, e, endpoint);
+                throw new RangerAuthzException(FAILED_TO_DESERIALIZE_RESPONSE, e, endpoint);
             }
         } catch (RangerAuthzException e) {
             throw e;
