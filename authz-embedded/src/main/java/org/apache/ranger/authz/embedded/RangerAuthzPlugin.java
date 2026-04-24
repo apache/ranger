@@ -70,8 +70,8 @@ class RangerAuthzPlugin {
     private final RangerBasePlugin                      plugin;
     private final Map<String, RangerResourceNameParser> rrnTemplates = new HashMap<>();
 
-    public RangerAuthzPlugin(String serviceType, String serviceName, Properties properties) {
-        plugin = new RangerBasePlugin(getPluginConfig(serviceType, serviceName, properties)) {
+    public RangerAuthzPlugin(String serviceType, String serviceName, String appId, Properties properties) {
+        plugin = new RangerBasePlugin(getPluginConfig(serviceType, serviceName, appId, properties)) {
             @Override
             public void setPolicies(ServicePolicies policies) {
                 super.setPolicies(policies);
@@ -407,7 +407,7 @@ class RangerAuthzPlugin {
         }
     }
 
-    private static RangerPluginConfig getPluginConfig(String serviceType, String serviceName, Properties properties) {
-        return new RangerPluginConfig(serviceType, serviceName, null, properties);
+    private static RangerPluginConfig getPluginConfig(String serviceType, String serviceName, String appId, Properties properties) {
+        return new RangerPluginConfig(serviceType, serviceName, appId, properties);
     }
 }

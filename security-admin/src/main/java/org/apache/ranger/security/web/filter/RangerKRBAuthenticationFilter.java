@@ -106,7 +106,6 @@ public class RangerKRBAuthenticationFilter extends RangerKrbFilter {
     static final String RULES_MECHANISM_PARAM = "kerberos.name.rules.mechanism";
 
     private static final String KERBEROS_TYPE = "kerberos";
-    private static final String S_USER        = "suser";
 
     protected static ServletContext noContext = new ServletContext() {
         @Override
@@ -517,15 +516,6 @@ public class RangerKRBAuthenticationFilter extends RangerKrbFilter {
                     }
                 }
             }
-        }
-
-        String sessionUserName = request.getParameter(S_USER);
-        String pathInfo        = request.getPathInfo();
-
-        if (!StringUtils.isEmpty(sessionUserName) && "keyadmin".equalsIgnoreCase(sessionUserName) && !StringUtils.isEmpty(pathInfo) && pathInfo.contains("public/v2/api/service")) {
-            LOG.info("Session will be created by : {}", sessionUserName);
-
-            userName = sessionUserName;
         }
 
         LOG.debug("Remote user from request = {}", request.getRemoteUser());

@@ -8,8 +8,8 @@
     {
       "itemId":      1,
       "name":        "root",
-      "label":       "Root",
-      "description": "Root",
+      "label":       "Realm Identifier",
+      "description": "Realm Identifier",
       "parent":      "",
       "level":       10,
       "isValidLeaf": true,

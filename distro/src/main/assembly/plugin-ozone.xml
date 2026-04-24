@@ -50,7 +50,6 @@
                 <unpack>false</unpack>
                 <includes>
                     <include>com.fasterxml.woodstox:woodstox-core:jar:${fasterxml.woodstox.version}</include>
-                    <include>com.kstruct:gethostname4j</include>
                     <include>com.sun.jersey:jersey-client:jar:${jersey-bundle.version}</include>
                     <include>com.sun.jersey:jersey-core:jar:${jersey-bundle.version}</include>
                     <include>javax.ws.rs:jsr311-api:jar:${jsr311-api.version}</include>
@@ -59,8 +58,6 @@
                     <include>commons-configuration:commons-configuration:jar:${commons.configuration1.version}</include>
                     <include>commons-io:commons-io:jar:${commons.io.version}</include>
                     <include>commons-logging:commons-logging:jar:${commons.logging.version}</include>
-                    <include>net.java.dev.jna:jna</include>
-                    <include>net.java.dev.jna:jna-platform</include>
                     <include>org.apache.commons:commons-collections4:jar:${commons.collections4.version}</include>
                     <include>org.apache.commons:commons-compress:jar:${commons.compress.version}</include>
                     <include>org.apache.commons:commons-configuration2:jar:${commons.configuration.version}</include>
@@ -117,9 +114,6 @@
                     <include>com.fasterxml.jackson.jaxrs:jackson-jaxrs-base:jar:${fasterxml.jackson.version}</include>
                     <include>com.fasterxml.jackson.jaxrs:jackson-jaxrs-json-provider:jar:${fasterxml.jackson.version}</include>
 		            <include>com.sun.xml.bind:jaxb-impl</include>
-                    <include>com.kstruct:gethostname4j</include>
-                    <include>net.java.dev.jna:jna</include>
-                    <include>net.java.dev.jna:jna-platform</include>
                     <include>org.elasticsearch:elasticsearch</include>
                     <include>org.elasticsearch:elasticsearch-core</include>
                     <include>org.elasticsearch:elasticsearch-x-content</include>

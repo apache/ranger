@@ -65,9 +65,6 @@
           <include>com.fasterxml.jackson.core:jackson-databind:jar:${fasterxml.jackson.version}</include>
           <include>com.fasterxml.jackson.jaxrs:jackson-jaxrs-base:jar:${fasterxml.jackson.version}</include>
           <include>com.fasterxml.jackson.jaxrs:jackson-jaxrs-json-provider:jar:${fasterxml.jackson.version}</include>
-          <include>com.kstruct:gethostname4j:jar:${kstruct.gethostname4j.version}</include>
-          <include>net.java.dev.jna:jna:jar:${jna.version}</include>
-          <include>net.java.dev.jna:jna-platform:jar:${jna-platform.version}</include>
           <include>org.elasticsearch:elasticsearch</include>
           <include>org.elasticsearch:elasticsearch-core</include>
           <include>org.elasticsearch:elasticsearch-x-content</include>

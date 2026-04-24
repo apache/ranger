@@ -99,6 +99,7 @@
 
         <!-- GCP HSM -->
         <google.cloud.kms>2.3.0</google.cloud.kms>
+        <google.failureaccess.version>1.0.3</google.failureaccess.version>
         <google.guava.version>33.4.8-jre</google.guava.version>
         <google.re2j.version>1.2</google.re2j.version>
         <googlecode.log4jdbc.version>1.2</googlecode.log4jdbc.version>
@@ -146,8 +147,6 @@
         <jettison.version>1.5.4</jettison.version>
         <jetty-client.version>9.4.56.v20240826</jetty-client.version>
         <jline.version>0.9.94</jline.version>
-        <jna-platform.version>5.7.0</jna-platform.version>
-        <jna.version>5.7.0</jna.version>
         <joda.time.version>2.10.6</joda.time.version>
         <jopt-simple.version>3.2</jopt-simple.version>
         <json4s.version>3.2.11</json4s.version>
@@ -159,7 +158,6 @@
         <kafka.version>3.9.1</kafka.version>
         <kerby.version>2.0.3</kerby.version>
         <knox.gateway.version>2.0.0</knox.gateway.version>
-        <kstruct.gethostname4j.version>1.0.0</kstruct.gethostname4j.version>
         <kylin.version>4.0.4</kylin.version>
         <libpam4j.version>1.10</libpam4j.version>
         <libthrift.version>0.14.0</libthrift.version>
@@ -771,11 +769,6 @@
             <name>jetbrains-intellij-dependencies</name>
             <url>https://packages.jetbrains.team/maven/p/ij/intellij-dependencies</url>
         </repository>
-        <repository>
-            <id>ozone-2.1.0-rc</id>
-            <name>ozone-2.1.0-rc</name>
-            <url>https://repository.apache.org/content/repositories/orgapacheozone-1061</url>
-        </repository>
     </repositories>
     <distributionManagement>
         <repository>
@@ -813,6 +806,7 @@
                 <module>jisql</module>
                 <module>kms</module>
                 <module>knox-agent</module>
+                <module>pdp</module>
                 <module>plugin-atlas</module>
                 <module>plugin-elasticsearch</module>
                 <module>plugin-kafka</module>
@@ -1162,6 +1156,7 @@
                 <module>jisql</module>
                 <module>kms</module>
                 <module>knox-agent</module>
+                <module>pdp</module>
                 <module>plugin-atlas</module>
                 <module>plugin-elasticsearch</module>
                 <module>plugin-kafka</module>
@@ -1250,6 +1245,7 @@
                 <module>jisql</module>
                 <module>kms</module>
                 <module>knox-agent</module>
+                <module>pdp</module>
                 <module>plugin-atlas</module>
                 <module>plugin-elasticsearch</module>
                 <module>plugin-kafka</module>
