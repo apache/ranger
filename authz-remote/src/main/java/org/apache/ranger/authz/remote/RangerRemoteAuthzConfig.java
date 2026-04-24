@@ -22,6 +22,7 @@ package org.apache.ranger.authz.remote;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.ranger.authz.api.RangerAuthzException;
 
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Properties;
@@ -32,24 +33,24 @@ import static org.apache.ranger.authz.remote.RangerRemoteAuthzErrorCode.MISSING_
 import static org.apache.ranger.authz.remote.RangerRemoteAuthzErrorCode.UNSUPPORTED_AUTH_TYPE;
 
 public class RangerRemoteAuthzConfig {
-    public static final String PROP_REMOTE_URL                             = "ranger.authz.remote.url";
-    public static final String PROP_REMOTE_CONNECT_TIMEOUT_MS              = "ranger.authz.remote.connect.timeout.ms";
-    public static final String PROP_REMOTE_READ_TIMEOUT_MS                 = "ranger.authz.remote.read.timeout.ms";
-    public static final String PROP_REMOTE_HEADER_PREFIX                   = "ranger.authz.remote.header.";
-    public static final String PROP_REMOTE_SSL_KEYSTORE_FILE               = "ranger.authz.remote.ssl.keystore.file";
-    public static final String PROP_REMOTE_SSL_KEYSTORE_PASSWORD           = "ranger.authz.remote.ssl.keystore.password";
-    public static final String PROP_REMOTE_SSL_KEYSTORE_TYPE               = "ranger.authz.remote.ssl.keystore.type";
-    public static final String PROP_REMOTE_SSL_TRUSTSTORE_FILE             = "ranger.authz.remote.ssl.truststore.file";
-    public static final String PROP_REMOTE_SSL_TRUSTSTORE_PASSWORD         = "ranger.authz.remote.ssl.truststore.password";
-    public static final String PROP_REMOTE_SSL_TRUSTSTORE_TYPE             = "ranger.authz.remote.ssl.truststore.type";
+    public static final String PROP_REMOTE_URL                               = "ranger.authz.remote.pdp.url";
+    public static final String PROP_REMOTE_CONNECT_TIMEOUT_MS                = "ranger.authz.remote.pdp.connect.timeout.ms";
+    public static final String PROP_REMOTE_READ_TIMEOUT_MS                   = "ranger.authz.remote.pdp.read.timeout.ms";
+    public static final String PROP_REMOTE_HEADER_PREFIX                     = "ranger.authz.remote.header.";
+    public static final String PROP_REMOTE_SSL_KEYSTORE_FILE                 = "ranger.authz.remote.ssl.keystore.file";
+    public static final String PROP_REMOTE_SSL_KEYSTORE_PASSWORD             = "ranger.authz.remote.ssl.keystore.password";
+    public static final String PROP_REMOTE_SSL_KEYSTORE_TYPE                 = "ranger.authz.remote.ssl.keystore.type";
+    public static final String PROP_REMOTE_SSL_TRUSTSTORE_FILE               = "ranger.authz.remote.ssl.truststore.file";
+    public static final String PROP_REMOTE_SSL_TRUSTSTORE_PASSWORD           = "ranger.authz.remote.ssl.truststore.password";
+    public static final String PROP_REMOTE_SSL_TRUSTSTORE_TYPE               = "ranger.authz.remote.ssl.truststore.type";
     public static final String PROP_REMOTE_SSL_DISABLE_HOSTNAME_VERIFICATION = "ranger.authz.remote.ssl.disable.hostname.verification";
-    public static final String PROP_REMOTE_AUTH_TYPE                       = "ranger.authz.remote.auth.type";
-    public static final String PROP_REMOTE_AUTH_KERBEROS_PRINCIPAL         = "ranger.authz.remote.auth.kerberos.principal";
-    public static final String PROP_REMOTE_AUTH_KERBEROS_KEYTAB            = "ranger.authz.remote.auth.kerberos.keytab";
-    public static final String PROP_REMOTE_AUTH_KERBEROS_DEBUG             = "ranger.authz.remote.auth.kerberos.debug";
+    public static final String PROP_REMOTE_AUTH_TYPE                         = "ranger.authz.remote.auth.type";
+    public static final String PROP_REMOTE_AUTH_KERBEROS_PRINCIPAL           = "ranger.authz.remote.auth.kerberos.principal";
+    public static final String PROP_REMOTE_AUTH_KERBEROS_KEYTAB              = "ranger.authz.remote.auth.kerberos.keytab";
+    public static final String PROP_REMOTE_AUTH_KERBEROS_DEBUG               = "ranger.authz.remote.auth.kerberos.debug";
 
-    public static final String PROP_PREFIX_SERVICE                         = "ranger.authz.service.";
-    public static final String PROP_PREFIX_SERVICE_TYPE                    = "ranger.authz.servicetype.";
+    public static final String PROP_PREFIX_SERVICE                           = "ranger.authz.service.";
+    public static final String PROP_PREFIX_SERVICE_TYPE                      = "ranger.authz.servicetype.";
 
     private static final String AUTHZ_PATH_PREFIX = "/authz/v1";
 
@@ -58,9 +59,26 @@ public class RangerRemoteAuthzConfig {
     private static final String DEFAULT_STORE_TYPE      = "PKCS12";
 
     private final Properties properties;
+    private final Map<String, String> headers;
 
     public RangerRemoteAuthzConfig(Properties properties) {
         this.properties = properties != null ? properties : new Properties();
+        Map<String, String> ret = new LinkedHashMap<>();
+
+        for (String propName : this.properties.stringPropertyNames()) {
+            if (!propName.startsWith(PROP_REMOTE_HEADER_PREFIX)) {
+                continue;
+            }
+
+            String headerName  = propName.substring(PROP_REMOTE_HEADER_PREFIX.length());
+            String headerValue = this.properties.getProperty(propName);
+
+            if (StringUtils.isNotBlank(headerName) && headerValue != null) {
+                ret.put(headerName, headerValue);
+            }
+        }
+
+        this.headers = Collections.unmodifiableMap(ret);
     }
 
     public String getPdpUrl() throws RangerAuthzException {
@@ -154,22 +172,7 @@ public class RangerRemoteAuthzConfig {
     }
 
     public Map<String, String> getHeaders() {
-        Map<String, String> ret = new LinkedHashMap<>();
-
-        for (String propName : properties.stringPropertyNames()) {
-            if (!propName.startsWith(PROP_REMOTE_HEADER_PREFIX)) {
-                continue;
-            }
-
-            String headerName  = propName.substring(PROP_REMOTE_HEADER_PREFIX.length());
-            String headerValue = properties.getProperty(propName);
-
-            if (StringUtils.isNotBlank(headerName) && headerValue != null) {
-                ret.put(headerName, headerValue);
-            }
-        }
-
-        return ret;
+        return headers;
     }
 
     public String getServiceTypeForService(String serviceName) {

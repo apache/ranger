@@ -19,6 +19,9 @@
 
 package org.apache.ranger.authz.remote;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.http.HttpEntity;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.CloseableHttpResponse;
@@ -61,9 +64,12 @@ import java.util.Map;
 import static org.apache.ranger.authz.remote.RangerRemoteAuthType.KERBEROS;
 import static org.apache.ranger.authz.remote.RangerRemoteAuthzErrorCode.REMOTE_CALL_UNSUCCESSFUL;
 import static org.apache.ranger.authz.remote.RangerRemoteAuthzErrorCode.REMOTE_REQUEST_FAILED;
+import static org.apache.ranger.authz.remote.RangerRemoteAuthzErrorCode.REMOTE_RESPONSE_INVALID;
 import static org.apache.ranger.authz.remote.RangerRemoteAuthzErrorCode.TLS_CONFIGURATION_FAILED;
 
 class RangerPdpClient implements Closeable {
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+
     private static final String PATH_AUTHORIZE            = "/authorize";
     private static final String PATH_AUTHORIZE_MULTI      = "/authorizeMulti";
     private static final String PATH_RESOURCE_PERMISSIONS = "/permissions";
@@ -82,52 +88,64 @@ class RangerPdpClient implements Closeable {
 
     RangerAuthzResult authorize(RangerAuthzRequest request) throws RangerAuthzException {
         String endpoint = config.getEndpointUrl(PATH_AUTHORIZE);
-        String payload  = RangerRemoteJson.writeAuthzRequest(request);
-        String response = post(endpoint, payload);
 
-        return RangerRemoteJson.readAuthzResult(response, endpoint);
+        return post(endpoint, request, RangerAuthzResult.class);
     }
 
     RangerMultiAuthzResult authorize(RangerMultiAuthzRequest request) throws RangerAuthzException {
         String endpoint = config.getEndpointUrl(PATH_AUTHORIZE_MULTI);
-        String payload  = RangerRemoteJson.writeMultiAuthzRequest(request);
-        String response = post(endpoint, payload);
 
-        return RangerRemoteJson.readMultiAuthzResult(response, endpoint);
+        return post(endpoint, request, RangerMultiAuthzResult.class);
     }
 
     RangerResourcePermissions getResourcePermissions(RangerResourcePermissionsRequest request) throws RangerAuthzException {
         String endpoint = config.getEndpointUrl(PATH_RESOURCE_PERMISSIONS);
-        String payload  = RangerRemoteJson.writeResourcePermissionsRequest(request);
-        String response = post(endpoint, payload);
 
-        return RangerRemoteJson.readResourcePermissions(response, endpoint);
+        return post(endpoint, request, RangerResourcePermissions.class);
     }
 
-    private String post(String endpoint, String payload) throws RangerAuthzException {
+    private <T> T post(String endpoint, Object payload, Class<T> responseType) throws RangerAuthzException {
+        final String requestBody;
+
+        try {
+            requestBody = OBJECT_MAPPER.writeValueAsString(payload);
+        } catch (IOException e) {
+            throw new RangerAuthzException(REMOTE_RESPONSE_INVALID, e, "request-body");
+        }
+
         HttpPost request = new HttpPost(endpoint);
 
         try {
             request.setHeader("Content-Type", ContentType.APPLICATION_JSON.getMimeType());
             request.setHeader("Accept", ContentType.APPLICATION_JSON.getMimeType());
-            request.setEntity(new StringEntity(payload, ContentType.APPLICATION_JSON));
+            request.setEntity(new StringEntity(requestBody, ContentType.APPLICATION_JSON));
 
             for (Map.Entry<String, String> header : config.getHeaders().entrySet()) {
                 request.setHeader(header.getKey(), header.getValue());
             }
 
+            String responseBody;
+
             if (authType == KERBEROS) {
-                return kerberosContext.doAs((PrivilegedExceptionAction<String>) () -> execute(request, endpoint));
+                responseBody = kerberosContext.doAs((PrivilegedExceptionAction<String>) () -> execute(request, endpoint));
+            } else {
+                responseBody = execute(request, endpoint);
             }
 
-            return execute(request, endpoint);
+            try {
+                return OBJECT_MAPPER.readValue(responseBody, responseType);
+            } catch (IOException e) {
+                throw new RangerAuthzException(REMOTE_RESPONSE_INVALID, e, endpoint);
+            }
         } catch (RangerAuthzException e) {
             throw e;
         } catch (PrivilegedActionException e) {
             Throwable cause = e.getException();
+
             if (cause instanceof RangerAuthzException) {
                 throw (RangerAuthzException) cause;
             }
+
             throw new RangerAuthzException(REMOTE_REQUEST_FAILED, cause, endpoint);
         } catch (IOException e) {
             throw new RangerAuthzException(REMOTE_REQUEST_FAILED, e, endpoint);
@@ -149,7 +167,7 @@ class RangerPdpClient implements Closeable {
                 return responseBody;
             }
 
-            String errorMessage = RangerRemoteJson.readErrorMessage(responseBody);
+            String errorMessage = readErrorMessage(responseBody);
 
             if (errorMessage == null || errorMessage.trim().isEmpty()) {
                 errorMessage = response.getStatusLine().getReasonPhrase();
@@ -230,5 +248,20 @@ class RangerPdpClient implements Closeable {
 
     private static char[] toPasswordChars(String password) {
         return password != null ? password.toCharArray() : null;
+    }
+
+    private static String readErrorMessage(String json) {
+        if (json == null || json.trim().isEmpty()) {
+            return null;
+        }
+
+        try {
+            JsonNode root    = OBJECT_MAPPER.readTree(json);
+            JsonNode message = root != null ? root.get("message") : null;
+
+            return message != null && !message.isNull() ? message.asText() : null;
+        } catch (IOException e) {
+            return null;
+        }
     }
 }
