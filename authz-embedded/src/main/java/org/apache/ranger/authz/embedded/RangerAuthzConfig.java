@@ -66,7 +66,7 @@ public class RangerAuthzConfig {
             }
         }
 
-        // add legacy audit configurations
+        // add legacy audit configurations; overrides entry specified with PROP_PREFIX_AUDIT prefix
         for (String propName : properties.stringPropertyNames()) {
             if (propName.startsWith(PROP_PREFIX_XASECURE_AUDIT)) {
                 ret.setProperty(propName, properties.getProperty(propName));
@@ -125,13 +125,14 @@ public class RangerAuthzConfig {
         }
 
         // add legacy configurations that start with pluginPropPrefix ("ranger.plugin." + serviceType + ".")
+        // overrides entry specified with prefixes PROP_PREFIX_DEFAULT, PROP_PREFIX_SERVICE_TYPE, PROP_PREFIX_SERVICE
         for (String propName : properties.stringPropertyNames()) {
             if (propName.startsWith(pluginPropPrefix)) {
                 ret.setProperty(propName, properties.getProperty(propName));
             }
         }
 
-        // add legacy configurations that start with "xasecure."
+        // add legacy configurations that start with "xasecure.", like SSL configurations that start with "xasecure.policymgr."
         for (String propName : properties.stringPropertyNames()) {
             if (propName.startsWith(PROP_PREFIX_XASECURE) && !propName.startsWith(PROP_PREFIX_XASECURE_AUDIT)) {
                 ret.setProperty(propName, properties.getProperty(propName));
