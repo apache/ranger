@@ -19,21 +19,24 @@
 
 package org.apache.ranger.unixusersync.process;
 
-import com.fasterxml.jackson.jaxrs.json.JacksonJsonProvider;
-import com.sun.jersey.api.client.Client;
-import com.sun.jersey.api.client.config.ClientConfig;
-import com.sun.jersey.api.client.config.DefaultClientConfig;
-import com.sun.jersey.api.client.filter.HTTPBasicAuthFilter;
-import com.sun.jersey.client.urlconnection.HTTPSProperties;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.security.SecureClientLogin;
+import org.apache.ranger.plugin.util.RangerJersey2ClientBuilder;
 import org.apache.ranger.plugin.util.RangerRESTClient;
 import org.apache.ranger.unixusersync.config.UserGroupSyncConfig;
+import org.glassfish.jersey.client.ClientConfig;
+import org.glassfish.jersey.client.ClientProperties;
 
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.KeyManager;
 import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLSession;
 import javax.net.ssl.TrustManager;
+import javax.ws.rs.client.Client;
+import javax.ws.rs.core.HttpHeaders;
+
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
 
 public class RangerUgSyncRESTClient extends RangerRESTClient {
     public RangerUgSyncRESTClient(String policyMgrBaseUrls, String ugKeyStoreFile, String ugKeyStoreFilepwd, String ugKeyStoreType, String ugTrustStoreFile, String ugTrustStoreFilepwd, String ugTrustStoreType, String authenticationType, String principal, String keytab, String polMgrUsername, String polMgrPassword) {
@@ -52,18 +55,42 @@ public class RangerUgSyncRESTClient extends RangerRESTClient {
             KeyManager[]   kmList     = getKeyManagers(ugKeyStoreFile, ugKeyStoreFilepwd);
             TrustManager[] tmList     = getTrustManagers(ugTrustStoreFile, ugTrustStoreFilepwd);
             SSLContext     sslContext = getSSLContext(kmList, tmList);
-            ClientConfig   config     = new DefaultClientConfig();
 
-            config.getClasses().add(JacksonJsonProvider.class); // to handle List<> unmarshalling
+            HostnameVerifier hv = new HostnameVerifier() {
+                @Override
+                public boolean verify(String urlHostName, SSLSession session) {
+                    return session.getPeerHost().equals(urlHostName);
+                }
+            };
 
-            HostnameVerifier hv = (urlHostName, session) -> session.getPeerHost().equals(urlHostName);
-
-            config.getProperties().put(HTTPSProperties.PROPERTY_HTTPS_PROPERTIES, new HTTPSProperties(hv, sslContext));
-
-            setClient(Client.create(config));
+            ClientConfig config = new ClientConfig();
+            RangerJersey2ClientBuilder.applyAntiMoxyConfiguration(config);
+            config.property(ClientProperties.CONNECT_TIMEOUT, getRestClientConnTimeOutMs());
+            config.property(ClientProperties.READ_TIMEOUT, getRestClientReadTimeOutMs());
+            RangerJersey2ClientBuilder.validateAntiMoxyConfiguration(config);
 
             if (StringUtils.isNotEmpty(getUsername()) && StringUtils.isNotEmpty(getPassword())) {
-                getClient().addFilter(new HTTPBasicAuthFilter(getUsername(), getPassword()));
+                final String user = getUsername();
+                final String pass = getPassword();
+                config.register(new javax.ws.rs.client.ClientRequestFilter() {
+                    @Override
+                    public void filter(javax.ws.rs.client.ClientRequestContext requestContext) {
+                        String authHeader = "Basic " + Base64.getEncoder().encodeToString((user + ":" + pass).getBytes(StandardCharsets.UTF_8));
+                        requestContext.getHeaders().add(HttpHeaders.AUTHORIZATION, authHeader);
+                    }
+                });
+            }
+
+            Client secureClient = RangerJersey2ClientBuilder.newBuilder()
+                    .sslContext(sslContext)
+                    .hostnameVerifier(hv)
+                    .withConfig(config)
+                    .build();
+            setClient(secureClient);
+
+            UserGroupSyncConfig userGroupSyncConfig = UserGroupSyncConfig.getInstance();
+            if (userGroupSyncConfig.isUserSyncRangerCookieEnabled()) {
+                setCookieAuthClient(getClient());
             }
         }
 

@@ -418,7 +418,7 @@ public class TestRangerAdminJersey2RESTClient {
         RangerAdminJersey2RESTClient underTest = spy(new RangerAdminJersey2RESTClient());
         underTest.client = clientMock;
         underTest.init(SERVICE, APPID, PREFIX, conf);
-        doReturn(true).when(underTest).isKerberosEnabled(ArgumentMatchers.any());
+        doReturn(true).when(underTest).isKerberosEnabled();
 
         Map<String, NewCookie> cookies = new HashMap<>();
         cookies.put(COOKIE_NAME, new NewCookie(COOKIE_NAME, "v"));
@@ -457,7 +457,7 @@ public class TestRangerAdminJersey2RESTClient {
         RangerAdminJersey2RESTClient underTest = spy(new RangerAdminJersey2RESTClient());
         underTest.client = clientMock;
         underTest.init(SERVICE, APPID, PREFIX, conf);
-        doReturn(true).when(underTest).isKerberosEnabled(ArgumentMatchers.any());
+        doReturn(true).when(underTest).isKerberosEnabled();
 
         Map<String, NewCookie> cookies = new HashMap<>();
         cookies.put(COOKIE_NAME, new NewCookie(COOKIE_NAME, "v"));
@@ -495,7 +495,7 @@ public class TestRangerAdminJersey2RESTClient {
         RangerAdminJersey2RESTClient underTest = spy(new RangerAdminJersey2RESTClient());
         underTest.client = clientMock;
         underTest.init(SERVICE, APPID, PREFIX, conf);
-        doReturn(true).when(underTest).isKerberosEnabled(ArgumentMatchers.any());
+        doReturn(true).when(underTest).isKerberosEnabled();
 
         Map<String, NewCookie> cookies = new HashMap<>();
         cookies.put(COOKIE_NAME, new NewCookie(COOKIE_NAME, "v"));
@@ -533,7 +533,7 @@ public class TestRangerAdminJersey2RESTClient {
         RangerAdminJersey2RESTClient underTest = spy(new RangerAdminJersey2RESTClient());
         underTest.client = clientMock;
         underTest.init(SERVICE, APPID, PREFIX, conf);
-        doReturn(true).when(underTest).isKerberosEnabled(ArgumentMatchers.any());
+        doReturn(true).when(underTest).isKerberosEnabled();
 
         when(response200.getStatus()).thenReturn(200);
         when(response200.readEntity(String.class)).thenReturn("{}");

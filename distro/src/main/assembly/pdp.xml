@@ -72,8 +72,6 @@
                       Use client/core only; avoid jersey-bundle to prevent
                       ASM package clashes with Jersey-2 server scanner.
                     -->
-                    <include>com.sun.jersey:jersey-client:jar:${jersey-bundle.version}</include>
-                    <include>com.sun.jersey:jersey-core:jar:${jersey-bundle.version}</include>
 
                     <!-- HK2 (Jersey DI framework) -->
                     <include>org.glassfish.hk2:hk2-api</include>

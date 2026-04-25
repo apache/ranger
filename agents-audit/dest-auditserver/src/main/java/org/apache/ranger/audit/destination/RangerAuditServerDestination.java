@@ -19,8 +19,6 @@
 
 package org.apache.ranger.audit.destination;
 
-import com.sun.jersey.api.client.ClientResponse;
-import com.sun.jersey.api.client.WebResource;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.security.UserGroupInformation;
@@ -28,9 +26,15 @@ import org.apache.http.HttpStatus;
 import org.apache.ranger.audit.model.AuditEventBase;
 import org.apache.ranger.audit.model.AuthzAuditEvent;
 import org.apache.ranger.audit.provider.MiscUtil;
+import org.apache.ranger.plugin.authn.DefaultJwtProvider;
 import org.apache.ranger.plugin.util.RangerRESTClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.ws.rs.client.Entity;
+import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 
 import java.security.PrivilegedExceptionAction;
 import java.util.Collection;
@@ -84,6 +88,10 @@ public class RangerAuditServerDestination extends AuditDestination {
         Configuration config = createRESTClientConfiguration(props, propPrefix, authType);
 
         this.restClient = new RangerRESTClient(url, sslConfigFileName, config);
+
+        if (AUTH_TYPE_JWT.equalsIgnoreCase(authType)) {
+            this.restClient.setJwtProvider(new DefaultJwtProvider("ranger.plugin.policy.rest.client", config));
+        }
 
         this.restClient.setRestClientConnTimeOutMs(connTimeoutMs);
         this.restClient.setRestClientReadTimeOutMs(readTimeoutMs);
@@ -180,6 +188,8 @@ public class RangerAuditServerDestination extends AuditDestination {
             queryParams.put(QUERY_PARAM_APP_ID, appId);
         }
 
+        Response response = null;
+
         try {
             final UserGroupInformation user         = MiscUtil.getUGILoginUser();
             final boolean              isSecureMode = isKerberosAuthenticated();
@@ -190,10 +200,8 @@ public class RangerAuditServerDestination extends AuditDestination {
                 LOG.debug("Sending audit batch of {} events. SecureMode: {}, User: {}", events.size(), isSecureMode, user != null ? user.getUserName() : "null");
             }
 
-            final ClientResponse response;
-
             if (isSecureMode) {
-                response = MiscUtil.executePrivilegedAction((PrivilegedExceptionAction<ClientResponse>) () -> {
+                response = MiscUtil.executePrivilegedAction((PrivilegedExceptionAction<Response>) () -> {
                     try {
                         return postAuditEvents(restClient, queryParams, events);
                     } catch (Exception e) {
@@ -210,7 +218,7 @@ public class RangerAuditServerDestination extends AuditDestination {
 
                 if (status == HttpStatus.SC_OK) {
                     if (LOG.isDebugEnabled()) {
-                        LOG.debug("Audit batch sent successfully. {} events delivered. Response: {}", events.size(), response.getEntity(String.class));
+                        LOG.debug("Audit batch sent successfully. {} events delivered. Response: {}", events.size(), response.readEntity(String.class));
                     }
 
                     ret = true;
@@ -219,7 +227,7 @@ public class RangerAuditServerDestination extends AuditDestination {
 
                     try {
                         if (response.hasEntity()) {
-                            errorBody = response.getEntity(String.class);
+                            errorBody = response.readEntity(String.class);
                         }
                     } catch (Exception e) {
                         LOG.debug("Failed to read error response body", e);
@@ -242,27 +250,33 @@ public class RangerAuditServerDestination extends AuditDestination {
             LOG.error("Failed to send audit batch of {} events. Error: {}", events.size(), e.getMessage(), e);
 
             ret = false;
+        } finally {
+            if (response != null) {
+                try {
+                    response.close();
+                } catch (Exception e) {
+                    LOG.debug("Error closing HTTP response", e);
+                }
+            }
         }
 
         return ret;
     }
 
-    private ClientResponse postAuditEvents(RangerRESTClient restClient, Map<String, String> params, Collection<AuditEventBase> events) {
+    private Response postAuditEvents(RangerRESTClient restClient, Map<String, String> params, Collection<AuditEventBase> events) {
         LOG.debug("Posting {} audit events to {}", events.size(), REST_RELATIVE_PATH_POST);
 
-        WebResource webResource = restClient.getResource(REST_RELATIVE_PATH_POST);
+        WebTarget target = restClient.getResource(REST_RELATIVE_PATH_POST);
 
         if (params != null && !params.isEmpty()) {
             for (Map.Entry<String, String> entry : params.entrySet()) {
-                webResource = webResource.queryParam(entry.getKey(), entry.getValue());
+                target = target.queryParam(entry.getKey(), entry.getValue());
             }
         }
 
-        return webResource
-                .accept("application/json")
-                .type("application/json")
-                .entity(events)
-                .post(ClientResponse.class);
+        return target.request(MediaType.APPLICATION_JSON_TYPE)
+                .accept(MediaType.APPLICATION_JSON_TYPE)
+                .post(Entity.entity(events, MediaType.APPLICATION_JSON_TYPE));
     }
 
     private static Configuration createRESTClientConfiguration(Properties props, String propPrefix, String authType) {

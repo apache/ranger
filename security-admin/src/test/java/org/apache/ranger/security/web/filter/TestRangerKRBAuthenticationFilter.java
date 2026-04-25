@@ -398,7 +398,8 @@ public class TestRangerKRBAuthenticationFilter {
 
     @Test
     public void testProtectedDoFilter_usesSessionUserNameKeyadminPath() throws Exception {
-        // Enable spnego
+        // The filter derives the logged-in user from the hadoop.auth value in Set-Cookie (see protected doFilter),
+        // not from an suser query parameter. Exercise keyadmin on a typical public v2 path.
         File kt = File.createTempFile("krb", ".keytab");
         kt.deleteOnExit();
         PropertiesUtil.getPropertiesMap().put("hadoop.security.authentication", "kerberos");
@@ -406,7 +407,6 @@ public class TestRangerKRBAuthenticationFilter {
         PropertiesUtil.getPropertiesMap().put("ranger.spnego.kerberos.keytab", kt.getAbsolutePath());
 
         RangerKRBAuthenticationFilter filter = new RangerKRBAuthenticationFilter();
-        // Inject userMgr to avoid NPE and to provide roles
         UserMgr userMgr = Mockito.mock(UserMgr.class);
         Field uf = RangerKRBAuthenticationFilter.class.getDeclaredField("userMgr");
         uf.setAccessible(true);
@@ -417,10 +417,14 @@ public class TestRangerKRBAuthenticationFilter {
         HttpServletResponse res = Mockito.mock(HttpServletResponse.class);
         FilterChain chain = Mockito.mock(FilterChain.class);
 
-        when(res.containsHeader("Set-Cookie")).thenReturn(false);
-        when(req.getParameter("suser")).thenReturn("keyadmin");
+        when(res.containsHeader("Set-Cookie")).thenReturn(true);
+        ArrayList<String> cookieHeaders = new ArrayList<>();
+        cookieHeaders.add("hadoop.auth=u=keyadmin&x=y; Path=/");
+        when(res.getHeaders("Set-Cookie")).thenReturn(cookieHeaders);
         when(req.getPathInfo()).thenReturn("/public/v2/api/service/list");
         when(req.getHeaderNames()).thenReturn(Collections.emptyEnumeration());
+        when(req.getParameterMap()).thenReturn(new HashMap<String, String[]>());
+        when(res.isCommitted()).thenReturn(false);
 
         filter.doFilter(chain, req, res);
 

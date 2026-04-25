@@ -16,9 +16,9 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+
 package org.apache.ranger.plugin.contextenricher;
 
-import com.sun.jersey.api.client.ClientResponse;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.ranger.admin.client.datatype.RESTResponse;
@@ -33,6 +33,8 @@ import org.apache.ranger.plugin.util.RangerServiceNotFoundException;
 import org.apache.ranger.plugin.util.RangerUserStore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.ws.rs.core.Response;
 
 import java.io.File;
 import java.io.FileReader;
@@ -350,7 +352,7 @@ public class RangerUserStoreRefresher extends Thread {
 
         final UserGroupInformation user         = MiscUtil.getUGILoginUser();
         final boolean              isSecureMode = user != null && UserGroupInformation.isSecurityEnabled();
-        final ClientResponse       response;
+        final Response             response;
         final Map<String, String>  queryParams = new HashMap<>();
 
         queryParams.put(RangerRESTUtils.REST_PARAM_LAST_KNOWN_USERSTORE_VERSION, Long.toString(lastKnownUserStoreVersion));
@@ -359,7 +361,7 @@ public class RangerUserStoreRefresher extends Thread {
         if (isSecureMode) {
             LOG.debug("Checking UserStore updated as user : {}", user);
 
-            response = MiscUtil.executePrivilegedAction((PrivilegedExceptionAction<ClientResponse>) () -> {
+            response = MiscUtil.executePrivilegedAction((PrivilegedExceptionAction<Response>) () -> {
                 try {
                     String relativeURL = RangerRESTUtils.REST_URL_SERVICE_SERCURE_GET_USERSTORE;
 
@@ -392,14 +394,14 @@ public class RangerUserStoreRefresher extends Thread {
 
             ret = null;
         } else if (response.getStatus() == SC_OK) {
-            ret = JsonUtilsV2.jsonToObj(response.getEntity(String.class), RangerUserStore.class);
+            ret = JsonUtilsV2.jsonToObj(response.readEntity(String.class), RangerUserStore.class);
         } else if (response.getStatus() == SC_NOT_FOUND) {
             ret = null;
 
             LOG.error("Error getting UserStore; service not found. secureMode={}, user={}, response={}, lastKnownUserStoreVersion={}, lastActivationTimeInMillis={}",
                     isSecureMode, user, response.getStatus(), lastKnownUserStoreVersion, lastActivationTimeInMillis);
 
-            String exceptionMsg = response.hasEntity() ? response.getEntity(String.class) : null;
+            String exceptionMsg = response.hasEntity() ? response.readEntity(String.class) : null;
 
             LOG.warn("Received 404 error code with body:[{}], Ignoring", exceptionMsg);
         } else {

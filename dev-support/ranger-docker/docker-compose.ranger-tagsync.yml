@@ -29,6 +29,7 @@ services:
       - TAGSYNC_VERSION
       - DEBUG_TAGSYNC=${DEBUG_TAGSYNC:-false}
       - KERBEROS_ENABLED
+      - JAVA_OPTS
 
 networks:
   ranger:

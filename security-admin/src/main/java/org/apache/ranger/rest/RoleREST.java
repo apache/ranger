@@ -19,8 +19,6 @@
 
 package org.apache.ranger.rest;
 
-import com.sun.jersey.core.header.FormDataContentDisposition;
-import com.sun.jersey.multipart.FormDataParam;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -63,8 +61,11 @@ import org.apache.ranger.service.RangerRoleService;
 import org.apache.ranger.service.XUserService;
 import org.apache.ranger.view.RangerExportRoleList;
 import org.apache.ranger.view.RangerRoleList;
+import org.apache.ranger.view.RoleUsersGroupsRequest;
 import org.apache.ranger.view.VXString;
 import org.apache.ranger.view.VXStringList;
+import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
+import org.glassfish.jersey.media.multipart.FormDataParam;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -94,6 +95,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -657,15 +659,21 @@ public class RoleREST {
      */
 
     /*
-        This API is used to add users and groups with/without GRANT privileges to this Role. It follows add-or-update semantics
+        This API is used to add users and groups with/without GRANT privileges to this Role. It follows add-or-update semantics.
+        Clients may send users, groups, and isAdmin in a JSON body ({@link RoleUsersGroupsRequest}) and/or as query parameters;
+        when both are present, the JSON body field wins if it is non-null.
      */
     @PUT
     @Path("/roles/{id}/addUsersAndGroups")
-    @Consumes("application/json")
+    @Consumes({MediaType.APPLICATION_JSON, MediaType.WILDCARD})
     @Produces("application/json")
-    public RangerRole addUsersAndGroups(@PathParam("id") Long roleId, List<String> users, List<String> groups, Boolean isAdmin) {
+    public RangerRole addUsersAndGroups(@PathParam("id") Long roleId, @QueryParam("users") List<String> users, @QueryParam("groups") List<String> groups, @QueryParam("isAdmin") Boolean isAdmin, RoleUsersGroupsRequest body) {
+        List<String> effectiveUsers  = resolveUsers(body, users);
+        List<String> effectiveGroups = resolveGroups(body, groups);
+        boolean      grantAdmin      = resolveGrantAdmin(body, isAdmin);
+
         if (LOG.isDebugEnabled()) {
-            LOG.debug("==> addUsersAndGroups(id={}, users={}, groups={}, isAdmin={})", roleId, Arrays.toString(users.toArray()), Arrays.toString(groups.toArray()), isAdmin);
+            LOG.debug("==> addUsersAndGroups(id={}, users={}, groups={}, isAdmin={})", roleId, effectiveUsers, effectiveGroups, grantAdmin);
         }
 
         RangerRole role;
@@ -674,7 +682,7 @@ public class RoleREST {
             // Real processing
             ensureAdminAccess(null, null);
 
-            if (containsInvalidUser(users)) {
+            if (containsInvalidUser(effectiveUsers)) {
                 throw new Exception("Invalid role user(s)");
             }
 
@@ -684,7 +692,7 @@ public class RoleREST {
             Set<RangerRole.RoleMember> roleGroups = new HashSet<>();
 
             for (RangerRole.RoleMember user : role.getUsers()) {
-                if (users.contains(user.getName()) && isAdmin == Boolean.TRUE) {
+                if (effectiveUsers.contains(user.getName()) && grantAdmin) {
                     user.setIsAdmin(true);
 
                     roleUsers.add(user);
@@ -693,20 +701,20 @@ public class RoleREST {
 
             Set<String> existingUsernames = getUserNames(role);
 
-            for (String user : users) {
+            for (String user : effectiveUsers) {
                 if (!existingUsernames.contains(user)) {
-                    roleUsers.add(new RangerRole.RoleMember(user, isAdmin));
+                    roleUsers.add(new RangerRole.RoleMember(user, grantAdmin));
                 }
             }
 
             for (RangerRole.RoleMember group : role.getGroups()) {
-                if (group.getIsAdmin() == isAdmin) {
+                if (group.getIsAdmin() == grantAdmin) {
                     roleGroups.add(group);
                 }
             }
 
-            for (String group : groups) {
-                roleGroups.add(new RangerRole.RoleMember(group, isAdmin));
+            for (String group : effectiveGroups) {
+                roleGroups.add(new RangerRole.RoleMember(group, grantAdmin));
             }
 
             role.setUsers(new ArrayList<>(roleUsers));
@@ -722,7 +730,7 @@ public class RoleREST {
         }
 
         if (LOG.isDebugEnabled()) {
-            LOG.debug("==> addUsersAndGroups(id={}, users={}, groups={}, isAdmin={})", roleId, Arrays.toString(users.toArray()), Arrays.toString(groups.toArray()), isAdmin);
+            LOG.debug("<== addUsersAndGroups(id={}, users={}, groups={}, isAdmin={})", roleId, effectiveUsers, effectiveGroups, grantAdmin);
         }
 
         return role;
@@ -730,14 +738,18 @@ public class RoleREST {
 
     /*
         This API is used to remove users and groups, without regard to their GRANT privilege, from this Role.
+        JSON body and query parameters use the same merge rules as addUsersAndGroups.
      */
     @PUT
     @Path("/roles/{id}/removeUsersAndGroups")
-    @Consumes("application/json")
+    @Consumes({MediaType.APPLICATION_JSON, MediaType.WILDCARD})
     @Produces("application/json")
-    public RangerRole removeUsersAndGroups(@PathParam("id") Long roleId, List<String> users, List<String> groups) {
+    public RangerRole removeUsersAndGroups(@PathParam("id") Long roleId, @QueryParam("users") List<String> users, @QueryParam("groups") List<String> groups, RoleUsersGroupsRequest body) {
+        List<String> effectiveUsers  = resolveUsers(body, users);
+        List<String> effectiveGroups = resolveGroups(body, groups);
+
         if (LOG.isDebugEnabled()) {
-            LOG.debug("==> removeUsersAndGroups(id={}, users={}, groups={})", roleId, Arrays.toString(users.toArray()), Arrays.toString(groups.toArray()));
+            LOG.debug("==> removeUsersAndGroups(id={}, users={}, groups={})", roleId, effectiveUsers, effectiveGroups);
         }
 
         RangerRole role;
@@ -748,7 +760,7 @@ public class RoleREST {
 
             role = getRole(roleId);
 
-            for (String user : users) {
+            for (String user : effectiveUsers) {
                 Iterator<RangerRole.RoleMember> iter = role.getUsers().iterator();
 
                 while (iter.hasNext()) {
@@ -761,7 +773,7 @@ public class RoleREST {
                 }
             }
 
-            for (String group : groups) {
+            for (String group : effectiveGroups) {
                 Iterator<RangerRole.RoleMember> iter = role.getGroups().iterator();
 
                 while (iter.hasNext()) {
@@ -784,7 +796,7 @@ public class RoleREST {
         }
 
         if (LOG.isDebugEnabled()) {
-            LOG.debug("<== removeUsersAndGroups(id={}, users={}, groups={})", roleId, Arrays.toString(users.toArray()), Arrays.toString(groups.toArray()));
+            LOG.debug("<== removeUsersAndGroups(id={}, users={}, groups={})", roleId, effectiveUsers, effectiveGroups);
         }
 
         return role;
@@ -792,13 +804,17 @@ public class RoleREST {
 
     /*
         This API is used to remove GRANT privilege from listed users and groups.
+        JSON body and query parameters use the same merge rules as addUsersAndGroups.
      */
     @PUT
     @Path("/roles/{id}/removeAdminFromUsersAndGroups")
-    @Consumes("application/json")
+    @Consumes({MediaType.APPLICATION_JSON, MediaType.WILDCARD})
     @Produces("application/json")
-    public RangerRole removeAdminFromUsersAndGroups(@PathParam("id") Long roleId, List<String> users, List<String> groups) {
-        LOG.debug("==> removeAdminFromUsersAndGroups(id={}, users={}, groups={})", roleId, Arrays.toString(users.toArray()), Arrays.toString(groups.toArray()));
+    public RangerRole removeAdminFromUsersAndGroups(@PathParam("id") Long roleId, @QueryParam("users") List<String> users, @QueryParam("groups") List<String> groups, RoleUsersGroupsRequest body) {
+        List<String> effectiveUsers  = resolveUsers(body, users);
+        List<String> effectiveGroups = resolveGroups(body, groups);
+
+        LOG.debug("==> removeAdminFromUsersAndGroups(id={}, users={}, groups={})", roleId, effectiveUsers, effectiveGroups);
 
         RangerRole role;
 
@@ -808,7 +824,7 @@ public class RoleREST {
 
             role = getRole(roleId);
 
-            for (String user : users) {
+            for (String user : effectiveUsers) {
                 for (RangerRole.RoleMember member : role.getUsers()) {
                     if (StringUtils.equals(member.getName(), user) && member.getIsAdmin()) {
                         member.setIsAdmin(false);
@@ -816,7 +832,7 @@ public class RoleREST {
                 }
             }
 
-            for (String group : groups) {
+            for (String group : effectiveGroups) {
                 for (RangerRole.RoleMember member : role.getGroups()) {
                     if (StringUtils.equals(member.getName(), group) && member.getIsAdmin()) {
                         member.setIsAdmin(false);
@@ -833,7 +849,7 @@ public class RoleREST {
             throw restErrorUtil.createRESTException(excp.getMessage());
         }
 
-        LOG.debug("==> removeAdminFromUsersAndGroups(id={}, users={}, groups={})", roleId, Arrays.toString(users.toArray()), Arrays.toString(groups.toArray()));
+        LOG.debug("<== removeAdminFromUsersAndGroups(id={}, users={}, groups={})", roleId, effectiveUsers, effectiveGroups);
 
         return role;
     }
@@ -1697,6 +1713,33 @@ public class RoleREST {
         }
 
         return roles;
+    }
+
+    /** When a JSON field is non-null it overrides the corresponding query parameter. */
+    private static List<String> resolveUsers(RoleUsersGroupsRequest body, List<String> queryUsers) {
+        if (body != null && body.getUsers() != null) {
+            return body.getUsers();
+        }
+
+        return queryUsers != null ? queryUsers : Collections.emptyList();
+    }
+
+    private static List<String> resolveGroups(RoleUsersGroupsRequest body, List<String> queryGroups) {
+        if (body != null && body.getGroups() != null) {
+            return body.getGroups();
+        }
+
+        return queryGroups != null ? queryGroups : Collections.emptyList();
+    }
+
+    private static boolean resolveGrantAdmin(RoleUsersGroupsRequest body, Boolean queryIsAdmin) {
+        Boolean fromBody = body != null ? body.getIsAdmin() : null;
+
+        if (fromBody != null) {
+            return Boolean.TRUE.equals(fromBody);
+        }
+
+        return Boolean.TRUE.equals(queryIsAdmin);
     }
 
     static {

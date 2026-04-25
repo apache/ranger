@@ -42,6 +42,7 @@ import org.apache.ranger.plugin.util.GrantRevokeRoleRequest;
 import org.apache.ranger.plugin.util.RangerPurgeResult;
 import org.apache.ranger.plugin.util.ServiceTags;
 import org.apache.ranger.security.context.RangerAPIList;
+import org.apache.ranger.view.RoleUsersGroupsRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -65,6 +66,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -890,37 +892,61 @@ public class PublicAPIsv2 {
         return roleREST.getUserRoles(userName, request);
     }
 
-    /*
-        This API is used to add users and groups with/without GRANT privileges to this Role. It follows add-or-update semantics
-      */
+    /**
+     * Adds users and/or groups to a role (add-or-update). GRANT (admin) flag is controlled by {@code isAdmin} when adding.
+     * <p>
+     * <strong>Contract:</strong> send {@code Content-Type: application/json} with a
+     * {@link org.apache.ranger.view.RoleUsersGroupsRequest} body, for example
+     * {@code {"users":["u1"], "groups":["g1"], "isAdmin": true}}. Omitted JSON fields can be left {@code null} when
+     * supplied as query parameters instead.
+     * </p>
+     * <p>
+     * <strong>Backward compatibility:</strong> the same values may still be passed as {@code users}, {@code groups},
+     * and {@code isAdmin} query parameters. If both JSON and query are present, each non-null JSON field overrides
+     * the corresponding query value (same merge rules as {@link RoleREST#addUsersAndGroups}).
+     * </p>
+     * <p>
+     * {@link MediaType#WILDCARD} is included in {@code @Consumes} so older clients that send no request entity
+     * (query parameters only) remain valid.
+     * </p>
+     */
     @PUT
     @Path("/api/roles/{id}/addUsersAndGroups")
-    @Consumes("application/json")
+    @Consumes({MediaType.APPLICATION_JSON, MediaType.WILDCARD})
     @Produces("application/json")
-    public RangerRole addUsersAndGroups(@PathParam("id") Long roleId, List<String> users, List<String> groups, Boolean isAdmin, @Context HttpServletRequest request) {
-        return roleREST.addUsersAndGroups(roleId, users, groups, isAdmin);
+    public RangerRole addUsersAndGroups(@PathParam("id") Long roleId, RoleUsersGroupsRequest body, @QueryParam("users") List<String> users, @QueryParam("groups") List<String> groups, @QueryParam("isAdmin") Boolean isAdmin, @Context HttpServletRequest request) {
+        return roleREST.addUsersAndGroups(roleId, users, groups, isAdmin, body);
     }
 
-    /*
-        This API is used to remove users and groups, without regard to their GRANT privilege, from this Role.
+    /**
+     * Removes listed users and groups from a role (regardless of GRANT on those members).
+     * <p>
+     * Preferred: JSON body {@code {"users": [...], "groups": [...]}} with {@code application/json}. Query parameters
+     * {@code users} and {@code groups} remain supported; merge rules are the same as for
+     * {@link #addUsersAndGroups(Long, org.apache.ranger.view.RoleUsersGroupsRequest, java.util.List, java.util.List, Boolean, javax.servlet.http.HttpServletRequest)}.
+     * </p>
      */
     @PUT
     @Path("/api/roles/{id}/removeUsersAndGroups")
-    @Consumes("application/json")
+    @Consumes({MediaType.APPLICATION_JSON, MediaType.WILDCARD})
     @Produces("application/json")
-    public RangerRole removeUsersAndGroups(@PathParam("id") Long roleId, List<String> users, List<String> groups, @Context HttpServletRequest request) {
-        return roleREST.removeUsersAndGroups(roleId, users, groups);
+    public RangerRole removeUsersAndGroups(@PathParam("id") Long roleId, RoleUsersGroupsRequest body, @QueryParam("users") List<String> users, @QueryParam("groups") List<String> groups, @Context HttpServletRequest request) {
+        return roleREST.removeUsersAndGroups(roleId, users, groups, body);
     }
 
-    /*
-        This API is used to remove GRANT privilege from listed users and groups.
+    /**
+     * Removes the GRANT (admin) privilege from the listed users and groups on this role; members stay on the role.
+     * <p>
+     * Preferred: JSON body {@code {"users": [...], "groups": [...]}} with {@code application/json}. Query parameters
+     * are still accepted for backward compatibility (same merge as {@link #addUsersAndGroups}).
+     * </p>
      */
     @PUT
     @Path("/api/roles/{id}/removeAdminFromUsersAndGroups")
-    @Consumes("application/json")
+    @Consumes({MediaType.APPLICATION_JSON, MediaType.WILDCARD})
     @Produces("application/json")
-    public RangerRole removeAdminFromUsersAndGroups(@PathParam("id") Long roleId, List<String> users, List<String> groups, @Context HttpServletRequest request) {
-        return roleREST.removeAdminFromUsersAndGroups(roleId, users, groups);
+    public RangerRole removeAdminFromUsersAndGroups(@PathParam("id") Long roleId, RoleUsersGroupsRequest body, @QueryParam("users") List<String> users, @QueryParam("groups") List<String> groups, @Context HttpServletRequest request) {
+        return roleREST.removeAdminFromUsersAndGroups(roleId, users, groups, body);
     }
 
     /*

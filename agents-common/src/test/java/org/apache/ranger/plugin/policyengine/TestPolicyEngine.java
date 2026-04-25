@@ -1166,6 +1166,9 @@ public class TestPolicyEngine {
                 reqContext.put(RangerAccessRequestUtil.KEY_CONTEXT_ALL_ACCESSTYPE_GROUPS, setOfAccessTypeGroups);
             }
 
+            // Match production preprocessing: resource matchers expand {USER} via token:USER in context
+            RangerAccessRequestUtil.setCurrentUserInContext(ret.getContext(), ret.getUser());
+
             return ret;
         }
     }

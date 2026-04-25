@@ -33,6 +33,7 @@ import org.apache.ranger.entity.XXPortalUser;
 import org.apache.ranger.entity.XXUser;
 import org.apache.ranger.ugsyncutil.model.GroupUserInfo;
 import org.apache.ranger.view.VXGroupUser;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
@@ -87,13 +88,15 @@ public class TestXGroupUserService {
     @Mock
     XXUserDao xXUserDao;
 
-    @InjectMocks
-    XGroupUserService svc;
-
     @Mock
-    BaseDao<XXGroupUser>                    entityDao;
+    BaseDao<XXGroupUser> entityDao;
     @Mock
     RangerTransactionSynchronizationAdapter txAdapter;
+
+    @BeforeEach
+    void wireEntityDao() {
+        xGroupUserService.entityDao = entityDao;
+    }
 
     @Test
     public void test1CreateXGroupUserWithOutLogin() {
@@ -175,17 +178,17 @@ public class TestXGroupUserService {
                 .when(txAdapter).executeOnTransactionCommit(any(Runnable.class));
 
         // inject the mocked BaseDao into service
-        BaseDao<XXGroupUser> previousDao = svc.entityDao;
-        svc.entityDao = entityDao;
+        BaseDao<XXGroupUser> previousDao = xGroupUserService.entityDao;
+        xGroupUserService.entityDao = entityDao;
         try {
-            svc.transactionSynchronizationAdapter = txAdapter;
+            xGroupUserService.transactionSynchronizationAdapter = txAdapter;
             Map<String, Long> users = new HashMap<>();
             users.put("u1", 11L);
             users.put("u2", 22L);
-            svc.createOrDeleteXGroupUsers(info, users);
+            xGroupUserService.createOrDeleteXGroupUsers(info, users);
             verify(entityDao).create(any(XXGroupUser.class));
         } finally {
-            svc.entityDao = previousDao;
+            xGroupUserService.entityDao = previousDao;
         }
     }
 

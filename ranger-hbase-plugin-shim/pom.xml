@@ -36,10 +36,23 @@
             <artifactId>gson</artifactId>
         </dependency>
         <dependency>
+            <groupId>javax.servlet</groupId>
+            <artifactId>javax.servlet-api</artifactId>
+            <version>${javax.servlet.version}</version>
+        </dependency>
+        <dependency>
             <groupId>org.apache.hbase</groupId>
             <artifactId>hbase-server</artifactId>
             <version>${hbase.version}</version>
             <exclusions>
+                <exclusion>
+                    <groupId>com.sun.jersey</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>com.sun.jersey.contribs</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
                 <exclusion>
                     <groupId>io.netty</groupId>
                     <artifactId>netty</artifactId>
@@ -47,6 +60,10 @@
                 <exclusion>
                     <groupId>io.netty</groupId>
                     <artifactId>netty-all</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>javax.servlet</groupId>
+                    <artifactId>javax.servlet-api</artifactId>
                 </exclusion>
                 <exclusion>
                     <groupId>jdk.tools</groupId>
