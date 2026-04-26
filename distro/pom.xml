@@ -28,28 +28,36 @@
     <name>Apache Ranger Distribution</name>
     <description>Apache Ranger Distribution</description>
 
-    <!--Add a dependency here to ensure this module is the final one built-->
     <dependencies>
         <dependency>
             <groupId>org.apache.ranger</groupId>
-            <artifactId>audit-consumer-hdfs</artifactId>
+            <artifactId>audit-dispatcher-hdfs</artifactId>
             <version>${project.version}</version>
-            <type>war</type>
-            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.ranger</groupId>
-            <artifactId>audit-consumer-solr</artifactId>
+            <artifactId>audit-dispatcher-solr</artifactId>
             <version>${project.version}</version>
-            <type>war</type>
-            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.ranger</groupId>
-            <artifactId>audit-server</artifactId>
+            <artifactId>ranger-audit-dest-hdfs</artifactId>
             <version>${project.version}</version>
-            <type>war</type>
-            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.ranger</groupId>
+            <artifactId>ranger-audit-dest-solr</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.ranger</groupId>
+            <artifactId>ranger-audit-dispatcher-common</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.ranger</groupId>
+            <artifactId>ranger-audit-server-common</artifactId>
+            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.ranger</groupId>
@@ -89,12 +97,6 @@
         </dependency>
         <dependency>
             <groupId>org.apache.ranger</groupId>
-            <artifactId>ranger-audit-common</artifactId>
-            <version>${project.version}</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.ranger</groupId>
             <artifactId>ranger-audit-dest-cloudwatch</artifactId>
             <version>${project.version}</version>
             <scope>provided</scope>
@@ -102,12 +104,6 @@
         <dependency>
             <groupId>org.apache.ranger</groupId>
             <artifactId>ranger-audit-dest-es</artifactId>
-            <version>${project.version}</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.ranger</groupId>
-            <artifactId>ranger-audit-dest-hdfs</artifactId>
             <version>${project.version}</version>
             <scope>provided</scope>
         </dependency>
@@ -125,8 +121,16 @@
         </dependency>
         <dependency>
             <groupId>org.apache.ranger</groupId>
-            <artifactId>ranger-audit-dest-solr</artifactId>
+            <artifactId>ranger-audit-dispatcher-app</artifactId>
             <version>${project.version}</version>
+            <type>war</type>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.ranger</groupId>
+            <artifactId>ranger-audit-ingestor</artifactId>
+            <version>${project.version}</version>
+            <type>war</type>
             <scope>provided</scope>
         </dependency>
         <dependency>
@@ -502,9 +506,8 @@
                                         <descriptor>src/main/assembly/plugin-sqoop.xml</descriptor>
                                         <descriptor>src/main/assembly/plugin-kylin.xml</descriptor>
                                         <descriptor>src/main/assembly/plugin-elasticsearch.xml</descriptor>
-                                        <descriptor>src/main/assembly/audit-server.xml</descriptor>
-                                        <descriptor>src/main/assembly/audit-consumer-solr.xml</descriptor>
-                                        <descriptor>src/main/assembly/audit-consumer-hdfs.xml</descriptor>
+                                        <descriptor>src/main/assembly/audit-ingestor.xml</descriptor>
+                                        <descriptor>src/main/assembly/audit-dispatcher.xml</descriptor>
                                         <descriptor>src/main/assembly/plugin-schema-registry.xml</descriptor>
                                         <descriptor>src/main/assembly/plugin-presto.xml</descriptor>
                                         <descriptor>src/main/assembly/plugin-trino.xml</descriptor>
@@ -1091,9 +1094,8 @@
                                         <descriptor>src/main/assembly/plugin-sqoop.xml</descriptor>
                                         <descriptor>src/main/assembly/plugin-kylin.xml</descriptor>
                                         <descriptor>src/main/assembly/plugin-elasticsearch.xml</descriptor>
-                                        <descriptor>src/main/assembly/audit-server.xml</descriptor>
-                                        <descriptor>src/main/assembly/audit-consumer-solr.xml</descriptor>
-                                        <descriptor>src/main/assembly/audit-consumer-hdfs.xml</descriptor>
+                                        <descriptor>src/main/assembly/audit-ingestor.xml</descriptor>
+                                        <descriptor>src/main/assembly/audit-dispatcher.xml</descriptor>
                                         <descriptor>src/main/assembly/plugin-schema-registry.xml</descriptor>
                                         <descriptor>src/main/assembly/plugin-presto.xml</descriptor>
                                         <descriptor>src/main/assembly/plugin-trino.xml</descriptor>

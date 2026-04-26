@@ -22,11 +22,13 @@ This directory contains shell scripts to start and stop the Ranger Audit Server 
 
 The Ranger Audit Server consists of three microservices:
 
-1. **ranger-audit-server-service** - Core audit server that receives audit events via REST API and produces them to Kafka
-2. **ranger-audit-consumer-solr** - Consumer service that reads from Kafka and indexes audits to Solr
-3. **ranger-audit-consumer-hdfs** - Consumer service that reads from Kafka and writes audits to HDFS/S3/Azure
+1. **ranger-audit-ingestor** - Core audit server that receives audit events via REST API and produces them to Kafka
+2. **ranger-audit-dispatcher-solr** - Dispatcher service that reads from Kafka and indexes audits to Solr
+3. **ranger-audit-dispatcher-hdfs** - Dispatcher service that reads from Kafka and writes audits to HDFS/S3/Azure
 
-Each service has its own `scripts` folder with start/stop scripts in its main directory.
+The codebase is organized into two main directories:
+- `audit-ingestor/`
+- `audit-dispatcher/` (contains a unified dispatcher application that dynamically loads specific dispatcher types)
 
 ## Prerequisites
 
@@ -39,8 +41,8 @@ Before running these scripts, ensure you have:
    mvn clean package -DskipTests
    ```
 3. **Kafka running** (required for all services)
-4. **Solr running** (required for Solr consumer)
-5. **HDFS/Hadoop running** (required for HDFS consumer)
+4. **Solr running** (required for Solr dispatcher)
+5. **HDFS/Hadoop running** (required for HDFS dispatcher)
 
 ## Quick Start - All Services
 
@@ -52,8 +54,8 @@ Before running these scripts, ensure you have:
 
 This script will start all three services in the correct order:
 1. Audit Server (waits 10 seconds)
-2. Solr Consumer (waits 5 seconds)
-3. HDFS Consumer
+2. Solr Dispatcher (waits 5 seconds)
+3. HDFS Dispatcher
 
 ### Stop All Services
 
@@ -71,40 +73,40 @@ Each service can also be started/stopped individually:
 
 ```bash
 # Start
-./ranger-audit-server-service/scripts/start-audit-server.sh
+./audit-ingestor/scripts/start-audit-ingestor.sh
 
 # Stop
-./ranger-audit-server-service/scripts/stop-audit-server.sh
+./audit-ingestor/scripts/stop-audit-ingestor.sh
 ```
 
 **Default Ports:** 7081 (HTTP), 7182 (HTTPS)
 **Health Check:** http://localhost:7081/api/audit/health
 
-### Solr Consumer
+### Solr Dispatcher
 
 ```bash
 # Start
-./ranger-audit-consumer-solr/scripts/start-consumer-solr.sh
+./audit-dispatcher/scripts/start-audit-dispatcher.sh solr
 
 # Stop
-./ranger-audit-consumer-solr/scripts/stop-consumer-solr.sh
+./audit-dispatcher/scripts/stop-audit-dispatcher.sh solr
 ```
 
 **Default Port:** 7091
-**Health Check:** http://localhost:7091/api/health
+**Health Check:** http://localhost:7091/api/health/ping
 
-### HDFS Consumer
+### HDFS Dispatcher
 
 ```bash
 # Start
-./ranger-audit-consumer-hdfs/scripts/start-consumer-hdfs.sh
+./audit-dispatcher/scripts/start-audit-dispatcher.sh hdfs
 
 # Stop
-./ranger-audit-consumer-hdfs/scripts/stop-consumer-hdfs.sh
+./audit-dispatcher/scripts/stop-audit-dispatcher.sh hdfs
 ```
 
 **Default Port:** 7092
-**Health Check:** http://localhost:7092/api/health
+**Health Check:** http://localhost:7092/api/health/ping
 
 ## Configuration
 
@@ -120,12 +122,12 @@ Each script supports the following environment variables:
 - `AUDIT_SERVER_OPTS` - Additional JVM options
 - `KERBEROS_ENABLED` - Enable Kerberos authentication (default: `false`)
 
-#### Consumers (HDFS and Solr)
-- `AUDIT_CONSUMER_HOME_DIR` - Home directory (default: `target/`)
-- `AUDIT_CONSUMER_CONF_DIR` - Configuration directory (default: `src/main/resources/conf/`)
-- `AUDIT_CONSUMER_LOG_DIR` - Log directory (default: `logs/`)
-- `AUDIT_CONSUMER_HEAP` - JVM heap settings (default: `-Xms512m -Xmx2g`)
-- `AUDIT_CONSUMER_OPTS` - Additional JVM options
+#### Dispatchers (HDFS and Solr)
+- `AUDIT_DISPATCHER_HOME_DIR` - Home directory (default: `target/`)
+- `AUDIT_DISPATCHER_CONF_DIR` - Configuration directory (default: `src/main/resources/conf/`)
+- `AUDIT_DISPATCHER_LOG_DIR` - Log directory (default: `logs/`)
+- `AUDIT_DISPATCHER_HEAP` - JVM heap settings (default: `-Xms512m -Xmx2g`)
+- `AUDIT_DISPATCHER_OPTS` - Additional JVM options
 - `KERBEROS_ENABLED` - Enable Kerberos authentication (default: `false`)
 
 ### Example with Custom Settings
@@ -135,7 +137,7 @@ Each script supports the following environment variables:
 export AUDIT_SERVER_HEAP="-Xms1g -Xmx4g"
 export AUDIT_SERVER_LOG_DIR="/var/log/ranger/range-audit-server"
 
-./ranger-audit-server-service/scripts/start-audit-server.sh
+./audit-ingestor/scripts/start-audit-ingestor.sh
 ```
 
 ## Log Files
@@ -143,31 +145,31 @@ export AUDIT_SERVER_LOG_DIR="/var/log/ranger/range-audit-server"
 Each service creates logs in its respective `logs/` directory (or custom location if set):
 
 - **Audit Server:**
-  - Application logs: `logs/ranger-audit-server.log`
+  - Application logs: `logs/ranger-audit-ingestor.log`
   - Catalina output: `logs/catalina.out`
-  - PID file: `logs/ranger-audit-server.pid`
+  - PID file: `logs/ranger-audit-ingestor.pid`
 
-- **Solr Consumer:**
-  - Application logs: `logs/ranger-audit-consumer-solr.log`
+- **Solr Dispatcher:**
+  - Application logs: `logs/ranger-audit-dispatcher.log`
   - Catalina output: `logs/catalina.out`
-  - PID file: `logs/ranger-audit-consumer-solr.pid`
+  - PID file: `logs/ranger-audit-dispatcher-solr.pid`
 
-- **HDFS Consumer:**
-  - Application logs: `logs/ranger-audit-consumer-hdfs.log`
+- **HDFS Dispatcher:**
+  - Application logs: `logs/ranger-audit-dispatcher.log`
   - Catalina output: `logs/catalina.out`
-  - PID file: `logs/ranger-audit-consumer-hdfs.pid`
+  - PID file: `logs/ranger-audit-dispatcher-hdfs.pid`
 
 ### Monitoring Logs
 
 ```bash
 # Tail audit server logs
-tail -f ranger-audit-server-service/logs/ranger-audit-server.log
+tail -f audit-ingestor/logs/ranger-audit-ingestor.log
 
-# Tail Solr consumer logs
-tail -f ranger-audit-consumer-solr/logs/ranger-audit-consumer-solr.log
+# Tail Solr dispatcher logs
+tail -f audit-dispatcher/logs/ranger-audit-dispatcher.log
 
-# Tail HDFS consumer logs
-tail -f ranger-audit-consumer-hdfs/logs/ranger-audit-consumer-hdfs.log
+# Tail HDFS dispatcher logs
+tail -f audit-dispatcher/logs/ranger-audit-dispatcher.log
 ```
 
 ### Enabling Debug Logging
@@ -175,7 +177,7 @@ tail -f ranger-audit-consumer-hdfs/logs/ranger-audit-consumer-hdfs.log
 To enable debug logging for troubleshooting, modify the `logback.xml` configuration file in the service's `conf/` directory:
 
 **For Audit Server:**
-Edit `ranger-audit-server-service/src/main/resources/conf/logback.xml` (or `/opt/ranger-audit-server/conf/logback.xml` in Docker):
+Edit `audit-ingestor/src/main/resources/conf/logback.xml` (or `/opt/ranger/audit-ingestor/conf/logback.xml` in Docker):
 
 ```xml
 <!-- Change the root logger level from INFO to DEBUG -->
@@ -191,7 +193,7 @@ Edit `ranger-audit-server-service/src/main/resources/conf/logback.xml` (or `/opt
 </logger>
 ```
 
-**For Consumers (HDFS/Solr):**
+**For Dispatchers (HDFS/Solr):**
 Similarly, edit the `logback.xml` in their respective `conf/` directories.
 
 **Available log levels:** `TRACE`, `DEBUG`, `INFO`, `WARN`, `ERROR`
@@ -210,8 +212,8 @@ After modifying the logback configuration, restart the service for changes to ta
 2. **Check for port conflicts:**
    ```bash
    lsof -i :7081  # Audit Server
-   lsof -i :7091  # Solr Consumer
-   lsof -i :7092  # HDFS Consumer
+   lsof -i :7091  # Solr Dispatcher
+   lsof -i :7092  # HDFS Dispatcher
    ```
 
 3. **Verify WAR file exists:**
@@ -237,7 +239,7 @@ kill <PID>
 kill -9 <PID>
 
 # Remove stale PID file
-rm -f logs/ranger-audit-server.pid
+rm -f logs/ranger-audit-ingestor.pid
 ```
 
 ### Java Not Found
@@ -256,9 +258,9 @@ java -version
 ### Kafka Connection Issues
 
 Check Kafka bootstrap servers configuration in:
-- `ranger-audit-server-service/src/main/resources/conf/ranger-audit-server-site.xml`
-- `ranger-audit-consumer-solr/src/main/resources/conf/ranger-audit-consumer-solr-site.xml`
-- `ranger-audit-consumer-hdfs/src/main/resources/conf/ranger-audit-consumer-hdfs-site.xml`
+- `audit-ingestor/src/main/resources/conf/ranger-audit-ingestor-site.xml`
+- `audit-dispatcher/dispatcher-solr/src/main/resources/conf/ranger-audit-dispatcher-solr-site.xml`
+- `audit-dispatcher/dispatcher-hdfs/src/main/resources/conf/ranger-audit-dispatcher-hdfs-site.xml`
 
 ## Architecture
 
@@ -285,7 +287,7 @@ Check Kafka bootstrap servers configuration in:
       ▼         ▼      ▼         ▼
 ┌──────────┐ ┌──────────┐ ┌──────────┐     ┌──────────┐
 │  Solr    │ │  HDFS    │ │  New     │ ... │   Nth    │
-│ Consumer │ │ Consumer │ │ Consumer │     │ Consumer │
+│ Dispatcher │ │ Dispatcher │ │ Dispatcher │     │ Dispatcher │
 │ (7091)   │ │ (7092)   │ │ (709N)   │     │ (709N+1) │
 └────┬─────┘ └────┬─────┘ └────┬─────┘     └────┬─────┘
      │            │            │                 │
@@ -300,221 +302,101 @@ Check Kafka bootstrap servers configuration in:
 
 To add a new audit destination (e.g., Elasticsearch, MongoDB, Cloud Storage, etc.), follow these steps:
 
-### 1. Create a New Consumer Module
+### 1. Create a New Dispatcher Module
 
-Create a new Maven module in the `ranger-audit-server` directory:
+Create a new Maven module in the `audit-server/audit-dispatcher` directory:
 
 ```bash
-cd ranger-audit-server
-mkdir ranger-audit-consumer-<destination>
-cd ranger-audit-consumer-<destination>
+cd audit-server/audit-dispatcher
+mkdir dispatcher-<destination>
+cd dispatcher-<destination>
 ```
 
-Create a `pom.xml` based on the existing consumers (Solr or HDFS). Key dependencies:
-- Spring Boot Starter
-- Spring Kafka
+Create a `pom.xml` based on the existing dispatchers (Solr or HDFS). Key dependencies:
+- `ranger-audit-dispatcher-common` (provided scope)
 - Your destination-specific client library (e.g., Elasticsearch client, MongoDB driver)
 
-### 2. Implement the Consumer Application
+### 2. Implement the Dispatcher Manager and Kafka Dispatcher
 
-Create the main Spring Boot application class:
+Create a `DispatcherManager` class that implements the singleton pattern and a `KafkaDispatcher` class that extends `AuditDispatcherBase`:
 
 ```java
-package org.apache.ranger.audit.consumer;
+package org.apache.ranger.audit.dispatcher;
 
-import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
-
-@SpringBootApplication
-public class YourDestinationConsumerApplication {
-    public static void main(String[] args) {
-        SpringApplication.run(YourDestinationConsumerApplication.class, args);
-    }
+public class YourDestinationDispatcherManager {
+    // Implement singleton and initialization logic
+    // See SolrDispatcherManager for reference
 }
 ```
 
-### 3. Create the Kafka Consumer
-
-Implement a Kafka consumer to read audit events:
-
 ```java
-package org.apache.ranger.audit.consumer;
+package org.apache.ranger.audit.dispatcher.kafka;
 
-import org.springframework.kafka.annotation.KafkaListener;
-import org.springframework.stereotype.Service;
-
-@Service
-public class YourDestinationConsumer {
-    @KafkaListener(topics = "${ranger.audit.kafka.topic:ranger_audits}", groupId = "${ranger.audit.kafka.consumer.group:audit-consumer-your-destination}")
-    public void consumeAudit(String auditEvent) {
-        // Parse audit event
-        // Transform if needed
-        // Write to your destination
-    }
+public class AuditYourDestinationDispatcher extends AuditDispatcherBase {
+    // Implement consume logic
+    // See AuditSolrDispatcher for reference
 }
 ```
 
-### 4. Add Configuration Files
+### 3. Add Configuration Files
 
 Create configuration files in `src/main/resources/conf/`:
 
-**ranger-audit-consumer-<destination>-site.xml:**
+**ranger-audit-dispatcher-<destination>-site.xml:**
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration>
     <property>
-        <name>ranger.audit.kafka.bootstrap.servers</name>
-        <value>localhost:9092</value>
+        <name>ranger.audit.dispatcher.type</name>
+        <value>{your-destination}</value>
     </property>
     <property>
-        <name>ranger.audit.kafka.topic</name>
-        <value>ranger_audits</value>
-    </property>
-    <property>
-        <name>ranger.audit.your-destination.url</name>
-        <value>http://localhost:PORT</value>
+        <name>ranger.audit.dispatcher.{your-destination}.class</name>
+        <value>org.apache.ranger.audit.dispatcher.{your-destination}DispatcherManager</value>
     </property>
     <!-- Add destination-specific configurations -->
 </configuration>
 ```
 
-**application.yml:**
-```yaml
-server:
-  port: 709X  # Choose next available port (e.g., 7093, 7094...)
+### 4. Update Parent POM and Assembly
 
-spring:
-  kafka:
-    bootstrap-servers: ${ranger.audit.kafka.bootstrap.servers:localhost:9092}
-    consumer:
-      group-id: audit-consumer-your-destination
-      auto-offset-reset: earliest
-      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
-      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
-
-# Add destination-specific Spring configurations
-```
-
-### 5. Create Start/Stop Scripts
-
-Create a `scripts` directory with start/stop scripts:
-
-**scripts/start-consumer-<destination>.sh:**
-```bash
-#!/bin/bash
-
-SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-SERVICE_DIR="$(dirname "$SCRIPT_DIR")"
-
-# Environment variables
-AUDIT_CONSUMER_HOME_DIR="${AUDIT_CONSUMER_HOME_DIR:-$SERVICE_DIR/target}"
-AUDIT_CONSUMER_CONF_DIR="${AUDIT_CONSUMER_CONF_DIR:-$SERVICE_DIR/src/main/resources/conf}"
-AUDIT_CONSUMER_LOG_DIR="${AUDIT_CONSUMER_LOG_DIR:-$SERVICE_DIR/logs}"
-AUDIT_CONSUMER_HEAP="${AUDIT_CONSUMER_HEAP:--Xms512m -Xmx2g}"
-AUDIT_CONSUMER_OPTS="${AUDIT_CONSUMER_OPTS:-}"
-KERBEROS_ENABLED="${KERBEROS_ENABLED:-false}"
-
-# Find WAR file
-WAR_FILE=$(find "$AUDIT_CONSUMER_HOME_DIR" -name "ranger-audit-consumer-<destination>*.war" | head -1)
-
-if [ -z "$WAR_FILE" ]; then
-    echo "Error: WAR file not found in $AUDIT_CONSUMER_HOME_DIR"
-    exit 1
-fi
-
-# Start service
-java $AUDIT_CONSUMER_HEAP $AUDIT_CONSUMER_OPTS \
-    -Dlog.dir="$AUDIT_CONSUMER_LOG_DIR" \
-    -Dconf.dir="$AUDIT_CONSUMER_CONF_DIR" \
-    -jar "$WAR_FILE" > "$AUDIT_CONSUMER_LOG_DIR/catalina.out" 2>&1 &
-
-echo $! > "$AUDIT_CONSUMER_LOG_DIR/ranger-audit-consumer-<destination>.pid"
-echo "Started Ranger Audit Consumer (<destination>) with PID: $(cat $AUDIT_CONSUMER_LOG_DIR/ranger-audit-consumer-<destination>.pid)"
-```
-
-**scripts/stop-consumer-<destination>.sh:**
-```bash
-#!/bin/bash
-
-SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-SERVICE_DIR="$(dirname "$SCRIPT_DIR")"
-AUDIT_CONSUMER_LOG_DIR="${AUDIT_CONSUMER_LOG_DIR:-$SERVICE_DIR/logs}"
-PID_FILE="$AUDIT_CONSUMER_LOG_DIR/ranger-audit-consumer-<destination>.pid"
-
-if [ -f "$PID_FILE" ]; then
-    PID=$(cat "$PID_FILE")
-    kill "$PID"
-    echo "Stopped Ranger Audit Consumer (<destination>) with PID: $PID"
-    rm -f "$PID_FILE"
-else
-    echo "PID file not found. Service may not be running."
-fi
-```
-
-Make scripts executable:
-```bash
-chmod +x scripts/*.sh
-```
-
-### 6. Update Parent POM
-
-Add the new module to the parent `ranger-audit-server/pom.xml`:
+Add the new module to the parent `audit-server/audit-dispatcher/pom.xml`:
 
 ```xml
 <modules>
-    <module>ranger-audit-server-service</module>
-    <module>ranger-audit-consumer-solr</module>
-    <module>ranger-audit-consumer-hdfs</module>
-    <module>ranger-audit-consumer-<destination></module>
+    <module>dispatcher-common</module>
+    <module>dispatcher-solr</module>
+    <module>dispatcher-hdfs</module>
+    <module>dispatcher-<destination></module>
+    <module>dispatcher-app</module>
 </modules>
 ```
 
-### 7. Update Start/Stop All Scripts
+Update `distro/src/main/assembly/audit-dispatcher.xml` to include the new module's JARs in `lib/dispatchers/<destination>`.
 
-Add your consumer to `scripts/start-all-services.sh`:
-
-```bash
-# Start Your Destination Consumer
-echo "Starting Ranger Audit Consumer (<destination>)..."
-cd "$BASE_DIR/ranger-audit-consumer-<destination>"
-./scripts/start-consumer-<destination>.sh
-echo "Waiting 5 seconds for consumer to initialize..."
-sleep 5
-```
-
-Add to `scripts/stop-all-services.sh`:
+### 5. Build and Test
 
 ```bash
-# Stop Your Destination Consumer
-echo "Stopping Ranger Audit Consumer (<destination>)..."
-cd "$BASE_DIR/ranger-audit-consumer-<destination>"
-./scripts/stop-consumer-<destination>.sh
-```
-
-### 8. Build and Test
-
-```bash
-# Build the new consumer
-cd ranger-audit-consumer-<destination>
+# Build the project
 mvn clean package -DskipTests
 
 # Test individually
-./scripts/start-consumer-<destination>.sh
+./audit-dispatcher/scripts/start-audit-dispatcher.sh <destination>
 
-# Check health (implement a health endpoint)
-curl http://localhost:709X/api/health
+# Check health
+curl http://localhost:709X/api/health/ping
 
 # View logs
-tail -f logs/ranger-audit-consumer-<destination>.log
+tail -f audit-dispatcher/logs/ranger-audit-dispatcher.log
 
 # Stop when done
-./scripts/stop-consumer-<destination>.sh
+./audit-dispatcher/scripts/stop-audit-dispatcher.sh <destination>
 ```
 
-### 9. Add Documentation
+### 6. Add Documentation
 
 Update this README to include:
-- The new consumer in the "Overview" section
+- The new dispatcher in the "Overview" section
 - Individual start/stop commands
 - Default port and health check endpoint
 - Configuration details specific to the destination
@@ -527,13 +409,10 @@ Update this README to include:
 
 ```bash
 # Build specific service
-cd ranger-audit-server-service
+cd audit-ingestor
 mvn clean package
 
-cd ../ranger-audit-consumer-solr
-mvn clean package
-
-cd ../ranger-audit-consumer-hdfs
+cd ../audit-dispatcher
 mvn clean package
 ```
 
@@ -543,7 +422,7 @@ Add debug options to the `OPTS` environment variable:
 
 ```bash
 export AUDIT_SERVER_OPTS="-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005"
-./ranger-audit-server-service/scripts/start-audit-server.sh
+./audit-ingestor/scripts/start-audit-ingestor.sh
 ```
 Then attach your IDE debugger to port 5005.
 
