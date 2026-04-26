@@ -261,6 +261,8 @@ public class HiveClient extends BaseClient implements Closeable {
 
         List<String> ret = new ArrayList<>();
 
+        validateSqlIdentifier(databaseMatching, "database pattern");
+
         try {
             if (hiveClient != null) {
                 List<String> hiveDBList;
@@ -303,20 +305,15 @@ public class HiveClient extends BaseClient implements Closeable {
         List<String> ret = new ArrayList<>();
 
         if (con != null) {
-            Statement stat = null;
-            ResultSet rs   = null;
-            String    sql  = "show databases";
-
-            if (databaseMatching != null && !databaseMatching.isEmpty()) {
-                sql = sql + " like \"" + databaseMatching + "\"";
-            }
+            ResultSet rs = null;
 
             try {
-                stat = con.createStatement();
-                rs   = stat.executeQuery(sql);
+                validateSqlIdentifier(databaseMatching, "database pattern");
+                String schemaPattern = convertToSqlPattern(databaseMatching);
+                rs = con.getMetaData().getSchemas(null, schemaPattern);
 
                 while (rs.next()) {
-                    String dbName = rs.getString(1);
+                    String dbName = rs.getString("TABLE_SCHEM");
 
                     if (dbList != null && dbList.contains(dbName)) {
                         continue;
@@ -325,7 +322,7 @@ public class HiveClient extends BaseClient implements Closeable {
                     ret.add(dbName);
                 }
             } catch (SQLTimeoutException sqlt) {
-                String          msgDesc      = "Time Out, Unable to execute SQL [" + sql + "].";
+                String          msgDesc      = "Time Out, Unable to retrieve database list.";
                 HadoopException hdpException = new HadoopException(msgDesc, sqlt);
 
                 hdpException.generateResponseDataMap(false, getMessage(sqlt), msgDesc + ERR_MSG, null, null);
@@ -334,7 +331,7 @@ public class HiveClient extends BaseClient implements Closeable {
 
                 throw hdpException;
             } catch (SQLException sqle) {
-                String          msgDesc      = "Unable to execute SQL [" + sql + "].";
+                String          msgDesc      = "Unable to retrieve database list.";
                 HadoopException hdpException = new HadoopException(msgDesc, sqle);
 
                 hdpException.generateResponseDataMap(false, getMessage(sqle), msgDesc + ERR_MSG, null, null);
@@ -342,9 +339,10 @@ public class HiveClient extends BaseClient implements Closeable {
                 LOG.debug("<== HiveClient.getDBList() Error : ", sqle);
 
                 throw hdpException;
+            }  catch (HadoopException he) {
+                throw he;
             } finally {
                 close(rs);
-                close(stat);
             }
         }
 
@@ -358,8 +356,11 @@ public class HiveClient extends BaseClient implements Closeable {
 
         List<String> ret = new ArrayList<>();
 
+        validateSqlIdentifier(tableNameMatching, "table pattern");
+
         if (hiveClient != null && dbList != null && !dbList.isEmpty()) {
             for (String dbName : dbList) {
+                validateSqlIdentifier(dbName, "database name");
                 try {
                     List<String> hiveTblList = hiveClient.getTables(dbName, tableNameMatching);
 
@@ -394,55 +395,31 @@ public class HiveClient extends BaseClient implements Closeable {
         List<String> ret = new ArrayList<>();
 
         if (con != null) {
-            Statement stat = null;
-            ResultSet rs   = null;
-            String   sql   = null;
+            ResultSet rs = null;
 
             try {
+                validateSqlIdentifier(tableNameMatching, "table pattern");
                 if (dbList != null && !dbList.isEmpty()) {
                     for (String db : dbList) {
-                        sql = "use " + db;
+                        validateSqlIdentifier(db, "database name");
+                        String tablePattern = convertToSqlPattern(tableNameMatching);
+                        rs = con.getMetaData().getTables(null, db, tablePattern, new String[] {"TABLE", "VIEW"});
 
-                        try {
-                            stat = con.createStatement();
+                        while (rs.next()) {
+                            String tblName = rs.getString("TABLE_NAME");
 
-                            stat.execute(sql);
-                        } finally {
-                            close(stat);
-
-                            stat = null;
-                        }
-
-                        sql = "show tables ";
-
-                        if (tableNameMatching != null && !tableNameMatching.isEmpty()) {
-                            sql = sql + " like \"" + tableNameMatching + "\"";
-                        }
-
-                        try {
-                            stat = con.createStatement();
-                            rs   = stat.executeQuery(sql);
-
-                            while (rs.next()) {
-                                String tblName = rs.getString(1);
-
-                                if (tblList != null && tblList.contains(tblName)) {
-                                    continue;
-                                }
-
-                                ret.add(tblName);
+                            if (tblList != null && tblList.contains(tblName)) {
+                                continue;
                             }
-                        } finally {
-                            close(rs);
-                            close(stat);
 
-                            rs   = null;
-                            stat = null;
+                            ret.add(tblName);
                         }
+                        close(rs);
+                        rs = null;
                     }
                 }
             } catch (SQLTimeoutException sqlt) {
-                String          msgDesc      = "Time Out, Unable to execute SQL [" + sql + "].";
+                String          msgDesc      = "Time Out, Unable to retrieve table list.";
                 HadoopException hdpException = new HadoopException(msgDesc, sqlt);
 
                 hdpException.generateResponseDataMap(false, getMessage(sqlt), msgDesc + ERR_MSG, null, null);
@@ -451,7 +428,7 @@ public class HiveClient extends BaseClient implements Closeable {
 
                 throw hdpException;
             } catch (SQLException sqle) {
-                String          msgDesc      = "Unable to execute SQL [" + sql + "].";
+                String          msgDesc      = "Unable to retrieve table list.";
                 HadoopException hdpException = new HadoopException(msgDesc, sqle);
 
                 hdpException.generateResponseDataMap(false, getMessage(sqle), msgDesc + ERR_MSG, null, null);
@@ -459,6 +436,10 @@ public class HiveClient extends BaseClient implements Closeable {
                 LOG.debug("<== HiveClient.getTblList() Error : ", sqle);
 
                 throw hdpException;
+            } catch (HadoopException he) {
+                throw he;
+            } finally {
+                close(rs);
             }
         }
 
@@ -473,13 +454,17 @@ public class HiveClient extends BaseClient implements Closeable {
         List<String> ret                     = new ArrayList<>();
         String       columnNameMatchingRegEx = null;
 
+        validateSqlIdentifier(columnNameMatching, "column pattern");
+
         if (columnNameMatching != null && !columnNameMatching.isEmpty()) {
             columnNameMatchingRegEx = columnNameMatching;
         }
 
         if (hiveClient != null && dbList != null && !dbList.isEmpty() && tblList != null && !tblList.isEmpty()) {
             for (String db : dbList) {
+                validateSqlIdentifier(db, "database name");
                 for (String tbl : tblList) {
+                    validateSqlIdentifier(tbl, "table name");
                     try {
                         List<FieldSchema> hiveSch = hiveClient.getFields(db, tbl);
 
@@ -529,30 +514,20 @@ public class HiveClient extends BaseClient implements Closeable {
                 columnNameMatchingRegEx = columnNameMatching;
             }
 
-            Statement stat = null;
-            ResultSet rs   = null;
-            String    sql  = null;
+            ResultSet rs = null;
 
-            if (dbList != null && !dbList.isEmpty() && tblList != null && !tblList.isEmpty()) {
-                for (String db : dbList) {
-                    for (String tbl : tblList) {
-                        try {
-                            sql = "use " + db;
-
-                            try {
-                                stat = con.createStatement();
-
-                                stat.execute(sql);
-                            } finally {
-                                close(stat);
-                            }
-
-                            sql  = "describe  " + tbl;
-                            stat = con.createStatement();
-                            rs   = stat.executeQuery(sql);
+            try {
+                validateSqlIdentifier(columnNameMatching, "column pattern");
+                if (dbList != null && !dbList.isEmpty() && tblList != null && !tblList.isEmpty()) {
+                    for (String db : dbList) {
+                        validateSqlIdentifier(db, "database name");
+                        for (String tbl : tblList) {
+                            validateSqlIdentifier(tbl, "table name");
+                            String columnPattern = convertToSqlPattern(columnNameMatching);
+                            rs = con.getMetaData().getColumns(null, db, tbl, columnPattern);
 
                             while (rs.next()) {
-                                String columnName = rs.getString(1);
+                                String columnName = rs.getString("COLUMN_NAME");
 
                                 if (colList != null && colList.contains(columnName)) {
                                     continue;
@@ -564,30 +539,33 @@ public class HiveClient extends BaseClient implements Closeable {
                                     ret.add(columnName);
                                 }
                             }
-                        } catch (SQLTimeoutException sqlt) {
-                            String          msgDesc      = "Time Out, Unable to execute SQL [" + sql + "].";
-                            HadoopException hdpException = new HadoopException(msgDesc, sqlt);
-
-                            hdpException.generateResponseDataMap(false, getMessage(sqlt), msgDesc + ERR_MSG, null, null);
-
-                            LOG.debug("<== HiveClient.getClmList() Error : ", sqlt);
-
-                            throw hdpException;
-                        } catch (SQLException sqle) {
-                            String          msgDesc      = "Unable to execute SQL [" + sql + "].";
-                            HadoopException hdpException = new HadoopException(msgDesc, sqle);
-
-                            hdpException.generateResponseDataMap(false, getMessage(sqle), msgDesc + ERR_MSG, null, null);
-
-                            LOG.debug("<== HiveClient.getClmList() Error : ", sqle);
-
-                            throw hdpException;
-                        } finally {
                             close(rs);
-                            close(stat);
+                            rs = null;
                         }
                     }
                 }
+            } catch (SQLTimeoutException sqlt) {
+                String          msgDesc      = "Time Out, Unable to retrieve column list.";
+                HadoopException hdpException = new HadoopException(msgDesc, sqlt);
+
+                hdpException.generateResponseDataMap(false, getMessage(sqlt), msgDesc + ERR_MSG, null, null);
+
+                LOG.debug("<== HiveClient.getClmList() Error : ", sqlt);
+
+                throw hdpException;
+            } catch (SQLException sqle) {
+                String          msgDesc      = "Unable to retrieve column list.";
+                HadoopException hdpException = new HadoopException(msgDesc, sqle);
+
+                hdpException.generateResponseDataMap(false, getMessage(sqle), msgDesc + ERR_MSG, null, null);
+
+                LOG.debug("<== HiveClient.getClmList() Error : ", sqle);
+
+                throw hdpException;
+            } catch (HadoopException he) {
+                throw he;
+            } finally {
+                close(rs);
             }
         }
 

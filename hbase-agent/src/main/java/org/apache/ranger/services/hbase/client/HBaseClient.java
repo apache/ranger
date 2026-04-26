@@ -191,6 +191,12 @@ public class HBaseClient extends BaseClient {
             ret = Subject.doAs(subj, new PrivilegedAction<List<String>>() {
                 @Override
                 public List<String> run() {
+                    String wildcard = tableNameMatching;
+                    if (wildcard != null) {
+                        wildcard = wildcard.replace(".*", "*");
+                    }
+                    validateWildcardPattern(wildcard, "table pattern");
+                    String safeTablePattern = convertWildcardToRegex(wildcard);
                     List<String> tableList = new ArrayList<>();
                     Admin        admin     = null;
 
@@ -205,8 +211,7 @@ public class HBaseClient extends BaseClient {
                             LOG.info("getTableList: no exception: HbaseAvailability true");
 
                             admin = conn.getAdmin();
-
-                            List<TableDescriptor> htds = admin.listTableDescriptors(Pattern.compile(tableNameMatching));
+                            List<TableDescriptor> htds = admin.listTableDescriptors(Pattern.compile(safeTablePattern));
 
                             if (htds != null) {
                                 for (TableDescriptor htd : htds) {
@@ -240,6 +245,8 @@ public class HBaseClient extends BaseClient {
                         LOG.error(msgDesc + mnre);
 
                         throw hdpException;
+                    } catch (HadoopException he) {
+                        throw he;
                     } catch (IOException io) {
                         String          msgDesc      = "getTableList: Unable to get HBase table List for [repository:" + getConfigHolder().getDatasourceName() + ",table-match:" + tableNameMatching + "].";
                         HadoopException hdpException = new HadoopException(msgDesc, io);
@@ -291,14 +298,18 @@ public class HBaseClient extends BaseClient {
 
                     @Override
                     public List<String> run() {
+                        String wildcard = columnFamilyMatching;
+                        if (wildcard != null) {
+                            wildcard = wildcard.replace(".*", "*");
+                        }
+                        validateWildcardPattern(wildcard, "column family pattern");
+                        String safeColumnPattern = convertWildcardToRegex(wildcard);
                         List<String> colfList = new ArrayList<>();
                         Admin        admin    = null;
 
                         try {
                             LOG.info("getColumnFamilyList: setting config values from client");
-
                             setClientConfigValues(conf);
-
                             LOG.info("getColumnFamilyList: checking HbaseAvailability with the new config");
 
                             try (Connection conn = ConnectionFactory.createConnection(conf)) {
@@ -314,8 +325,7 @@ public class HBaseClient extends BaseClient {
                                         if (htd != null) {
                                             for (ColumnFamilyDescriptor hcd : htd.getColumnFamilies()) {
                                                 String colf = hcd.getNameAsString();
-
-                                                if (colf.matches(columnFamilyMatching)) {
+                                                if (colf.matches(safeColumnPattern)) {
                                                     if (existingColumnFamilies != null && existingColumnFamilies.contains(colf)) {
                                                         continue;
                                                     } else {
@@ -345,6 +355,8 @@ public class HBaseClient extends BaseClient {
                             LOG.error(msgDesc + mnre);
 
                             throw hdpException;
+                        } catch (HadoopException he) {
+                            throw he;
                         } catch (IOException io) {
                             String          msgDesc      = "getColumnFamilyList: Unable to get HBase ColumnFamilyList for [repository:" + getConfigHolder().getDatasourceName() + ",table:" + tblName + ", table-match:" + columnFamilyMatching + "] ";
                             HadoopException hdpException = new HadoopException(msgDesc, io);

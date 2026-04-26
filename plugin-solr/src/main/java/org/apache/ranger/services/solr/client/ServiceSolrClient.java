@@ -418,10 +418,10 @@ public class ServiceSolrClient {
     }
 
     private List<String> getFieldList(String collection, List<String> ignoreFieldList) throws Exception {
-        // TODO: Best is to get the collections based on the collection value which could contain wild cards
         String queryStr = "";
 
         if (collection != null && !collection.isEmpty()) {
+            validateResourceName(collection, "collection name");
             queryStr += "/" + collection;
         }
 
@@ -616,6 +616,34 @@ public class ServiceSolrClient {
             }
         } catch (IOException | SecurityException ioe) {
             throw createException("Unable to login to Hadoop environment [" + serviceName + "]", ioe);
+        }
+    }
+
+    private void validateResourceName(String resourceName, String resourceType) {
+        if (resourceName == null) {
+            return;
+        }
+
+        if (resourceName.contains("..") || resourceName.contains("//") || resourceName.contains("\\")) {
+            String          msgDesc      = "Invalid " + resourceType + ": [" + resourceName + "]. Path traversal patterns are not allowed.";
+            HadoopException hdpException = new HadoopException(msgDesc);
+
+            hdpException.generateResponseDataMap(false, msgDesc, msgDesc + RangerSolrConstants.errMessage, null, null);
+
+            LOG.error(msgDesc);
+
+            throw hdpException;
+        }
+
+        if (!resourceName.matches("^[a-zA-Z0-9_.*\\-]+$")) {
+            String          msgDesc      = "Invalid " + resourceType + ": [" + resourceName + "]. Only alphanumeric characters, dots, underscores, hyphens, and wildcards are allowed.";
+            HadoopException hdpException = new HadoopException(msgDesc);
+
+            hdpException.generateResponseDataMap(false, msgDesc, msgDesc + RangerSolrConstants.errMessage, null, null);
+
+            LOG.error(msgDesc);
+
+            throw hdpException;
         }
     }
 
