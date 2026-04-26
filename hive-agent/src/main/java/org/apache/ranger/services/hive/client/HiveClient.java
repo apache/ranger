@@ -674,6 +674,7 @@ public class HiveClient extends BaseClient implements Closeable {
             String     driverClassName = prop.getProperty("jdbc.driverClassName");
             String     url             = prop.getProperty("jdbc.url");
 
+            JdbcUrlValidator.validate(url);
             if (driverClassName != null) {
                 try {
                     Driver driver = (Driver) Class.forName(driverClassName).newInstance();
