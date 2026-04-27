@@ -46,7 +46,6 @@ import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.SQLTimeoutException;
-import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -574,7 +573,7 @@ public class HiveClient extends BaseClient implements Closeable {
         return ret;
     }
 
-    private void close(Statement aStat) {
+    /*private void close(Statement aStat) {
         try {
             if (aStat != null) {
                 aStat.close();
@@ -582,7 +581,7 @@ public class HiveClient extends BaseClient implements Closeable {
         } catch (SQLException e) {
             LOG.error("Unable to close SQL statement", e);
         }
-    }
+    }*/
 
     private void close(ResultSet aResultSet) {
         try {
