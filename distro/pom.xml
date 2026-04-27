@@ -509,6 +509,7 @@
                                         <descriptor>src/main/assembly/plugin-presto.xml</descriptor>
                                         <descriptor>src/main/assembly/plugin-trino.xml</descriptor>
                                         <descriptor>src/main/assembly/sample-client.xml</descriptor>
+                                        <descriptor>src/main/assembly/liquibase-upgrade.xml</descriptor>
                                     </descriptors>
                                 </configuration>
                             </execution>
@@ -1098,6 +1099,7 @@
                                         <descriptor>src/main/assembly/plugin-presto.xml</descriptor>
                                         <descriptor>src/main/assembly/plugin-trino.xml</descriptor>
                                         <descriptor>src/main/assembly/sample-client.xml</descriptor>
+                                        <descriptor>src/main/assembly/liquibase-upgrade.xml</descriptor>
                                     </descriptors>
                                 </configuration>
                             </execution>
