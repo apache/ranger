@@ -38,9 +38,11 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -450,7 +452,15 @@ public class AuditHDFSDispatcher extends AuditDispatcherBase {
         }
 
         private void processRecordBatch(ConsumerRecords<String, String> records) {
+            Set<TopicPartition> failedPartitions = new HashSet<>();
+
             for (ConsumerRecord<String, String> record : records) {
+                TopicPartition partition = new TopicPartition(record.topic(), record.partition());
+
+                if (failedPartitions.contains(partition)) {
+                    continue; // Skip remaining records for this partition in the current batch
+                }
+
                 try {
                     LOG.debug("HDFS worker '{}' consumed: partition={}, key={}, offset={}",
                             workerId, record.partition(), record.key(), record.offset());
@@ -460,16 +470,32 @@ public class AuditHDFSDispatcher extends AuditDispatcherBase {
                     processMessage(record.value(), record.key());
 
                     // Track offset for manual commit strategies
-                    TopicPartition partition = new TopicPartition(record.topic(), record.partition());
                     pendingOffsets.put(partition, new OffsetAndMetadata(record.offset() + 1));
                     messagesProcessedSinceLastCommit.incrementAndGet();
                 } catch (Exception e) {
                     LOG.error("Error processing message in HDFS worker '{}': partition={}, key={}, offset={}",
                             workerId, record.partition(), record.key(), record.offset(), e);
 
-                    // On error, track offset to prevent reprocessing
-                    TopicPartition partition = new TopicPartition(record.topic(), record.partition());
+                    // On error, track the offset of the failed message so we retry it
                     pendingOffsets.put(partition, new OffsetAndMetadata(record.offset()));
+
+                    // Seek the consumer back to the failed offset so it is re-fetched in the next poll
+                    try {
+                        workerDispatcher.seek(partition, record.offset());
+                    } catch (Exception seekEx) {
+                        LOG.error("Failed to seek to offset {} for partition {} after processing error", 
+                                record.offset(), partition, seekEx);
+                    }
+
+                    // Add sleep to prevent frequent polling when HDFS is completely down
+                    try {
+                        Thread.sleep(5000);
+                    } catch (InterruptedException ie) {
+                        Thread.currentThread().interrupt();
+                    }
+
+                    // Mark this partition as failed so we don't process subsequent records for it in this batch
+                    failedPartitions.add(partition);
                 }
             }
         }

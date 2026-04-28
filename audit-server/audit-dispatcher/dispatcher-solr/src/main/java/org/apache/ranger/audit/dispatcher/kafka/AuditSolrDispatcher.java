@@ -324,11 +324,37 @@ public class AuditSolrDispatcher extends AuditDispatcherBase {
                         workerId, auditBatch.size(), e);
 
                 // On batch error, track offsets up to the first message to avoid reprocessing
-                // (Note: This is a simplistic approach - could be enhanced to track last successful offset)
+                // We use seek to ensure Kafka re-delivers this exact batch
                 if (!recordList.isEmpty()) {
-                    ConsumerRecord<String, String> firstRecord = recordList.get(0);
-                    TopicPartition partition = new TopicPartition(firstRecord.topic(), firstRecord.partition());
-                    pendingOffsets.put(partition, new OffsetAndMetadata(firstRecord.offset()));
+                    // Because records could span multiple partitions, we must track the first 
+                    // offset and issue a seek for EVERY partition present in this batch.
+                    Map<TopicPartition, Long> firstOffsets = new HashMap<>();
+
+                    for (ConsumerRecord<String, String> record : recordList) {
+                        TopicPartition partition = new TopicPartition(record.topic(), record.partition());
+                        firstOffsets.putIfAbsent(partition, record.offset());
+                    }
+
+                    for (Map.Entry<TopicPartition, Long> entry : firstOffsets.entrySet()) {
+                        TopicPartition partition = entry.getKey();
+                        Long firstOffset = entry.getValue();
+
+                        pendingOffsets.put(partition, new OffsetAndMetadata(firstOffset));
+
+                        try {
+                            workerDispatcher.seek(partition, firstOffset);
+                        } catch (Exception seekEx) {
+                            LOG.error("Failed to seek to offset {} for partition {} after Solr batch error", 
+                                    firstOffset, partition, seekEx);
+                        }
+                    }
+
+                    // Add sleep to prevent frequent polling when Solr is completely down
+                    try {
+                        Thread.sleep(5000);
+                    } catch (InterruptedException ie) {
+                        Thread.currentThread().interrupt();
+                    }
                 }
             }
         }
