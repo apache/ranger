@@ -13,47 +13,53 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-ARG RANGER_DB_TYPE=postgres
 ARG RANGER_BASE_IMAGE=apache/ranger-base
 ARG RANGER_BASE_VERSION=20260123-2-8
 
 FROM ${RANGER_BASE_IMAGE}:${RANGER_BASE_VERSION} AS ranger
 
 ARG RANGER_VERSION
-ARG RANGER_DB_TYPE
 ARG TARGETARCH
 
-COPY ./dist/ranger-${RANGER_VERSION}-admin.tar.gz     /home/ranger/dist/
+# JDBC jar filenames are defined in the image and reused by ranger.sh at runtime.
+ENV RANGER_JDBC_POSTGRES_JAR=postgresql-42.2.16.jre7.jar \
+    RANGER_JDBC_MYSQL_JAR=mysql-connector-java-8.0.28.jar \
+    RANGER_JDBC_ORACLE_JAR=ojdbc8.jar \
+    RANGER_JDBC_MSSQL_JAR=mssql-jdbc-12.8.1.jre8.jar \
+    RANGER_JDBC_LOG4JDBC_JAR=log4jdbc-1.2.jar
+
+COPY ./downloads/${RANGER_JDBC_POSTGRES_JAR}          ${RANGER_DIST}/
+COPY ./downloads/${RANGER_JDBC_MYSQL_JAR}             ${RANGER_DIST}/
+COPY ./downloads/${RANGER_JDBC_LOG4JDBC_JAR}          ${RANGER_DIST}/
+COPY ./downloads/${RANGER_JDBC_ORACLE_JAR}            ${RANGER_DIST}/
+COPY ./downloads/${RANGER_JDBC_MSSQL_JAR}             ${RANGER_DIST}/
+COPY ./dist/ranger-${RANGER_VERSION}-admin.tar.gz     ${RANGER_DIST}/
+
 COPY ./scripts/admin/ranger.sh                        ${RANGER_SCRIPTS}/
-COPY ./scripts/admin/create-ranger-services.py        ${RANGER_SCRIPTS}/
+COPY ./scripts/admin/user_password_bootstrap.py       ${RANGER_SCRIPTS}/
+COPY ./scripts/python/log_config.py                   ${RANGER_SCRIPTS}/
+COPY ./scripts/admin/dba.py                           ${RANGER_SCRIPTS}/
+COPY ./scripts/admin/ranger_admin_xml_config.py       ${RANGER_SCRIPTS}/
+COPY ./scripts/admin/create_ranger_services.py        ${RANGER_SCRIPTS}/
 
 RUN    tar xvfz /home/ranger/dist/ranger-${RANGER_VERSION}-admin.tar.gz --directory=${RANGER_HOME} \
     && ln -s ${RANGER_HOME}/ranger-${RANGER_VERSION}-admin ${RANGER_HOME}/admin \
     && rm -f /home/ranger/dist/ranger-${RANGER_VERSION}-admin.tar.gz \
     && rm -f /opt/ranger/admin/install.properties \
+    && rm -f /opt/ranger/admin/setup.sh \
+    && rm -f /opt/ranger/admin/dba_script.py \
+    && rm -f /opt/ranger/admin/db_setup.py \
     && mkdir -p /var/run/ranger /var/log/ranger /usr/share/java/ \
+    && chown ranger:ranger /usr/share/java \
+    && mkdir -p ${RANGER_HOME}/admin/ews/webapp/WEB-INF/classes/conf \
+    && rm -rf ${RANGER_HOME}/admin/ews/logs \
+    && ln -s /var/log/ranger ${RANGER_HOME}/admin/ews/logs \
     && chown -R ranger:ranger ${RANGER_HOME}/admin/ ${RANGER_SCRIPTS}/ /var/run/ranger/ /var/log/ranger/ \
     && chmod 755 ${RANGER_SCRIPTS}/ranger.sh
 
-FROM ranger AS ranger_postgres
-COPY ./downloads/postgresql-42.2.16.jre7.jar         /home/ranger/dist/
-RUN mv /home/ranger/dist/postgresql-42.2.16.jre7.jar /usr/share/java/postgresql.jar
-
-FROM ranger AS ranger_mysql
-COPY ./downloads/mysql-connector-java-8.0.28.jar  /home/ranger/dist/
-COPY ./downloads/log4jdbc-1.2.jar                 /home/ranger/dist/
-RUN     mv /home/ranger/dist/mysql-connector-java-8.0.28.jar /usr/share/java/mysql-connector.jar \
-     && mv /home/ranger/dist/log4jdbc-1.2.jar ${RANGER_HOME}/admin/ews/webapp/WEB-INF/lib/log4jdbc-1.2.jar
-
-FROM ranger AS ranger_oracle
-COPY ./downloads/ojdbc8.jar         /home/ranger/dist/
-RUN mv /home/ranger/dist/ojdbc8.jar /usr/share/java/oracle.jar
-
-FROM ranger AS ranger_sqlserver
-COPY ./downloads/mssql-jdbc-12.8.1.jre8.jar            /home/ranger/dist/
-RUN mv /home/ranger/dist/mssql-jdbc-12.8.1.jre8.jar    /usr/share/java/mssql.jar
-
-FROM ranger_${RANGER_DB_TYPE}
+# Copy config files
+COPY ./scripts/admin/configs/logback.xml                     ${RANGER_HOME}/admin/ews/webapp/WEB-INF/classes/conf
+COPY ./scripts/admin/configs/security-applicationContext.xml ${RANGER_HOME}/admin/ews/webapp/WEB-INF/classes/conf
 
 USER ranger
 

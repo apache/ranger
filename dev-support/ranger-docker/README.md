@@ -44,6 +44,15 @@ Use Dockerfiles in this directory to create docker images and run them to build 
   # valid values for RANGER_DB_TYPE: mysql/postgres/oracle
    ~~~
 
+- The Ranger Admin container uses `scripts/admin/ranger-admin-site.xml` for all database flavors. The file defaults to PostgreSQL and includes commented MySQL and Oracle blocks; uncomment the matching block and comment the other database flavor settings before starting the stack.
+   ~~~
+   export RANGER_DB_TYPE=mysql
+   # In scripts/admin/ranger-admin-site.xml, enable the commented MySQL block and comment others.
+
+   export RANGER_DB_TYPE=oracle
+   # In scripts/admin/ranger-admin-site.xml, enable the commented Oracle block and comment others.
+   ~~~
+
 ### Apache Ranger Build
 
 #### In containers using docker compose
