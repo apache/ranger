@@ -571,6 +571,7 @@
                         <exclude>*CHANGES*</exclude>
                         <exclude>**/ISSUES</exclude>
                         <exclude>**/patchprocess/**</exclude>
+                        <exclude>**/test/resources/**/*.base64</exclude>
                         <exclude>**/test/resources/**/*.json</exclude>
                         <exclude>**/test/resources/**/*.txt</exclude>
                         <exclude>**/test/resources/**/*.csv</exclude>
@@ -791,6 +792,7 @@
                 <module>audit-server</module>
                 <module>authz-api</module>
                 <module>authz-embedded</module>
+                <module>authz-remote</module>
                 <module>common-utils</module>
                 <module>credentialbuilder</module>
                 <!--
@@ -1141,6 +1143,7 @@
                 <module>audit-server</module>
                 <module>authz-api</module>
                 <module>authz-embedded</module>
+                <module>authz-remote</module>
                 <module>common-utils</module>
                 <module>credentialbuilder</module>
                 <!--
@@ -1235,6 +1238,7 @@
                 <module>audit-server</module>
                 <module>authz-api</module>
                 <module>authz-embedded</module>
+                <module>authz-remote</module>
                 <module>common-utils</module>
                 <module>credentialbuilder</module>
                 <module>embeddedwebserver</module>
