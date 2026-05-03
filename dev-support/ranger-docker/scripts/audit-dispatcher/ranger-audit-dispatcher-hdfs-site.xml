@@ -18,30 +18,26 @@
         <value>org.apache.ranger.audit.dispatcher.HdfsDispatcherManager</value>
     </property>
 
-    <!-- COMMON SERVER CONFIGURATION -->
-    <!-- COMMON KAFKA DISPATCHER CONFIGURATION -->
-    <!-- COMMON KERBEROS CONFIGURATION -->
-    <!-- Server Configuration (Health Check Endpoint) -->
+
+
     <property>
         <name>log.dir</name>
         <value>${audit.dispatcher.hdfs.log.dir}</value>
         <description>Log directory for HDFS dispatcher service</description>
     </property>
 
-
-    <!-- Used for KERBEROS authentication into HDFS -->
-    <!-- KAFKA DISPATCHER CONFIGURATION                                 -->
+    <!-- KAFKA DISPATCHER CONFIGURATION -->
     <property>
-        <name>xasecure.audit.destination.kafka.host</name>
+        <name>ranger.audit.dispatcher.host</name>
         <value>ranger-audit-dispatcher-hdfs.rangernw</value>
         <description>
-            - In Docker: Use full service name with domain (e.g., ranger-audit-ingestor.rangernw)
+            - In Docker: Use full service name with domain (e.g., ranger-audit-server.rangernw)
             - In VM: Use the actual FQDN (e.g., ranger.example.com)
         </description>
     </property>
 
     <property>
-        <name>xasecure.audit.destination.kafka.kerberos.principal</name>
+        <name>ranger.audit.dispatcher.service.kerberos.principal</name>
         <value>rangerauditserver/_HOST@EXAMPLE.COM</value>
         <description>
             rangerauditserver user kerberos principal for authentication into kafka
@@ -49,71 +45,65 @@
     </property>
 
     <property>
-        <name>xasecure.audit.destination.kafka.kerberos.keytab</name>
+        <name>ranger.audit.dispatcher.service.kerberos.keytab</name>
         <value>/etc/keytabs/rangerauditserver.keytab</value>
         <description>
             keytab of the rangerauditserver principal
         </description>
     </property>
     <property>
-        <name>xasecure.audit.destination.kafka.bootstrap.servers</name>
+        <name>ranger.audit.dispatcher.kafka.bootstrap.servers</name>
         <value>ranger-kafka:9092</value>
     </property>
 
     <property>
-        <name>xasecure.audit.destination.kafka.topic.name</name>
+        <name>ranger.audit.dispatcher.kafka.topic.name</name>
         <value>ranger_audits</value>
     </property>
 
     <property>
-        <name>xasecure.audit.destination.kafka.security.protocol</name>
+        <name>ranger.audit.dispatcher.kafka.security.protocol</name>
         <value>SASL_PLAINTEXT</value>
     </property>
 
     <property>
-        <name>xasecure.audit.destination.kafka.sasl.mechanism</name>
+        <name>ranger.audit.dispatcher.kafka.sasl.mechanism</name>
         <value>GSSAPI</value>
     </property>
 
     <!-- HDFS Dispatcher Threading Configuration -->
     <property>
-        <name>xasecure.audit.destination.kafka.dispatcher.thread.count</name>
+        <name>ranger.audit.dispatcher.thread.count</name>
         <value>3</value>
         <description>Number of HDFS dispatcher worker threads</description>
     </property>
 
     <!-- Offset Management -->
     <property>
-        <name>xasecure.audit.destination.kafka.dispatcher.offset.commit.strategy</name>
+        <name>ranger.audit.dispatcher.offset.commit.strategy</name>
         <value>batch</value>
         <description>batch or manual</description>
     </property>
 
     <property>
-        <name>xasecure.audit.destination.kafka.dispatcher.offset.commit.interval.ms</name>
+        <name>ranger.audit.dispatcher.offset.commit.interval.ms</name>
         <value>30000</value>
         <description>Used only if strategy is 'manual'</description>
     </property>
 
     <property>
-        <name>xasecure.audit.destination.kafka.dispatcher.max.poll.records</name>
+        <name>ranger.audit.dispatcher.max.poll.records</name>
         <value>500</value>
         <description>Maximum records per poll</description>
     </property>
 
-    <!-- Dispatcher Classes (ONLY HDFS) -->
+    <!-- Dispatcher Class (ONLY HDFS) -->
     <property>
-        <name>xasecure.audit.destination.kafka.dispatcher.classes</name>
+        <name>ranger.audit.dispatcher.class</name>
         <value>org.apache.ranger.audit.dispatcher.kafka.AuditHDFSDispatcher</value>
     </property>
 
-    <!-- HDFS DESTINATION CONFIGURATION - MUST BE ENABLED             -->
-    <property>
-        <name>xasecure.audit.destination.hdfs</name>
-        <value>true</value>
-        <description>MUST be true for HDFS dispatcher to work</description>
-    </property>
-
+    <!-- HDFS DESTINATION CONFIGURATION -->
     <property>
         <name>xasecure.audit.destination.hdfs.dir</name>
         <value>hdfs://ranger-hadoop:9000/ranger/audit</value>
@@ -140,5 +130,56 @@
         <name>xasecure.audit.destination.hdfs.file.rollover.sec</name>
         <value>86400</value>
         <description>File rollover time in seconds (default: 24 hours)</description>
+    </property>
+
+    <!-- DISPATCHER TYPE SELECTION -->
+    <property>
+        <name>ranger.audit.dispatcher.type</name>
+        <value>hdfs</value>
+    </property>
+
+    <property>
+        <name>ranger.audit.dispatcher.war.file</name>
+        <value>ranger-audit-dispatcher.war</value>
+    </property>
+
+    <property>
+        <name>ranger.audit.dispatcher.launcher.class</name>
+        <value>org.apache.ranger.audit.dispatcher.AuditDispatcherLauncher</value>
+    </property>
+
+    <property>
+        <name>ranger.audit.dispatcher.main.class</name>
+        <value>org.apache.ranger.audit.dispatcher.AuditDispatcherApplication</value>
+    </property>
+
+    <property>
+        <name>ranger.audit.dispatcher.http.port</name>
+        <value>7090</value>
+    </property>
+
+    <property>
+        <name>ranger.audit.dispatcher.contextName</name>
+        <value>/</value>
+    </property>
+
+    <property>
+        <name>ranger.audit.dispatcher.kafka.group.id</name>
+        <value>ranger_audit_dispatcher</value>
+    </property>
+
+    <property>
+        <name>ranger.audit.dispatcher.kafka.sasl.kerberos.service.name</name>
+        <value>kafka</value>
+    </property>
+
+    <property>
+        <name>ranger.audit.dispatcher.hadoop.security.authentication</name>
+        <value>KERBEROS</value>
+    </property>
+
+    <property>
+        <name>ranger.audit.dispatcher.bind.address</name>
+        <value>0.0.0.0</value>
     </property>
 </configuration>

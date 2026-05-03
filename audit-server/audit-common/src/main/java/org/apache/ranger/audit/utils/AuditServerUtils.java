@@ -23,12 +23,16 @@ import org.apache.kafka.clients.admin.Admin;
 import org.apache.kafka.clients.admin.DescribeTopicsResult;
 import org.apache.kafka.clients.admin.TopicDescription;
 import org.apache.kafka.common.errors.UnknownTopicOrPartitionException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.time.Duration;
 import java.util.Collections;
 import java.util.concurrent.ThreadLocalRandom;
 
 public class AuditServerUtils {
+    private static final Logger LOG = LoggerFactory.getLogger(AuditServerUtils.class);
+
     private AuditServerUtils() {
     }
 
@@ -59,6 +63,8 @@ public class AuditServerUtils {
             baseSleepMs = Math.min(maxSleepMs, baseSleepMs * 2);
 
             long sleep = baseSleepMs + ThreadLocalRandom.current().nextLong(0, baseSleepMs / 2 + 1);
+
+            LOG.info("topic {} is not ready yet. will retry after {}ms", topic, sleep);
 
             Thread.sleep(sleep);
         }

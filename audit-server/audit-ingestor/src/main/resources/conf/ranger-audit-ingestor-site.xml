@@ -51,16 +51,6 @@
     </property>
 
     <property>
-        <name>ranger.audit.ingestor.http.enabled</name>
-        <value>true</value>
-    </property>
-
-    <property>
-        <name>ranger.audit.ingestor.enableTLS</name>
-        <value>false</value>
-    </property>
-
-    <property>
         <name>ranger.audit.ingestor.https.attrib.ssl.enabled</name>
         <value>false</value>
     </property>
@@ -150,7 +140,7 @@
     </property>
 
     <property>
-        <name>ranger.audit.ingestor.kerberos.cookie.path</name>
+        <name>ranger.audit.ingestor.cookie.path</name>
         <value>/</value>
         <description>Cookie path for delegation token</description>
     </property>
@@ -236,23 +226,9 @@
         </description>
     </property>
 
-    <!-- KERBEROS FOR KAFKA PRODUCER -->
-    <property>
-        <name>ranger.audit.ingestor.authentication.method</name>
-        <value>KERBEROS</value>
-    </property>
 
     <property>
-        <name>xasecure.audit.destination.kafka.host</name>
-        <value>ranger-audit-ingestor.rangernw</value>
-        <description>
-            - In Docker: Use full service name with domain (e.g., ranger-audit-ingestor.rangernw)
-            - In VM: Use the actual FQDN (e.g., ranger.example.com)
-        </description>
-    </property>
-
-    <property>
-        <name>xasecure.audit.destination.kafka.kerberos.principal</name>
+        <name>ranger.audit.ingestor.service.kerberos.principal</name>
         <value>rangerauditserver/_HOST@EXAMPLE.COM</value>
         <description>
             rangerauditserver user kerberos principal for authentication into kafka
@@ -260,21 +236,22 @@
     </property>
 
     <property>
-        <name>xasecure.audit.destination.kafka.kerberos.keytab</name>
+        <name>ranger.audit.ingestor.service.kerberos.keytab</name>
         <value>/etc/keytabs/rangerauditserver.keytab</value>
         <description>
             keytab of the rangerauditserver principal
         </description>
     </property>
 
-    <!-- KAFKA PRODUCER CONFIGURATION -->
+    <!-- CONFIGURATION TO ENABLE AUDIT DESTINATION CONFIGURATION -->
     <property>
         <name>xasecure.audit.destination.kafka</name>
         <value>true</value>
     </property>
 
+    <!-- KAFKA PRODUCER CONFIGURATION IN THE INGESTOR -->
     <property>
-        <name>xasecure.audit.destination.kafka.bootstrap.servers</name>
+        <name>ranger.audit.ingestor.kafka.bootstrap.servers</name>
         <value>ranger-kafka:9092</value>
         <description>
             Kafka broker hosts for Kafka audit destination.
@@ -284,12 +261,12 @@
     </property>
 
     <property>
-        <name>xasecure.audit.destination.kafka.topic.name</name>
+        <name>ranger.audit.ingestor.kafka.topic.name</name>
         <value>ranger_audits</value>
     </property>
 
     <property>
-        <name>xasecure.audit.destination.kafka.partitioner.class</name>
+        <name>ranger.audit.ingestor.kafka.partitioner.class</name>
         <value>org.apache.ranger.audit.producer.kafka.AuditPartitioner</value>
         <description>
             Kafka partitioner class for distributing audit messages across partitions.
@@ -300,7 +277,7 @@
     </property>
 
     <property>
-        <name>xasecure.audit.destination.kafka.configured.plugins</name>
+        <name>ranger.audit.ingestor.kafka.configured.plugins</name>
         <value>hdfs,yarn,knox,hiveServer2,hiveMetastore,kafka,hbaseRegional,hbaseMaster,solr,trino,ozone,kudu,nifi</value>
         <description>
             Comma-separated list of configured plugin IDs.
@@ -311,7 +288,7 @@
     </property>
 
     <property>
-        <name>xasecure.audit.destination.kafka.topic.partitions.per.configured.plugin</name>
+        <name>ranger.audit.ingestor.kafka.topic.partitions.per.configured.plugin</name>
         <value>3</value>
         <description>
             Default number of partitions per configured plugin.
@@ -322,7 +299,7 @@
     </property>
 
     <property>
-        <name>xasecure.audit.destination.kafka.topic.partitions.buffer</name>
+        <name>ranger.audit.ingestor.kafka.topic.partitions.buffer</name>
         <value>9</value>
         <description>
             Number of buffer partitions reserved for unconfigured plugins.
@@ -338,24 +315,24 @@
     <!-- Plugins without overrides use the default (topic.partitions.per.configured.plugin) -->
     <!--
     <property>
-        <name>xasecure.audit.destination.kafka.plugin.partition.overrides.hdfs</name>
+        <name>ranger.audit.ingestor.kafka.plugin.partition.overrides.hdfs</name>
         <value>3</value>
         <description>HDFS plugin partition count override</description>
     </property>
     <property>
-        <name>xasecure.audit.destination.kafka.plugin.partition.overrides.hiveServer2</name>
+        <name>ranger.audit.ingestor.kafka.plugin.partition.overrides.hiveServer2</name>
         <value>2</value>
         <description>HiveServer plugin partition count override</description>
     </property>
     <property>
-        <name>xasecure.audit.destination.kafka.plugin.partition.overrides.kafka</name>
+        <name>ranger.audit.ingestor.kafka.plugin.partition.overrides.kafka</name>
         <value>5</value>
         <description>Kafka plugin partition count override</description>
     </property>
      -->
 
     <property>
-        <name>xasecure.audit.destination.kafka.topic.partitions</name>
+        <name>ranger.audit.ingestor.kafka.topic.partitions</name>
         <value>10</value>
         <description>
             Number of partitions for the Kafka audit topic.
@@ -370,7 +347,7 @@
     </property>
 
     <property>
-        <name>xasecure.audit.destination.kafka.replication.factor</name>
+        <name>ranger.audit.ingestor.kafka.replication.factor</name>
         <value>1</value>
         <description>
             Replication factor for the Kafka audit topic.
@@ -381,7 +358,7 @@
     </property>
 
     <property>
-        <name>xasecure.audit.destination.kafka.security.protocol</name>
+        <name>ranger.audit.ingestor.kafka.security.protocol</name>
         <value>SASL_PLAINTEXT</value>
         <description>
             Security protocol for Kafka audit destination.
@@ -390,23 +367,23 @@
     </property>
 
     <property>
-        <name>xasecure.audit.destination.kafka.sasl.mechanism</name>
+        <name>ranger.audit.ingestor.kafka.sasl.mechanism</name>
         <value>GSSAPI</value>
     </property>
 
     <property>
-        <name>xasecure.audit.destination.kafka.request.timeout.ms</name>
+        <name>ranger.audit.ingestor.kafka.request.timeout.ms</name>
         <value>60000</value>
     </property>
 
     <property>
-        <name>xasecure.audit.destination.kafka.connections.max.idle.ms</name>
+        <name>ranger.audit.ingestor.kafka.connections.max.idle.ms</name>
         <value>90000</value>
     </property>
 
     <!-- AUDIT RECOVERY CONFIGURATION (FOR KAFKA SEND FAILURES) -->
     <property>
-        <name>ranger.audit.kafka.recovery.enabled</name>
+        <name>ranger.audit.ingestor.recovery.enabled</name>
         <value>true</value>
         <description>
             Enable audit message recovery system. When enabled, failed audit messages are written to local spool files
@@ -415,7 +392,7 @@
     </property>
 
     <property>
-        <name>ranger.audit.kafka.recovery.spool.dir</name>
+        <name>ranger.audit.ingestor.recovery.spool.dir</name>
         <value>/var/log/ranger/ranger-audit-ingestor/audit/spool</value>
         <description>
             Directory for storing .failed files with audit messages that failed to send to Kafka.
@@ -424,7 +401,7 @@
     </property>
 
     <property>
-        <name>ranger.audit.kafka.recovery.archive.dir</name>
+        <name>ranger.audit.ingestor.recovery.archive.dir</name>
         <value>/var/log/ranger/ranger-audit-ingestor/audit/archive</value>
         <description>
             Directory for successfully processed files. Files are moved here with .processed extension
@@ -434,7 +411,7 @@
     </property>
 
     <property>
-        <name>ranger.audit.kafka.recovery.file.rotation.interval.sec</name>
+        <name>ranger.audit.ingestor.recovery.file.rotation.interval.sec</name>
         <value>300</value>
         <description>
             Time interval in seconds for rotating spool files. Default is 300 seconds (5 minutes).
@@ -443,7 +420,7 @@
     </property>
 
     <property>
-        <name>ranger.audit.kafka.recovery.max.messages.per.file</name>
+        <name>ranger.audit.ingestor.recovery.max.messages.per.file</name>
         <value>10000</value>
         <description>
             Maximum number of messages to write per spool file before rotation.
@@ -452,7 +429,7 @@
     </property>
 
     <property>
-        <name>ranger.audit.kafka.recovery.retry.interval.sec</name>
+        <name>ranger.audit.ingestor.recovery.retry.interval.sec</name>
         <value>60</value>
         <description>
             Time interval in seconds between retry attempts for archived files.
@@ -461,7 +438,7 @@
     </property>
 
     <property>
-        <name>ranger.audit.kafka.recovery.archive.max.processed.files</name>
+        <name>ranger.audit.ingestor.recovery.archive.max.processed.files</name>
         <value>100</value>
         <description>
             Maximum number of .processed files to retain in archive directory.
@@ -471,7 +448,7 @@
     </property>
 
     <property>
-        <name>ranger.audit.kafka.recovery.retry.max.attempts</name>
+        <name>ranger.audit.ingestor.recovery.retry.max.attempts</name>
         <value>3</value>
         <description>
             Maximum number of retry attempts per message before keeping file as .failed in spool.

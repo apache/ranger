@@ -41,9 +41,10 @@ import java.util.Properties;
 public class AuditMessageQueue extends AuditDestination {
     private static final Logger LOG = LoggerFactory.getLogger(AuditMessageQueue.class);
 
+    private static final String PROP_INGESTOR_PREFIX = "ranger.audit.ingestor";
+
     private KafkaProducer<String, String> kafkaProducer;
     private AuditProducer                 auditProducerRunnable;
-    private AuditMessageQueueUtils        auditMessageQueueUtils;
     private String                        topicName;
     private Thread                        producerThread;
     private AuditRecoveryManager          recoveryManager;
@@ -54,11 +55,9 @@ public class AuditMessageQueue extends AuditDestination {
 
         super.init(props, propPrefix);
 
-        auditMessageQueueUtils = new AuditMessageQueueUtils();
-
-        createAuditsTopic(props, propPrefix);
-        createKafkaProducer(props, propPrefix);
-        createRecoveryManager(props, propPrefix);
+        createAuditsTopic(props, PROP_INGESTOR_PREFIX);
+        createKafkaProducer(props, PROP_INGESTOR_PREFIX);
+        createRecoveryManager(props, PROP_INGESTOR_PREFIX);
 
         LOG.info("<== AuditMessageQueue.init() [CORE AUDIT SERVER]: created topic: {}, producer: {}",
                 topicName, (kafkaProducer != null) ? kafkaProducer.getClass() : "");
@@ -337,7 +336,7 @@ public class AuditMessageQueue extends AuditDestination {
 
     private void createAuditsTopic(final Properties props, final String propPrefix) {
         if (topicName == null) {
-            topicName = auditMessageQueueUtils.createAuditsTopicIfNotExists(props, propPrefix);
+            topicName = AuditMessageQueueUtils.createAuditsTopicIfNotExists(props, propPrefix);
         }
     }
 

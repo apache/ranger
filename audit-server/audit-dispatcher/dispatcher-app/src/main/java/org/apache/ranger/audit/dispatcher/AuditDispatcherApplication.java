@@ -23,35 +23,32 @@ import org.apache.ranger.audit.server.AuditConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
 import java.util.Properties;
 
 public class AuditDispatcherApplication {
     private static final Logger LOG                = LoggerFactory.getLogger(AuditDispatcherApplication.class);
     private static final String APP_NAME           = "audit-dispatcher";
     private static final String CONFIG_PREFIX      = "ranger.audit.dispatcher.";
-    private static final String COMMON_CONFIG_FILE = "ranger-audit-dispatcher-site.xml";
 
     private AuditDispatcherApplication() {
     }
 
     public static void main(String[] args) {
-        AuditConfig config = new AuditConfig();
-        config.addResourceIfReadable(COMMON_CONFIG_FILE);
-        LOG.info("Loaded common configuration from classpath: {}", COMMON_CONFIG_FILE);
-
         String dispatcherType = System.getProperty(CONFIG_PREFIX + "type");
         if (dispatcherType == null) {
-            dispatcherType = config.get(CONFIG_PREFIX + "type");
+            LOG.error("Dispatcher initialization failed.");
+            LOG.error("No dispatcher type specified. Please set [ranger.audit.dispatcher.type] system property.");
+            System.exit(1);
         }
 
-        // Load dispatcher-specific configuration from classpath
-        if (dispatcherType != null) {
-            String specificConfig = "ranger-audit-dispatcher-" + dispatcherType + "-site.xml";
-            config.addResourceIfReadable(specificConfig);
-            LOG.info("Loaded dispatcher-specific configuration from classpath: {}", specificConfig);
-        } else {
-            LOG.warn("No dispatcher type specified. Service might fail to start correctly.");
+        AuditConfig config = new AuditConfig();
+        String specificConfig = getDispatcherConfigPath(dispatcherType);
+        if (!config.addResourceIfReadable(specificConfig)) {
+            LOG.error("Failed to load dispatcher configuration: {}", specificConfig);
+            System.exit(1);
         }
+        LOG.info("Loaded dispatcher-specific configuration: {}", specificConfig);
 
         LOG.info("==========================================================================");
         LOG.info("==> Starting Ranger Audit Dispatcher Service (Type: {})", dispatcherType);
@@ -91,5 +88,19 @@ public class AuditDispatcherApplication {
         manager.getClass().getMethod("init", Properties.class).invoke(manager, props);
         LOG.info("{} initialized successfully", dispatcherMgrClass);
         return true;
+    }
+
+    private static String getDispatcherConfigPath(String dispatcherType) {
+        String confDir = System.getenv("AUDIT_DISPATCHER_CONF_DIR");
+        if (confDir == null || confDir.trim().isEmpty()) {
+            confDir = System.getProperty("ranger.audit.dispatcher.conf.dir");
+        }
+
+        String fileName = "ranger-audit-dispatcher-" + dispatcherType + "-site.xml";
+        if (confDir != null && !confDir.trim().isEmpty()) {
+            return confDir + File.separator + fileName;
+        }
+
+        return fileName;
     }
 }

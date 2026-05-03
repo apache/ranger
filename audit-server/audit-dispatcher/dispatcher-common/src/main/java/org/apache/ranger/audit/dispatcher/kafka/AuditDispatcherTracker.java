@@ -22,8 +22,8 @@ package org.apache.ranger.audit.dispatcher.kafka;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Collection;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -57,17 +57,15 @@ public class AuditDispatcherTracker {
         LOG.info("Registered active dispatcher for destination type: {}", destinationType);
     }
 
-    public Collection<AuditDispatcher> getActiveDispatchers() {
-        return activeDispatchers.values();
+    public Set<String> getActiveDispatcherTypes() {
+        return activeDispatchers.keySet();
     }
 
     /**
-      * Clear all active dispatcher references.
       * Called during shutdown after dispatchers have been stopped.
      */
-
-    public void clearActiveDispatchers() {
+    public void clearActiveDispatcher(String dispatcherType) {
         LOG.debug("Clearing {} active dispatcher references", activeDispatchers.size());
-        activeDispatchers.clear();
+        activeDispatchers.remove(dispatcherType);
     }
 }

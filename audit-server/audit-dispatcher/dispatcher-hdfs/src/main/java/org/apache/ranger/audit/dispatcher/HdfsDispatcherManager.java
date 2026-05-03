@@ -39,7 +39,8 @@ import java.util.Properties;
  */
 public class HdfsDispatcherManager {
     private static final Logger LOG                    = LoggerFactory.getLogger(HdfsDispatcherManager.class);
-    private static final String CONFIG_DISPATCHER_TYPE = "ranger.audit.dispatcher.type";
+    private static final String CONFIG_DISPATCHER_TYPE = AuditServerConstants.PROP_DISPATCHER_TYPE;
+    private static final String DISPATCHER_TYPE_HDFS   = "hdfs";
 
     private final AuditDispatcherTracker tracker       = AuditDispatcherTracker.getInstance();
     private       AuditDispatcher        dispatcher;
@@ -49,7 +50,7 @@ public class HdfsDispatcherManager {
         LOG.info("==> HdfsDispatcherManager.init()");
 
         String dispatcherType = System.getProperty(CONFIG_DISPATCHER_TYPE);
-        if (dispatcherType != null && !dispatcherType.equalsIgnoreCase("hdfs")) {
+        if (dispatcherType != null && !dispatcherType.equalsIgnoreCase(DISPATCHER_TYPE_HDFS)) {
             LOG.info("Skipping HdfsDispatcherManager initialization since dispatcher type is {}", dispatcherType);
             return;
         }
@@ -62,12 +63,20 @@ public class HdfsDispatcherManager {
 
             boolean isEnabled = MiscUtil.getBooleanProperty(props, "xasecure.audit.destination.hdfs", false);
             if (!isEnabled) {
+                String clsName = MiscUtil.getStringProperty(props, AuditServerConstants.PROP_DISPATCHER_CLASS);
+                if (clsName != null && clsName.contains("org.apache.ranger.audit.dispatcher.kafka.AuditHDFSDispatcher")) {
+                    isEnabled = true;
+                    props.setProperty("xasecure.audit.destination.hdfs", "true");
+                }
+            }
+
+            if (!isEnabled) {
                 LOG.warn("HDFS destination is disabled (xasecure.audit.destination.hdfs=false). No dispatchers will be created.");
                 return;
             }
 
             // Initialize and register HDFS Dispatcher
-            initializeDispatcher(props, AuditServerConstants.PROP_KAFKA_PROP_PREFIX);
+            initializeDispatcher(props, AuditServerConstants.PROP_DISPATCHER_PREFIX);
 
             if (dispatcher == null) {
                 LOG.warn("No dispatcher was created! Verify that xasecure.audit.destination.hdfs=true and classes are configured correctly.");
@@ -93,7 +102,7 @@ public class HdfsDispatcherManager {
     private void initializeDispatcher(Properties props, String propPrefix) {
         LOG.info("==> HdfsDispatcherManager.initializeDispatcher()");
 
-        String   clsStr                = MiscUtil.getStringProperty(props, propPrefix + "." + AuditServerConstants.PROP_DISPATCHER_CLASSES, "org.apache.ranger.audit.dispatcher.kafka.AuditHDFSDispatcher");
+        String   clsStr                = MiscUtil.getStringProperty(props, AuditServerConstants.PROP_DISPATCHER_CLASS, "org.apache.ranger.audit.dispatcher.kafka.AuditHDFSDispatcher");
         String[] hdfsDispatcherClasses = clsStr.split(",");
 
         LOG.info("Initializing {} dispatcher class(es)", hdfsDispatcherClasses.length);
@@ -109,7 +118,7 @@ public class HdfsDispatcherManager {
             dispatcher = (AuditDispatcher) dispatcherClass
                         .getConstructor(Properties.class, String.class)
                         .newInstance(props, propPrefix);
-            tracker.addActiveDispatcher("hdfs", dispatcher);
+            tracker.addActiveDispatcher(DISPATCHER_TYPE_HDFS, dispatcher);
             LOG.info("Successfully initialized dispatcher class: {}", dispatcherClass.getName());
         } catch (ClassNotFoundException e) {
             LOG.error("Dispatcher class not found: {}. Ensure the class is on the classpath.", hdfsDispatcherClassName, e);
@@ -188,7 +197,7 @@ public class HdfsDispatcherManager {
 
         dispatcher = null;
         dispatcherThread = null;
-        tracker.clearActiveDispatchers();
+        tracker.clearActiveDispatcher(DISPATCHER_TYPE_HDFS);
 
         LOG.info("<== HdfsDispatcherManager.shutdown() - HDFS dispatcher stopped");
     }

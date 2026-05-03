@@ -20,6 +20,7 @@
 package org.apache.ranger.audit.dispatcher;
 
 import org.apache.ranger.audit.server.AuditConfig;
+import org.apache.ranger.audit.server.AuditServerConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,29 +34,22 @@ import java.util.List;
 public class AuditDispatcherLauncher {
     private static final Logger LOG = LoggerFactory.getLogger(AuditDispatcherLauncher.class);
 
-    private static final String COMMON_CONFIG_FILE     = "ranger-audit-dispatcher-site.xml";
-    private static final String CONFIG_DISPATCHER_TYPE = "ranger.audit.dispatcher.type";
+    private static final String CONFIG_DISPATCHER_TYPE = AuditServerConstants.PROP_DISPATCHER_TYPE;
 
     private AuditDispatcherLauncher() {
     }
 
     public static void main(String[] args) {
         try {
-            AuditConfig config = new AuditConfig();
-            config.addResourceIfReadable(COMMON_CONFIG_FILE);
-
             String dispatcherType = System.getProperty(CONFIG_DISPATCHER_TYPE);
-            if (dispatcherType == null) {
-                dispatcherType = config.get(CONFIG_DISPATCHER_TYPE);
-                if (dispatcherType != null) {
-                    System.setProperty(CONFIG_DISPATCHER_TYPE, dispatcherType);
-                }
-            }
-
             if (dispatcherType == null) {
                 LOG.error("Dispatcher type is not specified. Cannot determine which dispatcher jars to load.");
                 System.exit(1);
             }
+
+            String specificConfig = getDispatcherConfigPath(dispatcherType);
+            AuditConfig config = new AuditConfig();
+            config.addResourceIfReadable(specificConfig);
 
             LOG.info("Initializing classloader for dispatcher type: {}", dispatcherType);
 
@@ -95,5 +89,19 @@ public class AuditDispatcherLauncher {
             LOG.error("Failed to launch audit dispatcher", e);
             System.exit(1);
         }
+    }
+
+    private static String getDispatcherConfigPath(String dispatcherType) {
+        String confDir = System.getenv("AUDIT_DISPATCHER_CONF_DIR");
+        if (confDir == null || confDir.trim().isEmpty()) {
+            confDir = System.getProperty("ranger.audit.dispatcher.conf.dir");
+        }
+
+        String fileName = "ranger-audit-dispatcher-" + dispatcherType + "-site.xml";
+        if (confDir != null && !confDir.trim().isEmpty()) {
+            return confDir + File.separator + fileName;
+        }
+
+        return fileName;
     }
 }

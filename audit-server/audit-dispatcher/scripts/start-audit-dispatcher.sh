@@ -27,12 +27,15 @@ AUDIT_DISPATCHER_HOME_DIR=${AUDIT_DISPATCHER_HOME_DIR:-$(cd "${scriptDir}/.."; p
 AUDIT_DISPATCHER_CONF_DIR=${AUDIT_DISPATCHER_CONF_DIR:-"${AUDIT_DISPATCHER_HOME_DIR}/conf"}
 AUDIT_DISPATCHER_LOG_DIR=${AUDIT_DISPATCHER_LOG_DIR:-"${AUDIT_DISPATCHER_HOME_DIR}/logs"}
 
-COMMON_CONF_FILE="${AUDIT_DISPATCHER_CONF_DIR}/ranger-audit-dispatcher-site.xml"
-
 # Determine the dispatcher type for starting the dispatcher of that type
 DISPATCHER_TYPE=$1
 
-CONF_FILE="${COMMON_CONF_FILE}"
+if [ -z "${DISPATCHER_TYPE}" ]; then
+    echo "[ERROR] Dispatcher type must be provided as the first argument (e.g., hdfs, solr)"
+    exit 1
+fi
+
+CONF_FILE="${AUDIT_DISPATCHER_CONF_DIR}/ranger-audit-dispatcher-${DISPATCHER_TYPE}-site.xml"
 
 # Set default heap size if not set
 if [ -z "${AUDIT_DISPATCHER_HEAP}" ]; then
@@ -77,12 +80,12 @@ get_property_value() {
   fi
 }
 
-WAR_FILE_NAME=$(get_property_value "ranger.audit.dispatcher.war.file" "${COMMON_CONF_FILE}")
+WAR_FILE_NAME=$(get_property_value "ranger.audit.dispatcher.war.file" "${CONF_FILE}")
 if [ -z "${WAR_FILE_NAME}" ]; then
     WAR_FILE_NAME="ranger-audit-dispatcher.war"
 fi
 
-MAIN_CLASS=$(get_property_value "ranger.audit.dispatcher.launcher.class" "${COMMON_CONF_FILE}")
+MAIN_CLASS=$(get_property_value "ranger.audit.dispatcher.launcher.class" "${CONF_FILE}")
 if [ -z "${MAIN_CLASS}" ]; then
     MAIN_CLASS="org.apache.ranger.audit.dispatcher.AuditDispatcherLauncher"
 fi

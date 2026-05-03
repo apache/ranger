@@ -19,8 +19,9 @@
 
 package org.apache.ranger.audit.rest;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.ranger.audit.dispatcher.kafka.AuditDispatcherTracker;
+import org.apache.ranger.audit.provider.MiscUtil;
+import org.apache.ranger.audit.server.AuditServerConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Scope;
@@ -50,13 +51,15 @@ public class AuditDispatcherHealthREST {
     @Path("/ping")
     @Produces("application/json")
     public Response ping() {
-        Map<String, String> resp = new HashMap<>();
+        Map<String, Object> resp = new HashMap<>();
         resp.put("status", "UP");
         resp.put("service", "audit-dispatcher");
 
         try {
-            ObjectMapper mapper = new ObjectMapper();
-            return Response.ok(mapper.writeValueAsString(resp)).build();
+            Response ret = Response.status(Response.Status.OK)
+                    .entity(buildResponse(resp))
+                    .build();
+            return ret;
         } catch (Exception e) {
             LOG.error("Error creating ping response", e);
             return Response.serverError().build();
@@ -72,33 +75,43 @@ public class AuditDispatcherHealthREST {
     public Response status() {
         Map<String, Object> resp = new HashMap<>();
         try {
-            String dispatcherType = System.getProperty("ranger.audit.dispatcher.type");
+            String dispatcherType = System.getProperty(AuditServerConstants.PROP_DISPATCHER_TYPE);
             resp.put("service", "audit-dispatcher-" + (dispatcherType != null ? dispatcherType : "unknown"));
 
+            Response.Status status = null;
             if (dispatcherType != null && !dispatcherType.trim().isEmpty()) {
-                String auditDispatcherType = dispatcherType.toLowerCase();
-                boolean isActive = AuditDispatcherTracker.getInstance().getActiveDispatchers().stream()
-                        .filter(d -> d != null)
-                        .anyMatch(d -> d.getClass().getName().toLowerCase().contains(auditDispatcherType));
-
+                boolean isActive = AuditDispatcherTracker.getInstance().getActiveDispatcherTypes().contains(dispatcherType.toLowerCase());
                 if (isActive) {
+                    status = Response.Status.OK;
                     resp.put("status", "UP");
                 } else {
+                    status = Response.Status.SERVICE_UNAVAILABLE;
                     resp.put("status", "DOWN");
                     resp.put("reason", dispatcherType + " Dispatcher is not active");
                 }
             } else {
+                status = Response.Status.SERVICE_UNAVAILABLE;
                 resp.put("status", "DOWN");
-                resp.put("reason", "Unknown dispatcher type: " + dispatcherType);
+                resp.put("reason", "Dispatcher type not provided: ");
             }
 
-            ObjectMapper mapper = new ObjectMapper();
-            return Response.ok(mapper.writeValueAsString(resp)).build();
+            Response ret = Response.status(status)
+                    .entity(buildResponse(resp))
+                    .build();
+            return ret;
         } catch (Exception e) {
             LOG.error("Error checking status", e);
             resp.put("status", "ERROR");
             resp.put("error", e.getMessage());
             return Response.serverError().entity(resp).build();
+        }
+    }
+
+    private String buildResponse(Map<String, Object> respMap) {
+        try {
+            return MiscUtil.getMapper().writeValueAsString(respMap);
+        } catch (Exception e) {
+            return "Error: " + e.getMessage();
         }
     }
 }

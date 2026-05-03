@@ -49,7 +49,6 @@ public class AuditProducer implements Runnable {
     public AuditProducer(Properties props, String propPrefix) throws Exception {
         LOG.debug("==> AuditProducer()");
 
-        AuditMessageQueueUtils auditMessageQueueUtils = new AuditMessageQueueUtils();
         producerProps.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, MiscUtil.getStringProperty(props, propPrefix + "." + AuditServerConstants.PROP_BOOTSTRAP_SERVERS));
         producerProps.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, Class.forName("org.apache.kafka.common.serialization.StringSerializer"));
         producerProps.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, Class.forName("org.apache.kafka.common.serialization.StringSerializer"));
@@ -63,7 +62,7 @@ public class AuditProducer implements Runnable {
         producerProps.put(AuditServerConstants.PROP_SASL_KERBEROS_SERVICE_NAME, AuditServerConstants.DEFAULT_SERVICE_NAME);
 
         if (securityProtocol.toUpperCase().contains(AuditServerConstants.PROP_SECURITY_PROTOCOL_VALUE)) {
-            producerProps.put(AuditServerConstants.PROP_SASL_JAAS_CONFIG, auditMessageQueueUtils.getJAASConfig(props, propPrefix));
+            producerProps.put(AuditServerConstants.PROP_SASL_JAAS_CONFIG, AuditMessageQueueUtils.getJAASConfig(props, propPrefix));
         }
 
         producerProps.put(ProducerConfig.LINGER_MS_CONFIG, 5);
@@ -79,7 +78,7 @@ public class AuditProducer implements Runnable {
             producerProps.put(ProducerConfig.PARTITIONER_CLASS_CONFIG, partitionerClass);
             LOG.info("Configured plugins detected - using plugin-based partitioner: {}", partitionerClass);
 
-            // Pass all xasecure.audit.destination.kafka.* properties to partitioner (no namespace translation)
+            // Pass all ranger.audit.ingestor.* properties to partitioner (no namespace translation)
             for (String propName : props.stringPropertyNames()) {
                 if (propName.startsWith(propPrefix + ".")) {
                     producerProps.put(propName, props.getProperty(propName));

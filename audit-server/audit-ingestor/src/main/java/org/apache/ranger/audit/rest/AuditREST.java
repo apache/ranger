@@ -79,7 +79,6 @@ public class AuditREST {
 
         Response.Status     status;
         Map<String, Object> resp = new HashMap<>();
-
         resp.put("service", "ranger-audit-server");
 
         try {
@@ -303,7 +302,7 @@ public class AuditREST {
     }
 
     /**
-     * Rules are loaded from ranger.audit.service.auth.to.local property in ranger-audit-ingestor-site.xml.
+     * Rules are loaded from ranger.audit.ingestor.auth.to.local property in ranger-audit-ingestor-site.xml.
      */
     private static void initializeAuthToLocal() {
         AuditServerConfig config = AuditServerConfig.getInstance();

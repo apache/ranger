@@ -37,15 +37,6 @@
     <!-- Configuration files -->
     <fileSet>
       <outputDirectory>conf</outputDirectory>
-      <directory>${project.parent.basedir}/audit-server/audit-dispatcher/dispatcher-common/src/main/resources/conf</directory>
-      <includes>
-        <include>ranger-audit-dispatcher-site.xml</include>
-      </includes>
-      <fileMode>644</fileMode>
-    </fileSet>
-
-    <fileSet>
-      <outputDirectory>conf</outputDirectory>
       <directory>${project.parent.basedir}/audit-server/audit-dispatcher/dispatcher-solr/src/main/resources/conf</directory>
       <includes>
         <include>ranger-audit-dispatcher-solr-site.xml</include>

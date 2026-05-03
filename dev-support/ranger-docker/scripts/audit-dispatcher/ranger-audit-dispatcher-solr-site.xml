@@ -18,29 +18,24 @@
         <value>org.apache.ranger.audit.dispatcher.SolrDispatcherManager</value>
     </property>
 
-    <!-- COMMON SERVER CONFIGURATION -->
-    <!-- COMMON KAFKA DISPATCHER CONFIGURATION -->
-    <!-- COMMON KERBEROS CONFIGURATION -->
-    <!-- Server Configuration (Health Check Endpoint) -->
     <property>
         <name>log.dir</name>
         <value>${audit.dispatcher.solr.log.dir}</value>
         <description>Log directory for Solr dispatcher service</description>
     </property>
 
-
     <!-- User for KERBEROS authentication into solr -->
     <property>
-        <name>xasecure.audit.destination.kafka.host</name>
+        <name>ranger.audit.dispatcher.host</name>
         <value>ranger-audit-dispatcher-solr.rangernw</value>
         <description>
-            - In Docker: Use full service name with domain (e.g., ranger-audit-ingestor.rangernw)
+            - In Docker: Use full service name with domain (e.g., ranger-audit-server.rangernw)
             - In VM: Use the actual FQDN (e.g., ranger.example.com)
         </description>
     </property>
 
     <property>
-        <name>xasecure.audit.destination.kafka.kerberos.principal</name>
+        <name>ranger.audit.dispatcher.service.kerberos.principal</name>
         <value>rangerauditserver/_HOST@EXAMPLE.COM</value>
         <description>
             rangerauditserver user kerberos principal for authentication into kafka
@@ -48,7 +43,7 @@
     </property>
 
     <property>
-        <name>xasecure.audit.destination.kafka.kerberos.keytab</name>
+        <name>ranger.audit.dispatcher.service.kerberos.keytab</name>
         <value>/etc/keytabs/rangerauditserver.keytab</value>
         <description>
             keytab of the rangerauditserver principal
@@ -57,65 +52,58 @@
 
     <!-- KAFKA DISPATCHER CONFIGURATION -->
     <property>
-        <name>xasecure.audit.destination.kafka.bootstrap.servers</name>
+        <name>ranger.audit.dispatcher.kafka.bootstrap.servers</name>
         <value>ranger-kafka:9092</value>
     </property>
 
     <property>
-        <name>xasecure.audit.destination.kafka.topic.name</name>
+        <name>ranger.audit.dispatcher.kafka.topic.name</name>
         <value>ranger_audits</value>
     </property>
 
     <property>
-        <name>xasecure.audit.destination.kafka.security.protocol</name>
+        <name>ranger.audit.dispatcher.kafka.security.protocol</name>
         <value>SASL_PLAINTEXT</value>
     </property>
 
     <property>
-        <name>xasecure.audit.destination.kafka.sasl.mechanism</name>
+        <name>ranger.audit.dispatcher.kafka.sasl.mechanism</name>
         <value>GSSAPI</value>
     </property>
 
     <!-- Solr Dispatcher Threading Configuration -->
     <property>
-        <name>xasecure.audit.destination.kafka.dispatcher.thread.count</name>
+        <name>ranger.audit.dispatcher.thread.count</name>
         <value>5</value>
         <description>Number of Solr dispatcher worker threads (higher for indexing throughput)</description>
     </property>
 
     <!-- Offset Management -->
     <property>
-        <name>xasecure.audit.destination.kafka.dispatcher.offset.commit.strategy</name>
+        <name>ranger.audit.dispatcher.offset.commit.strategy</name>
         <value>batch</value>
         <description>batch or manual</description>
     </property>
 
     <property>
-        <name>xasecure.audit.destination.kafka.dispatcher.offset.commit.interval.ms</name>
+        <name>ranger.audit.dispatcher.offset.commit.interval.ms</name>
         <value>30000</value>
         <description>Used only if strategy is 'manual'</description>
     </property>
 
     <property>
-        <name>xasecure.audit.destination.kafka.dispatcher.max.poll.records</name>
+        <name>ranger.audit.dispatcher.max.poll.records</name>
         <value>500</value>
         <description>Maximum records per poll for batch processing</description>
     </property>
 
-    <!-- Solr Dispatcher Classes -->
+    <!-- Solr Dispatcher Class -->
     <property>
-        <name>xasecure.audit.destination.kafka.dispatcher.classes</name>
+        <name>ranger.audit.dispatcher.class</name>
         <value>org.apache.ranger.audit.dispatcher.kafka.AuditSolrDispatcher</value>
     </property>
 
-    <!-- SOLR DESTINATION CONFIGURATION - MUST BE ENABLED -->
-
-    <property>
-        <name>xasecure.audit.destination.solr</name>
-        <value>true</value>
-        <description>MUST be true for Solr dispatcher to work</description>
-    </property>
-
+    <!-- SOLR DESTINATION CONFIGURATION -->
     <property>
         <name>xasecure.audit.destination.solr.urls</name>
         <value>http://ranger-solr:8983/solr/ranger_audits</value>
@@ -189,5 +177,56 @@
         <name>xasecure.audit.jaas.Client.option.keyTab</name>
         <value>/etc/keytabs/rangerauditserver.keytab</value>
         <description>Keytab for Solr authentication</description>
+    </property>
+
+    <!-- DISPATCHER TYPE SELECTION -->
+    <property>
+        <name>ranger.audit.dispatcher.type</name>
+        <value>solr</value>
+    </property>
+
+    <property>
+        <name>ranger.audit.dispatcher.war.file</name>
+        <value>ranger-audit-dispatcher.war</value>
+    </property>
+
+    <property>
+        <name>ranger.audit.dispatcher.launcher.class</name>
+        <value>org.apache.ranger.audit.dispatcher.AuditDispatcherLauncher</value>
+    </property>
+
+    <property>
+        <name>ranger.audit.dispatcher.main.class</name>
+        <value>org.apache.ranger.audit.dispatcher.AuditDispatcherApplication</value>
+    </property>
+
+    <property>
+        <name>ranger.audit.dispatcher.http.port</name>
+        <value>7090</value>
+    </property>
+
+    <property>
+        <name>ranger.audit.dispatcher.contextName</name>
+        <value>/</value>
+    </property>
+
+    <property>
+        <name>ranger.audit.dispatcher.kafka.group.id</name>
+        <value></value>
+    </property>
+
+    <property>
+        <name>ranger.audit.dispatcher.kafka.sasl.kerberos.service.name</name>
+        <value>kafka</value>
+    </property>
+
+    <property>
+        <name>ranger.audit.dispatcher.hadoop.security.authentication</name>
+        <value>KERBEROS</value>
+    </property>
+
+    <property>
+        <name>ranger.audit.dispatcher.bind.address</name>
+        <value>0.0.0.0</value>
     </property>
 </configuration>

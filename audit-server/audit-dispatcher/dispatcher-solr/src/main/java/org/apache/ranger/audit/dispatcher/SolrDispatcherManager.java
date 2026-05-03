@@ -27,8 +27,6 @@ import org.apache.ranger.audit.utils.AuditServerLogFormatter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.annotation.PostConstruct;
-
 import java.util.Properties;
 
 /**
@@ -41,18 +39,18 @@ import java.util.Properties;
  */
 public class SolrDispatcherManager {
     private static final Logger LOG                    = LoggerFactory.getLogger(SolrDispatcherManager.class);
-    private static final String CONFIG_DISPATCHER_TYPE = "ranger.audit.dispatcher.type";
+    private static final String CONFIG_DISPATCHER_TYPE = AuditServerConstants.PROP_DISPATCHER_TYPE;
+    private static final String DISPATCHER_TYPE_SOLR   = "solr";
 
     private final AuditDispatcherTracker tracker = AuditDispatcherTracker.getInstance();
     private       AuditDispatcher        dispatcher;
     private       Thread                 dispatcherThread;
 
-    @PostConstruct
     public void init(Properties props) {
         LOG.info("==> SolrDispatcherManager.init()");
 
         String dispatcherType = System.getProperty(CONFIG_DISPATCHER_TYPE);
-        if (dispatcherType != null && !dispatcherType.equalsIgnoreCase("solr")) {
+        if (dispatcherType != null && !dispatcherType.equalsIgnoreCase(DISPATCHER_TYPE_SOLR)) {
             LOG.info("Skipping SolrDispatcherManager initialization since dispatcher type is {}", dispatcherType);
             return;
         }
@@ -65,12 +63,20 @@ public class SolrDispatcherManager {
 
             boolean isEnabled = MiscUtil.getBooleanProperty(props, "xasecure.audit.destination.solr", false);
             if (!isEnabled) {
+                String clsName = MiscUtil.getStringProperty(props, AuditServerConstants.PROP_DISPATCHER_CLASS);
+                if (clsName != null && clsName.contains("org.apache.ranger.audit.dispatcher.kafka.AuditSolrDispatcher")) {
+                    isEnabled = true;
+                    props.setProperty("xasecure.audit.destination.solr", "true");
+                }
+            }
+
+            if (!isEnabled) {
                 LOG.warn("Solr destination is disabled (xasecure.audit.destination.solr=false). No dispatchers will be created.");
                 return;
             }
 
             // Initialize and register Solr Dispatcher
-            initializeDispatcher(props, AuditServerConstants.PROP_KAFKA_PROP_PREFIX);
+            initializeDispatcher(props, AuditServerConstants.PROP_DISPATCHER_PREFIX);
 
             if (dispatcher == null) {
                 LOG.warn("No dispatcher was created! Verify that xasecure.audit.destination.solr=true and classes are configured correctly.");
@@ -98,7 +104,7 @@ public class SolrDispatcherManager {
         LOG.info("==> SolrDispatcherManager.initializeDispatcher()");
 
         // Get dispatcher classes from configuration
-        String clsStr = MiscUtil.getStringProperty(props, propPrefix + "." + AuditServerConstants.PROP_DISPATCHER_CLASSES,
+        String clsStr = MiscUtil.getStringProperty(props, AuditServerConstants.PROP_DISPATCHER_CLASS,
                 "org.apache.ranger.audit.dispatcher.kafka.AuditSolrDispatcher");
 
         String solrDispatcherClassName = clsStr.split(",")[0].trim();
@@ -112,7 +118,7 @@ public class SolrDispatcherManager {
             dispatcher = (AuditDispatcher) dispatcherClass
                     .getConstructor(Properties.class, String.class)
                     .newInstance(props, propPrefix);
-            tracker.addActiveDispatcher("solr", dispatcher);
+            tracker.addActiveDispatcher(DISPATCHER_TYPE_SOLR, dispatcher);
             LOG.info("Successfully initialized dispatcher class: {}", dispatcherClass.getName());
         } catch (ClassNotFoundException e) {
             LOG.error("Dispatcher class not found: {}. Ensure the class is on the classpath.", solrDispatcherClassName, e);
@@ -198,7 +204,7 @@ public class SolrDispatcherManager {
 
         dispatcher = null;
         dispatcherThread = null;
-        tracker.clearActiveDispatchers();
+        tracker.clearActiveDispatcher(DISPATCHER_TYPE_SOLR);
 
         LOG.info("<== SolrDispatcherManager.shutdown() - Solr dispatcher stopped");
     }

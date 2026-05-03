@@ -22,12 +22,18 @@ package org.apache.ranger.audit.server;
 public class AuditServerConstants {
     private AuditServerConstants() {}
 
-    public static final String AUDIT_SERVER_APPNAME             = "ranger-audit";
-    public static final String PROP_PREFIX_AUDIT_SERVER         = "ranger.audit.ingestor.";
-    public static final String PROP_PREFIX_AUDIT_SERVER_SERVICE = PROP_PREFIX_AUDIT_SERVER + "service.";
-    public static final String PROP_AUTH_TO_LOCAL               = PROP_PREFIX_AUDIT_SERVER + "auth.to.local";
-    public static final String PROP_SUFFIX_ALLOWED_USERS        = ".allowed.users";
+    public static final String AUDIT_SERVER_APPNAME                          = "ranger-audit";
+    public static final String PROP_PREFIX_AUDIT_SERVER                      = "ranger.audit.ingestor.";
+    public static final String PROP_PREFIX_AUDIT_SERVER_SERVICE              = PROP_PREFIX_AUDIT_SERVER + "service.";
+    public static final String PROP_AUTH_TO_LOCAL                            = PROP_PREFIX_AUDIT_SERVER + "auth.to.local";
+    public static final String PROP_SUFFIX_ALLOWED_USERS                     = ".allowed.users";
+    public static final String PROP_AUDIT_SERVICE_PRINCIPAL                  = "service.kerberos.principal";
+    public static final String PROP_AUDIT_SERVICE_KEYTAB                     = "service.kerberos.keytab";
 
+    /**************************************
+     AUDIT-SERVER INGESTOR Configuration
+     **************************************/
+    // kafka configuration for audit ingestor
     public static final String JAAS_KRB5_MODULE                              = "com.sun.security.auth.module.Krb5LoginModule required";
     public static final String JAAS_USE_KEYTAB                               = "useKeyTab=true";
     public static final String JAAS_KEYTAB                                   = "keyTab=\"";
@@ -35,80 +41,73 @@ public class AuditServerConstants {
     public static final String JAAS_SERVICE_NAME                             = "serviceName=kafka";
     public static final String JAAS_USER_TICKET_CACHE                        = "useTicketCache=false";
     public static final String JAAS_PRINCIPAL                                = "principal=\"";
-    public static final String PROP_BOOTSTRAP_SERVERS                        = "bootstrap.servers";
-    public static final String PROP_TOPIC_NAME                               = "topic.name";
-    public static final String PROP_SECURITY_PROTOCOL                        = "security.protocol";
-    public static final String PROP_SASL_MECHANISM                           = "sasl.mechanism";
-    public static final String PROP_SASL_JAAS_CONFIG                         = "sasl.jaas.config";
-    public static final String PROP_SASL_KERBEROS_SERVICE_NAME               = "sasl.kerberos.service.name";
-    public static final String PROP_REQ_TIMEOUT_MS                           = "request.timeout.ms";
-    public static final String PROP_CONN_MAX_IDEAL_MS                        = "connections.max.idle.ms";
-    public static final String PROP_SOLR_DEST_PREFIX                         = "solr";
-    public static final String PROP_HDFS_DEST_PREFIX                         = "hdfs";
-    public static final String PROP_DISPATCHER_THREAD_COUNT                  = "dispatcher.thread.count";
-    public static final String PROP_DISPATCHER_OFFSET_COMMIT_STRATEGY        = "dispatcher.offset.commit.strategy";
-    public static final String PROP_DISPATCHER_OFFSET_COMMIT_INTERVAL        = "dispatcher.offset.commit.interval.ms";
-    public static final String PROP_DISPATCHER_MAX_POLL_RECORDS              = "dispatcher.max.poll.records";
-    public static final String PROP_DISPATCHER_SESSION_TIMEOUT_MS            = "dispatcher.session.timeout.ms";
-    public static final String PROP_DISPATCHER_MAX_POLL_INTERVAL_MS          = "dispatcher.max.poll.interval.ms";
-    public static final String PROP_DISPATCHER_HEARTBEAT_INTERVAL_MS         = "dispatcher.heartbeat.interval.ms";
-    public static final String PROP_DISPATCHER_PARTITION_ASSIGNMENT_STRATEGY = "dispatcher.partition.assignment.strategy";
-    public static final String PROP_AUDIT_SERVICE_PRINCIPAL                  = "kerberos.principal";
-    public static final String PROP_AUDIT_SERVICE_KEYTAB                     = "kerberos.keytab";
     public static final String PROP_KAFKA_PROP_PREFIX                        = "xasecure.audit.destination.kafka";
+    public static final String PROP_BOOTSTRAP_SERVERS                        = "kafka.bootstrap.servers";
+    public static final String PROP_TOPIC_NAME                               = "kafka.topic.name";
+    public static final String PROP_SECURITY_PROTOCOL                        = "kafka.security.protocol";
+    public static final String PROP_SASL_MECHANISM                           = "kafka.sasl.mechanism";
     public static final String PROP_KAFKA_TOPIC_INIT_MAX_RETRIES             = "kafka.topic.init.max.retries";
     public static final String PROP_KAFKA_TOPIC_INIT_RETRY_DELAY_MS          = "kafka.topic.init.retry.delay.ms";
+    public static final String PROP_REQ_TIMEOUT_MS                           = "kafka.request.timeout.ms";
+    public static final String PROP_CONN_MAX_IDEAL_MS                        = "kafka.connections.max.idle.ms";
+    public static final String PROP_SASL_JAAS_CONFIG                         = "sasl.jaas.config";
+    public static final String PROP_SASL_KERBEROS_SERVICE_NAME               = "sasl.kerberos.service.name";
 
-    // ranger_audits topic configuration
-    public static final String PROP_TOPIC_PARTITIONS                       = "topic.partitions";
-    public static final String PROP_PARTITIONER_CLASS                      = "partitioner.class";
-    public static final String PROP_CONFIGURED_PLUGINS                     = "configured.plugins";
-    public static final String PROP_TOPIC_PARTITIONS_PER_CONFIGURED_PLUGIN = "topic.partitions.per.configured.plugin";
-    public static final String PROP_PLUGIN_PARTITION_OVERRIDE_PREFIX       = "plugin.partition.overrides.";
-    public static final String PROP_BUFFER_PARTITIONS                      = "topic.partitions.buffer";
-    public static final String PROP_REPLICATION_FACTOR                     = "replication.factor";
+    // kafka topic - ranger_audits configuration
+    public static final String PROP_TOPIC_PARTITIONS                         = "kafka.topic.partitions";
+    public static final String PROP_PARTITIONER_CLASS                        = "kafka.partitioner.class";
+    public static final String PROP_CONFIGURED_PLUGINS                       = "kafka.configured.plugins";
+    public static final String PROP_TOPIC_PARTITIONS_PER_CONFIGURED_PLUGIN   = "kafka.topic.partitions.per.configured.plugin";
+    public static final String PROP_PLUGIN_PARTITION_OVERRIDE_PREFIX         = "kafka.plugin.partition.overrides.";
+    public static final String PROP_BUFFER_PARTITIONS                        = "kafka.topic.partitions.buffer";
+    public static final String PROP_REPLICATION_FACTOR                       = "kafka.replication.factor";
+
+    // Kafka Topic defaults
+    public static final String DEFAULT_TOPIC                                 = "ranger_audits";
+    public static final String DEFAULT_SASL_MECHANISM                        = "PLAIN";
+    public static final String DEFAULT_SECURITY_PROTOCOL                     = "PLAINTEXT";
+    public static final String DEFAULT_SERVICE_NAME                          = "kafka";
+    public static final String PROP_SECURITY_PROTOCOL_VALUE                  = "SASL";
+
+    // kafka Offset commit strategies
+    public static final String PROP_OFFSET_COMMIT_STRATEGY_MANUAL            = "manual";
+    public static final String PROP_OFFSET_COMMIT_STRATEGY_BATCH             = "batch";
+    public static final String DEFAULT_OFFSET_COMMIT_STRATEGY                = PROP_OFFSET_COMMIT_STRATEGY_BATCH;
+    public static final long   DEFAULT_OFFSET_COMMIT_INTERVAL_MS             = 30000; // 30 seconds
+    public static final int    DEFAULT_MAX_POLL_RECORDS                      = 500;   // Kafka default batch size
 
     // Default configured plugins: each gets allocated partitions from the topic
-    public static final String DEFAULT_PARTITIONER_CLASS                   = "org.apache.ranger.audit.producer.kafka.AuditPartitioner";
-    public static final String DEFAULT_CONFIGURED_PLUGINS                  = "hdfs,yarn,knox,hiveServer2,hiveMetastore,kafka,hbaseRegional,hbaseMaster,solr,trino,ozone,kudu,nifi";
-    public static final short  DEFAULT_REPLICATION_FACTOR                  = 2;
-    public static final int    DEFAULT_TOPIC_PARTITIONS                    = 10;  // For hash-based partitioning
-    public static final int    DEFAULT_PARTITIONS_PER_CONFIGURED_PLUGIN    = 3;   // For plugin-based partitioning
-    public static final int    DEFAULT_BUFFER_PARTITIONS                   = 9;   // For plugin-based partitioning
+    public static final String DEFAULT_PARTITIONER_CLASS                     = "org.apache.ranger.audit.producer.kafka.AuditPartitioner";
+    public static final String DEFAULT_CONFIGURED_PLUGINS                    = "hdfs,yarn,knox,hiveServer2,hiveMetastore,kafka,hbaseRegional,hbaseMaster,solr,trino,ozone,kudu,nifi";
+    public static final short  DEFAULT_REPLICATION_FACTOR                    = 3;
+    public static final int    DEFAULT_TOPIC_PARTITIONS                      = 10;
+    public static final int    DEFAULT_PARTITIONS_PER_CONFIGURED_PLUGIN      = 3;
+    public static final int    DEFAULT_BUFFER_PARTITIONS                     = 9;
 
     // Hadoop security configuration for UGI
-    public static final String PROP_HADOOP_AUTHENTICATION_TYPE = "hadoop.security.authentication";
-    public static final String PROP_HADOOP_AUTH_TYPE_KERBEROS  = "kerberos";
-    public static final String PROP_HADOOP_KERBEROS_NAME_RULES = "hadoop.security.auth_to_local";
+    public static final String PROP_HADOOP_AUTHENTICATION_TYPE               = "hadoop.security.authentication";
+    public static final String PROP_HADOOP_AUTH_TYPE_KERBEROS                = "kerberos";
+    public static final String PROP_HADOOP_KERBEROS_NAME_RULES               = "hadoop.security.auth_to_local";
 
-    // Kafka Topic and defaults
-    public static final String DEFAULT_TOPIC                              = "ranger_audits";
-    public static final String DEFAULT_SASL_MECHANISM                     = "PLAIN";
-    public static final String DEFAULT_SECURITY_PROTOCOL                  = "PLAINTEXT";
-    public static final String DEFAULT_SERVICE_NAME                       = "kafka";
-    public static final String DEFAULT_RANGER_AUDIT_HDFS_DISPATCHER_GROUP = "ranger_audit_hdfs_dispatcher_group";
-    public static final String DEFAULT_RANGER_AUDIT_SOLR_DISPATCHER_GROUP = "ranger_audit_solr_dispatcher_group";
-    public static final String PROP_SECURITY_PROTOCOL_VALUE               = "SASL";
-
-    // Offset commit strategies
-    public static final String PROP_OFFSET_COMMIT_STRATEGY_MANUAL       = "manual";
-    public static final String PROP_OFFSET_COMMIT_STRATEGY_BATCH        = "batch";
-    public static final String DEFAULT_OFFSET_COMMIT_STRATEGY           = PROP_OFFSET_COMMIT_STRATEGY_BATCH;
-    public static final long   DEFAULT_OFFSET_COMMIT_INTERVAL_MS        = 30000; // 30 seconds
-    public static final int    DEFAULT_MAX_POLL_RECORDS                 = 500;   // Kafka default batch size
+    /**************************************
+     AUDIT-SERVER DISPATCHER Configuration
+     **************************************/
+    // kafka configuration for the audit-server dispatcher
+    public static final String DEFAULT_PARTITION_ASSIGNMENT_STRATEGY         = "org.apache.kafka.clients.consumer.RangeAssignor";
+    public static final String PROP_DISPATCHER_PREFIX                        = "ranger.audit.dispatcher";
+    public static final String PROP_DISPATCHER_THREAD_COUNT                  = "thread.count";
+    public static final String PROP_DISPATCHER_OFFSET_COMMIT_STRATEGY        = "offset.commit.strategy";
+    public static final String PROP_DISPATCHER_OFFSET_COMMIT_INTERVAL        = "offset.commit.interval.ms";
+    public static final String PROP_DISPATCHER_MAX_POLL_RECORDS              = "max.poll.records";
+    public static final String PROP_DISPATCHER_SESSION_TIMEOUT_MS            = "session.timeout.ms";
+    public static final String PROP_DISPATCHER_MAX_POLL_INTERVAL_MS          = "max.poll.interval.ms";
+    public static final String PROP_DISPATCHER_HEARTBEAT_INTERVAL_MS         = "heartbeat.interval.ms";
+    public static final String PROP_DISPATCHER_PARTITION_ASSIGNMENT_STRATEGY = "partition.assignment.strategy";
+    public static final String PROP_DISPATCHER_TYPE                          = "ranger.audit.dispatcher.type";
+    public static final String PROP_DISPATCHER_CLASS                         = "ranger.audit.dispatcher.class";
 
     // Kafka dispatcher rebalancing timeouts (for subscribe mode)
-    public static final int    DEFAULT_SESSION_TIMEOUT_MS    = 60000;  // 60 seconds - failure detection
-    public static final int    DEFAULT_MAX_POLL_INTERVAL_MS  = 300000; // 5 minutes - max processing time
-    public static final int    DEFAULT_HEARTBEAT_INTERVAL_MS = 10000;  // 10 seconds - heartbeat frequency
-
-    // Kafka dispatcher partition assignment strategy
-    public static final String DEFAULT_PARTITION_ASSIGNMENT_STRATEGY = "org.apache.kafka.clients.consumer.RangeAssignor";
-
-    // Destination
-    public static final String DESTINATION_HDFS = "HDFS";
-    public static final String DESTINATION_SOLR = "SOLR";
-
-    // Dispatcher Registry Configuration
-    public static final String PROP_DISPATCHER_CLASSES = "dispatcher.classes";
+    public static final int    DEFAULT_SESSION_TIMEOUT_MS                    = 60000;  // 60 seconds - failure detection
+    public static final int    DEFAULT_MAX_POLL_INTERVAL_MS                  = 300000; // 5 minutes - max processing time
+    public static final int    DEFAULT_HEARTBEAT_INTERVAL_MS                 = 10000;  // 10 seconds - heartbeat frequency
 }

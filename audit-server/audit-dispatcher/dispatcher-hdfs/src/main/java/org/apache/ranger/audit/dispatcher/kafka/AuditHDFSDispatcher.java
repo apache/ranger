@@ -23,7 +23,6 @@ import org.apache.hadoop.security.SecureClientLogin;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
-import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.clients.consumer.OffsetAndMetadata;
 import org.apache.kafka.common.TopicPartition;
 import org.apache.ranger.audit.provider.AuditProviderFactory;
@@ -34,42 +33,23 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.time.Duration;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicLong;
 
 public class AuditHDFSDispatcher extends AuditDispatcherBase {
     private static final Logger LOG = LoggerFactory.getLogger(AuditHDFSDispatcher.class);
 
-    private static final String RANGER_AUDIT_HDFS_DISPATCHER_GROUP = AuditServerConstants.DEFAULT_RANGER_AUDIT_HDFS_DISPATCHER_GROUP;
-    private static final String CONFIG_CORE_SITE                   = "core-site.xml";
-    private static final String CONFIG_HDFS_SITE                   = "hdfs-site.xml";
+    private static final String CONFIG_CORE_SITE                           = "core-site.xml";
+    private static final String CONFIG_HDFS_SITE                           = "hdfs-site.xml";
+    private static final String DEFAULT_RANGER_AUDIT_HDFS_DISPATCHER_GROUP = "ranger_audit_hdfs_dispatcher_group";
+    private static final String PROP_HDFS_DEST_PREFIX                      = "hdfs";
 
-    private final AtomicBoolean                 running           = new AtomicBoolean(false);
-    private final Map<String, DispatcherWorker> dispatcherWorkers = new ConcurrentHashMap<>();
     private final AuditRouterHDFS               auditRouterHDFS;
 
-    private ExecutorService dispatcherThreadPool;
-    private int             dispatcherThreadCount  = 1;
-
-    // Offset management configuration (batch or manual only supported)
-    private String offsetCommitStrategy = AuditServerConstants.DEFAULT_OFFSET_COMMIT_STRATEGY;
-    private long   offsetCommitInterval = AuditServerConstants.DEFAULT_OFFSET_COMMIT_INTERVAL_MS;
-
     public AuditHDFSDispatcher(Properties props, String propPrefix) throws Exception {
-        super(props, propPrefix, RANGER_AUDIT_HDFS_DISPATCHER_GROUP);
+        super(props, propPrefix, DEFAULT_RANGER_AUDIT_HDFS_DISPATCHER_GROUP);
 
         auditRouterHDFS = new AuditRouterHDFS();
 
@@ -77,51 +57,17 @@ public class AuditHDFSDispatcher extends AuditDispatcherBase {
     }
 
     @Override
-    public void run() {
-        try {
-            LOG.info("Starting AuditHDFSDispatcher with appId-based thread");
-            startMultithreadedConsumption();
-
-            // Keep main thread alive while dispatcher threads are running
-            while (running.get()) {
-                try {
-                    Thread.sleep(1000);
-                } catch (InterruptedException e) {
-                    LOG.info("HDFS dispatcher main thread interrupted");
-                    Thread.currentThread().interrupt();
-                    break;
-                }
-            }
-        } catch (Throwable e) {
-            LOG.error("Error in AuditHDFSDispatcher", e);
-        } finally {
-            shutdown();
-        }
+    protected String getDispatcherName() {
+        return PROP_HDFS_DEST_PREFIX.toUpperCase();
     }
 
     @Override
-    public void shutdown() {
-        LOG.info("==> AuditHDFSDispatcher.shutdown()");
+    protected DispatcherWorker createDispatcherWorker(String workerId, List<Integer> assignedPartitions) {
+        return new HDFSDispatcherWorker(workerId, assignedPartitions);
+    }
 
-        // Stop dispatcher threads
-        running.set(false);
-
-        // Shutdown dispatcher workers
-        if (dispatcherThreadPool != null) {
-            dispatcherThreadPool.shutdownNow();
-            try {
-                if (!dispatcherThreadPool.awaitTermination(30, java.util.concurrent.TimeUnit.SECONDS)) {
-                    LOG.warn("HDFS dispatcher thread pool did not terminate within 30 seconds");
-                }
-            } catch (InterruptedException e) {
-                LOG.warn("Interrupted while waiting for HDFS dispatcher thread pool to terminate", e);
-                Thread.currentThread().interrupt();
-            }
-        }
-
-        dispatcherWorkers.clear();
-
-        // Shutdown destination handler
+    @Override
+    protected void shutdownDestination() {
         if (auditRouterHDFS != null) {
             try {
                 auditRouterHDFS.shutdown();
@@ -129,17 +75,6 @@ public class AuditHDFSDispatcher extends AuditDispatcherBase {
                 LOG.error("Error shutting down HDFS destination handler", e);
             }
         }
-
-        // Close main Kafka dispatcher
-        if (dispatcher != null) {
-            try {
-                dispatcher.close();
-            } catch (Exception e) {
-                LOG.error("Error closing main Kafka dispatcher", e);
-            }
-        }
-
-        LOG.info("<== AuditHDFSDispatcher.shutdown() complete");
     }
 
     private void init(Properties props, String propPrefix) throws Exception {
@@ -155,7 +90,7 @@ public class AuditHDFSDispatcher extends AuditDispatcherBase {
         initDispatcherConfig(props, propPrefix);
 
         // Initialize destination handler for message processing
-        auditRouterHDFS.init(props, AuditProviderFactory.AUDIT_DEST_BASE + "." + AuditServerConstants.PROP_HDFS_DEST_PREFIX);
+        auditRouterHDFS.init(props, AuditProviderFactory.AUDIT_DEST_BASE + "." + PROP_HDFS_DEST_PREFIX);
 
         LOG.info("<== AuditHDFSDispatcher.init(): AuditHDFSDispatcher initialized successfully");
     }
@@ -330,128 +265,13 @@ public class AuditHDFSDispatcher extends AuditDispatcherBase {
         LOG.info("<== AuditHDFSDispatcher.initializeOffsetManagement()");
     }
 
-    private void startMultithreadedConsumption() {
-        LOG.debug("==> AuditHDFSDispatcher.startMultithreadedConsumption()");
-
-        if (running.compareAndSet(false, true)) {
-            startDispatcherWorkers();
-        }
-
-        LOG.debug("<== AuditHDFSDispatcher.startMultithreadedConsumption()");
-    }
-
-    private void startDispatcherWorkers() {
-        LOG.info("==> AuditHDFSDispatcher.startDispatcherWorkers(): Creating {} dispatcher workers for horizontal scaling", dispatcherThreadCount);
-        LOG.info("Each worker will subscribe to topic '{}' and process partitions assigned by Kafka", topicName);
-
-        // Create thread pool sized for dispatcher workers
-        dispatcherThreadPool = Executors.newFixedThreadPool(dispatcherThreadCount);
-        LOG.info("Created thread pool with {} threads for scalable HDFS consumption", dispatcherThreadCount);
-
-        // Create HDFS dispatcher workers
-        for (int i = 0; i < dispatcherThreadCount; i++) {
-            String workerId = "hdfs-worker-" + i;
-            DispatcherWorker worker = new DispatcherWorker(workerId, new ArrayList<>());
-            dispatcherWorkers.put(workerId, worker);
-            dispatcherThreadPool.submit(worker);
-
-            LOG.info("Started HDFS dispatcher worker '{}' - will process ANY appId assigned by Kafka", workerId);
-        }
-
-        LOG.info("<== AuditHDFSDispatcher.startDispatcherWorkers(): All {} workers started in SUBSCRIBE mode", dispatcherThreadCount);
-    }
-
-    private class DispatcherWorker implements Runnable {
-        private final String workerId;
-        private final List<Integer> assignedPartitions;
-        private KafkaConsumer<String, String> workerDispatcher;
-
-        // Offset management
-        private final Map<TopicPartition, OffsetAndMetadata> pendingOffsets = new HashMap<>();
-        private final AtomicLong lastCommitTime = new AtomicLong(System.currentTimeMillis());
-        private final AtomicInteger messagesProcessedSinceLastCommit = new AtomicInteger(0);
-
-        public DispatcherWorker(String workerId, List<Integer> assignedPartitions) {
-            this.workerId = workerId;
-            this.assignedPartitions = assignedPartitions;
+    private class HDFSDispatcherWorker extends DispatcherWorker {
+        public HDFSDispatcherWorker(String workerId, List<Integer> assignedPartitions) {
+            super(workerId, assignedPartitions);
         }
 
         @Override
-        public void run() {
-            try {
-                // Create dispatcher for this worker with offset management configuration
-                Properties workerDispatcherProps = new Properties();
-                workerDispatcherProps.putAll(dispatcherProps);
-
-                // Configure offset management based on strategy
-                configureOffsetManagement(workerDispatcherProps);
-
-                workerDispatcher = new KafkaConsumer<>(workerDispatcherProps);
-
-                // Create re-balance listener
-                AuditDispatcherRebalanceListener rebalanceListener = new AuditDispatcherRebalanceListener(
-                        workerId,
-                        AuditServerConstants.DESTINATION_HDFS,
-                        topicName,
-                        offsetCommitStrategy,
-                        dispatcherGroupId,
-                        workerDispatcher,
-                        pendingOffsets,
-                        messagesProcessedSinceLastCommit,
-                        lastCommitTime,
-                        assignedPartitions);
-
-                // Subscribe to topic with re-balance listener
-                workerDispatcher.subscribe(Collections.singletonList(topicName), rebalanceListener);
-
-                LOG.info("[HDFS-DISPATCHER] Worker '{}' subscribed successfully, waiting for partition assignment from Kafka", workerId);
-                long threadId = Thread.currentThread().getId();
-                String threadName = Thread.currentThread().getName();
-                LOG.info("[HDFS-DISPATCHER-STARTUP] Worker '{}' [Thread-ID: {}, Thread-Name: '{}'] started | Topic: '{}' | Dispatcher-Group: {} | Mode: SUBSCRIBE",
-                        workerId, threadId, threadName, topicName, dispatcherGroupId);
-
-                // Consume messages
-                while (running.get()) {
-                    ConsumerRecords<String, String> records = workerDispatcher.poll(Duration.ofMillis(100));
-
-                    if (!records.isEmpty()) {
-                        processRecordBatch(records);
-                        // Handle offset committing based on strategy
-                        handleOffsetCommitting();
-                    }
-                }
-            } catch (Throwable e) {
-                LOG.error("Error in HDFS dispatcher worker '{}'", workerId, e);
-            } finally {
-                // Final offset commit before shutdown
-                commitPendingOffsets(true);
-
-                if (workerDispatcher != null) {
-                    try {
-                        LOG.info("HDFS Worker '{}': Unsubscribing from topic", workerId);
-                        workerDispatcher.unsubscribe();
-                    } catch (Exception e) {
-                        LOG.warn("HDFS Worker '{}': Error during unsubscribe", workerId, e);
-                    }
-
-                    try {
-                        LOG.info("HDFS Worker '{}': Closing dispatcher", workerId);
-                        workerDispatcher.close();
-                    } catch (Exception e) {
-                        LOG.error("Error closing dispatcher for HDFS worker '{}'", workerId, e);
-                    }
-                }
-                LOG.info("HDFS dispatcher worker '{}' stopped", workerId);
-            }
-        }
-
-        private void configureOffsetManagement(Properties dispatcherProps) {
-            // Always disable auto commit - only batch or manual strategies supported
-            dispatcherProps.put("enable.auto.commit", "false");
-            LOG.debug("HDFS worker '{}' configured for manual offset commit with strategy: {}", workerId, offsetCommitStrategy);
-        }
-
-        private void processRecordBatch(ConsumerRecords<String, String> records) {
+        protected void processRecordBatch(ConsumerRecords<String, String> records) {
             Set<TopicPartition> failedPartitions = new HashSet<>();
 
             for (ConsumerRecord<String, String> record : records) {
@@ -483,8 +303,7 @@ public class AuditHDFSDispatcher extends AuditDispatcherBase {
                     try {
                         workerDispatcher.seek(partition, record.offset());
                     } catch (Exception seekEx) {
-                        LOG.error("Failed to seek to offset {} for partition {} after processing error", 
-                                record.offset(), partition, seekEx);
+                        LOG.error("Failed to seek to offset {} for partition {} after processing error", record.offset(), partition, seekEx);
                     }
 
                     // Add sleep to prevent frequent polling when HDFS is completely down
@@ -496,54 +315,6 @@ public class AuditHDFSDispatcher extends AuditDispatcherBase {
 
                     // Mark this partition as failed so we don't process subsequent records for it in this batch
                     failedPartitions.add(partition);
-                }
-            }
-        }
-
-        private void handleOffsetCommitting() {
-            boolean shouldCommit = false;
-            long currentTime = System.currentTimeMillis();
-
-            if (AuditServerConstants.PROP_OFFSET_COMMIT_STRATEGY_BATCH.equals(offsetCommitStrategy)) {
-                // Commit after processing each batch
-                shouldCommit = !pendingOffsets.isEmpty();
-            } else if (AuditServerConstants.PROP_OFFSET_COMMIT_STRATEGY_MANUAL.equals(offsetCommitStrategy)) {
-                // Commit based on time interval
-                shouldCommit = (currentTime - lastCommitTime.get()) >= offsetCommitInterval && !pendingOffsets.isEmpty();
-            }
-
-            if (shouldCommit) {
-                commitPendingOffsets(false);
-            }
-        }
-
-        private void commitPendingOffsets(boolean isShutdown) {
-            if (pendingOffsets.isEmpty()) {
-                return;
-            }
-
-            try {
-                workerDispatcher.commitSync(pendingOffsets);
-
-                LOG.debug("HDFS worker '{}' committed {} offsets, processed {} messages",
-                        workerId, pendingOffsets.size(), messagesProcessedSinceLastCommit.get());
-
-                // Clear committed offsets
-                pendingOffsets.clear();
-                lastCommitTime.set(System.currentTimeMillis());
-                messagesProcessedSinceLastCommit.set(0);
-            } catch (Exception e) {
-                LOG.error("Error committing offsets in HDFS worker '{}': {}", workerId, pendingOffsets, e);
-
-                if (isShutdown) {
-                    // During shutdown, retry to avoid loss of any offsets
-                    try {
-                        Thread.sleep(1000);
-                        workerDispatcher.commitSync(pendingOffsets);
-                        LOG.info("Successfully committed offsets on retry during shutdown for HDFS worker '{}'", workerId);
-                    } catch (Exception retryException) {
-                        LOG.error("Failed to commit offsets even on retry during shutdown for HDFS worker '{}'", workerId, retryException);
-                    }
                 }
             }
         }

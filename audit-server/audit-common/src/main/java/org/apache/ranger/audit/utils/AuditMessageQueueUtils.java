@@ -43,10 +43,10 @@ import java.util.Set;
 public class AuditMessageQueueUtils {
     private static final Logger LOG = LoggerFactory.getLogger(AuditMessageQueueUtils.class);
 
-    public AuditMessageQueueUtils() {
+    private AuditMessageQueueUtils() {
     }
 
-    public String createAuditsTopicIfNotExists(Properties props, String propPrefix) {
+    public static String createAuditsTopicIfNotExists(Properties props, String propPrefix) {
         LOG.info("==> AuditMessageQueueUtils:createAuditsTopicIfNotExists(propPrefix={})", propPrefix);
 
         String ret                  = null;
@@ -64,7 +64,7 @@ public class AuditMessageQueueUtils {
         Map<String, Object> kafkaProp = new HashMap<>();
 
         kafkaProp.put(AdminClientConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
-        kafkaProp.put(AuditServerConstants.PROP_SASL_MECHANISM, saslMechanism);
+        kafkaProp.put("sasl.mechanism", saslMechanism);
         kafkaProp.put(AdminClientConfig.SECURITY_PROTOCOL_CONFIG, securityProtocol);
 
         if (securityProtocol != null && securityProtocol.toUpperCase().contains("SASL")) {
@@ -111,12 +111,12 @@ public class AuditMessageQueueUtils {
                      * Topic already existing. Check and update number of partitions for audit server. This is for upgrade
                      * from existing audit mechanism to audit server
                      */
-                    ret = updateExistingTopicPartitions(admin, topicName, partitions, replicationFactor);
+                    ret = updateExistingTopicPartitions(admin, topicName, partitions);
                 }
             } catch (Exception ex) {
                 if (currentAttempt < maxAttempts) {
                     LOG.warn("AuditMessageQueueUtils:createAuditsTopicIfNotExists(): Failed to connect to Kafka on attempt {}/{}. Retrying in {} ms. Error: {}",
-                            currentAttempt, maxAttempts, retryDelayMs, ex.getMessage());
+                            currentAttempt, maxAttempts, retryDelayMs, ex);
 
                     try {
                         Thread.sleep(retryDelayMs);
@@ -136,7 +136,7 @@ public class AuditMessageQueueUtils {
         return ret;
     }
 
-    public String getJAASConfig(Properties props, String propPrefix) {
+    public static String getJAASConfig(Properties props, String propPrefix) {
         // Use ranger service principal and keytab for Kafka authentication
         // This ensures consistent identity across all Ranger services and destination writes
         String hostName  = props.getProperty(propPrefix + "." + "host");
@@ -208,7 +208,7 @@ public class AuditMessageQueueUtils {
         return jaasConfig;
     }
 
-    public String updateExistingTopicPartitions(AdminClient admin, String topicName, int partitions, short replicationFactor) {
+    private static String updateExistingTopicPartitions(AdminClient admin, String topicName, int partitions) {
         LOG.info("==> AuditMessageQueueUtils:updateExistingTopicPartitions() topic: {}, desired partitions: {}", topicName, partitions);
 
         String ret;
@@ -326,7 +326,7 @@ public class AuditMessageQueueUtils {
      *
      * @return Number of partitions for the topic
      */
-    private int getPartitions(Properties prop, String propPrefix) {
+    private static int getPartitions(Properties prop, String propPrefix) {
         // Check if configured.plugins is set (use empty string as default to detect when not configured)
         int    totalPartitions   = 0;
         String configuredPlugins = MiscUtil.getStringProperty(prop, propPrefix + "." + AuditServerConstants.PROP_CONFIGURED_PLUGINS, AuditServerConstants.DEFAULT_CONFIGURED_PLUGINS);

@@ -54,20 +54,20 @@ public class AuditPartitioner implements Partitioner {
 
     @Override
     public void configure(Map<String, ?> configs) {
-        String propPrefix = AuditServerConstants.PROP_KAFKA_PROP_PREFIX;
+        String propPrefix = AuditServerConstants.PROP_PREFIX_AUDIT_SERVER;
 
-        String pluginsStr = getConfig(configs, propPrefix + "." + AuditServerConstants.PROP_CONFIGURED_PLUGINS,  AuditServerConstants.DEFAULT_CONFIGURED_PLUGINS);
+        String pluginsStr = getConfig(configs, propPrefix + AuditServerConstants.PROP_CONFIGURED_PLUGINS,  AuditServerConstants.DEFAULT_CONFIGURED_PLUGINS);
         configuredPlugins = pluginsStr.split(",");
         for (int i = 0; i < configuredPlugins.length; i++) {
             configuredPlugins[i] = configuredPlugins[i].trim();
         }
 
-        defaultPartitionsPerPlugin = getIntConfig(configs, propPrefix + "." + AuditServerConstants.PROP_TOPIC_PARTITIONS_PER_CONFIGURED_PLUGIN, AuditServerConstants.DEFAULT_PARTITIONS_PER_CONFIGURED_PLUGIN);
+        defaultPartitionsPerPlugin = getIntConfig(configs, propPrefix + AuditServerConstants.PROP_TOPIC_PARTITIONS_PER_CONFIGURED_PLUGIN, AuditServerConstants.DEFAULT_PARTITIONS_PER_CONFIGURED_PLUGIN);
         if (defaultPartitionsPerPlugin < 1) {
             defaultPartitionsPerPlugin = 1;
         }
 
-        totalPartitions = getIntConfig(configs, propPrefix + "." + AuditServerConstants.PROP_TOPIC_PARTITIONS, AuditServerConstants.DEFAULT_TOPIC_PARTITIONS);
+        totalPartitions = getIntConfig(configs, propPrefix + AuditServerConstants.PROP_TOPIC_PARTITIONS, AuditServerConstants.DEFAULT_TOPIC_PARTITIONS);
         if (totalPartitions < 1) {
             totalPartitions = AuditServerConstants.DEFAULT_TOPIC_PARTITIONS;
         }
@@ -76,7 +76,7 @@ public class AuditPartitioner implements Partitioner {
         pluginPartitionCounts = new int[configuredPlugins.length];
         for (int i = 0; i < configuredPlugins.length; i++) {
             String plugin = configuredPlugins[i];
-            String overrideKey = propPrefix + "." + AuditServerConstants.PROP_PLUGIN_PARTITION_OVERRIDE_PREFIX + plugin;
+            String overrideKey = propPrefix + AuditServerConstants.PROP_PLUGIN_PARTITION_OVERRIDE_PREFIX + plugin;
             int partitionCount = getIntConfig(configs, overrideKey, defaultPartitionsPerPlugin);
             pluginPartitionCounts[i] = partitionCount;
             if (partitionCount != defaultPartitionsPerPlugin) {
