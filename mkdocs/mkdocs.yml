@@ -90,6 +90,7 @@ nav:
           - Introduction: features/sec-zone/intro.md
       - Client Libraries:
           - Introduction: features/client-interface/intro.md
+          - Authz Remote Java Client: https://github.com/apache/ranger/blob/master/authz-remote/README.md
   - Project:
       - Contributing: project/contributing.md
       - Code Style Guide: project/java-code-style.md
