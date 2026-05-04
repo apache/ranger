@@ -18,7 +18,6 @@
  */
 package org.apache.ranger.common.db;
 
-import org.apache.ranger.biz.RangerBizUtil;
 import org.apache.ranger.common.PropertiesUtil;
 import org.apache.ranger.db.RangerDaoManager;
 import org.apache.ranger.db.RangerDaoManagerBase;
@@ -66,11 +65,9 @@ public class TestBaseDao {
     @Mock
     public EntityManager    em;
 
-    // ensure bulk mode is disabled and context is clean before each test
     @BeforeEach
-    public void resetBulkModeContext() {
+    public void resetOpContextThreadLocal() {
         RangerContextHolder.resetOpContext();
-        RangerBizUtil.setBulkMode(false);
     }
 
     @Test

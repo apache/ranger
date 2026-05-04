@@ -22,6 +22,7 @@ import org.apache.ranger.common.ContextUtil;
 import org.apache.ranger.common.PropertiesUtil;
 import org.apache.ranger.common.StringUtil;
 import org.apache.ranger.common.UserSessionBase;
+import org.apache.ranger.common.db.BaseDao;
 import org.apache.ranger.db.RangerDaoManager;
 import org.apache.ranger.db.XXAccessTypeDefDao;
 import org.apache.ranger.db.XXAccessTypeDefGrantsDao;
@@ -33,7 +34,6 @@ import org.apache.ranger.db.XXPolicyConditionDefDao;
 import org.apache.ranger.db.XXPortalUserDao;
 import org.apache.ranger.db.XXResourceDefDao;
 import org.apache.ranger.db.XXServiceConfigDefDao;
-import org.apache.ranger.db.XXServiceDefDao;
 import org.apache.ranger.entity.XXContextEnricherDef;
 import org.apache.ranger.entity.XXDataMaskTypeDef;
 import org.apache.ranger.entity.XXEnumDef;
@@ -57,6 +57,7 @@ import org.apache.ranger.plugin.model.RangerServiceDef.RangerServiceConfigDef;
 import org.apache.ranger.plugin.util.ServiceDefUtil;
 import org.apache.ranger.security.context.RangerContextHolder;
 import org.apache.ranger.security.context.RangerSecurityContext;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
@@ -93,17 +94,26 @@ import static org.mockito.Mockito.verify;
 public class TestRangerServiceDefService {
     private static final Long Id = 8L;
     @InjectMocks
-    RangerServiceDefService               serviceDefService = new RangerServiceDefService();
+    RangerServiceDefService               serviceDefService;
     @Mock
-    RangerDaoManager                      daoManager;
-    @InjectMocks
+    RangerDaoManager                      daoMgr;
     RangerServiceDefWithAssignedIdService rangerServiceDefWithAssignedIdService;
     @Mock XXServiceDefWithAssignedId xxServiceDefWithAssignedId;
     @Mock RangerServiceDef           rangerServiceDef;
     @Mock
-    XUserService    xUserService;
+    XUserService              xUserService;
     @Mock
-    XXServiceDefDao xServiceDefDao;
+    BaseDao<XXServiceDef>              entityDao;
+    @Mock
+    BaseDao<XXServiceDefWithAssignedId> entityDaoWithAssignedId;
+
+    @BeforeEach
+    void initRangerServiceDefWithAssignedIdService() {
+        serviceDefService.entityDao = entityDao;
+        rangerServiceDefWithAssignedIdService = new RangerServiceDefWithAssignedIdService();
+        rangerServiceDefWithAssignedIdService.daoMgr     = daoMgr;
+        rangerServiceDefWithAssignedIdService.entityDao = entityDaoWithAssignedId;
+    }
 
     public void setup() {
         RangerSecurityContext context = new RangerSecurityContext();
@@ -267,32 +277,32 @@ public class TestRangerServiceDefService {
         enumElementDefObj.setOrder(0);
         xElementsList.add(enumElementDefObj);
 
-        Mockito.when(daoManager.getXXPortalUser()).thenReturn(xPortalUserDao);
+        Mockito.when(daoMgr.getXXPortalUser()).thenReturn(xPortalUserDao);
         Mockito.when(xPortalUserDao.getById(Id)).thenReturn(tUser);
 
-        Mockito.when(daoManager.getXXServiceConfigDef()).thenReturn(xServiceConfigDefDao);
+        Mockito.when(daoMgr.getXXServiceConfigDef()).thenReturn(xServiceConfigDefDao);
         Mockito.when(xServiceConfigDefDao.findByServiceDefId(serviceDef.getId())).thenReturn(serviceConfigDefList);
 
-        Mockito.when(daoManager.getXXResourceDef()).thenReturn(xResourceDefDao);
+        Mockito.when(daoMgr.getXXResourceDef()).thenReturn(xResourceDefDao);
 
-        Mockito.when(daoManager.getXXAccessTypeDef()).thenReturn(xAccessTypeDefDao);
+        Mockito.when(daoMgr.getXXAccessTypeDef()).thenReturn(xAccessTypeDefDao);
         Mockito.when(xxAccessTypeDefGrantsDao.findImpliedGrantsByServiceDefId(Mockito.anyLong())).thenReturn(Collections.emptyMap());
-        Mockito.when(daoManager.getXXAccessTypeDefGrants()).thenReturn(xxAccessTypeDefGrantsDao);
+        Mockito.when(daoMgr.getXXAccessTypeDefGrants()).thenReturn(xxAccessTypeDefGrantsDao);
 
-        Mockito.when(daoManager.getXXPolicyConditionDef()).thenReturn(xPolicyConditionDefDao);
+        Mockito.when(daoMgr.getXXPolicyConditionDef()).thenReturn(xPolicyConditionDefDao);
 
-        Mockito.when(daoManager.getXXContextEnricherDef()).thenReturn(xContextEnricherDefDao);
+        Mockito.when(daoMgr.getXXContextEnricherDef()).thenReturn(xContextEnricherDefDao);
         Mockito.when(xContextEnricherDefDao.findByServiceDefId(serviceDef.getId())).thenReturn(contextEnrichersList);
 
-        Mockito.when(daoManager.getXXEnumDef()).thenReturn(xEnumDefDao);
+        Mockito.when(daoMgr.getXXEnumDef()).thenReturn(xEnumDefDao);
         Mockito.when(xEnumDefDao.findByServiceDefId(serviceDef.getId())).thenReturn(xEnumList);
 
-        Mockito.when(daoManager.getXXEnumElementDef()).thenReturn(xEnumElementDefDao);
+        Mockito.when(daoMgr.getXXEnumElementDef()).thenReturn(xEnumElementDefDao);
         Mockito.when(xEnumElementDefDao.findByEnumDefId(enumElementDefObj.getId())).thenReturn(xElementsList);
 
         XXDataMaskTypeDefDao    xDataMaskTypeDao  = Mockito.mock(XXDataMaskTypeDefDao.class);
         List<XXDataMaskTypeDef> xDataMaskTypeDefs = new ArrayList<>();
-        Mockito.when(daoManager.getXXDataMaskTypeDef()).thenReturn(xDataMaskTypeDao);
+        Mockito.when(daoMgr.getXXDataMaskTypeDef()).thenReturn(xDataMaskTypeDao);
         Mockito.when(xDataMaskTypeDao.findByServiceDefId(serviceDef.getId())).thenReturn(xDataMaskTypeDefs);
 
         RangerServiceDef dbRangerServiceDef = serviceDefService.populateViewBean(serviceDef);
@@ -302,13 +312,13 @@ public class TestRangerServiceDefService {
         assertEquals(dbRangerServiceDef.getDescription(), serviceDef.getDescription());
         assertEquals(dbRangerServiceDef.getGuid(), serviceDef.getGuid());
         assertEquals(dbRangerServiceDef.getVersion(), serviceDef.getVersion());
-        Mockito.verify(daoManager).getXXServiceConfigDef();
-        Mockito.verify(daoManager).getXXResourceDef();
-        Mockito.verify(daoManager).getXXAccessTypeDef();
-        Mockito.verify(daoManager).getXXPolicyConditionDef();
-        Mockito.verify(daoManager).getXXContextEnricherDef();
-        Mockito.verify(daoManager).getXXEnumDef();
-        Mockito.verify(daoManager).getXXEnumElementDef();
+        Mockito.verify(daoMgr).getXXServiceConfigDef();
+        Mockito.verify(daoMgr).getXXResourceDef();
+        Mockito.verify(daoMgr).getXXAccessTypeDef();
+        Mockito.verify(daoMgr).getXXPolicyConditionDef();
+        Mockito.verify(daoMgr).getXXContextEnricherDef();
+        Mockito.verify(daoMgr).getXXEnumDef();
+        Mockito.verify(daoMgr).getXXEnumElementDef();
     }
 
     @Test
@@ -463,44 +473,44 @@ public class TestRangerServiceDefService {
         enumElementDefObj.setOrder(0);
         xElementsList.add(enumElementDefObj);
 
-        Mockito.when(xServiceDefDao.getAll()).thenReturn(xServiceDefList);
+        Mockito.when(entityDao.getAll()).thenReturn(xServiceDefList);
 
-        Mockito.when(daoManager.getXXPortalUser()).thenReturn(xPortalUserDao);
+        Mockito.when(daoMgr.getXXPortalUser()).thenReturn(xPortalUserDao);
         Mockito.when(xPortalUserDao.getById(Id)).thenReturn(tUser);
 
-        Mockito.when(daoManager.getXXServiceConfigDef()).thenReturn(xServiceConfigDefDao);
+        Mockito.when(daoMgr.getXXServiceConfigDef()).thenReturn(xServiceConfigDefDao);
         Mockito.when(xServiceConfigDefDao.findByServiceDefId(serviceDef.getId())).thenReturn(serviceConfigDefList);
 
-        Mockito.when(daoManager.getXXResourceDef()).thenReturn(xResourceDefDao);
+        Mockito.when(daoMgr.getXXResourceDef()).thenReturn(xResourceDefDao);
 
-        Mockito.when(daoManager.getXXAccessTypeDef()).thenReturn(xAccessTypeDefDao);
+        Mockito.when(daoMgr.getXXAccessTypeDef()).thenReturn(xAccessTypeDefDao);
         Mockito.when(xxAccessTypeDefGrantsDao.findImpliedGrantsByServiceDefId(Mockito.anyLong())).thenReturn(Collections.emptyMap());
-        Mockito.when(daoManager.getXXAccessTypeDefGrants()).thenReturn(xxAccessTypeDefGrantsDao);
+        Mockito.when(daoMgr.getXXAccessTypeDefGrants()).thenReturn(xxAccessTypeDefGrantsDao);
 
-        Mockito.when(daoManager.getXXPolicyConditionDef()).thenReturn(xPolicyConditionDefDao);
+        Mockito.when(daoMgr.getXXPolicyConditionDef()).thenReturn(xPolicyConditionDefDao);
 
-        Mockito.when(daoManager.getXXContextEnricherDef()).thenReturn(xContextEnricherDefDao);
+        Mockito.when(daoMgr.getXXContextEnricherDef()).thenReturn(xContextEnricherDefDao);
         Mockito.when(xContextEnricherDefDao.findByServiceDefId(serviceDef.getId())).thenReturn(contextEnrichersList);
 
-        Mockito.when(daoManager.getXXEnumDef()).thenReturn(xEnumDefDao);
+        Mockito.when(daoMgr.getXXEnumDef()).thenReturn(xEnumDefDao);
         Mockito.when(xEnumDefDao.findByServiceDefId(serviceDef.getId())).thenReturn(xEnumList);
 
-        Mockito.when(daoManager.getXXEnumElementDef()).thenReturn(xEnumElementDefDao);
+        Mockito.when(daoMgr.getXXEnumElementDef()).thenReturn(xEnumElementDefDao);
         Mockito.when(xEnumElementDefDao.findByEnumDefId(enumElementDefObj.getId())).thenReturn(xElementsList);
 
         XXDataMaskTypeDefDao    xDataMaskTypeDao  = Mockito.mock(XXDataMaskTypeDefDao.class);
         List<XXDataMaskTypeDef> xDataMaskTypeDefs = new ArrayList<>();
-        Mockito.when(daoManager.getXXDataMaskTypeDef()).thenReturn(xDataMaskTypeDao);
+        Mockito.when(daoMgr.getXXDataMaskTypeDef()).thenReturn(xDataMaskTypeDao);
         Mockito.when(xDataMaskTypeDao.findByServiceDefId(serviceDef.getId())).thenReturn(xDataMaskTypeDefs);
 
         List<RangerServiceDef> dbRangerServiceDef = serviceDefService.getAllServiceDefs();
         assertNotNull(dbRangerServiceDef);
-        Mockito.verify(daoManager).getXXResourceDef();
-        Mockito.verify(daoManager).getXXAccessTypeDef();
-        Mockito.verify(daoManager).getXXPolicyConditionDef();
-        Mockito.verify(daoManager).getXXContextEnricherDef();
-        Mockito.verify(daoManager).getXXEnumDef();
-        Mockito.verify(daoManager).getXXEnumElementDef();
+        Mockito.verify(daoMgr).getXXResourceDef();
+        Mockito.verify(daoMgr).getXXAccessTypeDef();
+        Mockito.verify(daoMgr).getXXPolicyConditionDef();
+        Mockito.verify(daoMgr).getXXContextEnricherDef();
+        Mockito.verify(daoMgr).getXXEnumDef();
+        Mockito.verify(daoMgr).getXXEnumElementDef();
     }
 
     @Test
@@ -640,42 +650,42 @@ public class TestRangerServiceDefService {
         enumElementDefObj.setOrder(0);
         xElementsList.add(enumElementDefObj);
 
-        Mockito.when(daoManager.getXXPortalUser()).thenReturn(xPortalUserDao);
+        Mockito.when(daoMgr.getXXPortalUser()).thenReturn(xPortalUserDao);
         Mockito.when(xPortalUserDao.getById(Id)).thenReturn(tUser);
 
-        Mockito.when(daoManager.getXXServiceConfigDef()).thenReturn(xServiceConfigDefDao);
+        Mockito.when(daoMgr.getXXServiceConfigDef()).thenReturn(xServiceConfigDefDao);
         Mockito.when(xServiceConfigDefDao.findByServiceDefId(serviceDef.getId())).thenReturn(serviceConfigDefList);
 
-        Mockito.when(daoManager.getXXResourceDef()).thenReturn(xResourceDefDao);
+        Mockito.when(daoMgr.getXXResourceDef()).thenReturn(xResourceDefDao);
 
-        Mockito.when(daoManager.getXXAccessTypeDef()).thenReturn(xAccessTypeDefDao);
+        Mockito.when(daoMgr.getXXAccessTypeDef()).thenReturn(xAccessTypeDefDao);
         Mockito.when(xxAccessTypeDefGrantsDao.findImpliedGrantsByServiceDefId(Mockito.anyLong())).thenReturn(Collections.emptyMap());
-        Mockito.when(daoManager.getXXAccessTypeDefGrants()).thenReturn(xxAccessTypeDefGrantsDao);
+        Mockito.when(daoMgr.getXXAccessTypeDefGrants()).thenReturn(xxAccessTypeDefGrantsDao);
 
-        Mockito.when(daoManager.getXXPolicyConditionDef()).thenReturn(xPolicyConditionDefDao);
+        Mockito.when(daoMgr.getXXPolicyConditionDef()).thenReturn(xPolicyConditionDefDao);
 
-        Mockito.when(daoManager.getXXContextEnricherDef()).thenReturn(xContextEnricherDefDao);
+        Mockito.when(daoMgr.getXXContextEnricherDef()).thenReturn(xContextEnricherDefDao);
         Mockito.when(xContextEnricherDefDao.findByServiceDefId(serviceDef.getId())).thenReturn(contextEnrichersList);
 
-        Mockito.when(daoManager.getXXEnumDef()).thenReturn(xEnumDefDao);
+        Mockito.when(daoMgr.getXXEnumDef()).thenReturn(xEnumDefDao);
         Mockito.when(xEnumDefDao.findByServiceDefId(serviceDef.getId())).thenReturn(xEnumList);
 
-        Mockito.when(daoManager.getXXEnumElementDef()).thenReturn(xEnumElementDefDao);
+        Mockito.when(daoMgr.getXXEnumElementDef()).thenReturn(xEnumElementDefDao);
         Mockito.when(xEnumElementDefDao.findByEnumDefId(enumElementDefObj.getId())).thenReturn(xElementsList);
 
         XXDataMaskTypeDefDao    xDataMaskTypeDao  = Mockito.mock(XXDataMaskTypeDefDao.class);
         List<XXDataMaskTypeDef> xDataMaskTypeDefs = new ArrayList<>();
-        Mockito.when(daoManager.getXXDataMaskTypeDef()).thenReturn(xDataMaskTypeDao);
+        Mockito.when(daoMgr.getXXDataMaskTypeDef()).thenReturn(xDataMaskTypeDao);
         Mockito.when(xDataMaskTypeDao.findByServiceDefId(serviceDef.getId())).thenReturn(xDataMaskTypeDefs);
 
         RangerServiceDef dbRangerServiceDef = serviceDefService.getPopulatedViewObject(serviceDef);
         assertNotNull(dbRangerServiceDef);
-        Mockito.verify(daoManager).getXXServiceConfigDef();
-        Mockito.verify(daoManager).getXXResourceDef();
-        Mockito.verify(daoManager).getXXAccessTypeDef();
-        Mockito.verify(daoManager).getXXPolicyConditionDef();
-        Mockito.verify(daoManager).getXXContextEnricherDef();
-        Mockito.verify(daoManager).getXXEnumDef();
+        Mockito.verify(daoMgr).getXXServiceConfigDef();
+        Mockito.verify(daoMgr).getXXResourceDef();
+        Mockito.verify(daoMgr).getXXAccessTypeDef();
+        Mockito.verify(daoMgr).getXXPolicyConditionDef();
+        Mockito.verify(daoMgr).getXXContextEnricherDef();
+        Mockito.verify(daoMgr).getXXEnumDef();
     }
 
     @Test

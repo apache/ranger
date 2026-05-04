@@ -19,10 +19,6 @@
 
 package org.apache.ranger.biz;
 
-import com.sun.jersey.api.client.Client;
-import com.sun.jersey.api.client.ClientResponse;
-import com.sun.jersey.api.client.UniformInterfaceException;
-import com.sun.jersey.api.client.WebResource;
 import org.apache.commons.collections.Predicate;
 import org.apache.hadoop.security.SecureClientLogin;
 import org.apache.hadoop.security.authentication.util.KerberosName;
@@ -42,6 +38,7 @@ import org.apache.ranger.entity.XXServiceConfigMap;
 import org.apache.ranger.plugin.model.RangerService;
 import org.apache.ranger.plugin.util.KeySearchFilter;
 import org.apache.ranger.plugin.util.PasswordUtils;
+import org.apache.ranger.plugin.util.RangerJersey2ClientBuilder;
 import org.apache.ranger.view.VXKmsKey;
 import org.apache.ranger.view.VXKmsKeyList;
 import org.junit.jupiter.api.AfterEach;
@@ -58,7 +55,11 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import javax.security.auth.Subject;
 import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.Invocation;
+import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
@@ -99,13 +100,16 @@ public class TestKmsKeyMgr {
     private HttpServletRequest request;
 
     @Mock
-    private WebResource webResource;
+    private WebTarget webTarget;
 
     @Mock
-    private WebResource.Builder webResourceBuilder;
+    private Invocation.Builder invocationBuilder;
 
     @Mock
     private Client client;
+
+    @Mock
+    private Response response;
 
     @Mock
     private XXServiceDao xxServiceDao;
@@ -172,12 +176,15 @@ public class TestKmsKeyMgr {
                     Mockito.eq(MessageEnums.INVALID_INPUT_DATA), Mockito.isNull(), Mockito.eq(KeySearchFilter.SORT_BY))).thenReturn(null);
 
             // Mock client and web resource
-            try (MockedStatic<Client> clientMock = Mockito.mockStatic(Client.class)) {
-                clientMock.when(() -> Client.create(Mockito.any())).thenReturn(client);
-                Mockito.when(client.resource(Mockito.anyString())).thenReturn(webResource);
-                Mockito.when(webResource.accept(MediaType.APPLICATION_JSON_TYPE)).thenReturn(webResourceBuilder);
-                Mockito.when(webResourceBuilder.type(MediaType.APPLICATION_JSON_TYPE)).thenReturn(webResourceBuilder);
-                Mockito.when(webResourceBuilder.get(String.class)).thenReturn(jsonResponse, keyMetadataResponse);
+            try (MockedStatic<RangerJersey2ClientBuilder> clientMock = Mockito.mockStatic(RangerJersey2ClientBuilder.class)) {
+                Response mockResponse = Mockito.mock(Response.class);
+                Mockito.when(mockResponse.getStatus()).thenReturn(Response.Status.OK.getStatusCode());
+                Mockito.when(mockResponse.readEntity(String.class)).thenReturn(jsonResponse);
+
+                clientMock.when(RangerJersey2ClientBuilder::newClient).thenReturn(client);
+                Mockito.when(client.target(Mockito.anyString())).thenReturn(webTarget);
+                Mockito.when(webTarget.request(Mockito.anyString())).thenReturn(invocationBuilder);
+                Mockito.when(invocationBuilder.get()).thenReturn(mockResponse);
 
                 VXKmsKeyList result = kmsKeyMgr.searchKeys(request, TEST_REPO_NAME);
 
@@ -226,8 +233,6 @@ public class TestKmsKeyMgr {
             secureClientLoginMock.when(() -> SecureClientLogin.loginUserFromKeytab(Mockito.anyString(), Mockito.anyString(), Mockito.anyString())).thenReturn(mockSubject);
             passwordUtilsMock.when(() -> PasswordUtils.decryptPassword("encryptedPassword")).thenReturn(TEST_PASSWORD);
 
-            subjectMock.when(() -> Subject.doAs(Mockito.eq(mockSubject), Mockito.any(PrivilegedAction.class))).thenReturn(jsonResponse, mockKey.toString());
-
             XXService xxService = new XXService();
             xxService.setId(1L);
             XXServiceConfigMap xxServiceConfigMap = new XXServiceConfigMap();
@@ -248,9 +253,14 @@ public class TestKmsKeyMgr {
                     Mockito.eq(MessageEnums.INVALID_INPUT_DATA), Mockito.isNull(), Mockito.eq(KeySearchFilter.SORT_BY))).thenReturn(null);
 
             // Mock client and web resource
-            try (MockedStatic<Client> clientMock = Mockito.mockStatic(Client.class)) {
-                clientMock.when(() -> Client.create(Mockito.any())).thenReturn(client);
-                Mockito.when(client.resource(Mockito.anyString())).thenReturn(webResource);
+            try (MockedStatic<RangerJersey2ClientBuilder> clientMock = Mockito.mockStatic(RangerJersey2ClientBuilder.class)) {
+                Response mockResponse = Mockito.mock(Response.class);
+                Mockito.when(mockResponse.getStatus()).thenReturn(Response.Status.OK.getStatusCode());
+                Mockito.when(mockResponse.readEntity(String.class)).thenReturn(jsonResponse);
+
+                subjectMock.when(() -> Subject.doAs(Mockito.eq(mockSubject), Mockito.any(PrivilegedAction.class))).thenReturn(mockResponse);
+
+                clientMock.when(RangerJersey2ClientBuilder::newClient).thenReturn(client);
 
                 // Execute test
                 VXKmsKeyList result = kmsKeyMgr.searchKeys(request, TEST_REPO_NAME);
@@ -301,12 +311,15 @@ public class TestKmsKeyMgr {
             Mockito.when(svcStore.getServiceByName(TEST_REPO_NAME)).thenReturn(rangerService);
 
             // Mock client and web resource
-            try (MockedStatic<Client> clientMock = Mockito.mockStatic(Client.class)) {
-                clientMock.when(() -> Client.create(Mockito.any())).thenReturn(client);
-                Mockito.when(client.resource(Mockito.anyString())).thenReturn(webResource);
-                Mockito.when(webResource.accept(MediaType.APPLICATION_JSON_TYPE)).thenReturn(webResourceBuilder);
-                Mockito.when(webResourceBuilder.type(MediaType.APPLICATION_JSON_TYPE)).thenReturn(webResourceBuilder);
-                Mockito.when(webResourceBuilder.post(String.class, inputJson)).thenReturn(jsonResponse);
+            try (MockedStatic<RangerJersey2ClientBuilder> clientMock = Mockito.mockStatic(RangerJersey2ClientBuilder.class)) {
+                Response mockResponse = Mockito.mock(Response.class);
+                Mockito.when(mockResponse.getStatus()).thenReturn(Response.Status.OK.getStatusCode());
+                Mockito.when(mockResponse.readEntity(String.class)).thenReturn(jsonResponse);
+
+                clientMock.when(RangerJersey2ClientBuilder::newClient).thenReturn(client);
+                Mockito.when(client.target(Mockito.anyString())).thenReturn(webTarget);
+                Mockito.when(webTarget.request(Mockito.anyString())).thenReturn(invocationBuilder);
+                Mockito.when(invocationBuilder.post(Mockito.any())).thenReturn(mockResponse);
 
                 VXKmsKey result = kmsKeyMgr.rolloverKey(TEST_REPO_NAME, inputKey);
 
@@ -333,14 +346,12 @@ public class TestKmsKeyMgr {
 
             Mockito.when(svcStore.getServiceByName(TEST_REPO_NAME)).thenReturn(rangerService);
 
-            // Mock client and web resource to throw exception
-            try (MockedStatic<Client> clientMock = Mockito.mockStatic(Client.class)) {
-                clientMock.when(() -> Client.create(Mockito.any())).thenReturn(client);
-                ClientResponse response = Mockito.mock(ClientResponse.class);
-                Mockito.when(client.resource(Mockito.anyString())).thenReturn(webResource);
-                Mockito.when(webResource.accept(MediaType.APPLICATION_JSON_TYPE)).thenReturn(webResourceBuilder);
-                Mockito.when(webResourceBuilder.type(MediaType.APPLICATION_JSON_TYPE)).thenReturn(webResourceBuilder);
-                Mockito.when(webResourceBuilder.post(String.class, "{}")).thenThrow(new UniformInterfaceException("Connection failed", response, false));
+            // Mock client and web target to throw exception
+            try (MockedStatic<RangerJersey2ClientBuilder> clientMock = Mockito.mockStatic(RangerJersey2ClientBuilder.class)) {
+                clientMock.when(RangerJersey2ClientBuilder::newClient).thenReturn(client);
+                Mockito.when(client.target(Mockito.anyString())).thenReturn(webTarget);
+                Mockito.when(webTarget.request(Mockito.anyString())).thenReturn(invocationBuilder);
+                Mockito.when(invocationBuilder.post(Mockito.any())).thenThrow(new RuntimeException("Connection failed"));
 
                 Assertions.assertThrows(Exception.class, () -> {
                     kmsKeyMgr.rolloverKey(TEST_REPO_NAME, inputKey);
@@ -363,10 +374,14 @@ public class TestKmsKeyMgr {
             Mockito.when(svcStore.getServiceByName(TEST_REPO_NAME)).thenReturn(rangerService);
 
             // Mock client and web resource
-            try (MockedStatic<Client> clientMock = Mockito.mockStatic(Client.class)) {
-                clientMock.when(() -> Client.create(Mockito.any())).thenReturn(client);
-                Mockito.when(client.resource(Mockito.anyString())).thenReturn(webResource);
-                Mockito.when(webResource.delete(String.class)).thenReturn("Success");
+            try (MockedStatic<RangerJersey2ClientBuilder> clientMock = Mockito.mockStatic(RangerJersey2ClientBuilder.class)) {
+                Response mockResponse = Mockito.mock(Response.class);
+                Mockito.when(mockResponse.getStatus()).thenReturn(Response.Status.OK.getStatusCode());
+
+                clientMock.when(RangerJersey2ClientBuilder::newClient).thenReturn(client);
+                Mockito.when(client.target(Mockito.anyString())).thenReturn(webTarget);
+                Mockito.when(webTarget.request()).thenReturn(invocationBuilder);
+                Mockito.when(invocationBuilder.delete()).thenReturn(mockResponse);
 
                 Assertions.assertDoesNotThrow(() -> {
                     kmsKeyMgr.deleteKey(TEST_REPO_NAME, TEST_KEY_NAME);
@@ -390,12 +405,12 @@ public class TestKmsKeyMgr {
 
             Mockito.when(svcStore.getServiceByName(TEST_REPO_NAME)).thenReturn(rangerService);
 
-            // Mock client and web resource to throw exception
-            try (MockedStatic<Client> clientMock = Mockito.mockStatic(Client.class)) {
-                clientMock.when(() -> Client.create(Mockito.any())).thenReturn(client);
-                ClientResponse response = Mockito.mock(ClientResponse.class);
-                Mockito.when(client.resource(Mockito.anyString())).thenReturn(webResource);
-                Mockito.when(webResource.delete(String.class)).thenThrow(new UniformInterfaceException("Delete failed", response, false));
+            // Mock client and web target to throw exception
+            try (MockedStatic<RangerJersey2ClientBuilder> clientMock = Mockito.mockStatic(RangerJersey2ClientBuilder.class)) {
+                clientMock.when(RangerJersey2ClientBuilder::newClient).thenReturn(client);
+                Mockito.when(client.target(Mockito.anyString())).thenReturn(webTarget);
+                Mockito.when(webTarget.request()).thenReturn(invocationBuilder);
+                Mockito.when(invocationBuilder.delete()).thenThrow(new RuntimeException("Delete failed"));
 
                 Assertions.assertThrows(Exception.class, () -> {
                     kmsKeyMgr.deleteKey(TEST_REPO_NAME, TEST_KEY_NAME);
@@ -425,12 +440,15 @@ public class TestKmsKeyMgr {
             Mockito.when(svcStore.getServiceByName(TEST_REPO_NAME)).thenReturn(rangerService);
 
             // Mock client and web resource
-            try (MockedStatic<Client> clientMock = Mockito.mockStatic(Client.class)) {
-                clientMock.when(() -> Client.create(Mockito.any())).thenReturn(client);
-                Mockito.when(client.resource(Mockito.anyString())).thenReturn(webResource);
-                Mockito.when(webResource.accept(MediaType.APPLICATION_JSON_TYPE)).thenReturn(webResourceBuilder);
-                Mockito.when(webResourceBuilder.type(MediaType.APPLICATION_JSON_TYPE)).thenReturn(webResourceBuilder);
-                Mockito.when(webResourceBuilder.post(String.class, inputJson)).thenReturn(jsonResponse);
+            try (MockedStatic<RangerJersey2ClientBuilder> clientMock = Mockito.mockStatic(RangerJersey2ClientBuilder.class)) {
+                clientMock.when(RangerJersey2ClientBuilder::newClient).thenReturn(client);
+                Response mockResponse = Mockito.mock(Response.class);
+                Mockito.when(mockResponse.getStatus()).thenReturn(Response.Status.OK.getStatusCode());
+                Mockito.when(mockResponse.readEntity(String.class)).thenReturn(jsonResponse);
+
+                Mockito.when(client.target(Mockito.anyString())).thenReturn(webTarget);
+                Mockito.when(webTarget.request(Mockito.anyString())).thenReturn(invocationBuilder);
+                Mockito.when(invocationBuilder.post(Mockito.any())).thenReturn(mockResponse);
 
                 VXKmsKey result = kmsKeyMgr.createKey(TEST_REPO_NAME, inputKey);
 
@@ -457,14 +475,12 @@ public class TestKmsKeyMgr {
 
             Mockito.when(svcStore.getServiceByName(TEST_REPO_NAME)).thenReturn(rangerService);
 
-            // Mock client and web resource to throw exception
-            try (MockedStatic<Client> clientMock = Mockito.mockStatic(Client.class)) {
-                clientMock.when(() -> Client.create(Mockito.any())).thenReturn(client);
-                ClientResponse response = Mockito.mock(ClientResponse.class);
-                Mockito.when(client.resource(Mockito.anyString())).thenReturn(webResource);
-                Mockito.when(webResource.accept(MediaType.APPLICATION_JSON_TYPE)).thenReturn(webResourceBuilder);
-                Mockito.when(webResourceBuilder.type(MediaType.APPLICATION_JSON_TYPE)).thenReturn(webResourceBuilder);
-                Mockito.when(webResourceBuilder.post(String.class, "{}")).thenThrow(new UniformInterfaceException("Create failed", response, false));
+            // Mock client and web target to throw exception
+            try (MockedStatic<RangerJersey2ClientBuilder> clientMock = Mockito.mockStatic(RangerJersey2ClientBuilder.class)) {
+                clientMock.when(RangerJersey2ClientBuilder::newClient).thenReturn(client);
+                Mockito.when(client.target(Mockito.anyString())).thenReturn(webTarget);
+                Mockito.when(webTarget.request(Mockito.anyString())).thenReturn(invocationBuilder);
+                Mockito.when(invocationBuilder.post(Mockito.any())).thenThrow(new RuntimeException("Create failed"));
 
                 Assertions.assertThrows(Exception.class, () -> {
                     kmsKeyMgr.createKey(TEST_REPO_NAME, inputKey);
@@ -491,12 +507,15 @@ public class TestKmsKeyMgr {
             Mockito.when(svcStore.getServiceByName(TEST_REPO_NAME)).thenReturn(rangerService);
 
             // Mock client and web resource
-            try (MockedStatic<Client> clientMock = Mockito.mockStatic(Client.class)) {
-                clientMock.when(() -> Client.create(Mockito.any())).thenReturn(client);
-                Mockito.when(client.resource(Mockito.anyString())).thenReturn(webResource);
-                Mockito.when(webResource.accept(MediaType.APPLICATION_JSON_TYPE)).thenReturn(webResourceBuilder);
-                Mockito.when(webResourceBuilder.type(MediaType.APPLICATION_JSON_TYPE)).thenReturn(webResourceBuilder);
-                Mockito.when(webResourceBuilder.get(String.class)).thenReturn(jsonResponse);
+            try (MockedStatic<RangerJersey2ClientBuilder> clientMock = Mockito.mockStatic(RangerJersey2ClientBuilder.class)) {
+                Response mockResponse = Mockito.mock(Response.class);
+                Mockito.when(mockResponse.getStatus()).thenReturn(Response.Status.OK.getStatusCode());
+                Mockito.when(mockResponse.readEntity(String.class)).thenReturn(jsonResponse);
+
+                clientMock.when(RangerJersey2ClientBuilder::newClient).thenReturn(client);
+                Mockito.when(client.target(Mockito.anyString())).thenReturn(webTarget);
+                Mockito.when(webTarget.request(Mockito.anyString())).thenReturn(invocationBuilder);
+                Mockito.when(invocationBuilder.get()).thenReturn(mockResponse);
 
                 VXKmsKey result = kmsKeyMgr.getKey(TEST_REPO_NAME, TEST_KEY_NAME);
 
@@ -519,14 +538,12 @@ public class TestKmsKeyMgr {
 
             Mockito.when(svcStore.getServiceByName(TEST_REPO_NAME)).thenReturn(rangerService);
 
-            // Mock client and web resource to throw exception
-            try (MockedStatic<Client> clientMock = Mockito.mockStatic(Client.class)) {
-                clientMock.when(() -> Client.create(Mockito.any())).thenReturn(client);
-                ClientResponse response = Mockito.mock(ClientResponse.class);
-                Mockito.when(client.resource(Mockito.anyString())).thenReturn(webResource);
-                Mockito.when(webResource.accept(MediaType.APPLICATION_JSON_TYPE)).thenReturn(webResourceBuilder);
-                Mockito.when(webResourceBuilder.type(MediaType.APPLICATION_JSON_TYPE)).thenReturn(webResourceBuilder);
-                Mockito.when(webResourceBuilder.get(String.class)).thenThrow(new UniformInterfaceException("Get failed", response, false));
+            // Mock client and web target to throw exception
+            try (MockedStatic<RangerJersey2ClientBuilder> clientMock = Mockito.mockStatic(RangerJersey2ClientBuilder.class)) {
+                clientMock.when(RangerJersey2ClientBuilder::newClient).thenReturn(client);
+                Mockito.when(client.target(Mockito.anyString())).thenReturn(webTarget);
+                Mockito.when(webTarget.request(Mockito.anyString())).thenReturn(invocationBuilder);
+                Mockito.when(invocationBuilder.get()).thenThrow(new RuntimeException("Get failed"));
 
                 Assertions.assertThrows(Exception.class, () -> {
                     kmsKeyMgr.getKey(TEST_REPO_NAME, TEST_KEY_NAME);
@@ -565,12 +582,15 @@ public class TestKmsKeyMgr {
             jsonUtilsMock.when(() -> JsonUtils.jsonToObject(Mockito.anyString(), Mockito.eq(VXKmsKey.class))).thenReturn(resultKey);
 
             // Mock client and web resource
-            try (MockedStatic<Client> clientMock = Mockito.mockStatic(Client.class)) {
-                clientMock.when(() -> Client.create(Mockito.any())).thenReturn(client);
-                Mockito.when(client.resource(Mockito.anyString())).thenReturn(webResource);
-                Mockito.when(webResource.accept(MediaType.APPLICATION_JSON_TYPE)).thenReturn(webResourceBuilder);
-                Mockito.when(webResourceBuilder.type(MediaType.APPLICATION_JSON_TYPE)).thenReturn(webResourceBuilder);
-                Mockito.when(webResourceBuilder.get(String.class)).thenReturn(jsonResponse);
+            try (MockedStatic<RangerJersey2ClientBuilder> clientMock = Mockito.mockStatic(RangerJersey2ClientBuilder.class)) {
+                Response mockResponse = Mockito.mock(Response.class);
+                Mockito.when(mockResponse.getStatus()).thenReturn(Response.Status.OK.getStatusCode());
+                Mockito.when(mockResponse.readEntity(String.class)).thenReturn(jsonResponse);
+
+                clientMock.when(RangerJersey2ClientBuilder::newClient).thenReturn(client);
+                Mockito.when(client.target(Mockito.anyString())).thenReturn(webTarget);
+                Mockito.when(webTarget.request(Mockito.anyString())).thenReturn(invocationBuilder);
+                Mockito.when(invocationBuilder.get()).thenReturn(mockResponse);
 
                 VXKmsKey result = kmsKeyMgr.getKeyFromUri(TEST_PROVIDER_URL, TEST_KEY_NAME, false, TEST_REPO_NAME);
 
@@ -602,7 +622,6 @@ public class TestKmsKeyMgr {
             setupKerberosMocks(propertiesUtilMock, secureClientLoginMock, mockSubject);
             kerberosNameMock.when(() -> KerberosName.setRules("DEFAULT")).then(invocation -> null);
             passwordUtilsMock.when(() -> PasswordUtils.decryptPassword("encryptedPassword")).thenReturn(TEST_PASSWORD);
-            subjectMock.when(() -> Subject.doAs(Mockito.eq(mockSubject), Mockito.any(PrivilegedAction.class))).thenReturn(jsonResponse);
 
             XXService xxService = new XXService();
             xxService.setId(1L);
@@ -616,9 +635,14 @@ public class TestKmsKeyMgr {
             Mockito.when(xxServiceConfigMapDao.findByServiceAndConfigKey(1L, "password")).thenReturn(xxServiceConfigMap);
 
             // Mock client and web resource
-            try (MockedStatic<Client> clientMock = Mockito.mockStatic(Client.class)) {
-                clientMock.when(() -> Client.create(Mockito.any())).thenReturn(client);
-                Mockito.when(client.resource(Mockito.anyString())).thenReturn(webResource);
+            try (MockedStatic<RangerJersey2ClientBuilder> clientMock = Mockito.mockStatic(RangerJersey2ClientBuilder.class)) {
+                Response mockResponse = Mockito.mock(Response.class);
+                Mockito.when(mockResponse.getStatus()).thenReturn(Response.Status.OK.getStatusCode());
+                Mockito.when(mockResponse.readEntity(String.class)).thenReturn(jsonResponse);
+
+                subjectMock.when(() -> Subject.doAs(Mockito.eq(mockSubject), Mockito.any(PrivilegedAction.class))).thenReturn(mockResponse);
+
+                clientMock.when(RangerJersey2ClientBuilder::newClient).thenReturn(client);
 
                 VXKmsKey result = kmsKeyMgr.getKeyFromUri(TEST_PROVIDER_URL, TEST_KEY_NAME, true, TEST_REPO_NAME);
 
@@ -1027,12 +1051,15 @@ public class TestKmsKeyMgr {
             Mockito.when(restErrorUtil.validateString(Mockito.isNull(), Mockito.anyString(), Mockito.eq("Invalid value for parameter sortBy"),
                     Mockito.eq(MessageEnums.INVALID_INPUT_DATA), Mockito.isNull(), Mockito.eq(KeySearchFilter.SORT_BY))).thenReturn(null);
 
-            try (MockedStatic<Client> clientMock = Mockito.mockStatic(Client.class)) {
-                clientMock.when(() -> Client.create(Mockito.any())).thenReturn(client);
-                Mockito.when(client.resource(Mockito.anyString())).thenReturn(webResource);
-                Mockito.when(webResource.accept(MediaType.APPLICATION_JSON_TYPE)).thenReturn(webResourceBuilder);
-                Mockito.when(webResourceBuilder.type(MediaType.APPLICATION_JSON_TYPE)).thenReturn(webResourceBuilder);
-                Mockito.when(webResourceBuilder.get(String.class)).thenReturn(jsonResponse);
+            try (MockedStatic<RangerJersey2ClientBuilder> clientMock = Mockito.mockStatic(RangerJersey2ClientBuilder.class)) {
+                Response mockResponse = Mockito.mock(Response.class);
+                Mockito.when(mockResponse.getStatus()).thenReturn(Response.Status.OK.getStatusCode());
+                Mockito.when(mockResponse.readEntity(String.class)).thenReturn(jsonResponse);
+
+                clientMock.when(RangerJersey2ClientBuilder::newClient).thenReturn(client);
+                Mockito.when(client.target(Mockito.anyString())).thenReturn(webTarget);
+                Mockito.when(webTarget.request(Mockito.anyString())).thenReturn(invocationBuilder);
+                Mockito.when(invocationBuilder.get()).thenReturn(mockResponse);
 
                 VXKmsKeyList result = kmsKeyMgr.searchKeys(request, TEST_REPO_NAME);
 
@@ -1267,7 +1294,7 @@ public class TestKmsKeyMgr {
                 MockedStatic<StringUtil> stringUtilMock = Mockito.mockStatic(StringUtil.class);
                 MockedStatic<JsonUtils> jsonUtilsMock = Mockito.mockStatic(JsonUtils.class);
                 MockedStatic<PropertiesUtil> propertiesUtilMock = Mockito.mockStatic(PropertiesUtil.class);
-                MockedStatic<Client> clientMock = Mockito.mockStatic(Client.class)) {
+                MockedStatic<RangerJersey2ClientBuilder> clientMock = Mockito.mockStatic(RangerJersey2ClientBuilder.class)) {
             contextUtilMock.when(ContextUtil::getCurrentUserLoginId).thenReturn(TEST_USERNAME);
             stringUtilMock.when(() -> StringUtil.getUTFEncodedString(TEST_USERNAME)).thenReturn(TEST_USERNAME);
             jsonUtilsMock.when(() -> JsonUtils.jsonToListString(jsonResponse)).thenReturn(Collections.emptyList());
@@ -1276,21 +1303,23 @@ public class TestKmsKeyMgr {
             Mockito.when(svcStore.getServiceByName(TEST_REPO_NAME)).thenReturn(rangerService);
 
             Client localClient = Mockito.mock(Client.class);
-            WebResource webResource1 = Mockito.mock(WebResource.class);
-            WebResource.Builder builder1 = Mockito.mock(WebResource.Builder.class);
-            WebResource webResource2 = Mockito.mock(WebResource.class);
-            WebResource.Builder builder2 = Mockito.mock(WebResource.Builder.class);
+            WebTarget webTarget1 = Mockito.mock(WebTarget.class);
+            Invocation.Builder builder1 = Mockito.mock(Invocation.Builder.class);
+            WebTarget webTarget2 = Mockito.mock(WebTarget.class);
+            Invocation.Builder builder2 = Mockito.mock(Invocation.Builder.class);
 
-            clientMock.when(() -> Client.create(Mockito.any())).thenReturn(localClient);
-            Mockito.when(localClient.resource(Mockito.anyString())).thenReturn(webResource1, webResource2);
+            clientMock.when(RangerJersey2ClientBuilder::newClient).thenReturn(localClient);
+            Mockito.when(localClient.target(Mockito.anyString())).thenReturn(webTarget1, webTarget2);
 
-            Mockito.when(webResource1.accept(MediaType.APPLICATION_JSON_TYPE)).thenReturn(builder1);
-            Mockito.when(builder1.type(MediaType.APPLICATION_JSON_TYPE)).thenReturn(builder1);
-            Mockito.when(builder1.get(String.class)).thenThrow(new RuntimeException("Transient failure"));
+            Response mockResponse = Mockito.mock(Response.class);
+            Mockito.when(mockResponse.getStatus()).thenReturn(Response.Status.OK.getStatusCode());
+            Mockito.when(mockResponse.readEntity(String.class)).thenReturn(jsonResponse);
 
-            Mockito.when(webResource2.accept(MediaType.APPLICATION_JSON_TYPE)).thenReturn(builder2);
-            Mockito.when(builder2.type(MediaType.APPLICATION_JSON_TYPE)).thenReturn(builder2);
-            Mockito.when(builder2.get(String.class)).thenReturn(jsonResponse);
+            Mockito.when(webTarget1.request(Mockito.anyString())).thenReturn(builder1);
+            Mockito.when(builder1.get()).thenThrow(new RuntimeException("Transient failure"));
+
+            Mockito.when(webTarget2.request(Mockito.anyString())).thenReturn(builder2);
+            Mockito.when(builder2.get()).thenReturn(mockResponse);
 
             Mockito.when(request.getParameter(KeySearchFilter.KEY_NAME)).thenReturn(null);
             Mockito.when(request.getParameter(KeySearchFilter.START_INDEX)).thenReturn(null);
@@ -1306,13 +1335,13 @@ public class TestKmsKeyMgr {
     }
 
     @Test
-    public void testSearchKeys_ThrowsOnUniformInterfaceException() throws Exception {
+    public void testSearchKeys_ThrowsOnException() throws Exception {
         RangerService rangerService = createMockRangerService();
 
         try (MockedStatic<ContextUtil> contextUtilMock = Mockito.mockStatic(ContextUtil.class);
                 MockedStatic<StringUtil> stringUtilMock = Mockito.mockStatic(StringUtil.class);
                 MockedStatic<PropertiesUtil> propertiesUtilMock = Mockito.mockStatic(PropertiesUtil.class);
-                MockedStatic<Client> clientMock = Mockito.mockStatic(Client.class)) {
+                MockedStatic<RangerJersey2ClientBuilder> clientMock = Mockito.mockStatic(RangerJersey2ClientBuilder.class)) {
             contextUtilMock.when(ContextUtil::getCurrentUserLoginId).thenReturn(TEST_USERNAME);
             stringUtilMock.when(() -> StringUtil.getUTFEncodedString(TEST_USERNAME)).thenReturn(TEST_USERNAME);
             propertiesUtilMock.when(() -> PropertiesUtil.getProperty("hadoop.security.authentication", "simple")).thenReturn("simple");
@@ -1320,15 +1349,13 @@ public class TestKmsKeyMgr {
             Mockito.when(svcStore.getServiceByName(TEST_REPO_NAME)).thenReturn(rangerService);
 
             Client localClient = Mockito.mock(Client.class);
-            WebResource localResource = Mockito.mock(WebResource.class);
-            WebResource.Builder localBuilder = Mockito.mock(WebResource.Builder.class);
-            clientMock.when(() -> Client.create(Mockito.any())).thenReturn(localClient);
-            Mockito.when(localClient.resource(Mockito.anyString())).thenReturn(localResource);
-            Mockito.when(localResource.accept(MediaType.APPLICATION_JSON_TYPE)).thenReturn(localBuilder);
-            Mockito.when(localBuilder.type(MediaType.APPLICATION_JSON_TYPE)).thenReturn(localBuilder);
+            WebTarget localTarget = Mockito.mock(WebTarget.class);
+            Invocation.Builder localBuilder = Mockito.mock(Invocation.Builder.class);
+            clientMock.when(RangerJersey2ClientBuilder::newClient).thenReturn(localClient);
+            Mockito.when(localClient.target(Mockito.anyString())).thenReturn(localTarget);
+            Mockito.when(localTarget.request(MediaType.APPLICATION_JSON_TYPE)).thenReturn(localBuilder);
 
-            ClientResponse response = Mockito.mock(ClientResponse.class);
-            Mockito.when(localBuilder.get(String.class)).thenThrow(new UniformInterfaceException("Names fetch failed", response, false));
+            Mockito.when(localBuilder.get(String.class)).thenThrow(new RuntimeException("Names fetch failed"));
 
             Assertions.assertThrows(Exception.class, () -> kmsKeyMgr.searchKeys(request, TEST_REPO_NAME));
         }
@@ -1346,7 +1373,7 @@ public class TestKmsKeyMgr {
         try (MockedStatic<ContextUtil> contextUtilMock = Mockito.mockStatic(ContextUtil.class);
                 MockedStatic<StringUtil> stringUtilMock = Mockito.mockStatic(StringUtil.class);
                 MockedStatic<PropertiesUtil> propertiesUtilMock = Mockito.mockStatic(PropertiesUtil.class);
-                MockedStatic<Client> clientMock = Mockito.mockStatic(Client.class)) {
+                MockedStatic<RangerJersey2ClientBuilder> clientMock = Mockito.mockStatic(RangerJersey2ClientBuilder.class)) {
             contextUtilMock.when(ContextUtil::getCurrentUserLoginId).thenReturn(TEST_USERNAME);
             stringUtilMock.when(() -> StringUtil.getUTFEncodedString(TEST_USERNAME)).thenReturn(TEST_USERNAME);
             propertiesUtilMock.when(() -> PropertiesUtil.getProperty("hadoop.security.authentication", "simple")).thenReturn("simple");
@@ -1354,37 +1381,42 @@ public class TestKmsKeyMgr {
             Mockito.when(svcStore.getServiceByName(TEST_REPO_NAME)).thenReturn(rangerService);
 
             Client localClient = Mockito.mock(Client.class);
-            WebResource webResource1 = Mockito.mock(WebResource.class);
-            WebResource webResource2 = Mockito.mock(WebResource.class);
+            WebTarget webTarget1 = Mockito.mock(WebTarget.class);
+            WebTarget webTarget2 = Mockito.mock(WebTarget.class);
+            Invocation.Builder builder1 = Mockito.mock(Invocation.Builder.class);
+            Invocation.Builder builder2 = Mockito.mock(Invocation.Builder.class);
 
-            clientMock.when(() -> Client.create(Mockito.any())).thenReturn(localClient);
-            Mockito.when(localClient.resource(Mockito.anyString())).thenReturn(webResource1, webResource2);
+            clientMock.when(RangerJersey2ClientBuilder::newClient).thenReturn(localClient);
+            Mockito.when(localClient.target(Mockito.anyString())).thenReturn(webTarget1, webTarget2);
+            Mockito.when(webTarget1.request()).thenReturn(builder1);
+            Mockito.when(webTarget2.request()).thenReturn(builder2);
 
-            Mockito.when(webResource1.delete(String.class)).thenThrow(new RuntimeException("first host down"));
-            Mockito.when(webResource2.delete(String.class)).thenReturn("Success");
+            Response mockResponse2 = Mockito.mock(Response.class);
+            Mockito.when(mockResponse2.getStatus()).thenReturn(Response.Status.OK.getStatusCode());
+
+            Mockito.when(builder1.delete()).thenThrow(new RuntimeException("first host down"));
+            Mockito.when(builder2.delete()).thenReturn(mockResponse2);
 
             Assertions.assertDoesNotThrow(() -> kmsKeyMgr.deleteKey(TEST_REPO_NAME, TEST_KEY_NAME));
         }
     }
 
     @Test
-    public void testGetKeyFromUri_ThrowsUniformInterfaceException() throws Exception {
+    public void testGetKeyFromUri_ThrowsException() throws Exception {
         try (MockedStatic<ContextUtil> contextUtilMock = Mockito.mockStatic(ContextUtil.class);
                 MockedStatic<StringUtil> stringUtilMock = Mockito.mockStatic(StringUtil.class);
-                MockedStatic<Client> clientMock = Mockito.mockStatic(Client.class)) {
+                MockedStatic<RangerJersey2ClientBuilder> clientMock = Mockito.mockStatic(RangerJersey2ClientBuilder.class)) {
             contextUtilMock.when(ContextUtil::getCurrentUserLoginId).thenReturn(TEST_USERNAME);
             stringUtilMock.when(() -> StringUtil.getUTFEncodedString(TEST_USERNAME)).thenReturn(TEST_USERNAME);
 
             Client localClient = Mockito.mock(Client.class);
-            WebResource localResource = Mockito.mock(WebResource.class);
-            WebResource.Builder localBuilder = Mockito.mock(WebResource.Builder.class);
-            clientMock.when(() -> Client.create(Mockito.any())).thenReturn(localClient);
-            Mockito.when(localClient.resource(Mockito.anyString())).thenReturn(localResource);
-            Mockito.when(localResource.accept(MediaType.APPLICATION_JSON_TYPE)).thenReturn(localBuilder);
-            Mockito.when(localBuilder.type(MediaType.APPLICATION_JSON_TYPE)).thenReturn(localBuilder);
+            WebTarget localTarget = Mockito.mock(WebTarget.class);
+            Invocation.Builder localBuilder = Mockito.mock(Invocation.Builder.class);
+            clientMock.when(RangerJersey2ClientBuilder::newClient).thenReturn(localClient);
+            Mockito.when(localClient.target(Mockito.anyString())).thenReturn(localTarget);
+            Mockito.when(localTarget.request(MediaType.APPLICATION_JSON_TYPE)).thenReturn(localBuilder);
 
-            ClientResponse response = Mockito.mock(ClientResponse.class);
-            Mockito.when(localBuilder.get(String.class)).thenThrow(new UniformInterfaceException("Get failed", response, false));
+            Mockito.when(localBuilder.get(String.class)).thenThrow(new RuntimeException("Get failed"));
 
             Assertions.assertThrows(Exception.class, () ->
                     kmsKeyMgr.getKeyFromUri(TEST_PROVIDER_URL, TEST_KEY_NAME, false, TEST_REPO_NAME));

@@ -17,7 +17,6 @@
  */
 package org.apache.ranger.rest;
 
-import com.sun.jersey.core.header.FormDataContentDisposition;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -25,6 +24,7 @@ import org.apache.ranger.admin.client.datatype.RESTResponse;
 import org.apache.ranger.biz.AssetMgr;
 import org.apache.ranger.biz.RangerBizUtil;
 import org.apache.ranger.biz.RangerPolicyAdmin;
+import org.apache.ranger.biz.RoleDBStore;
 import org.apache.ranger.biz.SecurityZoneDBStore;
 import org.apache.ranger.biz.ServiceDBStore;
 import org.apache.ranger.biz.ServiceDBStore.JSON_FILE_NAME_TYPE;
@@ -33,6 +33,7 @@ import org.apache.ranger.biz.TagDBStore;
 import org.apache.ranger.biz.UserMgr;
 import org.apache.ranger.biz.XUserMgr;
 import org.apache.ranger.common.ContextUtil;
+import org.apache.ranger.common.GUIDUtil;
 import org.apache.ranger.common.MessageEnums;
 import org.apache.ranger.common.RESTErrorUtil;
 import org.apache.ranger.common.RangerConstants;
@@ -109,8 +110,10 @@ import org.apache.ranger.view.VXGroup;
 import org.apache.ranger.view.VXResponse;
 import org.apache.ranger.view.VXString;
 import org.apache.ranger.view.VXUser;
+import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Assumptions;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
@@ -167,13 +170,15 @@ public class TestServiceREST {
     private final String zoneName   = "test-zone-1";
     String importPoliceTestFilePath = "./src/test/java/org/apache/ranger/rest/importPolicy/import_policy_test_file.json";
     @InjectMocks
-    ServiceREST serviceREST = new ServiceREST();
+    ServiceREST serviceREST;
     @Mock
     RangerValidatorFactory validatorFactory;
     @Mock(answer = Answers.RETURNS_DEEP_STUBS)
     RangerDaoManager daoManager;
     @Mock
     ServiceDBStore svcStore;
+    @Mock
+    RoleDBStore roleDBStore;
     @Mock
     SecurityZoneDBStore zoneStore;
     @Mock
@@ -200,6 +205,8 @@ public class TestServiceREST {
     ContextUtil contextUtil;
     @Mock
     RangerBizUtil bizUtil;
+    @Mock
+    GUIDUtil guidUtil;
     @Mock
     RESTErrorUtil restErrorUtil;
     @Mock
@@ -235,6 +242,13 @@ public class TestServiceREST {
     @Mock
     UserMgr           userMgrGrantor;
     private String capabilityVector;
+
+    @BeforeEach
+    void reinforceSpringFieldInjection() {
+        serviceREST.policyLabelsService = policyLabelsService;
+        serviceREST.roleDBStore         = roleDBStore;
+        serviceREST.guidUtil            = guidUtil;
+    }
 
     public void setup() {
         RangerSecurityContext context = new RangerSecurityContext();

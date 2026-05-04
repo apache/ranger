@@ -49,6 +49,7 @@ import org.apache.ranger.security.context.RangerContextHolder;
 import org.apache.ranger.security.context.RangerSecurityContext;
 import org.apache.ranger.view.RangerServiceDefList;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
@@ -77,9 +78,9 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 public class TestRangerServiceDefServiceBase {
     private static final Long Id = 8L;
     @InjectMocks
-    RangerServiceDefService rangerServiceDefService = new RangerServiceDefService();
+    RangerServiceDefService rangerServiceDefService;
     @Mock
-    RangerDaoManager        daoManager;
+    RangerDaoManager        daoMgr;
     @Mock
     RESTErrorUtil           restErrorUtil;
     @Mock
@@ -95,7 +96,14 @@ public class TestRangerServiceDefServiceBase {
     @Mock
     JSONUtil                jsonUtil;
     @Mock
-    BaseDao<XXServiceDef>   baseDao;
+    BaseDao<XXServiceDef>   entityDao;
+
+    @BeforeEach
+    void wireRangerServiceDefServiceFields() {
+        rangerServiceDefService.daoMgr            = daoMgr;
+        rangerServiceDefService.entityDao         = entityDao;
+        rangerServiceDefService.rangerAuditFields = rangerAuditFields;
+    }
 
     public void setup() {
         RangerSecurityContext context = new RangerSecurityContext();
@@ -203,7 +211,7 @@ public class TestRangerServiceDefServiceBase {
         resourceDefObj.setDescription("HDFS Repository");
         resourceDefObj.setId(Id);
 
-        Mockito.when(daoManager.getXXResourceDef()).thenReturn(xResourceDefDao);
+        Mockito.when(daoMgr.getXXResourceDef()).thenReturn(xResourceDefDao);
 
         RangerResourceDef dbRangerResourceDef = rangerServiceDefService.populateXXToRangerResourceDef(resourceDefObj);
         Assertions.assertNotNull(dbRangerResourceDef);
@@ -211,7 +219,7 @@ public class TestRangerServiceDefServiceBase {
         Assertions.assertEquals(dbRangerResourceDef.getDescription(), resourceDefObj.getDescription());
         Assertions.assertEquals(dbRangerResourceDef.getType(), resourceDefObj.getType());
         Assertions.assertEquals(dbRangerResourceDef.getRbKeyDescription(), resourceDefObj.getRbkeydescription());
-        Mockito.verify(daoManager).getXXResourceDef();
+        Mockito.verify(daoMgr).getXXResourceDef();
     }
 
     @Test
@@ -501,14 +509,14 @@ public class TestRangerServiceDefServiceBase {
         enumDefObj.setUpdatedByUserId(Id);
         enumDefObj.setUpdateTime(new Date());
 
-        Mockito.when(daoManager.getXXEnumElementDef()).thenReturn(xEnumElementDefDao);
+        Mockito.when(daoMgr.getXXEnumElementDef()).thenReturn(xEnumElementDefDao);
         Mockito.when(xEnumElementDefDao.findByEnumDefId(enumDefObj.getId())).thenReturn(enumElementDefList);
 
         RangerEnumDef dbRangerEnumDef = rangerServiceDefService.populateXXToRangerEnumDef(enumDefObj);
         Assertions.assertNotNull(dbRangerEnumDef);
         Assertions.assertEquals(dbRangerEnumDef.getName(), enumDefObj.getName());
 
-        Mockito.verify(daoManager).getXXEnumElementDef();
+        Mockito.verify(daoMgr).getXXEnumElementDef();
     }
 
     @Test
