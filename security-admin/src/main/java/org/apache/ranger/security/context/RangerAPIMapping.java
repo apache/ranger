@@ -547,6 +547,7 @@ public class RangerAPIMapping {
         apiAssociatedWithGDS.add(RangerAPIList.ADD_SHARED_RESOURCE);
         apiAssociatedWithGDS.add(RangerAPIList.ADD_SHARED_RESOURCES);
         apiAssociatedWithGDS.add(RangerAPIList.UPDATE_SHARED_RESOURCE);
+        apiAssociatedWithGDS.add(RangerAPIList.UPDATE_SHARED_RESOURCES);
         apiAssociatedWithGDS.add(RangerAPIList.REMOVE_SHARED_RESOURCE);
         apiAssociatedWithGDS.add(RangerAPIList.REMOVE_SHARED_RESOURCES);
         apiAssociatedWithGDS.add(RangerAPIList.GET_SHARED_RESOURCE);

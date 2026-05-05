@@ -133,6 +133,10 @@ public abstract class AbstractGdsStore implements GdsStore {
     }
 
     @Override
+    public void updateSharedResources(List<Long> sharedResourceIds) throws Exception {
+    }
+
+    @Override
     public void removeSharedResources(List<Long> sharedResourceIds) throws Exception {
     }
 

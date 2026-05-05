@@ -925,6 +925,48 @@ public class TestGdsREST {
     }
 
     @Test
+    public void testUpdateSharedResources_updatesWhenNotForceDelete() throws Exception {
+        List<Long> resourceIds = Arrays.asList(1L, 2L, 3L);
+
+        doNothing().when(gdsStore).updateSharedResources(resourceIds);
+
+        gdsREST.updateSharedResources(false, resourceIds);
+
+        verify(gdsStore).updateSharedResources(resourceIds);
+        verify(gdsStore, Mockito.never()).removeSharedResources(Mockito.anyList());
+    }
+
+    @Test
+    public void testUpdateSharedResources_deletesWhenForceDelete() throws Exception {
+        List<Long> resourceIds = Arrays.asList(1L, 2L, 3L);
+
+        doNothing().when(gdsStore).removeSharedResources(resourceIds);
+
+        gdsREST.updateSharedResources(true, resourceIds);
+
+        verify(gdsStore).removeSharedResources(resourceIds);
+        verify(gdsStore, Mockito.never()).updateSharedResources(Mockito.anyList());
+    }
+
+    @Test
+    public void testUpdateSharedResourcesBatchSizeExceeded() {
+        List<Long> resourceIds = new ArrayList<>();
+        for (long i = 0; i < 101; i++) {
+            resourceIds.add(i);
+        }
+        Mockito.when(restErrorUtil.createRESTException(Mockito.anyString())).thenReturn(new WebApplicationException());
+
+        assertThrows(WebApplicationException.class, () -> gdsREST.updateSharedResources(false, resourceIds));
+    }
+
+    @Test
+    public void testUpdateSharedResourcesNullResourceIds() {
+        Mockito.when(restErrorUtil.createRESTException(Mockito.anyString())).thenReturn(new WebApplicationException());
+
+        assertThrows(WebApplicationException.class, () -> gdsREST.updateSharedResources(false, null));
+    }
+
+    @Test
     public void testRemoveSharedResourceException() {
         Mockito.doThrow(new RuntimeException("err")).when(gdsStore).removeSharedResources(any(List.class));
         when(restErrorUtil.createRESTException(anyString())).thenReturn(new WebApplicationException());

@@ -102,6 +102,8 @@ public interface GdsStore {
 
     RangerSharedResource updateSharedResource(RangerSharedResource resource) throws Exception;
 
+    void updateSharedResources(List<Long> sharedResourceIds) throws Exception;
+
     void removeSharedResources(List<Long> sharedResourceIds) throws Exception;
 
     RangerSharedResource getSharedResource(Long sharedResourceId) throws Exception;

@@ -720,6 +720,27 @@ public class GdsDBStore extends AbstractGdsStore {
     }
 
     @Override
+    public void updateSharedResources(List<Long> sharedResourceIds) {
+        LOG.debug("==> updateSharedResources({})", sharedResourceIds);
+
+        for (Long sharedResourceId : sharedResourceIds) {
+            RangerSharedResource existing = null;
+
+            try {
+                existing = sharedResourceService.read(sharedResourceId);
+            } catch (Exception excp) {
+                // ignore
+            }
+
+            if (existing != null) {
+                updateSharedResource(existing);
+            }
+        }
+
+        LOG.debug("<== updateSharedResources({})", sharedResourceIds);
+    }
+
+    @Override
     public void removeSharedResources(List<Long> sharedResourceIds) {
         LOG.debug("==> removeSharedResources({})", sharedResourceIds);
 

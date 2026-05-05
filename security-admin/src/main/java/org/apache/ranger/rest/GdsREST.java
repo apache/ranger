@@ -1261,6 +1261,47 @@ public class GdsREST {
         return ret;
     }
 
+    @PUT
+    @Path("/resources")
+    @Consumes("application/json")
+    @Produces("application/json")
+    @PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.UPDATE_SHARED_RESOURCES + "\")")
+    public void updateSharedResources(@QueryParam("forceDelete") @DefaultValue("false") boolean forceDelete, List<Long> resourceIds) {
+        LOG.debug("==> GdsREST.updateSharedResources(resourceIds={}, forceDelete={})", resourceIds, forceDelete);
+
+        RangerPerfTracer perf = null;
+
+        try {
+            if (resourceIds == null) {
+                throw new Exception("resourceIds must not be null");
+            }
+
+            if (resourceIds.size() > SHARED_RESOURCES_MAX_BATCH_SIZE) {
+                throw new Exception("updateSharedResources batch size exceeded the configured limit: Maximum allowed is " + SHARED_RESOURCES_MAX_BATCH_SIZE);
+            }
+
+            if (RangerPerfTracer.isPerfTraceEnabled(PERF_LOG)) {
+                perf = RangerPerfTracer.getPerfTracer(PERF_LOG, "GdsREST.updateSharedResources(" + resourceIds + ",forceDelete=" + forceDelete + ")");
+            }
+
+            if (forceDelete) {
+                gdsStore.removeSharedResources(resourceIds);
+            } else {
+                gdsStore.updateSharedResources(resourceIds);
+            }
+        } catch (WebApplicationException excp) {
+            throw excp;
+        } catch (Throwable excp) {
+            LOG.error("updateSharedResources(resourceIds={}, forceDelete={}) failed", resourceIds, forceDelete, excp);
+
+            throw restErrorUtil.createRESTException(excp.getMessage());
+        } finally {
+            RangerPerfTracer.log(perf);
+        }
+
+        LOG.debug("<== GdsREST.updateSharedResources(resourceIds={}, forceDelete={})", resourceIds, forceDelete);
+    }
+
     @DELETE
     @Path("/resource/{id}")
     @Produces("application/json")
