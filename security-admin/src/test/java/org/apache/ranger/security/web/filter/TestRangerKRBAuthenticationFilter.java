@@ -397,39 +397,6 @@ public class TestRangerKRBAuthenticationFilter {
     }
 
     @Test
-    public void testProtectedDoFilter_usesSessionUserNameKeyadminPath() throws Exception {
-        // Enable spnego
-        File kt = File.createTempFile("krb", ".keytab");
-        kt.deleteOnExit();
-        PropertiesUtil.getPropertiesMap().put("hadoop.security.authentication", "kerberos");
-        PropertiesUtil.getPropertiesMap().put("ranger.spnego.kerberos.principal", "HTTP/localhost@EXAMPLE.COM");
-        PropertiesUtil.getPropertiesMap().put("ranger.spnego.kerberos.keytab", kt.getAbsolutePath());
-
-        RangerKRBAuthenticationFilter filter = new RangerKRBAuthenticationFilter();
-        // Inject userMgr to avoid NPE and to provide roles
-        UserMgr userMgr = Mockito.mock(UserMgr.class);
-        Field uf = RangerKRBAuthenticationFilter.class.getDeclaredField("userMgr");
-        uf.setAccessible(true);
-        uf.set(filter, userMgr);
-        Mockito.when(userMgr.getRolesByLoginId("keyadmin")).thenReturn(Collections.singletonList("ROLE_USER"));
-
-        HttpServletRequest req = Mockito.mock(HttpServletRequest.class);
-        HttpServletResponse res = Mockito.mock(HttpServletResponse.class);
-        FilterChain chain = Mockito.mock(FilterChain.class);
-
-        when(res.containsHeader("Set-Cookie")).thenReturn(false);
-        when(req.getParameter("suser")).thenReturn("keyadmin");
-        when(req.getPathInfo()).thenReturn("/public/v2/api/service/list");
-        when(req.getHeaderNames()).thenReturn(Collections.emptyEnumeration());
-
-        filter.doFilter(chain, req, res);
-
-        Authentication a = SecurityContextHolder.getContext().getAuthentication();
-        assertNotNull(a);
-        verify(chain, times(1)).doFilter(req, res);
-    }
-
-    @Test
     public void testProtectedDoFilter_trustedProxy_authorizationFails() throws Exception {
         Assumptions.assumeTrue(false, "Skipped in this environment due to response writer issues");
         // Enable spnego and trusted proxy

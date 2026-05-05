@@ -106,7 +106,6 @@ public class RangerKRBAuthenticationFilter extends RangerKrbFilter {
     static final String RULES_MECHANISM_PARAM = "kerberos.name.rules.mechanism";
 
     private static final String KERBEROS_TYPE = "kerberos";
-    private static final String S_USER        = "suser";
 
     protected static ServletContext noContext = new ServletContext() {
         @Override
@@ -260,6 +259,11 @@ public class RangerKRBAuthenticationFilter extends RangerKrbFilter {
         }
 
         @Override
+        public ServletRegistration.Dynamic addJspFile(String servletName, String jspFile) {
+            return null;
+        }
+
+        @Override
         public <T extends Servlet> T createServlet(Class<T> clazz) {
             return null;
         }
@@ -357,6 +361,34 @@ public class RangerKRBAuthenticationFilter extends RangerKrbFilter {
         @Override
         public String getVirtualServerName() {
             return null;
+        }
+
+        @Override
+        public int getSessionTimeout() {
+            return 0;
+        }
+
+        @Override
+        public void setSessionTimeout(int sessionTimeout) {
+        }
+
+        @Override
+        public String getRequestCharacterEncoding() {
+            return null;
+        }
+
+        @Override
+        public void setRequestCharacterEncoding(String encoding) {
+        }
+
+        @Override
+        public String getResponseCharacterEncoding() {
+            return null;
+        }
+
+        @Override
+        public void setResponseCharacterEncoding(String encoding) {
+            // No-op implementation for compatibility with Servlet API 4.0+
         }
     };
 
@@ -517,15 +549,6 @@ public class RangerKRBAuthenticationFilter extends RangerKrbFilter {
                     }
                 }
             }
-        }
-
-        String sessionUserName = request.getParameter(S_USER);
-        String pathInfo        = request.getPathInfo();
-
-        if (!StringUtils.isEmpty(sessionUserName) && "keyadmin".equalsIgnoreCase(sessionUserName) && !StringUtils.isEmpty(pathInfo) && pathInfo.contains("public/v2/api/service")) {
-            LOG.info("Session will be created by : {}", sessionUserName);
-
-            userName = sessionUserName;
         }
 
         LOG.debug("Remote user from request = {}", request.getRemoteUser());

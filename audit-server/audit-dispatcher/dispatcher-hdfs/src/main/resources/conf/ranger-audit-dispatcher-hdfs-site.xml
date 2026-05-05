@@ -46,7 +46,7 @@
     </property>
     <property>
         <name>ranger.audit.dispatcher.kafka.bootstrap.servers</name>
-        <value>ranger-kafka:9092</value>
+        <value>ranger-kafka.rangernw:9092</value>
     </property>
 
     <property>

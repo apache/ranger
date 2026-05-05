@@ -45,6 +45,7 @@ import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
+import javax.ws.rs.OPTIONS;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
@@ -163,10 +164,13 @@ public class KMS {
             int    idx        = requestURL.lastIndexOf(KMSRESTConstants.KEYS_RESOURCE);
 
             requestURL = requestURL.substring(0, idx);
+            URI locationURI = getKeyURI(requestURL, name);
 
-            return Response.created(getKeyURI(KMSRESTConstants.SERVICE_VERSION, name))
+            Response response = Response.created(locationURI)
                     .type(MediaType.APPLICATION_JSON)
-                    .header("Location", getKeyURI(requestURL, name)).entity(json).build();
+                    .entity(json)
+                    .build();
+            return response;
         } catch (Exception e) {
             LOG.error("Exception in createKey.", e);
 
@@ -174,6 +178,15 @@ public class KMS {
         } finally {
             LOG.debug("<== createKey()");
         }
+    }
+
+    /**
+     * Handles OPTIONS requests for the root v1 resource (e.g., /kms/v1/).
+     * This is required for the Kerberos/SPNEGO authentication handshake.
+     */
+    @OPTIONS
+    public Response getOptions() {
+        return Response.ok().build();
     }
 
     @DELETE

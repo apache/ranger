@@ -19,7 +19,7 @@ delimiter ;;
 create procedure create_index_for_x_trx_log() begin
 if exists (SELECT * FROM INFORMATION_SCHEMA.STATISTICS WHERE table_schema=DATABASE() AND table_name='x_trx_log') then
   if not exists (SELECT * FROM INFORMATION_SCHEMA.STATISTICS WHERE table_schema=DATABASE() AND table_name='x_trx_log' AND index_name='x_trx_log_IDX_trx_id') then
-    CREATE INDEX x_trx_log_IDX_trx_id ON x_trx_log(trx_id);
+    CREATE INDEX x_trx_log_IDX_trx_id ON x_trx_log(trx_id(190));
   end if;
 end if;
 end;;

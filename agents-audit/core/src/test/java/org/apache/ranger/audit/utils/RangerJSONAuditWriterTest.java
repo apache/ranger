@@ -101,9 +101,13 @@ public class RangerJSONAuditWriterTest {
 
         reset(jsonAuditWriter);
 
-        assertTrue(jsonAuditWriter.logJSON(Collections.singleton("Last log file will be opened in append mode and this event will be written")));
-        assertTrue(jsonAuditWriter.logJSON(Collections.singleton("This event will also be written in append mode")));
-        Path auditPath1 = jsonAuditWriter.auditPath;
+        final Path auditPath1;
+        synchronized (jsonAuditWriter) {
+            assertTrue(jsonAuditWriter.logJSON(Collections.singleton("Last log file will be opened in append mode and this event will be written")));
+            assertTrue(jsonAuditWriter.logJSON(Collections.singleton("This event will also be written in append mode")));
+            auditPath1 = jsonAuditWriter.auditPath;
+        }
+        assertNotNull(auditPath1);
 
         Thread.sleep(6000);
 
@@ -118,6 +122,7 @@ public class RangerJSONAuditWriterTest {
 
         // ensure the same rolled over file is not used for append
         assertNotEquals(auditPath1, jsonAuditWriter.auditPath);
+        assertNotNull(jsonAuditWriter.auditPath, "second write should create a new audit file path");
 
         // cleanup
         jsonAuditWriter.fileSystem.deleteOnExit(auditPath1);
@@ -165,14 +170,19 @@ public class RangerJSONAuditWriterTest {
         jsonAuditWriter.fileRolloverSec = 5; // in seconds
         jsonAuditWriter.init(props, "test", "localfs", auditConfigs);
 
-        assertTrue(jsonAuditWriter.logJSON(Collections.singleton("First file created and added this line!")));
-        Path auditPath1 = jsonAuditWriter.auditPath;
+        final Path auditPath1;
+        synchronized (jsonAuditWriter) {
+            assertTrue(jsonAuditWriter.logJSON(Collections.singleton("First file created and added this line!")));
+            auditPath1 = jsonAuditWriter.auditPath;
+        }
+        assertNotNull(auditPath1);
 
         Thread.sleep(6000);
 
         assertNull(jsonAuditWriter.ostream);
         assertNull(jsonAuditWriter.logWriter);
         assertTrue(jsonAuditWriter.logJSON(Collections.singleton("Second file created since rollover happened!")));
+        assertNotNull(jsonAuditWriter.auditPath, "second write should create a new audit file path");
 
         // cleanup
         jsonAuditWriter.fileSystem.deleteOnExit(auditPath1);

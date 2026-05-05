@@ -19,11 +19,6 @@
 
 package org.apache.ranger.biz;
 
-import com.sun.jersey.api.client.Client;
-import com.sun.jersey.api.client.UniformInterfaceException;
-import com.sun.jersey.api.client.WebResource;
-import com.sun.jersey.api.client.config.ClientConfig;
-import com.sun.jersey.api.client.config.DefaultClientConfig;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.collections.Predicate;
@@ -47,6 +42,7 @@ import org.apache.ranger.entity.XXServiceConfigMap;
 import org.apache.ranger.plugin.model.RangerService;
 import org.apache.ranger.plugin.util.KeySearchFilter;
 import org.apache.ranger.plugin.util.PasswordUtils;
+import org.apache.ranger.plugin.util.RangerJersey2ClientBuilder;
 import org.apache.ranger.view.VXKmsKey;
 import org.apache.ranger.view.VXKmsKeyList;
 import org.slf4j.Logger;
@@ -56,7 +52,12 @@ import org.springframework.stereotype.Component;
 
 import javax.security.auth.Subject;
 import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.Entity;
+import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 
 import java.io.IOException;
 import java.net.URI;
@@ -77,7 +78,6 @@ public class KmsKeyMgr {
     static final String NAME_RULES       = "hadoop.security.auth_to_local";
     static final String RANGER_AUTH_TYPE = "hadoop.security.authentication";
     static final String HOST_NAME        = "ranger.service.host";
-
     private static final String              KMS_KEY_LIST_URI     = "v1/keys/names";                //GET
     private static final String              KMS_ADD_KEY_URI      = "v1/keys";                    //POST
     private static final String              KMS_ROLL_KEY_URI     = "v1/key/${alias}";            //POST
@@ -143,43 +143,46 @@ public class KmsKeyMgr {
                     uri = uri.concat("?doAs=" + currentUserLoginId);
                 }
 
-                final WebResource r = c.resource(uri);
-
+                final WebTarget target = c.target(uri);
                 try {
-                    String response;
-
+                    Response response;
                     if (!isKerberos) {
-                        response = r.accept(MediaType.APPLICATION_JSON_TYPE).type(MediaType.APPLICATION_JSON_TYPE).get(String.class);
+                        response = target.request(MediaType.APPLICATION_JSON).get();
                     } else {
                         Subject sub = getSubjectForKerberos(repoName);
-
-                        response = Subject.doAs(sub, (PrivilegedAction<String>) () -> r.accept(MediaType.APPLICATION_JSON_TYPE).type(MediaType.APPLICATION_JSON_TYPE).get(String.class));
+                        response = Subject.doAs(sub, (PrivilegedAction<Response>) () -> target.request(MediaType.APPLICATION_JSON).get());
                     }
 
-                    logger.debug(" Search Key RESPONSE: [{}]", response);
+                    logger.debug(" Search Key RESPONSE: [{}]", response.getStatus());
 
-                    List<String> keys = JsonUtils.jsonToListString(response);
+                    if (response.getStatus() == Response.Status.OK.getStatusCode()) {
+                        String jsonString = response.readEntity(String.class);
+                        logger.debug(" Search Key JSON string: [{}]", jsonString);
+                        List<String> keys = JsonUtils.jsonToListString(jsonString);
 
-                    Collections.sort(keys);
+                        Collections.sort(keys);
 
-                    VXKmsKeyList   vxKmsKeyList2 = new VXKmsKeyList();
-                    List<VXKmsKey> vXKeys2       = new ArrayList<>();
+                        VXKmsKeyList   vxKmsKeyList2 = new VXKmsKeyList();
+                        List<VXKmsKey> vXKeys2       = new ArrayList<>();
 
-                    for (String name : keys) {
-                        VXKmsKey key = new VXKmsKey();
+                        for (String name : keys) {
+                            VXKmsKey key = new VXKmsKey();
 
-                        key.setName(name);
+                            key.setName(name);
 
-                        vXKeys2.add(key);
+                            vXKeys2.add(key);
+                        }
+
+                        vxKmsKeyList2.setVXKeys(vXKeys2);
+
+                        vxKmsKeyList = getFilteredKeyList(request, vxKmsKeyList2);
+
+                        break;
+                    } else {
+                        throw new WebApplicationException(response);
                     }
-
-                    vxKmsKeyList2.setVXKeys(vXKeys2);
-
-                    vxKmsKeyList = getFilteredKeyList(request, vxKmsKeyList2);
-
-                    break;
                 } catch (Exception e) {
-                    if (e instanceof UniformInterfaceException || i == providers.length - 1) {
+                    if (e instanceof WebApplicationException || i == providers.length - 1) {
                         throw e;
                     } else {
                         continue;
@@ -263,27 +266,31 @@ public class KmsKeyMgr {
                     uri = uri.concat("?doAs=" + currentUserLoginId);
                 }
 
-                final WebResource r          = c.resource(uri);
-                final String      jsonString = JsonUtils.objectToJson(vXKey);
+                final WebTarget r          = c.target(uri);
+                final String    jsonString = JsonUtils.objectToJson(vXKey);
 
                 try {
-                    String response;
+                    Response response;
 
                     if (!isKerberos) {
-                        response = r.accept(MediaType.APPLICATION_JSON_TYPE).type(MediaType.APPLICATION_JSON_TYPE).post(String.class, jsonString);
+                        response = r.request(MediaType.APPLICATION_JSON).post(Entity.json(jsonString));
                     } else {
                         Subject sub = getSubjectForKerberos(provider);
-
-                        response = Subject.doAs(sub, (PrivilegedAction<String>) () -> r.accept(MediaType.APPLICATION_JSON_TYPE).type(MediaType.APPLICATION_JSON_TYPE).post(String.class, jsonString));
+                        response = Subject.doAs(sub, (PrivilegedAction<Response>) () -> r.request(MediaType.APPLICATION_JSON).post(Entity.json(jsonString)));
                     }
 
-                    logger.debug("Roll RESPONSE: [{}]", response);
+                    logger.debug("Roll RESPONSE: [{}]", response.getStatus());
 
-                    ret = JsonUtils.jsonToObject(response, VXKmsKey.class);
-
+                    if (response.getStatus() == Response.Status.OK.getStatusCode()) {
+                        ret = JsonUtils.jsonToObject(response.readEntity(String.class), VXKmsKey.class);
+                    } else {
+                        String errorResponse = response.readEntity(String.class);
+                        logger.error("Roll Key failed with status [{}], error response: [{}]", response.getStatus(), errorResponse);
+                        throw new WebApplicationException(errorResponse, response.getStatus());
+                    }
                     break;
                 } catch (Exception e) {
-                    if (e instanceof UniformInterfaceException || i == providers.length - 1) {
+                    if (e instanceof WebApplicationException || i == providers.length - 1) {
                         throw e;
                     } else {
                         continue;
@@ -326,22 +333,26 @@ public class KmsKeyMgr {
                     uri = uri.concat("?doAs=" + currentUserLoginId);
                 }
 
-                final WebResource r = c.resource(uri);
+                final WebTarget r = c.target(uri);
                 try {
-                    String response;
+                    Response response;
 
                     if (!isKerberos) {
-                        response = r.delete(String.class);
+                        response = r.request().delete();
                     } else {
                         Subject sub = getSubjectForKerberos(provider);
-
-                        response = Subject.doAs(sub, (PrivilegedAction<String>) () -> r.delete(String.class));
+                        response = Subject.doAs(sub, (PrivilegedAction<Response>) () -> r.request().delete());
                     }
-
-                    logger.debug("delete RESPONSE: [{}]", response);
-                    break;
+                    logger.debug("delete RESPONSE: [{}]", response.getStatus());
+                    if (response.getStatus() == Response.Status.OK.getStatusCode() || response.getStatus() == Response.Status.NO_CONTENT.getStatusCode()) {
+                        break;
+                    } else {
+                        String errorResponse = response.readEntity(String.class);
+                        logger.error("Delete Key failed with status [{}], error response: [{}]", response.getStatus(), errorResponse);
+                        throw new WebApplicationException(errorResponse, response.getStatus());
+                    }
                 } catch (Exception e) {
-                    if (e instanceof UniformInterfaceException || i == providers.length - 1) {
+                    if (e instanceof WebApplicationException || i == providers.length - 1) {
                         throw e;
                     } else {
                         continue;
@@ -383,27 +394,33 @@ public class KmsKeyMgr {
                     uri = uri.concat("?doAs=" + currentUserLoginId);
                 }
 
-                final WebResource r          = c.resource(uri);
-                final String      jsonString = JsonUtils.objectToJson(vXKey);
+                final WebTarget r          = c.target(uri);
+                final String    jsonString = JsonUtils.objectToJson(vXKey);
 
                 try {
-                    String response;
+                    Response response;
 
                     if (!isKerberos) {
-                        response = r.accept(MediaType.APPLICATION_JSON_TYPE).type(MediaType.APPLICATION_JSON_TYPE).post(String.class, jsonString);
+                        response = r.request(MediaType.APPLICATION_JSON).post(Entity.json(jsonString));
                     } else {
                         Subject sub = getSubjectForKerberos(provider);
-
-                        response = Subject.doAs(sub, (PrivilegedAction<String>) () -> r.accept(MediaType.APPLICATION_JSON_TYPE).type(MediaType.APPLICATION_JSON_TYPE).post(String.class, jsonString));
+                        response = Subject.doAs(sub, (PrivilegedAction<Response>) () -> r.request(MediaType.APPLICATION_JSON).post(Entity.json(jsonString)));
                     }
 
-                    logger.debug("Create RESPONSE: [{}]", response);
+                    logger.debug("Create RESPONSE: [{}]", response.getStatus());
 
-                    ret = JsonUtils.jsonToObject(response, VXKmsKey.class);
+                    if (response.getStatus() == Response.Status.CREATED.getStatusCode() || response.getStatus() == Response.Status.OK.getStatusCode()) {
+                        ret = JsonUtils.jsonToObject(response.readEntity(String.class), VXKmsKey.class);
+                    } else {
+                        String errorResponse = response.readEntity(String.class);
+                        logger.error("Create Key failed with status [{}], error response: [{}]", response.getStatus(), errorResponse);
+
+                        throw new WebApplicationException(errorResponse, response.getStatus());
+                    }
 
                     return ret;
                 } catch (Exception e) {
-                    if (e instanceof UniformInterfaceException || i == providers.length - 1) {
+                    if (e instanceof WebApplicationException || i == providers.length - 1) {
                         throw e;
                     } else {
                         continue;
@@ -445,24 +462,28 @@ public class KmsKeyMgr {
                     uri = uri.concat("?doAs=" + currentUserLoginId);
                 }
 
-                final WebResource r = c.resource(uri);
+                final WebTarget r = c.target(uri);
 
                 try {
-                    String response;
+                    Response response;
 
                     if (!isKerberos) {
-                        response = r.accept(MediaType.APPLICATION_JSON_TYPE).type(MediaType.APPLICATION_JSON_TYPE).get(String.class);
+                        response = r.request(MediaType.APPLICATION_JSON).get();
                     } else {
                         Subject sub = getSubjectForKerberos(provider);
-
-                        response = Subject.doAs(sub, (PrivilegedAction<String>) () -> r.accept(MediaType.APPLICATION_JSON_TYPE).type(MediaType.APPLICATION_JSON_TYPE).get(String.class));
+                        response = Subject.doAs(sub, (PrivilegedAction<Response>) () -> r.request(MediaType.APPLICATION_JSON).get());
                     }
+                    logger.debug("RESPONSE: [{}]", response.getStatus());
+                    if (response.getStatus() == Response.Status.OK.getStatusCode()) {
+                        return JsonUtils.jsonToObject(response.readEntity(String.class), VXKmsKey.class);
+                    } else {
+                        String errorResponse = response.readEntity(String.class);
+                        logger.error("Get Key failed with status [{}], error response: [{}]", response.getStatus(), errorResponse);
 
-                    logger.debug("RESPONSE: [{}]", response);
-
-                    return JsonUtils.jsonToObject(response, VXKmsKey.class);
+                        throw new WebApplicationException(errorResponse, response.getStatus());
+                    }
                 } catch (Exception e) {
-                    if (e instanceof UniformInterfaceException || i == providers.length - 1) {
+                    if (e instanceof WebApplicationException || i == providers.length - 1) {
                         throw e;
                     } else {
                         continue;
@@ -486,20 +507,26 @@ public class KmsKeyMgr {
             uri = uri.concat("?doAs=" + currentUserLoginId);
         }
 
-        final WebResource r = c.resource(uri);
-        String            response;
+        final WebTarget r = c.target(uri);
+        Response        response;
 
         if (!isKerberos) {
-            response = r.accept(MediaType.APPLICATION_JSON_TYPE).type(MediaType.APPLICATION_JSON_TYPE).get(String.class);
+            response = r.request(MediaType.APPLICATION_JSON).get();
         } else {
             Subject sub = getSubjectForKerberos(repoName);
-
-            response = Subject.doAs(sub, (PrivilegedAction<String>) () -> r.accept(MediaType.APPLICATION_JSON_TYPE).type(MediaType.APPLICATION_JSON_TYPE).get(String.class));
+            response = Subject.doAs(sub, (PrivilegedAction<Response>) () -> r.request(MediaType.APPLICATION_JSON).get());
         }
 
-        logger.debug("RESPONSE: [{}]", response);
+        logger.debug("RESPONSE: [{}]", response.getStatus());
 
-        return JsonUtils.jsonToObject(response, VXKmsKey.class);
+        if (response.getStatus() == Response.Status.OK.getStatusCode()) {
+            return JsonUtils.jsonToObject(response.readEntity(String.class), VXKmsKey.class);
+        } else {
+            String errorResponse = response.readEntity(String.class);
+            logger.error("Get Key from URI failed with status [{}], error response: [{}]", response.getStatus(), errorResponse);
+
+            throw new WebApplicationException(errorResponse, response.getStatus());
+        }
     }
 
     public VXKmsKeyList getFilteredKeyList(HttpServletRequest request, VXKmsKeyList vXKmsKeyList) {
@@ -678,11 +705,8 @@ public class KmsKeyMgr {
     }
 
     private synchronized Client getClient() {
-        ClientConfig cc  = new DefaultClientConfig();
-
-        cc.getProperties().put(ClientConfig.PROPERTY_FOLLOW_REDIRECTS, true);
-
-        return Client.create(cc);
+        // Use RangerJersey2ClientBuilder instead of unsafe ClientBuilder.newBuilder().build() to prevent MOXy usage
+        return RangerJersey2ClientBuilder.newClient();
     }
 
     private Predicate getPredicate(KeySearchFilter filter) {

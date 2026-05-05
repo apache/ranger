@@ -1,0 +1,20 @@
+{
+  "requestId": "hive-access-request",
+  "user": {
+    "name": "hive",
+    "groups": []
+  },
+  "access": {
+    "resource": {
+      "name": "table:default/sales"
+    },
+    "action": "QUERY",
+    "permissions": [
+      "select"
+    ]
+  },
+  "context": {
+    "serviceType": "hive",
+    "serviceName": "dev_hive"
+  }
+}

@@ -22,6 +22,7 @@ package org.apache.ranger.plugin.classloader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.security.AccessController;
@@ -31,8 +32,10 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.NoSuchElementException;
 
 public class RangerPluginClassLoader extends URLClassLoader {
     private static final Logger LOG = LoggerFactory.getLogger(RangerPluginClassLoader.class);
@@ -138,12 +141,27 @@ public class RangerPluginClassLoader extends URLClassLoader {
     }
 
     @Override
-    public Enumeration<URL> findResources(String name) {
-        final Enumeration<URL> ret;
-
+    public Enumeration<URL> findResources(String name) throws IOException {
         LOG.debug("==> RangerPluginClassLoader.findResources({}) ", name);
 
-        ret = new MergeEnumeration(findResourcesUsingChildClassLoader(name), findResourcesUsingComponentClassLoader(name));
+        Enumeration<URL> childResources     = findResourcesUsingChildClassLoader(name);
+        Enumeration<URL> componentResources = findResourcesUsingComponentClassLoader(name);
+
+        // Convert the enumerations to iterators
+        Iterator<URL> childIterator     = (childResources != null) ? Collections.list(childResources).iterator() : Collections.emptyIterator();
+        Iterator<URL> componentIterator = (componentResources != null) ? Collections.list(componentResources).iterator() : Collections.emptyIterator();
+
+        // Create the merged iterator
+        Iterator<URL> mergedIterator = new MergeIterator(childIterator, componentIterator);
+
+        // Convert the merged iterator into a List
+        List<URL> mergedList = new ArrayList<>();
+        while (mergedIterator.hasNext()) {
+            mergedList.add(mergedIterator.next());
+        }
+
+        // Convert the list back to an Enumeration to match the method signature
+        Enumeration<URL> ret = Collections.enumeration(mergedList);
 
         LOG.debug("<== RangerPluginClassLoader.findResources({}) ", name);
 
@@ -177,7 +195,7 @@ public class RangerPluginClassLoader extends URLClassLoader {
         return ret;
     }
 
-    public Enumeration<URL> findResourcesUsingChildClassLoader(String name) {
+    public Enumeration<URL> findResourcesUsingChildClassLoader(String name) throws IOException {
         Enumeration<URL> ret = null;
 
         try {
@@ -187,12 +205,15 @@ public class RangerPluginClassLoader extends URLClassLoader {
         } catch (Throwable t) {
             //Ignore any exceptions. Null / Empty return is handle in following statements
             LOG.debug("RangerPluginClassLoader.findResourcesUsingChildClassLoader({}): class not found in child. Falling back to componentClassLoader", name, t);
+            if (t instanceof IOException) {
+                throw (IOException) t;
+            }
         }
 
         return ret;
     }
 
-    public Enumeration<URL> findResourcesUsingComponentClassLoader(String name) {
+    public Enumeration<URL> findResourcesUsingComponentClassLoader(String name) throws IOException {
         Enumeration<URL> ret = null;
 
         try {
@@ -207,6 +228,9 @@ public class RangerPluginClassLoader extends URLClassLoader {
             LOG.debug("<== RangerPluginClassLoader.findResourcesUsingComponentClassLoader({}): {}", name, ret);
         } catch (Throwable t) {
             LOG.debug("RangerPluginClassLoader.findResourcesUsingComponentClassLoader({}): class not found in componentClassLoader.", name, t);
+            if (t instanceof IOException) {
+                throw (IOException) t;
+            }
         }
 
         return ret;
@@ -273,7 +297,7 @@ public class RangerPluginClassLoader extends URLClassLoader {
         }
 
         @Override
-        public Class<?> findClass(String name) throws ClassNotFoundException { //NO PMD
+        public Class<?> findClass(String name) throws ClassNotFoundException {
             return super.findClass(name);
         }
 
@@ -282,33 +306,38 @@ public class RangerPluginClassLoader extends URLClassLoader {
         }
     }
 
-    static class MergeEnumeration implements Enumeration<URL> { //NO PMD
-        final Enumeration<URL> e1;
-        final Enumeration<URL> e2;
+    static class MergeIterator implements Iterator<URL> {
+        final Iterator<URL> i1;
+        final Iterator<URL> i2;
 
-        public MergeEnumeration(Enumeration<URL> e1, Enumeration<URL> e2) {
-            this.e1 = e1;
-            this.e2 = e2;
+        public MergeIterator(Iterator<URL> i1, Iterator<URL> i2) {
+            this.i1 = i1;
+            this.i2 = i2;
         }
 
         @Override
-        public boolean hasMoreElements() {
-            return ((e1 != null && e1.hasMoreElements()) || (e2 != null && e2.hasMoreElements()));
+        public boolean hasNext() {
+            return ((i1 != null && i1.hasNext()) || (i2 != null && i2.hasNext()));
         }
 
         @Override
-        public URL nextElement() {
+        public URL next() {
             final URL ret;
 
-            if (e1 != null && e1.hasMoreElements()) {
-                ret = e1.nextElement();
-            } else if (e2 != null && e2.hasMoreElements()) {
-                ret = e2.nextElement();
+            if (i1 != null && i1.hasNext()) {
+                ret = i1.next();
+            } else if (i2 != null && i2.hasNext()) {
+                ret = i2.next();
             } else {
-                ret = null;
+                throw new NoSuchElementException();
             }
 
             return ret;
+        }
+
+        @Override
+        public void remove() {
+            throw new UnsupportedOperationException("Remove not supported by MergeIterator");
         }
     }
 }

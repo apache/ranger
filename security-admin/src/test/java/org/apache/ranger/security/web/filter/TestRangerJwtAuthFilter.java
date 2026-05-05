@@ -18,7 +18,9 @@
  */
 package org.apache.ranger.security.web.filter;
 
+import org.apache.hadoop.conf.Configuration;
 import org.apache.ranger.authz.handler.RangerAuth;
+import org.apache.ranger.common.PropertiesUtil;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Test;
@@ -38,6 +40,7 @@ import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 
 import java.io.IOException;
+import java.lang.reflect.Method;
 import java.util.Collection;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
@@ -119,5 +122,55 @@ public class TestRangerJwtAuthFilter {
         filter.doFilter(req, res, chain);
 
         assertNull(SecurityContextHolder.getContext().getAuthentication());
+    }
+
+    @Test
+    void testIsProxyEnabled_defaultFalse() {
+        PropertiesUtil.getPropertiesMap().remove("ranger.authentication.allow.trustedproxy");
+        RangerJwtAuthFilter filter = new RangerJwtAuthFilter();
+        assertFalse(filter.isProxyEnabled());
+    }
+
+    @Test
+    void testIsProxyEnabled_trueWhenConfigured() {
+        PropertiesUtil.getPropertiesMap().put("ranger.authentication.allow.trustedproxy", "true");
+        RangerJwtAuthFilter filter = new RangerJwtAuthFilter();
+        assertTrue(filter.isProxyEnabled());
+        PropertiesUtil.getPropertiesMap().remove("ranger.authentication.allow.trustedproxy");
+    }
+
+    @Test
+    void testAuthorizeProxyUser_returnsFalseWhenNoProxyConfigLoaded() {
+        RangerJwtAuthFilter filter = new RangerJwtAuthFilter();
+        // no proxyuser config loaded into ProxyUsers -> should fail safely
+        assertFalse(filter.authorizeProxyUser("knoxui", "admin", "10.0.0.1"));
+    }
+
+    @Test
+    void testGetProxyuserConfiguration_copiesOnlyProxyuserKeys() throws Exception {
+        // Arrange: put both proxyuser keys and non-proxyuser keys
+        PropertiesUtil.getPropertiesMap().put("ranger.proxyuser.knoxui.hosts", "*");
+        PropertiesUtil.getPropertiesMap().put("ranger.proxyuser.knoxui.groups", "*");
+        PropertiesUtil.getPropertiesMap().put("ranger.some.other.key", "shouldNotBeCopied");
+
+        RangerJwtAuthFilter filter = new RangerJwtAuthFilter();
+
+        // Call private getProxyuserConfiguration() via reflection
+        Method m = RangerJwtAuthFilter.class.getDeclaredMethod("getProxyuserConfiguration");
+        m.setAccessible(true);
+
+        Configuration conf = (Configuration) m.invoke(filter);
+
+        // Assert: proxyuser keys copied
+        assertEquals("*", conf.get("ranger.proxyuser.knoxui.hosts"));
+        assertEquals("*", conf.get("ranger.proxyuser.knoxui.groups"));
+
+        // Assert: non-proxyuser keys NOT copied
+        assertNull(conf.get("ranger.some.other.key"));
+
+        // Cleanup
+        PropertiesUtil.getPropertiesMap().remove("ranger.proxyuser.knoxui.hosts");
+        PropertiesUtil.getPropertiesMap().remove("ranger.proxyuser.knoxui.groups");
+        PropertiesUtil.getPropertiesMap().remove("ranger.some.other.key");
     }
 }

@@ -83,8 +83,6 @@ public class TestRangerDefaultAuditHandler {
 
     @Test
     public void test02_getAuthzEvents_populatesFieldsAndDefaults() {
-        RangerRESTUtils.hostname = "my-host";
-
         RangerServiceDef svcDef = new RangerServiceDef();
         svcDef.setId(5L);
         List<RangerResourceDef> resourceDefs = new ArrayList<>();
@@ -170,7 +168,7 @@ public class TestRangerDefaultAuditHandler {
         Assertions.assertEquals("clusterA", event.getClusterName());
         Assertions.assertEquals("zone-1", event.getZoneName());
         Assertions.assertEquals(Long.valueOf(7L), event.getPolicyVersion());
-        Assertions.assertEquals("my-host", event.getAgentHostname());
+        Assertions.assertEquals(new RangerRESTUtils().getAgentHostname(), event.getAgentHostname());
         Assertions.assertNotNull(event.getEventId());
         Assertions.assertEquals(event.getEventId(), result.getAuditLogId());
         Assertions.assertEquals("RangerAudit", event.getLogType());

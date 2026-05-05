@@ -69,6 +69,7 @@ public class AuditMessageQueueUtils {
 
         if (securityProtocol != null && securityProtocol.toUpperCase().contains("SASL")) {
             kafkaProp.put(AuditServerConstants.PROP_SASL_JAAS_CONFIG, getJAASConfig(props, propPrefix));
+            kafkaProp.put(AuditServerConstants.PROP_SASL_KERBEROS_SERVICE_NAME, AuditServerConstants.DEFAULT_SERVICE_NAME);
         }
 
         kafkaProp.put(AdminClientConfig.REQUEST_TIMEOUT_MS_CONFIG, reqTimeoutMS);

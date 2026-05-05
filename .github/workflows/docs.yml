@@ -18,7 +18,7 @@ name: docs
 
 on:
   push:
-    branches: [ ranger_5353, master ]
+    branches: [ dev, master ]
 
 permissions:
   contents: write

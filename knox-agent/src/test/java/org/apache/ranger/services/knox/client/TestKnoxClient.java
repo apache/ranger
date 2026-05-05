@@ -18,13 +18,9 @@
 
 package org.apache.ranger.services.knox.client;
 
-import com.sun.jersey.api.client.Client;
-import com.sun.jersey.api.client.ClientResponse;
-import com.sun.jersey.api.client.WebResource;
-import com.sun.jersey.api.client.WebResource.Builder;
-import com.sun.jersey.api.client.filter.HTTPBasicAuthFilter;
 import org.apache.ranger.plugin.client.HadoopException;
 import org.apache.ranger.plugin.util.PasswordUtils;
+import org.apache.ranger.plugin.util.RangerJersey2ClientBuilder;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Test;
@@ -35,8 +31,14 @@ import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.Invocation;
+import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.core.Response;
+
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
+import java.lang.reflect.Method;
 import java.security.Permission;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -44,9 +46,9 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
@@ -170,23 +172,17 @@ public class TestKnoxClient {
 
     @Test
     public void test09_timedTask_success() throws Exception {
-        String value = KnoxClient.timedTask(new Callable<String>() {
-            @Override
-            public String call() {
-                return "ok";
-            }
-        }, 1L, TimeUnit.SECONDS);
+        String value = KnoxClient.timedTask(() -> "ok", 1L, TimeUnit.SECONDS);
         Assertions.assertEquals("ok", value);
     }
 
     @Test
     public void test10_timedTask_throws() {
-        Assertions.assertThrows(Exception.class, () -> KnoxClient.timedTask(new Callable<String>() {
-            @Override
-            public String call() throws Exception {
+        Assertions.assertThrows(Exception.class, () -> {
+            KnoxClient.timedTask(() -> {
                 throw new Exception("x");
-            }
-        }, 1L, TimeUnit.SECONDS));
+            }, 1L, TimeUnit.SECONDS);
+        });
     }
 
     @Test
@@ -194,23 +190,26 @@ public class TestKnoxClient {
         KnoxClient client = new KnoxClient("https://knox/topologies", "admin", "pwd");
 
         try (MockedStatic<PasswordUtils> pwStatic = Mockito.mockStatic(PasswordUtils.class);
-                MockedStatic<Client> clientStatic = Mockito.mockStatic(Client.class)) {
+                MockedStatic<RangerJersey2ClientBuilder> builderStatic = Mockito.mockStatic(RangerJersey2ClientBuilder.class)) {
             pwStatic.when(() -> PasswordUtils.decryptPassword("pwd")).thenReturn("dec");
 
+            RangerJersey2ClientBuilder.SafeClientBuilder safeBuilder = mock(RangerJersey2ClientBuilder.SafeClientBuilder.class);
             Client jersey = mock(Client.class);
-            WebResource wr = mock(WebResource.class);
-            Builder builder = mock(Builder.class);
-            ClientResponse response = mock(ClientResponse.class);
+            WebTarget webTarget = mock(WebTarget.class);
+            Invocation.Builder invocationBuilder = mock(Invocation.Builder.class);
+            Response response = mock(Response.class);
 
-            clientStatic.when(Client::create).thenReturn(jersey);
-            Mockito.doNothing().when(jersey).addFilter(Mockito.any(HTTPBasicAuthFilter.class));
-            when(jersey.resource("https://knox/topologies")).thenReturn(wr);
-            when(wr.accept("application/json")).thenReturn(builder);
-            when(builder.get(ClientResponse.class)).thenReturn(response);
+            builderStatic.when(RangerJersey2ClientBuilder::newBuilder).thenReturn(safeBuilder);
+            when(safeBuilder.build()).thenReturn(jersey);
+            when(jersey.register(any(Class.class))).thenReturn(jersey);
+            when(jersey.register(any(Object.class))).thenReturn(jersey);
+            when(jersey.target("https://knox/topologies")).thenReturn(webTarget);
+            when(webTarget.request("application/json")).thenReturn(invocationBuilder);
+            when(invocationBuilder.get()).thenReturn(response);
 
             when(response.getStatus()).thenReturn(200);
             String json = "{\"topology\":[{\"name\":\"admin\"},{\"name\":\"gateway\"}]}";
-            when(response.getEntity(String.class)).thenReturn(json);
+            when(response.readEntity(String.class)).thenReturn(json);
 
             List<String> listAll = client.getTopologyList("*", null);
             Assertions.assertEquals(2, listAll.size());
@@ -222,7 +221,7 @@ public class TestKnoxClient {
             Assertions.assertTrue(skipDueToContains.isEmpty());
 
             verify(response, times(3)).close();
-            verify(jersey, times(3)).destroy();
+            verify(jersey, times(3)).close();
         }
     }
 
@@ -230,17 +229,20 @@ public class TestKnoxClient {
     public void test12_getTopologyList_statusNot200_returnsEmpty() {
         KnoxClient client = new KnoxClient("https://knox/topologies", "admin", "pwd");
 
-        try (MockedStatic<Client> clientStatic = Mockito.mockStatic(Client.class)) {
+        try (MockedStatic<RangerJersey2ClientBuilder> builderStatic = Mockito.mockStatic(RangerJersey2ClientBuilder.class)) {
+            RangerJersey2ClientBuilder.SafeClientBuilder safeBuilder = mock(RangerJersey2ClientBuilder.SafeClientBuilder.class);
             Client jersey = mock(Client.class);
-            WebResource wr = mock(WebResource.class);
-            Builder builder = mock(Builder.class);
-            ClientResponse response = mock(ClientResponse.class);
+            WebTarget webTarget = mock(WebTarget.class);
+            Invocation.Builder invocationBuilder = mock(Invocation.Builder.class);
+            Response response = mock(Response.class);
 
-            clientStatic.when(Client::create).thenReturn(jersey);
-            Mockito.doNothing().when(jersey).addFilter(Mockito.any(HTTPBasicAuthFilter.class));
-            when(jersey.resource("https://knox/topologies")).thenReturn(wr);
-            when(wr.accept("application/json")).thenReturn(builder);
-            when(builder.get(ClientResponse.class)).thenReturn(response);
+            builderStatic.when(RangerJersey2ClientBuilder::newBuilder).thenReturn(safeBuilder);
+            when(safeBuilder.build()).thenReturn(jersey);
+            when(jersey.register(any(Class.class))).thenReturn(jersey);
+            when(jersey.register(any(Object.class))).thenReturn(jersey);
+            when(jersey.target("https://knox/topologies")).thenReturn(webTarget);
+            when(webTarget.request("application/json")).thenReturn(invocationBuilder);
+            when(invocationBuilder.get()).thenReturn(response);
 
             when(response.getStatus()).thenReturn(500);
 
@@ -253,16 +255,19 @@ public class TestKnoxClient {
     public void test13_getTopologyList_responseNull_throws() {
         KnoxClient client = new KnoxClient("https://knox/topologies", "admin", "pwd");
 
-        try (MockedStatic<Client> clientStatic = Mockito.mockStatic(Client.class)) {
+        try (MockedStatic<RangerJersey2ClientBuilder> builderStatic = Mockito.mockStatic(RangerJersey2ClientBuilder.class)) {
+            RangerJersey2ClientBuilder.SafeClientBuilder safeBuilder = mock(RangerJersey2ClientBuilder.SafeClientBuilder.class);
             Client jersey = mock(Client.class);
-            WebResource wr = mock(WebResource.class);
-            Builder builder = mock(Builder.class);
+            WebTarget webTarget = mock(WebTarget.class);
+            Invocation.Builder invocationBuilder = mock(Invocation.Builder.class);
 
-            clientStatic.when(Client::create).thenReturn(jersey);
-            Mockito.doNothing().when(jersey).addFilter(Mockito.any(HTTPBasicAuthFilter.class));
-            when(jersey.resource("https://knox/topologies")).thenReturn(wr);
-            when(wr.accept("application/json")).thenReturn(builder);
-            when(builder.get(ClientResponse.class)).thenReturn(null);
+            builderStatic.when(RangerJersey2ClientBuilder::newBuilder).thenReturn(safeBuilder);
+            when(safeBuilder.build()).thenReturn(jersey);
+            when(jersey.register(any(Class.class))).thenReturn(jersey);
+            when(jersey.register(any(Object.class))).thenReturn(jersey);
+            when(jersey.target("https://knox/topologies")).thenReturn(webTarget);
+            when(webTarget.request("application/json")).thenReturn(invocationBuilder);
+            when(invocationBuilder.get()).thenReturn(null);
 
             Assertions.assertThrows(HadoopException.class, () -> client.getTopologyList("*", null));
         }
@@ -272,11 +277,15 @@ public class TestKnoxClient {
     public void test14_getTopologyList_throwsWrapped() {
         KnoxClient client = new KnoxClient("https://knox/topologies", "admin", "pwd");
 
-        try (MockedStatic<Client> clientStatic = Mockito.mockStatic(Client.class)) {
+        try (MockedStatic<RangerJersey2ClientBuilder> builderStatic = Mockito.mockStatic(RangerJersey2ClientBuilder.class)) {
+            RangerJersey2ClientBuilder.SafeClientBuilder safeBuilder = mock(RangerJersey2ClientBuilder.SafeClientBuilder.class);
             Client jersey = mock(Client.class);
-            clientStatic.when(Client::create).thenReturn(jersey);
-            Mockito.doNothing().when(jersey).addFilter(Mockito.any(HTTPBasicAuthFilter.class));
-            when(jersey.resource("https://knox/topologies")).thenThrow(new RuntimeException("boom"));
+
+            builderStatic.when(RangerJersey2ClientBuilder::newBuilder).thenReturn(safeBuilder);
+            when(safeBuilder.build()).thenReturn(jersey);
+            when(jersey.register(any(Class.class))).thenReturn(jersey);
+            when(jersey.register(any(Object.class))).thenReturn(jersey);
+            when(jersey.target("https://knox/topologies")).thenThrow(new RuntimeException("boom"));
 
             Assertions.assertThrows(HadoopException.class, () -> client.getTopologyList("*", null));
         }
@@ -287,23 +296,28 @@ public class TestKnoxClient {
         KnoxClient client = new KnoxClient("https://knox/topologies", "admin", "pwd");
 
         try (MockedStatic<PasswordUtils> pwStatic = Mockito.mockStatic(PasswordUtils.class);
-                MockedStatic<Client> clientStatic = Mockito.mockStatic(Client.class)) {
+                MockedStatic<RangerJersey2ClientBuilder> builderStatic = Mockito.mockStatic(RangerJersey2ClientBuilder.class)) {
             pwStatic.when(() -> PasswordUtils.decryptPassword("pwd")).thenReturn("dec");
 
+            RangerJersey2ClientBuilder.SafeClientBuilder safeBuilder = mock(RangerJersey2ClientBuilder.SafeClientBuilder.class);
             Client jersey = mock(Client.class);
-            WebResource wr = mock(WebResource.class);
-            Builder builder = mock(Builder.class);
-            ClientResponse response = mock(ClientResponse.class);
+            WebTarget webTarget = mock(WebTarget.class);
+            WebTarget pathTarget = mock(WebTarget.class);
+            Invocation.Builder invocationBuilder = mock(Invocation.Builder.class);
+            Response response = mock(Response.class);
 
-            clientStatic.when(Client::create).thenReturn(jersey);
-            Mockito.doNothing().when(jersey).addFilter(Mockito.any(HTTPBasicAuthFilter.class));
-            when(jersey.resource("https://knox/topologies/top1")).thenReturn(wr);
-            when(wr.accept("application/json")).thenReturn(builder);
-            when(builder.get(ClientResponse.class)).thenReturn(response);
+            builderStatic.when(RangerJersey2ClientBuilder::newBuilder).thenReturn(safeBuilder);
+            when(safeBuilder.build()).thenReturn(jersey);
+            when(jersey.register(any(Class.class))).thenReturn(jersey);
+            when(jersey.register(any(Object.class))).thenReturn(jersey);
+            when(jersey.target("https://knox/topologies")).thenReturn(webTarget);
+            when(webTarget.path("top1")).thenReturn(pathTarget);
+            when(pathTarget.request("application/json")).thenReturn(invocationBuilder);
+            when(invocationBuilder.get()).thenReturn(response);
 
             when(response.getStatus()).thenReturn(200);
             String json = "{\"topology\":{\"service\":[{\"role\":\"HIVE\"},{\"role\":\"NAMENODE\"}]}}";
-            when(response.getEntity(String.class)).thenReturn(json);
+            when(response.readEntity(String.class)).thenReturn(json);
 
             List<String> tops = Collections.singletonList("top1");
             List<String> all = client.getServiceList(tops, "*", null);
@@ -321,17 +335,22 @@ public class TestKnoxClient {
     public void test16_getServiceList_statusNot200_logsAndContinues() {
         KnoxClient client = new KnoxClient("https://knox/topologies", "admin", "pwd");
 
-        try (MockedStatic<Client> clientStatic = Mockito.mockStatic(Client.class)) {
+        try (MockedStatic<RangerJersey2ClientBuilder> builderStatic = Mockito.mockStatic(RangerJersey2ClientBuilder.class)) {
+            RangerJersey2ClientBuilder.SafeClientBuilder safeBuilder = mock(RangerJersey2ClientBuilder.SafeClientBuilder.class);
             Client jersey = mock(Client.class);
-            WebResource wr = mock(WebResource.class);
-            Builder builder = mock(Builder.class);
-            ClientResponse response = mock(ClientResponse.class);
+            WebTarget webTarget = mock(WebTarget.class);
+            WebTarget pathTarget = mock(WebTarget.class);
+            Invocation.Builder invocationBuilder = mock(Invocation.Builder.class);
+            Response response = mock(Response.class);
 
-            clientStatic.when(Client::create).thenReturn(jersey);
-            Mockito.doNothing().when(jersey).addFilter(Mockito.any(HTTPBasicAuthFilter.class));
-            when(jersey.resource("https://knox/topologies/top1")).thenReturn(wr);
-            when(wr.accept("application/json")).thenReturn(builder);
-            when(builder.get(ClientResponse.class)).thenReturn(response);
+            builderStatic.when(RangerJersey2ClientBuilder::newBuilder).thenReturn(safeBuilder);
+            when(safeBuilder.build()).thenReturn(jersey);
+            when(jersey.register(any(Class.class))).thenReturn(jersey);
+            when(jersey.register(any(Object.class))).thenReturn(jersey);
+            when(jersey.target("https://knox/topologies")).thenReturn(webTarget);
+            when(webTarget.path("top1")).thenReturn(pathTarget);
+            when(pathTarget.request("application/json")).thenReturn(invocationBuilder);
+            when(invocationBuilder.get()).thenReturn(response);
 
             when(response.getStatus()).thenReturn(500);
 
@@ -344,16 +363,21 @@ public class TestKnoxClient {
     public void test17_getServiceList_responseNull_throws() {
         KnoxClient client = new KnoxClient("https://knox/topologies", "admin", "pwd");
 
-        try (MockedStatic<Client> clientStatic = Mockito.mockStatic(Client.class)) {
+        try (MockedStatic<RangerJersey2ClientBuilder> builderStatic = Mockito.mockStatic(RangerJersey2ClientBuilder.class)) {
+            RangerJersey2ClientBuilder.SafeClientBuilder safeBuilder = mock(RangerJersey2ClientBuilder.SafeClientBuilder.class);
             Client jersey = mock(Client.class);
-            WebResource wr = mock(WebResource.class);
-            Builder builder = mock(Builder.class);
+            WebTarget webTarget = mock(WebTarget.class);
+            WebTarget pathTarget = mock(WebTarget.class);
+            Invocation.Builder invocationBuilder = mock(Invocation.Builder.class);
 
-            clientStatic.when(Client::create).thenReturn(jersey);
-            Mockito.doNothing().when(jersey).addFilter(Mockito.any(HTTPBasicAuthFilter.class));
-            when(jersey.resource("https://knox/topologies/top1")).thenReturn(wr);
-            when(wr.accept("application/json")).thenReturn(builder);
-            when(builder.get(ClientResponse.class)).thenReturn(null);
+            builderStatic.when(RangerJersey2ClientBuilder::newBuilder).thenReturn(safeBuilder);
+            when(safeBuilder.build()).thenReturn(jersey);
+            when(jersey.register(any(Class.class))).thenReturn(jersey);
+            when(jersey.register(any(Object.class))).thenReturn(jersey);
+            when(jersey.target("https://knox/topologies")).thenReturn(webTarget);
+            when(webTarget.path("top1")).thenReturn(pathTarget);
+            when(pathTarget.request("application/json")).thenReturn(invocationBuilder);
+            when(invocationBuilder.get()).thenReturn(null);
 
             Assertions.assertThrows(HadoopException.class,
                     () -> client.getServiceList(Collections.singletonList("top1"), "*", null));
@@ -364,11 +388,15 @@ public class TestKnoxClient {
     public void test18_getServiceList_throwsWrapped() {
         KnoxClient client = new KnoxClient("https://knox/topologies", "admin", "pwd");
 
-        try (MockedStatic<Client> clientStatic = Mockito.mockStatic(Client.class)) {
+        try (MockedStatic<RangerJersey2ClientBuilder> builderStatic = Mockito.mockStatic(RangerJersey2ClientBuilder.class)) {
+            RangerJersey2ClientBuilder.SafeClientBuilder safeBuilder = mock(RangerJersey2ClientBuilder.SafeClientBuilder.class);
             Client jersey = mock(Client.class);
-            clientStatic.when(Client::create).thenReturn(jersey);
-            Mockito.doNothing().when(jersey).addFilter(Mockito.any(HTTPBasicAuthFilter.class));
-            when(jersey.resource("https://knox/topologies/top1")).thenThrow(new RuntimeException("boom"));
+
+            builderStatic.when(RangerJersey2ClientBuilder::newBuilder).thenReturn(safeBuilder);
+            when(safeBuilder.build()).thenReturn(jersey);
+            when(jersey.register(any(Class.class))).thenReturn(jersey);
+            when(jersey.register(any(Object.class))).thenReturn(jersey);
+            when(jersey.target("https://knox/topologies")).thenThrow(new RuntimeException("boom"));
 
             Assertions.assertThrows(HadoopException.class,
                     () -> client.getServiceList(Collections.singletonList("top1"), "*", null));
@@ -433,6 +461,87 @@ public class TestKnoxClient {
             Assertions.assertTrue(out.contains("Found service for topology:"));
         } finally {
             System.setOut(origOut);
+        }
+    }
+
+    @Test
+    public void test12_validateResourceName_rejectsPathTraversal() throws Exception {
+        KnoxClient client = new KnoxClient("https://localhost:8443/gateway/admin/api/v1/topologies", "admin", "pwd");
+
+        List<String> pathTraversalInputs = Arrays.asList("../etc/passwd", "../../sensitive", "topology/../admin", "topology//malicious", "test\\windows\\path", "..\\..\\config");
+
+        for (String input : pathTraversalInputs) {
+            HadoopException ex = Assertions.assertThrows(HadoopException.class,
+                    () -> invokeValidateResourceName(client, input, "topology name"),
+                    "Path traversal should be rejected: " + input);
+            Assertions.assertTrue(ex.getMessage().contains("Path traversal"),
+                    "Error should indicate path traversal for: " + input);
+        }
+    }
+
+    @Test
+    public void test13_validateResourceName_rejectsSpecialCharacters() throws Exception {
+        KnoxClient client = new KnoxClient("https://localhost:8443/gateway/admin/api/v1/topologies", "admin", "pwd");
+
+        List<String> invalidInputs = Arrays.asList("'; DROP TABLE users; --", "topology<script>alert(1)</script>", "test@topology", "topology#name", "test!topology", "topology&name", "topology(with)parens", "topology{with}braces", "topology[with]brackets", "topology$name", "topology%encoded", "topology name", "topology\ttab", "topology\nnewline", "topology;rm -rf /", "topology|cat /etc/passwd", "topology`whoami`", "topology$(whoami)");
+
+        for (String input : invalidInputs) {
+            HadoopException ex = Assertions.assertThrows(HadoopException.class,
+                    () -> invokeValidateResourceName(client, input, "topology name"), "Special characters should be rejected: " + input);
+            Assertions.assertTrue(ex.getMessage().contains("Invalid"), "Error should indicate invalid input for: " + input);
+        }
+    }
+
+    @Test
+    public void test14_validateResourceName_acceptsValidNames() throws Exception {
+        KnoxClient client = new KnoxClient("https://localhost:8443/gateway/admin/api/v1/topologies", "admin", "pwd");
+
+        List<String> validInputs = Arrays.asList("topology", "topology_name", "topology123", "TOPOLOGY", "Topology_Name_123", "_topology", "topology_", "topology.name", "topology-name", "topology*", "top*");
+
+        for (String input : validInputs) {
+            try {
+                invokeValidateResourceName(client, input, "topology name");
+            } catch (Exception e) {
+                throw new AssertionError("Valid topology name should not throw exception: " + input, e);
+            }
+        }
+    }
+
+    @Test
+    public void test15_validateResourceName_rejectsNullByteInjection() throws Exception {
+        KnoxClient client = new KnoxClient("https://localhost:8443/gateway/admin/api/v1/topologies", "admin", "pwd");
+
+        HadoopException ex = Assertions.assertThrows(HadoopException.class,
+                () -> invokeValidateResourceName(client, "topology\0null", "topology name"));
+        Assertions.assertTrue(ex.getMessage().contains("Invalid"));
+    }
+
+    @Test
+    public void test16_validateResourceName_rejectsUrlEncoded() throws Exception {
+        KnoxClient client = new KnoxClient("https://localhost:8443/gateway/admin/api/v1/topologies", "admin", "pwd");
+
+        List<String> encodedInputs = Arrays.asList("%2e%2e%2f", "topology%00", "test%20space");
+
+        for (String input : encodedInputs) {
+            HadoopException ex = Assertions.assertThrows(HadoopException.class,
+                    () -> invokeValidateResourceName(client, input, "topology name"),
+                    "URL encoded attack should be rejected: " + input);
+            Assertions.assertTrue(ex.getMessage().contains("Invalid"),
+                    "Error should indicate invalid input for: " + input);
+        }
+    }
+
+    private void invokeValidateResourceName(KnoxClient client, String resourceName, String resourceType) throws Exception {
+        Method method = KnoxClient.class.getDeclaredMethod("validateResourceName", String.class, String.class);
+        method.setAccessible(true);
+        try {
+            method.invoke(client, resourceName, resourceType);
+        } catch (java.lang.reflect.InvocationTargetException e) {
+            Throwable cause = e.getCause();
+            if (cause instanceof HadoopException) {
+                throw (HadoopException) cause;
+            }
+            throw e;
         }
     }
 }

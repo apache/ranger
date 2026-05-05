@@ -252,11 +252,11 @@
     <!-- KAFKA PRODUCER CONFIGURATION IN THE INGESTOR -->
     <property>
         <name>ranger.audit.ingestor.kafka.bootstrap.servers</name>
-        <value>ranger-kafka:9092</value>
+        <value>ranger-kafka.rangernw:9092</value>
         <description>
             Kafka broker hosts for Kafka audit destination.
             example: kafka-broker1:9092,kafka-broker2:9092,kafka-broker3:9092
-            In Docker, use the service name of the kafka brokers: ranger-kafka:9092
+            In Docker, use the service name of the kafka brokers: ranger-kafka.rangernw:9092
         </description>
     </property>
 

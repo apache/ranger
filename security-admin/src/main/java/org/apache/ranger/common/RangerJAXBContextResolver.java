@@ -19,20 +19,17 @@
 
 package org.apache.ranger.common;
 
-import com.sun.jersey.api.json.JSONConfiguration;
-import com.sun.jersey.api.json.JSONJAXBContext;
-
 import javax.ws.rs.ext.ContextResolver;
 import javax.ws.rs.ext.Provider;
 import javax.xml.bind.JAXBContext;
 
-/**
- *
- */
+import java.util.HashMap;
+import java.util.Map;
+
 @Provider
 public class RangerJAXBContextResolver implements ContextResolver<JAXBContext> {
     private final JAXBContext context;
-    private final Class<?>[]  types = {
+    private final Class<?>[] types = {
             org.apache.ranger.view.VXAuthSessionList.class,
             org.apache.ranger.view.VXResponse.class,
             org.apache.ranger.view.VXStringList.class,
@@ -51,9 +48,8 @@ public class RangerJAXBContextResolver implements ContextResolver<JAXBContext> {
     };
 
     public RangerJAXBContextResolver() throws Exception {
-        JSONConfiguration config = JSONConfiguration.natural().build();
-
-        context = new JSONJAXBContext(config, types);
+        Map<String, Object> configs = new HashMap<>();
+        this.context = JAXBContext.newInstance(types, configs);
     }
 
     @Override

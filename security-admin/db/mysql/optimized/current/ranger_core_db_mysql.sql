@@ -456,7 +456,7 @@ CREATE TABLE `x_trx_log_v2` (
   KEY `x_trx_log_v2_FK_added_by_id` (`added_by_id`),
   KEY `x_trx_log_v2_cr_time` (`create_time`),
   KEY `x_trx_log_v2_action` (`action`),
-  KEY `x_trx_log_v2_trx_id` (`trx_id`)
+  KEY `x_trx_log_v2_trx_id` (`trx_id`(190))
 )ROW_FORMAT=DYNAMIC;
 
 CREATE TABLE `x_perm_map` (

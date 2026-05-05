@@ -19,6 +19,7 @@ package org.apache.ranger.services.schema.registry.client;
 
 import org.apache.ranger.services.schema.registry.client.connection.ISchemaRegistryClient;
 import org.apache.ranger.services.schema.registry.client.util.DefaultSchemaRegistryClientForTesting;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
@@ -27,8 +28,6 @@ import java.util.List;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
 
 public class AutocompletionAgentTest {
     @Test
@@ -37,11 +36,11 @@ public class AutocompletionAgentTest {
         AutocompletionAgent autocompletionAgent = new AutocompletionAgent("schema-registry", client);
 
         HashMap<String, Object> res = autocompletionAgent.connectionTest();
-        assertEquals(true, res.get("connectivityStatus"));
-        assertEquals("ConnectionTest Successful", res.get("message"));
-        assertEquals("ConnectionTest Successful", res.get("description"));
-        assertNull(res.get("objectId"));
-        assertNull(res.get("fieldName"));
+        Assertions.assertEquals(true, res.get("connectivityStatus"));
+        Assertions.assertEquals("ConnectionTest Successful", res.get("message"));
+        Assertions.assertEquals("ConnectionTest Successful", res.get("description"));
+        Assertions.assertNull(res.get("objectId"));
+        Assertions.assertNull(res.get("fieldName"));
 
         client              = new DefaultSchemaRegistryClientForTesting() {
             public void checkConnection() throws Exception {
@@ -52,11 +51,11 @@ public class AutocompletionAgentTest {
 
         res = autocompletionAgent.connectionTest();
         String errMessage = "You can still save the repository and start creating policies, but you would not be able to use autocomplete for resource names. Check server logs for more info.";
-        assertEquals(false, res.get("connectivityStatus"));
+        Assertions.assertEquals(false, res.get("connectivityStatus"));
         assertThat(res.get("message"), is(errMessage));
         assertThat(res.get("description"), is(errMessage));
-        assertNull(res.get("objectId"));
-        assertNull(res.get("fieldName"));
+        Assertions.assertNull(res.get("objectId"));
+        Assertions.assertNull(res.get("fieldName"));
     }
 
     @Test
@@ -75,7 +74,7 @@ public class AutocompletionAgentTest {
         // doesn't contain any groups that starts with 'tesSome'
         List<String> initialGroups = new ArrayList<>();
         List<String> res           = autocompletionAgent.getSchemaGroupList("tesSome", initialGroups);
-        assertEquals(0, res.size());
+        Assertions.assertEquals(0, res.size());
 
         // Empty initialGroups and the list of groups returned by ISchemaRegistryClient
         // contains a group that starts with 'tes'
@@ -83,7 +82,7 @@ public class AutocompletionAgentTest {
         res           = autocompletionAgent.getSchemaGroupList("tes", initialGroups);
         List<String> expected = new ArrayList<>();
         expected.add("testGroup");
-        assertEquals(1, res.size());
+        Assertions.assertEquals(1, res.size());
         assertThat(res, is(expected));
 
         // initialGroups contains one element, list of the groups returned by ISchemaRegistryClient
@@ -93,7 +92,7 @@ public class AutocompletionAgentTest {
         res      = autocompletionAgent.getSchemaGroupList("tes", initialGroups);
         expected = new ArrayList<>();
         expected.add("testGroup");
-        assertEquals(1, res.size());
+        Assertions.assertEquals(1, res.size());
         assertThat(res, is(expected));
 
         // initialGroups contains one element, list of the groups returned by ISchemaRegistryClient
@@ -104,7 +103,7 @@ public class AutocompletionAgentTest {
         expected = new ArrayList<>();
         expected.add("testGroup2");
         expected.add("testGroup");
-        assertEquals(2, res.size());
+        Assertions.assertEquals(2, res.size());
         assertThat(res, is(expected));
     }
 
@@ -129,11 +128,11 @@ public class AutocompletionAgentTest {
         List<String> res      = autocompletionAgent.getSchemaMetadataList("tes", groupList, new ArrayList<>());
         List<String> expected = new ArrayList<>();
         expected.add("testSchema");
-        assertEquals(1, res.size());
+        Assertions.assertEquals(1, res.size());
         assertThat(res, is(expected));
 
         res = autocompletionAgent.getSchemaMetadataList("tesSome", groupList, new ArrayList<>());
-        assertEquals(0, res.size());
+        Assertions.assertEquals(0, res.size());
     }
 
     @Test
@@ -168,10 +167,114 @@ public class AutocompletionAgentTest {
         List<String> res      = autocompletionAgent.getBranchList("tes", groups, schemaList, new ArrayList<>());
         List<String> expected = new ArrayList<>();
         expected.add("testBranch");
-        assertEquals(1, res.size());
+        Assertions.assertEquals(1, res.size());
         assertThat(res, is(expected));
 
         res = autocompletionAgent.getSchemaMetadataList("tesSome", schemaList, new ArrayList<>());
-        assertEquals(0, res.size());
+        Assertions.assertEquals(0, res.size());
+    }
+
+    @Test
+    void testValidatePattern_validAlphanumeric() {
+        ISchemaRegistryClient client = new DefaultSchemaRegistryClientForTesting() {
+            public List<String> getSchemaNames(List<String> schemaGroup) {
+                List<String> schemas = new ArrayList<>();
+                schemas.add("mySchema123");
+                return schemas;
+            }
+        };
+        AutocompletionAgent agent = new AutocompletionAgent("test", client);
+        List<String> groups = new ArrayList<>();
+        groups.add("testGroup");
+        List<String> result = agent.expandSchemaMetadataNameRegex(groups, "mySchema123");
+        Assertions.assertEquals(1, result.size());
+        Assertions.assertEquals("mySchema123", result.get(0));
+    }
+
+    @Test
+    void testValidatePattern_validWildcards() {
+        ISchemaRegistryClient client = new DefaultSchemaRegistryClientForTesting() {
+            public List<String> getSchemaNames(List<String> schemaGroup) {
+                List<String> schemas = new ArrayList<>();
+                schemas.add("mySchema123");
+                schemas.add("testSchema");
+                return schemas;
+            }
+        };
+        AutocompletionAgent agent = new AutocompletionAgent("test", client);
+        List<String> groups = new ArrayList<>();
+        groups.add("testGroup");
+        List<String> result = agent.expandSchemaMetadataNameRegex(groups, "my*");
+        Assertions.assertEquals(1, result.size());
+        Assertions.assertEquals("mySchema123", result.get(0));
+    }
+
+    @Test
+    void testValidatePattern_rejectsReDoSPattern() {
+        ISchemaRegistryClient client = new DefaultSchemaRegistryClientForTesting();
+        AutocompletionAgent agent = new AutocompletionAgent("test", client);
+        List<String> groups = new ArrayList<>();
+        groups.add("testGroup");
+        Assertions.assertThrows(IllegalArgumentException.class, () -> {
+            agent.expandSchemaMetadataNameRegex(groups, "(a+)+");
+        });
+    }
+
+    @Test
+    void testValidatePattern_rejectsComplexRegex() {
+        ISchemaRegistryClient client = new DefaultSchemaRegistryClientForTesting();
+        AutocompletionAgent agent = new AutocompletionAgent("test", client);
+        List<String> groups = new ArrayList<>();
+        groups.add("testGroup");
+        Assertions.assertThrows(IllegalArgumentException.class, () -> {
+            agent.expandSchemaMetadataNameRegex(groups, "test{1,5}");
+        });
+    }
+
+    @Test
+    void testValidatePattern_rejectsInjectionAttempt() {
+        ISchemaRegistryClient client = new DefaultSchemaRegistryClientForTesting();
+        AutocompletionAgent agent = new AutocompletionAgent("test", client);
+        List<String> groups = new ArrayList<>();
+        groups.add("testGroup");
+        Assertions.assertThrows(IllegalArgumentException.class, () -> {
+            agent.expandSchemaMetadataNameRegex(groups, "test'; DROP TABLE users--");
+        });
+    }
+
+    @Test
+    void testConvertWildcardToRegex_asterisk() {
+        ISchemaRegistryClient client = new DefaultSchemaRegistryClientForTesting() {
+            public List<String> getSchemaNames(List<String> schemaGroup) {
+                List<String> schemas = new ArrayList<>();
+                schemas.add("testSchema");
+                schemas.add("prodSchema");
+                return schemas;
+            }
+        };
+        AutocompletionAgent agent = new AutocompletionAgent("test", client);
+        List<String> groups = new ArrayList<>();
+        groups.add("testGroup");
+        List<String> result = agent.expandSchemaMetadataNameRegex(groups, "test*");
+        Assertions.assertEquals(1, result.size());
+        Assertions.assertEquals("testSchema", result.get(0));
+    }
+
+    @Test
+    void testConvertWildcardToRegex_questionMark() {
+        ISchemaRegistryClient client = new DefaultSchemaRegistryClientForTesting() {
+            public List<String> getSchemaNames(List<String> schemaGroup) {
+                List<String> schemas = new ArrayList<>();
+                schemas.add("schema1");
+                schemas.add("schema12");
+                return schemas;
+            }
+        };
+        AutocompletionAgent agent = new AutocompletionAgent("test", client);
+        List<String> groups = new ArrayList<>();
+        groups.add("testGroup");
+        List<String> result = agent.expandSchemaMetadataNameRegex(groups, "schema?");
+        Assertions.assertEquals(1, result.size());
+        Assertions.assertEquals("schema1", result.get(0));
     }
 }

@@ -19,17 +19,6 @@
 
 package org.apache.ranger.plugin.util;
 
-import com.fasterxml.jackson.jaxrs.json.JacksonJsonProvider;
-import com.sun.jersey.api.client.Client;
-import com.sun.jersey.api.client.ClientHandlerException;
-import com.sun.jersey.api.client.ClientRequest;
-import com.sun.jersey.api.client.ClientResponse;
-import com.sun.jersey.api.client.WebResource;
-import com.sun.jersey.api.client.config.ClientConfig;
-import com.sun.jersey.api.client.config.DefaultClientConfig;
-import com.sun.jersey.api.client.filter.ClientFilter;
-import com.sun.jersey.api.client.filter.HTTPBasicAuthFilter;
-import com.sun.jersey.client.urlconnection.HTTPSProperties;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Validate;
 import org.apache.hadoop.conf.Configuration;
@@ -38,6 +27,8 @@ import org.apache.ranger.authorization.hadoop.utils.RangerCredentialProvider;
 import org.apache.ranger.authorization.utils.JsonUtils;
 import org.apache.ranger.authorization.utils.StringUtil;
 import org.apache.ranger.plugin.authn.JwtProvider;
+import org.glassfish.jersey.client.ClientConfig;
+import org.glassfish.jersey.client.ClientProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -45,9 +36,17 @@ import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.KeyManager;
 import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLSession;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
+import javax.ws.rs.ProcessingException;
+import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.Entity;
+import javax.ws.rs.client.Invocation;
+import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Cookie;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import java.io.File;
@@ -65,12 +64,31 @@ import java.security.cert.CertificateException;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 public class RangerRESTClient {
     private static final Logger LOG = LoggerFactory.getLogger(RangerRESTClient.class);
 
-    public static final String RANGER_PROP_POLICYMGR_URL                         = "ranger.service.store.rest.url";
-    public static final String RANGER_PROP_POLICYMGR_SSLCONFIG_FILENAME          = "ranger.service.store.rest.ssl.config.file";
+    public enum HttpMethod {
+        GET("GET"),
+        POST("POST"),
+        PUT("PUT"),
+        DELETE("DELETE");
+
+        private final String method;
+
+        HttpMethod(String method) {
+            this.method = method;
+        }
+
+        public String getMethod() {
+            return method;
+        }
+    }
+
+    public static final String RANGER_PROP_POLICYMGR_URL                     = "ranger.service.store.rest.url";
+    public static final String RANGER_PROP_POLICYMGR_SSLCONFIG_FILENAME      = "ranger.service.store.rest.ssl.config.file";
     public static final String RANGER_POLICYMGR_CLIENT_KEY_FILE                  = "xasecure.policymgr.clientssl.keystore";
     public static final String RANGER_POLICYMGR_CLIENT_KEY_FILE_TYPE             = "xasecure.policymgr.clientssl.keystore.type";
     public static final String RANGER_POLICYMGR_CLIENT_KEY_FILE_CREDENTIAL       = "xasecure.policymgr.clientssl.keystore.credential.file";
@@ -85,6 +103,22 @@ public class RangerRESTClient {
     public static final String RANGER_SSL_TRUSTMANAGER_ALGO_TYPE                 = TrustManagerFactory.getDefaultAlgorithm();
     public static final String RANGER_SSL_CONTEXT_ALGO_TYPE                      = "TLSv1.2";
     public static final String JWT_HEADER_PREFIX                                 = "Bearer ";
+
+    public static final String RANGER_PROP_JWT_TOKEN_RETRIEVER_CLASS         = "ranger.common.auth.jwt.retriever.class";
+    public static final String RANGER_PROP_JWT_TOKEN_RETRIEVER_CLASS_DEFAULT = "org.apache.ranger.plugin.token.JwTokenRetrieverEnv";
+    public static final String RANGER_PROP_JWT_SERVER_COOKIE_NAME            = "ranger.common.auth.jwt.server.cookie.name";
+    public static final String RANGER_PROP_JWT_IGNOREIF_OTHER_AUTH_EXISTS    = "ranger.common.auth.jwt.ignoreif.other.auth.exists";
+    public static final String RANGER_PROP_JWT_ENABLED                       = "ranger.common.auth.jwt.enabled";
+
+    public static final String JWT_COOKIE_NAME_DEFAULT                           = "hadoop-jwt";
+
+    public static final String RANGER_PROP_AUTH_TYPE           = "AUTH_TYPE";
+    public static final String RANGER_AUTH_TYPE_KERBEROS       = "KERBEROS";
+    public static final String RANGER_AUTH_TYPE_RAZ_DT         = "RAZ-DT";
+    public static final String RANGER_PROP_DT_OPERATION_TYPE   = "DT_OPERATION_TYPE";
+    public static final String RANGER_DT_OPERATION_TYPE_GET    = "GETDELEGATIONTOKEN";
+    public static final String RANGER_DT_OPERATION_TYPE_RENEW  = "RENEWDELEGATIONTOKEN";
+    public static final String RANGER_DT_OPERATION_TYPE_CANCEL = "CANCELDELEGATIONTOKEN";
 
     private final    List<String> configuredURLs;
     private final    String       propertyPrefix;
@@ -109,8 +143,7 @@ public class RangerRESTClient {
     private volatile Client       client;
     private volatile Client       cookieAuthClient;
     private          JwtProvider  jwtProvider;
-    private          ClientFilter jwtAuthFilter;
-    private          ClientFilter basicAuthFilter;
+    private volatile String       authHeader;
 
     public RangerRESTClient(String url, String sslConfigFileName, Configuration config) {
         this(url, sslConfigFileName, config, getPropertyPrefix(config));
@@ -148,7 +181,7 @@ public class RangerRESTClient {
     }
 
     public boolean isAuthFilterPresent() {
-        return jwtAuthFilter != null || basicAuthFilter != null;
+        return jwtProvider != null || hasBasicAuth();
     }
 
     public int getRestClientConnTimeOutMs() {
@@ -184,18 +217,16 @@ public class RangerRESTClient {
     }
 
     public void setBasicAuthInfo(String username, String password) {
-        mUsername = username;
-        mPassword = password;
-
         setBasicAuthFilter(username, password);
     }
 
     public void setJwtProvider(JwtProvider jwtProvider) {
         this.jwtProvider = jwtProvider;
+        resetClient();
     }
 
-    public WebResource getResource(String relativeUrl) {
-        return getClient().resource(getUrl() + relativeUrl);
+    public WebTarget getResource(String relativeUrl) {
+        return getClient().target(getUrl() + relativeUrl);
     }
 
     public String toJson(Object obj) {
@@ -228,8 +259,20 @@ public class RangerRESTClient {
         this.client = client;
     }
 
+    protected void setCookieAuthClient(Client cookieAuthClient) {
+        this.cookieAuthClient = cookieAuthClient;
+    }
+
     public void resetClient() {
-        client = null;
+        if (client != null) {
+            client.close();
+            client = null;
+        }
+
+        if (cookieAuthClient != null) {
+            cookieAuthClient.close();
+            cookieAuthClient = null;
+        }
     }
 
     public KeyManager[] getKeyManagers(String keyStoreFile, String keyStoreFilePwd) {
@@ -340,251 +383,36 @@ public class RangerRESTClient {
         return tmList;
     }
 
-    public ClientResponse get(String relativeUrl, Map<String, String> params) throws Exception {
-        ClientResponse finalResponse = null;
-        int            startIndex    = this.lastKnownActiveUrlIndex;
-        int            retryAttempt  = 0;
-
-        for (int index = 0; index < configuredURLs.size(); index++) {
-            int currentIndex = (startIndex + index) % configuredURLs.size();
-
-            try {
-                WebResource.Builder webResource = createWebResource(currentIndex, relativeUrl, params);
-
-                finalResponse = webResource.accept(RangerRESTUtils.REST_EXPECTED_MIME_TYPE).type(RangerRESTUtils.REST_MIME_TYPE_JSON).get(ClientResponse.class);
-
-                if (finalResponse != null) {
-                    if (finalResponse.getStatusInfo().getFamily() == Response.Status.Family.SERVER_ERROR) {
-                        throw new ClientHandlerException("Response status: " + finalResponse.getStatus());
-                    }
-
-                    setLastKnownActiveUrlIndex(currentIndex);
-
-                    break;
-                }
-            } catch (ClientHandlerException ex) {
-                if (shouldRetry(configuredURLs.get(currentIndex), index, retryAttempt, ex)) {
-                    retryAttempt++;
-
-                    index = -1; // start from first url
-                }
-            }
-        }
-
-        return finalResponse;
+    public Response get(String relativeUrl, Map<String, String> params) throws Exception {
+        return performRequest(HttpMethod.GET, relativeUrl, params, null, null);
     }
 
-    public ClientResponse get(String relativeUrl, Map<String, String> params, Cookie sessionId) throws Exception {
-        ClientResponse finalResponse = null;
-        int            startIndex    = this.lastKnownActiveUrlIndex;
-        int            retryAttempt  = 0;
-
-        for (int index = 0; index < configuredURLs.size(); index++) {
-            int currentIndex = (startIndex + index) % configuredURLs.size();
-
-            try {
-                WebResource.Builder br = createWebResource(currentIndex, relativeUrl, params, sessionId);
-
-                finalResponse = br.accept(RangerRESTUtils.REST_EXPECTED_MIME_TYPE).type(RangerRESTUtils.REST_MIME_TYPE_JSON).get(ClientResponse.class);
-
-                if (finalResponse != null) {
-                    if (finalResponse.getStatusInfo().getFamily() == Response.Status.Family.SERVER_ERROR) {
-                        throw new ClientHandlerException("Response status: " + finalResponse.getStatus());
-                    }
-
-                    setLastKnownActiveUrlIndex(currentIndex);
-
-                    break;
-                }
-            } catch (ClientHandlerException ex) {
-                if (shouldRetry(configuredURLs.get(currentIndex), index, retryAttempt, ex)) {
-                    retryAttempt++;
-
-                    index = -1; // start from first url
-                }
-            }
-        }
-
-        return finalResponse;
+    public Response get(String relativeUrl, Map<String, String> params, Cookie sessionId) throws Exception {
+        return performRequest(HttpMethod.GET, relativeUrl, params, null, sessionId);
     }
 
-    public ClientResponse post(String relativeUrl, Map<String, String> params, Object obj) throws Exception {
-        ClientResponse finalResponse = null;
-        int            startIndex    = this.lastKnownActiveUrlIndex;
-        int            retryAttempt  = 0;
-
-        for (int index = 0; index < configuredURLs.size(); index++) {
-            int currentIndex = (startIndex + index) % configuredURLs.size();
-
-            try {
-                WebResource.Builder webResource = createWebResource(currentIndex, relativeUrl, params);
-
-                finalResponse = webResource.accept(RangerRESTUtils.REST_EXPECTED_MIME_TYPE).type(RangerRESTUtils.REST_MIME_TYPE_JSON).post(ClientResponse.class, toJson(obj));
-
-                if (finalResponse != null) {
-                    setLastKnownActiveUrlIndex(currentIndex);
-
-                    break;
-                }
-            } catch (ClientHandlerException ex) {
-                if (shouldRetry(configuredURLs.get(currentIndex), index, retryAttempt, ex)) {
-                    retryAttempt++;
-
-                    index = -1; // start from first url
-                }
-            }
-        }
-
-        return finalResponse;
+    public Response post(String relativeUrl, Map<String, String> params, Object obj) throws Exception {
+        return performRequest(HttpMethod.POST, relativeUrl, params, obj, null);
     }
 
-    public ClientResponse post(String relativeURL, Map<String, String> params, Object obj, Cookie sessionId) throws Exception {
-        ClientResponse response     = null;
-        int            startIndex   = this.lastKnownActiveUrlIndex;
-        int            retryAttempt = 0;
-
-        for (int index = 0; index < configuredURLs.size(); index++) {
-            int currentIndex = (startIndex + index) % configuredURLs.size();
-
-            try {
-                WebResource.Builder br = createWebResource(currentIndex, relativeURL, params, sessionId);
-
-                response = br.accept(RangerRESTUtils.REST_EXPECTED_MIME_TYPE).type(RangerRESTUtils.REST_MIME_TYPE_JSON).post(ClientResponse.class, toJson(obj));
-
-                if (response != null) {
-                    setLastKnownActiveUrlIndex(currentIndex);
-
-                    break;
-                }
-            } catch (ClientHandlerException ex) {
-                if (shouldRetry(configuredURLs.get(currentIndex), index, retryAttempt, ex)) {
-                    retryAttempt++;
-
-                    index = -1; // start from first url
-                }
-            }
-        }
-
-        return response;
+    public Response post(String relativeURL, Map<String, String> params, Object obj, Cookie sessionId) throws Exception {
+        return performRequest(HttpMethod.POST, relativeURL, params, obj, sessionId);
     }
 
-    public ClientResponse delete(String relativeUrl, Map<String, String> params) throws Exception {
-        ClientResponse finalResponse = null;
-        int            startIndex    = this.lastKnownActiveUrlIndex;
-        int            retryAttempt  = 0;
-
-        for (int index = 0; index < configuredURLs.size(); index++) {
-            int currentIndex = (startIndex + index) % configuredURLs.size();
-
-            try {
-                WebResource.Builder webResource = createWebResource(currentIndex, relativeUrl, params);
-
-                finalResponse = webResource.accept(RangerRESTUtils.REST_EXPECTED_MIME_TYPE).type(RangerRESTUtils.REST_MIME_TYPE_JSON).delete(ClientResponse.class);
-
-                if (finalResponse != null) {
-                    setLastKnownActiveUrlIndex(currentIndex);
-
-                    break;
-                }
-            } catch (ClientHandlerException ex) {
-                if (shouldRetry(configuredURLs.get(currentIndex), index, retryAttempt, ex)) {
-                    retryAttempt++;
-
-                    index = -1; // start from first url
-                }
-            }
-        }
-
-        return finalResponse;
+    public Response delete(String relativeUrl, Map<String, String> params) throws Exception {
+        return performRequest(HttpMethod.DELETE, relativeUrl, params, null, null);
     }
 
-    public ClientResponse delete(String relativeURL, Map<String, String> params, Cookie sessionId) throws Exception {
-        ClientResponse response     = null;
-        int            startIndex   = this.lastKnownActiveUrlIndex;
-        int            retryAttempt = 0;
-
-        for (int index = 0; index < configuredURLs.size(); index++) {
-            int currentIndex = (startIndex + index) % configuredURLs.size();
-
-            try {
-                WebResource.Builder br = createWebResource(currentIndex, relativeURL, params, sessionId);
-
-                response = br.delete(ClientResponse.class);
-
-                if (response != null) {
-                    setLastKnownActiveUrlIndex(currentIndex);
-
-                    break;
-                }
-            } catch (ClientHandlerException ex) {
-                if (shouldRetry(configuredURLs.get(currentIndex), index, retryAttempt, ex)) {
-                    retryAttempt++;
-
-                    index = -1; // start from first url
-                }
-            }
-        }
-
-        return response;
+    public Response delete(String relativeURL, Map<String, String> params, Cookie sessionId) throws Exception {
+        return performRequest(HttpMethod.DELETE, relativeURL, params, null, sessionId);
     }
 
-    public ClientResponse put(String relativeUrl, Map<String, String> params, Object obj) throws Exception {
-        ClientResponse finalResponse = null;
-        int            startIndex    = this.lastKnownActiveUrlIndex;
-        int            retryAttempt  = 0;
-
-        for (int index = 0; index < configuredURLs.size(); index++) {
-            int currentIndex = (startIndex + index) % configuredURLs.size();
-
-            try {
-                WebResource.Builder webResource = createWebResource(currentIndex, relativeUrl, params);
-
-                finalResponse = webResource.accept(RangerRESTUtils.REST_EXPECTED_MIME_TYPE).type(RangerRESTUtils.REST_MIME_TYPE_JSON).put(ClientResponse.class, toJson(obj));
-
-                if (finalResponse != null) {
-                    setLastKnownActiveUrlIndex(currentIndex);
-
-                    break;
-                }
-            } catch (ClientHandlerException ex) {
-                if (shouldRetry(configuredURLs.get(currentIndex), index, retryAttempt, ex)) {
-                    retryAttempt++;
-
-                    index = -1; // start from first url
-                }
-            }
-        }
-
-        return finalResponse;
+    public Response put(String relativeUrl, Map<String, String> params, Object obj) throws Exception {
+        return performRequest(HttpMethod.PUT, relativeUrl, params, obj, null);
     }
 
-    public ClientResponse put(String relativeURL, Object request, Cookie sessionId) throws Exception {
-        ClientResponse response     = null;
-        int            startIndex   = this.lastKnownActiveUrlIndex;
-        int            retryAttempt = 0;
-
-        for (int index = 0; index < configuredURLs.size(); index++) {
-            int currentIndex = (startIndex + index) % configuredURLs.size();
-
-            try {
-                WebResource.Builder br = createWebResource(currentIndex, relativeURL, null, sessionId);
-
-                response = br.accept(RangerRESTUtils.REST_EXPECTED_MIME_TYPE).type(RangerRESTUtils.REST_MIME_TYPE_JSON).put(ClientResponse.class, toJson(request));
-
-                if (response != null) {
-                    setLastKnownActiveUrlIndex(currentIndex);
-
-                    break;
-                }
-            } catch (ClientHandlerException ex) {
-                if (shouldRetry(configuredURLs.get(currentIndex), index, retryAttempt, ex)) {
-                    retryAttempt++;
-
-                    index = -1; // start from first url
-                }
-            }
-        }
-        return response;
+    public Response put(String relativeURL, Object request, Cookie sessionId) throws Exception {
+        return performRequest(HttpMethod.PUT, relativeURL, null, request, sessionId);
     }
 
     public int getLastKnownActiveUrlIndex() {
@@ -592,7 +420,7 @@ public class RangerRESTClient {
     }
 
     protected void setLastKnownActiveUrlIndex(int lastKnownActiveUrlIndex) {
-        this.lastKnownActiveUrlIndex = lastKnownActiveUrlIndex;
+        this.lastKnownActiveUrlIndex = lastKnownActiveUrlIndex % configuredURLs.size();
     }
 
     public List<String> getConfiguredURLs() {
@@ -618,6 +446,7 @@ public class RangerRESTClient {
                 tmList = tmf.getTrustManagers();
             } catch (NoSuchAlgorithmException | KeyStoreException | IllegalStateException e) {
                 LOG.error("Unable to get the default SSL TrustStore for the JVM", e);
+                tmList = null;
             }
         }
 
@@ -640,24 +469,85 @@ public class RangerRESTClient {
         }
     }
 
-    protected WebResource.Builder createWebResource(int currentIndex, String relativeURL, Map<String, String> params) {
-        WebResource webResource = getClient().resource(configuredURLs.get(currentIndex) + relativeURL);
+    protected WebTarget setQueryParams(WebTarget webTarget, Map<String, String> params) {
+        WebTarget ret = webTarget;
 
-        webResource = setQueryParams(webResource, params);
+        if (params != null) {
+            Set<Map.Entry<String, String>> entrySet = params.entrySet();
 
-        return webResource.getRequestBuilder();
+            for (Map.Entry<String, String> entry : entrySet) {
+                ret = ret.queryParam(entry.getKey(), entry.getValue());
+            }
+        }
+
+        return ret;
     }
 
-    protected WebResource.Builder createWebResource(int currentIndex, String relativeURL, Map<String, String> params, Cookie sessionId) {
-        if (sessionId == null) {
-            return createWebResource(currentIndex, relativeURL, params);
-        } else {
-            WebResource webResource = getCookieAuthClient().resource(configuredURLs.get(currentIndex) + relativeURL);
+    private Invocation.Builder createInvocationBuilder(int currentIndex, String relativeURL, Map<String, String> params, Cookie sessionId) {
+        Client             clientToUse = sessionId != null ? getCookieAuthClient() : getClient();
+        WebTarget          webTarget   = clientToUse.target(configuredURLs.get(currentIndex) + relativeURL);
 
-            webResource = setQueryParams(webResource, params);
+        webTarget = setQueryParams(webTarget, params);
 
-            return webResource.getRequestBuilder().cookie(sessionId);
+        Invocation.Builder builder = webTarget.request(MediaType.APPLICATION_JSON);
+
+        if (sessionId != null) {
+            builder = builder.cookie(sessionId);
         }
+
+        return builder;
+    }
+
+    private Response performRequest(HttpMethod method, String relativeUrl, Map<String, String> params, Object requestBody, Cookie sessionId) throws Exception {
+        Response finalResponse = null;
+        int      startIndex    = this.lastKnownActiveUrlIndex;
+        int      retryAttempt  = 0;
+
+        for (int index = 0; index < configuredURLs.size(); index++) {
+            int currentIndex = (startIndex + index) % configuredURLs.size();
+
+            try {
+                Invocation.Builder builder = createInvocationBuilder(currentIndex, relativeUrl, params, sessionId);
+
+                if (HttpMethod.POST == method) {
+                    finalResponse = builder.post(Entity.entity(requestBody, MediaType.APPLICATION_JSON));
+                } else if (HttpMethod.PUT == method) {
+                    finalResponse = builder.put(Entity.entity(requestBody, MediaType.APPLICATION_JSON));
+                } else if (HttpMethod.DELETE == method) {
+                    finalResponse = builder.delete();
+                } else {
+                    finalResponse = builder.get();
+                }
+
+                if (finalResponse != null) {
+                    int status = finalResponse.getStatus();
+
+                    boolean success = status == Response.Status.OK.getStatusCode()
+                            || status == Response.Status.NO_CONTENT.getStatusCode()
+                            || status == Response.Status.NOT_MODIFIED.getStatusCode();
+
+                    if (success) {
+                        setLastKnownActiveUrlIndex(currentIndex);
+
+                        break;
+                    } else if (finalResponse.getStatusInfo().getFamily() == Response.Status.Family.SERVER_ERROR) {
+                        throw new ProcessingException("Response status: " + finalResponse.getStatus());
+                    } else {
+                        LOG.error("Request to {} failed with HTTP status {}", configuredURLs.get(currentIndex), finalResponse.getStatus());
+
+                        break;
+                    }
+                }
+            } catch (ProcessingException | WebApplicationException ex) {
+                if (shouldRetry(configuredURLs.get(currentIndex), index, retryAttempt, ex)) {
+                    retryAttempt++;
+
+                    index = -1; // start from first url
+                }
+            }
+        }
+
+        return finalResponse;
     }
 
     protected boolean shouldRetry(String currentUrl, int index, int retryAttemptCount, Exception ex) throws Exception {
@@ -672,7 +562,7 @@ public class RangerRESTClient {
             LOG.warn("Waiting for {}ms before retry attempt #{}", retryIntervalMs, (retryAttemptCount + 1));
 
             try {
-                Thread.sleep(retryIntervalMs);
+                TimeUnit.MILLISECONDS.sleep(retryIntervalMs);
             } catch (InterruptedException excp) {
                 LOG.error("Failed while waiting to retry", excp);
                 Thread.currentThread().interrupt();
@@ -695,18 +585,6 @@ public class RangerRESTClient {
         this.mTrustStoreType = mTrustStoreType;
     }
 
-    protected static WebResource setQueryParams(WebResource webResource, Map<String, String> params) {
-        WebResource ret = webResource;
-
-        if (webResource != null && params != null) {
-            for (Map.Entry<String, String> entry : params.entrySet()) {
-                ret = ret.queryParam(entry.getKey(), entry.getValue());
-            }
-        }
-
-        return ret;
-    }
-
     private static String getPropertyPrefix(Configuration config) {
         return (config instanceof RangerPluginConfig) ? ((RangerPluginConfig) config).getPropertyPrefix() : "ranger.plugin";
     }
@@ -720,15 +598,7 @@ public class RangerRESTClient {
 
                 if (ret == null) {
                     cookieAuthClient = buildClient();
-
-                    if (jwtAuthFilter != null) {
-                        cookieAuthClient.removeFilter(jwtAuthFilter);
-                    }
-
-                    if (basicAuthFilter != null) {
-                        cookieAuthClient.removeFilter(basicAuthFilter);
-                    }
-
+                    //Pending : need to remove basic auth filter from client.
                     ret = cookieAuthClient;
                 }
             }
@@ -738,70 +608,91 @@ public class RangerRESTClient {
     }
 
     private Client buildClient() {
-        Client client = null;
+        RangerJersey2ClientBuilder.SafeClientBuilder clientBuilder;
+        ClientConfig config = new ClientConfig();
 
         if (mIsSSL) {
-            KeyManager[]   kmList     = getKeyManagers();
-            TrustManager[] tmList     = getTrustManagers();
-            SSLContext     sslContext = getSSLContext(kmList, tmList);
-            ClientConfig   config     = new DefaultClientConfig();
+            try {
+                KeyManager[]     kmList     = getKeyManagers();
+                TrustManager[]   tmList     = getTrustManagers();
+                SSLContext       sslContext = getSSLContext(kmList, tmList);
+                HostnameVerifier hv = new HostnameVerifier() {
+                    public boolean verify(String urlHostName, SSLSession session) {
+                        return session.getPeerHost().equals(urlHostName);
+                    }
+                };
 
-            config.getClasses().add(JacksonJsonProvider.class); // to handle List<> unmarshalling
-
-            HostnameVerifier hv = (urlHostName, session) -> session.getPeerHost().equals(urlHostName);
-
-            config.getProperties().put(HTTPSProperties.PROPERTY_HTTPS_PROPERTIES, new HTTPSProperties(hv, sslContext));
-
-            client = Client.create(config);
+                // Use RangerJersey2ClientBuilder instead of unsafe ClientBuilder.newBuilder() to prevent MOXy usage
+                clientBuilder = RangerJersey2ClientBuilder.newBuilder()
+                        .sslContext(sslContext)
+                        .hostnameVerifier(hv);
+            } catch (Exception e) {
+                LOG.error("Failed to build SSL client. Falling back to HTTP.");
+                throw new IllegalStateException("Failed to build SSL client.", e);
+            }
+        } else {
+            // Use RangerJersey2ClientBuilder instead of unsafe ClientBuilder.newBuilder() to prevent MOXy usage
+            clientBuilder = RangerJersey2ClientBuilder.newBuilder();
         }
 
-        if (client == null) {
-            ClientConfig config = new DefaultClientConfig();
+        // Apply centralized anti-MOXy configuration using the utility
+        RangerJersey2ClientBuilder.applyAntiMoxyConfiguration(config);
 
-            config.getClasses().add(JacksonJsonProvider.class); // to handle List<> unmarshalling
+        // Set timeouts
+        config.property(ClientProperties.CONNECT_TIMEOUT, mRestClientConnTimeOutMs);
+        config.property(ClientProperties.READ_TIMEOUT, mRestClientReadTimeOutMs);
 
-            client = Client.create(config);
+        // Validate that MOXy prevention is properly configured
+        RangerJersey2ClientBuilder.validateAntiMoxyConfiguration(config);
+
+        if (jwtProvider != null) {
+            config.register(new javax.ws.rs.client.ClientRequestFilter() {
+                @Override
+                public void filter(javax.ws.rs.client.ClientRequestContext requestContext) {
+                    String header = getAuthHeader();
+
+                    if (StringUtils.isNotEmpty(header)) {
+                        authHeader = header;
+                        requestContext.getHeaders().putSingle("Authorization", header);
+                    }
+                }
+            });
+        } else if (hasBasicAuth()) {
+            authHeader = getBasicAuthHeader();
+            config.register(new javax.ws.rs.client.ClientRequestFilter() {
+                @Override
+                public void filter(javax.ws.rs.client.ClientRequestContext requestContext) {
+                    requestContext.getHeaders().add("Authorization", authHeader);
+                }
+            });
+            LOG.info("Registering Basic auth header in REST client");
+        } else {
+            authHeader = null;
         }
 
-        // use JWT if present
-        ClientFilter authFilter = jwtAuthFilter != null ? jwtAuthFilter : basicAuthFilter;
-
-        if (authFilter != null && !client.isFilterPresent(authFilter)) {
-            client.addFilter(authFilter);
-        }
-
-        // Set Connection Timeout and ReadTime for the PolicyRefresh
-        client.setConnectTimeout(mRestClientConnTimeOutMs);
-        client.setReadTimeout(mRestClientReadTimeOutMs);
+        Client client = clientBuilder.withConfig(config).build();
 
         return client;
     }
 
     private void setJWTFilter() {
-        JwtProvider jwtProvider = this.jwtProvider;
-        if (jwtProvider != null) {
+        JwtProvider provider = jwtProvider;
+
+        if (provider != null) {
             LOG.info("Registering JWT auth header in REST client");
-            jwtAuthFilter = new ClientFilter() {
-                @Override
-                public ClientResponse handle(ClientRequest clientRequest) throws ClientHandlerException {
-                    String jwt = jwtProvider.getJwt();
-
-                    clientRequest.getHeaders().putSingle("Authorization", JWT_HEADER_PREFIX + jwt);
-
-                    return getNext().handle(clientRequest);
-                }
-            };
-        } else {
-            jwtAuthFilter = null;
         }
     }
 
     private void setBasicAuthFilter(String username, String password) {
         if (StringUtils.isNotEmpty(username) && StringUtils.isNotEmpty(password)) {
-            basicAuthFilter = new HTTPBasicAuthFilter(username, password);
+            mUsername = username;
+            mPassword = password;
         } else {
-            basicAuthFilter = null;
+            mUsername = null;
+            mPassword = null;
         }
+
+        resetClient();
     }
 
     private void init(Configuration config) {
@@ -833,8 +724,8 @@ public class RangerRESTClient {
             }
         }
 
-        String username    = config.get(propertyPrefix + ".policy.rest.client.username");
-        String password    = config.get(propertyPrefix + ".policy.rest.client.password");
+        String username = config.get(propertyPrefix + ".policy.rest.client.username");
+        String password = config.get(propertyPrefix + ".policy.rest.client.password");
 
         setJWTFilter();
 
@@ -895,5 +786,29 @@ public class RangerRESTClient {
                 LOG.error("Error while closing file: [{}]", filename, excp);
             }
         }
+    }
+
+    private String getAuthHeader() {
+        String currentJwt = getCurrentJwt();
+
+        if (currentJwt != null) {
+            return JWT_HEADER_PREFIX + currentJwt;
+        }
+
+        return hasBasicAuth() ? getBasicAuthHeader() : null;
+    }
+
+    private String getCurrentJwt() {
+        JwtProvider provider = jwtProvider;
+
+        return provider != null ? StringUtils.trimToNull(provider.getJwt()) : null;
+    }
+
+    private boolean hasBasicAuth() {
+        return StringUtils.isNotEmpty(mUsername) && StringUtils.isNotEmpty(mPassword);
+    }
+
+    private String getBasicAuthHeader() {
+        return "Basic " + java.util.Base64.getEncoder().encodeToString((mUsername + ":" + mPassword).getBytes());
     }
 }

@@ -18,7 +18,6 @@
  */
 package org.apache.ranger;
 
-import com.sun.jersey.api.client.ClientResponse;
 import org.apache.ranger.plugin.model.RangerSecurityZone;
 import org.apache.ranger.plugin.model.RangerSecurityZoneHeaderInfo;
 import org.apache.ranger.plugin.model.RangerService;
@@ -51,33 +50,33 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-public class TestRangerClient {
+class TestRangerClient {
     private static final RangerClient.API GET_TEST_API = new RangerClient.API("/relative/path/test", HttpMethod.GET, Response.Status.OK);
     private AutoCloseable               mocks;
 
     @BeforeEach
-    public void setup() {
+    void setup() {
         mocks = MockitoAnnotations.openMocks(this);
     }
 
     @AfterEach
-    public void tearDown() throws Exception {
+    void tearDown() throws Exception {
         if (mocks != null) {
             mocks.close();
         }
     }
 
     @Test
-    public void apiGet_Success() throws Exception {
+    void apiGet_Success() throws Exception {
         try {
             RangerRESTClient restClient = mock(RangerRESTClient.class);
-            ClientResponse   response   = mock(ClientResponse.class);
+            Response   response   = mock(Response.class);
             RangerClient     client     = new RangerClient(restClient);
             RangerService    service    = new RangerService("testType", "testService", "MockedService", "testTag", new HashMap<>());
 
             when(restClient.get(anyString(), any())).thenReturn(response);
             when(response.getStatus()).thenReturn(GET_TEST_API.getExpectedStatus().getStatusCode());
-            when(response.getEntity(String.class)).thenReturn(JsonUtilsV2.objToJson(service));
+            when(response.readEntity(String.class)).thenReturn(JsonUtilsV2.objToJson(service));
 
             RangerService ret = client.getService(service.getName());
 
@@ -89,44 +88,44 @@ public class TestRangerClient {
     }
 
     @Test
-    public void apiGet_ServiceUnavailable() throws Exception {
+    void apiGet_ServiceUnavailable() throws Exception {
         try {
             RangerRESTClient restClient = mock(RangerRESTClient.class);
-            ClientResponse   response   = mock(ClientResponse.class);
+            Response   response   = mock(Response.class);
             RangerClient     client     = new RangerClient(restClient);
 
             when(restClient.get(anyString(), any())).thenReturn(response);
-            when(response.getStatus()).thenReturn(ClientResponse.Status.SERVICE_UNAVAILABLE.getStatusCode());
+            when(response.getStatus()).thenReturn(Response.Status.SERVICE_UNAVAILABLE.getStatusCode());
 
             client.getService(1L);
 
             Assertions.fail("Expected to fail with SERVICE_UNAVAILABLE");
         } catch (RangerServiceException excp) {
-            Assertions.assertEquals(ClientResponse.Status.SERVICE_UNAVAILABLE, excp.getStatus(), "Expected to fail with status SERVICE_UNAVAILABLE");
+            Assertions.assertEquals(Response.Status.SERVICE_UNAVAILABLE, excp.getStatus(), "Expected to fail with status SERVICE_UNAVAILABLE");
         }
     }
 
     @Test
-    public void apiGet_FailWithUnexpectedStatusCode() throws Exception {
+    void apiGet_FailWithUnexpectedStatusCode() throws Exception {
         try {
             RangerRESTClient restClient = mock(RangerRESTClient.class);
-            ClientResponse   response   = mock(ClientResponse.class);
+            Response   response   = mock(Response.class);
             RangerClient     client     = new RangerClient(restClient);
 
             when(restClient.get(anyString(), any())).thenReturn(response);
-            when(response.getStatus()).thenReturn(ClientResponse.Status.INTERNAL_SERVER_ERROR.getStatusCode());
+            when(response.getStatus()).thenReturn(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode());
 
             client.getService(1L);
 
             Assertions.fail("supposed to fail with RangerServiceException");
         } catch (RangerServiceException excp) {
-            Assertions.assertTrue(excp.getMessage().contains("statusCode=" + ClientResponse.Status.INTERNAL_SERVER_ERROR.getStatusCode()));
-            Assertions.assertTrue(excp.getMessage().contains("status=" + ClientResponse.Status.INTERNAL_SERVER_ERROR.getReasonPhrase()));
+            Assertions.assertTrue(excp.getMessage().contains("statusCode=" + Response.Status.INTERNAL_SERVER_ERROR.getStatusCode()));
+            Assertions.assertTrue(excp.getMessage().contains("status=" + Response.Status.INTERNAL_SERVER_ERROR.getReasonPhrase()));
         }
     }
 
     @Test
-    public void apiGet_FailWithNullResponse() throws Exception {
+    void apiGet_FailWithNullResponse() throws Exception {
         try {
             RangerRESTClient restClient = mock(RangerRESTClient.class);
             RangerClient     client     = new RangerClient(restClient);
@@ -143,7 +142,7 @@ public class TestRangerClient {
     }
 
     @Test
-    public void api_UrlMissingFormat() {
+    void api_UrlMissingFormat() {
         try {
             new RangerClient.API("%dtest%dpath%d", HttpMethod.GET, Response.Status.OK).applyUrlFormat(1, 1);
             Assertions.fail("supposed to fail with RangerServiceException");
@@ -153,7 +152,7 @@ public class TestRangerClient {
     }
 
     @Test
-    public void api_UrlIllegalFormatConversion() {
+    void api_UrlIllegalFormatConversion() {
         try {
             new RangerClient.API("testpath%d", HttpMethod.GET, Response.Status.OK).applyUrlFormat("1");
             Assertions.fail("supposed to fail with RangerServiceException");
@@ -170,9 +169,9 @@ public class TestRangerClient {
     }
 
     @Test
-    public void testGetSecurityZoneHeaders() throws Exception {
+    void testGetSecurityZoneHeaders() throws Exception {
         RangerRESTClient restClient = mock(RangerRESTClient.class);
-        ClientResponse   response   = mock(ClientResponse.class);
+        Response   response   = mock(Response.class);
         RangerClient     client     = new RangerClient(restClient);
 
         List<RangerSecurityZoneHeaderInfo> expected = new ArrayList<>();
@@ -182,7 +181,7 @@ public class TestRangerClient {
 
         when(restClient.get(anyString(), any())).thenReturn(response);
         when(response.getStatus()).thenReturn(GET_TEST_API.getExpectedStatus().getStatusCode());
-        when(response.getEntity(String.class)).thenReturn(JsonUtilsV2.listToJson(expected));
+        when(response.readEntity(String.class)).thenReturn(JsonUtilsV2.listToJson(expected));
 
         List<RangerSecurityZoneHeaderInfo> actual = client.getSecurityZoneHeaders(Collections.emptyMap());
 
@@ -195,9 +194,9 @@ public class TestRangerClient {
     }
 
     @Test
-    public void testGetSecurityZoneServiceHeaders() throws Exception {
+    void testGetSecurityZoneServiceHeaders() throws Exception {
         RangerRESTClient restClient = mock(RangerRESTClient.class);
-        ClientResponse   response   = mock(ClientResponse.class);
+        Response   response   = mock(Response.class);
         RangerClient     client     = new RangerClient(restClient);
 
         List<RangerServiceHeaderInfo> expected = new ArrayList<>();
@@ -207,7 +206,7 @@ public class TestRangerClient {
 
         when(restClient.get(anyString(), any())).thenReturn(response);
         when(response.getStatus()).thenReturn(GET_TEST_API.getExpectedStatus().getStatusCode());
-        when(response.getEntity(String.class)).thenReturn(JsonUtilsV2.listToJson(expected));
+        when(response.readEntity(String.class)).thenReturn(JsonUtilsV2.listToJson(expected));
 
         List<RangerServiceHeaderInfo> actual = client.getSecurityZoneServiceHeaders(Collections.emptyMap());
 
@@ -222,7 +221,7 @@ public class TestRangerClient {
     }
 
     @Test
-    public void testGetSecurityZoneNamesForResource() throws RangerServiceException {
+    void testGetSecurityZoneNamesForResource() throws RangerServiceException {
         RangerClient client      = Mockito.mock(RangerClient.class);
         String       serviceName = "dev_hive";
         Map<String, String> resource = new HashMap<String, String>() {{
@@ -238,7 +237,7 @@ public class TestRangerClient {
     }
 
     @Test
-    public void testFindSecurityZones() throws RangerServiceException {
+    void testFindSecurityZones() throws RangerServiceException {
         RangerClient        client = Mockito.mock(RangerClient.class);
         Map<String, String> filter = Collections.emptyMap();
 
@@ -250,7 +249,7 @@ public class TestRangerClient {
     }
 
     @Test
-    public void testPurgeRecords() throws RangerServiceException {
+    void testPurgeRecords() throws RangerServiceException {
         RangerClient client        = Mockito.mock(RangerClient.class);
         String       recordType    = "login_records";
         int          retentionDays = 180;

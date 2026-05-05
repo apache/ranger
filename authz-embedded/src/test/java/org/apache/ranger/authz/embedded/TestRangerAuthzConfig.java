@@ -50,6 +50,13 @@ public class TestRangerAuthzConfig {
     }
 
     @Test
+    public void testLegacyConfigs() {
+        RangerAuthzConfig config = new RangerAuthzConfig(createLegacyDevHiveProperties());
+
+        validateLegacyProperties(config.getServiceProperties("dev_hive", "hive"));
+    }
+
+    @Test
     public void testAuditConfigsV2() {
         RangerAuthzConfig config          = new RangerAuthzConfig(createAuditV2Properties());
         Properties        auditProperties = config.getAuditProperties();
@@ -78,7 +85,18 @@ public class TestRangerAuthzConfig {
         validateDevHdfsProperties(config.getServiceProperties("dev_hdfs", "hdfs"));
         validateAuditConfigV2(config.getAuditProperties());
         validateAuditConfigV3(config.getAuditProperties());
+        validateAuditConfigLegacy(config.getAuditProperties());
         assertEquals("ranger-pdp", config.getAppType());
+    }
+
+    @Test
+    public void testLegacyAuditConfigs() {
+        RangerAuthzConfig config          = new RangerAuthzConfig(createAuditLegacyProperties());
+        Properties        auditProperties = config.getAuditProperties();
+
+        assertEquals(10, auditProperties.size());
+
+        validateAuditConfigLegacy(auditProperties);
     }
 
     private void validateDevHiveProperties(Properties prop) {
@@ -112,6 +130,20 @@ public class TestRangerAuthzConfig {
         assertEquals("30000", prop.getProperty("ranger.plugin.hdfs.policy.rest.client.read.timeoutMs"));
         assertEquals("30000", prop.getProperty("ranger.plugin.hdfs.policy.pollIntervalMs"));
         assertEquals("/etc/ranger/policycache", prop.getProperty("ranger.plugin.hdfs.policy.cache.dir"));
+    }
+
+    private void validateLegacyProperties(Properties prop) {
+        assertEquals(10, prop.size());
+        assertEquals("dev_hive", prop.getProperty("ranger.plugin.hive.service.name"));
+        assertEquals("org.apache.ranger.admin.client.RangerAdminRESTClient", prop.getProperty("ranger.plugin.hive.policy.source.impl"));
+        assertEquals("http://localhost:6080", prop.getProperty("ranger.plugin.hive.policy.rest.url"));
+        assertEquals("/etc/hive/conf/ranger-policymgr-ssl.xml", prop.getProperty("ranger.plugin.hive.policy.rest.ssl.config.file"));
+        assertEquals("120000", prop.getProperty("ranger.plugin.hive.policy.rest.client.connection.timeoutMs"));
+        assertEquals("30000", prop.getProperty("ranger.plugin.hive.policy.rest.client.read.timeoutMs"));
+        assertEquals("30000", prop.getProperty("ranger.plugin.hive.policy.pollIntervalMs"));
+        assertEquals("/etc/ranger/policycache", prop.getProperty("ranger.plugin.hive.policy.cache.dir"));
+        assertEquals("hadoopdev-clientcert.jks", prop.getProperty("xasecure.policymgr.clientssl.keystore"));
+        assertEquals("cacerts-xasecure.jks", prop.getProperty("xasecure.policymgr.clientssl.truststore"));
     }
 
     private void validateAuditConfigV2(Properties prop) {
@@ -157,6 +189,21 @@ public class TestRangerAuthzConfig {
         assertEquals("ranger_audits", props.getProperty("xasecure.audit.destination.solr.collection"));
     }
 
+    private void validateAuditConfigLegacy(Properties props) {
+        assertEquals("true", props.getProperty("xasecure.audit.is.enabled"));
+        assertEquals("false", props.getProperty("xasecure.audit.destination.hdfs"));
+        assertEquals("true", props.getProperty("xasecure.audit.destination.solr"));
+        assertEquals("false", props.getProperty("xasecure.audit.destination.log4j"));
+
+        assertEquals("hdfs://namenode:8020/ranger/audit", props.getProperty("xasecure.audit.destination.hdfs.dir"));
+        assertEquals("%app-type%/%time:yyyyMMdd%", props.getProperty("xasecure.audit.destination.hdfs.subdir"));
+        assertEquals("%app-type%_ranger_audit_%hostname%.log", props.getProperty("xasecure.audit.destination.hdfs.filename.format"));
+        assertEquals("org.apache.ranger.audit.utils.RangerJSONAuditWriter", props.getProperty("xasecure.audit.destination.hdfs.filewriter.impl"));
+
+        assertEquals("http://localhost:6083/solr/ranger_audits", props.getProperty("xasecure.audit.destination.solr.urls"));
+        assertEquals("ranger_audits", props.getProperty("xasecure.audit.destination.solr.collection"));
+    }
+
     private static Properties createDefaultProperties() {
         Properties props = new Properties();
 
@@ -169,6 +216,23 @@ public class TestRangerAuthzConfig {
         props.setProperty("ranger.authz.default.policy.rest.client.read.timeoutMs", "30000");
         props.setProperty("ranger.authz.default.policy.pollIntervalMs", "30000");
         props.setProperty("ranger.authz.default.policy.cache.dir", "/etc/ranger/policycache");
+
+        return props;
+    }
+
+    private static Properties createLegacyDevHiveProperties() {
+        Properties props = new Properties();
+
+        props.put("ranger.plugin.hive.service.name", "dev_hive");
+        props.put("ranger.plugin.hive.policy.source.impl", "org.apache.ranger.admin.client.RangerAdminRESTClient");
+        props.put("ranger.plugin.hive.policy.rest.url", "http://localhost:6080");
+        props.put("ranger.plugin.hive.policy.rest.ssl.config.file", "/etc/hive/conf/ranger-policymgr-ssl.xml");
+        props.put("ranger.plugin.hive.policy.rest.client.connection.timeoutMs", "120000");
+        props.put("ranger.plugin.hive.policy.rest.client.read.timeoutMs", "30000");
+        props.put("ranger.plugin.hive.policy.pollIntervalMs", "30000");
+        props.put("ranger.plugin.hive.policy.cache.dir", "/etc/ranger/policycache");
+        props.put("xasecure.policymgr.clientssl.keystore", "hadoopdev-clientcert.jks");
+        props.put("xasecure.policymgr.clientssl.truststore", "cacerts-xasecure.jks");
 
         return props;
     }
@@ -224,11 +288,31 @@ public class TestRangerAuthzConfig {
         return props;
     }
 
+    private static Properties createAuditLegacyProperties() {
+        Properties props = new Properties();
+
+        props.setProperty("xasecure.audit.is.enabled", "true");
+        props.setProperty("xasecure.audit.destination.hdfs", "false");
+        props.setProperty("xasecure.audit.destination.solr", "true");
+        props.setProperty("xasecure.audit.destination.log4j", "false");
+
+        props.setProperty("xasecure.audit.destination.hdfs.dir", "hdfs://namenode:8020/ranger/audit");
+        props.setProperty("xasecure.audit.destination.hdfs.subdir", "%app-type%/%time:yyyyMMdd%");
+        props.setProperty("xasecure.audit.destination.hdfs.filename.format", "%app-type%_ranger_audit_%hostname%.log");
+        props.setProperty("xasecure.audit.destination.hdfs.filewriter.impl", "org.apache.ranger.audit.utils.RangerJSONAuditWriter");
+
+        props.setProperty("xasecure.audit.destination.solr.urls", "http://localhost:6083/solr/ranger_audits");
+        props.setProperty("xasecure.audit.destination.solr.collection", "ranger_audits");
+
+        return props;
+    }
+
     private static Properties createAllAuthzProperties() {
         Properties props = createDefaultProperties();
 
         props.putAll(createAuditV2Properties());
         props.putAll(createAuditV3Properties());
+        props.putAll(createAuditLegacyProperties());
 
         props.setProperty("ranger.authz.service.hive.service.name", "dev_hive");
 
