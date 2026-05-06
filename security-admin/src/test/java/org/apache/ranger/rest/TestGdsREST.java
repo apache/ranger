@@ -926,37 +926,48 @@ public class TestGdsREST {
 
     @Test
     public void testUpdateSharedResources_updatesWhenNotForceDelete() throws Exception {
-        List<Long> resourceIds = Arrays.asList(1L, 2L, 3L);
+        RangerGds.RangerSharedResource resource1 = createSharedResource();
+        RangerGds.RangerSharedResource resource2 = createSharedResource();
+        RangerGds.RangerSharedResource resource3 = createSharedResource();
+        List<RangerGds.RangerSharedResource> resources = Arrays.asList(resource1, resource2, resource3);
 
-        doNothing().when(gdsStore).updateSharedResources(resourceIds);
+        when(gdsStore.updateSharedResource(resource1)).thenReturn(resource1);
+        when(gdsStore.updateSharedResource(resource2)).thenReturn(resource2);
+        when(gdsStore.updateSharedResource(resource3)).thenReturn(resource3);
 
-        gdsREST.updateSharedResources(false, resourceIds);
+        gdsREST.updateSharedResources(false, resources);
 
-        verify(gdsStore).updateSharedResources(resourceIds);
+        verify(gdsStore).updateSharedResource(resource1);
+        verify(gdsStore).updateSharedResource(resource2);
+        verify(gdsStore).updateSharedResource(resource3);
         verify(gdsStore, Mockito.never()).removeSharedResources(Mockito.anyList());
     }
 
     @Test
     public void testUpdateSharedResources_deletesWhenForceDelete() throws Exception {
-        List<Long> resourceIds = Arrays.asList(1L, 2L, 3L);
+        RangerGds.RangerSharedResource resource1 = createSharedResource();
+        RangerGds.RangerSharedResource resource2 = createSharedResource();
+        RangerGds.RangerSharedResource resource3 = createSharedResource();
+        List<RangerGds.RangerSharedResource> resources = Arrays.asList(resource1, resource2, resource3);
+        List<Long> resourceIds = Arrays.asList(resource1.getId(), resource2.getId(), resource3.getId());
 
         doNothing().when(gdsStore).removeSharedResources(resourceIds);
 
-        gdsREST.updateSharedResources(true, resourceIds);
+        gdsREST.updateSharedResources(true, resources);
 
         verify(gdsStore).removeSharedResources(resourceIds);
-        verify(gdsStore, Mockito.never()).updateSharedResources(Mockito.anyList());
+        verify(gdsStore, Mockito.never()).updateSharedResource(Mockito.any(RangerGds.RangerSharedResource.class));
     }
 
     @Test
     public void testUpdateSharedResourcesBatchSizeExceeded() {
-        List<Long> resourceIds = new ArrayList<>();
+        List<RangerGds.RangerSharedResource> resources = new ArrayList<>();
         for (long i = 0; i < 101; i++) {
-            resourceIds.add(i);
+            resources.add(createSharedResource());
         }
         Mockito.when(restErrorUtil.createRESTException(Mockito.anyString())).thenReturn(new WebApplicationException());
 
-        assertThrows(WebApplicationException.class, () -> gdsREST.updateSharedResources(false, resourceIds));
+        assertThrows(WebApplicationException.class, () -> gdsREST.updateSharedResources(false, resources));
     }
 
     @Test
