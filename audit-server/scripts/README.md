@@ -65,6 +65,41 @@ This script will start all three services in the correct order:
 
 This script will stop all three services in reverse order.
 
+## Docker Compose (Dev Support)
+
+Docker compose files for the audit-server services live in `dev-support/ranger-docker`:
+
+- `docker-compose.ranger-audit-server.yml` - starts audit ingestor + both dispatchers together
+- `docker-compose.ranger-audit-ingestor.yml` - starts only the audit ingestor
+- `docker-compose.ranger-audit-dispatcher-solr.yml` - starts only the Solr dispatcher
+- `docker-compose.ranger-audit-dispatcher-hdfs.yml` - starts only the HDFS dispatcher
+
+### Docker Compose Commands
+
+```bash
+# Start all audit-server services (ingestor + dispatchers)
+docker compose -f docker-compose.ranger.yml \
+  -f docker-compose.ranger-hadoop.yml \
+  -f docker-compose.ranger-kafka.yml \
+  -f docker-compose.ranger-audit-server.yml up -d
+
+# Start only the audit ingestor
+docker compose -f docker-compose.ranger.yml \
+  -f docker-compose.ranger-kafka.yml \
+  -f docker-compose.ranger-audit-ingestor.yml up -d
+
+# Start only the Solr dispatcher
+docker compose -f docker-compose.ranger.yml \
+  -f docker-compose.ranger-kafka.yml \
+  -f docker-compose.ranger-audit-dispatcher-solr.yml up -d
+
+# Start only the HDFS dispatcher
+docker compose -f docker-compose.ranger.yml \
+  -f docker-compose.ranger-hadoop.yml \
+  -f docker-compose.ranger-kafka.yml \
+  -f docker-compose.ranger-audit-dispatcher-hdfs.yml up -d
+```
+
 ## Individual Service Scripts
 
 Each service can also be started/stopped individually:
@@ -92,8 +127,8 @@ Each service can also be started/stopped individually:
 ./audit-dispatcher/scripts/stop-audit-dispatcher.sh solr
 ```
 
-**Default Port:** 7091
-**Health Check:** http://localhost:7091/api/health/ping
+**Default Port:** 7090 (configured in `ranger-audit-dispatcher-solr-site.xml`)
+**Health Check:** http://localhost:7090/api/health/ping
 
 ### HDFS Dispatcher
 
@@ -105,8 +140,8 @@ Each service can also be started/stopped individually:
 ./audit-dispatcher/scripts/stop-audit-dispatcher.sh hdfs
 ```
 
-**Default Port:** 7092
-**Health Check:** http://localhost:7092/api/health/ping
+**Default Port:** 7090 (configured in `ranger-audit-dispatcher-hdfs-site.xml`)
+**Health Check:** http://localhost:7090/api/health/ping
 
 ## Configuration
 
