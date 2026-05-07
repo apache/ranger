@@ -19,7 +19,7 @@ services:
   ranger-audit-dispatcher-solr:
     build:
       context: .
-      dockerfile: Dockerfile.ranger-audit-dispatcher-solr
+      dockerfile: Dockerfile.ranger-audit-dispatcher
       args:
         - RANGER_BASE_IMAGE=${RANGER_BASE_IMAGE}
         - RANGER_BASE_VERSION=${RANGER_BASE_VERSION}
@@ -28,6 +28,7 @@ services:
     image: ranger-audit-dispatcher-solr:latest
     container_name: ranger-audit-dispatcher-solr
     hostname: ranger-audit-dispatcher-solr.rangernw
+    command: ["solr"]
     stdin_open: true
     tty: true
     depends_on:
@@ -45,7 +46,6 @@ services:
       AUDIT_DISPATCHER_CONF_DIR: /opt/ranger/audit-dispatcher/conf
       AUDIT_DISPATCHER_LOG_DIR: /var/log/ranger/audit-dispatcher/solr
       AUDIT_DISPATCHER_HEAP: "-Xms512m -Xmx2g"
-      AUDIT_DISPATCHER_OPTS: "--add-opens=java.base/java.lang=ALL-UNNAMED -Djersey.config.server.wadl.disableWadl=true"
       RANGER_VERSION: ${RANGER_VERSION}
       KERBEROS_ENABLED: ${KERBEROS_ENABLED}
       KAFKA_BOOTSTRAP_SERVERS: ranger-kafka.rangernw:9092

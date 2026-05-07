@@ -57,6 +57,9 @@
         <appender-ref ref="LogToConsole" />
     </logger>
 
+    <!-- WADL generator (suppress noisy output) -->
+    <logger name="com.sun.jersey.server.wadl.generators.WadlGeneratorJAXBGrammarGenerator" level="OFF" />
+
     <!-- Lucene/Solr Logger (reduce verbosity) -->
     <logger name="org.apache.lucene" level="INFO" additivity="false">
         <appender-ref ref="LogToRollingFile" />
