@@ -186,16 +186,16 @@
             <artifactId>netty-all</artifactId>
             <version>${netty-all.version}</version>
         </dependency>
+        <dependency>
+            <groupId>jakarta.ws.rs</groupId>
+            <artifactId>jakarta.ws.rs-api</artifactId>
+            <version>${jakarta.ws.rs-api.version}</version>
+        </dependency>
         <!-- JAXB API + runtime for Java 11+ (removed from JDK in Java 9) -->
         <dependency>
             <groupId>jakarta.xml.bind</groupId>
             <artifactId>jakarta.xml.bind-api</artifactId>
             <version>2.3.3</version>
-        </dependency>
-        <dependency>
-            <groupId>jakarta.ws.rs</groupId>
-            <artifactId>jakarta.ws.rs-api</artifactId>
-            <version>${jakarta.ws.rs-api.version}</version>
         </dependency>
         <!-- JAXB API + runtime for Java 11+ (removed from JDK in Java 9) -->
         <dependency>
@@ -694,42 +694,6 @@
             <artifactId>cglib</artifactId>
             <version>${cglib.version}</version>
         </dependency>
-        <!-- OpenSAML 4.x - Compatible with Spring Security 5.8.x -->
-        <dependency>
-            <groupId>org.opensaml</groupId>
-            <artifactId>opensaml-core</artifactId>
-            <version>4.3.0</version>
-        </dependency>
-        <dependency>
-            <groupId>org.opensaml</groupId>
-            <artifactId>opensaml-saml-api</artifactId>
-            <version>4.3.0</version>
-        </dependency>
-        <dependency>
-            <groupId>org.opensaml</groupId>
-            <artifactId>opensaml-saml-impl</artifactId>
-            <version>4.3.0</version>
-        </dependency>
-        <dependency>
-            <groupId>org.opensaml</groupId>
-            <artifactId>opensaml-security-api</artifactId>
-            <version>4.3.0</version>
-        </dependency>
-        <dependency>
-            <groupId>org.opensaml</groupId>
-            <artifactId>opensaml-security-impl</artifactId>
-            <version>4.3.0</version>
-        </dependency>
-        <dependency>
-            <groupId>org.opensaml</groupId>
-            <artifactId>opensaml-xmlsec-api</artifactId>
-            <version>4.3.0</version>
-        </dependency>
-        <dependency>
-            <groupId>org.opensaml</groupId>
-            <artifactId>opensaml-xmlsec-impl</artifactId>
-            <version>4.3.0</version>
-        </dependency>
         <dependency>
             <groupId>org.glassfish.hk2.external</groupId>
             <artifactId>jakarta.inject</artifactId>
@@ -766,9 +730,25 @@
             <artifactId>opensaml-core</artifactId>
             <version>4.3.0</version>
         </dependency>
+        <!-- OpenSAML 4.x - Compatible with Spring Security 5.8.x -->
+        <dependency>
+            <groupId>org.opensaml</groupId>
+            <artifactId>opensaml-core</artifactId>
+            <version>4.3.0</version>
+        </dependency>
         <dependency>
             <groupId>org.opensaml</groupId>
             <artifactId>opensaml-saml-api</artifactId>
+            <version>4.3.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.opensaml</groupId>
+            <artifactId>opensaml-saml-api</artifactId>
+            <version>4.3.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.opensaml</groupId>
+            <artifactId>opensaml-saml-impl</artifactId>
             <version>4.3.0</version>
         </dependency>
         <dependency>
@@ -783,12 +763,32 @@
         </dependency>
         <dependency>
             <groupId>org.opensaml</groupId>
+            <artifactId>opensaml-security-api</artifactId>
+            <version>4.3.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.opensaml</groupId>
+            <artifactId>opensaml-security-impl</artifactId>
+            <version>4.3.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.opensaml</groupId>
             <artifactId>opensaml-security-impl</artifactId>
             <version>4.3.0</version>
         </dependency>
         <dependency>
             <groupId>org.opensaml</groupId>
             <artifactId>opensaml-xmlsec-api</artifactId>
+            <version>4.3.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.opensaml</groupId>
+            <artifactId>opensaml-xmlsec-api</artifactId>
+            <version>4.3.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.opensaml</groupId>
+            <artifactId>opensaml-xmlsec-impl</artifactId>
             <version>4.3.0</version>
         </dependency>
         <dependency>
