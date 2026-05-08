@@ -87,6 +87,7 @@ jobs:
       - name: Copy artifacts for docker build
         run: |
           mv ranger-*-admin.tar.gz dev-support/ranger-docker/dist
+          mv ranger-*-pdp.tar.gz dev-support/ranger-docker/dist
           mv ranger-*-usersync.tar.gz dev-support/ranger-docker/dist
           mv ranger-*-tagsync.tar.gz dev-support/ranger-docker/dist
           mv ranger-*-kms.tar.gz dev-support/ranger-docker/dist
@@ -108,6 +109,7 @@ jobs:
           export RANGER_DB_TYPE=postgres
           docker compose \
           -f docker-compose.ranger.yml \
+          -f docker-compose.ranger-pdp.yml \
           -f docker-compose.ranger-usersync.yml \
           -f docker-compose.ranger-tagsync.yml \
           -f docker-compose.ranger-kms.yml build
@@ -118,6 +120,7 @@ jobs:
           export RANGER_DB_TYPE=postgres
           docker compose \
           -f docker-compose.ranger.yml \
+          -f docker-compose.ranger-pdp.yml \
           -f docker-compose.ranger-usersync.yml \
           -f docker-compose.ranger-tagsync.yml \
           -f docker-compose.ranger-kms.yml up -d
@@ -125,7 +128,7 @@ jobs:
       - name: Check status of containers and remove them
         run: |
           sleep 60
-          containers=(ranger ranger-zk ranger-solr ranger-postgres ranger-usersync ranger-tagsync ranger-kms);
+          containers=(ranger ranger-zk ranger-solr ranger-postgres ranger-pdp ranger-usersync ranger-tagsync ranger-kms);
           flag=true;
           for container in "${containers[@]}"; do
               if [[ $(docker inspect -f '{{.State.Running}}' $container 2>/dev/null) == "true" ]]; then
