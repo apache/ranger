@@ -1292,12 +1292,16 @@ public class GdsREST {
     @DELETE
     @Path("/resources")
     @PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.REMOVE_SHARED_RESOURCES + "\")")
-    public void removeSharedResources(List<Long> resourceIds) {
-        LOG.debug("==> GdsREST.removeSharedResources({})", resourceIds);
+    public void removeSharedResources(@QueryParam("resourceIds") List<Long> resourceIds) {
+        LOG.debug("==> GdsREST.removeSharedResources(resourceIds={})", resourceIds);
 
         RangerPerfTracer perf = null;
 
         try {
+            if (resourceIds == null) {
+                throw new Exception("resourceIds must not be null");
+            }
+
             if (resourceIds.size() > SHARED_RESOURCES_MAX_BATCH_SIZE) {
                 throw new Exception("removeSharedResources batch size exceeded the configured limit: Maximum allowed is " + SHARED_RESOURCES_MAX_BATCH_SIZE);
             }
@@ -1317,7 +1321,7 @@ public class GdsREST {
             RangerPerfTracer.log(perf);
         }
 
-        LOG.debug("<== GdsREST.removeSharedResources({})", resourceIds);
+        LOG.debug("<== GdsREST.removeSharedResources(resourceIds={})", resourceIds);
     }
 
     @GET

@@ -963,6 +963,13 @@ public class TestGdsREST {
     }
 
     @Test
+    public void testRemoveSharedResourcesNullResourceIds() {
+        Mockito.when(restErrorUtil.createRESTException(Mockito.anyString())).thenReturn(new WebApplicationException());
+
+        assertThrows(WebApplicationException.class, () -> gdsREST.removeSharedResources(null));
+    }
+
+    @Test
     public void testGetSharedResource() {
         Long resourceId = 1L;
         RangerGds.RangerSharedResource expected = createSharedResource();
