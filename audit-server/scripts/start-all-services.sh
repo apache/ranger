@@ -20,9 +20,9 @@
 # Start All Ranger Audit Services
 # ========================================
 # This script starts all three audit services in the correct order:
-# 1. Audit Server (receives audits and produces to Kafka)
-# 2. Solr Consumer (consumes from Kafka and indexes to Solr)
-# 3. HDFS Consumer (consumes from Kafka and writes to HDFS)
+# 1. Audit Ingestor (receives audits and produces to Kafka)
+# 2. Solr Dispatcher (consumes from Kafka and indexes to Solr)
+# 3. HDFS Dispatcher (consumes from Kafka and writes to HDFS)
 
 set -e
 
@@ -34,45 +34,51 @@ echo "Starting All Ranger Audit Services"
 echo "=========================================="
 echo ""
 
-# Start Audit Server
-echo "[1/3] Starting Ranger Audit Server Service..."
-if [ -f "${PARENT_DIR}/ranger-audit-server-service/scripts/start-audit-server.sh" ]; then
-  bash "${PARENT_DIR}/ranger-audit-server-service/scripts/start-audit-server.sh"
+# Start Audit Ingestor
+echo "[1/3] Starting Ranger Audit Ingestor Service..."
+if [ -f "${PARENT_DIR}/audit-ingestor/scripts/start-audit-ingestor.sh" ]; then
+  bash "${PARENT_DIR}/audit-ingestor/scripts/start-audit-ingestor.sh"
   echo ""
-  echo "Waiting 10 seconds for Audit Server to initialize..."
+  echo "Waiting 10 seconds for Audit Ingestor to initialize..."
   sleep 10
 else
-  echo "[ERROR] Audit Server start script not found"
+  echo "[ERROR] Audit Ingestor start script not found"
   exit 1
 fi
 
-# Start Solr Consumer
-echo "[2/3] Starting Ranger Audit Consumer - Solr..."
-if [ -f "${PARENT_DIR}/ranger-audit-consumer-solr/scripts/start-consumer-solr.sh" ]; then
-  bash "${PARENT_DIR}/ranger-audit-consumer-solr/scripts/start-consumer-solr.sh"
+# Start Solr Dispatcher
+echo "[2/3] Starting Ranger Audit Dispatcher - Solr..."
+if [ -f "${PARENT_DIR}/audit-dispatcher/scripts/start-audit-dispatcher.sh" ]; then
+  nohup bash "${PARENT_DIR}/audit-dispatcher/scripts/start-audit-dispatcher.sh" solr > "${PARENT_DIR}/audit-dispatcher/logs/start-solr.log" 2>&1 &
+  PID=$!
+  echo $PID > "${PARENT_DIR}/audit-dispatcher/logs/ranger-audit-dispatcher-solr.pid"
+  echo "Started Solr Dispatcher with PID: $PID"
   echo ""
-  echo "Waiting 5 seconds for Solr Consumer to initialize..."
+  echo "Waiting 5 seconds for Solr Dispatcher to initialize..."
   sleep 5
 else
-  echo "[WARNING] Solr Consumer start script not found, skipping..."
+  echo "[WARNING] Solr Dispatcher start script not found, skipping..."
 fi
 
-# Start HDFS Consumer
-echo "[3/3] Starting Ranger Audit Consumer - HDFS..."
-if [ -f "${PARENT_DIR}/ranger-audit-consumer-hdfs/scripts/start-consumer-hdfs.sh" ]; then
-  bash "${PARENT_DIR}/ranger-audit-consumer-hdfs/scripts/start-consumer-hdfs.sh"
+# Start HDFS Dispatcher
+echo "[3/3] Starting Ranger Audit Dispatcher - HDFS..."
+if [ -f "${PARENT_DIR}/audit-dispatcher/scripts/start-audit-dispatcher.sh" ]; then
+  nohup bash "${PARENT_DIR}/audit-dispatcher/scripts/start-audit-dispatcher.sh" hdfs > "${PARENT_DIR}/audit-dispatcher/logs/start-hdfs.log" 2>&1 &
+  PID=$!
+  echo $PID > "${PARENT_DIR}/audit-dispatcher/logs/ranger-audit-dispatcher-hdfs.pid"
+  echo "Started HDFS Dispatcher with PID: $PID"
   echo ""
 else
-  echo "[WARNING] HDFS Consumer start script not found, skipping..."
+  echo "[WARNING] HDFS Dispatcher start script not found, skipping..."
 fi
 
 echo "=========================================="
-echo "✓ All Ranger Audit Services Started"
+echo "All Ranger Audit Services Started"
 echo "=========================================="
 echo ""
 echo "Service Endpoints:"
-echo "  - Audit Server:     http://localhost:7081/api/audit/health"
-echo "  - Solr Consumer:    http://localhost:7091/api/health"
-echo "  - HDFS Consumer:    http://localhost:7092/api/health"
+echo "  - Audit Ingestor:     http://localhost:7081/api/audit/health"
+echo "  - Solr Dispatcher:    http://localhost:7091/api/health"
+echo "  - HDFS Dispatcher:    http://localhost:7092/api/health"
 echo ""
 echo "To stop all services: ${SCRIPT_DIR}/stop-all-services.sh"
