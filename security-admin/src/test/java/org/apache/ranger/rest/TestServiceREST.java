@@ -1099,10 +1099,24 @@ public class TestServiceREST {
     @Test
     public void test35validateConfig() throws Exception {
         RangerService rangerService = rangerService();
+        Mockito.when(bizUtil.isAdmin()).thenReturn(true);
         Mockito.when(serviceMgr.validateConfig(rangerService, svcStore)).thenReturn(vXResponse);
         VXResponse dbVXResponse = serviceREST.validateConfig(rangerService);
         Assertions.assertNotNull(dbVXResponse);
         Mockito.verify(serviceMgr).validateConfig(rangerService, svcStore);
+    }
+
+    @Test
+    public void test35ValidateConfig_NonAdminUser_ThrowsForbidden() throws Exception {
+        RangerService rangerService = rangerService();
+        Mockito.when(bizUtil.isAdmin()).thenReturn(false);
+        Mockito.when(restErrorUtil.createRESTException(Mockito.eq(HttpServletResponse.SC_FORBIDDEN),
+                Mockito.eq(ServiceREST.ERR_VALIDATE_CONFIG_ADMIN_ONLY),
+                Mockito.eq(true))).thenReturn(new WebApplicationException(HttpServletResponse.SC_FORBIDDEN));
+        Assertions.assertThrows(WebApplicationException.class, () -> serviceREST.validateConfig(rangerService));
+        Mockito.verify(bizUtil).isAdmin();
+        Mockito.verify(restErrorUtil).createRESTException(HttpServletResponse.SC_FORBIDDEN, ServiceREST.ERR_VALIDATE_CONFIG_ADMIN_ONLY, true);
+        Mockito.verify(serviceMgr, Mockito.never()).validateConfig(Mockito.any(), Mockito.any());
     }
 
     @Test
@@ -3186,7 +3200,7 @@ public class TestServiceREST {
     @Test
     public void test115ValidateConfigWithException() throws Exception {
         RangerService rangerService = rangerService();
-
+        Mockito.when(bizUtil.isAdmin()).thenReturn(true);
         Mockito.when(serviceMgr.validateConfig(rangerService, svcStore)).thenThrow(new RuntimeException("Validation failed"));
         Mockito.when(restErrorUtil.createRESTException(Mockito.anyString())).thenReturn(new WebApplicationException());
 
