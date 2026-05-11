@@ -1,0 +1,10 @@
+{
+  "name": "test_{random_str}",
+  "password": "Test@12345",
+  "firstName": "Ranger_tester_{random_str}",
+  "lastName": "",
+  "emailAddress": "xyz_{random_str}@gmail.com",
+  "status": 1,
+  "userRoleList": [
+  ]
+}

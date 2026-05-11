@@ -1,0 +1,32 @@
+{
+    "id": 1,
+    "guid": "df0ddf40-d67d-4cc4-9e2a-034cab50d31c",
+    "isEnabled": true,
+    "createdBy": "Admin",
+    "updatedBy": "Admin",
+    "createTime": 1699997285887,
+    "updateTime": 1699997286336,
+    "version": 2,
+    "type": "hdfs",
+    "name": "dev_hdfs_1",
+    "displayName": "cm_hdfs_1",
+    "description": "Hdfs repo",
+    "tagService": "cm_tag",
+    "configs": {
+        "tag.download.auth.users": "hdfs,hdfsfoo0",
+        "password": "*****",
+        "policy.download.auth.users": "hdfs,hdfsfoo0",
+        "hadoop.security.authentication": "kerberos",
+        "hadoop.rpc.protection": "privacy",
+
+        "default.policy.users": "hdfs,hdfsfoo0",
+        "fs.default.name": "hdfs://quasar-xcuono-2.quasar-xcuono.root.hwx.site:8020",
+        "hadoop.security.authorization": "true",
+        "ranger.plugin.audit.filters": "[{'accessResult': 'DENIED', 'isAudited': true}, {'actions':['delete','rename'],'isAudited':true}, {'users':['hdfs'], 'actions': ['listStatus', 'getfileinfo', 'listCachePools', 'listCacheDirectives', 'listCorruptFileBlocks', 'monitorHealth', 'rollEditLog', 'open'], 'isAudited': false}, {'users': ['oozie'],'resources': {'path': {'values': ['/user/oozie/share/lib'],'isRecursive': true}},'isAudited': false},{'users': ['spark'],'resources': {'path': {'values': ['/user/spark/applicationHistory'],'isRecursive': true}},'isAudited': false},{'users': ['hue'],'resources': {'path': {'values': ['/user/hue'],'isRecursive': true}},'isAudited': false},{'users': ['hbase'],'resources': {'path': {'values': ['/hbase'],'isRecursive': true}},'isAudited': false},{'users': ['mapred'],'resources': {'path': {'values': ['/user/history'],'isRecursive': true}},'isAudited': false}, {'actions': ['getfileinfo'], 'isAudited':false} ]",
+        "username": "hdfs"
+    },
+    "policyVersion": 34,
+    "policyUpdateTime": 1701065558693,
+    "tagVersion": 44,
+    "tagUpdateTime": 1700964953537
+}
