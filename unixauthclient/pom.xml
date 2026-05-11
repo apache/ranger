@@ -92,9 +92,9 @@
             <version>${libpam4j.version}</version>
         </dependency>
         <dependency>
-            <groupId>org.mockito</groupId>
-            <artifactId>mockito-inline</artifactId>
-            <version>${mockito.version}</version>
+            <groupId>org.bouncycastle</groupId>
+            <artifactId>bcpkix-jdk18on</artifactId>
+            <version>${org.bouncycastle.bcpkix-jdk18on}</version>
             <scope>test</scope>
         </dependency>
         <dependency>

@@ -64,6 +64,8 @@
                     <include>org.glassfish.jersey.inject:jersey-hk2</include>
                     <include>org.glassfish.jersey.media:jersey-media-json-jackson</include>
                     <include>jakarta.ws.rs:jakarta.ws.rs-api</include>
+                    <include>jakarta.xml.bind:jakarta.xml.bind-api:jar:${jakarta.xml.bind-api.version}</include>
+                    <include>jakarta.activation:jakarta.activation-api:jar:${jakarta.activation-api.version}</include>
                     <include>javax.inject:javax.inject</include>
                     <include>javax.validation:validation-api</include>
 
@@ -72,8 +74,6 @@
                       Use client/core only; avoid jersey-bundle to prevent
                       ASM package clashes with Jersey-2 server scanner.
                     -->
-                    <include>com.sun.jersey:jersey-client:jar:${jersey-bundle.version}</include>
-                    <include>com.sun.jersey:jersey-core:jar:${jersey-bundle.version}</include>
 
                     <!-- HK2 (Jersey DI framework) -->
                     <include>org.glassfish.hk2:hk2-api</include>

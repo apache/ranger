@@ -43,22 +43,22 @@
   </filter-mapping>
   <servlet>
     <servlet-name>REST Service</servlet-name>
-    <servlet-class>com.sun.jersey.spi.spring.container.servlet.SpringServlet</servlet-class>
+    <servlet-class>org.glassfish.jersey.servlet.ServletContainer</servlet-class>
     <init-param>
-      <param-name>com.sun.jersey.config.property.packages</param-name>
-      <param-value>org.apache.ranger.rest,org.apache.ranger.common,xa.rest</param-value>
+      <param-name>jersey.config.server.provider.packages</param-name>
+      <param-value>org.apache.ranger.rest,org.apache.ranger.common</param-value>
     </init-param>
     <init-param>
-      <param-name>com.sun.jersey.spi.container.ContainerRequestFilters</param-name>
-      <param-value>org.apache.ranger.service.filter.RangerRESTAPIFilter</param-value>
+      <param-name>jersey.config.server.provider.classnames</param-name>
+      <param-value>org.glassfish.jersey.media.multipart.MultiPartFeature,com.fasterxml.jackson.jaxrs.json.JacksonJaxbJsonProvider,org.apache.ranger.service.filter.RangerRESTAPIFilter</param-value>
     </init-param>
     <init-param>
-      <param-name>com.sun.jersey.spi.container.ContainerResponseFilters</param-name>
-      <param-value>org.apache.ranger.service.filter.RangerRESTAPIFilter</param-value>
-    </init-param>
-    <init-param>
-      <param-name>com.sun.jersey.api.json.POJOMappingFeature</param-name>
+      <param-name>jersey.config.disableAutoDiscovery</param-name>
       <param-value>true</param-value>
+    </init-param>
+    <init-param>
+      <param-name>jersey.config.server.provider.scanning.recursive</param-name>
+      <param-value>false</param-value>
     </init-param>
     <load-on-startup>1</load-on-startup>
   </servlet>
@@ -86,5 +86,5 @@
     <error-code>404</error-code>
     <location>/public/error404.jsp</location>
   </error-page>
-  	
+
 </web-app>

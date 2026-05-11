@@ -106,7 +106,7 @@
   <!-- HTTP Header authentication -->
   <property>
     <name>ranger.pdp.authn.header.enabled</name>
-    <value>false</value>
+    <value>true</value>
   </property>
 
   <property>
@@ -117,12 +117,12 @@
   <!-- JWT bearer token authentication for incoming REST requests -->
   <property>
     <name>ranger.pdp.authn.jwt.enabled</name>
-    <value>false</value>
+    <value>true</value>
   </property>
 
     <property>
     <name>ranger.pdp.authn.jwt.provider.url</name>
-    <value/>
+    <value>https://jwkserve.com/.well-known/jwks.json</value>
   </property>
 
   <!-- Kerberos / SPNEGO authentication for incoming REST requests -->

@@ -28,6 +28,7 @@ import org.apache.ranger.db.RangerDaoManager;
 import org.apache.ranger.db.XXServiceDao;
 import org.apache.ranger.entity.XXAccessAudit;
 import org.apache.ranger.view.VXAccessAuditList;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
@@ -64,7 +65,7 @@ public class TestXAccessAuditService {
     SearchField searchField;
 
     @Mock
-    BaseDao entityDao;
+    BaseDao<XXAccessAudit> entityDao;
 
     @Mock
     Query query;
@@ -86,6 +87,11 @@ public class TestXAccessAuditService {
 
     @Mock
     XXServiceDao xXServiceDao;
+
+    @BeforeEach
+    void wireEntityDao() {
+        xAccessAuditService.entityDao = entityDao;
+    }
 
     @Test
     public void test1SearchXAccessAudits() {
