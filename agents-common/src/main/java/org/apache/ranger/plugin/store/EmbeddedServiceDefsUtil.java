@@ -49,7 +49,7 @@ public class EmbeddedServiceDefsUtil {
     private static final Logger LOG = LoggerFactory.getLogger(EmbeddedServiceDefsUtil.class);
 
     // following servicedef list should be reviewed/updated whenever a new embedded service-def is added
-    public static final String DEFAULT_BOOTSTRAP_SERVICEDEF_LIST        = "tag,gds,hdfs,hbase,hive,kms,knox,storm,yarn,kafka,solr,atlas,nifi,nifi-registry,sqoop,kylin,elasticsearch,presto,trino,ozone,kudu,schema-registry,nestedstructure,polaris";
+    public static final String DEFAULT_BOOTSTRAP_SERVICEDEF_LIST        = "tag,gds,hdfs,hbase,hive,kms,knox,storm,yarn,kafka,solr,atlas,nifi,nifi-registry,sqoop,kylin,elasticsearch,presto,trino,ozone,kudu,schema-registry,nestedstructure,polaris,clickhouse";
     public static final String EMBEDDED_SERVICEDEF_TAG_NAME             = "tag";
     public static final String EMBEDDED_SERVICEDEF_GDS_NAME             = "gds";
     public static final String EMBEDDED_SERVICEDEF_HDFS_NAME            = "hdfs";
@@ -76,6 +76,7 @@ public class EmbeddedServiceDefsUtil {
     public static final String EMBEDDED_SERVICEDEF_KUDU_NAME            = "kudu";
     public static final String EMBEDDED_SERVICEDEF_NESTEDSTRUCTURE_NAME = "nestedstructure";
     public static final String EMBEDDED_SERVICEDEF_POLARIS_NAME         = "polaris";
+    public static final String EMBEDDED_SERVICEDEF_CLICKHOUSE_NAME      = "clickhouse";
 
     public static final String PROPERTY_CREATE_EMBEDDED_SERVICE_DEFS = "ranger.service.store.create.embedded.service-defs";
     public static final String HDFS_IMPL_CLASS_NAME                  = "org.apache.ranger.services.hdfs.RangerServiceHdfs";
@@ -127,6 +128,7 @@ public class EmbeddedServiceDefsUtil {
     private       RangerServiceDef        polarisServiceDef;
     private       RangerServiceDef        tagServiceDef;
     private       RangerServiceDef        gdsServiceDef;
+    private       RangerServiceDef        clickhouseServiceDef;
 
     /**
      * Private constructor to restrict instantiation of this singleton utility class.
@@ -189,6 +191,7 @@ public class EmbeddedServiceDefsUtil {
             kuduServiceDef            = getOrCreateServiceDef(store, EMBEDDED_SERVICEDEF_KUDU_NAME);
             nestedStructureServiveDef = getOrCreateServiceDef(store, EMBEDDED_SERVICEDEF_NESTEDSTRUCTURE_NAME);
             polarisServiceDef         = getOrCreateServiceDef(store, EMBEDDED_SERVICEDEF_POLARIS_NAME);
+            clickhouseServiceDef      = getOrCreateServiceDef(store, EMBEDDED_SERVICEDEF_CLICKHOUSE_NAME);
 
             gdsServiceDef = getOrCreateServiceDef(store, EMBEDDED_SERVICEDEF_GDS_NAME);
 
@@ -302,6 +305,10 @@ public class EmbeddedServiceDefsUtil {
 
     public long getGdsServiceDefId() {
         return getId(gdsServiceDef);
+    }
+
+    public long getClickhouseServiceDefId(){
+        return getId(clickhouseServiceDef);
     }
 
     public RangerServiceDef getEmbeddedServiceDef(String defType) throws Exception {

@@ -1,0 +1,363 @@
+{
+  "name": "clickhouse",
+  "displayName": "ClickHouse",
+  "implClass": "org.apache.ranger.services.clickhouse.RangerServiceClickHouse",
+  "label": "ClickHouse Server",
+  "description": "ClickHouse Database Service",
+  "guid": "5efabb6e-8253-46e2-b662-ce017365f417",
+  "options": {
+    "enableDenyAndExceptionsInPolicies": "true",
+    "enableTagBasedPolicies": "true"
+  },
+  "resources": [
+    {
+      "itemId": 1,
+      "name": "database",
+      "parent": "",
+      "level": 10,
+      "type": "string",
+      "mandatory": true,
+      "lookupSupported": false,
+      "excludesSupported": true,
+      "matcher": "org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
+      "matcherOptions": { "wildCard": true, "ignoreCase": true },
+      "label": "Database",
+      "description": "ClickHouse Database",
+      "isValidLeaf": false
+    },
+    {
+      "itemId": 2,
+      "name": "table",
+      "parent": "database",
+      "level": 20,
+      "type": "string",
+      "mandatory": false,
+      "lookupSupported": false,
+      "excludesSupported": true,
+      "matcher": "org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
+      "matcherOptions": { "wildCard": true, "ignoreCase": true },
+      "label": "Table",
+      "description": "ClickHouse Table",
+      "isValidLeaf": false
+    },
+    {
+      "itemId": 3,
+      "name": "column",
+      "parent": "table",
+      "level": 30,
+      "type": "string",
+      "mandatory": false,
+      "lookupSupported": false,
+      "excludesSupported": true,
+      "matcher": "org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
+      "matcherOptions": { "wildCard": true, "ignoreCase": true },
+      "label": "Column",
+      "description": "ClickHouse Column",
+      "isValidLeaf": true
+    },
+    {
+      "itemId": 4,
+      "name": "view",
+      "parent": "database",
+      "level": 20,
+      "type": "string",
+      "mandatory": false,
+      "lookupSupported": false,
+      "excludesSupported": true,
+      "matcher": "org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
+      "matcherOptions": { "wildCard": true, "ignoreCase": true },
+      "label": "View",
+      "description": "ClickHouse View",
+      "isValidLeaf": true
+    },
+    {
+      "itemId": 5,
+      "name": "dictionary",
+      "parent": "database",
+      "level": 20,
+      "type": "string",
+      "mandatory": false,
+      "lookupSupported": false,
+      "excludesSupported": true,
+      "matcher": "org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
+      "matcherOptions": { "wildCard": true, "ignoreCase": true },
+      "label": "Dictionary",
+      "description": "ClickHouse Dictionary",
+      "isValidLeaf": true
+    },
+    {
+      "itemId": 6,
+      "name": "function",
+      "parent": "",
+      "level": 10,
+      "type": "string",
+      "mandatory": false,
+      "lookupSupported": false,
+      "excludesSupported": true,
+      "matcher": "org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
+      "matcherOptions": { "wildCard": true, "ignoreCase": true },
+      "label": "Function",
+      "description": "ClickHouse Function",
+      "isValidLeaf": true
+    },
+    {
+      "itemId": 7,
+      "name": "cluster",
+      "parent": "",
+      "level": 10,
+      "type": "string",
+      "mandatory": false,
+      "lookupSupported": false,
+      "excludesSupported": true,
+      "matcher": "org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
+      "matcherOptions": { "wildCard": true, "ignoreCase": true },
+      "label": "Cluster",
+      "description": "ClickHouse Cluster",
+      "isValidLeaf": true
+    },
+    {
+      "itemId": 8,
+      "name": "role",
+      "parent": "",
+      "level": 10,
+      "type": "string",
+      "mandatory": false,
+      "lookupSupported": false,
+      "excludesSupported": true,
+      "matcher": "org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
+      "matcherOptions": { "wildCard": true, "ignoreCase": true },
+      "label": "Role",
+      "description": "ClickHouse Role",
+      "isValidLeaf": true
+    },
+    {
+      "itemId": 9,
+      "name": "settings_profile",
+      "parent": "",
+      "level": 10,
+      "type": "string",
+      "mandatory": false,
+      "lookupSupported": false,
+      "excludesSupported": true,
+      "matcher": "org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
+      "matcherOptions": { "wildCard": true, "ignoreCase": true },
+      "label": "Settings Profile",
+      "description": "ClickHouse Settings Profile",
+      "isValidLeaf": true
+    },
+    {
+      "itemId": 10,
+      "name": "quota",
+      "parent": "",
+      "level": 10,
+      "type": "string",
+      "mandatory": false,
+      "lookupSupported": false,
+      "excludesSupported": true,
+      "matcher": "org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
+      "matcherOptions": { "wildCard": true, "ignoreCase": true },
+      "label": "Quota",
+      "description": "ClickHouse Quota",
+      "isValidLeaf": true
+    },
+    {
+      "itemId": 11,
+      "name": "named_collection",
+      "parent": "",
+      "level": 10,
+      "type": "string",
+      "mandatory": false,
+      "lookupSupported": false,
+      "excludesSupported": true,
+      "matcher": "org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
+      "matcherOptions": { "wildCard": true, "ignoreCase": true },
+      "label": "Named Collection",
+      "description": "ClickHouse Named Collection",
+      "isValidLeaf": true
+    },
+    {
+      "itemId": 12,
+      "name": "global",
+      "parent": "",
+      "level": 10,
+      "type": "string",
+      "mandatory": false,
+      "lookupSupported": false,
+      "excludesSupported": false,
+      "matcher": "org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
+      "matcherOptions": { "wildCard": true, "ignoreCase": false },
+      "label": "Global",
+      "description": "Global permissions (SYSTEM, KILL QUERY, etc.)",
+      "isValidLeaf": true
+    }
+  ],
+  "accessTypes": [
+    { "itemId": 1, "name": "select", "label": "SELECT", "category": "READ" },
+    { "itemId": 2, "name": "insert", "label": "INSERT", "category": "UPDATE" },
+    { "itemId": 3, "name": "create", "label": "CREATE", "category": "CREATE" },
+    { "itemId": 4, "name": "drop", "label": "DROP", "category": "DELETE" },
+    { "itemId": 5, "name": "alter", "label": "ALTER", "category": "UPDATE" },
+    { "itemId": 6, "name": "truncate", "label": "TRUNCATE", "category": "DELETE" },
+    { "itemId": 7, "name": "optimize", "label": "OPTIMIZE", "category": "MANAGE" },
+    { "itemId": 8, "name": "show", "label": "SHOW", "category": "READ" },
+    { "itemId": 9, "name": "dictget", "label": "DICTGET", "category": "READ" },
+    { "itemId": 10, "name": "system", "label": "SYSTEM", "category": "MANAGE" },
+    { "itemId": 11, "name": "usage", "label": "USAGE", "category": "READ" },
+    { "itemId": 12, "name": "execute", "label": "EXECUTE", "category": "READ" },
+    { "itemId": 13, "name": "create_role", "label": "CREATE ROLE", "category": "CREATE" },
+    { "itemId": 14, "name": "drop_role", "label": "DROP ROLE", "category": "DELETE" },
+    { "itemId": 15, "name": "grant_role", "label": "GRANT ROLE", "category": "MANAGE" },
+    { "itemId": 16, "name": "revoke_role", "label": "REVOKE ROLE", "category": "MANAGE" },
+    { "itemId": 17, "name": "set_role", "label": "SET ROLE", "category": "MANAGE" },
+    { "itemId": 18, "name": "create_user", "label": "CREATE USER", "category": "CREATE" },
+    { "itemId": 19, "name": "drop_user", "label": "DROP USER", "category": "DELETE" },
+    { "itemId": 20, "name": "alter_user", "label": "ALTER USER", "category": "UPDATE" },
+    { "itemId": 21, "name": "create_quota", "label": "CREATE QUOTA", "category": "CREATE" },
+    { "itemId": 22, "name": "drop_quota", "label": "DROP QUOTA", "category": "DELETE" },
+    { "itemId": 23, "name": "create_settings_profile", "label": "CREATE SETTINGS PROFILE", "category": "CREATE" },
+    { "itemId": 24, "name": "drop_settings_profile", "label": "DROP SETTINGS PROFILE", "category": "DELETE" },
+    { "itemId": 25, "name": "backup", "label": "BACKUP", "category": "READ" },
+    { "itemId": 26, "name": "restore", "label": "RESTORE", "category": "UPDATE" },
+    { "itemId": 27, "name": "access_management", "label": "ACCESS MANAGEMENT", "category": "MANAGE" },
+    { "itemId": 28, "name": "kill_query", "label": "KILL QUERY", "category": "MANAGE" },
+    { "itemId": 29, "name": "external_access", "label": "EXTERNAL ACCESS", "category": "MANAGE" },
+    {
+      "itemId": 30,
+      "name": "all",
+      "label": "ALL",
+      "impliedGrants": [
+        "select", "insert", "create", "drop", "alter", "truncate", "optimize",
+        "show", "dictget", "system", "usage", "execute",
+        "create_role", "drop_role", "grant_role", "revoke_role", "set_role",
+        "create_user", "drop_user", "alter_user",
+        "create_quota", "drop_quota",
+        "create_settings_profile", "drop_settings_profile",
+        "backup", "restore", "access_management", "kill_query", "external_access"
+      ]
+    }
+  ],
+  "policyConditions": [
+    {
+      "itemId": 1,
+      "name": "_expression",
+      "evaluator": "org.apache.ranger.plugin.conditionevaluator.RangerScriptConditionEvaluator",
+      "evaluatorOptions": { "ui.isMultiline": "true", "engineName": "JavaScript" },
+      "uiHint": "{ \"isMultiline\":true }",
+      "label": "Enter boolean expression",
+      "description": "Boolean expression"
+    }
+  ],
+  "dataMaskDef": {
+    "accessTypes": [
+      { "name": "select" }
+    ],
+    "resources": [
+      { "name": "database", "mandatory": true, "lookupSupported": false, "uiHint": "{ \"singleValue\":true }" },
+      { "name": "table",    "mandatory": true, "lookupSupported": false, "uiHint": "{ \"singleValue\":true }" },
+      { "name": "column", "mandatory": true, "lookupSupported": false }
+    ],
+    "maskTypes": [
+      {
+        "itemId": 1,
+        "name": "CUSTOM",
+        "label": "Custom",
+        "description": "Custom ClickHouse SQL expression"
+      }
+    ]
+  },
+  "rowFilterDef": {
+    "accessTypes": [
+      { "name": "select" }
+    ],
+    "resources": [
+      { "name": "database", "mandatory": true, "lookupSupported": false, "uiHint": "{ \"singleValue\":true }" },
+      { "name": "table",    "mandatory": true, "lookupSupported": false, "uiHint": "{ \"singleValue\":true }" }
+    ]
+  },
+  "markerAccessTypes": [
+    {
+      "itemId": 31,
+      "name": "_READ",
+      "label": "_READ",
+      "impliedGrants": ["select", "show", "dictget", "usage", "execute"]
+    },
+    {
+      "itemId": 32,
+      "name": "_CREATE",
+      "label": "_CREATE",
+      "impliedGrants": ["create", "insert", "create_role", "create_user", "create_quota", "create_settings_profile"]
+    },
+    {
+      "itemId": 33,
+      "name": "_UPDATE",
+      "label": "_UPDATE",
+      "impliedGrants": ["insert", "alter", "alter_user", "restore"]
+    },
+    {
+      "itemId": 34,
+      "name": "_DELETE",
+      "label": "_DELETE",
+      "impliedGrants": ["drop", "truncate", "drop_role", "drop_user", "drop_quota", "drop_settings_profile"]
+    },
+    {
+      "itemId": 35,
+      "name": "_MANAGE",
+      "label": "_MANAGE",
+      "impliedGrants": ["system", "optimize", "grant_role", "revoke_role", "set_role", "access_management", "kill_query", "external_access", "backup"]
+    },
+    {
+      "itemId": 36,
+      "name": "_ALL",
+      "label": "_ALL",
+      "impliedGrants": [
+        "select", "insert", "create", "drop", "alter", "truncate", "optimize",
+        "show", "dictget", "system", "usage", "execute",
+        "create_role", "drop_role", "grant_role", "revoke_role", "set_role",
+        "create_user", "drop_user", "alter_user",
+        "create_quota", "drop_quota",
+        "create_settings_profile", "drop_settings_profile",
+        "backup", "restore", "access_management", "kill_query", "external_access"
+      ]
+    }
+  ],
+  "configs": [
+    {
+      "itemId": 1,
+      "name": "jdbc.url",
+      "type": "string",
+      "mandatory": false,
+      "label": "JDBC URL",
+      "defaultValue": "jdbc:clickhouse://localhost:8123"
+    },
+    {
+      "itemId": 2,
+      "name": "username",
+      "type": "string",
+      "mandatory": false,
+      "label": "Username"
+    },
+    {
+      "itemId": 3,
+      "name": "password",
+      "type": "password",
+      "mandatory": false,
+      "label": "Password"
+    },
+    {
+      "itemId": 4,
+      "name": "ssl",
+      "type": "boolean",
+      "mandatory": false,
+      "label": "Enable SSL",
+      "defaultValue": "false"
+    },
+    {
+      "itemId": 5,
+      "name": "ranger.plugin.audit.filters",
+      "type": "string",
+      "mandatory": false,
+      "label": "Audit Filters",
+      "defaultValue": "[ {'accessResult': 'DENIED', 'isAudited': true} ]"
+    }
+  ]
+}
