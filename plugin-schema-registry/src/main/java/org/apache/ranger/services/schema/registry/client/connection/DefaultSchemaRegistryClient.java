@@ -251,7 +251,7 @@ public class DefaultSchemaRegistryClient implements ISchemaRegistryClient {
             try {
                 Class<?> clazz = Class.forName(urlSelectorClass);
                 if (!UrlSelector.class.isAssignableFrom(clazz)) {
-                    throw new RuntimeException(ERR_CLASS_NOT_IMPLEMENTING_URL_SELECTOR + urlSelectorClass);
+                    throw new RuntimeException(urlSelectorClass + ERR_CLASS_NOT_IMPLEMENTING_URL_SELECTOR);
                 }
                 urlSelector = (UrlSelector) clazz.getConstructor(String.class).newInstance(rootCatalogURL);
             } catch (InstantiationException | IllegalAccessException | ClassNotFoundException | NoSuchMethodException | InvocationTargetException e) {
