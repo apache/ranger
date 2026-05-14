@@ -24,8 +24,8 @@
 
 import pytest
 import requests
-from utils import run_command,get_error_logs
-from test_config import (HDFS_USER,HIVE_USER,HEADERS,PARAMS,BASE_URL,
+from hdfs.utils import run_command,get_error_logs
+from hdfs.test_config import (HDFS_USER,HIVE_USER,HEADERS,PARAMS,BASE_URL,
                          CREATE_EZ_COMMANDS ,GRANT_PERMISSIONS_COMMANDS,
                          CREATE_FILE_COMMAND, ACTIONS_COMMANDS,READ_EZ_FILE,
                          CLEANUP_COMMANDS,CROSS_EZ_ACTION_COMMANDS,CLEANUP_EZ)
