@@ -17,7 +17,7 @@ limitations under the License.
 
 ## Pytest Functional Test Suite
 
-This test suite validates REST API endpoints for Apache Ranger services, KMS (Key Management Service), and tests HDFS encryption functionalities including key management and file operations within encryption zones.
+This test suite validates REST API endpoints for Apache Ranger services,Admin (xuserrest, servicerest), KMS (Key Management Service), and tests HDFS encryption functionalities including key management and file operations within encryption zones.
 
 ### Available Test Suites
 
@@ -46,14 +46,14 @@ pytest-Tests/
 │   ├──utility/                  # Utility Folder contains helper functions
 │   |     ├── utils.py   
 │   ├── conftest.py              # Fixtures and setup for user REST tests
-│   └── test_file.py        # User REST API test cases
+│   └── test_file.py             # User REST API test cases
 │
 ├── servicerest/                 # Tests on Ranger Service REST APIs
 │   ├──utility/                  # Utility Folder contains helper functions
 │   |     ├── utils.py   
 │   ├── conftest.py              # Fixtures and setup for service REST tests
-│   ├── test_file.py      # Service REST API test cases
-│   └── automation.log                    # logs related to the tests and the conftest files for servicerest
+│   ├── test_file.py             # Service REST API test cases
+│   └── automation.log           # logs related to the tests and the conftest files for servicerest
 │
 ├── pytest.ini                   # Registers custom pytest markers
 ├── run_tests.sh                 # Script to automate setup and test execution

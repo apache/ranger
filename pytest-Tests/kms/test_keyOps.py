@@ -27,7 +27,7 @@
 import requests
 import pytest
 import time
-from utils import fetch_logs
+from kms.utils import fetch_logs
 
 BASE_URL = "http://localhost:9292/kms/v1"
 PARAMS = {"user.name": "keyadmin"}

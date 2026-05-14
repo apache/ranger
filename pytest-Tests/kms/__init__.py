@@ -21,16 +21,3 @@
 # They are provided by a third-party and are governed by
 # separate terms of service, privacy policy, and support
 # documentation.
-
-[pytest]
-markers =
-    cleanEZ: clean up the encryption zone
-    createEZ: create encryption zone
-    get: get methods
-    post: post methods
-    put: put methods
-    delete: delete methods
-    positive: positive test cases
-    negative: negative test cases
-    xuserrest: xuserrest test cases
-    secure_endpoint: secure endpoint test cases
