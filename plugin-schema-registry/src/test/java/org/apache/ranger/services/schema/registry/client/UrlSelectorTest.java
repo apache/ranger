@@ -36,7 +36,7 @@ public class UrlSelectorTest {
         conf.put(SCHEMA_REGISTRY_URL.name(), "http://localhost:8060/api/v1");
         conf.put("schema.registry.client.url.selector", "org.springframework.context.support.ClassPathXmlApplicationContext");
         RuntimeException ex = assertThrows(RuntimeException.class, () -> new DefaultSchemaRegistryClient(conf));
-        assertTrue(ex.getMessage().contains(DefaultSchemaRegistryClient.ERR_UNAUTHORIZED_URL_SELECTOR));
+        assertTrue(ex.getMessage().contains(DefaultSchemaRegistryClient.ERR_CLASS_NOT_IMPLEMENTING_URL_SELECTOR));
     }
 
     @Test
