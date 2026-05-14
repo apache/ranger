@@ -13,83 +13,163 @@ distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
-
-
-This workflow will build a Java project with Maven, and cache/restore any dependencies to improve the workflow execution time
-For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-java-with-maven
-
-This workflow uses actions that are not certified by GitHub.
-They are provided by a third-party and are governed by
-separate terms of service, privacy policy, and support
-documentation.
 -->
 
+## Pytest Functional Test Suite
 
-##    Pytest Functional Test-suite
+This test suite validates REST API endpoints for Apache Ranger services, KMS (Key Management Service), and tests HDFS encryption functionalities including key management and file operations within encryption zones.
 
+### Available Test Suites
 
-This test suite validates REST API endpoints for KMS (Key Management Service) and tests HDFS encryption functionalities including key management and file operations within encryption zones.
+| Suite | Description |
+|---|---|
+| **hdfs** | Test cases for HDFS encryption lifecycle using KMS |
+| **kms** | Test cases for KMS REST API functionality |
+| **xuserrest** | Test cases for Ranger Admin User/Group/Role REST APIs |
+| **servicerest** | Test cases for Ranger Admin Service REST APIs |
 
-**hdfs :** contains test cases for checking KMS functionality through hdfs encryption lifecycle
-
-**kms  :** contains test cases for checking KMS API functionality
-
+---
 
 ### Directory Structure
 
-```
+```text
 pytest-Tests/
-├── hdfs/                    # Tests on HDFS encryption cycle
-├── kms/                     # Tests on KMS API
-├── pytest.ini               # Registers custom pytest markers
-├── run_tests.sh             # Script to automate test execution
-├── requirements.txt
-├── readme.md
+├── hdfs/                        # Tests on HDFS encryption cycle
+│   ├── conftest.py              # Fixtures and setup for HDFS tests
+│   └── test_file.py             # HDFS encryption test cases
+│
+├── kms/                         # Tests on KMS REST API
+│   ├── conftest.py              # Fixtures and setup for KMS tests
+│   └── test_file.py              # KMS API test cases
+│
+├── xuserrest/                   # Tests on Ranger User/Group/Role REST APIs
+│   ├──utility/                  # Utility Folder contains helper functions
+│   |     ├── utils.py   
+│   ├── conftest.py              # Fixtures and setup for user REST tests
+│   └── test_file.py        # User REST API test cases
+│
+├── servicerest/                 # Tests on Ranger Service REST APIs
+│   ├──utility/                  # Utility Folder contains helper functions
+│   |     ├── utils.py   
+│   ├── conftest.py              # Fixtures and setup for service REST tests
+│   ├── test_file.py      # Service REST API test cases
+│   └── automation.log                    # logs related to the tests and the conftest files for servicerest
+│
+├── pytest.ini                   # Registers custom pytest markers
+├── run_tests.sh                 # Script to automate setup and test execution
+├── requirements.txt             # Python dependencies
+└── readme.md                    # This documentation
 
 ```
+> **Note:** A Python virtual environment folder named `myenv` will be automatically
+> generated upon running the tests for the first time.
 
-### Running Tests
 
-#### Container Setup
+## Prerequisites
+1. Docker & Docker Compose installed and running
+2. Python 3.10 or higher
+3. Change the working directory to pytest-Tests
+```text
+cd pytest-Tests/
+```
+4. Make the shell script executable
 
-Before running the tests, configure container behavior using the following environment variable:
-~~~
-  # To force a fresh container setup:
-  export CLEAN_CONTAINERS=1
-~~~
+```text
+chmod +x run_tests.sh
+```
 
-After the initial setup, you can disable fresh container creation by setting below for the next re-runs:
-~~~
-  export CLEAN_CONTAINERS=0
-~~~
 
-#### Executing Tests
+## Environment Variables
 
-Run the test script using:
-~~~
-  ./run-tests.sh [db-type] [additional-services]
-  
-  # valid values for db-type: mysql/postgres/oracle , postgres is the default
-  # additional-services: multiple services can be specified separated by space
-  
-  # e.g for running tests within kms and hdfs use below command:
-  
-  ./run-tests.sh postgres hadoop
-  
-  # Note: If additional-services are specified, db-type must also be explicitly specified
+Configure container behavior before running the script using the following environment variables:
 
-~~~
+1. Fresh Setup & Cleanup:
 
-#### Note (Optional)
+Force a clean environment & helps building binaries with local changes (removes old Ranger containers, prunes Docker space, builds fresh, and cleans up after tests):
+```text
+export CLEAN_CONTAINERS=1
+./run_tests.sh
+```
 
-If you only need to start the infrastructure i.e containers (without running tests):
-~~~
-  export RUN_TESTS=0
-~~~
-This is useful when tests are failing due to incomplete container setup.
+After initial setup, disable fresh container creation to speed up subsequent runs:
 
-After the infrastructure is successfully up, set RUN_TESTS=1 and rerun the script to execute the tests without setup issues.
+```text
+export CLEAN_CONTAINERS=0
+./run_tests.sh
+```
 
-#### Note
+2. Infrastructure Only (Skip Tests)
 
-Reports generated after tests execution in html can be viewed in any browser for detailed test results.
+Start Docker infrastructure without executing Pytest suites:
+
+```text
+export RUN_TESTS=0
+./run_tests.sh
+```
+This is useful when tests fail due to slow container startup. Once all containers are healthy, re-enable tests:
+
+```text
+export RUN_TESTS=1
+./run_tests.sh
+```
+ 
+
+## Running Tests
+The run_tests.sh script manages Docker container setup, dependency installation, and test execution. It supports both interactive and argument-based modes.
+
+1. Interactive Mode:
+
+Run the script without arguments to be prompted for inputs:
+```text
+./run_tests.sh
+```
+> DB Type: Enter one of postgres, mysql, oracle, mssql. Defaults to postgres.
+
+> Test Suites: Enter space-separated suite names. Defaults to ALL suites. 
+
+example:
+```text
+
+Available DB types: postgres, mysql, oracle, mssql
+Enter DB type (press Enter to default to postgres): postgres
+
+Available test suites: xuserrest servicerest hdfs kms
+Enter test suites space-separated (press Enter to run ALL): kms hdfs
+```
+
+2. Command-Line Arguments Mode:
+
+Pass arguments directly to skip prompts:
+
+```text
+./run_tests.sh [db-type] [test-suites...]
+```
+db-type — Must be the first argument. Valid values: postgres, mysql, oracle, mssql.
+
+test-suites — Space-separated list: hdfs, kms, xuserrest, servicerest.
+
+Examples:
+
+```text
+# Run all suites with Postgres (default)
+./run_tests.sh postgres
+
+# Run specific suites with Postgres
+./run_tests.sh postgres kms hdfs
+
+# Run only user REST tests with MySQL
+./run_tests.sh mysql xuserrest
+
+# Run service REST tests with Oracle
+./run_tests.sh oracle servicerest
+ ```
+
+## Test Reports
+After execution, HTML reports are automatically generated for each suite. Open the corresponding file in any browser to view detailed results:
+
+| Suite       | Report File             |
+|:------------|:------------------------|
+| hdfs        | report_hdfs.html        |
+| kms         | report_kms.html         |
+| xuserrest   | report_xuserrest.html   |
+| servicerest | report_servicerest.html |
