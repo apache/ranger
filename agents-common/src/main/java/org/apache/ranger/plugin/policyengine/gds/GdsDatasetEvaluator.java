@@ -124,10 +124,9 @@ public class GdsDatasetEvaluator {
                     RangerAccessRequestUtil.setAccessTypeACLResults(datasetRequest.getContext(), null);
 
                     policyEvaluators.forEach(e -> {
-                        if (!e.isApplicable(accessTime)) {
-                            return;
+                        if (e.isApplicable(accessTime)) {
+                            e.evaluate(datasetRequest, datasetResult);
                         }
-                        e.evaluate(datasetRequest, datasetResult);
                     });
                 } finally {
                     RangerAccessRequestUtil.setAccessTypeResults(datasetRequest.getContext(), null);
