@@ -25,7 +25,7 @@
 import docker
 import pytest
 import time
-from test_config import (HADOOP_CONTAINER, HDFS_USER,KMS_PROPERTY,CORE_SITE_XML_PATH)
+from hdfs.test_config import (HADOOP_CONTAINER, HDFS_USER,KMS_PROPERTY,CORE_SITE_XML_PATH)
 
 # Setup Docker Client
 client = docker.from_env()

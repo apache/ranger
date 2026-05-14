@@ -24,7 +24,7 @@
 
 import pytest
 import docker
-from test_config import (KMS_CONTAINER,HADOOP_NAMENODE_LOG_PATH,KMS_LOG_PATH)
+from hdfs.test_config import (KMS_CONTAINER,HADOOP_NAMENODE_LOG_PATH,KMS_LOG_PATH)
 
 # Setup Docker Client
 client = docker.from_env()

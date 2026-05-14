@@ -23,8 +23,8 @@
 # documentation.
 
 import pytest
-from utils import run_command,get_error_logs
-from test_config import (HDFS_USER,HIVE_USER,HBASE_USER,KEY_ADMIN,
+from hdfs.utils import run_command,get_error_logs
+from hdfs.test_config import (HDFS_USER,HIVE_USER,HBASE_USER,KEY_ADMIN,
                          CREATE_KEY_COMMAND, VALIDATE_KEY_COMMAND, CREATE_EZ_COMMANDS,GRANT_PERMISSIONS_COMMANDS,
                          UNAUTHORIZED_WRITE_COMMAND, ACTIONS_COMMANDS,
                          UNAUTHORIZED_READ_COMMAND,KEY_DELETION_CMD,
