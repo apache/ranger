@@ -1279,11 +1279,42 @@ public class TestRangerHiveAuthorizer {
         Mockito.when(msFactory.getHiveMetastoreClient()).thenReturn(ms);
 
         RangerHiveAuthorizer authorizer = new RangerHiveAuthorizer(msFactory, null, null, null);
-        Method               m          = RangerHiveAuthorizer.class.getDeclaredMethod("getRangerResourceACLs", HivePrivilegeObject.class);
+        Method               m          = RangerHiveAuthorizer.class.getDeclaredMethod("getRangerResourceACLs", HivePrivilegeObject.class, HivePrincipal.class);
         m.setAccessible(true);
-        HivePrivilegeObject obj = new HivePrivilegeObject(HivePrivilegeObjectType.TABLE_OR_VIEW, "db1", "t1");
-        Object              out = m.invoke(authorizer, obj);
+        HivePrivilegeObject obj       = new HivePrivilegeObject(HivePrivilegeObjectType.TABLE_OR_VIEW, "db1", "t1");
+        HivePrincipal       principal = new HivePrincipal("analyst", HivePrincipal.HivePrincipalType.ROLE);
+        Object              out = m.invoke(authorizer, obj, principal);
         assertInstanceOf(RangerResourceACLs.class, out);
+    }
+
+    @Test
+    void test66_getRangerResourceACLs_usesPrincipalContext() throws Exception {
+        RangerBasePlugin plugin = (RangerBasePlugin) Mockito.spy(newInstanceRangerHivePlugin("hiveCLI"));
+        Mockito.doReturn(new RangerResourceACLs()).when(plugin).getResourceACLs(Mockito.any(RangerAccessRequestImpl.class));
+        setStaticHivePlugin(plugin);
+
+        HiveMetastoreClientFactory msFactory = Mockito.mock(HiveMetastoreClientFactory.class);
+        IMetaStoreClient           ms        = Mockito.mock(IMetaStoreClient.class);
+        Mockito.when(msFactory.getHiveMetastoreClient()).thenReturn(ms);
+        RangerHiveAuthorizer authorizer = new RangerHiveAuthorizer(msFactory, null, null, null);
+
+        Method m = RangerHiveAuthorizer.class.getDeclaredMethod("getRangerResourceACLs", HivePrivilegeObject.class, HivePrincipal.class);
+        m.setAccessible(true);
+
+        HivePrivilegeObject obj       = new HivePrivilegeObject(HivePrivilegeObjectType.TABLE_OR_VIEW, "db1", "t1");
+        HivePrincipal       principal = new HivePrincipal("analyst", HivePrincipal.HivePrincipalType.ROLE);
+        m.invoke(authorizer, obj, principal);
+
+        Mockito.verify(plugin).getResourceACLs(Mockito.argThat(req -> {
+            if (!(req instanceof RangerHiveAccessRequest)) {
+                return false;
+            }
+            RangerHiveAccessRequest request = (RangerHiveAccessRequest) req;
+            return request.getUser() == null &&
+                    request.getUserGroups().isEmpty() &&
+                    request.getUserRoles().contains("analyst") &&
+                    request.getHiveAccessType() == RangerHiveAuthorizer.HiveAccessType.USE;
+        }));
     }
 
     @Test
