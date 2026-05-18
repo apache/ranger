@@ -2608,7 +2608,7 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
                     partValues          = (msObjRef.getPartValues() == null) ? new ArrayList<>() : msObjRef.getPartValues();
                     hivePrivilegeObject = new HivePrivilegeObject(objectType, dbName, objectName);
 
-                    RangerResourceACLs rangerResourceACLs = getRangerResourceACLs(hivePrivilegeObject);
+                    RangerResourceACLs rangerResourceACLs = getRangerResourceACLs(hivePrivilegeObject, principal);
 
                     if (rangerResourceACLs != null) {
                         Map<String, Map<String, RangerResourceACLs.AccessResult>> userRangerACLs  = rangerResourceACLs.getUserACLs();
@@ -2800,16 +2800,50 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
         return Sets.newHashSet(ugi.getGroupNames());
     }
 
-    private RangerResourceACLs getRangerResourceACLs(HivePrivilegeObject hiveObject) {
-        LOG.debug("==> RangerHivePolicyProvider.getRangerResourceACLs:[{}]", hiveObject);
+    private RangerResourceACLs getRangerResourceACLs(HivePrivilegeObject hiveObject, HivePrincipal principal) {
+        RangerResourceACLs ret = null;
 
-        RangerResourceACLs      ret;
-        RangerHiveResource      hiveResource = createHiveResource(hiveObject);
-        RangerAccessRequestImpl request      = new RangerAccessRequestImpl(hiveResource, RangerPolicyEngine.ANY_ACCESS, null, null, null);
+        LOG.debug("==> RangerHivePolicyProvider.getRangerResourceACLs:[{}], principal=[{}]", hiveObject, principal);
+
+        RangerHiveResource hiveResource = createHiveResource(hiveObject);
+        if (hiveResource == null) {
+            return null;
+        }
+
+        RangerAccessRequestImpl request;
+        if (principal == null) {
+            request = new RangerAccessRequestImpl(hiveResource, RangerPolicyEngine.ANY_ACCESS, null, null, null);
+        } else {
+            String      user   = null;
+            Set<String> groups = Collections.emptySet();
+            Set<String> roles  = Collections.emptySet();
+
+            switch (principal.getType()) {
+                case USER:
+                    user   = principal.getName();
+                    groups = getPrincipalGroup(user);
+                    roles  = getCurrentRolesForUser(user, groups);
+                    break;
+                case GROUP:
+                    groups = Sets.newHashSet(principal.getName());
+                    break;
+                case ROLE:
+                    roles = Sets.newHashSet(principal.getName());
+                    break;
+                default:
+                    break;
+            }
+
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("getRangerResourceACLs(): principalType={}, user={}, groups={}, roles={}", principal.getType(), user, groups, roles);
+            }
+
+            request = new RangerHiveAccessRequest(hiveResource, user, groups, roles, "SHOW PRIVILEGES", HiveAccessType.USE, null, null);
+        }
 
         ret = hivePlugin.getResourceACLs(request);
 
-        LOG.debug("<== RangerHivePolicyProvider.getRangerResourceACLs:[{}], Computed ACLS:[{}]", hiveObject, ret);
+        LOG.debug("<== RangerHivePolicyProvider.getRangerResourceACLs:[{}], principal=[{}], Computed ACLS:[{}]", hiveObject, principal, ret);
 
         return ret;
     }
