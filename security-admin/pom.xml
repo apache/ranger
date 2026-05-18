@@ -207,11 +207,6 @@
             <artifactId>javax.servlet-api</artifactId>
             <version>${javax.servlet.version}</version>
         </dependency>
-        <dependency>
-            <groupId>net.htmlparser.jericho</groupId>
-            <artifactId>jericho-html</artifactId>
-            <version>${jericho.html.version}</version>
-        </dependency>
         <!-- Transitive dependency for nimbus-jose-jwt.
          Please re-check this version when updating nimbus-jose-jwt.
          Please read RANGER-2080 for more details.
