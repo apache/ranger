@@ -214,6 +214,8 @@ def temp_secure_user(ranger_config, client_roles):
             "isVisible": 1,
             "userSource":1, # to ensure it's created as an external user
             "userRoleList": final_role_list,
+            "syncSource":"EXTERNAL_PYTEST",
+            "otherAttributes":"{\"sync_source\":\"EXTERNAL_PYTEST\"}",
             "groupIdList": [],
             "groupNameList": []
         }
@@ -406,7 +408,11 @@ def temp_group(ranger_config):
         group_name = f"pytest_group_{uuid.uuid4().hex[:8]}"
 
         payload = {
-            "name": group_name
+            "name": group_name,
+            "groupSource" : 1, # to ensure it's created as an external group
+            "groupType" : 1,
+            "syncSource":"EXTERNAL_PYTEST",
+            "otherAttributes":"{\"sync_source\":\"EXTERNAL_PYTEST\"}",
         }
 
         response = requests.post(
