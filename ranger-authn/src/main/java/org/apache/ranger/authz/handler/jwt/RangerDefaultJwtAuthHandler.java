@@ -19,7 +19,6 @@
 package org.apache.ranger.authz.handler.jwt;
 
 import javax.servlet.ServletRequest;
-import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 
 import org.apache.commons.lang3.StringUtils;
@@ -59,11 +58,10 @@ public class RangerDefaultJwtAuthHandler extends RangerJwtAuthHandler {
     public RangerAuth authenticate(HttpServletRequest httpServletRequest) {
         RangerAuth rangerAuth       = null;
         String     jwtAuthHeaderStr = getJwtAuthHeader(httpServletRequest);
-        String     jwtCookieStr     = StringUtils.isBlank(jwtAuthHeaderStr) ? getJwtCookie(httpServletRequest) : null;
         String     doAsUser         = httpServletRequest.getParameter(DO_AS_PARAMETER);
 
         // authenticate against the JWT first to get the real (token-verified) user
-        AuthenticationToken authToken = authenticate(jwtAuthHeaderStr, jwtCookieStr);
+        AuthenticationToken authToken = authenticate(jwtAuthHeaderStr);
         String realUser = authToken != null ? authToken.getName() : null;
 
         if (realUser != null) {
@@ -96,27 +94,12 @@ public class RangerDefaultJwtAuthHandler extends RangerJwtAuthHandler {
     public static boolean canAuthenticateRequest(final ServletRequest request) {
         HttpServletRequest httpServletRequest = (HttpServletRequest) request;
         String     jwtAuthHeaderStr = getJwtAuthHeader(httpServletRequest);
-        String     jwtCookieStr     = StringUtils.isBlank(jwtAuthHeaderStr) ? getJwtCookie(httpServletRequest) : null;
 
-        return shouldProceedAuth(jwtAuthHeaderStr, jwtCookieStr);
+        return shouldProceedAuth(jwtAuthHeaderStr);
     }
 
     public static String getJwtAuthHeader(final HttpServletRequest httpServletRequest) {
         return httpServletRequest.getHeader(AUTHORIZATION_HEADER);
-    }
-
-    public static String getJwtCookie(final HttpServletRequest httpServletRequest) {
-        String jwtCookieStr = null;
-        Cookie[] cookies = httpServletRequest.getCookies();
-        if (cookies != null) {
-            for (Cookie cookie : cookies) {
-                if (cookieName.equals(cookie.getName())) {
-                    jwtCookieStr = cookie.getName() + "=" + cookie.getValue();
-                    break;
-                }
-            }
-        }
-        return jwtCookieStr;
     }
 
     protected boolean isProxyEnabled() {

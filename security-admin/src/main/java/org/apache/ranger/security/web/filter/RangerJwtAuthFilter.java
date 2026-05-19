@@ -76,8 +76,6 @@ public class RangerJwtAuthFilter extends RangerDefaultJwtAuthHandler implements 
 
             config.setProperty(RangerJwtAuthHandler.KEY_PROVIDER_URL, PropertiesUtil.getProperty(RangerSSOAuthenticationFilter.JWT_AUTH_PROVIDER_URL));
             config.setProperty(RangerJwtAuthHandler.KEY_JWT_PUBLIC_KEY, PropertiesUtil.getProperty(RangerSSOAuthenticationFilter.JWT_PUBLIC_KEY, ""));
-            config.setProperty(RangerJwtAuthHandler.KEY_JWT_COOKIE_NAME,
-                               PropertiesUtil.getProperty(RangerSSOAuthenticationFilter.JWT_COOKIE_NAME, RangerSSOAuthenticationFilter.JWT_COOKIE_NAME_DEFAULT));
             config.setProperty(RangerJwtAuthHandler.KEY_JWT_AUDIENCES, PropertiesUtil.getProperty(RangerSSOAuthenticationFilter.JWT_AUDIENCES, ""));
 
             super.initialize(config);
