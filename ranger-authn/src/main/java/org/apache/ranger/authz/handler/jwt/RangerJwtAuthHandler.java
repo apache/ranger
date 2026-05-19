@@ -101,7 +101,7 @@ public abstract class RangerJwtAuthHandler implements RangerAuthHandler {
         }
     }
 
-    protected AuthenticationToken authenticate(final String jwtAuthHeader, final String jwtCookie, final String doAsUser) {
+    protected AuthenticationToken authenticate(final String jwtAuthHeader, final String jwtCookie) {
         if (LOG.isDebugEnabled()) {
             LOG.debug("===>>> RangerJwtAuthHandler.authenticate()");
         }
@@ -115,17 +115,10 @@ public abstract class RangerJwtAuthHandler implements RangerAuthHandler {
                     final SignedJWT jwtToken = SignedJWT.parse(serializedJWT);
                     boolean         valid    = validateToken(jwtToken);
                     if (valid) {
-                        String userName;
-
-                        if (StringUtils.isNotBlank(doAsUser)) {
-                            userName = doAsUser.trim();
-                        } else {
-                            userName = jwtToken.getJWTClaimsSet().getSubject();
-                        }
+                        String userName = jwtToken.getJWTClaimsSet().getSubject();
 
                         if (LOG.isDebugEnabled()) {
                             LOG.debug("RangerJwtAuthHandler.authenticate(): Issuing AuthenticationToken for user: [{}]", userName);
-                            LOG.debug("RangerJwtAuthHandler.authenticate(): Authentication successful for user [{}] and doAs user is [{}]", jwtToken.getJWTClaimsSet().getSubject(), doAsUser);
                         }
                         token = new AuthenticationToken(userName, userName, TYPE);
                     } else {
