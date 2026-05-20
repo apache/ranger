@@ -162,7 +162,8 @@ class TestRoleCRUD:
         [("admin", "ranger_admin_config", "minimal_request"),
          ("admin", "ranger_admin_config", "with_users_groups"), 
          ("admin", "ranger_admin_config", "with_create_non_exist_user_group"),
-         ("service_admin","","with_service_name")],
+         ("service_admin","","with_service_name")
+        ],
     )
     def test_create_role(self, role, auth, test_case, request):
         if role == "service_admin":
@@ -212,7 +213,9 @@ class TestRoleCRUD:
         assert_response(response, 200, f"Expected 200 for {test_case} but got {response.status_code}")
 
         response_data = response.json()
-        role_id = response_data.get("id")
+        role_id = response_data["id"]
+        print(f"[+] Role created successfully with id={role_id} for test case {test_case}")
+        print(f" /n /n Response data: {response_data}.   /n /n")
         delete_role(role_id)
 
         if test_case == "with_service_name":
@@ -242,7 +245,7 @@ class TestRoleCRUD:
             )
             assert_response(response, [200, 204], f"Expected 200 for group deletion but got {response.status_code}")
     
-
+    
     # NEGATIVE TESTS
 
     @pytest.mark.get
@@ -292,6 +295,7 @@ class TestRoleCRUD:
                 json={"name": temp_role_name}
             )
             payload = {"name": temp_role_name}
+            role_to_delete = temp_role_name
 
         elif test_case == "invalid_member_owner":
             payload = {
@@ -340,4 +344,14 @@ class TestRoleCRUD:
         if test_case == "wrong_service_name":
             delete_service(service_id)
             delete_service(other_service["id"])
-
+        if test_case == "duplicate_role_name":
+            # Cleanup the created role
+            roles_resp = requests.get(
+                f"{self.base_url}/roles/roles",
+                headers=self.headers,
+                auth=auth,
+                params={"roleName": role_to_delete}
+            )
+            if roles_resp.status_code == 200 and roles_resp.json().get("roles"):
+                role_id = roles_resp.json()["roles"][0]["id"]
+                delete_role(role_id)
