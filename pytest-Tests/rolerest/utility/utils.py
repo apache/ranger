@@ -33,7 +33,7 @@ import subprocess
 import xuserrest.utility.utils as xutils
 
 
-BASE_URL = "http://localhost:6080"
+BASE_URL = "http://localhost:6080/service"
 AUTH = ("admin", "rangerR0cks!")
 HEADERS = {"Content-Type": "application/json"}
 
@@ -83,7 +83,7 @@ def create_service():
         }
     }
     svc_resp = requests.post(
-        f"{BASE_URL}/service/plugins/services",
+        f"{BASE_URL}/plugins/services",
         auth=AUTH,
         headers=HEADERS,
         data=json.dumps(service_payload)
@@ -117,7 +117,7 @@ def assign_service_admin(service_id, service, username):
     }
     
     resp = requests.put(
-        f"{BASE_URL}/service/plugins/services/{service_id}",
+        f"{BASE_URL}/plugins/services/{service_id}",
         auth=AUTH,
         headers=HEADERS,
         json=update_payload 
@@ -128,7 +128,7 @@ def assign_service_admin(service_id, service, username):
 
 def delete_service(service_id):
     resp = requests.delete(
-        f"{BASE_URL}/service/plugins/services/{service_id}",
+        f"{BASE_URL}/plugins/services/{service_id}",
         auth=AUTH,
         headers=HEADERS
     )
@@ -141,11 +141,13 @@ def assert_response(response, expected_status, text = None, service_name=SERVICE
     xutils.assert_response(response, expected_status, text, service_name)
 
 
+# Remove Content-Type for DELETE requests
 def delete_role(role_id):
     resp = requests.delete(
         f"{BASE_URL}/roles/roles/{role_id}",
         auth=AUTH,
-        headers=HEADERS
+        headers={"Accept": "application/json"}  # Changed from string to dictionary
     )
-    assert_response(resp, [200, 204], f"Failed to delete role id={role_id}: {resp.text}")
-    print(f"[+] Role deleted: id={role_id}")
+    #assert_response(resp, [200, 204], f"Failed to delete role id={role_id}: {resp.text}")
+    assert resp.status_code in [200, 204], f"Failed to delete role id={role_id}: {resp.text}"
+    print(f" /n /n [+] Role deleted successfully with id={role_id}. Response status: {resp.status_code}. Response text: {resp.text} /n /n")
