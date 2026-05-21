@@ -17,17 +17,26 @@
 
 package org.apache.ranger.db;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.ranger.common.db.BaseDao;
 import org.apache.ranger.entity.XXResourceDef;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import javax.persistence.NoResultException;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 public class XXResourceDefDao extends BaseDao<XXResourceDef> {
+    private static final Logger logger = LoggerFactory.getLogger(XXResourceDefDao.class);
+
     public XXResourceDefDao(RangerDaoManagerBase daoMgr) {
         super(daoMgr);
     }
@@ -100,5 +109,30 @@ public class XXResourceDefDao extends BaseDao<XXResourceDef> {
         } catch (NoResultException e) {
             return new ArrayList<>();
         }
+    }
+
+    public Map<String, XXResourceDef> findXXResourceDefsByNameAndPolicyId(Set<String> names, Long policyId) {
+        Map<String, XXResourceDef> ret = Collections.emptyMap();
+        if (policyId == null || CollectionUtils.isEmpty(names)) {
+            return ret;
+        }
+        try {
+            List<XXResourceDef> result = getEntityManager()
+                    .createNamedQuery("XXResourceDef.findByNamesAndPolicyId", XXResourceDef.class)
+                    .setParameter("policyId", policyId)
+                    .setParameter("names", names)
+                    .getResultList();
+
+            if (CollectionUtils.isEmpty(result)) {
+                return ret;
+            }
+            // Group rows into an in-memory map keyed by resource name
+            ret = result.stream()
+                    .collect(Collectors.toMap(XXResourceDef::getName, java.util.function.Function.identity(), (a, b) -> a));
+        } catch (javax.persistence.NoResultException e) {
+            logger.error("No resource definitions found for policyId={} and names={}", policyId, names);
+        }
+
+        return ret;
     }
 }

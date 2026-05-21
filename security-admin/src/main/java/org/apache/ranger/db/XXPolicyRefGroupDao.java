@@ -29,7 +29,9 @@ import javax.persistence.NoResultException;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Service
 public class XXPolicyRefGroupDao extends BaseDao<XXPolicyRefGroup> {
@@ -119,5 +121,35 @@ public class XXPolicyRefGroupDao extends BaseDao<XXPolicyRefGroup> {
         }
 
         batchDeleteByIds("XXPolicyRefGroup.deleteByIds", ids, "ids");
+    }
+
+    public Map<String, Long> findGroupNameByPolicyId(Long policyId) {
+        if (policyId == null) {
+            return Collections.emptyMap();
+        }
+        try {
+            List<Object[]> results = getEntityManager()
+                    .createNamedQuery("XXPolicyRefGroup.findGroupNameByPolicyId", Object[].class)
+                    .setParameter("policyId", policyId)
+                    .getResultList();
+
+            Map<String, Long> groupNameIdMap = new HashMap<>();
+            for (Object[] row : results) {
+                String groupName = (String) row[0];
+                Long id = (Long) row[1];
+                groupNameIdMap.put(groupName, id);
+            }
+
+            return groupNameIdMap;
+        } catch (NoResultException e) {
+            return Collections.emptyMap();
+        }
+    }
+
+    public void deletePolicyRefGroupByIds(List<Long> ids) {
+        if (CollectionUtils.isEmpty(ids)) {
+            return;
+        }
+        batchDeleteByIds("XXPolicyRefGroup.deletePolicyRefGroupByIds", ids, "ids");
     }
 }

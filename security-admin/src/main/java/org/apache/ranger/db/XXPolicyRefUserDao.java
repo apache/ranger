@@ -29,7 +29,9 @@ import javax.persistence.NoResultException;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Service
 public class XXPolicyRefUserDao extends BaseDao<XXPolicyRefUser> {
@@ -132,5 +134,35 @@ public class XXPolicyRefUserDao extends BaseDao<XXPolicyRefUser> {
         }
 
         batchDeleteByIds("XXPolicyRefUser.deleteByIds", ids, "ids");
+    }
+
+    public Map<String, Long> findUserNameIdByPolicyId(Long policyId) {
+        if (policyId == null) {
+            return Collections.emptyMap();
+        }
+        try {
+            List<Object[]> results = getEntityManager()
+                    .createNamedQuery("XXPolicyRefUser.findUserNameIdByPolicyId", Object[].class)
+                    .setParameter("policyId", policyId)
+                    .getResultList();
+
+            Map<String, Long> userNameIdMap = new HashMap<>();
+            for (Object[] row : results) {
+                String userName = (String) row[0];
+                Long id = (Long) row[1];
+                userNameIdMap.put(userName, id);
+            }
+
+            return userNameIdMap;
+        } catch (NoResultException e) {
+            return Collections.emptyMap();
+        }
+    }
+
+    public void deletePolicyRefUserByIds(List<Long> ids) {
+        if (CollectionUtils.isEmpty(ids)) {
+            return;
+        }
+        batchDeleteByIds("XXPolicyRefUser.deletePolicyRefUserByIds", ids, "ids");
     }
 }

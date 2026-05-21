@@ -17,17 +17,26 @@
 
 package org.apache.ranger.db;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.ranger.common.db.BaseDao;
 import org.apache.ranger.entity.XXPolicyConditionDef;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import javax.persistence.NoResultException;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 public class XXPolicyConditionDefDao extends BaseDao<XXPolicyConditionDef> {
+    private static final Logger logger = LoggerFactory.getLogger(XXPolicyConditionDefDao.class);
+
     public XXPolicyConditionDefDao(RangerDaoManagerBase daoManager) {
         super(daoManager);
     }
@@ -59,5 +68,29 @@ public class XXPolicyConditionDefDao extends BaseDao<XXPolicyConditionDef> {
         } catch (NoResultException e) {
             return null;
         }
+    }
+
+    public Map<String, XXPolicyConditionDef> findByServiceDefIdAndNames(Long serviceDefId, Set<String> names) {
+        Map<String, XXPolicyConditionDef> ret = Collections.emptyMap();
+        if (serviceDefId == null || CollectionUtils.isEmpty(names)) {
+            return ret;
+        }
+        try {
+            List<XXPolicyConditionDef> result = getEntityManager()
+                    .createNamedQuery("XXPolicyConditionDef.findByServiceDefIdAndNames", tClass)
+                    .setParameter("serviceDefId", serviceDefId)
+                    .setParameter("names", names)
+                    .getResultList();
+
+            if (CollectionUtils.isEmpty(result)) {
+                return ret;
+            }
+            return result.stream()
+                    .collect(Collectors.toMap(XXPolicyConditionDef::getName, java.util.function.Function.identity(), (a, b) -> a));
+        } catch (Exception e) {
+            logger.error("Error retrieving policy condition definitions for serviceDefId={} and names={}", serviceDefId, names);
+        }
+
+        return ret;
     }
 }

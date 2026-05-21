@@ -29,7 +29,9 @@ import javax.persistence.NoResultException;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Service
 public class XXPolicyRefRoleDao extends BaseDao<XXPolicyRefRole> {
@@ -132,5 +134,35 @@ public class XXPolicyRefRoleDao extends BaseDao<XXPolicyRefRole> {
         }
 
         batchDeleteByIds("XXPolicyRefRole.deleteByIds", ids, "ids");
+    }
+
+    public Map<String, Long> findRoleNameIdByPolicyId(Long policyId) {
+        if (policyId == null) {
+            return Collections.emptyMap();
+        }
+        try {
+            List<Object[]> results = getEntityManager()
+                    .createNamedQuery("XXPolicyRefRole.findRoleNameIdByPolicyId", Object[].class)
+                    .setParameter("policyId", policyId)
+                    .getResultList();
+
+            Map<String, Long> roleNameIdMap = new HashMap<>();
+            for (Object[] row : results) {
+                String roleName = (String) row[0];
+                Long id = (Long) row[1];
+                roleNameIdMap.put(roleName, id);
+            }
+
+            return roleNameIdMap;
+        } catch (NoResultException e) {
+            return Collections.emptyMap();
+        }
+    }
+
+    public void deletePolicyRefRoleByIds(List<Long> ids) {
+        if (CollectionUtils.isEmpty(ids)) {
+            return;
+        }
+        batchDeleteByIds("XXPolicyRefRole.deletePolicyRefRoleByIds", ids, "ids");
     }
 }
