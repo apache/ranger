@@ -104,8 +104,8 @@ http://www.springframework.org/schema/security/spring-security-oauth2-2.0.xsd">
                         policy-directives="default-src 'none'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; connect-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline';font-src 'self'"/>
             </security:headers>
             <security:session-management session-fixation-protection="newSession"/>
-            <intercept-url pattern="/login/saml2/sso/ranger-saml" access="permitAll"/>
-            <intercept-url pattern="/saml2/authenticate/ranger-saml" access="permitAll"/>
+            <intercept-url pattern="/login/saml2/sso/*" access="permitAll"/>
+            <intercept-url pattern="/saml2/authenticate/*" access="permitAll"/>
             <intercept-url pattern="/logout/saml2/**" access="permitAll"/>
             <intercept-url pattern="/**" access="isAuthenticated()"/>
             <security:custom-filter position="PRE_AUTH_FILTER" ref="headerPreAuthFilter"/>
