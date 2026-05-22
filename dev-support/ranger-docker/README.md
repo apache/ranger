@@ -24,7 +24,7 @@ Use Dockerfiles in this directory to create docker images and run them to build 
 ### Environment Setup
 
 - Ensure that you have recent version of Docker installed from [docker.io](http://www.docker.io) (as of this writing: Engine v24.0.5, Compose v2.20.2).
-   Make sure to configure docker with at least 6gb of memory.
+   Make sure to configure docker with at least 8gb of memory.
 
 - Update environment variables in ```.env``` file, if necessary
 

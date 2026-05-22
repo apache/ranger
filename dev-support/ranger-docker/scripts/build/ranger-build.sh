@@ -44,7 +44,7 @@ then
   BUILD_HOST_SRC=true
 fi
 
-export MAVEN_OPTS="-Xms2g -Xmx2g"
+export MAVEN_OPTS="-Xms512m -Xmx5g -XX:+UseG1GC -XX:+ExplicitGCInvokesConcurrent -XX:SoftRefLRUPolicyMSPerMB=50 ${JAVA_OPTS}"
 export M2=/home/ranger/.m2
 
 
