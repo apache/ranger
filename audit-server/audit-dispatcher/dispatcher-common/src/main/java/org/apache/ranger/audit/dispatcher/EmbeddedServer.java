@@ -42,6 +42,7 @@ import org.apache.ranger.audit.server.AuditConfig;
 import org.apache.ranger.audit.server.AuditServerConstants;
 import org.apache.ranger.audit.utils.AuditServerLogFormatter;
 import org.apache.ranger.authorization.hadoop.utils.RangerCredentialProvider;
+import org.apache.tomcat.util.net.SSLHostConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -84,7 +85,8 @@ public class EmbeddedServer {
     public  static final String DEFAULT_NAME_RULE                   = "DEFAULT";
     private static final String RANGER_KEYSTORE_FILE_TYPE_DEFAULT   = "jks";
     private static final String RANGER_TRUSTSTORE_FILE_TYPE_DEFAULT = "jks";
-    private static final String RANGER_SSL_CONTEXT_ALGO_TYPE        = "TLSv1.2";
+    private static final String RANGER_SSL_CONTEXT_ALGO_TYPE        = "TLS";
+    private static final String DEFAULT_SSL_PROTOCOL                = "TLS";
     private static final String RANGER_SSL_KEYMANAGER_ALGO_TYPE     = KeyManagerFactory.getDefaultAlgorithm();
     private static final String RANGER_SSL_TRUSTMANAGER_ALGO_TYPE   = TrustManagerFactory.getDefaultAlgorithm();
     public static final  String KEYSTORE_FILE_TYPE_DEFAULT          = KeyStore.getDefaultType();
@@ -181,7 +183,7 @@ public class EmbeddedServer {
             ssl.setSecure(true);
             ssl.setScheme("https");
             ssl.setAttribute("SSLEnabled", "true");
-            ssl.setAttribute("sslProtocol", getConfig("https.attrib.ssl.protocol", "TLSv1.2"));
+            ssl.setAttribute("sslProtocol", getConfig("https.attrib.ssl.protocol", DEFAULT_SSL_PROTOCOL));
             ssl.setAttribute("clientAuth", clientAuth);
             if (StringUtils.isNotBlank(sslKeystoreKeyAlias)) {
                 ssl.setAttribute("keyAlias", sslKeystoreKeyAlias);
@@ -194,6 +196,14 @@ public class EmbeddedServer {
 
             if (StringUtils.isNotBlank(ciphers)) {
                 ssl.setAttribute("ciphers", ciphers);
+                SSLHostConfig[] configs = ssl.findSslHostConfigs();
+                if (configs != null) {
+                    for (SSLHostConfig hostConfig : configs) {
+                        if (hostConfig != null) {
+                            hostConfig.setCipherSuites(ciphers);
+                        }
+                    }
+                }
             }
 
             server.getService().addConnector(ssl);
