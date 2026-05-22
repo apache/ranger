@@ -15,8 +15,8 @@
 # limitations under the License.
 
 ARG RANGER_BASE_IMAGE=apache/ranger-base
-ARG RANGER_BASE_VERSION=20260123-2-8
-ARG SOLR_VERSION=8.11.3
+ARG RANGER_BASE_VERSION=20260123-2-17
+ARG SOLR_VERSION=9.4.1
 FROM ${RANGER_BASE_IMAGE}:${RANGER_BASE_VERSION} AS ranger-base
 FROM solr:${SOLR_VERSION}
 
@@ -26,8 +26,15 @@ USER root
 
 RUN apt update && DEBIAN_FRONTEND="noninteractive" apt-get install -y krb5-user
 
-RUN mkdir -p /opt/solr/server/solr/configsets/ranger_audits/conf /home/ranger/dist /opt/ranger /home/ranger/scripts
-RUN chown -R solr:solr /opt/solr/server/solr/configsets/ranger_audits/
+# Create all necessary directories in one go, including /var/solr/data
+RUN mkdir -p /opt/solr/server/solr/configsets/ranger_audits/conf \
+             /home/ranger/dist \
+             /opt/ranger \
+             /home/ranger/scripts \
+             /var/solr/data
+# Apply ownership to the directories in one go
+RUN chown -R solr:solr /opt/solr/server/solr/configsets/ranger_audits/ \
+                       /var/solr
 
 COPY --from=ranger-base /home/ranger/scripts/wait_for_keytab.sh             /home/ranger/scripts/wait_for_keytab.sh
 COPY --from=ranger-base /home/ranger/scripts/wait_for_testusers_keytab.sh   /home/ranger/scripts/wait_for_testusers_keytab.sh

@@ -211,7 +211,9 @@
         <servlet.api.version>2.5</servlet.api.version>
         <slf4j-api.version>2.0.13</slf4j-api.version>
         <slf4j.version>2.0.13</slf4j.version>
-        <solr.version>8.11.3</solr.version>
+        <solr.jersey.version>2.39.1</solr.jersey.version>
+        <solr.lucene.version>9.8.0</solr.lucene.version>
+        <solr.version>9.4.1</solr.version>
         <sonar.dynamicAnalysis>reuseReports</sonar.dynamicAnalysis>
         <sonar.java.coveragePlugin>jacoco</sonar.java.coveragePlugin>
         <sonar.language>java</sonar.language>
@@ -1128,6 +1130,7 @@
                 <module>agents-installer</module>
                 <module>common-utils</module>
                 <module>credentialbuilder</module>
+                <module>distro</module>
                 <module>plugin-solr</module>
                 <module>ranger-plugin-classloader</module>
                 <module>ranger-solr-plugin-shim</module>

@@ -91,6 +91,7 @@
           <include>org.apache.lucene:lucene-core</include>
           <include>org.apache.orc:orc-core:jar:${orc.version}</include>
           <include>org.apache.orc:orc-shims:jar:${orc.version}</include>
+          <include>org.apache.solr:solr-api:jar:${solr.version}</include>
           <include>org.apache.solr:solr-solrj:jar:${solr.version}</include>
           <include>org.eclipse.jetty:jetty-client:jar:${jetty-client.version}</include>
           <include>org.elasticsearch.client:elasticsearch-rest-client</include>

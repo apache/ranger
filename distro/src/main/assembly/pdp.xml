@@ -119,6 +119,7 @@
                     <include>com.fasterxml.woodstox:woodstox-core:jar:${fasterxml.woodstox.version}</include>
 
                     <!-- Audit sinks -->
+                    <include>org.apache.solr:solr-api</include>
                     <include>org.apache.solr:solr-solrj</include>
                     <include>org.apache.httpcomponents:httpmime:jar:${httpcomponents.httpmime.version}</include>
                     <include>org.apache.httpcomponents:httpclient:jar:${httpcomponents.httpclient.version}</include>

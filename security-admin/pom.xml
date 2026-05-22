@@ -547,6 +547,11 @@
         </dependency>
         <dependency>
             <groupId>org.apache.solr</groupId>
+            <artifactId>solr-api</artifactId>
+            <version>${solr.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.solr</groupId>
             <artifactId>solr-solrj</artifactId>
             <version>${solr.version}</version>
             <exclusions>
@@ -581,6 +586,31 @@
                 <exclusion>
                     <groupId>io.netty</groupId>
                     <artifactId>netty-transport-native-unix-common</artifactId>
+                </exclusion>
+                <!-- SolrJ 9.x pulls Lucene 9.x, which breaks Elasticsearch 7.x (expects Lucene 8.x) on the same classpath -->
+                <exclusion>
+                    <groupId>org.apache.lucene</groupId>
+                    <artifactId>lucene-analysis-common</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.lucene</groupId>
+                    <artifactId>lucene-backward-codecs</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.lucene</groupId>
+                    <artifactId>lucene-core</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.lucene</groupId>
+                    <artifactId>lucene-queries</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.lucene</groupId>
+                    <artifactId>lucene-queryparser</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.lucene</groupId>
+                    <artifactId>lucene-sandbox</artifactId>
                 </exclusion>
                 <exclusion>
                     <groupId>org.apache.zookeeper</groupId>

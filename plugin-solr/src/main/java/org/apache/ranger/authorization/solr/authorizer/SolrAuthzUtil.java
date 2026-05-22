@@ -153,7 +153,6 @@ class SolrAuthzUtil {
                 case SYNCSHARD:
                 case MOVEREPLICA:
                 case RESTORE:
-                case MIGRATESTATEFORMAT:
                 case FORCELEADER:
                 case REBALANCELEADERS:
                 case BALANCESHARDUNIQUE:
@@ -210,8 +209,6 @@ class SolrAuthzUtil {
 
                 case REQUESTSTATUS:
                 case OVERSEEROP:
-                case INVOKE:
-                    // TODO - is this correct ?
                 case DELETEALIAS: {
                     return Collections.emptyMap();
                 }

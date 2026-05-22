@@ -20,7 +20,6 @@ package org.apache.ranger.authorization.solr.authorizer;
 
 import org.apache.ranger.plugin.classloader.PluginClassLoaderActivator;
 import org.apache.ranger.plugin.classloader.RangerPluginClassLoader;
-import org.apache.solr.common.StringUtils;
 import org.apache.solr.common.util.NamedList;
 import org.apache.solr.handler.component.ResponseBuilder;
 import org.apache.solr.handler.component.SearchComponent;
@@ -32,6 +31,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.Map;
+import java.util.Objects;
 
 public class RangerSolrAuthorizer extends SearchComponent implements AuthorizationPlugin {
     private static final Logger LOG = LoggerFactory.getLogger(RangerSolrAuthorizer.class);
@@ -56,7 +56,7 @@ public class RangerSolrAuthorizer extends SearchComponent implements Authorizati
         LOG.debug("==> RangerSolrAuthorizer.close(Resource)");
 
         // close() to be forwarded only for authorizer instance
-        boolean isAuthorizer = StringUtils.equals(super.getName(), RANGER_SOLR_AUTHORIZER_IMPL_CLASSNAME);
+        boolean isAuthorizer = Objects.equals(super.getName(), RANGER_SOLR_AUTHORIZER_IMPL_CLASSNAME);
 
         if (isAuthorizer) {
             try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator(pluginClassLoader, "close")) {

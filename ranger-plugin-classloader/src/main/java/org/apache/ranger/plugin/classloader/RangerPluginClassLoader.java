@@ -40,6 +40,23 @@ import java.util.NoSuchElementException;
 public class RangerPluginClassLoader extends URLClassLoader {
     private static final Logger LOG = LoggerFactory.getLogger(RangerPluginClassLoader.class);
 
+    /**
+     * Jersey SPI descriptors merged from the host (e.g. Solr Jetty) pull in server-side
+     * AutoDiscoverable implementations that cannot be cast to interfaces loaded from the
+     * plugin impl classpath. Use only plugin-local Jersey service registrations.
+     */
+    private static final String JERSEY_SPI_RESOURCE_PREFIX = "META-INF/services/org.glassfish.jersey";
+
+    /**
+     * Solr's Jetty webapp ships its own Jersey (often a different version). Parent-first
+     * delegation mixes {@code jersey-client} from the plugin with {@code jersey-common}
+     * from the webapp and causes {@code IllegalAccessError} on {@code ClientRequest}.
+     */
+    private static final String[] ISOLATED_JERSEY_CLASS_PREFIXES = {
+            "org.glassfish.jersey.",
+            "org.glassfish.hk2.",
+    };
+
     private static final String TAG_SERVICE_TYPE = "tag";
 
     private static final Map<String, RangerPluginClassLoader> PLUGIN_CLASS_LOADERS = new HashMap<>();
@@ -96,7 +113,7 @@ public class RangerPluginClassLoader extends URLClassLoader {
     public Class<?> findClass(String name) throws ClassNotFoundException {
         LOG.debug("==> RangerPluginClassLoader.findClass({})", name);
 
-        Class<?> ret = null;
+        Class<?> ret;
 
         try {
             // first we try to find a class inside the child classloader
@@ -104,6 +121,10 @@ public class RangerPluginClassLoader extends URLClassLoader {
 
             ret = super.findClass(name);
         } catch (Throwable e) {
+            if (isIsolatedJerseyClasspathClass(name)) {
+                throw toClassNotFoundException(name, e);
+            }
+
             // Use the Component ClassLoader findClass to load when childClassLoader fails to find
             LOG.debug("RangerPluginClassLoader.findClass({}): calling componentClassLoader.findClass()", name);
 
@@ -111,6 +132,8 @@ public class RangerPluginClassLoader extends URLClassLoader {
 
             if (savedClassLoader != null) {
                 ret = savedClassLoader.findClass(name);
+            } else {
+                throw toClassNotFoundException(name, e);
             }
         }
 
@@ -144,6 +167,12 @@ public class RangerPluginClassLoader extends URLClassLoader {
     public Enumeration<URL> findResources(String name) throws IOException {
         LOG.debug("==> RangerPluginClassLoader.findResources({}) ", name);
 
+        if (isJerseySpiResource(name)) {
+            LOG.debug("RangerPluginClassLoader.findResources({}): using plugin classpath only for Jersey SPI", name);
+
+            return findResourcesUsingChildClassLoader(name);
+        }
+
         Enumeration<URL> childResources     = findResourcesUsingChildClassLoader(name);
         Enumeration<URL> componentResources = findResourcesUsingComponentClassLoader(name);
 
@@ -171,6 +200,18 @@ public class RangerPluginClassLoader extends URLClassLoader {
     @Override
     public synchronized Class<?> loadClass(String name) throws ClassNotFoundException {
         LOG.debug("==> RangerPluginClassLoader.loadClass({})", name);
+
+        if (isIsolatedJerseyClasspathClass(name)) {
+            Class<?> loaded = findLoadedClass(name);
+
+            if (loaded == null) {
+                loaded = findClass(name);
+            }
+
+            LOG.debug("<== RangerPluginClassLoader.loadClass({}): {} (plugin-local Jersey)", name, loaded);
+
+            return loaded;
+        }
 
         Class<?> ret = null;
 
@@ -289,6 +330,32 @@ public class RangerPluginClassLoader extends URLClassLoader {
     private ComponentClassLoader getComponentClassLoader() {
         return componentClassLoader;
         //return componentClassLoader.get();
+    }
+
+    private static boolean isJerseySpiResource(String name) {
+        return name != null && name.startsWith(JERSEY_SPI_RESOURCE_PREFIX);
+    }
+
+    private static boolean isIsolatedJerseyClasspathClass(String name) {
+        if (name == null) {
+            return false;
+        }
+
+        for (String prefix : ISOLATED_JERSEY_CLASS_PREFIXES) {
+            if (name.startsWith(prefix)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private static ClassNotFoundException toClassNotFoundException(String name, Throwable cause) {
+        if (cause instanceof ClassNotFoundException) {
+            return (ClassNotFoundException) cause;
+        }
+
+        return new ClassNotFoundException(name, cause);
     }
 
     static class ComponentClassLoader extends ClassLoader {

@@ -49,6 +49,10 @@ find . -type d -name 'target' -prune -exec find {} -type f \( -name 'ranger-*.ja
 -or -name '*shim*' -prune \
 | xargs -n1 unzip -o -q -d target/coverage-classes
 
+# Lucene 9+ (Solr 9) ships multi-release classes under META-INF/versions/*; JaCoCo 0.8.x
+# fails with "Can't add different class with same name" when both base and versioned copies exist.
+rm -rf target/coverage-classes/META-INF/versions
+
 # get all source file paths
 src=$(find . -path '*/src/main/java' -o -path './target' -prune | sed 's/^/--sourcefiles /g' | xargs echo)
 

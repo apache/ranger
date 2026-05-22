@@ -232,18 +232,33 @@ public class RangerSolrAuthorizer extends SearchComponent implements Authorizati
                         }
                         break;
                     }
-                    case METRICS_HISTORY_READ_PERM:
-                    case METRICS_READ_PERM: {
+                    case METRICS_READ_PERM:
+                    case HEALTH_PERM: {
                         rangerRequests.add(createAdminRequest(userName, userGroups, ip, eventTime, RangerSolrConstants.AdminType.METRICS, RangerSolrConstants.AccessType.QUERY));
                         break;
                     }
-                    case AUTOSCALING_READ_PERM:
-                    case AUTOSCALING_HISTORY_READ_PERM: {
-                        rangerRequests.add(createAdminRequest(userName, userGroups, ip, eventTime, RangerSolrConstants.AdminType.AUTOSCALING, RangerSolrConstants.AccessType.QUERY));
+                    case ZK_READ_PERM: {
+                        rangerRequests.add(createAdminRequest(userName, userGroups, ip, eventTime, RangerSolrConstants.AdminType.SECURITY, RangerSolrConstants.AccessType.QUERY));
                         break;
                     }
-                    case AUTOSCALING_WRITE_PERM: {
-                        rangerRequests.add(createAdminRequest(userName, userGroups, ip, eventTime, RangerSolrConstants.AdminType.AUTOSCALING, RangerSolrConstants.AccessType.UPDATE));
+                    case FILESTORE_READ_PERM: {
+                        rangerRequests.add(createAdminRequest(userName, userGroups, ip, eventTime, RangerSolrConstants.AdminType.METRICS, RangerSolrConstants.AccessType.QUERY));
+                        break;
+                    }
+                    case FILESTORE_WRITE_PERM: {
+                        rangerRequests.add(createAdminRequest(userName, userGroups, ip, eventTime, RangerSolrConstants.AdminType.METRICS, RangerSolrConstants.AccessType.UPDATE));
+                        break;
+                    }
+                    case PACKAGE_READ_PERM: {
+                        for (String s : SolrAuthzUtil.getConfigAuthorizables(context)) {
+                            rangerRequests.add(createRequest(userName, userGroups, ip, eventTime, RangerSolrConstants.ResourceType.CONFIG, s, RangerSolrConstants.AccessType.QUERY));
+                        }
+                        break;
+                    }
+                    case PACKAGE_EDIT_PERM: {
+                        for (String s : SolrAuthzUtil.getConfigAuthorizables(context)) {
+                            rangerRequests.add(createRequest(userName, userGroups, ip, eventTime, RangerSolrConstants.ResourceType.CONFIG, s, RangerSolrConstants.AccessType.UPDATE));
+                        }
                         break;
                     }
                     case ALL: {

@@ -100,6 +100,7 @@
             <include>org.apache.httpcomponents:httpcore-nio:jar:${httpcomponents.httpcore.version}</include>
             <include>org.apache.httpcomponents:httpcore:jar:${httpcomponents.httpcore.version}</include>
             <include>org.apache.httpcomponents:httpmime:jar:${httpcomponents.httpmime.version}</include>
+            <include>org.apache.solr:solr-api:jar:${solr.version}</include>
             <include>org.apache.solr:solr-solrj:jar:${solr.version}</include>
             <include>org.eclipse.jetty:jetty-client:jar:${jetty-client.version}</include>
             <include>org.glassfish.jersey.core:jersey-client</include>

@@ -18,13 +18,8 @@
  */
 package org.apache.ranger.server.tomcat;
 
-import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.security.SecureClientLogin;
-import org.apache.http.HttpEntity;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.entity.ByteArrayEntity;
-import org.apache.http.util.EntityUtils;
 import org.apache.solr.client.solrj.SolrClient;
 import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.client.solrj.impl.CloudSolrClient;
@@ -32,29 +27,20 @@ import org.apache.solr.client.solrj.impl.HttpClientUtil;
 import org.apache.solr.client.solrj.impl.Krb5HttpClientBuilder;
 import org.apache.solr.client.solrj.impl.SolrHttpClientBuilder;
 import org.apache.solr.client.solrj.request.CollectionAdminRequest;
+import org.apache.solr.client.solrj.request.ConfigSetAdminRequest;
 import org.apache.solr.client.solrj.response.CollectionAdminResponse;
+import org.apache.solr.client.solrj.response.ConfigSetAdminResponse;
 import org.apache.solr.common.SolrException;
-import org.apache.solr.common.cloud.SolrZkClient;
-import org.apache.solr.common.cloud.SolrZooKeeper;
-import org.apache.solr.common.cloud.ZkConfigManager;
-import org.noggit.JSONParser;
-import org.noggit.ObjectBuilder;
 
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.StringReader;
-import java.nio.ByteBuffer;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -80,12 +66,10 @@ public class SolrCollectionBootstrapper extends Thread {
     private static final String AUTHENTICATION_TYPE                  = "hadoop.security.authentication";
     private static final String RANGER_SERVICE_HOSTNAME              = "ranger.service.host";
     private static final String ADMIN_USER_PRINCIPAL                 = "ranger.admin.kerberos.principal";
-    private static final String SSL_ENABLED_PARAM                    = "ranger.service.https.attrib.ssl.enabled";
-    private static final int    TRY_UNTIL_SUCCESS                    = -1;
+    private static final int TRY_UNTIL_SUCCESS = -1;
 
-    private final String  customConfigSetLocation;
-    private final File    configSetFolder;
-    private final boolean isSSLEnabled;
+    private final String customConfigSetLocation;
+    private final File   configSetFolder;
 
     boolean         solrCloudMode;
     boolean         isCompleted;
@@ -104,8 +88,6 @@ public class SolrCollectionBootstrapper extends Thread {
     Long            timeInterval;
     SolrClient      solrClient;
     CloudSolrClient solrCloudClient;
-    SolrZooKeeper   solrZookeeper;
-    SolrZkClient    zkClient;
 
     public SolrCollectionBootstrapper() throws IOException {
         logger.info("Starting Solr Setup");
@@ -161,39 +143,6 @@ public class SolrCollectionBootstrapper extends Thread {
             pathForCloudMode = Paths.get(solrFileDir, "contrib", "solr_for_audit_setup", "conf");
             configSetFolder  = pathForCloudMode.toFile();
         }
-
-        String sslEnabledProp = EmbeddedServerUtil.getConfig(SSL_ENABLED_PARAM);
-
-        isSSLEnabled = ("true".equalsIgnoreCase(sslEnabledProp));
-    }
-
-    public static Map postDataAndGetResponse(CloudSolrClient cloudClient, String uri, ByteBuffer bytarr) throws IOException {
-        HttpPost   httpPost = null;
-        HttpEntity entity;
-        String     response = null;
-        Map        m        = null;
-
-        try {
-            httpPost = new HttpPost(uri);
-
-            httpPost.setHeader("Content-Type", "application/octet-stream");
-            httpPost.setEntity(new ByteArrayEntity(bytarr.array(), bytarr.arrayOffset(), bytarr.limit()));
-
-            entity = cloudClient.getLbClient().getHttpClient().execute(httpPost).getEntity();
-
-            try {
-                response = EntityUtils.toString(entity, StandardCharsets.UTF_8);
-                m        = (Map) ObjectBuilder.getVal(new JSONParser(new StringReader(response)));
-            } catch (JSONParser.ParseException e) {
-                logger.severe("Error response: " + response);
-            }
-        } finally {
-            if (httpPost != null) {
-                httpPost.releaseConnection();
-            }
-        }
-
-        return m;
     }
 
     public void run() {
@@ -248,7 +197,6 @@ public class SolrCollectionBootstrapper extends Thread {
             solrCloudClient.setDefaultCollection(solrCollectionName);
             solrCloudClient.connect();
 
-            zkClient      = solrCloudClient.getZkStateReader().getZkClient();
             solrClient    = solrCloudClient;
             solrCloudMode = true;
 
@@ -270,67 +218,70 @@ public class SolrCollectionBootstrapper extends Thread {
 
     private boolean uploadConfiguration() {
         try {
-            if (zkClient != null) {
-                ZkConfigManager zkConfigManager = new ZkConfigManager(zkClient);
-                boolean         configExists    = zkConfigManager.configExists(solrConfigName);
-
-                if (!configExists) {
-                    try {
-                        logger.info("Config does not exist with name " + solrConfigName);
-
-                        String zipOfConfigs = null;
-
-                        if (this.configSetFolder.exists() && this.configSetFolder.isFile()) {
-                            zipOfConfigs = this.configSetFolder.getAbsolutePath();
-                        } else {
-                            String[] files = this.configSetFolder.list();
-
-                            if (files != null) {
-                                for (String aFile : files) {
-                                    if (aFile != null) {
-                                        if (aFile.equals("solr_audit_conf.zip")) {
-                                            zipOfConfigs = this.configSetFolder + "/" + aFile;
-                                            break;
-                                        }
-                                    }
-                                }
-                            }
-                        }
-
-                        if (zipOfConfigs == null) {
-                            throw new FileNotFoundException("Could Not Find Configs Zip File : " + getConfigSetFolder());
-                        }
-
-                        File       file             = new File(zipOfConfigs);
-                        byte[]     arrByte          = Files.readAllBytes(file.toPath());
-                        ByteBuffer byteBuffer       = ByteBuffer.wrap(arrByte);
-                        String     baseUrl          = getBaseUrl();
-                        String     protocol         = isSSLEnabled ? "https" : "http";
-                        String     uploadConfigsUrl = String.format("%s://%s/admin/configs?action=UPLOAD&name=%s", protocol, baseUrl, solrConfigName);
-
-                        postDataAndGetResponse(solrCloudClient, uploadConfigsUrl, byteBuffer);
-
-                        return true;
-                    } catch (Exception ex) {
-                        logger.log(Level.SEVERE, "Error while uploading configs : ", ex);
-
-                        return false;
-                    }
-                } else {
-                    logger.info("Config already exists with name " + solrConfigName);
-
-                    return true;
-                }
-            } else {
-                logger.severe("Solr is in cloud mode and could not find the zookeeper client for performing upload operations. ");
+            if (solrCloudClient == null) {
+                logger.severe("Solr is in cloud mode but CloudSolrClient is not connected.");
 
                 return false;
             }
+
+            ConfigSetAdminRequest.List listRequest = new ConfigSetAdminRequest.List();
+            ConfigSetAdminResponse.List listResponse = listRequest.process(solrCloudClient);
+            List<String>                configSets   = listResponse.getConfigSets();
+
+            if (configSets != null && configSets.contains(solrConfigName)) {
+                logger.info("Config already exists with name " + solrConfigName);
+
+                return true;
+            }
+
+            logger.info("Config does not exist with name " + solrConfigName);
+
+            String zipOfConfigs = resolveConfigZipPath();
+
+            if (zipOfConfigs == null) {
+                throw new FileNotFoundException("Could Not Find Configs Zip File : " + getConfigSetFolder());
+            }
+
+            File configZip = new File(zipOfConfigs);
+
+            ConfigSetAdminRequest.Upload uploadRequest = new ConfigSetAdminRequest.Upload();
+
+            uploadRequest.setConfigSetName(solrConfigName);
+            uploadRequest.setUploadFile(configZip, "application/zip");
+            uploadRequest.setOverwrite(true);
+
+            ConfigSetAdminResponse uploadResponse = uploadRequest.process(solrCloudClient);
+
+            if (uploadResponse.getStatus() != 0) {
+                logger.log(Level.SEVERE, "Error while uploading configs, response=" + uploadResponse);
+
+                return false;
+            }
+
+            return true;
         } catch (Exception ex) {
             logger.severe("Error while uploading configuration : " + ex);
 
             return false;
         }
+    }
+
+    private String resolveConfigZipPath() {
+        if (this.configSetFolder.exists() && this.configSetFolder.isFile()) {
+            return this.configSetFolder.getAbsolutePath();
+        }
+
+        String[] files = this.configSetFolder.list();
+
+        if (files != null) {
+            for (String aFile : files) {
+                if ("solr_audit_conf.zip".equals(aFile)) {
+                    return this.configSetFolder + "/" + aFile;
+                }
+            }
+        }
+
+        return null;
     }
 
     private void logErrorMessageAndWait(String msg, Exception exception) {
@@ -372,9 +323,10 @@ public class SolrCollectionBootstrapper extends Thread {
 
                     logger.info("No. of shards provided is : " + noOfShards);
 
-                    CollectionAdminRequest.Create createCollection = CollectionAdminRequest.createCollection(solrCollectionName, solrConfigName, noOfShards, noOfReplicas);
+                    CollectionAdminRequest.Create createCollection = CollectionAdminRequest.createCollection(
+                            solrCollectionName, solrConfigName, noOfShards, noOfReplicas);
 
-                    createCollection.setMaxShardsPerNode(maxNodePerShards);
+                    createCollection.withProperty("maxShardsPerNode", String.valueOf(maxNodePerShards));
 
                     CollectionAdminResponse createResponse = createCollection.process(solrClient);
 
@@ -452,18 +404,5 @@ public class SolrCollectionBootstrapper extends Thread {
         }
 
         return zookeeperHosts;
-    }
-
-    private String getBaseUrl() throws Exception {
-        Set<String> nodes = solrCloudClient.getClusterStateProvider().getLiveNodes();
-
-        if (CollectionUtils.isEmpty(nodes)) {
-            throw new Exception("No live SolrServers available");
-        }
-
-        String[] nodeArr = nodes.toArray(new String[0]);
-
-        // getting nodes URL as 'port_solr', so converting it to 'port/solr'
-        return nodeArr[0].replaceAll("_", "/");
     }
 }

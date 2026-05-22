@@ -95,6 +95,7 @@
                     <include>org.apache.httpcomponents:httpcore:jar:${httpcomponents.httpcore.version}</include>
 		            <include>org.apache.zookeeper:zookeeper:jar:${zookeeper.version}</include>
 		            <include>org.apache.zookeeper:zookeeper-jute:jar:${zookeeper.version}</include>
+                    <include>org.apache.solr:solr-api:jar:${solr.version}</include>
                     <include>org.apache.solr:solr-solrj:jar:${solr.version}</include>
                     <include>com.fasterxml.woodstox:woodstox-core:jar:${fasterxml.woodstox.version}</include>
                     <include>org.codehaus.woodstox:stax2-api:jar:${codehaus.woodstox.stax2api.version}</include>

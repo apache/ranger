@@ -39,14 +39,37 @@ DEFAULT"
 
   export SOLR_AUTHENTICATION_OPTS="${JAAS_CONFIG} ${JAAS_APPNAME} ${KRB5_CONF} ${KERBEROS_KEYTAB} ${KERBEROS_PRINCIPAL} ${COOKIE_DOMAIN} ${KERBEROS_NAME_RULES}"
   export SOLR_AUTH_TYPE=kerberos
+  export HADOOP_CONF_DIR=/opt/solr/server/resources
+  export SOLR_AUTHENTICATION_OPTS="${SOLR_AUTHENTICATION_OPTS} -Dhadoop.security.authentication=kerberos"
+  # Solr 9 docker entrypoint appends SOLR_AUTHENTICATION_OPTS to SOLR_OPTS when SOLR_AUTH_TYPE=kerberos
+  export SOLR_OPTS="${SOLR_OPTS} ${SOLR_AUTHENTICATION_OPTS}"
 fi
+
+# Ranger policy cache, keytabs (Solr 9 SecurityManager; allowPaths used when SM is enabled)
+export SOLR_OPTS="${SOLR_OPTS} -Dsolr.allowPaths=/etc/ranger,/etc/keytabs"
+export SOLR_SECURITY_MANAGER_ENABLED="${SOLR_SECURITY_MANAGER_ENABLED:-false}"
 
 if [ ! -e ${SOLR_INSTALL_DIR}/.setupDone ]
 then
+  POLICY_CACHE_DIR=/etc/ranger/dev_solr/policycache
+  mkdir -p "${POLICY_CACHE_DIR}"
+  chmod a+rx /etc/ranger /etc/ranger/dev_solr "${POLICY_CACHE_DIR}" 2>/dev/null || true
+
   cd /opt/ranger/ranger-solr-plugin
   ./enable-solr-plugin.sh
 
   touch "${SOLR_INSTALL_DIR}"/.setupDone
 fi
 
-su -p -c "export PATH=${PATH} && /opt/docker-solr/scripts/docker-entrypoint.sh $*" solr
+# conf/ is bind-mounted; solr-precreate may skip writing core.properties when the core dir already exists
+RANGER_AUDITS_CORE_DIR=/var/solr/data/ranger_audits
+if [ -d "${RANGER_AUDITS_CORE_DIR}/conf" ] && [ ! -f "${RANGER_AUDITS_CORE_DIR}/core.properties" ]; then
+  printf '%s\n' 'name=ranger_audits' 'config=solrconfig.xml' 'schema=managed-schema' 'dataDir=data' > "${RANGER_AUDITS_CORE_DIR}/core.properties"
+  mkdir -p "${RANGER_AUDITS_CORE_DIR}/data"
+fi
+chown -R solr:solr "${RANGER_AUDITS_CORE_DIR}" 2>/dev/null || true
+
+export PATH="/opt/solr/bin:/opt/solr/docker/scripts:/opt/solr/prometheus-exporter/bin:${PATH}"
+export HADOOP_CONF_DIR="${HADOOP_CONF_DIR:-/opt/solr/server/resources}"
+su -p -c "export PATH=${PATH} HADOOP_CONF_DIR=${HADOOP_CONF_DIR} SOLR_SECURITY_MANAGER_ENABLED=${SOLR_SECURITY_MANAGER_ENABLED:-false} SOLR_OPTS=\"${SOLR_OPTS}\" SOLR_AUTHENTICATION_OPTS=\"${SOLR_AUTHENTICATION_OPTS}\" && /opt/solr/docker/scripts/docker-entrypoint.sh $*" solr
+#su -p -c "export PATH=${PATH} && /opt/docker-solr/scripts/docker-entrypoint.sh $*" solr
