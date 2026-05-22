@@ -675,4 +675,8 @@
 		<name>ranger.allow.kerberos.auth.login.browser</name>
 		<value>false</value>
 	</property>
+	<property>
+		<name>ranger.audit.metrics.max.supported.days</name>
+		<value>90</value>
+	</property>
 </configuration>

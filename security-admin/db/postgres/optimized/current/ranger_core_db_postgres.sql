@@ -98,6 +98,7 @@ DROP TABLE IF EXISTS x_gds_data_share CASCADE;
 DROP TABLE IF EXISTS x_gds_shared_resource CASCADE;
 DROP TABLE IF EXISTS x_gds_data_share_in_dataset CASCADE;
 DROP TABLE IF EXISTS x_gds_dataset_in_project CASCADE;
+DROP TABLE IF EXISTS x_audit_metrics CASCADE;
 
 DROP SEQUENCE IF EXISTS x_sec_zone_ref_group_seq;
 DROP SEQUENCE IF EXISTS x_sec_zone_ref_user_seq;
@@ -180,6 +181,7 @@ DROP SEQUENCE IF EXISTS X_GDS_DATA_SHARE_SEQ;
 DROP SEQUENCE IF EXISTS X_GDS_SHARED_RESOURCE_SEQ;
 DROP SEQUENCE IF EXISTS X_GDS_DATA_SHARE_IN_DATASET_SEQ;
 DROP SEQUENCE IF EXISTS X_GDS_DATASET_IN_PROJECT_SEQ;
+DROP SEQUENCE IF EXISTS x_audit_metrics_seq;
 
 create table x_db_version_h(
 id	SERIAL primary key,
@@ -1801,6 +1803,28 @@ CREATE INDEX x_gds_ppm_project_id ON x_gds_project_policy_map(project_id);
 CREATE INDEX x_gds_ppm_policy_id  ON x_gds_project_policy_map(policy_id);
 commit;
 
+CREATE SEQUENCE x_audit_metrics_seq;
+CREATE TABLE x_audit_metrics(
+id BIGINT DEFAULT nextval('x_audit_metrics_seq'::regclass),
+service_type BIGINT DEFAULT NULL NULL,
+service_name varchar(255) DEFAULT NULL NULL,
+app_id varchar(255) DEFAULT NULL NULL,
+cluster_name varchar(255) DEFAULT NULL NULL,
+client_ip varchar(255) DEFAULT NULL NULL,
+metrics_text varchar(4000) DEFAULT NULL NULL,
+throughput_unit varchar(255) DEFAULT NULL NULL,
+number_of_audits BIGINT DEFAULT '0' NULL,
+version BIGINT DEFAULT '0' NOT NULL,
+create_time TIMESTAMP DEFAULT NULL NULL,
+update_time TIMESTAMP DEFAULT NULL NULL,
+added_by_id BIGINT DEFAULT NULL NULL,
+upd_by_id BIGINT DEFAULT NULL NULL,
+ PRIMARY KEY (id),
+ CONSTRAINT x_audit_metrics_FK_service_type FOREIGN KEY (service_type) REFERENCES x_service_def (id),
+ CONSTRAINT x_audit_metrics_FK_added_by_id FOREIGN KEY (added_by_id) REFERENCES x_portal_user (id),
+ CONSTRAINT x_audit_metrics_FK_upd_by_id FOREIGN KEY (upd_by_id) REFERENCES x_portal_user (id)
+);
+commit;
 
 CREATE INDEX x_tag_change_log_IDX_service_id ON x_tag_change_log(service_id);
 CREATE INDEX x_tag_change_log_IDX_tag_version ON x_tag_change_log(service_tags_version);
@@ -2046,6 +2070,8 @@ INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('058',current_timestamp,'Ranger 1.0.0',current_timestamp,'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('059',current_timestamp,'Ranger 1.0.0',current_timestamp,'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('060',current_timestamp,'Ranger 1.0.0',current_timestamp,'localhost','Y');
+INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('063',current_timestamp,'Ranger 1.0.0',current_timestamp,'localhost','Y');
+INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('064',current_timestamp,'Ranger 1.0.0',current_timestamp,'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('065',current_timestamp,'Ranger 1.0.0',current_timestamp,'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('066',current_timestamp,'Ranger 3.0.0',current_timestamp,'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('067',current_timestamp,'Ranger 3.0.0',current_timestamp,'localhost','Y');
@@ -2162,6 +2188,14 @@ INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('J10063',current_timestamp,'Ranger 3.0.0',current_timestamp,'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('J10064',current_timestamp,'Ranger 3.0.0',current_timestamp,'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('JAVA_PATCHES',current_timestamp,'Ranger 1.0.0',current_timestamp,'localhost','Y');
+
+DROP VIEW IF EXISTS vx_audit_metrics_by_hours;
+CREATE VIEW vx_audit_metrics_by_hours AS select service_type, service_name, app_id, cluster_name, client_ip, EXTRACT(HOUR from create_time) as hours, sum(number_of_audits) as numberOfAudits from x_audit_metrics where (cast(CREATE_TIME as date) = CURRENT_DATE) group by service_type, service_name, app_id, cluster_name, client_ip, hours ORDER BY hours;
+commit;
+
+DROP VIEW IF EXISTS vx_audit_metrics_by_days;
+CREATE VIEW	vx_audit_metrics_by_days AS select service_type, service_name, app_id, cluster_name, client_ip, EXTRACT(DAY from create_time) as days, sum(number_of_audits) as numberOfAudits, cast(create_time as date) as auditDate from x_audit_metrics group by  service_type, service_name, app_id, cluster_name, client_ip, days, auditDate ORDER BY auditDate, days;
+commit;
 
 DROP VIEW IF EXISTS vx_principal;
 CREATE VIEW vx_principal as (SELECT u.user_name AS principal_name, 0 AS principal_type, u.status status, u.is_visible is_visible, u.other_attributes other_attributes, u.create_time create_time, u.update_time update_time, u.added_by_id added_by_id, u.upd_by_id upd_by_id FROM x_user u) UNION (SELECT g.group_name principal_name, 1 AS principal_type, g.status status, g.is_visible is_visible, g.other_attributes other_attributes, g.create_time create_time, g.update_time update_time, g.added_by_id added_by_id, g.upd_by_id upd_by_id FROM x_group g) UNION (SELECT r.name principal_name, 2 AS principal_name, 1 status, 1 is_visible, null other_attributes, r.create_time create_time, r.update_time update_time, r.added_by_id added_by_id, r.upd_by_id upd_by_id FROM x_role r);

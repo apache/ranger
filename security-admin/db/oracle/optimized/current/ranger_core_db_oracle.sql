@@ -112,6 +112,7 @@ call spdropsequence('X_GDS_DATASET_POLICY_MAP_SEQ');
 call spdropsequence('X_GDS_PROJECT_POLICY_MAP_SEQ');
 
 CREATE SEQUENCE SEQ_GEN_IDENTITY START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE;
+CREATE SEQUENCE X_AUDIT_METRICS_SEQ START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE;
 CREATE SEQUENCE X_ACCESS_AUDIT_SEQ START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE;
 CREATE SEQUENCE X_ASSET_SEQ START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE;
 CREATE SEQUENCE X_AUDIT_MAP_SEQ START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE;
@@ -223,6 +224,9 @@ BEGIN
 END;/
 /
 
+call spdropview('vx_audit_metrics_by_hours');
+call spdropview('vx_audit_metrics_by_days');
+call spdroptable('x_audit_metrics');
 call spdroptable('X_RMS_MAPPING_PROVIDER');
 call spdroptable('X_RMS_RESOURCE_MAPPING');
 call spdroptable('X_RMS_NOTIFICATION');
@@ -2044,6 +2048,34 @@ CREATE TABLE x_gds_project_policy_map (
 CREATE INDEX x_gds_ppm_project_id ON x_gds_project_policy_map(project_id);
 CREATE INDEX x_gds_ppm_policy_id  ON x_gds_project_policy_map(policy_id);
 
+CREATE TABLE x_audit_metrics(
+id NUMBER(20) NOT NULL,
+service_type NUMBER(20) DEFAULT NULL NULL,
+service_name varchar(255) DEFAULT NULL NULL,
+app_id varchar(255) DEFAULT NULL NULL,
+cluster_name varchar(255) DEFAULT NULL NULL,
+client_ip varchar(255) DEFAULT NULL NULL,
+metrics_text varchar(4000) DEFAULT NULL NULL,
+throughput_unit varchar(255) DEFAULT NULL NULL,
+number_of_audits NUMBER(20) DEFAULT NULL NULL,
+version NUMBER(20) DEFAULT NULL NULL,
+create_time DATE DEFAULT NULL NULL,
+update_time DATE DEFAULT NULL NULL,
+added_by_id NUMBER(20) DEFAULT NULL NULL,
+upd_by_id NUMBER(20) DEFAULT NULL NULL,
+PRIMARY KEY (id),
+CONSTRAINT x_audit_metrics_FK_service_type FOREIGN KEY (service_type) REFERENCES x_service_def (id),
+CONSTRAINT x_audit_metrics_FK_added_by_id FOREIGN KEY (added_by_id) REFERENCES x_portal_user (id),
+CONSTRAINT x_audit_metrics_FK_upd_by_id FOREIGN KEY (upd_by_id) REFERENCES x_portal_user (id)
+);
+commit;
+
+CREATE VIEW vx_audit_metrics_by_hours AS select service_type, service_name, app_id, cluster_name, client_ip, EXTRACT(HOUR from CAST(create_time AS TIMESTAMP)) as hours, sum(number_of_audits) as numberOfAudits from x_audit_metrics where CREATE_TIME >= TRUNC(CURRENT_DATE) group by service_type, service_name, app_id, cluster_name, client_ip, EXTRACT(HOUR from CAST(create_time AS TIMESTAMP)) ORDER BY hours;
+commit;
+
+CREATE VIEW	vx_audit_metrics_by_days AS select service_type, service_name, app_id, cluster_name, client_ip, EXTRACT(DAY from CAST(create_time AS TIMESTAMP)) AS days, sum(number_of_audits) as numberOfAudits, trunc(create_time) as auditDate from x_audit_metrics group by  service_type, service_name, app_id, cluster_name, client_ip, EXTRACT(DAY from CAST(create_time AS TIMESTAMP)), trunc(create_time) ORDER BY auditDate, days;
+commit;
+
 CREATE VIEW vx_principal as
         (SELECT u.user_name  AS principal_name, 0 AS principal_type, u.status AS status, u.is_visible AS is_visible, u.other_attributes AS other_attributes, u.create_time AS create_time, u.update_time AS update_time, u.added_by_id AS added_by_id, u.upd_by_id AS upd_by_id FROM x_user u)  UNION ALL
         (SELECT g.group_name AS principal_name, 1 AS principal_type, g.status AS status, g.is_visible AS is_visible, g.other_attributes AS other_attributes, g.create_time AS create_time, g.update_time AS update_time, g.added_by_id AS added_by_id, g.upd_by_id AS upd_by_id FROM x_group g) UNION ALL
@@ -2132,6 +2164,8 @@ INSERT INTO x_db_version_h (id,version,inst_at,inst_by,updated_at,updated_by,act
 INSERT INTO x_db_version_h (id,version,inst_at,inst_by,updated_at,updated_by,active) VALUES (X_DB_VERSION_H_SEQ.nextval, '058',sys_extract_utc(systimestamp),'Ranger 1.0.0',sys_extract_utc(systimestamp),'localhost','Y');
 INSERT INTO x_db_version_h (id,version,inst_at,inst_by,updated_at,updated_by,active) VALUES (X_DB_VERSION_H_SEQ.nextval, '059',sys_extract_utc(systimestamp),'Ranger 1.0.0',sys_extract_utc(systimestamp),'localhost','Y');
 INSERT INTO x_db_version_h (id,version,inst_at,inst_by,updated_at,updated_by,active) VALUES (X_DB_VERSION_H_SEQ.nextval, '060',sys_extract_utc(systimestamp),'Ranger 1.0.0',sys_extract_utc(systimestamp),'localhost','Y');
+INSERT INTO x_db_version_h (id,version,inst_at,inst_by,updated_at,updated_by,active) VALUES (X_DB_VERSION_H_SEQ.nextval, '063',sys_extract_utc(systimestamp),'Ranger 1.0.0',sys_extract_utc(systimestamp),'localhost','Y');
+INSERT INTO x_db_version_h (id,version,inst_at,inst_by,updated_at,updated_by,active) VALUES (X_DB_VERSION_H_SEQ.nextval, '064',sys_extract_utc(systimestamp),'Ranger 1.0.0',sys_extract_utc(systimestamp),'localhost','Y');
 INSERT INTO x_db_version_h (id,version,inst_at,inst_by,updated_at,updated_by,active) VALUES (X_DB_VERSION_H_SEQ.nextval, '065',sys_extract_utc(systimestamp),'Ranger 1.0.0',sys_extract_utc(systimestamp),'localhost','Y');
 INSERT INTO x_db_version_h (id,version,inst_at,inst_by,updated_at,updated_by,active) VALUES (X_DB_VERSION_H_SEQ.nextval, '066',sys_extract_utc(systimestamp),'Ranger 3.0.0',sys_extract_utc(systimestamp),'localhost','Y');
 INSERT INTO x_db_version_h (id,version,inst_at,inst_by,updated_at,updated_by,active) VALUES (X_DB_VERSION_H_SEQ.nextval, '067',sys_extract_utc(systimestamp),'Ranger 3.0.0',sys_extract_utc(systimestamp),'localhost','Y');
