@@ -591,8 +591,8 @@
 				and xSvc.id = xPol.service and xPol.id = :policyId and obj.name = :name order by obj.level</query>
 	</named-query>
 
-	<named-query name="XXResourceDef.findByNamesAndPolicyId">
-		<query>select obj from XXResourceDef obj, XXPolicy xPol, XXServiceDef xSvcDef,
+	<named-query name="XXResourceDef.findResourceDefIdsByNameAndPolicyId">
+		<query>select obj.id, obj.name from XXResourceDef obj, XXPolicy xPol, XXServiceDef xSvcDef,
 			XXService xSvc where obj.defId = xSvcDef.id and xSvcDef.id = xSvc.type
 			and xSvc.id = xPol.service and xPol.id = :policyId and obj.name IN :names order by obj.level
 		</query>
@@ -651,8 +651,8 @@
 				obj.name = :name and xSvc.id = :serviceId and obj.defId = xSvc.type</query>
 	</named-query>
 
-	<named-query name="XXAccessTypeDef.findByNamesAndServiceId">
-		<query>select obj from XXAccessTypeDef obj, XXService xSvc where obj.name IN :names and xSvc.id = :serviceId and obj.defId = xSvc.type</query>
+	<named-query name="XXAccessTypeDef.findAccessTypeDefIdsByNamesAndServiceId">
+		<query>select obj.id, obj.name from XXAccessTypeDef obj, XXService xSvc where obj.name IN :names and xSvc.id = :serviceId and obj.defId = xSvc.type</query>
 	</named-query>
 
 	<named-query name="XXAccessTypeDef.getNamesByServiceName">
@@ -671,8 +671,8 @@
 		<query>select obj from XXPolicyConditionDef obj where obj.defId = :serviceDefId and obj.name = :name order by obj.order</query>
 	</named-query>
 
-	<named-query name="XXPolicyConditionDef.findByServiceDefIdAndNames">
-		<query>select obj from XXPolicyConditionDef obj where obj.defId = :serviceDefId and obj.name IN :names order by obj.order</query>
+	<named-query name="XXPolicyConditionDef.findConditionDefIdsByServiceDefIdAndNames">
+		<query>select obj.id, obj.name from XXPolicyConditionDef obj where obj.defId = :serviceDefId and obj.name IN :names order by obj.order</query>
 	</named-query>
 
 	<!-- XXContextEnricherDef -->
@@ -700,8 +700,8 @@
 			obj.name = :name and xSvc.id = :serviceId and obj.defId = xSvc.type</query>
 	</named-query>
 
-	<named-query name="XXDataMaskTypeDef.findByNamesAndServiceId">
-		<query>select obj from XXDataMaskTypeDef obj, XXService xSvc where obj.name IN :names and xSvc.id = :serviceId and obj.defId = xSvc.type</query>
+	<named-query name="XXDataMaskTypeDef.findDataMaskTypeDefIdsByNamesAndServiceId">
+		<query>select obj.id, obj.name from XXDataMaskTypeDef obj, XXService xSvc where obj.name IN :names and xSvc.id = :serviceId and obj.defId = xSvc.type</query>
 	</named-query>
 
 	<named-query name="XXDataMaskTypeDef.getNamesByServiceName">

@@ -28,10 +28,11 @@ import org.springframework.stereotype.Service;
 import javax.persistence.NoResultException;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 public class XXPolicyRefGroupDao extends BaseDao<XXPolicyRefGroup> {
@@ -124,26 +125,22 @@ public class XXPolicyRefGroupDao extends BaseDao<XXPolicyRefGroup> {
     }
 
     public Map<String, Long> findGroupNameByPolicyId(Long policyId) {
-        if (policyId == null) {
-            return Collections.emptyMap();
-        }
-        try {
-            List<Object[]> results = getEntityManager()
-                    .createNamedQuery("XXPolicyRefGroup.findGroupNameByPolicyId", Object[].class)
-                    .setParameter("policyId", policyId)
-                    .getResultList();
-
-            Map<String, Long> groupNameIdMap = new HashMap<>();
-            for (Object[] row : results) {
-                String groupName = (String) row[0];
-                Long id = (Long) row[1];
-                groupNameIdMap.put(groupName, id);
+        Map<String, Long> ret = Collections.emptyMap();
+        if (policyId != null) {
+            try {
+                Collection<Object[]> results = getEntityManager()
+                        .createNamedQuery("XXPolicyRefGroup.findGroupNameByPolicyId", Object[].class)
+                        .setParameter("policyId", policyId)
+                        .getResultList();
+                ret = results.stream().collect(
+                        Collectors.toMap(
+                                object -> (String) object[0],
+                                object -> (Long) object[1]));
+            } catch (NoResultException e) {
+                // ignore
             }
-
-            return groupNameIdMap;
-        } catch (NoResultException e) {
-            return Collections.emptyMap();
         }
+        return ret;
     }
 
     public void deletePolicyRefGroupByIds(List<Long> ids) {

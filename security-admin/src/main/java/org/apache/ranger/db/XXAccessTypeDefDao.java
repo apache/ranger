@@ -27,6 +27,7 @@ import org.springframework.stereotype.Service;
 import javax.persistence.NoResultException;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -85,28 +86,23 @@ public class XXAccessTypeDefDao extends BaseDao<XXAccessTypeDef> {
         return ret != null ? ret : Collections.emptyList();
     }
 
-    public Map<String, XXAccessTypeDef> findByNamesAndServiceId(Set<String> names, Long serviceId) {
-        Map<String, XXAccessTypeDef> ret = Collections.emptyMap();
-        if (CollectionUtils.isEmpty(names) || serviceId == null) {
-            return ret;
-        }
-        try {
-            // Fetches all matching access type definitions inside a single list execution
-            List<XXAccessTypeDef> result = getEntityManager()
-                    .createNamedQuery("XXAccessTypeDef.findByNamesAndServiceId", tClass)
-                    .setParameter("names", names)
-                    .setParameter("serviceId", serviceId)
-                    .getResultList();
-
-            if (CollectionUtils.isEmpty(result)) {
-                return ret;
+    public Map<String, Long> findAccessTypeDefIdsByNamesAndServiceId(Set<String> names, Long serviceId) {
+        Map<String, Long> ret = Collections.emptyMap();
+        if (serviceId != null && CollectionUtils.isNotEmpty(names)) {
+            try {
+                Collection<Object[]> result = getEntityManager()
+                        .createNamedQuery("XXAccessTypeDef.findAccessTypeDefIdsByNamesAndServiceId", Object[].class)
+                        .setParameter("names", names)
+                        .setParameter("serviceId", serviceId)
+                        .getResultList();
+                ret = result.stream().collect(
+                        Collectors.toMap(
+                                object -> (String) object[1],
+                                object -> (Long) object[0],
+                                (a, b) -> a));
+            } catch (NoResultException e) {
+                logger.debug(e.getMessage());
             }
-
-            // Maps everything into an in-memory dictionary keyed by access type name
-            return result.stream()
-                    .collect(Collectors.toMap(XXAccessTypeDef::getName, java.util.function.Function.identity(), (a, b) -> a));
-        } catch (javax.persistence.NoResultException e) {
-            logger.error("No access type definitions found for serviceId={} and names={}", serviceId, names);
         }
         return ret;
     }

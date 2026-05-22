@@ -28,11 +28,8 @@ import org.apache.ranger.db.RangerDaoManager;
 import org.apache.ranger.db.XXPolicyRefGroupDao;
 import org.apache.ranger.db.XXPolicyRefRoleDao;
 import org.apache.ranger.db.XXPolicyRefUserDao;
-import org.apache.ranger.entity.XXAccessTypeDef;
-import org.apache.ranger.entity.XXDataMaskTypeDef;
 import org.apache.ranger.entity.XXGroup;
 import org.apache.ranger.entity.XXPolicy;
-import org.apache.ranger.entity.XXPolicyConditionDef;
 import org.apache.ranger.entity.XXPolicyRefAccessType;
 import org.apache.ranger.entity.XXPolicyRefCondition;
 import org.apache.ranger.entity.XXPolicyRefDataMaskType;
@@ -40,7 +37,6 @@ import org.apache.ranger.entity.XXPolicyRefGroup;
 import org.apache.ranger.entity.XXPolicyRefResource;
 import org.apache.ranger.entity.XXPolicyRefRole;
 import org.apache.ranger.entity.XXPolicyRefUser;
-import org.apache.ranger.entity.XXResourceDef;
 import org.apache.ranger.entity.XXRole;
 import org.apache.ranger.entity.XXServiceDef;
 import org.apache.ranger.entity.XXUser;
@@ -187,15 +183,15 @@ public class PolicyRefUpdater {
 
         if (CollectionUtils.isNotEmpty(resourceNames)) {
             List<XXPolicyRefResource> xPolResources = new ArrayList<>();
-            Map<String, XXResourceDef> nameToResDefMap = daoMgr.getXXResourceDef().findXXResourceDefsByNameAndPolicyId(resourceNames, policy.getId());
+            Map<String, Long> nameToResDefIdMap = daoMgr.getXXResourceDef().findResourceDefIdsByNameAndPolicyId(resourceNames, policy.getId());
             for (String resource : resourceNames) {
-                XXResourceDef xResDef = nameToResDefMap.get(resource);
-                if (xResDef == null) {
+                Long resourceDefId = nameToResDefIdMap.get(resource);
+                if (resourceDefId == null) {
                     throw new Exception(resource + ": is not a valid resource-type. policy='" + policy.getName() + "' service='" + policy.getService() + "'");
                 }
                 XXPolicyRefResource xPolRes = new XXPolicyRefResource();
                 xPolRes.setPolicyId(policy.getId());
-                xPolRes.setResourceDefId(xResDef.getId());
+                xPolRes.setResourceDefId(resourceDefId);
                 xPolRes.setResourceName(resource);
                 xPolResources.add(xPolRes);
             }
@@ -216,17 +212,20 @@ public class PolicyRefUpdater {
                     .collect(Collectors.toSet());
             Map<String, Long> roleNameIdMap = daoMgr.getXXRole().getIdsByRoleNames(filteredRoleNames);
             for (String roleName : filteredRoleNames) {
-                PolicyPrincipalAssociator associator = new PolicyPrincipalAssociator(PRINCIPAL_TYPE.ROLE, roleName, xPolicy, roleNameIdMap.get(roleName), null, null, xPolRoles);
-                if (!associator.doAssociate(false)) {
-                    if (createPrincipalsIfAbsent) {
-                        rangerTransactionSynchronizationAdapter.executeOnTransactionCommit(associator);
-                    } else {
-                        VXResponse gjResponse = new VXResponse();
-
-                        gjResponse.setStatusCode(HttpServletResponse.SC_BAD_REQUEST);
-                        gjResponse.setMsgDesc("Operation denied. Role name: " + roleName + " specified in policy does not exist in ranger admin.");
-                        throw restErrorUtil.generateRESTException(gjResponse);
+                Long roleId = roleNameIdMap.get(roleName);
+                PolicyRoleAssociator associator = new PolicyRoleAssociator(roleName, roleId, xPolicy);
+                if (roleId != null) {
+                    XXPolicyRefRole roleRef = associator.getPolicyRef();
+                    if (roleRef != null) {
+                        xPolRoles.add(roleRef);
                     }
+                } else if (createPrincipalsIfAbsent) {
+                    rangerTransactionSynchronizationAdapter.executeOnTransactionCommit(associator);
+                } else {
+                    VXResponse gjResponse = new VXResponse();
+                    gjResponse.setStatusCode(HttpServletResponse.SC_BAD_REQUEST);
+                    gjResponse.setMsgDesc("Operation denied. Role name: " + roleName + " specified in policy does not exist in ranger admin.");
+                    throw restErrorUtil.generateRESTException(gjResponse);
                 }
             }
             batchInsert(xPolRoles, daoMgr.getXXPolicyRefRole(), oldBulkMode);
@@ -240,18 +239,20 @@ public class PolicyRefUpdater {
             Map<String, Long> groupNameIdMap = daoMgr.getXXGroup().getIdsByGroupNames(filteredGroupNames);
             List<XXPolicyRefGroup> xPolGroups = new ArrayList<>();
             for (String groupName : filteredGroupNames) {
-                PolicyPrincipalAssociator associator = new PolicyPrincipalAssociator(PRINCIPAL_TYPE.GROUP, groupName, xPolicy, groupNameIdMap.get(groupName), null, xPolGroups, null);
-                if (!associator.doAssociate(false)) {
-                    if (createPrincipalsIfAbsent) {
-                        rangerTransactionSynchronizationAdapter.executeOnTransactionCommit(associator);
-                    } else {
-                        VXResponse gjResponse = new VXResponse();
-
-                        gjResponse.setStatusCode(HttpServletResponse.SC_BAD_REQUEST);
-                        gjResponse.setMsgDesc("Operation denied. Group name: " + groupName + " specified in policy does not exist in ranger admin.");
-
-                        throw restErrorUtil.generateRESTException(gjResponse);
+                Long groupId = groupNameIdMap.get(groupName);
+                PolicyGroupAssociator associator = new PolicyGroupAssociator(groupName, groupId, xPolicy);
+                if (groupId != null) {
+                    XXPolicyRefGroup groupRef = associator.getPolicyRef();
+                    if (groupRef != null) {
+                        xPolGroups.add(groupRef);
                     }
+                } else if (createPrincipalsIfAbsent) {
+                    rangerTransactionSynchronizationAdapter.executeOnTransactionCommit(associator);
+                } else {
+                    VXResponse gjResponse = new VXResponse();
+                    gjResponse.setStatusCode(HttpServletResponse.SC_BAD_REQUEST);
+                    gjResponse.setMsgDesc("Operation denied. Group name: " + groupName + " specified in policy does not exist in ranger admin.");
+                    throw restErrorUtil.generateRESTException(gjResponse);
                 }
             }
             batchInsert(xPolGroups, daoMgr.getXXPolicyRefGroup(), oldBulkMode);
@@ -265,18 +266,20 @@ public class PolicyRefUpdater {
                     .collect(Collectors.toSet());
             Map<String, Long> userNameIdMap = daoMgr.getXXUser().getIdsByUserNames(filteredUserNames);
             for (String userName : filteredUserNames) {
-                PolicyPrincipalAssociator associator = new PolicyPrincipalAssociator(PRINCIPAL_TYPE.USER, userName, xPolicy, userNameIdMap.get(userName), xPolUsers, null, null);
-                if (!associator.doAssociate(false)) {
-                    if (createPrincipalsIfAbsent) {
-                        rangerTransactionSynchronizationAdapter.executeOnTransactionCommit(associator);
-                    } else {
-                        VXResponse gjResponse = new VXResponse();
-
-                        gjResponse.setStatusCode(HttpServletResponse.SC_BAD_REQUEST);
-                        gjResponse.setMsgDesc("Operation denied. User name: " + userName + " specified in policy does not exist in ranger admin.");
-
-                        throw restErrorUtil.generateRESTException(gjResponse);
+                Long userId = userNameIdMap.get(userName);
+                PolicyUserAssociator associator = new PolicyUserAssociator(userName, userId, xPolicy);
+                if (userId != null) {
+                    XXPolicyRefUser userRef = associator.getPolicyRef();
+                    if (userRef != null) {
+                        xPolUsers.add(userRef);
                     }
+                } else if (createPrincipalsIfAbsent) {
+                    rangerTransactionSynchronizationAdapter.executeOnTransactionCommit(associator);
+                } else {
+                    VXResponse gjResponse = new VXResponse();
+                    gjResponse.setStatusCode(HttpServletResponse.SC_BAD_REQUEST);
+                    gjResponse.setMsgDesc("Operation denied. User name: " + userName + " specified in policy does not exist in ranger admin.");
+                    throw restErrorUtil.generateRESTException(gjResponse);
                 }
             }
             batchInsert(xPolUsers, daoMgr.getXXPolicyRefUser(), oldBulkMode);
@@ -286,17 +289,17 @@ public class PolicyRefUpdater {
         accessTypes.removeAll(ServiceDefUtil.ACCESS_TYPE_MARKERS);
         if (CollectionUtils.isNotEmpty(accessTypes)) {
             List<XXPolicyRefAccessType> xPolAccesses = new ArrayList<>();
-            Map<String, XXAccessTypeDef> nameToAccessTypeDefMap = daoMgr.getXXAccessTypeDef().findByNamesAndServiceId(accessTypes, xPolicy.getService());
+            Map<String, Long> nameToAccessTypeDefIdMap = daoMgr.getXXAccessTypeDef().findAccessTypeDefIdsByNamesAndServiceId(accessTypes, xPolicy.getService());
             for (String accessType : accessTypes) {
-                XXAccessTypeDef xAccTypeDef = nameToAccessTypeDefMap.get(accessType);
-                if (xAccTypeDef == null) {
+                Long accessDefId = nameToAccessTypeDefIdMap.get(accessType);
+                if (accessDefId == null) {
                     throw new Exception(accessType + ": is not a valid access-type. policy='" + policy.getName() + "' service='" + policy.getService() + "'");
                 }
 
                 XXPolicyRefAccessType xPolAccess = new XXPolicyRefAccessType();
 
                 xPolAccess.setPolicyId(policy.getId());
-                xPolAccess.setAccessDefId(xAccTypeDef.getId());
+                xPolAccess.setAccessDefId(accessDefId);
                 xPolAccess.setAccessTypeName(accessType);
 
                 xPolAccesses.add(xPolAccess);
@@ -306,10 +309,10 @@ public class PolicyRefUpdater {
 
         if (CollectionUtils.isNotEmpty(conditionTypes)) {
             List<XXPolicyRefCondition> xPolConds = new ArrayList<>();
-            Map<String, XXPolicyConditionDef> nameToConditionDefMap = daoMgr.getXXPolicyConditionDef().findByServiceDefIdAndNames(xServiceDef.getId(), conditionTypes);
+            Map<String, Long> nameToConditionDefIdMap = daoMgr.getXXPolicyConditionDef().findConditionDefIdsByServiceDefIdAndNames(xServiceDef.getId(), conditionTypes);
             for (String condition : conditionTypes) {
-                XXPolicyConditionDef xPolCondDef = nameToConditionDefMap.get(condition);
-                if (xPolCondDef == null) {
+                Long conditionDefId = nameToConditionDefIdMap.get(condition);
+                if (conditionDefId == null) {
                     if (StringUtils.equalsIgnoreCase(condition, ServiceDefUtil.IMPLICIT_CONDITION_EXPRESSION_NAME)) {
                         continue;
                     }
@@ -318,7 +321,7 @@ public class PolicyRefUpdater {
 
                 XXPolicyRefCondition xPolCond = new XXPolicyRefCondition();
                 xPolCond.setPolicyId(policy.getId());
-                xPolCond.setConditionDefId(xPolCondDef.getId());
+                xPolCond.setConditionDefId(conditionDefId);
                 xPolCond.setConditionName(condition);
 
                 xPolConds.add(xPolCond);
@@ -328,17 +331,17 @@ public class PolicyRefUpdater {
 
         if (CollectionUtils.isNotEmpty(dataMaskTypes)) {
             List<XXPolicyRefDataMaskType> xxDataMaskInfos = new ArrayList<>();
-            Map<String, XXDataMaskTypeDef> namesToDataMaskTypeDefMap = daoMgr.getXXDataMaskTypeDef().findByNamesAndServiceId(dataMaskTypes, xPolicy.getService());
+            Map<String, Long> nameToDataMaskTypeDefIdMap = daoMgr.getXXDataMaskTypeDef().findDataMaskTypeDefIdsByNamesAndServiceId(dataMaskTypes, xPolicy.getService());
             for (String dataMaskType : dataMaskTypes) {
-                XXDataMaskTypeDef dataMaskDef = namesToDataMaskTypeDefMap.get(dataMaskType);
-                if (dataMaskDef == null) {
+                Long dataMaskDefId = nameToDataMaskTypeDefIdMap.get(dataMaskType);
+                if (dataMaskDefId == null) {
                     throw new Exception(dataMaskType + ": is not a valid datamask-type. policy='" + policy.getName() + "' service='" + policy.getService() + "'");
                 }
 
                 XXPolicyRefDataMaskType xxDataMaskInfo = new XXPolicyRefDataMaskType();
 
                 xxDataMaskInfo.setPolicyId(policy.getId());
-                xxDataMaskInfo.setDataMaskDefId(dataMaskDef.getId());
+                xxDataMaskInfo.setDataMaskDefId(dataMaskDefId);
                 xxDataMaskInfo.setDataMaskTypeName(dataMaskType);
 
                 xxDataMaskInfos.add(xxDataMaskInfo);
@@ -379,16 +382,9 @@ public class PolicyRefUpdater {
      * @return              true if cleanup was successful.
      */
     public Boolean cleanupRefTablesForUpdate(Long policyId, Set<String> policyUsers, Set<String> policyRoles, Set<String> policyGroups) {
-        XXPolicyRefUserDao xPolicyRefUserDao = daoMgr.getXXPolicyRefUser();
-        XXPolicyRefRoleDao xxPolicyRefRoleDao = daoMgr.getXXPolicyRefRole();
-        XXPolicyRefGroupDao xxPolicyRefGroupDao = daoMgr.getXXPolicyRefGroup();
-
-        Map<String, Long> policyUserNameIdMap   = xPolicyRefUserDao.findUserNameIdByPolicyId(policyId);
-        Map<String, Long> policyRoleNameIdMap   = xxPolicyRefRoleDao.findRoleNameIdByPolicyId(policyId);
-        Map<String, Long> policyGroupNameIdMap   = xxPolicyRefGroupDao.findGroupNameByPolicyId(policyId);
-        cleanupPolicyRefUsers(policyUsers, policyUserNameIdMap, policyId, xPolicyRefUserDao);
-        cleanupPolicyRefRoles(policyRoles, policyRoleNameIdMap, policyId, xxPolicyRefRoleDao);
-        cleanupPolicyRefGroups(policyGroups, policyGroupNameIdMap, policyId, xxPolicyRefGroupDao);
+        cleanupPolicyRefUsers(policyUsers, policyId, daoMgr.getXXPolicyRefUser());
+        cleanupPolicyRefRoles(policyRoles, policyId, daoMgr.getXXPolicyRefRole());
+        cleanupPolicyRefGroups(policyGroups, policyId, daoMgr.getXXPolicyRefGroup());
         daoMgr.getXXPolicyRefResource().deleteByPolicyId(policyId);
         daoMgr.getXXPolicyRefAccessType().deleteByPolicyId(policyId);
         daoMgr.getXXPolicyRefCondition().deleteByPolicyId(policyId);
@@ -400,12 +396,12 @@ public class PolicyRefUpdater {
      * Identifies and deletes outdated user references for a given policy,
      * and prepares a list of new users that need to be inserted.
      *
-     * @param policyUsers           Set of usernames from the new policy.
-     * @param policyUserNameIdMap   Existing mapping of usernames to their DB IDs for the policy.
-     * @param policyId              The ID of the policy.
-     * @param dao                   DAO for policy reference users.
+     * @param policyUsers   Set of usernames from the new policy.
+     * @param policyId      The ID of the policy.
+     * @param dao           DAO for policy reference users.
      */
-    public void cleanupPolicyRefUsers(Set<String> policyUsers, Map<String, Long> policyUserNameIdMap, Long policyId, XXPolicyRefUserDao dao) {
+    public void cleanupPolicyRefUsers(Set<String> policyUsers, Long policyId, XXPolicyRefUserDao dao) {
+        Map<String, Long> policyUserNameIdMap = dao.findUserNameIdByPolicyId(policyId);
         if (policyUserNameIdMap != null && !policyUserNameIdMap.isEmpty()) {
             Set<String> existingPolicyRefUsers = policyUserNameIdMap.keySet();
             Set<String> toDeletePolicyRefUsers = new HashSet<>(existingPolicyRefUsers);
@@ -432,12 +428,12 @@ public class PolicyRefUpdater {
      * Identifies and deletes outdated role references for a given policy,
      * and prepares a list of new roles that need to be inserted.
      *
-     * @param policyRoles           Set of role names from the new policy.
-     * @param policyRoleNameIdMap   Existing mapping of role names to their DB IDs for the policy.
-     * @param policyId              The ID of the policy.
-     * @param dao                   DAO for policy reference roles.
+     * @param policyRoles   Set of role names from the new policy.
+     * @param policyId      The ID of the policy.
+     * @param dao           DAO for policy reference roles.
      */
-    public void cleanupPolicyRefRoles(Set<String> policyRoles, Map<String, Long> policyRoleNameIdMap, Long policyId, XXPolicyRefRoleDao dao) {
+    public void cleanupPolicyRefRoles(Set<String> policyRoles, Long policyId, XXPolicyRefRoleDao dao) {
+        Map<String, Long> policyRoleNameIdMap = dao.findRoleNameIdByPolicyId(policyId);
         if (policyRoleNameIdMap != null && !policyRoleNameIdMap.isEmpty()) {
             Set<String> existingPolicyRefRoles = policyRoleNameIdMap.keySet();
             Set<String> toDeletePolicyRefRoles = new HashSet<>(existingPolicyRefRoles);
@@ -464,12 +460,12 @@ public class PolicyRefUpdater {
      * Identifies and deletes outdated group references for a given policy,
      * and prepares a list of new groups that need to be inserted.
      *
-     * @param policyGroups           Set of group names from the new policy.
-     * @param policyGroupNameIdMap   Existing mapping of group names to their DB IDs for the policy.
-     * @param policyId              The ID of the policy.
-     * @param dao                   DAO for policy reference groups.
+     * @param policyGroups   Set of group names from the new policy.
+     * @param policyId       The ID of the policy.
+     * @param dao            DAO for policy reference groups.
      */
-    public void cleanupPolicyRefGroups(Set<String> policyGroups, Map<String, Long> policyGroupNameIdMap, Long policyId, XXPolicyRefGroupDao dao) {
+    public void cleanupPolicyRefGroups(Set<String> policyGroups, Long policyId, XXPolicyRefGroupDao dao) {
+        Map<String, Long> policyGroupNameIdMap = dao.findGroupNameByPolicyId(policyId);
         if (policyGroupNameIdMap != null && !policyGroupNameIdMap.isEmpty()) {
             Set<String> existingPolicyRefGroups = policyGroupNameIdMap.keySet();
             Set<String> toDeletePolicyRefGroups = new HashSet<>(existingPolicyRefGroups);
@@ -494,229 +490,232 @@ public class PolicyRefUpdater {
 
     public enum PRINCIPAL_TYPE { USER, GROUP, ROLE }
 
-    private class PolicyPrincipalAssociator implements Runnable {
-        final PRINCIPAL_TYPE type;
-        final String         name;
-        final XXPolicy       xPolicy;
-        final Long id;
-        final List<XXPolicyRefUser> xPolUsers;
-        final List<XXPolicyRefGroup> xPolGroups;
-        final List<XXPolicyRefRole> xPolRoles;
+    private boolean doesPolicyExist(XXPolicy policy) {
+        return daoMgr.getXXPolicy().getById(policy.getId()) != null;
+    }
 
-        public PolicyPrincipalAssociator(PRINCIPAL_TYPE type, String name, XXPolicy xPolicy, Long id, List<XXPolicyRefUser> xPolUsers, List<XXPolicyRefGroup> xPolGroups, List<XXPolicyRefRole> xPolRoles) {
-            this.type    = type;
+    private class PolicyRoleAssociator implements Runnable {
+        private final String   name;
+        private final Long     roleId;
+        private final XXPolicy xPolicy;
+
+        PolicyRoleAssociator(String name, Long roleId, XXPolicy xPolicy) {
             this.name    = name;
+            this.roleId  = roleId;
             this.xPolicy = xPolicy;
-            this.id = id;
-            this.xPolUsers = xPolUsers;
-            this.xPolGroups = xPolGroups;
-            this.xPolRoles = xPolRoles;
+        }
+
+        public XXPolicyRefRole getPolicyRef() {
+            Long id = resolveRoleId(false);
+            if (id == null || !doesPolicyExist(xPolicy)) {
+                return null;
+            }
+            XXPolicyRefRole xPolRole = new XXPolicyRefRole();
+            xPolRole.setPolicyId(xPolicy.getId());
+            xPolRole.setRoleId(id);
+            xPolRole.setRoleName(name);
+            return xPolRole;
+        }
+
+        public void createPolicyRef(Long id) {
+            if (doesPolicyExist(xPolicy)) {
+                XXPolicyRefRole xPolRole = new XXPolicyRefRole();
+                xPolRole.setPolicyId(xPolicy.getId());
+                xPolRole.setRoleId(id);
+                xPolRole.setRoleName(name);
+                daoMgr.getXXPolicyRefRole().create(xPolRole);
+            } else {
+                LOG.info("Policy with id ={} does not exist, skipping policy association!", xPolicy.getId());
+            }
         }
 
         @Override
         public void run() {
-            if (doAssociate(true)) {
-                LOG.debug("Associated {}:{} with policy id:[{}]", type.name(), name, xPolicy.getId());
-            } else {
-                throw new RuntimeException("Failed to associate " + type.name() + ":" + name + " with policy id:[" + xPolicy.getId() + "]");
-            }
-        }
-
-        boolean doAssociate(boolean isAdmin) {
-            LOG.debug("===> PolicyPrincipalAssociator.doAssociate({})", isAdmin);
-
-            final boolean ret;
-
-            Long id = createOrGetPrincipal(isAdmin);
-
+            Long id = resolveRoleId(true);
             if (id != null) {
-                // associate with policy
-                createPolicyAssociation(id, name, isAdmin);
-
-                ret = true;
+                createPolicyRef(id);
+                LOG.debug("Associated ROLE:{} with policy id:[{}]", name, xPolicy.getId());
             } else {
-                ret = false;
+                throw new RuntimeException("Failed to associate ROLE:" + name + " with policy id:[" + xPolicy.getId() + "]");
             }
-
-            LOG.debug("<=== PolicyPrincipalAssociator.doAssociate({}) : {}", isAdmin, ret);
-
-            return ret;
         }
 
-        private Long createOrGetPrincipal(final boolean createIfAbsent) {
-            LOG.debug("===> PolicyPrincipalAssociator.createOrGetPrincipal({})", createIfAbsent);
-
-            if (id != null) {
-                return id;
+        private Long resolveRoleId(boolean createIfAbsent) {
+            if (roleId != null) {
+                return roleId;
             }
-
-            Long ret = null;
-
-            switch (type) {
-                case USER: {
-                    XXUser xUser = daoMgr.getXXUser().findByUserName(name);
-
-                    if (xUser != null) {
-                        ret = xUser.getId();
-                    } else {
-                        if (createIfAbsent) {
-                            ret = createPrincipal(name);
-                        }
-                    }
-                }
-                break;
-                case GROUP: {
-                    XXGroup xGroup = daoMgr.getXXGroup().findByGroupName(name);
-
-                    if (xGroup != null) {
-                        ret = xGroup.getId();
-                    } else {
-                        if (createIfAbsent) {
-                            ret = createPrincipal(name);
-                        }
-                    }
-                }
-                break;
-                case ROLE: {
-                    XXRole xRole = daoMgr.getXXRole().findByRoleName(name);
-
-                    if (xRole != null) {
-                        ret = xRole.getId();
-                    } else {
-                        if (createIfAbsent) {
-                            RangerBizUtil.setBulkMode(false);
-                            ret = createPrincipal(name);
-                        }
-                    }
-                }
-                break;
-                default:
-                    break;
+            XXRole xRole = daoMgr.getXXRole().findByRoleName(name);
+            if (xRole != null) {
+                return xRole.getId();
             }
-
-            LOG.debug("<=== PolicyPrincipalAssociator.createOrGetPrincipal({}) : {}", createIfAbsent, ret);
-
-            return ret;
+            if (createIfAbsent) {
+                RangerBizUtil.setBulkMode(false);
+                return createRole();
+            }
+            return null;
         }
 
-        private Long createPrincipal(String user) {
-            LOG.warn("User specified in policy does not exist in ranger admin, creating new user, Type: {}, name = {}", type.name(), user);
-
-            LOG.debug("===> PolicyPrincipalAssociator.createPrincipal(type={}, name={})", type.name(), name);
-
-            Long ret = null;
-
-            switch (type) {
-                case USER: {
-                    // Create External user
-                    VXUser vXUser = xUserMgr.createServiceConfigUser(name);
-                    if (vXUser != null) {
-                        XXUser xUser = daoMgr.getXXUser().findByUserName(name);
-
-                        if (xUser == null) {
-                            LOG.error("No User created!! Irrecoverable error! [{}]", name);
-                        } else {
-                            ret = xUser.getId();
-                        }
-                    } else {
-                        LOG.warn("serviceConfigUser:[{}] creation failed. This may be a transient/spurious condition that may correct itself when transaction is committed", name);
-                    }
-                }
-                break;
-                case GROUP: {
-                    // Create group
-                    VXGroup vxGroup = new VXGroup();
-
-                    vxGroup.setName(name);
-                    vxGroup.setDescription(name);
-                    vxGroup.setGroupSource(RangerCommonEnums.GROUP_EXTERNAL);
-
-                    VXGroup vXGroup = xGroupService.createXGroupWithOutLogin(vxGroup);
-
-                    if (vXGroup != null) {
-                        xGroupService.createTransactionLog(vXGroup, null, OPERATION_CREATE_CONTEXT, xPolicy.getAddedByUserId());
-
-                        ret = vXGroup.getId();
-                    }
-                }
-                break;
-                case ROLE: {
-                    try {
-                        RangerRole rRole       = new RangerRole(name, null, null, null, null);
-                        RangerRole createdRole = roleStore.createRole(rRole, false);
-
-                        ret = createdRole.getId();
-                    } catch (Exception e) {
-                        // Ignore
-                    }
-                }
-                break;
-                default:
-                    break;
+        private Long createRole() {
+            LOG.warn("Role specified in policy does not exist in ranger admin, creating new role, name = {}", name);
+            try {
+                RangerRole rRole       = new RangerRole(name, null, null, null, null);
+                RangerRole createdRole = roleStore.createRole(rRole, false);
+                return createdRole.getId();
+            } catch (Exception e) {
+                return null;
             }
+        }
+    }
 
-            LOG.debug("<=== PolicyPrincipalAssociator.createPrincipal(type={}, name={}) : {}", type.name(), name, ret);
+    private class PolicyGroupAssociator implements Runnable {
+        private final String   name;
+        private final Long     groupId;
+        private final XXPolicy xPolicy;
 
-            return ret;
+        PolicyGroupAssociator(String name, Long groupId, XXPolicy xPolicy) {
+            this.name     = name;
+            this.groupId  = groupId;
+            this.xPolicy  = xPolicy;
         }
 
-        private boolean doesPolicyExist(XXPolicy xPolicy) {
-            return daoMgr.getXXPolicy().getById(xPolicy.getId()) != null;
+        public XXPolicyRefGroup getPolicyRef() {
+            Long id = resolveGroupId(false);
+            if (id == null || !doesPolicyExist(xPolicy)) {
+                return null;
+            }
+            XXPolicyRefGroup xPolGroup = new XXPolicyRefGroup();
+            xPolGroup.setPolicyId(xPolicy.getId());
+            xPolGroup.setGroupId(id);
+            xPolGroup.setGroupName(name);
+            return xPolGroup;
         }
 
-        private void createPolicyAssociation(Long id, String name, boolean isAdmin) {
-            LOG.debug("===> PolicyPrincipalAssociator.createPolicyAssociation(policyId={}, type={}, name={}, id={}, isAdmin={})", xPolicy.getId(), type.name(),
-                    name, id, isAdmin);
-
+        public void createPolicyRef(Long id) {
             if (doesPolicyExist(xPolicy)) {
-                switch (type) {
-                    case USER: {
-                        XXPolicyRefUser xPolUser = new XXPolicyRefUser();
-
-                        xPolUser.setPolicyId(xPolicy.getId());
-                        xPolUser.setUserId(id);
-                        xPolUser.setUserName(name);
-                        if (isAdmin) {
-                            daoMgr.getXXPolicyRefUser().create(xPolUser);
-                        } else {
-                            xPolUsers.add(xPolUser);
-                        }
-                    }
-                    break;
-                    case GROUP: {
-                        XXPolicyRefGroup xPolGroup = new XXPolicyRefGroup();
-
-                        xPolGroup.setPolicyId(xPolicy.getId());
-                        xPolGroup.setGroupId(id);
-                        xPolGroup.setGroupName(name);
-                        if (isAdmin) {
-                            daoMgr.getXXPolicyRefGroup().create(xPolGroup);
-                        } else {
-                            xPolGroups.add(xPolGroup);
-                        }
-                    }
-                    break;
-                    case ROLE: {
-                        XXPolicyRefRole xPolRole = new XXPolicyRefRole();
-
-                        xPolRole.setPolicyId(xPolicy.getId());
-                        xPolRole.setRoleId(id);
-                        xPolRole.setRoleName(name);
-                        if (isAdmin) {
-                            daoMgr.getXXPolicyRefRole().create(xPolRole);
-                        } else {
-                            xPolRoles.add(xPolRole);
-                        }
-                    }
-                    break;
-                    default:
-                        break;
-                }
+                XXPolicyRefGroup xPolGroup = new XXPolicyRefGroup();
+                xPolGroup.setPolicyId(xPolicy.getId());
+                xPolGroup.setGroupId(id);
+                xPolGroup.setGroupName(name);
+                daoMgr.getXXPolicyRefGroup().create(xPolGroup);
             } else {
                 LOG.info("Policy with id ={} does not exist, skipping policy association!", xPolicy.getId());
             }
+        }
 
-            LOG.debug("<=== PolicyPrincipalAssociator.createPolicyAssociation(policyId={}, type={}, name={}, id={})", xPolicy.getId(), type.name(), name, id);
+        @Override
+        public void run() {
+            Long id = resolveGroupId(true);
+            if (id != null) {
+                createPolicyRef(id);
+                LOG.debug("Associated GROUP:{} with policy id:[{}]", name, xPolicy.getId());
+            } else {
+                throw new RuntimeException("Failed to associate GROUP:" + name + " with policy id:[" + xPolicy.getId() + "]");
+            }
+        }
+
+        private Long resolveGroupId(boolean createIfAbsent) {
+            if (groupId != null) {
+                return groupId;
+            }
+            XXGroup xGroup = daoMgr.getXXGroup().findByGroupName(name);
+            if (xGroup != null) {
+                return xGroup.getId();
+            }
+            if (createIfAbsent) {
+                return createGroup();
+            }
+            return null;
+        }
+
+        private Long createGroup() {
+            LOG.warn("Group specified in policy does not exist in ranger admin, creating new group, name = {}", name);
+            VXGroup vxGroup = new VXGroup();
+            vxGroup.setName(name);
+            vxGroup.setDescription(name);
+            vxGroup.setGroupSource(RangerCommonEnums.GROUP_EXTERNAL);
+            VXGroup vXGroup = xGroupService.createXGroupWithOutLogin(vxGroup);
+            if (vXGroup != null) {
+                xGroupService.createTransactionLog(vXGroup, null, OPERATION_CREATE_CONTEXT, xPolicy.getAddedByUserId());
+                return vXGroup.getId();
+            }
+            return null;
+        }
+    }
+
+    private class PolicyUserAssociator implements Runnable {
+        private final String   name;
+        private final Long     userId;
+        private final XXPolicy xPolicy;
+
+        PolicyUserAssociator(String name, Long userId, XXPolicy xPolicy) {
+            this.name    = name;
+            this.userId  = userId;
+            this.xPolicy = xPolicy;
+        }
+
+        public XXPolicyRefUser getPolicyRef() {
+            Long id = resolveUserId(false);
+            if (id == null || !doesPolicyExist(xPolicy)) {
+                return null;
+            }
+            XXPolicyRefUser xPolUser = new XXPolicyRefUser();
+            xPolUser.setPolicyId(xPolicy.getId());
+            xPolUser.setUserId(id);
+            xPolUser.setUserName(name);
+            return xPolUser;
+        }
+
+        public void createPolicyRef(Long id) {
+            if (doesPolicyExist(xPolicy)) {
+                XXPolicyRefUser xPolUser = new XXPolicyRefUser();
+                xPolUser.setPolicyId(xPolicy.getId());
+                xPolUser.setUserId(id);
+                xPolUser.setUserName(name);
+                daoMgr.getXXPolicyRefUser().create(xPolUser);
+            } else {
+                LOG.info("Policy with id ={} does not exist, skipping policy association!", xPolicy.getId());
+            }
+        }
+
+        @Override
+        public void run() {
+            Long id = resolveUserId(true);
+            if (id != null) {
+                createPolicyRef(id);
+                LOG.debug("Associated USER:{} with policy id:[{}]", name, xPolicy.getId());
+            } else {
+                throw new RuntimeException("Failed to associate USER:" + name + " with policy id:[" + xPolicy.getId() + "]");
+            }
+        }
+
+        private Long resolveUserId(boolean createIfAbsent) {
+            if (userId != null) {
+                return userId;
+            }
+            XXUser xUser = daoMgr.getXXUser().findByUserName(name);
+            if (xUser != null) {
+                return xUser.getId();
+            }
+            if (createIfAbsent) {
+                return createUser();
+            }
+            return null;
+        }
+
+        private Long createUser() {
+            LOG.warn("User specified in policy does not exist in ranger admin, creating new user, name = {}", name);
+            VXUser vXUser = xUserMgr.createServiceConfigUser(name);
+            if (vXUser != null) {
+                XXUser xUser = daoMgr.getXXUser().findByUserName(name);
+                if (xUser == null) {
+                    LOG.error("No User created!! Irrecoverable error! [{}]", name);
+                } else {
+                    return xUser.getId();
+                }
+            } else {
+                LOG.warn("serviceConfigUser:[{}] creation failed. This may be a transient/spurious condition that may correct itself when transaction is committed", name);
+            }
+            return null;
         }
     }
 

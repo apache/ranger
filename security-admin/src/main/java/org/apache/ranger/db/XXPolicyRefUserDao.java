@@ -28,10 +28,11 @@ import org.springframework.stereotype.Service;
 import javax.persistence.NoResultException;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 public class XXPolicyRefUserDao extends BaseDao<XXPolicyRefUser> {
@@ -137,26 +138,22 @@ public class XXPolicyRefUserDao extends BaseDao<XXPolicyRefUser> {
     }
 
     public Map<String, Long> findUserNameIdByPolicyId(Long policyId) {
-        if (policyId == null) {
-            return Collections.emptyMap();
-        }
-        try {
-            List<Object[]> results = getEntityManager()
-                    .createNamedQuery("XXPolicyRefUser.findUserNameIdByPolicyId", Object[].class)
-                    .setParameter("policyId", policyId)
-                    .getResultList();
-
-            Map<String, Long> userNameIdMap = new HashMap<>();
-            for (Object[] row : results) {
-                String userName = (String) row[0];
-                Long id = (Long) row[1];
-                userNameIdMap.put(userName, id);
+        Map<String, Long> ret = Collections.emptyMap();
+        if (policyId != null) {
+            try {
+                Collection<Object[]> results = getEntityManager()
+                        .createNamedQuery("XXPolicyRefUser.findUserNameIdByPolicyId", Object[].class)
+                        .setParameter("policyId", policyId)
+                        .getResultList();
+                ret = results.stream().collect(
+                        Collectors.toMap(
+                                object -> (String) object[0],
+                                object -> (Long) object[1]));
+            } catch (NoResultException e) {
+                // ignore
             }
-
-            return userNameIdMap;
-        } catch (NoResultException e) {
-            return Collections.emptyMap();
         }
+        return ret;
     }
 
     public void deletePolicyRefUserByIds(List<Long> ids) {

@@ -27,6 +27,7 @@ import org.springframework.stereotype.Service;
 import javax.persistence.NoResultException;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -70,27 +71,24 @@ public class XXPolicyConditionDefDao extends BaseDao<XXPolicyConditionDef> {
         }
     }
 
-    public Map<String, XXPolicyConditionDef> findByServiceDefIdAndNames(Long serviceDefId, Set<String> names) {
-        Map<String, XXPolicyConditionDef> ret = Collections.emptyMap();
-        if (serviceDefId == null || CollectionUtils.isEmpty(names)) {
-            return ret;
-        }
-        try {
-            List<XXPolicyConditionDef> result = getEntityManager()
-                    .createNamedQuery("XXPolicyConditionDef.findByServiceDefIdAndNames", tClass)
-                    .setParameter("serviceDefId", serviceDefId)
-                    .setParameter("names", names)
-                    .getResultList();
-
-            if (CollectionUtils.isEmpty(result)) {
-                return ret;
+    public Map<String, Long> findConditionDefIdsByServiceDefIdAndNames(Long serviceDefId, Set<String> names) {
+        Map<String, Long> ret = Collections.emptyMap();
+        if (serviceDefId != null && CollectionUtils.isNotEmpty(names)) {
+            try {
+                Collection<Object[]> result = getEntityManager()
+                        .createNamedQuery("XXPolicyConditionDef.findConditionDefIdsByServiceDefIdAndNames", Object[].class)
+                        .setParameter("serviceDefId", serviceDefId)
+                        .setParameter("names", names)
+                        .getResultList();
+                ret = result.stream().collect(
+                        Collectors.toMap(
+                                object -> (String) object[1],
+                                object -> (Long) object[0],
+                                (a, b) -> a));
+            } catch (NoResultException e) {
+                logger.debug(e.getMessage());
             }
-            return result.stream()
-                    .collect(Collectors.toMap(XXPolicyConditionDef::getName, java.util.function.Function.identity(), (a, b) -> a));
-        } catch (Exception e) {
-            logger.error("Error retrieving policy condition definitions for serviceDefId={} and names={}", serviceDefId, names);
         }
-
         return ret;
     }
 }

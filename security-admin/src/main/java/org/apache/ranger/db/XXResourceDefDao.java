@@ -27,6 +27,7 @@ import org.springframework.stereotype.Service;
 import javax.persistence.NoResultException;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -111,28 +112,24 @@ public class XXResourceDefDao extends BaseDao<XXResourceDef> {
         }
     }
 
-    public Map<String, XXResourceDef> findXXResourceDefsByNameAndPolicyId(Set<String> names, Long policyId) {
-        Map<String, XXResourceDef> ret = Collections.emptyMap();
-        if (policyId == null || CollectionUtils.isEmpty(names)) {
-            return ret;
-        }
-        try {
-            List<XXResourceDef> result = getEntityManager()
-                    .createNamedQuery("XXResourceDef.findByNamesAndPolicyId", XXResourceDef.class)
-                    .setParameter("policyId", policyId)
-                    .setParameter("names", names)
-                    .getResultList();
-
-            if (CollectionUtils.isEmpty(result)) {
-                return ret;
+    public Map<String, Long> findResourceDefIdsByNameAndPolicyId(Set<String> names, Long policyId) {
+        Map<String, Long> ret = Collections.emptyMap();
+        if (policyId != null && CollectionUtils.isNotEmpty(names)) {
+            try {
+                Collection<Object[]> result = getEntityManager()
+                        .createNamedQuery("XXResourceDef.findResourceDefIdsByNameAndPolicyId", Object[].class)
+                        .setParameter("policyId", policyId)
+                        .setParameter("names", names)
+                        .getResultList();
+                ret = result.stream().collect(
+                        Collectors.toMap(
+                                object -> (String) object[1],
+                                object -> (Long) object[0],
+                                (a, b) -> a));
+            } catch (NoResultException e) {
+                logger.debug(e.getMessage());
             }
-            // Group rows into an in-memory map keyed by resource name
-            ret = result.stream()
-                    .collect(Collectors.toMap(XXResourceDef::getName, java.util.function.Function.identity(), (a, b) -> a));
-        } catch (javax.persistence.NoResultException e) {
-            logger.error("No resource definitions found for policyId={} and names={}", policyId, names);
         }
-
         return ret;
     }
 }
