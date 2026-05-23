@@ -48,6 +48,8 @@ fi
 # Ranger policy cache, keytabs (Solr 9 SecurityManager; allowPaths used when SM is enabled)
 export SOLR_OPTS="${SOLR_OPTS} -Dsolr.allowPaths=/etc/ranger,/etc/keytabs"
 export SOLR_SECURITY_MANAGER_ENABLED="${SOLR_SECURITY_MANAGER_ENABLED:-false}"
+# Solr 9.4+: KerberosPlugin lives in the hadoop-auth module
+export SOLR_MODULES="${SOLR_MODULES:+$SOLR_MODULES,}hadoop-auth"
 
 if [ ! -e ${SOLR_INSTALL_DIR}/.setupDone ]
 then

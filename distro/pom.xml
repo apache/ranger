@@ -484,50 +484,6 @@
             </activation>
             <build>
                 <plugins>
-                    <!-- Solr plugin: jersey-client/media 2.39.1 are dropped when moduleSet merges plugins-common's 2.47 -->
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-dependency-plugin</artifactId>
-                        <executions>
-                            <execution>
-                                <id>copy-solr-jersey-client</id>
-                                <goals>
-                                    <goal>copy</goal>
-                                </goals>
-                                <phase>prepare-package</phase>
-                                <configuration>
-                                    <artifactItems>
-                                        <artifactItem>
-                                            <groupId>org.glassfish.jersey.core</groupId>
-                                            <artifactId>jersey-client</artifactId>
-                                            <version>${solr.jersey.version}</version>
-                                        </artifactItem>
-                                        <artifactItem>
-                                            <groupId>org.glassfish.jersey.core</groupId>
-                                            <artifactId>jersey-common</artifactId>
-                                            <version>${solr.jersey.version}</version>
-                                        </artifactItem>
-                                        <artifactItem>
-                                            <groupId>org.glassfish.jersey.ext</groupId>
-                                            <artifactId>jersey-entity-filtering</artifactId>
-                                            <version>${solr.jersey.version}</version>
-                                        </artifactItem>
-                                        <artifactItem>
-                                            <groupId>org.glassfish.jersey.inject</groupId>
-                                            <artifactId>jersey-hk2</artifactId>
-                                            <version>${solr.jersey.version}</version>
-                                        </artifactItem>
-                                        <artifactItem>
-                                            <groupId>org.glassfish.jersey.media</groupId>
-                                            <artifactId>jersey-media-json-jackson</artifactId>
-                                            <version>${solr.jersey.version}</version>
-                                        </artifactItem>
-                                    </artifactItems>
-                                    <outputDirectory>${project.build.directory}/solr-jersey-extra</outputDirectory>
-                                </configuration>
-                            </execution>
-                        </executions>
-                    </plugin>
                     <plugin>
                         <artifactId>maven-assembly-plugin</artifactId>
                         <version>${assembly.plugin.version}</version>
@@ -850,50 +806,6 @@
             <id>ranger-solr-plugin</id>
             <build>
                 <plugins>
-                    <!-- jersey-client/media 2.39.1 are dropped when moduleSet merges plugins-common's 2.47 -->
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-dependency-plugin</artifactId>
-                        <executions>
-                            <execution>
-                                <id>copy-solr-jersey-client</id>
-                                <goals>
-                                    <goal>copy</goal>
-                                </goals>
-                                <phase>prepare-package</phase>
-                                <configuration>
-                                    <artifactItems>
-                                        <artifactItem>
-                                            <groupId>org.glassfish.jersey.core</groupId>
-                                            <artifactId>jersey-client</artifactId>
-                                            <version>${solr.jersey.version}</version>
-                                        </artifactItem>
-                                        <artifactItem>
-                                            <groupId>org.glassfish.jersey.core</groupId>
-                                            <artifactId>jersey-common</artifactId>
-                                            <version>${solr.jersey.version}</version>
-                                        </artifactItem>
-                                        <artifactItem>
-                                            <groupId>org.glassfish.jersey.ext</groupId>
-                                            <artifactId>jersey-entity-filtering</artifactId>
-                                            <version>${solr.jersey.version}</version>
-                                        </artifactItem>
-                                        <artifactItem>
-                                            <groupId>org.glassfish.jersey.inject</groupId>
-                                            <artifactId>jersey-hk2</artifactId>
-                                            <version>${solr.jersey.version}</version>
-                                        </artifactItem>
-                                        <artifactItem>
-                                            <groupId>org.glassfish.jersey.media</groupId>
-                                            <artifactId>jersey-media-json-jackson</artifactId>
-                                            <version>${solr.jersey.version}</version>
-                                        </artifactItem>
-                                    </artifactItems>
-                                    <outputDirectory>${project.build.directory}/solr-jersey-extra</outputDirectory>
-                                </configuration>
-                            </execution>
-                        </executions>
-                    </plugin>
                     <plugin>
                         <artifactId>maven-assembly-plugin</artifactId>
                         <version>${assembly.plugin.version}</version>

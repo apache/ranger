@@ -1128,6 +1128,7 @@
                 <module>agents-common</module>
                 <module>agents-cred</module>
                 <module>agents-installer</module>
+                <module>authz-api</module>
                 <module>common-utils</module>
                 <module>credentialbuilder</module>
                 <module>distro</module>
@@ -1135,6 +1136,7 @@
                 <module>ranger-plugin-classloader</module>
                 <module>ranger-solr-plugin-shim</module>
                 <module>ranger-util</module>
+                <module>ugsync-util</module>
             </modules>
         </profile>
         <profile>

@@ -608,8 +608,12 @@ public class RangerRESTClient {
     }
 
     private Client buildClient() {
+        return RangerJersey2ClientBuilder.runWithJerseyClassLoader(this::buildClientInternal);
+    }
+
+    private Client buildClientInternal() {
         RangerJersey2ClientBuilder.SafeClientBuilder clientBuilder;
-        ClientConfig config = new ClientConfig();
+        ClientConfig config = RangerJersey2ClientBuilder.newClientConfig();
 
         if (mIsSSL) {
             try {
