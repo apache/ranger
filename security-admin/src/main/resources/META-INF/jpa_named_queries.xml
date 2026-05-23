@@ -592,9 +592,11 @@
 	</named-query>
 
 	<named-query name="XXResourceDef.findResourceDefIdsByNameAndPolicyId">
-		<query>select obj.id, obj.name from XXResourceDef obj, XXPolicy xPol, XXServiceDef xSvcDef,
-			XXService xSvc where obj.defId = xSvcDef.id and xSvcDef.id = xSvc.type
-			and xSvc.id = xPol.service and xPol.id = :policyId and obj.name IN :names order by obj.level
+		<query>SELECT obj.id, obj.name FROM XXResourceDef obj
+		        WHERE obj.name IN :names AND obj.defId IN
+		              (SELECT xSvcDef.id FROM XXServiceDef xSvcDef, XXService xSvc, XXPolicy xPol
+		                WHERE xSvcDef.id = xSvc.type AND xSvc.id = xPol.service AND xPol.id = :policyId)
+		        ORDER BY obj.level
 		</query>
 	</named-query>
 
@@ -652,7 +654,8 @@
 	</named-query>
 
 	<named-query name="XXAccessTypeDef.findAccessTypeDefIdsByNamesAndServiceId">
-		<query>select obj.id, obj.name from XXAccessTypeDef obj, XXService xSvc where obj.name IN :names and xSvc.id = :serviceId and obj.defId = xSvc.type</query>
+		<query>SELECT obj.id, obj.name FROM XXAccessTypeDef obj
+		        WHERE obj.name IN :names AND obj.defId IN (SELECT xSvc.type FROM XXService xSvc WHERE xSvc.id = :serviceId)</query>
 	</named-query>
 
 	<named-query name="XXAccessTypeDef.getNamesByServiceName">

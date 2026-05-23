@@ -119,22 +119,20 @@ public class XXGroupDao extends BaseDao<XXGroup> {
     }
 
     public Map<String, Long> getIdsByGroupNames(Collection<String> groupNames) {
-        Map<String, Long> ret = Collections.emptyMap();
         if (CollectionUtils.isNotEmpty(groupNames)) {
             try {
                 Collection<Object[]> result = getEntityManager()
                         .createNamedQuery("XXGroup.getIdsByGroupNames", Object[].class)
                         .setParameter("names", groupNames)
                         .getResultList();
-                ret = result.stream().collect(
-                    Collectors.toMap(
-                        object -> (String) (object[1]),
-                        object -> (Long) (object[0])));
+
+                return result.stream().collect(Collectors.toMap(object -> (String) (object[1]), object -> (Long) (object[0])));
             } catch (NoResultException excp) {
                 logger.debug(excp.getMessage());
             }
         }
-        return ret;
+
+        return Collections.emptyMap();
     }
 
     private GroupInfo toGroupInfo(Object[] row) {

@@ -131,21 +131,19 @@ public class XXRoleDao extends BaseDao<XXRole> {
     }
 
     public Map<String, Long> getIdsByRoleNames(Collection<String> roleNames) {
-        Map<String, Long> ret = Collections.emptyMap();
         if (CollectionUtils.isNotEmpty(roleNames)) {
             try {
                 Collection<Object[]> result = getEntityManager()
                         .createNamedQuery("XXRole.getIdsByRoleNames", Object[].class)
                         .setParameter("roleNames", roleNames)
                         .getResultList();
-                ret = result.stream().collect(
-                    Collectors.toMap(
-                        object -> (String) (object[1]),
-                        object -> (Long) (object[0])));
+
+                return result.stream().collect(Collectors.toMap(object -> (String) (object[1]), object -> (Long) (object[0])));
             } catch (NoResultException e) {
                 logger.debug(e.getMessage());
             }
         }
-        return ret;
+
+        return Collections.emptyMap();
     }
 }

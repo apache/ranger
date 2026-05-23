@@ -87,7 +87,6 @@ public class XXDataMaskTypeDefDao extends BaseDao<XXDataMaskTypeDef> {
     }
 
     public Map<String, Long> findDataMaskTypeDefIdsByNamesAndServiceId(Set<String> names, Long serviceId) {
-        Map<String, Long> ret = Collections.emptyMap();
         if (serviceId != null && CollectionUtils.isNotEmpty(names)) {
             try {
                 Collection<Object[]> result = getEntityManager()
@@ -95,15 +94,13 @@ public class XXDataMaskTypeDefDao extends BaseDao<XXDataMaskTypeDef> {
                         .setParameter("names", names)
                         .setParameter("serviceId", serviceId)
                         .getResultList();
-                ret = result.stream().collect(
-                        Collectors.toMap(
-                                object -> (String) object[1],
-                                object -> (Long) object[0],
-                                (a, b) -> a));
+
+                return result.stream().collect(Collectors.toMap(object -> (String) object[1], object -> (Long) object[0], (a, b) -> a));
             } catch (NoResultException e) {
                 logger.debug(e.getMessage());
             }
         }
-        return ret;
+
+        return Collections.emptyMap();
     }
 }

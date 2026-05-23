@@ -113,7 +113,6 @@ public class XXResourceDefDao extends BaseDao<XXResourceDef> {
     }
 
     public Map<String, Long> findResourceDefIdsByNameAndPolicyId(Set<String> names, Long policyId) {
-        Map<String, Long> ret = Collections.emptyMap();
         if (policyId != null && CollectionUtils.isNotEmpty(names)) {
             try {
                 Collection<Object[]> result = getEntityManager()
@@ -121,15 +120,13 @@ public class XXResourceDefDao extends BaseDao<XXResourceDef> {
                         .setParameter("policyId", policyId)
                         .setParameter("names", names)
                         .getResultList();
-                ret = result.stream().collect(
-                        Collectors.toMap(
-                                object -> (String) object[1],
-                                object -> (Long) object[0],
-                                (a, b) -> a));
+
+                return result.stream().collect(Collectors.toMap(object -> (String) object[1], object -> (Long) object[0], (a, b) -> a));
             } catch (NoResultException e) {
                 logger.debug(e.getMessage());
             }
         }
-        return ret;
+
+        return Collections.emptyMap();
     }
 }

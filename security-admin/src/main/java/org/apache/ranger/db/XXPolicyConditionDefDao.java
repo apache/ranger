@@ -72,7 +72,6 @@ public class XXPolicyConditionDefDao extends BaseDao<XXPolicyConditionDef> {
     }
 
     public Map<String, Long> findConditionDefIdsByServiceDefIdAndNames(Long serviceDefId, Set<String> names) {
-        Map<String, Long> ret = Collections.emptyMap();
         if (serviceDefId != null && CollectionUtils.isNotEmpty(names)) {
             try {
                 Collection<Object[]> result = getEntityManager()
@@ -80,15 +79,13 @@ public class XXPolicyConditionDefDao extends BaseDao<XXPolicyConditionDef> {
                         .setParameter("serviceDefId", serviceDefId)
                         .setParameter("names", names)
                         .getResultList();
-                ret = result.stream().collect(
-                        Collectors.toMap(
-                                object -> (String) object[1],
-                                object -> (Long) object[0],
-                                (a, b) -> a));
+
+                return result.stream().collect(Collectors.toMap(object -> (String) object[1], object -> (Long) object[0], (a, b) -> a));
             } catch (NoResultException e) {
                 logger.debug(e.getMessage());
             }
         }
-        return ret;
+
+        return Collections.emptyMap();
     }
 }

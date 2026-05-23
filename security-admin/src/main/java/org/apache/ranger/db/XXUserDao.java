@@ -189,22 +189,20 @@ public class XXUserDao extends BaseDao<XXUser> {
     }
 
     public Map<String, Long> getIdsByUserNames(Collection<String> names) {
-        Map<String, Long> ret = Collections.emptyMap();
         if (CollectionUtils.isNotEmpty(names)) {
             try {
                 Collection<Object[]> result = getEntityManager()
                         .createNamedQuery("XXUser.getIdsByUserNames", Object[].class)
                         .setParameter("names", names)
                         .getResultList();
-                ret = result.stream().collect(
-                    Collectors.toMap(
-                        object -> (String) (object[1]),
-                        object -> (Long) (object[0])));
+
+                return result.stream().collect(Collectors.toMap(object -> (String) (object[1]), object -> (Long) (object[0])));
             } catch (NoResultException e) {
                 logger.debug(e.getMessage());
             }
         }
-        return ret;
+
+        return Collections.emptyMap();
     }
 
     private UserInfo toUserInfo(Object[] row) {
