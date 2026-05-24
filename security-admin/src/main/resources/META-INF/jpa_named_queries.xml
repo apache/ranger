@@ -176,6 +176,10 @@
 		</query>
 	</named-query>
 
+	<named-query name="XXGroup.getIdsByGroupNames">
+		<query>SELECT obj.id, obj.name FROM XXGroup obj WHERE obj.name IN :names</query>
+	</named-query>
+
 	<!-- XXGroup -->
 	<named-query name="XXUser.findGroupsByUserIds">
 		<query>SELECT user.name, group.name FROM XXUser user, XXGroup group, XXGroupUser groupUser
@@ -191,6 +195,10 @@
 	<named-query name="XXUser.getAllUserIdNames">
 		<query>SELECT portalUser.id, user.id, user.name FROM XXUser user, XXPortalUser portalUser WHERE user.name=portalUser.loginId
 		</query>
+	</named-query>
+
+	<named-query name="XXUser.getIdsByUserNames">
+		<query>SELECT obj.id, obj.name FROM XXUser obj WHERE obj.name IN :names</query>
 	</named-query>
 
 	<named-query name="VXXPrincipal.lookupByName">
@@ -583,6 +591,15 @@
 				and xSvc.id = xPol.service and xPol.id = :policyId and obj.name = :name order by obj.level</query>
 	</named-query>
 
+	<named-query name="XXResourceDef.findResourceDefIdsByNameAndPolicyId">
+		<query>SELECT obj.id, obj.name FROM XXResourceDef obj
+		        WHERE obj.name IN :names AND obj.defId IN
+		              (SELECT xSvcDef.id FROM XXServiceDef xSvcDef, XXService xSvc, XXPolicy xPol
+		                WHERE xSvcDef.id = xSvc.type AND xSvc.id = xPol.service AND xPol.id = :policyId)
+		        ORDER BY obj.level
+		</query>
+	</named-query>
+
 	<named-query name="XXResourceDef.findByParentResId">
 		<query>
 			select obj from XXResourceDef obj where obj.parent = :parentId
@@ -636,6 +653,11 @@
 				obj.name = :name and xSvc.id = :serviceId and obj.defId = xSvc.type</query>
 	</named-query>
 
+	<named-query name="XXAccessTypeDef.findAccessTypeDefIdsByNamesAndServiceId">
+		<query>SELECT obj.id, obj.name FROM XXAccessTypeDef obj
+		        WHERE obj.name IN :names AND obj.defId IN (SELECT xSvc.type FROM XXService xSvc WHERE xSvc.id = :serviceId)</query>
+	</named-query>
+
 	<named-query name="XXAccessTypeDef.getNamesByServiceName">
 		<query>SELECT obj.name FROM XXAccessTypeDef obj, XXService svc
 		        WHERE svc.name = :serviceName
@@ -650,6 +672,10 @@
 
 	<named-query name="XXPolicyConditionDef.findByServiceDefIdAndName">
 		<query>select obj from XXPolicyConditionDef obj where obj.defId = :serviceDefId and obj.name = :name order by obj.order</query>
+	</named-query>
+
+	<named-query name="XXPolicyConditionDef.findConditionDefIdsByServiceDefIdAndNames">
+		<query>select obj.id, obj.name from XXPolicyConditionDef obj where obj.defId = :serviceDefId and obj.name IN :names order by obj.order</query>
 	</named-query>
 
 	<!-- XXContextEnricherDef -->
@@ -675,6 +701,10 @@
 	<named-query name="XXDataMaskTypeDef.findByNameAndServiceId">
 		<query>select obj from XXDataMaskTypeDef obj, XXService xSvc where
 			obj.name = :name and xSvc.id = :serviceId and obj.defId = xSvc.type</query>
+	</named-query>
+
+	<named-query name="XXDataMaskTypeDef.findDataMaskTypeDefIdsByNamesAndServiceId">
+		<query>select obj.id, obj.name from XXDataMaskTypeDef obj, XXService xSvc where obj.name IN :names and xSvc.id = :serviceId and obj.defId = xSvc.type</query>
 	</named-query>
 
 	<named-query name="XXDataMaskTypeDef.getNamesByServiceName">
@@ -916,6 +946,14 @@
 		<query>select obj from XXPolicyRefGroup obj where obj.groupName = :groupName</query>
 	</named-query>
 
+	<named-query name="XXPolicyRefGroup.findGroupNameByPolicyId">
+		<query>select obj.groupName, obj.id from XXPolicyRefGroup obj where obj.policyId = :policyId</query>
+	</named-query>
+
+	<named-query name="XXPolicyRefGroup.deletePolicyRefGroupByIds">
+		<query>DELETE FROM XXPolicyRefGroup obj WHERE obj.id IN :ids </query>
+	</named-query>
+
 <!-- 	new queries -->
 	<named-query name="XXPolicyRefGroup.findByGroupIdAndPolicyId">
 		<query>select obj from XXPolicyRefGroup obj where obj.groupId = :groupId and obj.policyId = :policyId </query>
@@ -1120,6 +1158,14 @@
 
 	<named-query name="XXPolicyRefUser.deleteByIds">
 		<query>DELETE FROM XXPolicyRefUser obj WHERE obj.id IN :ids</query>
+	</named-query>
+
+	<named-query name="XXPolicyRefUser.findUserNameIdByPolicyId">
+		<query>SELECT obj.userName, obj.id FROM XXPolicyRefUser obj WHERE obj.policyId = :policyId</query>
+	</named-query>
+
+	<named-query name="XXPolicyRefUser.deletePolicyRefUserByIds">
+		<query>DELETE FROM XXPolicyRefUser obj WHERE obj.id IN :ids </query>
 	</named-query>
 
 	<!-- XXPolicyItemCondition -->
@@ -1956,6 +2002,10 @@
         <query>select obj.name from XXRole obj</query>
     </named-query>
 
+    <named-query name="XXRole.getIdsByRoleNames">
+        <query>SELECT obj.id, obj.name FROM XXRole obj WHERE obj.name IN :roleNames</query>
+    </named-query>
+
 	<!-- XXRoleRef* -->
 
     <named-query name="XXRoleRefUser.findByRoleId">
@@ -2024,6 +2074,14 @@
 	<!-- XXPolicyRefRole -->
 	<named-query name="XXPolicyRefRole.findByPolicyId">
 		<query>select obj from XXPolicyRefRole obj where obj.policyId = :policyId </query>
+	</named-query>
+
+	<named-query name="XXPolicyRefRole.findRoleNameIdByPolicyId">
+		<query>SELECT obj.roleName, obj.id FROM XXPolicyRefRole obj WHERE obj.policyId = :policyId</query>
+	</named-query>
+
+	<named-query name="XXPolicyRefRole.deletePolicyRefRoleByIds">
+		<query>DELETE FROM XXPolicyRefRole obj WHERE obj.id IN :ids </query>
 	</named-query>
 
 	<named-query name="XXPolicyRefRole.findIdsByPolicyId">

@@ -36,14 +36,10 @@ import org.apache.ranger.db.XXPolicyRefUserDao;
 import org.apache.ranger.db.XXResourceDefDao;
 import org.apache.ranger.db.XXRoleDao;
 import org.apache.ranger.db.XXUserDao;
-import org.apache.ranger.entity.XXAccessTypeDef;
-import org.apache.ranger.entity.XXDataMaskTypeDef;
 import org.apache.ranger.entity.XXPolicy;
-import org.apache.ranger.entity.XXPolicyConditionDef;
 import org.apache.ranger.entity.XXPolicyRefGroup;
 import org.apache.ranger.entity.XXPolicyRefRole;
 import org.apache.ranger.entity.XXPolicyRefUser;
-import org.apache.ranger.entity.XXResourceDef;
 import org.apache.ranger.entity.XXServiceDef;
 import org.apache.ranger.entity.XXUser;
 import org.apache.ranger.plugin.model.RangerPolicy;
@@ -71,12 +67,18 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -122,7 +124,7 @@ public class TestPolicyRefUpdater {
 
     @Test
     public void testCreateNewPolMappingForRefTable_NullPolicyNoop() throws Exception {
-        updater.createNewPolMappingForRefTable(null, null, null, false);
+        updater.createNewPolMappingForRefTable(null, null, null, false, false);
     }
 
     @Test
@@ -162,9 +164,9 @@ public class TestPolicyRefUpdater {
         // Stubs for DAO lookups and batch create calls
         XXResourceDefDao resDefDao = mock(XXResourceDefDao.class);
         when(daoMgr.getXXResourceDef()).thenReturn(resDefDao);
-        XXResourceDef xRes = new XXResourceDef();
-        xRes.setId(1L);
-        when(resDefDao.findByNameAndPolicyId("db", 5L)).thenReturn(xRes);
+        Map<String, Long> xxResourceDefIdMap = new HashMap<>();
+        xxResourceDefIdMap.put("db", 1L);
+        when(resDefDao.findResourceDefIdsByNameAndPolicyId(Mockito.anySet(), Mockito.eq(5L))).thenReturn(xxResourceDefIdMap);
         Mockito.lenient().when(rangerAuditFields.populateAuditFields(Mockito.any(), Mockito.any()))
                 .thenAnswer(inv -> inv.getArgument(0));
         XXPolicyRefResourceDao polResDao = mock(XXPolicyRefResourceDao.class);
@@ -177,45 +179,44 @@ public class TestPolicyRefUpdater {
         when(daoMgr.getXXPolicyRefUser()).thenReturn(polUserDao);
         XXAccessTypeDefDao accDefDao = mock(XXAccessTypeDefDao.class);
         when(daoMgr.getXXAccessTypeDef()).thenReturn(accDefDao);
-        XXAccessTypeDef xAcc = new XXAccessTypeDef();
-        xAcc.setId(2L);
-        when(accDefDao.findByNameAndServiceId("select", 9L)).thenReturn(xAcc);
+        Map<String, Long> xAccMap = new HashMap<>();
+        xAccMap.put("select", 2L);
+        when(accDefDao.findAccessTypeDefIdsByNamesAndServiceId(Mockito.anySet(), Mockito.eq(9L))).thenReturn(xAccMap);
         XXPolicyRefAccessTypeDao polAccDao = mock(XXPolicyRefAccessTypeDao.class);
         when(daoMgr.getXXPolicyRefAccessType()).thenReturn(polAccDao);
         XXPolicyConditionDefDao condDefDao = mock(XXPolicyConditionDefDao.class);
         when(daoMgr.getXXPolicyConditionDef()).thenReturn(condDefDao);
-        XXPolicyConditionDef xCond = new XXPolicyConditionDef();
-        xCond.setId(3L);
-        when(condDefDao.findByServiceDefIdAndName(9L, "time")).thenReturn(xCond);
+        Map<String, Long> xCondMap = new HashMap<>();
+        xCondMap.put("time", 3L);
+        when(condDefDao.findConditionDefIdsByServiceDefIdAndNames(Mockito.eq(9L), Mockito.anySet())).thenReturn(xCondMap);
         XXPolicyRefConditionDao polCondDao = mock(XXPolicyRefConditionDao.class);
         when(daoMgr.getXXPolicyRefCondition()).thenReturn(polCondDao);
         XXDataMaskTypeDefDao dmDefDao = mock(XXDataMaskTypeDefDao.class);
         when(daoMgr.getXXDataMaskTypeDef()).thenReturn(dmDefDao);
-        XXDataMaskTypeDef xDm = new XXDataMaskTypeDef();
-        xDm.setId(4L);
-        when(dmDefDao.findByNameAndServiceId("MASK", 9L)).thenReturn(xDm);
+        Map<String, Long> xxDataMaskTypeDefIdMap = new HashMap<>();
+        xxDataMaskTypeDefIdMap.put("MASK", 4L);
+        when(dmDefDao.findDataMaskTypeDefIdsByNamesAndServiceId(Mockito.anySet(), Mockito.eq(9L))).thenReturn(xxDataMaskTypeDefIdMap);
         XXPolicyRefDataMaskTypeDao polDmDao = mock(XXPolicyRefDataMaskTypeDao.class);
         when(daoMgr.getXXPolicyRefDataMaskType()).thenReturn(polDmDao);
         when(rangerBizUtil.checkAdminAccess()).thenReturn(true);
 
-        // Principal creation path (user, group, role) when not existing and
-        // createPrincipalsIfAbsent=true
+        org.apache.ranger.db.XXPolicyDao policyDao = mock(org.apache.ranger.db.XXPolicyDao.class);
+        when(daoMgr.getXXPolicy()).thenReturn(policyDao);
+        when(policyDao.getById(xPolicy.getId())).thenReturn(xPolicy);
+
         XXUserDao userDao = mock(XXUserDao.class);
         when(daoMgr.getXXUser()).thenReturn(userDao);
-        when(userDao.findByUserName("u1")).thenReturn(null);
-        when(daoMgr.getXXPolicyRefUser()).thenReturn(polUserDao);
+        when(userDao.getIdsByUserNames(Mockito.anySet())).thenReturn(Collections.singletonMap("u1", 30L));
 
         XXGroupDao groupDao = mock(XXGroupDao.class);
         when(daoMgr.getXXGroup()).thenReturn(groupDao);
-        when(groupDao.findByGroupName("g1")).thenReturn(null);
-        when(daoMgr.getXXPolicyRefGroup()).thenReturn(polGroupDao);
+        when(groupDao.getIdsByGroupNames(Mockito.anySet())).thenReturn(Collections.singletonMap("g1", 20L));
 
         XXRoleDao roleDao = mock(XXRoleDao.class);
         when(daoMgr.getXXRole()).thenReturn(roleDao);
-        when(roleDao.findByRoleName("r1")).thenReturn(null);
-        when(daoMgr.getXXPolicyRefRole()).thenReturn(polRoleDao);
+        when(roleDao.getIdsByRoleNames(Mockito.anySet())).thenReturn(Collections.singletonMap("r1", 10L));
 
-        updater.createNewPolMappingForRefTable(policy, xPolicy, xSvc, true);
+        updater.createNewPolMappingForRefTable(policy, xPolicy, xSvc, true, false);
         // no exceptions indicates success across branches
     }
 
@@ -231,18 +232,72 @@ public class TestPolicyRefUpdater {
         xPolicy.setId(6L);
         XXServiceDef xSvc = new XXServiceDef();
         xSvc.setId(9L);
-        // ensure cleanupRefTables() doesn't NPE before resource lookup
-        when(daoMgr.getXXPolicyRefResource()).thenReturn(mock(XXPolicyRefResourceDao.class));
-        when(daoMgr.getXXPolicyRefRole()).thenReturn(mock(XXPolicyRefRoleDao.class));
-        when(daoMgr.getXXPolicyRefGroup()).thenReturn(mock(XXPolicyRefGroupDao.class));
-        when(daoMgr.getXXPolicyRefUser()).thenReturn(mock(XXPolicyRefUserDao.class));
-        when(daoMgr.getXXPolicyRefAccessType()).thenReturn(mock(XXPolicyRefAccessTypeDao.class));
-        when(daoMgr.getXXPolicyRefCondition()).thenReturn(mock(XXPolicyRefConditionDao.class));
-        when(daoMgr.getXXPolicyRefDataMaskType()).thenReturn(mock(XXPolicyRefDataMaskTypeDao.class));
         XXResourceDefDao resDefDao = mock(XXResourceDefDao.class);
         when(daoMgr.getXXResourceDef()).thenReturn(resDefDao);
-        when(resDefDao.findByNameAndPolicyId("invalid", 6L)).thenReturn(null);
-        assertThrows(Exception.class, () -> updater.createNewPolMappingForRefTable(policy, xPolicy, xSvc, false));
+        when(resDefDao.findResourceDefIdsByNameAndPolicyId(Mockito.anySet(), Mockito.eq(6L))).thenReturn(Collections.emptyMap());
+        assertThrows(Exception.class, () -> updater.createNewPolMappingForRefTable(policy, xPolicy, xSvc, false, false));
+    }
+
+    @Test
+    public void testCleanupRefTablesForUpdate_SelectivePrincipalCleanup() {
+        final Long policyId = 100L;
+
+        Set<String> policyUsers  = new HashSet<>(Arrays.asList("alice", "bob", "carol"));
+        Set<String> policyRoles  = new HashSet<>(Arrays.asList("roleA", "roleB", "roleNew"));
+        Set<String> policyGroups = new HashSet<>(Arrays.asList("grp1", "grp2", "grpNew"));
+
+        Map<String, Long> existingUsers = new HashMap<>();
+        existingUsers.put("alice", 1L);
+        existingUsers.put("bob", 2L);
+        existingUsers.put("dave", 4L);
+
+        Map<String, Long> existingRoles = new HashMap<>();
+        existingRoles.put("roleA", 10L);
+        existingRoles.put("roleOld", 12L);
+
+        Map<String, Long> existingGroups = new HashMap<>();
+        existingGroups.put("grp1", 20L);
+        existingGroups.put("grpOld", 22L);
+
+        XXPolicyRefUserDao userDao = mock(XXPolicyRefUserDao.class);
+        XXPolicyRefRoleDao roleDao = mock(XXPolicyRefRoleDao.class);
+        XXPolicyRefGroupDao groupDao = mock(XXPolicyRefGroupDao.class);
+        XXPolicyRefResourceDao resourceDao = mock(XXPolicyRefResourceDao.class);
+        XXPolicyRefAccessTypeDao accessDao = mock(XXPolicyRefAccessTypeDao.class);
+        XXPolicyRefConditionDao conditionDao = mock(XXPolicyRefConditionDao.class);
+        XXPolicyRefDataMaskTypeDao dataMaskDao = mock(XXPolicyRefDataMaskTypeDao.class);
+
+        when(daoMgr.getXXPolicyRefUser()).thenReturn(userDao);
+        when(daoMgr.getXXPolicyRefRole()).thenReturn(roleDao);
+        when(daoMgr.getXXPolicyRefGroup()).thenReturn(groupDao);
+        when(daoMgr.getXXPolicyRefResource()).thenReturn(resourceDao);
+        when(daoMgr.getXXPolicyRefAccessType()).thenReturn(accessDao);
+        when(daoMgr.getXXPolicyRefCondition()).thenReturn(conditionDao);
+        when(daoMgr.getXXPolicyRefDataMaskType()).thenReturn(dataMaskDao);
+
+        when(userDao.findUserNameIdByPolicyId(policyId)).thenReturn(existingUsers);
+        when(roleDao.findRoleNameIdByPolicyId(policyId)).thenReturn(existingRoles);
+        when(groupDao.findGroupNameByPolicyId(policyId)).thenReturn(existingGroups);
+
+        assertTrue(updater.cleanupRefTablesForUpdate(policyId, policyUsers, policyRoles, policyGroups));
+
+        verify(userDao).deletePolicyRefUserByIds(Collections.singletonList(4L));
+        assertEquals(Collections.singleton("carol"), policyUsers);
+
+        verify(roleDao).deletePolicyRefRoleByIds(Collections.singletonList(12L));
+        assertEquals(new HashSet<>(Arrays.asList("roleB", "roleNew")), policyRoles);
+
+        verify(groupDao).deletePolicyRefGroupByIds(Collections.singletonList(22L));
+        assertEquals(new HashSet<>(Arrays.asList("grp2", "grpNew")), policyGroups);
+
+        verify(resourceDao).deleteByPolicyId(policyId);
+        verify(accessDao).deleteByPolicyId(policyId);
+        verify(conditionDao).deleteByPolicyId(policyId);
+        verify(dataMaskDao).deleteByPolicyId(policyId);
+
+        verify(userDao, never()).deleteByPolicyId(policyId);
+        verify(roleDao, never()).deleteByPolicyId(policyId);
+        verify(groupDao, never()).deleteByPolicyId(policyId);
     }
 
     @Test
@@ -268,9 +323,14 @@ public class TestPolicyRefUpdater {
         xPolicy.setId(10L);
         xPolicy.setService(100L);
 
+        // FIX: Mock policy DAO hierarchy to satisfy doesPolicyExist(xPolicy) checks
+        org.apache.ranger.db.XXPolicyDao policyDao = mock(org.apache.ranger.db.XXPolicyDao.class);
+        when(daoMgr.getXXPolicy()).thenReturn(policyDao);
+        when(policyDao.getById(xPolicy.getId())).thenReturn(xPolicy);
+
         // Mock audit population to be identity
         Mockito.lenient().when(rangerAuditFields.populateAuditFields(Mockito.any(), Mockito.any()))
-                .thenAnswer(inv -> inv.getArgument(0));
+            .thenAnswer(inv -> inv.getArgument(0));
 
         // USER path: user not found, xUserMgr creates, then XXUser lookup returns id
         XXUserDao userDao = mock(XXUserDao.class);
@@ -285,23 +345,22 @@ public class TestPolicyRefUpdater {
         XXPolicyRefUserDao polUserDao = mock(XXPolicyRefUserDao.class);
         when(daoMgr.getXXPolicyRefUser()).thenReturn(polUserDao);
 
-        // Reflectively construct inner class PolicyPrincipalAssociator for USER
-        Class<?> inner = null;
+        // Reflectively construct inner class PolicyUserAssociator for USER
+        Class<?> userAssociatorClass = null;
         for (Class<?> c : PolicyRefUpdater.class.getDeclaredClasses()) {
-            if (c.getSimpleName().equals("PolicyPrincipalAssociator")) {
-                inner = c;
+            if (c.getSimpleName().equals("PolicyUserAssociator")) {
+                userAssociatorClass = c;
                 break;
             }
         }
-        assertNotNull(inner);
-        Constructor<?> ctor = inner.getDeclaredConstructor(PolicyRefUpdater.class,
-                PolicyRefUpdater.PRINCIPAL_TYPE.class, String.class, XXPolicy.class);
-        ctor.setAccessible(true);
-        Object associatorUser = ctor.newInstance(updater, PolicyRefUpdater.PRINCIPAL_TYPE.USER, "uNew", xPolicy);
-        Method doAssociate = inner.getDeclaredMethod("doAssociate", boolean.class);
-        doAssociate.setAccessible(true);
-        Object resultUser = doAssociate.invoke(associatorUser, true);
-        assertEquals(Boolean.TRUE, resultUser);
+        assertNotNull(userAssociatorClass);
+        Constructor<?> userCtor = userAssociatorClass.getDeclaredConstructor(
+                PolicyRefUpdater.class, String.class, Long.class, XXPolicy.class);
+        userCtor.setAccessible(true);
+        Object associatorUser = userCtor.newInstance(updater, "uNew", null, xPolicy);
+        Method runUser = userAssociatorClass.getDeclaredMethod("run");
+        runUser.setAccessible(true);
+        runUser.invoke(associatorUser);
         verify(daoMgr.getXXPolicyRefUser(), Mockito.times(1))
                 .create(Mockito.any(XXPolicyRefUser.class));
 
@@ -316,9 +375,21 @@ public class TestPolicyRefUpdater {
         XXPolicyRefGroupDao polGroupDao = mock(XXPolicyRefGroupDao.class);
         when(daoMgr.getXXPolicyRefGroup()).thenReturn(polGroupDao);
 
-        Object associatorGroup = ctor.newInstance(updater, PolicyRefUpdater.PRINCIPAL_TYPE.GROUP, "gNew", xPolicy);
-        Object resultGroup = doAssociate.invoke(associatorGroup, true);
-        assertEquals(Boolean.TRUE, resultGroup);
+        Class<?> groupAssociatorClass = null;
+        for (Class<?> c : PolicyRefUpdater.class.getDeclaredClasses()) {
+            if (c.getSimpleName().equals("PolicyGroupAssociator")) {
+                groupAssociatorClass = c;
+                break;
+            }
+        }
+        assertNotNull(groupAssociatorClass);
+        Constructor<?> groupCtor = groupAssociatorClass.getDeclaredConstructor(
+                PolicyRefUpdater.class, String.class, Long.class, XXPolicy.class);
+        groupCtor.setAccessible(true);
+        Object associatorGroup = groupCtor.newInstance(updater, "gNew", null, xPolicy);
+        Method runGroup = groupAssociatorClass.getDeclaredMethod("run");
+        runGroup.setAccessible(true);
+        runGroup.invoke(associatorGroup);
         verify(daoMgr.getXXPolicyRefGroup(), Mockito.times(1))
                 .create(Mockito.any(XXPolicyRefGroup.class));
 
@@ -333,9 +404,21 @@ public class TestPolicyRefUpdater {
         XXPolicyRefRoleDao polRoleDao = mock(XXPolicyRefRoleDao.class);
         when(daoMgr.getXXPolicyRefRole()).thenReturn(polRoleDao);
 
-        Object associatorRole = ctor.newInstance(updater, PolicyRefUpdater.PRINCIPAL_TYPE.ROLE, "rNew", xPolicy);
-        Object resultRole = doAssociate.invoke(associatorRole, true);
-        assertEquals(Boolean.TRUE, resultRole);
+        Class<?> roleAssociatorClass = null;
+        for (Class<?> c : PolicyRefUpdater.class.getDeclaredClasses()) {
+            if (c.getSimpleName().equals("PolicyRoleAssociator")) {
+                roleAssociatorClass = c;
+                break;
+            }
+        }
+        assertNotNull(roleAssociatorClass);
+        Constructor<?> roleCtor = roleAssociatorClass.getDeclaredConstructor(
+                PolicyRefUpdater.class, String.class, Long.class, XXPolicy.class);
+        roleCtor.setAccessible(true);
+        Object associatorRole = roleCtor.newInstance(updater, "rNew", null, xPolicy);
+        Method runRole = roleAssociatorClass.getDeclaredMethod("run");
+        runRole.setAccessible(true);
+        runRole.invoke(associatorRole);
         verify(daoMgr.getXXPolicyRefRole(), Mockito.times(1)).create(Mockito.any(XXPolicyRefRole.class));
     }
 }
