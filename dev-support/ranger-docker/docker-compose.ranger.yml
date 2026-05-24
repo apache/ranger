@@ -13,11 +13,11 @@ services:
     container_name: ranger
     hostname: ranger.rangernw
     volumes:
-      - ./dist/keytabs/ranger:/etc/keytabs
+      - ./dist/keytabs/ranger:/etc/keytabs:ro
       - ./dist/version:/home/ranger/dist/version:ro
       - ./scripts/kdc/krb5.conf:/etc/krb5.conf:ro
       - ./scripts/hadoop/core-site.xml:/home/ranger/scripts/core-site.xml:ro
-      - ./scripts/admin/ranger-admin-install-${RANGER_DB_TYPE}.properties:/opt/ranger/admin/install.properties
+      - ./scripts/admin/ranger-admin-install-${RANGER_DB_TYPE}.properties:/opt/ranger/admin/install.properties:ro
     stdin_open: true
     tty: true
     networks:
@@ -82,9 +82,9 @@ services:
     container_name: ranger-zk
     hostname: ranger-zk.rangernw
     volumes:
-      - ./dist/keytabs/ranger-zk:/etc/keytabs
+      - ./dist/keytabs/ranger-zk:/etc/keytabs:ro
       - ./scripts/kdc/krb5.conf:/etc/krb5.conf:ro
-      - ./scripts/zk/jaas.conf:/etc/zookeeper/jaas.conf
+      - ./scripts/zk/jaas.conf:/etc/zookeeper/jaas.conf:ro
       - ./scripts/zk/zookeeper-with-kerberos.sh:/zookeeper-with-kerberos.sh:ro
     entrypoint: [ "/bin/bash", "/zookeeper-with-kerberos.sh" ]
     networks:
@@ -108,19 +108,19 @@ services:
     container_name: ranger-solr
     hostname: ranger-solr.rangernw
     volumes:
-      - ./dist/keytabs/ranger-solr:/etc/keytabs
-      - ./scripts/solr/solr-ranger_audits:/opt/solr/server/solr/configsets/ranger_audits/conf
+      - ./dist/keytabs/ranger-solr:/etc/keytabs:ro
+      - ./scripts/solr/solr-ranger_audits:/opt/solr/server/solr/configsets/ranger_audits/conf:ro
       # Core conf is copied once by solr-precreate; mount so Solr 9 cache updates apply without recreating the core
-      - ./scripts/solr/solr-ranger_audits:/var/solr/data/ranger_audits/conf
-      - ./scripts/solr/ranger_audits/core.properties:/var/solr/data/ranger_audits/core.properties
-      - ./scripts/solr/ranger-solr-plugin-install.properties:/opt/ranger/ranger-solr-plugin/install.properties
+      - ./scripts/solr/solr-ranger_audits:/var/solr/data/ranger_audits/conf:ro
+      - ./scripts/solr/ranger_audits/core.properties:/var/solr/data/ranger_audits/core.properties:ro
+      - ./scripts/solr/ranger-solr-plugin-install.properties:/opt/ranger/ranger-solr-plugin/install.properties:ro
       # Keep enable templates in sync with repo (image tarball may be stale)
       - ../../plugin-solr/conf/ranger-solr-security-changes.cfg:/opt/ranger/ranger-solr-plugin/install/conf.templates/enable/ranger-solr-security-changes.cfg:ro
-      - ./scripts/solr/core-site.xml:/opt/solr/server/resources/core-site.xml
-      - ./scripts/solr/solr-jaas.conf:/opt/solr/server/etc/jaas.conf
-      - ./scripts/solr/solr-security.json:/var/solr/data/security.json
-      - ./scripts/solr/ranger-solr.sh:/opt/ranger/ranger-solr.sh
-      - ./scripts/kdc/krb5.conf:/etc/krb5.conf
+      - ./scripts/solr/core-site.xml:/opt/solr/server/resources/core-site.xml:ro
+      - ./scripts/solr/solr-jaas.conf:/opt/solr/server/etc/jaas.conf:ro
+      - ./scripts/solr/solr-security.json:/var/solr/data/security.json:ro
+      - ./scripts/solr/ranger-solr.sh:/opt/ranger/ranger-solr.sh:ro
+      - ./scripts/kdc/krb5.conf:/etc/krb5.conf:ro
     networks:
       - ranger
     ports:
