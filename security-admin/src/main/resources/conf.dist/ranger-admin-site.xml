@@ -278,11 +278,11 @@
 	</property>
 	<property>
 		<name>ranger.admin.authn.header.username</name>
-		<value>x-awc-username</value>
+		<value></value>
 	</property>
 	<property>
 		<name>ranger.admin.authn.header.requestid</name>
-		<value>x-awc-requestid</value>
+		<value></value>
 	</property>
 	<!-- Trusted header auth properties end -->
 	<!-- Kerberos Properties starts-->	
