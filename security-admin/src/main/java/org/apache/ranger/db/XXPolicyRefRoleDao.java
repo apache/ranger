@@ -19,14 +19,6 @@
 
 package org.apache.ranger.db;
 
-import org.apache.commons.collections.CollectionUtils;
-import org.apache.ranger.biz.RangerPolicyRetriever;
-import org.apache.ranger.common.db.BaseDao;
-import org.apache.ranger.entity.XXPolicyRefRole;
-import org.springframework.stereotype.Service;
-
-import javax.persistence.NoResultException;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -34,94 +26,96 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import javax.persistence.NoResultException;
+
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.ranger.biz.RangerPolicyRetriever;
+import org.apache.ranger.common.db.BaseDao;
+import org.apache.ranger.entity.XXPolicyRefRole;
+import org.springframework.stereotype.Service;
+
 @Service
-public class XXPolicyRefRoleDao extends BaseDao<XXPolicyRefRole> {
-    public XXPolicyRefRoleDao(RangerDaoManagerBase daoManager) {
+public class XXPolicyRefRoleDao extends BaseDao<XXPolicyRefRole>{
+
+
+    public XXPolicyRefRoleDao(RangerDaoManagerBase daoManager)  {
         super(daoManager);
     }
 
     public List<XXPolicyRefRole> findByPolicyId(Long policyId) {
-        if (policyId == null) {
-            return Collections.emptyList();
+        if(policyId == null) {
+            return Collections.EMPTY_LIST;
         }
-
         try {
             return getEntityManager()
                     .createNamedQuery("XXPolicyRefRole.findByPolicyId", tClass)
                     .setParameter("policyId", policyId).getResultList();
         } catch (NoResultException e) {
-            return Collections.emptyList();
+            return Collections.EMPTY_LIST;
         }
     }
-
     public List<XXPolicyRefRole> findByRoleName(String roleName) {
         if (roleName == null) {
-            return Collections.emptyList();
+            return Collections.EMPTY_LIST;
         }
-
         try {
             return getEntityManager().createNamedQuery("XXPolicyRefRole.findByRoleName", tClass)
                     .setParameter("roleName", roleName).getResultList();
         } catch (NoResultException e) {
-            return Collections.emptyList();
+            return Collections.EMPTY_LIST;
         }
     }
 
+    @SuppressWarnings("unchecked")
     public List<RangerPolicyRetriever.PolicyTextNameMap> findUpdatedRoleNamesByPolicy(Long policyId) {
         List<RangerPolicyRetriever.PolicyTextNameMap> ret = new ArrayList<>();
-
         if (policyId != null) {
-            List<Object[]> rows = getEntityManager()
-                    .createNamedQuery("XXPolicyRefRole.findUpdatedRoleNamesByPolicy", Object[].class)
+            List<Object[]> rows = (List<Object[]>) getEntityManager()
+                    .createNamedQuery("XXPolicyRefRole.findUpdatedRoleNamesByPolicy")
                     .setParameter("policy", policyId)
                     .getResultList();
-
             if (rows != null) {
                 for (Object[] row : rows) {
-                    ret.add(new RangerPolicyRetriever.PolicyTextNameMap((Long) row[0], (String) row[1], (String) row[2]));
+                    ret.add(new RangerPolicyRetriever.PolicyTextNameMap((Long)row[0], (String)row[1], (String)row[2]));
                 }
             }
         }
-
         return ret;
     }
 
+    @SuppressWarnings("unchecked")
     public List<RangerPolicyRetriever.PolicyTextNameMap> findUpdatedRoleNamesByService(Long serviceId) {
         List<RangerPolicyRetriever.PolicyTextNameMap> ret = new ArrayList<>();
-
         if (serviceId != null) {
-            List<Object[]> rows = getEntityManager()
-                    .createNamedQuery("XXPolicyRefRole.findUpdatedRoleNamesByService", Object[].class)
+            List<Object[]> rows = (List<Object[]>) getEntityManager()
+                    .createNamedQuery("XXPolicyRefRole.findUpdatedRoleNamesByService")
                     .setParameter("service", serviceId)
                     .getResultList();
-
             if (rows != null) {
                 for (Object[] row : rows) {
-                    ret.add(new RangerPolicyRetriever.PolicyTextNameMap((Long) row[0], (String) row[1], (String) row[2]));
+                    ret.add(new RangerPolicyRetriever.PolicyTextNameMap((Long)row[0], (String)row[1], (String)row[2]));
                 }
             }
         }
-
         return ret;
     }
 
-    public Long findRoleRefPolicyCount(String roleName) {
-        Long ret = -1L;
+	public Long findRoleRefPolicyCount(String roleName) {
+		Long ret = -1L;
 
-        try {
-            ret = getEntityManager().createNamedQuery("XXPolicyRefRole.findRoleRefPolicyCount", Long.class)
-                    .setParameter("roleName", roleName).getSingleResult();
-        } catch (Exception e) {
-            // ignore
-        }
+		try {
+			ret = getEntityManager().createNamedQuery("XXPolicyRefRole.findRoleRefPolicyCount", Long.class)
+					.setParameter("roleName", roleName).getSingleResult();
+		} catch (Exception e) {
+		}
 
-        return ret;
-    }
+		return ret;
+	}
 
-    public void deleteByPolicyId(Long policyId) {
-        if (policyId == null) {
-            return;
-        }
+	public void deleteByPolicyId(Long policyId) {
+		if(policyId == null) {
+			return;
+		}
 
         // First select ids according to policyId, then delete records according to ids
         // The purpose of dividing the delete sql into these two steps is to avoid deadlocks at rr isolation level
@@ -135,31 +129,32 @@ public class XXPolicyRefRoleDao extends BaseDao<XXPolicyRefRole> {
         }
 
         batchDeleteByIds("XXPolicyRefRole.deleteByIds", ids, "ids");
-    }
+	}
 
-    public Map<String, Long> findRoleNameIdByPolicyId(Long policyId) {
-        Map<String, Long> ret = Collections.emptyMap();
-        if (policyId != null) {
-            try {
-                Collection<Object[]> results = getEntityManager()
-                        .createNamedQuery("XXPolicyRefRole.findRoleNameIdByPolicyId", Object[].class)
-                        .setParameter("policyId", policyId)
-                        .getResultList();
-                ret = results.stream().collect(
-                        Collectors.toMap(
-                                object -> (String) object[0],
-                                object -> (Long) object[1]));
-            } catch (NoResultException e) {
-                // ignore
-            }
-        }
-        return ret;
-    }
+	public Map<String, Long> findRoleNameIdByPolicyId(Long policyId) {
+		Map<String, Long> ret = Collections.emptyMap();
+		if (policyId != null) {
+			try {
+				Collection<Object[]> results = getEntityManager()
+						.createNamedQuery("XXPolicyRefRole.findRoleNameIdByPolicyId", Object[].class)
+						.setParameter("policyId", policyId)
+						.getResultList();
+				ret = results.stream().collect(
+						Collectors.toMap(
+								object -> (String) object[0],
+								object -> (Long) object[1]));
+			} catch (NoResultException e) {
+				// ignore
+			}
+		}
+		return ret;
+	}
 
-    public void deletePolicyRefRoleByIds(List<Long> ids) {
-        if (CollectionUtils.isEmpty(ids)) {
-            return;
-        }
-        batchDeleteByIds("XXPolicyRefRole.deletePolicyRefRoleByIds", ids, "ids");
-    }
+	public void deletePolicyRefRoleByIds(List<Long> ids) {
+		if (CollectionUtils.isEmpty(ids)) {
+			return;
+		}
+		batchDeleteByIds("XXPolicyRefRole.deletePolicyRefRoleByIds", ids, "ids");
+	}
 }
+

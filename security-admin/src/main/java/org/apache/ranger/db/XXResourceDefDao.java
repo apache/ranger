@@ -17,15 +17,6 @@
 
 package org.apache.ranger.db;
 
-import org.apache.commons.collections.CollectionUtils;
-import org.apache.ranger.common.db.BaseDao;
-import org.apache.ranger.entity.XXResourceDef;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Service;
-
-import javax.persistence.NoResultException;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -34,99 +25,105 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import javax.persistence.NoResultException;
+
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.ranger.common.db.BaseDao;
+import org.apache.ranger.entity.XXResourceDef;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+
 @Service
 public class XXResourceDefDao extends BaseDao<XXResourceDef> {
-    private static final Logger logger = LoggerFactory.getLogger(XXResourceDefDao.class);
+	private static final Logger logger = LoggerFactory.getLogger(XXResourceDefDao.class);
 
-    public XXResourceDefDao(RangerDaoManagerBase daoMgr) {
-        super(daoMgr);
-    }
+	public XXResourceDefDao(RangerDaoManagerBase daoMgr) {
+		super(daoMgr);
+	}
+	
+	public XXResourceDef findByNameAndServiceDefId(String name, Long defId) {
+		if(name == null || defId == null) {
+			return null;
+		}
+		try {
+			return getEntityManager().createNamedQuery(
+					"XXResourceDef.findByNameAndDefId", tClass)
+					.setParameter("name", name).setParameter("defId", defId)
+					.getSingleResult();
+		} catch (NoResultException e) {
+			return null;
+		}
+	}
 
-    public XXResourceDef findByNameAndServiceDefId(String name, Long defId) {
-        if (name == null || defId == null) {
-            return null;
-        }
+	public List<XXResourceDef> findByServiceDefId(Long serviceDefId) {
+		if (serviceDefId == null) {
+			return new ArrayList<XXResourceDef>();
+		}
+		try {
+			List<XXResourceDef> retList = getEntityManager()
+					.createNamedQuery("XXResourceDef.findByServiceDefId", tClass)
+					.setParameter("serviceDefId", serviceDefId).getResultList();
+			return retList;
+		} catch (NoResultException e) {
+			return new ArrayList<XXResourceDef>();
+		}
+	}
+	
+	public List<XXResourceDef> findByPolicyId(Long policyId) {
+		if(policyId == null) {
+			return new ArrayList<XXResourceDef>();
+		}
+		try {
+			return getEntityManager()
+					.createNamedQuery("XXResourceDef.findByPolicyId", tClass)
+					.setParameter("policyId", policyId).getResultList();
+		} catch (NoResultException e) {
+			return new ArrayList<XXResourceDef>();
+		}
+	}
 
-        try {
-            return getEntityManager().createNamedQuery("XXResourceDef.findByNameAndDefId", tClass)
-                    .setParameter("name", name).setParameter("defId", defId)
-                    .getSingleResult();
-        } catch (NoResultException e) {
-            return null;
-        }
-    }
+	public XXResourceDef findByNameAndPolicyId(String name, Long policyId) {
+		if(policyId == null || name == null) {
+			return null;
+		}
+		try {
+			return getEntityManager()
+					.createNamedQuery("XXResourceDef.findByNameAndPolicyId", tClass)
+					.setParameter("policyId", policyId)
+					.setParameter("name", name).getSingleResult();
+		} catch (NoResultException e) {
+			return null;
+		}
+	}
 
-    public List<XXResourceDef> findByServiceDefId(Long serviceDefId) {
-        if (serviceDefId == null) {
-            return new ArrayList<>();
-        }
+	public List<XXResourceDef> findByParentResId(Long parentId) {
+		if(parentId == null) {
+			return new ArrayList<XXResourceDef>();
+		}
+		try {
+			return getEntityManager().createNamedQuery("XXResourceDef.findByParentResId", tClass)
+					.setParameter("parentId", parentId).getResultList();
+		} catch (NoResultException e) {
+			return new ArrayList<XXResourceDef>();
+		}
+	}
 
-        try {
-            return getEntityManager()
-                    .createNamedQuery("XXResourceDef.findByServiceDefId", tClass)
-                    .setParameter("serviceDefId", serviceDefId).getResultList();
-        } catch (NoResultException e) {
-            return new ArrayList<>();
-        }
-    }
+	public Map<String, Long> findResourceDefIdsByNameAndPolicyId(Set<String> names, Long policyId) {
+		if (policyId != null && CollectionUtils.isNotEmpty(names)) {
+			try {
+				Collection<Object[]> result = getEntityManager()
+						.createNamedQuery("XXResourceDef.findResourceDefIdsByNameAndPolicyId", Object[].class)
+						.setParameter("policyId", policyId)
+						.setParameter("names", names)
+						.getResultList();
 
-    public List<XXResourceDef> findByPolicyId(Long policyId) {
-        if (policyId == null) {
-            return new ArrayList<>();
-        }
+				return result.stream().collect(Collectors.toMap(object -> (String) object[1], object -> (Long) object[0], (a, b) -> a));
+			} catch (NoResultException e) {
+				logger.debug(e.getMessage());
+			}
+		}
 
-        try {
-            return getEntityManager()
-                    .createNamedQuery("XXResourceDef.findByPolicyId", tClass)
-                    .setParameter("policyId", policyId).getResultList();
-        } catch (NoResultException e) {
-            return new ArrayList<>();
-        }
-    }
-
-    public XXResourceDef findByNameAndPolicyId(String name, Long policyId) {
-        if (policyId == null || name == null) {
-            return null;
-        }
-
-        try {
-            return getEntityManager()
-                    .createNamedQuery("XXResourceDef.findByNameAndPolicyId", tClass)
-                    .setParameter("policyId", policyId)
-                    .setParameter("name", name).getSingleResult();
-        } catch (NoResultException e) {
-            return null;
-        }
-    }
-
-    public List<XXResourceDef> findByParentResId(Long parentId) {
-        if (parentId == null) {
-            return new ArrayList<>();
-        }
-
-        try {
-            return getEntityManager().createNamedQuery("XXResourceDef.findByParentResId", tClass)
-                    .setParameter("parentId", parentId).getResultList();
-        } catch (NoResultException e) {
-            return new ArrayList<>();
-        }
-    }
-
-    public Map<String, Long> findResourceDefIdsByNameAndPolicyId(Set<String> names, Long policyId) {
-        if (policyId != null && CollectionUtils.isNotEmpty(names)) {
-            try {
-                Collection<Object[]> result = getEntityManager()
-                        .createNamedQuery("XXResourceDef.findResourceDefIdsByNameAndPolicyId", Object[].class)
-                        .setParameter("policyId", policyId)
-                        .setParameter("names", names)
-                        .getResultList();
-
-                return result.stream().collect(Collectors.toMap(object -> (String) object[1], object -> (Long) object[0], (a, b) -> a));
-            } catch (NoResultException e) {
-                logger.debug(e.getMessage());
-            }
-        }
-
-        return Collections.emptyMap();
-    }
+		return Collections.emptyMap();
+	}
 }

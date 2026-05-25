@@ -19,14 +19,6 @@
 
 package org.apache.ranger.db;
 
-import org.apache.commons.collections.CollectionUtils;
-import org.apache.ranger.biz.RangerPolicyRetriever;
-import org.apache.ranger.common.db.BaseDao;
-import org.apache.ranger.entity.XXPolicyRefGroup;
-import org.springframework.stereotype.Service;
-
-import javax.persistence.NoResultException;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -34,119 +26,122 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import javax.persistence.NoResultException;
+
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.ranger.biz.RangerPolicyRetriever;
+import org.apache.ranger.common.db.BaseDao;
+import org.apache.ranger.entity.XXPolicyRefGroup;
+import org.springframework.stereotype.Service;
+
 @Service
-public class XXPolicyRefGroupDao extends BaseDao<XXPolicyRefGroup> {
-    public XXPolicyRefGroupDao(RangerDaoManagerBase daoManager) {
-        super(daoManager);
-    }
+public class XXPolicyRefGroupDao extends BaseDao<XXPolicyRefGroup>{
 
-    public List<XXPolicyRefGroup> findByPolicyId(Long policyId) {
-        if (policyId == null) {
-            return Collections.emptyList();
-        }
 
-        try {
-            return getEntityManager()
-                    .createNamedQuery("XXPolicyRefGroup.findByPolicyId", tClass)
-                    .setParameter("policyId", policyId).getResultList();
-        } catch (NoResultException e) {
-            return Collections.emptyList();
-        }
-    }
+	public XXPolicyRefGroupDao(RangerDaoManagerBase daoManager)  {
+		super(daoManager);
+	}
 
-    public List<XXPolicyRefGroup> findByGroupName(String groupName) {
-        if (groupName == null) {
-            return Collections.emptyList();
-        }
+	public List<XXPolicyRefGroup> findByPolicyId(Long policyId) {
+		if(policyId == null) {
+			return Collections.EMPTY_LIST;
+		}
+		try {
+			return getEntityManager()
+					.createNamedQuery("XXPolicyRefGroup.findByPolicyId", tClass)
+					.setParameter("policyId", policyId).getResultList();
+		} catch (NoResultException e) {
+			return Collections.EMPTY_LIST;
+		}
+	}
+	public List<XXPolicyRefGroup> findByGroupName(String groupName) {
+		if (groupName == null) {
+			return Collections.EMPTY_LIST;
+		}
+		try {
+			return getEntityManager().createNamedQuery("XXPolicyRefGroup.findByGroupName", tClass)
+					.setParameter("groupName", groupName).getResultList();
+		} catch (NoResultException e) {
+			return Collections.EMPTY_LIST;
+		}
+	}
 
-        try {
-            return getEntityManager().createNamedQuery("XXPolicyRefGroup.findByGroupName", tClass)
-                    .setParameter("groupName", groupName).getResultList();
-        } catch (NoResultException e) {
-            return Collections.emptyList();
-        }
-    }
-
+    @SuppressWarnings("unchecked")
     public List<RangerPolicyRetriever.PolicyTextNameMap> findUpdatedGroupNamesByPolicy(Long policyId) {
         List<RangerPolicyRetriever.PolicyTextNameMap> ret = new ArrayList<>();
-
         if (policyId != null) {
-            List<Object[]> rows = getEntityManager()
-                    .createNamedQuery("XXPolicyRefGroup.findUpdatedGroupNamesByPolicy", Object[].class)
+            List<Object[]> rows = (List<Object[]>) getEntityManager()
+                    .createNamedQuery("XXPolicyRefGroup.findUpdatedGroupNamesByPolicy")
                     .setParameter("policy", policyId)
                     .getResultList();
-
             if (rows != null) {
                 for (Object[] row : rows) {
-                    ret.add(new RangerPolicyRetriever.PolicyTextNameMap((Long) row[0], (String) row[1], (String) row[2]));
+                    ret.add(new RangerPolicyRetriever.PolicyTextNameMap((Long)row[0], (String)row[1], (String)row[2]));
                 }
             }
         }
-
         return ret;
     }
 
-    public List<RangerPolicyRetriever.PolicyTextNameMap> findUpdatedGroupNamesByService(Long serviceId) {
+	@SuppressWarnings("unchecked")
+	public List<RangerPolicyRetriever.PolicyTextNameMap> findUpdatedGroupNamesByService(Long serviceId) {
         List<RangerPolicyRetriever.PolicyTextNameMap> ret = new ArrayList<>();
-
         if (serviceId != null) {
-            List<Object[]> rows = getEntityManager()
-                    .createNamedQuery("XXPolicyRefGroup.findUpdatedGroupNamesByService", Object[].class)
+            List<Object[]> rows = (List<Object[]>) getEntityManager()
+                    .createNamedQuery("XXPolicyRefGroup.findUpdatedGroupNamesByService")
                     .setParameter("service", serviceId)
                     .getResultList();
-
             if (rows != null) {
                 for (Object[] row : rows) {
-                    ret.add(new RangerPolicyRetriever.PolicyTextNameMap((Long) row[0], (String) row[1], (String) row[2]));
+                    ret.add(new RangerPolicyRetriever.PolicyTextNameMap((Long)row[0], (String)row[1], (String)row[2]));
                 }
             }
         }
-
         return ret;
     }
 
-    public void deleteByPolicyId(Long policyId) {
-        if (policyId == null) {
-            return;
-        }
+	public void deleteByPolicyId(Long policyId) {
+		if(policyId == null) {
+			return;
+		}
 
-        // First select ids according to policyId, then delete records according to ids
-        // The purpose of dividing the delete sql into these two steps is to avoid deadlocks at rr isolation level
-        List<Long> ids = getEntityManager()
-                .createNamedQuery("XXPolicyRefGroup.findIdsByPolicyId", Long.class)
-                .setParameter("policyId", policyId)
-                .getResultList();
+		// First select ids according to policyId, then delete records according to ids
+		// The purpose of dividing the delete sql into these two steps is to avoid deadlocks at rr isolation level
+		List<Long> ids = getEntityManager()
+				.createNamedQuery("XXPolicyRefGroup.findIdsByPolicyId", Long.class)
+				.setParameter("policyId", policyId)
+				.getResultList();
 
-        if (CollectionUtils.isEmpty(ids)) {
-            return;
-        }
+		if (CollectionUtils.isEmpty(ids)) {
+			return;
+		}
 
-        batchDeleteByIds("XXPolicyRefGroup.deleteByIds", ids, "ids");
-    }
+		batchDeleteByIds("XXPolicyRefGroup.deleteByIds", ids, "ids");
+	}
 
-    public Map<String, Long> findGroupNameByPolicyId(Long policyId) {
-        Map<String, Long> ret = Collections.emptyMap();
-        if (policyId != null) {
-            try {
-                Collection<Object[]> results = getEntityManager()
-                        .createNamedQuery("XXPolicyRefGroup.findGroupNameByPolicyId", Object[].class)
-                        .setParameter("policyId", policyId)
-                        .getResultList();
-                ret = results.stream().collect(
-                        Collectors.toMap(
-                                object -> (String) object[0],
-                                object -> (Long) object[1]));
-            } catch (NoResultException e) {
-                // ignore
-            }
-        }
-        return ret;
-    }
+	public Map<String, Long> findGroupNameByPolicyId(Long policyId) {
+		Map<String, Long> ret = Collections.emptyMap();
+		if (policyId != null) {
+			try {
+				Collection<Object[]> results = getEntityManager()
+						.createNamedQuery("XXPolicyRefGroup.findGroupNameByPolicyId", Object[].class)
+						.setParameter("policyId", policyId)
+						.getResultList();
+				ret = results.stream().collect(
+						Collectors.toMap(
+								object -> (String) object[0],
+								object -> (Long) object[1]));
+			} catch (NoResultException e) {
+				// ignore
+			}
+		}
+		return ret;
+	}
 
-    public void deletePolicyRefGroupByIds(List<Long> ids) {
-        if (CollectionUtils.isEmpty(ids)) {
-            return;
-        }
-        batchDeleteByIds("XXPolicyRefGroup.deletePolicyRefGroupByIds", ids, "ids");
-    }
+	public void deletePolicyRefGroupByIds(List<Long> ids) {
+		if (CollectionUtils.isEmpty(ids)) {
+			return;
+		}
+		batchDeleteByIds("XXPolicyRefGroup.deletePolicyRefGroupByIds", ids, "ids");
+	}
 }
