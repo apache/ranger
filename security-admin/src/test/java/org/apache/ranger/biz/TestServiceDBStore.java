@@ -1835,10 +1835,11 @@ public class TestServiceDBStore {
 		Mockito.when(factory.createPolicyResourceSignature(rangerPolicy))
 				.thenReturn(signature);
 		Mockito.when(!bizUtil.hasAccess(xService, null)).thenReturn(true);
-        Mockito.when(policyRefUpdater.cleanupRefTables(rangerPolicy)).thenReturn(true);
+		Mockito.doNothing().when(policyRefUpdater).createNewPolMappingForRefTable(
+				Mockito.eq(rangerPolicy), Mockito.eq(xPolicy), Mockito.eq(xServiceDef),
+				Mockito.anyBoolean(), Mockito.eq(true));
 
-
-        RangerPolicy dbRangerPolicy = serviceDBStore.updatePolicy(rangerPolicy);
+		RangerPolicy dbRangerPolicy = serviceDBStore.updatePolicy(rangerPolicy);
 		Assert.assertNotNull(dbRangerPolicy);
 		Assert.assertEquals(dbRangerPolicy, rangerPolicy);
 		Assert.assertEquals(dbRangerPolicy.getId(), rangerPolicy.getId());
