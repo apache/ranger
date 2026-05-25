@@ -26,10 +26,17 @@ then
   ${RANGER_SCRIPTS}/wait_for_keytab.sh solr.keytab
   ${RANGER_SCRIPTS}/wait_for_testusers_keytab.sh
 
-  JAAS_CONFIG="-Djava.security.auth.login.config=/opt/solr/server/etc/jaas.conf"
+  if [ ! -e /var/solr/data/HTTP.keytab ]
+  then
+    cp /etc/keytabs/HTTP.keytab /var/solr/data/
+    cp /etc/keytabs/solr.keytab /var/solr/data/
+    chown solr:solr /var/solr/data/HTTP.keytab /var/solr/data/solr.keytab
+  fi
+
+  JAAS_CONFIG="-Djava.security.auth.login.config=/var/solr/data/jaas.conf"
   JAAS_APPNAME="-Dsolr.kerberos.jaas.appname=Client"
   KRB5_CONF="-Djava.security.krb5.conf=/etc/krb5.conf"
-  KERBEROS_KEYTAB="-Dsolr.kerberos.keytab=/etc/keytabs/HTTP.keytab"
+  KERBEROS_KEYTAB="-Dsolr.kerberos.keytab=/var/solr/data/HTTP.keytab"
   KERBEROS_PRINCIPAL="-Dsolr.kerberos.principal=HTTP/ranger-solr.rangernw@EXAMPLE.COM"
   COOKIE_DOMAIN="-Dsolr.kerberos.cookie.domain=ranger-solr"
   KERBEROS_NAME_RULES="-Dsolr.kerberos.name.rules=RULE:[2:\$1/\$2@\$0]([ndj]n/.*@EXAMPLE\.COM)s/.*/hdfs/\
@@ -38,7 +45,7 @@ RULE:[2:\$1/\$2@\$0](jhs/.*@EXAMPLE\.COM)s/.*/mapred/\
 DEFAULT"
 
   export SOLR_AUTHENTICATION_OPTS="${JAAS_CONFIG} ${JAAS_APPNAME} ${KRB5_CONF} ${KERBEROS_KEYTAB} ${KERBEROS_PRINCIPAL} ${COOKIE_DOMAIN} ${KERBEROS_NAME_RULES}"
-  export SOLR_AUTH_TYPE=kerberos
+  export SOLR_MODULES=hadoop-auth
 fi
 
 if [ ! -e ${SOLR_INSTALL_DIR}/.setupDone ]
@@ -49,4 +56,4 @@ then
   touch "${SOLR_INSTALL_DIR}"/.setupDone
 fi
 
-su -p -c "export PATH=${PATH} && /opt/docker-solr/scripts/docker-entrypoint.sh $*" solr
+su -p -c "export PATH=${PATH} && /opt/solr/docker/scripts/docker-entrypoint.sh $*" solr
