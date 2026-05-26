@@ -8,6 +8,19 @@
           "policyItems":[
             { "accesses":[ { "type": "_ALL", "isAllowed": true } ], "users": [ "ds-user", "ds1-user" ], "groups": []}
           ]
+        },
+        { "id": 2010, "name": "dataset-1-expired", "isEnabled": true, "isAuditEnabled": true,
+          "resources": { "dataset-id": { "values": ["1"] } },
+          "policyItems":[
+            {
+              "accesses":[ { "type": "_READ", "isAllowed": true } ],
+              "users": [ "expired-user" ],
+              "groups": [],
+              "conditions": [
+                { "type": "validitySchedule", "values": [ "{\"startTime\":\"2000/01/01 00:00:00\",\"endTime\":\"2000/01/02 00:00:00\",\"timeZone\":\"UTC\"}" ] }
+              ]
+            }
+          ]
         }
       ]
     },
