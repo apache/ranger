@@ -146,6 +146,9 @@ public class AssetMgr extends AssetMgrBase {
     ElasticSearchAccessAuditsService elasticSearchAccessAuditsService;
 
     @Autowired
+    org.apache.ranger.opensearch.OpenSearchAccessAuditsService openSearchAccessAuditsService;
+
+    @Autowired
     CloudWatchAccessAuditsService cloudWatchAccessAuditsService;
 
     @Autowired
@@ -761,6 +764,8 @@ public class AssetMgr extends AssetMgrBase {
             return solrAccessAuditsService.searchXAccessAudits(searchCriteria);
         } else if (RangerBizUtil.AUDIT_STORE_ELASTIC_SEARCH.equalsIgnoreCase(xaBizUtil.getAuditDBType())) {
             return elasticSearchAccessAuditsService.searchXAccessAudits(searchCriteria);
+        } else if (RangerBizUtil.AUDIT_STORE_OPENSEARCH.equalsIgnoreCase(xaBizUtil.getAuditDBType())) {
+            return openSearchAccessAuditsService.searchXAccessAudits(searchCriteria);
         } else if (RangerBizUtil.AUDIT_STORE_CLOUD_WATCH.equalsIgnoreCase(xaBizUtil.getAuditDBType())) {
             return cloudWatchAccessAuditsService.searchXAccessAudits(searchCriteria);
         } else {

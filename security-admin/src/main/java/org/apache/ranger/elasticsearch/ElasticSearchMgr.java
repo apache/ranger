@@ -168,6 +168,7 @@ public class ElasticSearchMgr {
                         RestClientBuilder restClientBuilder = getRestClientBuilder(urls, protocol, user, password, port);
 
                         client = new RestHighLevelClient(restClientBuilder);
+                        me     = client;
                     } catch (Throwable t) {
                         logger.error("Can't connect to ElasticSearch: {}", parameterString, t);
                     }
