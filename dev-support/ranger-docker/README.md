@@ -106,6 +106,72 @@ docker compose -f docker-compose.ranger.yml -f docker-compose.ranger-trino.yml u
 ~~~
 docker compose -f docker-compose.ranger.yml -f docker-compose.ranger-opensearch.yml up -d
 ~~~
+
+#### OpenSearch audit flow (replace Solr for access audits)
+
+OpenSearch can replace Solr for **audit storage and UI queries**. Ranger Admin reads audits via
+`audit_store=opensearch` using a native low-level REST client (compatible with any OpenSearch version).
+
+**Write path:** access audits flow through audit-server ingestor, Kafka, and the Java
+`ranger-audit-dispatcher-opensearch` service into the OpenSearch `ranger_audits` index.
+Ranger Admin policy/admin transaction audits remain DB-backed; this is the same boundary
+used by the Solr audit path.
+
+##### Quick start
+
+~~~
+# Prerequisites: build the audit-dispatcher tarball and download archives
+mvn clean package -DskipTests -pl distro -am
+cp target/ranger-*-audit-dispatcher.tar.gz dev-support/ranger-docker/dist/
+cd dev-support/ranger-docker
+./download-archives.sh kafka opensearch hadoop
+
+# Run the E2E test (starts stack, tests, tears down automatically)
+./scripts/audit/e2e-audit-opensearch.sh
+
+# Or keep the stack running after the test for debugging
+./scripts/audit/e2e-audit-opensearch.sh --no-teardown
+
+# Re-run just the test against an already-running stack
+./scripts/audit/e2e-audit-opensearch.sh --skip-start
+~~~
+
+##### Manual setup (advanced)
+
+For finer control, the individual steps can be run manually:
+
+~~~
+export RANGER_DB_TYPE=postgres
+
+# 1. Start OpenSearch first (Ranger Admin's bootstrapper needs it on startup)
+docker compose -f docker-compose.ranger.yml -f docker-compose.ranger-opensearch.yml \
+  -f docker-compose.ranger-kafka.yml -f docker-compose.ranger-hadoop.yml \
+  -f docker-compose.ranger-audit-server.yml \
+  -f docker-compose.ranger-audit-dispatcher-opensearch.yml up -d ranger-opensearch
+
+# 2. Start core stack (Ranger Admin, Kafka, Hadoop)
+#    Kafka auto-creates the ranger_audits topic on startup.
+#    Ranger Admin auto-creates the OpenSearch index via OpenSearchIndexBootStrapper.
+docker compose -f docker-compose.ranger.yml -f docker-compose.ranger-opensearch.yml \
+  -f docker-compose.ranger-kafka.yml -f docker-compose.ranger-hadoop.yml \
+  -f docker-compose.ranger-audit-server.yml \
+  -f docker-compose.ranger-audit-dispatcher-opensearch.yml up -d ranger ranger-kafka ranger-hadoop
+
+# 3. Start audit ingestor and OpenSearch dispatcher
+docker compose -f docker-compose.ranger.yml -f docker-compose.ranger-opensearch.yml \
+  -f docker-compose.ranger-kafka.yml -f docker-compose.ranger-hadoop.yml \
+  -f docker-compose.ranger-audit-server.yml \
+  -f docker-compose.ranger-audit-dispatcher-opensearch.yml up -d ranger-audit-ingestor ranger-audit-dispatcher-opensearch
+
+# 4. Run end-to-end audit test (--skip-start since stack is already up)
+./scripts/audit/e2e-audit-opensearch.sh --skip-start
+~~~
+
+For **fresh Ranger installs** using OpenSearch for audits, set `audit_store=opensearch` in
+`scripts/admin/ranger-admin-install-postgres.properties` and configure the `audit_opensearch_*` properties.
+
+For **existing Solr-based installs**, switching stores requires updating `audit_store=opensearch`
+in install.properties, configuring the `audit_opensearch_*` properties, and restarting Ranger Admin.
 Similarly, check the `depends` section of the `docker-compose.ranger-service.yaml` file and add docker-compose files for these services when trying to bring up the `service` container.
 
 #### Bring up all containers

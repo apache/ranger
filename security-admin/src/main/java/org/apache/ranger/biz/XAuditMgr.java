@@ -45,6 +45,9 @@ public class XAuditMgr extends XAuditMgrBase {
     ElasticSearchAccessAuditsService elasticSearchAccessAuditsService;
 
     @Autowired
+    org.apache.ranger.opensearch.OpenSearchAccessAuditsService openSearchAccessAuditsService;
+
+    @Autowired
     CloudWatchAccessAuditsService cloudWatchAccessAuditsService;
 
     @Autowired
@@ -118,6 +121,8 @@ public class XAuditMgr extends XAuditMgrBase {
             return solrAccessAuditsService.searchXAccessAudits(searchCriteria);
         } else if (RangerBizUtil.AUDIT_STORE_ELASTIC_SEARCH.equalsIgnoreCase(auditDBType)) {
             return elasticSearchAccessAuditsService.searchXAccessAudits(searchCriteria);
+        } else if (RangerBizUtil.AUDIT_STORE_OPENSEARCH.equalsIgnoreCase(auditDBType)) {
+            return openSearchAccessAuditsService.searchXAccessAudits(searchCriteria);
         } else if (RangerBizUtil.AUDIT_STORE_CLOUD_WATCH.equalsIgnoreCase(auditDBType)) {
             return cloudWatchAccessAuditsService.searchXAccessAudits(searchCriteria);
         } else {
@@ -133,6 +138,8 @@ public class XAuditMgr extends XAuditMgrBase {
             return solrAccessAuditsService.getXAccessAuditSearchCount(searchCriteria);
         } else if (RangerBizUtil.AUDIT_STORE_ELASTIC_SEARCH.equalsIgnoreCase(auditDBType)) {
             return elasticSearchAccessAuditsService.getXAccessAuditSearchCount(searchCriteria);
+        } else if (RangerBizUtil.AUDIT_STORE_OPENSEARCH.equalsIgnoreCase(auditDBType)) {
+            return openSearchAccessAuditsService.getXAccessAuditSearchCount(searchCriteria);
         } else if (RangerBizUtil.AUDIT_STORE_CLOUD_WATCH.equalsIgnoreCase(auditDBType)) {
             return cloudWatchAccessAuditsService.getXAccessAuditSearchCount(searchCriteria);
         } else {

@@ -34,6 +34,7 @@
         <module>dest-auditserver</module>
         <module>dest-cloudwatch</module>
         <module>dest-es</module>
+        <module>dest-os</module>
         <module>dest-hdfs</module>
         <module>dest-kafka</module>
         <module>dest-log4j</module>

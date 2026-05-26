@@ -36,10 +36,13 @@ COPY ./scripts/kdc/kdc.conf      /etc/krb5kdc/kdc.conf
 COPY ./scripts/kdc/kadm5.acl     /etc/krb5kdc/kadm5.acl
 COPY ./scripts/kdc/entrypoint.sh /entrypoint.sh
 
-RUN chmod +x /entrypoint.sh
+RUN chmod +x /entrypoint.sh && apt-get update && apt-get install -y netcat-openbsd && rm -rf /var/lib/apt/lists/*
 
 VOLUME /etc/keytabs
 
 EXPOSE 88/tcp 88/udp 749/tcp
+
+HEALTHCHECK --interval=5s --timeout=3s --start-period=120s --retries=30 \
+  CMD test -f /etc/keytabs/.provisioned && echo | nc -w 1 localhost 88 || exit 1
 
 ENTRYPOINT ["/entrypoint.sh"]

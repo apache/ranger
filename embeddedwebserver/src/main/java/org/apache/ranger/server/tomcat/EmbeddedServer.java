@@ -72,8 +72,10 @@ public class EmbeddedServer {
     private static final String AUDIT_SOURCE_TYPE                   = "ranger.audit.source.type";
     private static final String AUDIT_SOURCE_SOLR                   = "solr";
     private static final String AUDIT_SOURCE_ES                     = "elasticsearch";
+    private static final String AUDIT_SOURCE_OPENSEARCH             = "opensearch";
     private static final String SOLR_BOOTSTRAP_ENABLED              = "ranger.audit.solr.bootstrap.enabled";
     private static final String ES_BOOTSTRAP_ENABLED                = "ranger.audit.elasticsearch.bootstrap.enabled";
+    private static final String OS_BOOTSTRAP_ENABLED                = "ranger.audit.opensearch.bootstrap.enabled";
     private static final String ADMIN_USER_KEYTAB                   = "ranger.admin.kerberos.keytab";
     private static final String ADMIN_NAME_RULES                    = "hadoop.security.auth_to_local";
     private static final String ADMIN_SERVER_NAME                   = "rangeradmin";
@@ -449,6 +451,18 @@ public class EmbeddedServer {
                             esSchemaSetup.start();
                         } catch (Exception e) {
                             LOG.severe("Error while setting elasticsearch " + e);
+                        }
+                    }
+                } else if (AUDIT_SOURCE_OPENSEARCH.equalsIgnoreCase(auditSourceType)) {
+                    boolean osBootstrapEnabled = Boolean.parseBoolean(EmbeddedServerUtil.getConfig(OS_BOOTSTRAP_ENABLED, "true"));
+
+                    if (osBootstrapEnabled) {
+                        try {
+                            OpenSearchIndexBootStrapper osSchemaSetup = new OpenSearchIndexBootStrapper();
+
+                            osSchemaSetup.start();
+                        } catch (Exception e) {
+                            LOG.severe("Error while setting opensearch " + e);
                         }
                     }
                 }

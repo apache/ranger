@@ -433,6 +433,8 @@ public class AuditProviderFactory {
                 provider = createDestination("org.apache.ranger.audit.destination.SolrAuditDestination");
             } else if (providerName.equalsIgnoreCase("elasticsearch")) {
                 provider = createDestination("org.apache.ranger.audit.destination.ElasticSearchAuditDestination");
+            } else if (providerName.equalsIgnoreCase("opensearch")) {
+                provider = createDestination("org.apache.ranger.audit.destination.OpenSearchAuditDestination");
             } else if (providerName.equalsIgnoreCase("amazon_cloudwatch")) {
                 provider = createDestination("org.apache.ranger.audit.destination.AmazonCloudWatchAuditDestination");
             } else if (providerName.equalsIgnoreCase("kafka")) {

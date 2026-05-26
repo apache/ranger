@@ -102,6 +102,13 @@ audit_elasticsearch_user=$(get_prop 'audit_elasticsearch_user' $PROPFILE)
 audit_elasticsearch_password=$(get_prop 'audit_elasticsearch_password' $PROPFILE)
 audit_elasticsearch_index=$(get_prop 'audit_elasticsearch_index' $PROPFILE)
 audit_elasticsearch_bootstrap_enabled=$(get_prop 'audit_elasticsearch_bootstrap_enabled' $PROPFILE)
+audit_opensearch_urls=$(get_prop 'audit_opensearch_urls' $PROPFILE)
+audit_opensearch_protocol=$(get_prop 'audit_opensearch_protocol' $PROPFILE)
+audit_opensearch_port=$(get_prop 'audit_opensearch_port' $PROPFILE)
+audit_opensearch_user=$(get_prop 'audit_opensearch_user' $PROPFILE)
+audit_opensearch_password=$(get_prop 'audit_opensearch_password' $PROPFILE)
+audit_opensearch_index=$(get_prop 'audit_opensearch_index' $PROPFILE)
+audit_opensearch_bootstrap_enabled=$(get_prop 'audit_opensearch_bootstrap_enabled' $PROPFILE)
 audit_solr_urls=$(get_prop 'audit_solr_urls' $PROPFILE)
 audit_solr_user=$(get_prop_or_default 'audit_solr_user' $PROPFILE '')
 audit_solr_password=$(get_prop_or_default 'audit_solr_password' $PROPFILE '')
@@ -302,6 +309,16 @@ init_variables(){
 		fi
 		if [ "${audit_elasticsearch_port}" == "" ] ;then
 			log "[I] Please provide valid port for 'elasticsearch' audit store!"
+			exit 1
+		fi
+	fi
+	if [ "${audit_store}" == "opensearch" ] ;then
+		if [ "${audit_opensearch_urls}" == "" ] ;then
+			log "[I] Please provide valid URL for 'opensearch' audit store!"
+			exit 1
+		fi
+		if [ "${audit_opensearch_port}" == "" ] ;then
+			log "[I] Please provide valid port for 'opensearch' audit store!"
 			exit 1
 		fi
 	fi
@@ -853,6 +870,38 @@ update_properties() {
 
 		propertyName=ranger.audit.elasticsearch.bootstrap.enabled
 		newPropertyValue=${audit_elasticsearch_bootstrap_enabled}
+		updatePropertyToFilePy $propertyName "${newPropertyValue}" $to_file_ranger
+
+	fi
+
+	if [ "${audit_store}" == "opensearch" ]
+	then
+		propertyName=ranger.audit.opensearch.urls
+		newPropertyValue=${audit_opensearch_urls}
+		updatePropertyToFilePy $propertyName "${newPropertyValue}" $to_file_ranger
+
+		propertyName=ranger.audit.opensearch.protocol
+		newPropertyValue=${audit_opensearch_protocol}
+		updatePropertyToFilePy $propertyName "${newPropertyValue}" $to_file_ranger
+
+		propertyName=ranger.audit.opensearch.port
+		newPropertyValue=${audit_opensearch_port}
+		updatePropertyToFilePy $propertyName "${newPropertyValue}" $to_file_ranger
+
+		propertyName=ranger.audit.opensearch.user
+		newPropertyValue=${audit_opensearch_user}
+		updatePropertyToFilePy $propertyName "${newPropertyValue}" $to_file_ranger
+
+		propertyName=ranger.audit.opensearch.password
+		newPropertyValue=${audit_opensearch_password}
+		updatePropertyToFilePy $propertyName "${newPropertyValue}" $to_file_ranger
+
+		propertyName=ranger.audit.opensearch.index
+		newPropertyValue=${audit_opensearch_index}
+		updatePropertyToFilePy $propertyName "${newPropertyValue}" $to_file_ranger
+
+		propertyName=ranger.audit.opensearch.bootstrap.enabled
+		newPropertyValue=${audit_opensearch_bootstrap_enabled}
 		updatePropertyToFilePy $propertyName "${newPropertyValue}" $to_file_ranger
 
 	fi

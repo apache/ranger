@@ -22,9 +22,15 @@
 #
 
 #
-# source .env file to get versions to download
+# Load .env file to get versions to download. Do not source it directly:
+# values like JAVA_OPTS contain spaces and are valid for docker compose .env
+# files, but not valid shell assignments unless quoted.
 #
-source .env
+while IFS='=' read -r key value; do
+  if [[ "${key}" =~ ^[A-Za-z_][A-Za-z0-9_]*$ ]]; then
+    export "${key}=${value}"
+  fi
+done < .env
 
 
 downloadIfNotPresent() {
