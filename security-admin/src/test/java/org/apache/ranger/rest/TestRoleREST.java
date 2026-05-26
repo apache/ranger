@@ -1214,7 +1214,6 @@ public class TestRoleREST {
 
         List<String> roleList   = createRoleList();
         RangerRole   rangerRole = createRole();
-        boolean isRefTableCleanupRequired = true;
 
         SearchFilter filter = new SearchFilter();
 
@@ -1227,7 +1226,8 @@ public class TestRoleREST {
         Mockito.when(searchUtil.getSearchFilter(request, roleService.sortFields)).thenReturn(filter);
         Mockito.when(roleStore.getRoleNames(Mockito.any(SearchFilter.class))).thenReturn(roleList);
         Mockito.when(roleStore.getRole(Mockito.anyString())).thenReturn(rangerRole);
-        Mockito.when(roleStore.createRole(Mockito.any(RangerRole.class), eq(createNonExistUserGroupRole), eq(isRefTableCleanupRequired))).thenReturn(rangerRole);
+        Mockito.when(roleStore.createRole(Mockito.any(RangerRole.class), eq(createNonExistUserGroupRole), eq(false))).thenReturn(rangerRole);
+        Mockito.when(roleStore.updateRole(Mockito.any(RangerRole.class), eq(createNonExistUserGroupRole), eq(true))).thenReturn(rangerRole);
 
         RESTResponse resp = roleRest.importRolesFromFile(request, uploadedInputStream, fileDetail, updateIfExists, createNonExistUserGroupRole);
         Assertions.assertNotNull(resp);
