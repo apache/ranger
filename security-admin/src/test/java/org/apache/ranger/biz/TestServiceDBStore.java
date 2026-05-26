@@ -1688,7 +1688,7 @@ public class TestServiceDBStore {
 
 		Mockito.when(daoManager.getXXPolicy()).thenReturn(xPolicyDao);
 		Mockito.when(xPolicyDao.getById(Id)).thenReturn(xPolicy);
-		Mockito.doNothing().when(policyRefUpdater).createNewPolMappingForRefTable(rangerPolicy, xPolicy, xServiceDef, false);
+		Mockito.doNothing().when(policyRefUpdater).createNewPolMappingForRefTable(rangerPolicy, xPolicy, xServiceDef, false, false);
 		Mockito.when(policyService.getPopulatedViewObject(xPolicy)).thenReturn(rangerPolicy);
 
 		Mockito.when(daoManager.getXXService()).thenReturn(xServiceDao);
@@ -1835,10 +1835,11 @@ public class TestServiceDBStore {
 		Mockito.when(factory.createPolicyResourceSignature(rangerPolicy))
 				.thenReturn(signature);
 		Mockito.when(!bizUtil.hasAccess(xService, null)).thenReturn(true);
-        Mockito.when(policyRefUpdater.cleanupRefTables(rangerPolicy)).thenReturn(true);
+		Mockito.doNothing().when(policyRefUpdater).createNewPolMappingForRefTable(
+				Mockito.eq(rangerPolicy), Mockito.eq(xPolicy), Mockito.eq(xServiceDef),
+				Mockito.anyBoolean(), Mockito.eq(true));
 
-
-        RangerPolicy dbRangerPolicy = serviceDBStore.updatePolicy(rangerPolicy);
+		RangerPolicy dbRangerPolicy = serviceDBStore.updatePolicy(rangerPolicy);
 		Assert.assertNotNull(dbRangerPolicy);
 		Assert.assertEquals(dbRangerPolicy, rangerPolicy);
 		Assert.assertEquals(dbRangerPolicy.getId(), rangerPolicy.getId());

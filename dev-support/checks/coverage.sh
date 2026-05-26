@@ -49,6 +49,10 @@ find . -type d -name 'target' -prune -exec find {} -type f \( -name 'ranger-*.ja
 -or -name '*shim*' -prune \
 | xargs -n1 unzip -o -q -d target/coverage-classes
 
+# Multi-release JARs (e.g. BouncyCastle) ship the same classes under
+# META-INF/versions/* and at the root; JaCoCo fails with duplicate class names.
+rm -rf target/coverage-classes/META-INF/versions || true
+
 # get all source file paths
 src=$(find . -path '*/src/main/java' -o -path './target' -prune | sed 's/^/--sourcefiles /g' | xargs echo)
 

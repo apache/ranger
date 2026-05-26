@@ -18,16 +18,25 @@
 package org.apache.ranger.db;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.persistence.NoResultException;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.ranger.common.db.BaseDao;
 import org.apache.ranger.entity.XXAccessTypeDef;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 @Service
 public class XXAccessTypeDefDao extends BaseDao<XXAccessTypeDef> {
+	private static final Logger logger = LoggerFactory.getLogger(XXAccessTypeDefDao.class);
 
 	public XXAccessTypeDefDao(RangerDaoManagerBase daoManager) {
 		super(daoManager);
@@ -59,5 +68,23 @@ public class XXAccessTypeDefDao extends BaseDao<XXAccessTypeDef> {
 		} catch (NoResultException e) {
 			return null;
 		}
+	}
+
+	public Map<String, Long> findAccessTypeDefIdsByNamesAndServiceId(Set<String> names, Long serviceId) {
+		if (serviceId != null && CollectionUtils.isNotEmpty(names)) {
+			try {
+				Collection<Object[]> result = getEntityManager()
+						.createNamedQuery("XXAccessTypeDef.findAccessTypeDefIdsByNamesAndServiceId", Object[].class)
+						.setParameter("names", names)
+						.setParameter("serviceId", serviceId)
+						.getResultList();
+
+				return result.stream().collect(Collectors.toMap(object -> (String) object[1], object -> (Long) object[0], (a, b) -> a));
+			} catch (NoResultException e) {
+				logger.debug(e.getMessage());
+			}
+		}
+
+		return Collections.emptyMap();
 	}
 }

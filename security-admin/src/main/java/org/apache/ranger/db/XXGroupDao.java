@@ -21,10 +21,14 @@ package org.apache.ranger.db;
 
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.ranger.authorization.utils.JsonUtils;
 import org.apache.ranger.common.RangerCommonEnums;
@@ -115,6 +119,23 @@ public class XXGroupDao extends BaseDao<XXGroup> {
 		}
 
 		return ret;
+	}
+
+	public Map<String, Long> getIdsByGroupNames(Collection<String> groupNames) {
+		if (CollectionUtils.isNotEmpty(groupNames)) {
+			try {
+				Collection<Object[]> result = getEntityManager()
+						.createNamedQuery("XXGroup.getIdsByGroupNames", Object[].class)
+						.setParameter("names", groupNames)
+						.getResultList();
+
+				return result.stream().collect(Collectors.toMap(object -> (String) (object[1]), object -> (Long) (object[0])));
+			} catch (NoResultException excp) {
+				logger.debug(excp.getMessage());
+			}
+		}
+
+		return Collections.emptyMap();
 	}
 
 	private GroupInfo toGroupInfo(Object[] row) {

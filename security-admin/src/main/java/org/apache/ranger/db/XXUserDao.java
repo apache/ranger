@@ -21,6 +21,7 @@ package org.apache.ranger.db;
 
 import javax.persistence.NoResultException;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.ListUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.ranger.authorization.utils.JsonUtils;
@@ -33,12 +34,15 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
-import java.util.Set;
-import java.util.HashSet;
-import java.util.Map;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import static org.apache.ranger.plugin.util.RangerCommonConstants.*;
 
@@ -184,6 +188,23 @@ public class XXUserDao extends BaseDao<XXUser> {
 		}
 
 		return ret;
+	}
+
+	public Map<String, Long> getIdsByUserNames(Collection<String> names) {
+		if (CollectionUtils.isNotEmpty(names)) {
+			try {
+				Collection<Object[]> result = getEntityManager()
+						.createNamedQuery("XXUser.getIdsByUserNames", Object[].class)
+						.setParameter("names", names)
+						.getResultList();
+
+				return result.stream().collect(Collectors.toMap(object -> (String) (object[1]), object -> (Long) (object[0])));
+			} catch (NoResultException e) {
+				logger.debug(e.getMessage());
+			}
+		}
+
+		return Collections.emptyMap();
 	}
 
 	private UserInfo toUserInfo(Object[] row) {

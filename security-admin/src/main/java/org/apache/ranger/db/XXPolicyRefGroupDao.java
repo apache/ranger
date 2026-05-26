@@ -20,8 +20,11 @@
 package org.apache.ranger.db;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import javax.persistence.NoResultException;
 
@@ -114,5 +117,31 @@ public class XXPolicyRefGroupDao extends BaseDao<XXPolicyRefGroup>{
 		}
 
 		batchDeleteByIds("XXPolicyRefGroup.deleteByIds", ids, "ids");
+	}
+
+	public Map<String, Long> findGroupNameByPolicyId(Long policyId) {
+		Map<String, Long> ret = Collections.emptyMap();
+		if (policyId != null) {
+			try {
+				Collection<Object[]> results = getEntityManager()
+						.createNamedQuery("XXPolicyRefGroup.findGroupNameByPolicyId", Object[].class)
+						.setParameter("policyId", policyId)
+						.getResultList();
+				ret = results.stream().collect(
+						Collectors.toMap(
+								object -> (String) object[0],
+								object -> (Long) object[1]));
+			} catch (NoResultException e) {
+				// ignore
+			}
+		}
+		return ret;
+	}
+
+	public void deletePolicyRefGroupByIds(List<Long> ids) {
+		if (CollectionUtils.isEmpty(ids)) {
+			return;
+		}
+		batchDeleteByIds("XXPolicyRefGroup.deletePolicyRefGroupByIds", ids, "ids");
 	}
 }
