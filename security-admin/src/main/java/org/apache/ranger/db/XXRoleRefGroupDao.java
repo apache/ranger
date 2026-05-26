@@ -26,8 +26,11 @@ import org.springframework.stereotype.Service;
 
 import javax.persistence.NoResultException;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 public class XXRoleRefGroupDao extends BaseDao<XXRoleRefGroup> {
@@ -90,6 +93,25 @@ public class XXRoleRefGroupDao extends BaseDao<XXRoleRefGroup> {
         } catch (NoResultException e) {
             return Collections.emptyList();
         }
+    }
+
+    public Map<String, Long> findGroupNameIdByRoleId(Long roleId) {
+        Map<String, Long> ret = Collections.emptyMap();
+        if (roleId != null) {
+            try {
+                Collection<Object[]> results = getEntityManager()
+                        .createNamedQuery("XXRoleRefGroup.findGroupNameIdByRoleId", Object[].class)
+                        .setParameter("roleId", roleId)
+                        .getResultList();
+                ret = results.stream().collect(
+                        Collectors.toMap(
+                                object -> (String) object[0],
+                                object -> (Long) object[1]));
+            } catch (NoResultException e) {
+                // ignore
+            }
+        }
+        return ret;
     }
 
     public void deleteRoleRefGroupByIds(List<Long> ids) {

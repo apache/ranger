@@ -400,7 +400,7 @@ public class TestPolicyRefUpdater {
         when(roleDao.findByRoleName("rNew")).thenReturn(null);
         RangerRole createdRole = new RangerRole("rNew", null, null, null, null);
         createdRole.setId(33L);
-        when(roleStore.createRole(Mockito.any(RangerRole.class), Mockito.eq(false))).thenReturn(createdRole);
+        when(roleStore.createRole(Mockito.any(RangerRole.class), Mockito.eq(false), Mockito.eq(false))).thenReturn(createdRole);
         XXPolicyRefRoleDao polRoleDao = mock(XXPolicyRefRoleDao.class);
         when(daoMgr.getXXPolicyRefRole()).thenReturn(polRoleDao);
 

@@ -632,7 +632,7 @@ public class PolicyRefUpdater {
 
             try {
                 RangerRole rRole       = new RangerRole(name, null, null, null, null);
-                RangerRole createdRole = roleStore.createRole(rRole, false);
+                RangerRole createdRole = roleStore.createRole(rRole, false, false);
 
                 return createdRole.getId();
             } catch (Exception e) {

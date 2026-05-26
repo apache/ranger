@@ -44,9 +44,12 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.lang.reflect.Field;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anySet;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
@@ -137,16 +140,26 @@ public class TestRoleRefUpdater {
         xg.setId(22L);
         XXRole xr = new XXRole();
         xr.setId(33L);
-        when(xUserDao.findByUserName("u1")).thenReturn(xu);
-        when(xGroupDao.findByGroupName("g1")).thenReturn(xg);
-        when(xRoleDao.findByRoleName("r1")).thenReturn(xr);
+        when(xRoleDao.findByRoleId(5L)).thenReturn(xr);
+        when(urd.findUserNameIdMapByRoleId(5L)).thenReturn(Collections.emptyMap());
+        when(grd.findGroupNameIdByRoleId(5L)).thenReturn(Collections.emptyMap());
+        when(rrd.findSubRoleNameIdByRoleId(5L)).thenReturn(Collections.emptyMap());
+        Map<String, Long> userIds = new HashMap<>();
+        userIds.put("u1", 11L);
+        Map<String, Long> groupIds = new HashMap<>();
+        groupIds.put("g1", 22L);
+        Map<String, Long> roleIds = new HashMap<>();
+        roleIds.put("r1", 33L);
+        when(xUserDao.getIdsByUserNames(anySet())).thenReturn(userIds);
+        when(xGroupDao.getIdsByGroupNames(anySet())).thenReturn(groupIds);
+        when(xRoleDao.getIdsByRoleNames(anySet())).thenReturn(roleIds);
 
         RangerRole role = buildRole(5L, Collections.singletonList("u1"), Collections.singletonList("g1"),
                 Collections.singletonList("r1"));
-        updater.createNewRoleMappingForRefTable(role, true);
-        verify(urd, times(1)).create(any(XXRoleRefUser.class));
-        verify(grd, times(1)).create(any(XXRoleRefGroup.class));
-        verify(rrd, times(1)).create(any(XXRoleRefRole.class));
+        updater.createNewRoleMappingForRefTable(role, true, true);
+        verify(urd, times(1)).batchCreate(any());
+        verify(grd, times(1)).batchCreate(any());
+        verify(rrd, times(1)).batchCreate(any());
     }
 
     @Test
@@ -168,20 +181,69 @@ public class TestRoleRefUpdater {
         when(dao.getXXRoleRefUser()).thenReturn(urd);
         when(dao.getXXRoleRefGroup()).thenReturn(grd);
         when(dao.getXXRoleRefRole()).thenReturn(rrd);
-        when(urd.findIdsByRoleId(7L)).thenReturn(Collections.emptyList());
-        when(grd.findIdsByRoleId(7L)).thenReturn(Collections.emptyList());
-        when(rrd.findIdsByRoleId(7L)).thenReturn(Collections.emptyList());
+        when(urd.findUserNameIdMapByRoleId(7L)).thenReturn(Collections.emptyMap());
+        when(grd.findGroupNameIdByRoleId(7L)).thenReturn(Collections.emptyMap());
+        when(rrd.findSubRoleNameIdByRoleId(7L)).thenReturn(Collections.emptyMap());
+        when(xUserDao.getIdsByUserNames(anySet())).thenReturn(Collections.emptyMap());
         when(biz.checkAdminAccess()).thenReturn(false);
 
         RangerRole role = buildRole(7L, Collections.singletonList("missingUser"), Collections.emptyList(),
                 Collections.emptyList());
         RuntimeException expected = new RuntimeException("missing");
         when(rest.createRESTException(anyString(), any())).thenThrow(expected);
-        Assertions.assertThrows(RuntimeException.class, () -> updater.createNewRoleMappingForRefTable(role, false));
+        Assertions.assertThrows(RuntimeException.class, () -> updater.createNewRoleMappingForRefTable(role, false, false));
 
-        // allow creation: should schedule associator
+        // allow creation: should schedule associator (principal creation runs on transaction commit)
         when(biz.checkAdminAccess()).thenReturn(true);
-        updater.createNewRoleMappingForRefTable(role, true);
+        updater.createNewRoleMappingForRefTable(role, true, true);
         verify(adapter, times(1)).executeOnTransactionCommit(any(Runnable.class));
+    }
+
+    @Test
+    public void test04_cleanupRefTablesForUpdate_selectivePrincipalCleanup() throws Exception {
+        RoleRefUpdater updater = new RoleRefUpdater();
+        RangerDaoManager dao = mock(RangerDaoManager.class);
+        XXRoleRefUserDao urd = mock(XXRoleRefUserDao.class);
+        XXRoleRefGroupDao grd = mock(XXRoleRefGroupDao.class);
+        XXRoleRefRoleDao rrd = mock(XXRoleRefRoleDao.class);
+        when(dao.getXXRoleRefUser()).thenReturn(urd);
+        when(dao.getXXRoleRefGroup()).thenReturn(grd);
+        when(dao.getXXRoleRefRole()).thenReturn(rrd);
+        setField(updater, RoleRefUpdater.class, "daoMgr", dao);
+
+        final Long roleId = 100L;
+        java.util.Set<String> roleUsers = new java.util.HashSet<>(Arrays.asList("alice", "bob", "carol"));
+        java.util.Set<String> roleRoles = new java.util.HashSet<>(Arrays.asList("roleA", "roleB", "roleNew"));
+        java.util.Set<String> roleGroups = new java.util.HashSet<>(Arrays.asList("grp1", "grp2", "grpNew"));
+
+        Map<String, Long> existingUsers = new HashMap<>();
+        existingUsers.put("alice", 1L);
+        existingUsers.put("bob", 2L);
+        existingUsers.put("dave", 4L);
+
+        Map<String, Long> existingRoles = new HashMap<>();
+        existingRoles.put("roleA", 10L);
+        existingRoles.put("roleOld", 12L);
+
+        Map<String, Long> existingGroups = new HashMap<>();
+        existingGroups.put("grp1", 20L);
+        existingGroups.put("grpOld", 22L);
+
+        when(urd.findUserNameIdMapByRoleId(roleId)).thenReturn(existingUsers);
+        when(rrd.findSubRoleNameIdByRoleId(roleId)).thenReturn(existingRoles);
+        when(grd.findGroupNameIdByRoleId(roleId)).thenReturn(existingGroups);
+
+        RangerRole role = new RangerRole("role", null, null, null, null);
+        role.setId(roleId);
+        Assertions.assertTrue(updater.cleanupRefTablesForUpdate(role, roleUsers, roleGroups, roleRoles));
+
+        verify(urd).deleteRoleRefUserByIds(Collections.singletonList(4L));
+        Assertions.assertEquals(Collections.singleton("carol"), roleUsers);
+
+        verify(rrd).deleteRoleRefRoleByIds(Collections.singletonList(12L));
+        Assertions.assertEquals(new java.util.HashSet<>(Arrays.asList("roleB", "roleNew")), roleRoles);
+
+        verify(grd).deleteRoleRefGroupByIds(Collections.singletonList(22L));
+        Assertions.assertEquals(new java.util.HashSet<>(Arrays.asList("grp2", "grpNew")), roleGroups);
     }
 }
