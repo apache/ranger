@@ -87,17 +87,6 @@ public class XXRoleRefUserDao extends BaseDao<XXRoleRefUser> {
         return ret;
     }
 
-    public Long getMaxIdOfXXRoleRefUser() {
-        try {
-            Long maxId = getEntityManager()
-                    .createNamedQuery("XXRoleRefUser.getMaxIdOfXXRoleRefUser", Long.class)
-                    .getSingleResult();
-            return maxId != null ? maxId : 0L;
-        } catch (NoResultException e) {
-            return 0L;
-        }
-    }
-
     public List<XXRoleRefUser> findByUserId(Long userId) {
         if (userId == null) {
             return Collections.emptyList();

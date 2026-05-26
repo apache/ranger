@@ -2016,12 +2016,8 @@
 				<query>select obj.id from XXRoleRefUser obj  where obj.roleId = :roleId</query>
 		</named-query>
 
-	<named-query name="XXRoleRefUser.findUserNameIdByRoleId">
-				<query>SELECT obj.userName, obj.id FROM XXRoleRefUser obj WHERE obj.roleId = :roleId</query>
-	</named-query>
-
-		<named-query name="XXRoleRefUser.getMaxIdOfXXRoleRefUser">
-				<query>select MAX(obj.id) from XXRoleRefUser obj</query>
+		<named-query name="XXRoleRefUser.findUserNameIdByRoleId">
+					<query>SELECT obj.userName, obj.id FROM XXRoleRefUser obj WHERE obj.roleId = :roleId</query>
 		</named-query>
 
     <named-query name="XXRoleRefUser.findByUserId">
