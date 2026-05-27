@@ -22,14 +22,9 @@ FROM ${RANGER_BASE_IMAGE}:${RANGER_BASE_VERSION}
 ARG RANGER_VERSION
 ARG KERBEROS_ENABLED
 
-# Install required packages including Kerberos client
+# Install additional packages not in the base image
 RUN apt-get update && apt-get install -y \
-    python3 \
-    python3-pip \
-    curl \
-    vim \
     net-tools \
-    krb5-user \
     && rm -rf /var/lib/apt/lists/*
 
 # Volume for keytabs

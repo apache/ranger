@@ -171,4 +171,3 @@ volumes:
 networks:
   ranger:
     name: rangernw
-    external: true
