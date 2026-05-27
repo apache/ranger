@@ -115,7 +115,7 @@ public class RoleDBStore implements RoleStore {
             throw new Exception("Cannot create role:[" + role + "]");
         }
 
-        roleRefUpdater.createNewRoleMappingForRefTable(createdRole, createNonExistUserGroupRole, false);
+        roleRefUpdater.createNewRoleMappingForRefTable(createdRole, createNonExistUserGroupRole, isRefTableCleanupRequired);
 
         roleService.createTransactionLog(createdRole, null, RangerBaseModelService.OPERATION_CREATE_CONTEXT);
 
@@ -150,7 +150,7 @@ public class RoleDBStore implements RoleStore {
             throw new Exception("Cannot update role:[" + role + "]");
         }
 
-        roleRefUpdater.createNewRoleMappingForRefTable(updatedRole, createNonExistUserGroupRole, true);
+        roleRefUpdater.createNewRoleMappingForRefTable(updatedRole, createNonExistUserGroupRole, isRefTableCleanupRequired);
 
         roleService.updatePolicyVersions(updatedRole.getId());
 

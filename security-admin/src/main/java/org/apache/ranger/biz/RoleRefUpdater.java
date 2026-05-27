@@ -91,8 +91,9 @@ public class RoleRefUpdater {
 
         boolean oldBulkMode = RangerBizUtil.isBulkMode();
 
-        final Long        roleId     = rangerRole.getId();
-        final Set<String> roleUsers  = new HashSet<>();
+        final Long        roleId      = rangerRole.getId();
+        final boolean     roleExists  = roleId != null && daoMgr.getXXRole().getById(roleId) != null;
+        final Set<String> roleUsers   = new HashSet<>();
         final Set<String> roleGroups = new HashSet<>();
         final Set<String> roleRoles  = new HashSet<>();
 
@@ -126,7 +127,7 @@ public class RoleRefUpdater {
 
             for (String userName : filteredUserNames) {
                 Long               userId      = userNameIdMap.get(userName);
-                RoleUserAssociator associator = new RoleUserAssociator(userName, userId, roleId);
+                RoleUserAssociator associator = new RoleUserAssociator(userName, userId, roleId, roleExists);
 
                 if (userId != null) {
                     XXRoleRefUser userRef = associator.getRoleRef();
@@ -156,7 +157,7 @@ public class RoleRefUpdater {
 
             for (String groupName : filteredGroupNames) {
                 Long                groupId     = groupNameIdMap.get(groupName);
-                RoleGroupAssociator associator = new RoleGroupAssociator(groupName, groupId, roleId);
+                RoleGroupAssociator associator = new RoleGroupAssociator(groupName, groupId, roleId, roleExists);
 
                 if (groupId != null) {
                     XXRoleRefGroup groupRef = associator.getRoleRef();
@@ -186,7 +187,7 @@ public class RoleRefUpdater {
 
             for (String subRoleName : filteredSubRoleNames) {
                 Long               subRoleId  = subRoleNameIdMap.get(subRoleName);
-                RoleRoleAssociator associator = new RoleRoleAssociator(subRoleName, subRoleId, roleId);
+                RoleRoleAssociator associator = new RoleRoleAssociator(subRoleName, subRoleId, roleId, roleExists);
 
                 if (subRoleId != null) {
                     XXRoleRefRole roleRef = associator.getRoleRef();
@@ -393,25 +394,23 @@ public class RoleRefUpdater {
         }
     }
 
-    private boolean doesRoleExist(Long roleId) {
-        return roleId != null && daoMgr.getXXRole().findByRoleId(roleId) != null;
-    }
-
     private class RoleUserAssociator implements Runnable {
-        private final String name;
-        private final Long   userId;
-        private final Long   roleId;
+        private final String  name;
+        private final Long    userId;
+        private final Long    roleId;
+        private final boolean roleExists;
 
-        RoleUserAssociator(String name, Long userId, Long roleId) {
-            this.name   = name;
-            this.userId = userId;
-            this.roleId = roleId;
+        RoleUserAssociator(String name, Long userId, Long roleId, boolean roleExists) {
+            this.name       = name;
+            this.userId     = userId;
+            this.roleId     = roleId;
+            this.roleExists = roleExists;
         }
 
         public XXRoleRefUser getRoleRef() {
             Long id = resolveUserId(false);
 
-            if (id != null && doesRoleExist(roleId)) {
+            if (id != null && roleExists) {
                 XXRoleRefUser xRoleRefUser = new XXRoleRefUser();
 
                 xRoleRefUser.setRoleId(roleId);
@@ -426,7 +425,7 @@ public class RoleRefUpdater {
         }
 
         public void createRoleRef(Long id) {
-            if (doesRoleExist(roleId)) {
+            if (roleExists) {
                 XXRoleRefUser xRoleRefUser = new XXRoleRefUser();
 
                 xRoleRefUser.setRoleId(roleId);
@@ -491,20 +490,22 @@ public class RoleRefUpdater {
     }
 
     private class RoleGroupAssociator implements Runnable {
-        private final String name;
-        private final Long   groupId;
-        private final Long   roleId;
+        private final String  name;
+        private final Long    groupId;
+        private final Long    roleId;
+        private final boolean roleExists;
 
-        RoleGroupAssociator(String name, Long groupId, Long roleId) {
-            this.name    = name;
-            this.groupId = groupId;
-            this.roleId  = roleId;
+        RoleGroupAssociator(String name, Long groupId, Long roleId, boolean roleExists) {
+            this.name       = name;
+            this.groupId    = groupId;
+            this.roleId     = roleId;
+            this.roleExists = roleExists;
         }
 
         public XXRoleRefGroup getRoleRef() {
             Long id = resolveGroupId(false);
 
-            if (id != null && doesRoleExist(roleId)) {
+            if (id != null && roleExists) {
                 XXRoleRefGroup xRoleRefGroup = new XXRoleRefGroup();
 
                 xRoleRefGroup.setRoleId(roleId);
@@ -519,7 +520,7 @@ public class RoleRefUpdater {
         }
 
         public void createRoleRef(Long id) {
-            if (doesRoleExist(roleId)) {
+            if (roleExists) {
                 XXRoleRefGroup xRoleRefGroup = new XXRoleRefGroup();
 
                 xRoleRefGroup.setRoleId(roleId);
@@ -584,20 +585,22 @@ public class RoleRefUpdater {
     }
 
     private class RoleRoleAssociator implements Runnable {
-        private final String name;
-        private final Long   subRoleId;
-        private final Long   roleId;
+        private final String  name;
+        private final Long    subRoleId;
+        private final Long    roleId;
+        private final boolean roleExists;
 
-        RoleRoleAssociator(String name, Long subRoleId, Long roleId) {
+        RoleRoleAssociator(String name, Long subRoleId, Long roleId, boolean roleExists) {
             this.name       = name;
             this.subRoleId  = subRoleId;
             this.roleId     = roleId;
+            this.roleExists = roleExists;
         }
 
         public XXRoleRefRole getRoleRef() {
             Long id = resolveSubRoleId(false);
 
-            if (id != null && doesRoleExist(roleId)) {
+            if (id != null && roleExists) {
                 XXRoleRefRole xRoleRefRole = new XXRoleRefRole();
 
                 xRoleRefRole.setRoleId(roleId);
@@ -612,7 +615,7 @@ public class RoleRefUpdater {
         }
 
         public void createRoleRef(Long id) {
-            if (doesRoleExist(roleId)) {
+            if (roleExists) {
                 XXRoleRefRole xRoleRefRole = new XXRoleRefRole();
 
                 xRoleRefRole.setRoleId(roleId);

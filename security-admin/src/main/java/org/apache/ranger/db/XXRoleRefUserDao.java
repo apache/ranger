@@ -79,7 +79,8 @@ public class XXRoleRefUserDao extends BaseDao<XXRoleRefUser> {
                 ret = results.stream().collect(
                         Collectors.toMap(
                                 object -> (String) object[0],
-                                object -> (Long) object[1]));
+                                object -> (Long) object[1],
+                                (existing, replacement) -> existing));
             } catch (NoResultException e) {
                 // ignore
             }

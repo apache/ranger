@@ -140,7 +140,9 @@ public class TestRoleRefUpdater {
         xg.setId(22L);
         XXRole xr = new XXRole();
         xr.setId(33L);
-        when(xRoleDao.findByRoleId(5L)).thenReturn(xr);
+        XXRole parentRole = new XXRole();
+        parentRole.setId(5L);
+        when(xRoleDao.getById(5L)).thenReturn(parentRole);
         when(urd.findUserNameIdMapByRoleId(5L)).thenReturn(Collections.emptyMap());
         when(grd.findGroupNameIdByRoleId(5L)).thenReturn(Collections.emptyMap());
         when(rrd.findSubRoleNameIdByRoleId(5L)).thenReturn(Collections.emptyMap());
@@ -167,6 +169,7 @@ public class TestRoleRefUpdater {
         RoleRefUpdater updater = new RoleRefUpdater();
         RangerDaoManager dao = mock(RangerDaoManager.class);
         XXUserDao xUserDao = mock(XXUserDao.class);
+        XXRoleDao xRoleDao = mock(XXRoleDao.class);
         RESTErrorUtil rest = mock(RESTErrorUtil.class);
         RangerTransactionSynchronizationAdapter adapter = mock(RangerTransactionSynchronizationAdapter.class);
         RangerBizUtil biz = mock(RangerBizUtil.class);
@@ -178,6 +181,10 @@ public class TestRoleRefUpdater {
         setField(updater, RoleRefUpdater.class, "rangerTransactionSynchronizationAdapter", adapter);
         setField(updater, RoleRefUpdater.class, "xaBizUtil", biz);
         when(dao.getXXUser()).thenReturn(xUserDao);
+        when(dao.getXXRole()).thenReturn(xRoleDao);
+        XXRole parentRole = new XXRole();
+        parentRole.setId(7L);
+        when(xRoleDao.getById(7L)).thenReturn(parentRole);
         when(dao.getXXRoleRefUser()).thenReturn(urd);
         when(dao.getXXRoleRefGroup()).thenReturn(grd);
         when(dao.getXXRoleRefRole()).thenReturn(rrd);
