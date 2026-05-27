@@ -140,7 +140,7 @@ public class RangerPdpConfig {
     }
 
     public String getHeaderAuthnUsername() {
-        return get(RangerPdpConstants.PROP_AUTHN_HEADER_USERNAME, "X-Forwarded-User");
+        return get(RangerPdpConstants.PROP_AUTHN_HEADER_USERNAME, "");
     }
 
     // --- JWT bearer token auth ---

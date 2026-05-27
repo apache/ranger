@@ -138,9 +138,10 @@
     </description>
   </property>
 
+  <!-- must be explicitly set -->
   <property>
     <name>ranger.pdp.authn.header.username</name>
-    <value>X-Forwarded-User</value>
+    <value></value>
     <description>HTTP header name from which the authenticated username is read.</description>
   </property>
 
