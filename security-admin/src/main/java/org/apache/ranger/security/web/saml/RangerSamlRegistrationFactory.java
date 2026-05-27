@@ -35,6 +35,9 @@ import java.security.PrivateKey;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 import java.security.interfaces.RSAPrivateKey;
+import java.util.ArrayList;
+import java.util.Enumeration;
+import java.util.List;
 
 public class RangerSamlRegistrationFactory {
     private static final Logger LOG = LoggerFactory.getLogger(RangerSamlRegistrationFactory.class);
@@ -65,20 +68,21 @@ public class RangerSamlRegistrationFactory {
 
     public static RelyingPartyRegistration buildFromKeystore(RelyingPartyRegistration.Builder builder, String keystorePath,
                                                              String alias, String password) throws Exception {
-        if (keystorePath == null || keystorePath.trim().isEmpty()) {
+        if (StringUtils.isBlank(keystorePath)) {
             throw new IllegalArgumentException("ranger.service.https.attrib.keystore.file must not be null or empty");
-        }
-        if (alias == null || alias.trim().isEmpty()) {
-            throw new IllegalArgumentException("ranger.service.https.attrib.keystore.keyalias must not be null or empty");
         }
         String resolvedPassword = resolvePassword(password);
         if (StringUtils.isBlank(resolvedPassword)) {
             throw new IllegalArgumentException("Could not resolve keystore password from credential store or " +
                     "ranger.service.https.attrib.keystore.pass");
         }
-        KeyStore ks = KeyStore.getInstance("JKS");
+        String keystoreType = PropertiesUtil.getProperty("ranger.keystore.file.type", "JKS");
+        KeyStore ks = KeyStore.getInstance(keystoreType.toUpperCase());
         try (FileInputStream fis = new FileInputStream(keystorePath)) {
             ks.load(fis, resolvedPassword.toCharArray());
+        }
+        if (StringUtils.isBlank(alias)) {
+            alias = findFirstPrivateKeyAlias(ks, keystorePath);
         }
         PrivateKey privateKey = (PrivateKey) ks.getKey(alias, resolvedPassword.toCharArray());
         if (privateKey == null) {
@@ -107,7 +111,7 @@ public class RangerSamlRegistrationFactory {
                     "keyStoreCredentialAlias");
             if (StringUtils.isNotBlank(providerPath) && StringUtils.isNotBlank(keyAlias)) {
                 String resolved = CredentialReader.getDecryptedString(providerPath.trim(), keyAlias.trim(),
-                        PropertiesUtil.getProperty("ranger.keystore.file.type", "jks"));
+                        PropertiesUtil.getProperty("ranger.keystore.file.type", "JKS").toUpperCase());
                 if (StringUtils.isNotBlank(resolved) && !"none".equalsIgnoreCase(resolved.trim())) {
                     return resolved;
                 }
@@ -116,5 +120,27 @@ public class RangerSamlRegistrationFactory {
             LOG.warn("Could not resolve password from credential store, falling back to config value", e);
         }
         return rawPassword; // plain text fallback
+    }
+
+    private static String findFirstPrivateKeyAlias(KeyStore ks, String keystorePath) throws Exception {
+        List<String> privateKeyEntries = new ArrayList<>();
+        Enumeration<String> aliases = ks.aliases();
+        while (aliases.hasMoreElements()) {
+            String a = aliases.nextElement();
+            if (ks.isKeyEntry(a)) {
+                privateKeyEntries.add(a);
+            }
+        }
+        if (privateKeyEntries.isEmpty()) {
+            throw new IllegalArgumentException("No PrivateKeyEntry found in keystore: "
+                    + keystorePath + ". Set ranger.service.https.attrib.keystore.keyalias explicitly.");
+        }
+        if (privateKeyEntries.size() > 1) {
+            LOG.warn("Multiple PrivateKeyEntries found in keystore: {}. Using first entry: {}. Set ranger.service.https.attrib." +
+                    "keystore.keyalias explicitly to " + "avoid ambiguity.", keystorePath, privateKeyEntries.get(0));
+        } else {
+            LOG.info("ranger.service.https.attrib.keystore.keyalias not configured. Auto-detected alias: {}", privateKeyEntries.get(0));
+        }
+        return privateKeyEntries.get(0);
     }
 }
