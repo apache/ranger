@@ -32,6 +32,7 @@
                 <include>org.apache.ranger:credentialbuilder</include>
                 <include>org.apache.ranger:authz-embedded</include>
                 <include>org.apache.ranger:ranger-audit-core</include>
+                <include>org.apache.ranger:ranger-audit-dest-auditserver</include>
                 <include>org.apache.ranger:ranger-audit-dest-hdfs</include>
                 <include>org.apache.ranger:ranger-audit-dest-solr</include>
                 <include>org.apache.ranger:ranger-authn</include>
