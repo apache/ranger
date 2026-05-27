@@ -734,6 +734,26 @@ public class ServiceREST {
     @PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.UPDATE_SERVICE + "\")")
     public RangerService updateService(RangerService service, @Context HttpServletRequest request) {
         LOG.debug("==> ServiceREST.updateService(): {}", service);
+        // if service.id and param 'id' are specified, service.id should be same as the param 'id'
+        // if service.id is null, then set param 'id' into service Object
+        if (request != null) {
+            String requestURI = request.getRequestURI();
+            if (requestURI != null) {
+                String[] parts = requestURI.split("/");
+                try {
+                    Long id = Long.parseLong(parts[parts.length - 1]);
+                    if (service.getId() == null) {
+                        service.setId(id);
+                    } else if (StringUtils.isBlank(service.getName()) || !service.getId().equals(id)) {
+                        throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST, "serviceDef Id mismatch or service name not provided", true);
+                    }
+                } catch (NumberFormatException e) {
+                    LOG.warn("Could not parse service id from request URI: {}", requestURI);
+                }
+            }
+        } else {
+            LOG.debug("HttpServletRequest is null, skipping URI-based ID validation");
+        }
 
         RangerService    ret;
         RangerPerfTracer perf = null;
