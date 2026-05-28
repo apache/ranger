@@ -54,17 +54,11 @@
         <directoryMode>755</directoryMode>
         <fileMode>644</fileMode>
         <includes>
-          <include>com.carrotsearch:hppc</include>
-          <include>com.fasterxml.jackson.core:jackson-annotations:jar:${fasterxml.jackson.version}</include>
-          <include>com.fasterxml.jackson.core:jackson-core:jar:${fasterxml.jackson.version}</include>
-          <include>com.fasterxml.jackson.core:jackson-databind:jar:${fasterxml.jackson.version}</include>
           <include>com.fasterxml.jackson.jaxrs:jackson-jaxrs-base:jar:${fasterxml.jackson.version}</include>
           <include>com.fasterxml.jackson.jaxrs:jackson-jaxrs-json-provider:jar:${fasterxml.jackson.version}</include>
-          <include>com.fasterxml.jackson.module:jackson-module-jaxb-annotations:jar:${fasterxml.jackson.version}</include>
           <include>com.google.code.gson:gson</include>
           <include>commons-collections:commons-collections</include>
           <include>io.airlift:aircompressor:jar:${aircompressor.version}</include>
-          <include>jakarta.ws.rs:jakarta.ws.rs-api</include>
           <include>javax.inject:javax.inject</include>
           <include>joda-time:joda-time</include>
           <include>org.apache.hadoop.thirdparty:hadoop-shaded-guava:jar:${hadoop-shaded-guava.version}</include>
@@ -72,18 +66,16 @@
           <include>org.apache.hadoop:hadoop-client-runtime:jar:${hadoop.version}</include>
           <include>org.apache.httpcomponents:httpasyncclient:jar:${httpcomponents.httpasyncclient.version}</include>
           <include>org.apache.httpcomponents:httpcore-nio:jar:${httpcomponents.httpcore.version}</include>
-          <include>org.apache.lucene:lucene-core</include>
-          <include>org.glassfish.hk2.external:jakarta.inject</include>
           <include>org.glassfish.hk2:class-model</include>
           <include>org.glassfish.hk2:hk2-api</include>
           <include>org.glassfish.hk2:hk2-core</include>
-          <include>org.glassfish.hk2:hk2-locator</include>
           <include>org.glassfish.hk2:hk2-runlevel</include>
-          <include>org.glassfish.hk2:hk2-utils</include>
-          <include>org.glassfish.hk2:hk2</include>
-          <include>org.glassfish.jersey.core:jersey-common</include>
-          <include>org.glassfish.jersey.ext:jersey-entity-filtering</include>
-          <include>org.glassfish.jersey.inject:jersey-hk2</include>
+          <include>org.graalvm.js:js:jar:${graalvm.version}</include>
+          <include>org.graalvm.js:js-scriptengine:jar:${graalvm.version}</include>
+          <include>org.graalvm.regex:regex:jar:${graalvm.version}</include>
+          <include>org.graalvm.sdk:graal-sdk:jar:${graalvm.version}</include>
+          <include>org.graalvm.truffle:truffle-api:jar:${graalvm.version}</include>
+          <include>com.ibm.icu:icu4j</include>
         </includes>
       </binaries>
     </moduleSet>

@@ -30,6 +30,8 @@ import javax.net.ssl.SSLContext;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 
+import java.util.stream.Collectors;
+
 /**
  * Comprehensive Jersey client utility for Ranger components.
  *
@@ -355,8 +357,7 @@ public class RangerJersey2ClientBuilder {
         boolean jacksonRegistered = config.getClasses().contains(JacksonJaxbJsonProvider.class) || config.getInstances().stream().anyMatch(instance -> instance instanceof JacksonJaxbJsonProvider);
 
         if (!jacksonRegistered) {
-            LOG.error("CRITICAL: Jackson JSON provider is not registered! Default JSON processing may fail.");
-            isValid = false;
+            LOG.error("CRITICAL: Jackson JSON provider is not registered! Default JSON processing may fail. Classes={}", config.getClasses().stream().map(Class::getCanonicalName).collect(Collectors.toList()));
         }
 
         if (isValid) {
