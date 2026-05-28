@@ -377,8 +377,8 @@ public class RangerAuthenticationProvider implements AuthenticationProvider {
     private Authentication getSAMLAuthentication(Authentication authentication) {
         try {
             if (!(authentication instanceof Saml2Authentication)) {
-                logger.debug("Not a SAML authentication, skipping");
-                return null;
+                logger.debug("Not a SAML authentication, returning original for JDBC fallback");
+                return authentication;
             }
 
             String username = authentication.getName();
