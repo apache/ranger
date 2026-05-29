@@ -20,12 +20,8 @@
 package org.apache.ranger.plugin.policyevaluator;
 
 import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.ranger.plugin.conditionevaluator.RangerValidityScheduleConditionEvaluator;
 import org.apache.ranger.plugin.model.RangerPolicy;
-import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItem;
-import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemAccess;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemDataMaskInfo;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemRowFilterInfo;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
@@ -36,7 +32,6 @@ import org.apache.ranger.plugin.policyengine.PolicyEngine;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest.ResourceMatchingScope;
 import org.apache.ranger.plugin.policyengine.RangerPluginContext;
-import org.apache.ranger.plugin.policyengine.RangerPolicyEngine;
 import org.apache.ranger.plugin.policyengine.RangerPolicyEngineOptions;
 import org.apache.ranger.plugin.policyengine.RangerResourceACLs;
 import org.apache.ranger.plugin.policyengine.RangerResourceACLs.DataMaskResult;
@@ -204,7 +199,6 @@ public abstract class RangerAbstractPolicyEvaluator implements RangerPolicyEvalu
 
             if (policyType == RangerPolicy.POLICY_TYPE_ACCESS) {
                 updateFromPolicyACLs(isConditionalMatch, acls, targetAccessTypes);
-                filterAclResultsByValiditySchedule(request, acls);
             } else if (policyType == RangerPolicy.POLICY_TYPE_ROWFILTER) {
                 updateRowFiltersFromPolicy(isConditionalMatch, acls, targetAccessTypes);
             } else if (policyType == RangerPolicy.POLICY_TYPE_DATAMASK) {
@@ -415,128 +409,6 @@ public abstract class RangerAbstractPolicyEvaluator implements RangerPolicyEvalu
 
                 resourceACLs.setRoleAccessInfo(roleName, accessType, accessResult, policy);
             }
-        }
-    }
-
-    private void filterAclResultsByValiditySchedule(RangerAccessRequest request, RangerResourceACLs resourceACLs) {
-        if (request == null || resourceACLs == null || request.getAccessTime() == null) {
-            return;
-        }
-
-        String      user   = request.getUser();
-        Set<String> groups = request.getUserGroups();
-        Set<String> roles  = request.getUserRoles();
-
-        if (StringUtils.isBlank(user) && CollectionUtils.isEmpty(groups) && CollectionUtils.isEmpty(roles)) {
-            return;
-        }
-
-        RangerPolicy policy = getPolicy();
-        if (policy == null) {
-            return;
-        }
-
-        List<RangerPolicyItem> policyItems = new ArrayList<>();
-        policyItems.addAll(policy.getPolicyItems());
-        policyItems.addAll(policy.getDenyPolicyItems());
-        policyItems.addAll(policy.getAllowExceptions());
-        policyItems.addAll(policy.getDenyExceptions());
-
-        if (CollectionUtils.isEmpty(policyItems)) {
-            return;
-        }
-
-        Map<String, Collection<String>> impliedAccessGrants = ServiceDefUtil.getExpandedImpliedGrants(getServiceDef());
-
-        for (RangerPolicyItem policyItem : policyItems) {
-            if (!isPolicyItemValidityActive(policyItem, request)) {
-                removeAccessesForPrincipal(policyItem, impliedAccessGrants, user, groups, roles, resourceACLs);
-            }
-        }
-    }
-
-    private boolean isPolicyItemValidityActive(RangerPolicyItem policyItem, RangerAccessRequest request) {
-        if (policyItem == null || request == null || CollectionUtils.isEmpty(policyItem.getConditions())) {
-            return true;
-        }
-
-        for (RangerPolicy.RangerPolicyItemCondition condition : policyItem.getConditions()) {
-            if (!StringUtils.equalsIgnoreCase(condition.getType(), "validitySchedule")) {
-                continue;
-            }
-
-            RangerValidityScheduleConditionEvaluator evaluator = new RangerValidityScheduleConditionEvaluator();
-            evaluator.setPolicyItemCondition(condition);
-            evaluator.init();
-
-            if (!evaluator.isMatched(request)) {
-                return false;
-            }
-        }
-
-        return true;
-    }
-
-    private void removeAccessesForPrincipal(RangerPolicyItem policyItem,
-            Map<String, Collection<String>> impliedAccessGrants,
-            String user,
-            Set<String> groups,
-            Set<String> roles,
-            RangerResourceACLs resourceACLs) {
-        if (policyItem == null || CollectionUtils.isEmpty(policyItem.getAccesses())) {
-            return;
-        }
-
-        for (RangerPolicyItemAccess access : policyItem.getAccesses()) {
-            Collection<String> accessTypes = impliedAccessGrants.get(access.getType());
-            if (CollectionUtils.isEmpty(accessTypes)) {
-                accessTypes = Collections.singleton(access.getType());
-            }
-
-            if (StringUtils.isNotBlank(user) && CollectionUtils.isNotEmpty(policyItem.getUsers())) {
-                if (policyItem.getUsers().contains(user) || policyItem.getUsers().contains(RangerPolicyEngine.USER_CURRENT)) {
-                    removeAccessTypes(resourceACLs.getUserACLs(), user, accessTypes);
-                }
-            }
-
-            if (CollectionUtils.isNotEmpty(groups) && CollectionUtils.isNotEmpty(policyItem.getGroups())) {
-                if (policyItem.getGroups().contains(RangerPolicyEngine.GROUP_PUBLIC)) {
-                    removeAccessTypes(resourceACLs.getGroupACLs(), RangerPolicyEngine.GROUP_PUBLIC, accessTypes);
-                } else {
-                    for (String group : groups) {
-                        if (policyItem.getGroups().contains(group)) {
-                            removeAccessTypes(resourceACLs.getGroupACLs(), group, accessTypes);
-                        }
-                    }
-                }
-            }
-
-            if (CollectionUtils.isNotEmpty(roles) && CollectionUtils.isNotEmpty(policyItem.getRoles())) {
-                for (String role : roles) {
-                    if (policyItem.getRoles().contains(role)) {
-                        removeAccessTypes(resourceACLs.getRoleACLs(), role, accessTypes);
-                    }
-                }
-            }
-        }
-    }
-
-    private void removeAccessTypes(Map<String, Map<String, RangerResourceACLs.AccessResult>> aclMap, String principal, Collection<String> accessTypes) {
-        if (MapUtils.isEmpty(aclMap) || StringUtils.isBlank(principal) || CollectionUtils.isEmpty(accessTypes)) {
-            return;
-        }
-
-        Map<String, RangerResourceACLs.AccessResult> accessInfo = aclMap.get(principal);
-        if (MapUtils.isEmpty(accessInfo)) {
-            return;
-        }
-
-        for (String accessType : accessTypes) {
-            accessInfo.remove(accessType);
-        }
-
-        if (accessInfo.isEmpty()) {
-            aclMap.remove(principal);
         }
     }
 
