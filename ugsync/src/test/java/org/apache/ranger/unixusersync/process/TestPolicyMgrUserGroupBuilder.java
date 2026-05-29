@@ -1053,7 +1053,7 @@ public class TestPolicyMgrUserGroupBuilder {
 
     @Test
     public void testAK_addOrUpdateUsersGroups_startup_emptyLdap_doesNotThrowNPE() throws Exception {
-        // Reproduces RANGER-XXXX: when LDAP returns 0 groups/users (e.g. connectivity failure),
+        // Reproduces RANGER-5620: when LDAP returns 0 groups/users (e.g. connectivity failure),
         // deltaGroupUsers is never initialised by addOrUpdateGroupUsers().
         // On startup (isStartupFlag=true) the whiteListGroupMap loop falls through to
         // deltaGroupUsers.get(groupName) which caused a NullPointerException and dropped
