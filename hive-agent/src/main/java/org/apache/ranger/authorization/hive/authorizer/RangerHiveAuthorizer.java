@@ -58,6 +58,7 @@ import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.thirdparty.com.google.common.collect.Sets;
 import org.apache.ranger.authorization.hadoop.constants.RangerHadoopConstants;
 import org.apache.ranger.authorization.utils.StringUtil;
+import org.apache.ranger.plugin.conditionevaluator.RangerValidityScheduleConditionEvaluator;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemAccess;
 import org.apache.ranger.plugin.model.RangerRole;
@@ -2843,9 +2844,129 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 
         ret = hivePlugin.getResourceACLs(request);
 
+        if (ret != null && principal != null && request != null) {
+            filterAclsByValiditySchedule(ret, principal, request);
+        }
+
         LOG.debug("<== RangerHivePolicyProvider.getRangerResourceACLs:[{}], principal=[{}], Computed ACLS:[{}]", hiveObject, principal, ret);
 
         return ret;
+    }
+
+    private void filterAclsByValiditySchedule(RangerResourceACLs acls, HivePrincipal principal, RangerAccessRequest request) {
+        if (acls == null || principal == null || request == null) {
+            return;
+        }
+
+        Map<String, Map<String, RangerResourceACLs.AccessResult>> principalACLs = null;
+        switch (principal.getType()) {
+            case USER:
+                principalACLs = acls.getUserACLs();
+                break;
+            case GROUP:
+                principalACLs = acls.getGroupACLs();
+                break;
+            case ROLE:
+                principalACLs = acls.getRoleACLs();
+                break;
+            default:
+                break;
+        }
+
+        if (principalACLs != null) {
+            Map<String, RangerResourceACLs.AccessResult> accessMap = principalACLs.get(principal.getName());
+            if (accessMap != null) {
+                List<String> keysToRemove = new ArrayList<>();
+                for (Map.Entry<String, RangerResourceACLs.AccessResult> entry : accessMap.entrySet()) {
+                    RangerResourceACLs.AccessResult accessResult = entry.getValue();
+                    if (accessResult != null && accessResult.getResult() == RangerPolicyEvaluator.ACCESS_CONDITIONAL) {
+                        RangerPolicy policy = accessResult.getPolicy();
+                        if (policy != null) {
+                            boolean hasActiveItem = false;
+
+                            List<RangerPolicy.RangerPolicyItem> policyItems = new ArrayList<>();
+                            if (CollectionUtils.isNotEmpty(policy.getPolicyItems())) {
+                                policyItems.addAll(policy.getPolicyItems());
+                            }
+                            if (CollectionUtils.isNotEmpty(policy.getDenyPolicyItems())) {
+                                policyItems.addAll(policy.getDenyPolicyItems());
+                            }
+                            if (CollectionUtils.isNotEmpty(policy.getAllowExceptions())) {
+                                policyItems.addAll(policy.getAllowExceptions());
+                            }
+                            if (CollectionUtils.isNotEmpty(policy.getDenyExceptions())) {
+                                policyItems.addAll(policy.getDenyExceptions());
+                            }
+
+                            for (RangerPolicy.RangerPolicyItem policyItem : policyItems) {
+                                if (isPolicyItemApplicable(policyItem, principal, entry.getKey()) && isPolicyItemValidityActive(policyItem, request)) {
+                                    hasActiveItem = true;
+                                    break;
+                                }
+                            }
+                            if (!hasActiveItem) {
+                                keysToRemove.add(entry.getKey());
+                            }
+                        }
+                    }
+                }
+                for (String key : keysToRemove) {
+                    accessMap.remove(key);
+                }
+                if (accessMap.isEmpty()) {
+                    principalACLs.remove(principal.getName());
+                }
+            }
+        }
+    }
+
+    private boolean isPolicyItemApplicable(RangerPolicy.RangerPolicyItem policyItem, HivePrincipal principal, String accessType) {
+        if (policyItem == null || principal == null || StringUtils.isBlank(accessType)) {
+            return false;
+        }
+
+        if (CollectionUtils.isEmpty(policyItem.getAccesses())) {
+            return false;
+        }
+
+        boolean hasAccessType = false;
+        for (RangerPolicy.RangerPolicyItemAccess access : policyItem.getAccesses()) {
+            if (StringUtils.equalsIgnoreCase(accessType, access.getType()) || StringUtils.equalsIgnoreCase(access.getType(), RangerPolicyEngine.ANY_ACCESS)) {
+                hasAccessType = true;
+                break;
+            }
+        }
+        if (!hasAccessType) {
+            return false;
+        }
+
+        switch (principal.getType()) {
+            case USER:
+                return CollectionUtils.isNotEmpty(policyItem.getUsers()) && (policyItem.getUsers().contains(principal.getName()) || policyItem.getUsers().contains(RangerPolicyEngine.USER_CURRENT));
+            case GROUP:
+                return CollectionUtils.isNotEmpty(policyItem.getGroups()) && (policyItem.getGroups().contains(principal.getName()) || policyItem.getGroups().contains(RangerPolicyEngine.GROUP_PUBLIC));
+            case ROLE:
+                return CollectionUtils.isNotEmpty(policyItem.getRoles()) && policyItem.getRoles().contains(principal.getName());
+        }
+        return false;
+    }
+
+    private boolean isPolicyItemValidityActive(RangerPolicy.RangerPolicyItem policyItem, RangerAccessRequest request) {
+        if (policyItem == null || request == null || CollectionUtils.isEmpty(policyItem.getConditions())) {
+            return true;
+        }
+        for (RangerPolicy.RangerPolicyItemCondition condition : policyItem.getConditions()) {
+            if (!StringUtils.equalsIgnoreCase(condition.getType(), "validitySchedule")) {
+                continue;
+            }
+            RangerValidityScheduleConditionEvaluator evaluator = new org.apache.ranger.plugin.conditionevaluator.RangerValidityScheduleConditionEvaluator();
+            evaluator.setPolicyItemCondition(condition);
+            evaluator.init();
+            if (!evaluator.isMatched(request)) {
+                return false;
+            }
+        }
+        return true;
     }
 
     private Map<String, Map<Privilege, AccessResult>> convertRangerACLsToHiveACLs(Map<String, Map<String, RangerResourceACLs.AccessResult>> rangerACLs) {

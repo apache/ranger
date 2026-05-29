@@ -1450,6 +1450,128 @@ public class TestRangerHiveAuthorizer {
         }
     }
 
+    @Test
+    void test70_getRangerResourceACLs_filtersExpiredValiditySchedule() throws Exception {
+        RangerBasePlugin   plugin = (RangerBasePlugin) Mockito.spy(newInstanceRangerHivePlugin("hiveCLI"));
+        RangerResourceACLs acls   = new RangerResourceACLs();
+
+        RangerPolicy pUser = new RangerPolicy();
+        RangerPolicy.RangerPolicyItem item = new RangerPolicy.RangerPolicyItem();
+        item.setAccesses(Collections.singletonList(new RangerPolicy.RangerPolicyItemAccess("select", true)));
+        item.setUsers(Collections.singletonList("alice"));
+
+        RangerPolicy.RangerPolicyItemCondition condition = new RangerPolicy.RangerPolicyItemCondition();
+        condition.setType("validitySchedule");
+        condition.setValues(Collections.singletonList("{\"endTime\":\"2000/01/01 00:00:00\"}"));
+        item.setConditions(Collections.singletonList(condition));
+
+        pUser.setPolicyItems(Collections.singletonList(item));
+
+        acls.setUserAccessInfo("alice", "select", RangerPolicyEvaluator.ACCESS_CONDITIONAL, pUser);
+
+        Mockito.doReturn(acls).when(plugin).getResourceACLs(Mockito.any(RangerAccessRequestImpl.class));
+        setStaticHivePlugin(plugin);
+
+        HiveMetastoreClientFactory msFactory = Mockito.mock(HiveMetastoreClientFactory.class);
+        IMetaStoreClient           ms        = Mockito.mock(IMetaStoreClient.class);
+        Mockito.when(msFactory.getHiveMetastoreClient()).thenReturn(ms);
+        RangerHiveAuthorizer authorizer = new RangerHiveAuthorizer(msFactory, null, null, null);
+
+        Method m = RangerHiveAuthorizer.class.getDeclaredMethod("getRangerResourceACLs", HivePrivilegeObject.class, HivePrincipal.class);
+        m.setAccessible(true);
+
+        HivePrivilegeObject obj       = new HivePrivilegeObject(HivePrivilegeObjectType.TABLE_OR_VIEW, "db1", "t1");
+        HivePrincipal       principal = new HivePrincipal("alice", HivePrincipal.HivePrincipalType.USER);
+
+        Object out = m.invoke(authorizer, obj, principal);
+        assertInstanceOf(RangerResourceACLs.class, out);
+        RangerResourceACLs resultAcls = (RangerResourceACLs) out;
+
+        assertTrue(resultAcls.getUserACLs().isEmpty() || !resultAcls.getUserACLs().containsKey("alice"));
+    }
+
+    @Test
+    void test71_getRangerResourceACLs_keepsActiveValiditySchedule() throws Exception {
+        RangerBasePlugin   plugin = (RangerBasePlugin) Mockito.spy(newInstanceRangerHivePlugin("hiveCLI"));
+        RangerResourceACLs acls   = new RangerResourceACLs();
+
+        RangerPolicy pUser = new RangerPolicy();
+        RangerPolicy.RangerPolicyItem item = new RangerPolicy.RangerPolicyItem();
+        item.setAccesses(Collections.singletonList(new RangerPolicy.RangerPolicyItemAccess("select", true)));
+        item.setUsers(Collections.singletonList("bob"));
+
+        RangerPolicy.RangerPolicyItemCondition condition = new RangerPolicy.RangerPolicyItemCondition();
+        condition.setType("validitySchedule");
+        condition.setValues(Collections.singletonList("{\"endTime\":\"2100/01/01 00:00:00\"}"));
+        item.setConditions(Collections.singletonList(condition));
+
+        pUser.setPolicyItems(Collections.singletonList(item));
+
+        acls.setUserAccessInfo("bob", "select", RangerPolicyEvaluator.ACCESS_CONDITIONAL, pUser);
+
+        Mockito.doReturn(acls).when(plugin).getResourceACLs(Mockito.any(RangerAccessRequestImpl.class));
+        setStaticHivePlugin(plugin);
+
+        HiveMetastoreClientFactory msFactory = Mockito.mock(HiveMetastoreClientFactory.class);
+        IMetaStoreClient           ms        = Mockito.mock(IMetaStoreClient.class);
+        Mockito.when(msFactory.getHiveMetastoreClient()).thenReturn(ms);
+        RangerHiveAuthorizer authorizer = new RangerHiveAuthorizer(msFactory, null, null, null);
+
+        Method m = RangerHiveAuthorizer.class.getDeclaredMethod("getRangerResourceACLs", HivePrivilegeObject.class, HivePrincipal.class);
+        m.setAccessible(true);
+
+        HivePrivilegeObject obj       = new HivePrivilegeObject(HivePrivilegeObjectType.TABLE_OR_VIEW, "db1", "t1");
+        HivePrincipal       principal = new HivePrincipal("bob", HivePrincipal.HivePrincipalType.USER);
+
+        Object out = m.invoke(authorizer, obj, principal);
+        assertInstanceOf(RangerResourceACLs.class, out);
+        RangerResourceACLs resultAcls = (RangerResourceACLs) out;
+
+        assertFalse(resultAcls.getUserACLs().isEmpty());
+        assertTrue(resultAcls.getUserACLs().containsKey("bob"));
+        assertNotNull(resultAcls.getUserACLs().get("bob").get("select"));
+    }
+
+    @Test
+    void test72_getRangerResourceACLs_filtersExpiredValidityScheduleForGroup() throws Exception {
+        RangerBasePlugin   plugin = (RangerBasePlugin) Mockito.spy(newInstanceRangerHivePlugin("hiveCLI"));
+        RangerResourceACLs acls   = new RangerResourceACLs();
+
+        RangerPolicy pGroup = new RangerPolicy();
+        RangerPolicy.RangerPolicyItem item = new RangerPolicy.RangerPolicyItem();
+        item.setAccesses(Collections.singletonList(new RangerPolicy.RangerPolicyItemAccess("update", true)));
+        item.setGroups(Collections.singletonList("dev_group"));
+
+        RangerPolicy.RangerPolicyItemCondition condition = new RangerPolicy.RangerPolicyItemCondition();
+        condition.setType("validitySchedule");
+        condition.setValues(Collections.singletonList("{\"endTime\":\"2000/01/01 00:00:00\"}"));
+        item.setConditions(Collections.singletonList(condition));
+
+        pGroup.setPolicyItems(Collections.singletonList(item));
+
+        acls.setGroupAccessInfo("dev_group", "update", RangerPolicyEvaluator.ACCESS_CONDITIONAL, pGroup);
+
+        Mockito.doReturn(acls).when(plugin).getResourceACLs(Mockito.any(RangerAccessRequestImpl.class));
+        setStaticHivePlugin(plugin);
+
+        HiveMetastoreClientFactory msFactory = Mockito.mock(HiveMetastoreClientFactory.class);
+        IMetaStoreClient           ms        = Mockito.mock(IMetaStoreClient.class);
+        Mockito.when(msFactory.getHiveMetastoreClient()).thenReturn(ms);
+        RangerHiveAuthorizer authorizer = new RangerHiveAuthorizer(msFactory, null, null, null);
+
+        Method m = RangerHiveAuthorizer.class.getDeclaredMethod("getRangerResourceACLs", HivePrivilegeObject.class, HivePrincipal.class);
+        m.setAccessible(true);
+
+        HivePrivilegeObject obj       = new HivePrivilegeObject(HivePrivilegeObjectType.TABLE_OR_VIEW, "db1", "t1");
+        HivePrincipal       principal = new HivePrincipal("dev_group", HivePrincipal.HivePrincipalType.GROUP);
+
+        Object out = m.invoke(authorizer, obj, principal);
+        assertInstanceOf(RangerResourceACLs.class, out);
+        RangerResourceACLs resultAcls = (RangerResourceACLs) out;
+
+        assertTrue(resultAcls.getGroupACLs().isEmpty() || !resultAcls.getGroupACLs().containsKey("dev_group"));
+    }
+
     private static RangerAccessResult allowedResult() {
         RangerAccessResult res = new RangerAccessResult(RangerPolicy.POLICY_TYPE_ACCESS, "svc", null, new RangerAccessRequestImpl());
         res.setIsAudited(true);
