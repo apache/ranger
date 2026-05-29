@@ -1051,6 +1051,44 @@ public class TestPolicyMgrUserGroupBuilder {
         }
     }
 
+    @Test
+    public void testAK_addOrUpdateUsersGroups_startup_emptyLdap_doesNotThrowNPE() throws Exception {
+        // Reproduces RANGER-XXXX: when LDAP returns 0 groups/users (e.g. connectivity failure),
+        // deltaGroupUsers is never initialised by addOrUpdateGroupUsers().
+        // On startup (isStartupFlag=true) the whiteListGroupMap loop falls through to
+        // deltaGroupUsers.get(groupName) which caused a NullPointerException and dropped
+        // all group associations for existing users.
+        PolicyMgrUserGroupBuilder builder = new PolicyMgrUserGroupBuilder();
+        setPrivate(builder, "ldapUgSyncClient", new FakeRest());
+
+        Map<String, String> wlGroupMap = new HashMap<>();
+        wlGroupMap.put("g1", "ROLE_KEY_ADMIN");
+        setPrivate(builder, "whiteListGroupMap", wlGroupMap);
+
+        // groupUsersCache is intentionally empty so the else-if branch (deltaGroupUsers) is reached
+        setPrivate(builder, "groupUsersCache", new HashMap<String, Set<String>>());
+        setPrivate(builder, "whiteListUserMap", new HashMap<String, String>());
+        setPrivate(builder, "userMap", new HashMap<String, String>());
+        setPrivate(builder, "groupMap", new HashMap<String, String>());
+        setPrivate(builder, "isStartupFlag", true);
+
+        // All source maps empty — simulates LDAP returning 0 groups and 0 users
+        assertDoesNotThrow(() -> {
+            try {
+                builder.addOrUpdateUsersGroups(
+                        Collections.emptyMap(),
+                        Collections.emptyMap(),
+                        Collections.emptyMap(),
+                        false);
+            } catch (NullPointerException e) {
+                throw e; // re-throw NPE so assertDoesNotThrow catches it as failure
+            } catch (Throwable ignored) {
+                // Other exceptions (e.g. REST returning null) are acceptable;
+                // only the NPE from deltaGroupUsers == null is the bug we are guarding against.
+            }
+        });
+    }
+
     // Helpers
     @SuppressWarnings("unchecked")
     private static <T> T getPrivate(Object target, String field, Class<T> type) throws Exception {
@@ -1093,3 +1131,4 @@ public class TestPolicyMgrUserGroupBuilder {
         }
     }
 }
+
