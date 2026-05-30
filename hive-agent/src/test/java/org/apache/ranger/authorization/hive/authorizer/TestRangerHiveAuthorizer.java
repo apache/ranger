@@ -50,6 +50,7 @@ import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemAccess;
 import org.apache.ranger.plugin.model.RangerRole;
+import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequestImpl;
 import org.apache.ranger.plugin.policyengine.RangerAccessResult;
 import org.apache.ranger.plugin.policyengine.RangerResourceACLs;
@@ -1570,6 +1571,161 @@ public class TestRangerHiveAuthorizer {
         RangerResourceACLs resultAcls = (RangerResourceACLs) out;
 
         assertTrue(resultAcls.getGroupACLs().isEmpty() || !resultAcls.getGroupACLs().containsKey("dev_group"));
+    }
+
+    @Test
+    void test73_getRangerResourceACLs_keepsActiveValidityScheduleWithImpliedGrants() throws Exception {
+        RangerBasePlugin   plugin = (RangerBasePlugin) Mockito.spy(newInstanceRangerHivePlugin("hiveCLI"));
+        RangerResourceACLs acls   = new RangerResourceACLs();
+
+        RangerServiceDef serviceDef = new RangerServiceDef();
+        RangerServiceDef.RangerAccessTypeDef allAccessDef = new RangerServiceDef.RangerAccessTypeDef(1L, "all", "all", "all", null);
+        allAccessDef.setImpliedGrants(Arrays.asList("select", "update", "drop"));
+        serviceDef.setAccessTypes(Collections.singletonList(allAccessDef));
+        Mockito.doReturn(serviceDef).when(plugin).getServiceDef();
+
+        RangerPolicy pUser = new RangerPolicy();
+        RangerPolicy.RangerPolicyItem item = new RangerPolicy.RangerPolicyItem();
+        item.setAccesses(Collections.singletonList(new RangerPolicy.RangerPolicyItemAccess("all", true)));
+        item.setUsers(Collections.singletonList("bob"));
+
+        RangerPolicy.RangerPolicyItemCondition condition = new RangerPolicy.RangerPolicyItemCondition();
+        condition.setType("validitySchedule");
+        condition.setValues(Collections.singletonList("{\"endTime\":\"2100/01/01 00:00:00\"}"));
+        item.setConditions(Collections.singletonList(condition));
+
+        pUser.setPolicyItems(Collections.singletonList(item));
+
+        // The policy engine would have expanded "all" into "select", "update", "drop", etc.
+        // We will test if the filtering correctly identifies "all" as granting "select"
+        acls.setUserAccessInfo("bob", "select", RangerPolicyEvaluator.ACCESS_CONDITIONAL, pUser);
+
+        Mockito.doReturn(acls).when(plugin).getResourceACLs(Mockito.any(RangerAccessRequestImpl.class));
+        setStaticHivePlugin(plugin);
+
+        HiveMetastoreClientFactory msFactory = Mockito.mock(HiveMetastoreClientFactory.class);
+        IMetaStoreClient           ms        = Mockito.mock(IMetaStoreClient.class);
+        Mockito.when(msFactory.getHiveMetastoreClient()).thenReturn(ms);
+        RangerHiveAuthorizer authorizer = new RangerHiveAuthorizer(msFactory, null, null, null);
+
+        Method m = RangerHiveAuthorizer.class.getDeclaredMethod("getRangerResourceACLs", HivePrivilegeObject.class, HivePrincipal.class);
+        m.setAccessible(true);
+
+        HivePrivilegeObject obj       = new HivePrivilegeObject(HivePrivilegeObjectType.TABLE_OR_VIEW, "db1", "t1");
+        HivePrincipal       principal = new HivePrincipal("bob", HivePrincipal.HivePrincipalType.USER);
+
+        Object out = m.invoke(authorizer, obj, principal);
+        assertInstanceOf(RangerResourceACLs.class, out);
+        RangerResourceACLs resultAcls = (RangerResourceACLs) out;
+
+        assertFalse(resultAcls.getUserACLs().isEmpty());
+        assertTrue(resultAcls.getUserACLs().containsKey("bob"));
+        assertNotNull(resultAcls.getUserACLs().get("bob").get("select"));
+    }
+
+    @Test
+    void test74_getRangerResourceACLs_filtersExpiredValidityScheduleWithGdsImpliedGrants() throws Exception {
+        RangerBasePlugin   plugin = (RangerBasePlugin) Mockito.spy(newInstanceRangerHivePlugin("hiveCLI"));
+        RangerResourceACLs acls   = new RangerResourceACLs();
+
+        org.apache.ranger.plugin.policyengine.gds.GdsPolicyEngine gdsPolicyEngine = Mockito.mock(org.apache.ranger.plugin.policyengine.gds.GdsPolicyEngine.class);
+        org.apache.ranger.plugin.util.ServiceGdsInfo gdsInfo = new org.apache.ranger.plugin.util.ServiceGdsInfo();
+        RangerServiceDef gdsServiceDef = new RangerServiceDef();
+        RangerServiceDef.RangerAccessTypeDef readAccessDef = new RangerServiceDef.RangerAccessTypeDef(1L, "_READ", "_READ", "_READ", null);
+        readAccessDef.setImpliedGrants(Arrays.asList("select", "read"));
+        gdsServiceDef.setAccessTypes(Collections.singletonList(readAccessDef));
+        gdsInfo.setGdsServiceDef(gdsServiceDef);
+        Mockito.when(gdsPolicyEngine.getGdsInfo()).thenReturn(gdsInfo);
+        Mockito.doReturn(gdsPolicyEngine).when(plugin).getGdsPolicyEngine();
+
+        RangerPolicy pUser = new RangerPolicy();
+        RangerPolicy.RangerPolicyItem item = new RangerPolicy.RangerPolicyItem();
+        item.setAccesses(Collections.singletonList(new RangerPolicy.RangerPolicyItemAccess("_READ", true)));
+        item.setUsers(Collections.singletonList("bob"));
+
+        RangerPolicy.RangerPolicyItemCondition condition = new RangerPolicy.RangerPolicyItemCondition();
+        condition.setType("validitySchedule");
+        // Use an expired schedule (year 2000)
+        condition.setValues(Collections.singletonList("{\"endTime\":\"2000/01/01 00:00:00\"}"));
+        item.setConditions(Collections.singletonList(condition));
+
+        pUser.setPolicyItems(Collections.singletonList(item));
+
+        // The ACL comes in as 'select', but the policy item says '_READ'
+        acls.setUserAccessInfo("bob", "select", RangerPolicyEvaluator.ACCESS_CONDITIONAL, pUser);
+
+        Mockito.doReturn(acls).when(plugin).getResourceACLs(Mockito.any(RangerAccessRequestImpl.class));
+        setStaticHivePlugin(plugin);
+
+        HiveMetastoreClientFactory msFactory = Mockito.mock(HiveMetastoreClientFactory.class);
+        IMetaStoreClient           ms        = Mockito.mock(IMetaStoreClient.class);
+        Mockito.when(msFactory.getHiveMetastoreClient()).thenReturn(ms);
+        RangerHiveAuthorizer authorizer = new RangerHiveAuthorizer(msFactory, null, null, null);
+
+        Method m = RangerHiveAuthorizer.class.getDeclaredMethod("getRangerResourceACLs", HivePrivilegeObject.class, HivePrincipal.class);
+        m.setAccessible(true);
+
+        HivePrivilegeObject obj       = new HivePrivilegeObject(HivePrivilegeObjectType.TABLE_OR_VIEW, "db1", "t1");
+        HivePrincipal       principal = new HivePrincipal("bob", HivePrincipal.HivePrincipalType.USER);
+
+        Object out = m.invoke(authorizer, obj, principal);
+        assertInstanceOf(RangerResourceACLs.class, out);
+        RangerResourceACLs resultAcls = (RangerResourceACLs) out;
+
+        assertTrue(resultAcls.getUserACLs().isEmpty() || !resultAcls.getUserACLs().containsKey("bob"));
+    }
+
+    @Test
+    void test75_getRangerResourceACLs_keepsActiveValidityScheduleWithGdsImpliedGrants() throws Exception {
+        RangerBasePlugin   plugin = (RangerBasePlugin) Mockito.spy(newInstanceRangerHivePlugin("hiveCLI"));
+        RangerResourceACLs acls   = new RangerResourceACLs();
+
+        org.apache.ranger.plugin.policyengine.gds.GdsPolicyEngine gdsPolicyEngine = Mockito.mock(org.apache.ranger.plugin.policyengine.gds.GdsPolicyEngine.class);
+        org.apache.ranger.plugin.util.ServiceGdsInfo gdsInfo = new org.apache.ranger.plugin.util.ServiceGdsInfo();
+        RangerServiceDef gdsServiceDef = new RangerServiceDef();
+        RangerServiceDef.RangerAccessTypeDef readAccessDef = new RangerServiceDef.RangerAccessTypeDef(1L, "_READ", "_READ", "_READ", null);
+        readAccessDef.setImpliedGrants(Arrays.asList("select", "read"));
+        gdsServiceDef.setAccessTypes(Collections.singletonList(readAccessDef));
+        gdsInfo.setGdsServiceDef(gdsServiceDef);
+        Mockito.when(gdsPolicyEngine.getGdsInfo()).thenReturn(gdsInfo);
+        Mockito.doReturn(gdsPolicyEngine).when(plugin).getGdsPolicyEngine();
+
+        RangerPolicy pUser = new RangerPolicy();
+        RangerPolicy.RangerPolicyItem item = new RangerPolicy.RangerPolicyItem();
+        item.setAccesses(Collections.singletonList(new RangerPolicy.RangerPolicyItemAccess("_READ", true)));
+        item.setUsers(Collections.singletonList("bob"));
+
+        RangerPolicy.RangerPolicyItemCondition condition = new RangerPolicy.RangerPolicyItemCondition();
+        condition.setType("validitySchedule");
+        // Use an active schedule (year 2100)
+        condition.setValues(Collections.singletonList("{\"endTime\":\"2100/01/01 00:00:00\"}"));
+        item.setConditions(Collections.singletonList(condition));
+
+        pUser.setPolicyItems(Collections.singletonList(item));
+
+        acls.setUserAccessInfo("bob", "select", RangerPolicyEvaluator.ACCESS_CONDITIONAL, pUser);
+
+        Mockito.doReturn(acls).when(plugin).getResourceACLs(Mockito.any(RangerAccessRequestImpl.class));
+        setStaticHivePlugin(plugin);
+
+        HiveMetastoreClientFactory msFactory = Mockito.mock(HiveMetastoreClientFactory.class);
+        IMetaStoreClient           ms        = Mockito.mock(IMetaStoreClient.class);
+        Mockito.when(msFactory.getHiveMetastoreClient()).thenReturn(ms);
+        RangerHiveAuthorizer authorizer = new RangerHiveAuthorizer(msFactory, null, null, null);
+
+        Method m = RangerHiveAuthorizer.class.getDeclaredMethod("getRangerResourceACLs", HivePrivilegeObject.class, HivePrincipal.class);
+        m.setAccessible(true);
+
+        HivePrivilegeObject obj       = new HivePrivilegeObject(HivePrivilegeObjectType.TABLE_OR_VIEW, "db1", "t1");
+        HivePrincipal       principal = new HivePrincipal("bob", HivePrincipal.HivePrincipalType.USER);
+
+        Object out = m.invoke(authorizer, obj, principal);
+        assertInstanceOf(RangerResourceACLs.class, out);
+        RangerResourceACLs resultAcls = (RangerResourceACLs) out;
+
+        assertFalse(resultAcls.getUserACLs().isEmpty());
+        assertTrue(resultAcls.getUserACLs().containsKey("bob"));
+        assertNotNull(resultAcls.getUserACLs().get("bob").get("select"));
     }
 
     private static RangerAccessResult allowedResult() {

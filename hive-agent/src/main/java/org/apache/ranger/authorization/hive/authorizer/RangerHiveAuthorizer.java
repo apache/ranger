@@ -70,6 +70,7 @@ import org.apache.ranger.plugin.policyengine.RangerAccessRequestImpl;
 import org.apache.ranger.plugin.policyengine.RangerAccessResult;
 import org.apache.ranger.plugin.policyengine.RangerPolicyEngine;
 import org.apache.ranger.plugin.policyengine.RangerResourceACLs;
+import org.apache.ranger.plugin.policyengine.gds.GdsPolicyEngine;
 import org.apache.ranger.plugin.policyevaluator.RangerPolicyEvaluator;
 import org.apache.ranger.plugin.service.RangerBasePlugin;
 import org.apache.ranger.plugin.util.GrantRevokeRequest;
@@ -78,6 +79,7 @@ import org.apache.ranger.plugin.util.RangerAccessRequestUtil;
 import org.apache.ranger.plugin.util.RangerPerfTracer;
 import org.apache.ranger.plugin.util.RangerRequestedResources;
 import org.apache.ranger.plugin.util.RangerRoles;
+import org.apache.ranger.plugin.util.ServiceDefUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -2876,6 +2878,25 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
         if (principalACLs != null) {
             Map<String, RangerResourceACLs.AccessResult> accessMap = principalACLs.get(principal.getName());
             if (accessMap != null) {
+                Map<String, Collection<String>> impliedGrants    = null;
+                Map<String, Collection<String>> gdsImpliedGrants = null;
+
+                if (hivePlugin != null) {
+                    RangerServiceDef serviceDef = hivePlugin.getServiceDef();
+                    if (serviceDef != null) {
+                        impliedGrants = ServiceDefUtil.getExpandedImpliedGrants(serviceDef);
+                    }
+
+                    GdsPolicyEngine gdsPolicyEngine = hivePlugin.getGdsPolicyEngine();
+                    if (gdsPolicyEngine != null && gdsPolicyEngine.getGdsInfo() != null) {
+                        RangerServiceDef gdsServiceDef = gdsPolicyEngine.getGdsInfo().getGdsServiceDef();
+                        if (gdsServiceDef != null) {
+                            gdsImpliedGrants = ServiceDefUtil.getExpandedImpliedGrants(gdsServiceDef);
+                        }
+                    }
+                }
+
+                Map<RangerPolicy.RangerPolicyItem, Boolean> policyItemActiveCache = new HashMap<>();
                 List<String> keysToRemove = new ArrayList<>();
                 for (Map.Entry<String, RangerResourceACLs.AccessResult> entry : accessMap.entrySet()) {
                     RangerResourceACLs.AccessResult accessResult = entry.getValue();
@@ -2899,9 +2920,16 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
                             }
 
                             for (RangerPolicy.RangerPolicyItem policyItem : policyItems) {
-                                if (isPolicyItemApplicable(policyItem, principal, entry.getKey()) && isPolicyItemValidityActive(policyItem, request)) {
-                                    hasActiveItem = true;
-                                    break;
+                                if (isPolicyItemApplicable(policyItem, principal, entry.getKey(), impliedGrants, gdsImpliedGrants)) {
+                                    Boolean isActive = policyItemActiveCache.get(policyItem);
+                                    if (isActive == null) {
+                                        isActive = isPolicyItemValidityActive(policyItem, request);
+                                        policyItemActiveCache.put(policyItem, isActive);
+                                    }
+                                    if (isActive) {
+                                        hasActiveItem = true;
+                                        break;
+                                    }
                                 }
                             }
                             if (!hasActiveItem) {
@@ -2920,7 +2948,7 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
         }
     }
 
-    private boolean isPolicyItemApplicable(RangerPolicy.RangerPolicyItem policyItem, HivePrincipal principal, String accessType) {
+    private boolean isPolicyItemApplicable(RangerPolicy.RangerPolicyItem policyItem, HivePrincipal principal, String accessType, Map<String, Collection<String>> impliedGrants, Map<String, Collection<String>> gdsImpliedGrants) {
         if (policyItem == null || principal == null || StringUtils.isBlank(accessType)) {
             return false;
         }
@@ -2930,12 +2958,42 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
         }
 
         boolean hasAccessType = false;
+
         for (RangerPolicy.RangerPolicyItemAccess access : policyItem.getAccesses()) {
             if (StringUtils.equalsIgnoreCase(accessType, access.getType()) || StringUtils.equalsIgnoreCase(access.getType(), RangerPolicyEngine.ANY_ACCESS)) {
                 hasAccessType = true;
                 break;
             }
+            if (impliedGrants != null) {
+                Collection<String> impliedAccessTypes = impliedGrants.get(access.getType());
+                if (impliedAccessTypes != null) {
+                    for (String impliedAccessType : impliedAccessTypes) {
+                        if (StringUtils.equalsIgnoreCase(accessType, impliedAccessType)) {
+                            hasAccessType = true;
+                            break;
+                        }
+                    }
+                }
+            }
+            if (hasAccessType) {
+                break;
+            }
+            if (gdsImpliedGrants != null) {
+                Collection<String> impliedAccessTypes = gdsImpliedGrants.get(access.getType());
+                if (impliedAccessTypes != null) {
+                    for (String impliedAccessType : impliedAccessTypes) {
+                        if (StringUtils.equalsIgnoreCase(accessType, impliedAccessType)) {
+                            hasAccessType = true;
+                            break;
+                        }
+                    }
+                }
+            }
+            if (hasAccessType) {
+                break;
+            }
         }
+
         if (!hasAccessType) {
             return false;
         }
@@ -2959,7 +3017,7 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
             if (!StringUtils.equalsIgnoreCase(condition.getType(), "validitySchedule")) {
                 continue;
             }
-            RangerValidityScheduleConditionEvaluator evaluator = new org.apache.ranger.plugin.conditionevaluator.RangerValidityScheduleConditionEvaluator();
+            RangerValidityScheduleConditionEvaluator evaluator = new RangerValidityScheduleConditionEvaluator();
             evaluator.setPolicyItemCondition(condition);
             evaluator.init();
             if (!evaluator.isMatched(request)) {
