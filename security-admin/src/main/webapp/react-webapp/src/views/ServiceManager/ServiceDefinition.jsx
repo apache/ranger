@@ -178,7 +178,7 @@ class ServiceDefinition extends Component {
                             pathname: `/service/${s.id}/policies/${RangerPolicyType.RANGER_ACCESS_POLICY_TYPE.value}`,
                             detail: this.props.selectedZone
                           }}
-                          className="service-name text-info"
+                          className="service-name"
                         >
                           {s.displayName !== undefined ? s.displayName : s.name}
                         </Link>

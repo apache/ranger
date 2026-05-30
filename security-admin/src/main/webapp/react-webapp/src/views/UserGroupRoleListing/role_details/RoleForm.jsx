@@ -26,7 +26,8 @@ import {
   Loader,
   CustomTooltip,
   selectInputCustomStyles,
-  trimInputValue
+  trimInputValue,
+  ConfirmationClearIndicator
 } from "Components/CommonComponents";
 import { FieldArray } from "react-final-form-arrays";
 import arrayMutators from "final-form-arrays";
@@ -639,6 +640,10 @@ function RoleForm() {
                             styles={selectInputCustomStyles}
                             tabSelectsValue={false}
                             placeholder="Select Users"
+                            clearConfirmMessage="Users"
+                            components={{
+                              ClearIndicator: ConfirmationClearIndicator
+                            }}
                           />
                         </div>
                         <div className="col-sm-3">
@@ -748,6 +753,10 @@ function RoleForm() {
                             styles={selectInputCustomStyles}
                             tabSelectsValue={false}
                             placeholder="Select Groups"
+                            clearConfirmMessage="Groups"
+                            components={{
+                              ClearIndicator: ConfirmationClearIndicator
+                            }}
                           />
                         </div>
                         <div className="col-sm-3">
@@ -857,6 +866,10 @@ function RoleForm() {
                             styles={selectInputCustomStyles}
                             tabSelectsValue={false}
                             placeholder="Select Roles"
+                            clearConfirmMessage="Roles"
+                            components={{
+                              ClearIndicator: ConfirmationClearIndicator
+                            }}
                           />
                         </div>
                         <div className="col-sm-3">

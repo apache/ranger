@@ -32,8 +32,13 @@ import {
 const esprima = require("esprima");
 
 export default function PolicyConditionsComp(props) {
-  const { policyConditionDetails, inputVal, showModal, handleCloseModal } =
-    props;
+  const {
+    policyConditionDetails,
+    inputVal,
+    showModal,
+    handleCloseModal,
+    modalHeader
+  } = props;
 
   const accessedOpt = [
     { value: "yes", label: "Yes" },
@@ -55,7 +60,7 @@ export default function PolicyConditionsComp(props) {
   };
 
   const formInitialData = () => {
-    var conditions = {};
+    let conditions = {};
     if (inputVal && inputVal.value) {
       for (let val in inputVal.value) {
         conditions[val] = inputVal.value[val];
@@ -125,11 +130,11 @@ export default function PolicyConditionsComp(props) {
       >
         <Form
           onSubmit={handleSubmit}
-          initialValues={formInitialData}
+          initialValues={formInitialData()}
           render={({ handleSubmit }) => (
             <form onSubmit={handleSubmit}>
               <Modal.Header closeButton>
-                <Modal.Title>Policy Condition</Modal.Title>
+                <Modal.Title>{modalHeader}</Modal.Title>
               </Modal.Header>
               <Modal.Body>
                 {policyConditionDetails?.length > 0 &&
@@ -199,7 +204,7 @@ export default function PolicyConditionsComp(props) {
                                               : "form-control"
                                           }
                                           as="textarea"
-                                          rows={3}
+                                          rows={12}
                                           onBlur={(e) =>
                                             trimInputValue(e, input)
                                           }
@@ -243,10 +248,6 @@ export default function PolicyConditionsComp(props) {
                                     onCreateOption={(inputValue) => {
                                       const trimmedValue = inputValue.trim();
                                       if (trimmedValue) {
-                                        const newOption = {
-                                          label: trimmedValue,
-                                          value: trimmedValue
-                                        };
                                         const currentValues = input.value || [];
                                         const newValues = [
                                           ...currentValues,
