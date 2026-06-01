@@ -156,10 +156,6 @@ public class RangerPdpConfig {
         return get(RangerPdpConstants.PROP_AUTHN_JWT_PUBLIC_KEY, "");
     }
 
-    public String getJwtCookieName() {
-        return get(RangerPdpConstants.PROP_AUTHN_JWT_COOKIE_NAME, "hadoop-jwt");
-    }
-
     public String getJwtAudiences() {
         return get(RangerPdpConstants.PROP_AUTHN_JWT_AUDIENCES, "");
     }
