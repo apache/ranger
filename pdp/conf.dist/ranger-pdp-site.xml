@@ -165,12 +165,6 @@
   </property>
 
   <property>
-    <name>ranger.pdp.authn.jwt.cookie.name</name>
-    <value>hadoop-jwt</value>
-    <description>Cookie name from which a JWT bearer token may be read.</description>
-  </property>
-
-  <property>
     <name>ranger.pdp.authn.jwt.audiences</name>
     <value/>
     <description>Comma-separated list of accepted JWT audiences. Empty means any audience is accepted.</description>

@@ -33,15 +33,14 @@ import java.util.Properties;
 /**
  * Authenticates requests using a JWT bearer token.
  *
- * <p>Checks for the token in the {@code Authorization: Bearer <token>} header first,
- * then in the configured JWT cookie.  Delegates signature verification and expiry/audience
+ * <p>Checks for the token in the {@code Authorization: Bearer <token>} header
+ * Delegates signature verification and expiry/audience
  * checks to {@link RangerDefaultJwtAuthHandler} from the {@code ranger-authn} module.
  *
  * <p>Configuration keys (all prefixed with {@code ranger.pdp.authn.jwt.}):
  * <ul>
  *   <li>{@code provider.url}  – JWKS endpoint URL (optional if public key is set)
  *   <li>{@code public.key}    – PEM-encoded public key (optional if provider URL is set)
- *   <li>{@code cookie.name}   – JWT cookie name (default: {@code hadoop-jwt})
  *   <li>{@code audiences}     – comma-separated list of accepted audiences (optional)
  * </ul>
  */
@@ -58,7 +57,6 @@ public class JwtAuthNHandler implements PdpAuthNHandler {
 
         copyIfPresent(config, RangerPdpConstants.PROP_AUTHN_JWT_PROVIDER_URL, jwtConfig, RangerDefaultJwtAuthHandler.KEY_PROVIDER_URL);
         copyIfPresent(config, RangerPdpConstants.PROP_AUTHN_JWT_PUBLIC_KEY, jwtConfig, RangerDefaultJwtAuthHandler.KEY_JWT_PUBLIC_KEY);
-        copyIfPresent(config, RangerPdpConstants.PROP_AUTHN_JWT_COOKIE_NAME, jwtConfig, RangerDefaultJwtAuthHandler.KEY_JWT_COOKIE_NAME);
         copyIfPresent(config, RangerPdpConstants.PROP_AUTHN_JWT_AUDIENCES, jwtConfig, RangerDefaultJwtAuthHandler.KEY_JWT_AUDIENCES);
 
         delegate = new RangerDefaultJwtAuthHandler();

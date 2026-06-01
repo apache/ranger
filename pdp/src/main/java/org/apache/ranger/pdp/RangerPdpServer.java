@@ -230,7 +230,6 @@ public class RangerPdpServer {
         authFilterDef.addInitParameter(RangerPdpConstants.PROP_AUTHN_JWT_ENABLED, Boolean.toString(config.isJwtAuthnEnabled()));
         authFilterDef.addInitParameter(RangerPdpConstants.PROP_AUTHN_JWT_PROVIDER_URL, config.getJwtProviderUrl());
         authFilterDef.addInitParameter(RangerPdpConstants.PROP_AUTHN_JWT_PUBLIC_KEY, config.getJwtPublicKey());
-        authFilterDef.addInitParameter(RangerPdpConstants.PROP_AUTHN_JWT_COOKIE_NAME, config.getJwtCookieName());
         authFilterDef.addInitParameter(RangerPdpConstants.PROP_AUTHN_JWT_AUDIENCES, config.getJwtAudiences());
 
         // Kerberos / SPNEGO

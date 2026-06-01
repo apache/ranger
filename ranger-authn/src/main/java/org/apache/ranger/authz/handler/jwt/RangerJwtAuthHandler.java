@@ -53,14 +53,11 @@ public abstract class RangerJwtAuthHandler implements RangerAuthHandler {
     public static final String TYPE                = "ranger-jwt";        // Constant that identifies the authentication mechanism.
     public static final String KEY_PROVIDER_URL    = "jwks.provider-url"; // JWKS provider URL
     public static final String KEY_JWT_PUBLIC_KEY  = "jwt.public-key";    // JWT token provider public key
-    public static final String KEY_JWT_COOKIE_NAME = "jwt.cookie-name";   // JWT cookie name
     public static final String KEY_JWT_AUDIENCES   = "jwt.audiences";
     public static final String JWT_AUTHZ_PREFIX    = "Bearer ";
 
     protected List<String>               audiences = null;
     protected JWKSource<SecurityContext> keySource = null;
-
-    protected static String cookieName = "hadoop-jwt";
 
     @Override
     public void initialize(final Properties config) throws Exception {
@@ -84,12 +81,6 @@ public abstract class RangerJwtAuthHandler implements RangerAuthHandler {
 	    throw new Exception("RangerJwtAuthHandler: Mandatory configs ('jwks.provider-url' & 'jwt.public-key') are missing, must provide atleast one.");
 	}
 
-        // setup custom cookie name if configured
-        String customCookieName = config.getProperty(KEY_JWT_COOKIE_NAME);
-        if (customCookieName != null) {
-            cookieName = customCookieName;
-        }
-
         // setup audiences if configured
         String audiencesStr = config.getProperty(KEY_JWT_AUDIENCES);
         if (StringUtils.isNotBlank(audiencesStr)) {
@@ -101,31 +92,24 @@ public abstract class RangerJwtAuthHandler implements RangerAuthHandler {
         }
     }
 
-    protected AuthenticationToken authenticate(final String jwtAuthHeader, final String jwtCookie, final String doAsUser) {
+    protected AuthenticationToken authenticate(final String jwtAuthHeader) {
         if (LOG.isDebugEnabled()) {
             LOG.debug("===>>> RangerJwtAuthHandler.authenticate()");
         }
 
         AuthenticationToken token = null;
-        if (shouldProceedAuth(jwtAuthHeader, jwtCookie)) {
-            String serializedJWT = getJWT(jwtAuthHeader, jwtCookie);
+        if (shouldProceedAuth(jwtAuthHeader)) {
+            String serializedJWT = getJWT(jwtAuthHeader);
 
             if (StringUtils.isNotBlank(serializedJWT)) {
                 try {
                     final SignedJWT jwtToken = SignedJWT.parse(serializedJWT);
                     boolean         valid    = validateToken(jwtToken);
                     if (valid) {
-                        String userName;
-
-                        if (StringUtils.isNotBlank(doAsUser)) {
-                            userName = doAsUser.trim();
-                        } else {
-                            userName = jwtToken.getJWTClaimsSet().getSubject();
-                        }
+                        String userName = jwtToken.getJWTClaimsSet().getSubject();
 
                         if (LOG.isDebugEnabled()) {
                             LOG.debug("RangerJwtAuthHandler.authenticate(): Issuing AuthenticationToken for user: [{}]", userName);
-                            LOG.debug("RangerJwtAuthHandler.authenticate(): Authentication successful for user [{}] and doAs user is [{}]", jwtToken.getJWTClaimsSet().getSubject(), doAsUser);
                         }
                         token = new AuthenticationToken(userName, userName, TYPE);
                     } else {
@@ -146,22 +130,13 @@ public abstract class RangerJwtAuthHandler implements RangerAuthHandler {
         return token;
     }
 
-    protected String getJWT(final String jwtAuthHeader, final String jwtCookie) {
+    protected String getJWT(final String jwtAuthHeader) {
         String serializedJWT = null;
 
         // try to fetch from AUTH header
         if (StringUtils.isNotBlank(jwtAuthHeader) && jwtAuthHeader.startsWith(JWT_AUTHZ_PREFIX)) {
             serializedJWT = jwtAuthHeader.substring(JWT_AUTHZ_PREFIX.length());
         }
-
-        // if not found in AUTH header, try to fetch from cookie
-        if (StringUtils.isBlank(serializedJWT) && StringUtils.isNotBlank(jwtCookie)) {
-            String[] cookie = jwtCookie.split("=");
-            if (cookieName.equals(cookie[0])) {
-                serializedJWT = cookie[1];
-            }
-        }
-
         return serializedJWT;
     }
 
@@ -317,7 +292,7 @@ public abstract class RangerJwtAuthHandler implements RangerAuthHandler {
         return valid;
     }
 
-    public static boolean shouldProceedAuth(final String authHeader, final String jwtCookie) {
-        return (StringUtils.isNotBlank(authHeader) && authHeader.startsWith(JWT_AUTHZ_PREFIX)) || (StringUtils.isNotBlank(jwtCookie) && jwtCookie.startsWith(cookieName));
+    public static boolean shouldProceedAuth(final String authHeader) {
+        return (StringUtils.isNotBlank(authHeader) && authHeader.startsWith(JWT_AUTHZ_PREFIX));
     }
 }
