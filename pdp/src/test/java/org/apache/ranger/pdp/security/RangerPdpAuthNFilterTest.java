@@ -55,6 +55,7 @@ public class RangerPdpAuthNFilterTest {
 
         params.put(RangerPdpConstants.PROP_AUTHN_TYPES, "header");
         params.put(RangerPdpConstants.PROP_AUTHN_HEADER_ENABLED, "true");
+        params.put(RangerPdpConstants.PROP_AUTHN_HEADER_USERNAME, "Some-X-Header");
 
         filter.init(new TestFilterConfig(params));
 
