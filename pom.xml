@@ -224,7 +224,7 @@
         <sqoop.version>1.99.7</sqoop.version>
         <storm.version>1.2.4</storm.version>
         <testng.version>7.5.1</testng.version>
-        <tomcat.embed.version>9.0.115</tomcat.embed.version>
+        <tomcat.embed.version>9.0.118</tomcat.embed.version>
         <!-- trino plugin deps -->
         <trino.airlift.version>0.192</trino.airlift.version>
         <trino.bval-jsr.version>2.0.0</trino.bval-jsr.version>
