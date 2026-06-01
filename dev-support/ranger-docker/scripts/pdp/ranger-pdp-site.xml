@@ -109,6 +109,7 @@
     <value>true</value>
   </property>
 
+  <!-- docker deployment uses this by default, generally must be explicitly set -->
   <property>
     <name>ranger.pdp.authn.header.username</name>
     <value>X-Forwarded-User</value>

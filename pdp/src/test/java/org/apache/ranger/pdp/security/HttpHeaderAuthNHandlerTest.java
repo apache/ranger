@@ -29,10 +29,11 @@ import java.lang.reflect.Proxy;
 import java.util.Properties;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 public class HttpHeaderAuthNHandlerTest {
     @Test
-    public void testAuthenticate_usesDefaultHeaderName() {
+    public void testAuthenticate_usesNoHeaderName() {
         HttpHeaderAuthNHandler handler = new HttpHeaderAuthNHandler();
         Properties             config  = new Properties();
 
@@ -41,9 +42,9 @@ public class HttpHeaderAuthNHandlerTest {
         HttpServletRequest     request = requestWithHeader("X-Forwarded-User", "alice");
         PdpAuthNHandler.Result result  = handler.authenticate(request, null);
 
-        assertEquals(PdpAuthNHandler.Result.Status.AUTHENTICATED, result.getStatus());
-        assertEquals("alice", result.getUserName());
-        assertEquals(HttpHeaderAuthNHandler.AUTH_TYPE, result.getAuthType());
+        assertEquals(PdpAuthNHandler.Result.Status.SKIP, result.getStatus());
+        assertNull(result.getUserName());
+        assertNull(result.getAuthType());
     }
 
     @Test
