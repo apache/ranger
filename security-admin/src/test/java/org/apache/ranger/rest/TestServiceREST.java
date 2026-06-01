@@ -395,6 +395,20 @@ public class TestServiceREST {
     public void test2updateServiceDef() throws Exception {
         RangerServiceDef rangerServiceDef = rangerServiceDef();
 
+        // Ensure the service def has a name to pass validation
+        if (StringUtils.isBlank(rangerServiceDef.getName())) {
+            rangerServiceDef.setName("hdfs");
+        }
+
+        // Mock restErrorUtil to prevent NullPointerException
+        WebApplicationException mockException = new WebApplicationException(
+                "serviceDef Id mismatch",
+                HttpServletResponse.SC_BAD_REQUEST);
+        Mockito.when(restErrorUtil.createRESTException(
+                Mockito.anyInt(),
+                Mockito.anyString(),
+                Mockito.anyBoolean())).thenReturn(mockException);
+
         Mockito.when(validatorFactory.getServiceDefValidator(svcStore)).thenReturn(serviceDefValidator);
         Mockito.when(svcStore.updateServiceDef(Mockito.any())).thenReturn(rangerServiceDef);
 
@@ -4504,5 +4518,30 @@ public class TestServiceREST {
                 throw new RuntimeException(ite.getCause());
             }
         });
+    }
+
+    @Test
+    public void testUpdateServiceDefWithValidNameButMismatchedId() throws Exception {
+        // Arrange
+        RangerServiceDef serviceDef = rangerServiceDef();
+        serviceDef.setName("hdfs"); // Valid name
+        serviceDef.setId(999L);     // Mismatched ID (different from Id = 8L)
+
+        WebApplicationException mockException = new WebApplicationException();
+        Mockito.when(restErrorUtil.createRESTException(
+                Mockito.eq(HttpServletResponse.SC_BAD_REQUEST),
+                Mockito.eq("serviceDef Id mismatch"),
+                Mockito.eq(true)
+        )).thenReturn(mockException);
+
+        // Act & Assert
+        Assertions.assertThrows(WebApplicationException.class,
+                () -> serviceREST.updateServiceDef(serviceDef, Id));
+
+        // Verify the correct error was created
+        Mockito.verify(restErrorUtil).createRESTException(
+                HttpServletResponse.SC_BAD_REQUEST,
+                "serviceDef Id mismatch",
+                true);
     }
 }
