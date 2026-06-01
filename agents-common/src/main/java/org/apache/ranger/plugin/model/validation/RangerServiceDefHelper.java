@@ -510,7 +510,7 @@ public class RangerServiceDefHelper {
                         Map<String, RangerResourceDef> wildcardMap = new HashMap<>(resources.size());
                         for (RangerResourceDef res : resources) {
                             if (res != null) {
-                                wildcardMap.put(res.getName(), createWildcardEnabledResourceDef(res));
+                                wildcardMap.putIfAbsent(res.getName(), createWildcardEnabledResourceDef(res));
                             }
                         }
                         wildcardEnabledResourceDefs.put(policyType, Collections.unmodifiableMap(wildcardMap));
@@ -558,9 +558,6 @@ public class RangerServiceDefHelper {
         }
 
         private RangerResourceDef createWildcardEnabledResourceDef(RangerResourceDef resourceDef) {
-            if (resourceDef == null) {
-                return null;
-            }
             RangerResourceDef ret = new RangerResourceDef(resourceDef);
             ret.getMatcherOptions().put(RangerAbstractResourceMatcher.OPTION_WILD_CARD, Boolean.TRUE.toString());
             return ret;
