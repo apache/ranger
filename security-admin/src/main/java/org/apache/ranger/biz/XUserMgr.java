@@ -1678,7 +1678,6 @@ public class XUserMgr extends XUserMgrBase {
 
         vXGroupUser.setParentGroupId(xGroup.getId());
 
-
         return super.updateXGroupUser(vXGroupUser);
     }
 

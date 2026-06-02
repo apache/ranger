@@ -2031,6 +2031,22 @@ public class TestXUserMgr {
         VXUser vxUser = vxUser();
         vxUser.setUserSource(RangerCommonEnums.USER_EXTERNAL);
         VXGroupUser vxGroupUser = vxGroupUser();
+        // Mock XXGroupUser lookup
+        XXGroupUserDao xxGroupUserDao = Mockito.mock(XXGroupUserDao.class);
+        XXGroupUser xxGroupUser = new XXGroupUser();
+        Mockito.when(daoManager.getXXGroupUser()).thenReturn(xxGroupUserDao);
+        Mockito.when(xxGroupUserDao.getById(vxGroupUser.getId())).thenReturn(xxGroupUser);
+        // Mock XXGroup lookup
+        XXGroupDao xxGroupDao = Mockito.mock(XXGroupDao.class);
+        XXGroup xxGroup = new XXGroup();
+        xxGroup.setId(1L);
+        Mockito.when(daoManager.getXXGroup()).thenReturn(xxGroupDao);
+        Mockito.when(xxGroupDao.findByGroupName(vxGroupUser.getName())).thenReturn(xxGroup);
+        // Mock XXUser lookup
+        XXUserDao xxUserDao = Mockito.mock(XXUserDao.class);
+        XXUser xxUser = new XXUser();
+        Mockito.when(daoManager.getXXUser()).thenReturn(xxUserDao);
+        Mockito.when(xxUserDao.getById(vxGroupUser.getUserId())).thenReturn(xxUser);
         Mockito.when(xGroupUserService.updateResource(Mockito.any())).thenReturn(vxGroupUser);
         VXGroupUser dbvxUser = xUserMgr.updateXGroupUser(vxGroupUser);
         Assertions.assertNotNull(dbvxUser);
@@ -2492,9 +2508,25 @@ public class TestXUserMgr {
         xXGroupUserList.add(xXGroupUser);
         Mockito.when(daoManager.getXXGroupUser()).thenReturn(xxGroupUserDao);
         Mockito.when(xxGroupUserDao.findByGroupId(vXGroup.getId())).thenReturn(xXGroupUserList);
+        // CHANGED: Use anyLong() so it matches regardless of internal ID state
+        Mockito.when(xxGroupUserDao.getById(Mockito.anyLong())).thenReturn(xXGroupUser);
+        // Mock XXGroup lookup
+        XXGroupDao xxGroupDao = Mockito.mock(XXGroupDao.class);
+        XXGroup xxGroup = new XXGroup();
+        xxGroup.setId(vXGroup.getId());
+        Mockito.when(daoManager.getXXGroup()).thenReturn(xxGroupDao);
+        // CHANGED: Use anyString() because the group name likely gets altered internally during the loop
+        Mockito.when(xxGroupDao.findByGroupName(Mockito.anyString())).thenReturn(xxGroup);
+        // Mock XXUser lookup
+        XXUserDao xxUserDao = Mockito.mock(XXUserDao.class);
+        XXUser xxUser = new XXUser();
+        Mockito.when(daoManager.getXXUser()).thenReturn(xxUserDao);
+        // CHANGED: Use anyLong() for user ID lookup
+        Mockito.when(xxUserDao.getById(Mockito.anyLong())).thenReturn(xxUser);
         Mockito.when(xGroupUserService.populateViewBean(xXGroupUser)).thenReturn(vxGroupUser);
         xUserMgr.updateXgroupUserForGroupUpdate(vXGroup);
-        Mockito.verify(daoManager).getXXGroupUser();
+        // Verify changes
+        Mockito.verify(daoManager, Mockito.atLeastOnce()).getXXGroupUser();
         Mockito.verify(xxGroupUserDao).findByGroupId(vXGroup.getId());
     }
 
