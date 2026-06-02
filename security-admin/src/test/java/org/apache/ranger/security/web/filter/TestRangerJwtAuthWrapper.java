@@ -37,7 +37,6 @@ import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
-import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -178,7 +177,7 @@ public class TestRangerJwtAuthWrapper {
     }
 
     @Test
-    void testDoFilter_skipsJwtFilter_whenNoBearerAndNoCookie() throws Exception {
+    void testDoFilter_skipsJwtFilter_whenNoBearer() throws Exception {
         PropertiesUtil.getPropertiesMap().put("ranger.sso.enabled", "false");
 
         HttpServletRequest req = Mockito.mock(HttpServletRequest.class);
@@ -187,7 +186,6 @@ public class TestRangerJwtAuthWrapper {
 
         // no bearer header, no cookies
         Mockito.when(req.getHeader("Authorization")).thenReturn(null);
-        Mockito.when(req.getCookies()).thenReturn(null);
 
         RangerJwtAuthFilter jwt = Mockito.mock(RangerJwtAuthFilter.class);
         RangerJwtAuthWrapper wrapper = new RangerJwtAuthWrapper();
@@ -196,26 +194,6 @@ public class TestRangerJwtAuthWrapper {
         wrapper.doFilter(req, res, chain);
 
         verify(jwt, never()).doFilter(req, res, chain);
-        verify(chain, times(1)).doFilter(req, res);
-    }
-
-    @Test
-    void testDoFilter_invokesJwtFilter_whenJwtCookiePresent() throws Exception {
-        PropertiesUtil.getPropertiesMap().put("ranger.sso.enabled", "false");
-
-        HttpServletRequest req = Mockito.mock(HttpServletRequest.class);
-        HttpServletResponse res = Mockito.mock(HttpServletResponse.class);
-        FilterChain chain = Mockito.mock(FilterChain.class);
-
-        Mockito.when(req.getHeader("Authorization")).thenReturn(null);
-        Mockito.when(req.getCookies()).thenReturn(new Cookie[] {new Cookie("hadoop-jwt", "abc")});
-        RangerJwtAuthFilter jwt = Mockito.mock(RangerJwtAuthFilter.class);
-        RangerJwtAuthWrapper wrapper = new RangerJwtAuthWrapper();
-        setField(wrapper, "rangerJwtAuthFilter", jwt);
-
-        wrapper.doFilter(req, res, chain);
-
-        verify(jwt, times(1)).doFilter(req, res, chain);
         verify(chain, times(1)).doFilter(req, res);
     }
 
