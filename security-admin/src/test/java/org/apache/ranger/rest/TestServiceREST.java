@@ -4544,6 +4544,8 @@ public class TestServiceREST {
                 "serviceDef Id mismatch",
                 true);
     }
+
+    @Test
     public void testUpdateService_IdMismatchBetweenPayloadAndURL() throws Exception {
         // service has id=8 in payload, but URL has id=99 — should trigger BAD_REQUEST
         RangerService service = rangerService();
