@@ -1653,6 +1653,32 @@ public class XUserMgr extends XUserMgrBase {
 
         xaBizUtil.blockAuditorRoleUser();
 
+        XXGroupUser xxGroupUser = null;
+
+        if (vXGroupUser.getId() != null) {
+            xxGroupUser = daoManager.getXXGroupUser().getById(vXGroupUser.getId());
+            if (xxGroupUser == null) {
+                throw restErrorUtil.createRESTException(
+                        "Group-User mapping not found with ID: " + vXGroupUser.getId(),
+                        MessageEnums.DATA_NOT_FOUND);
+            }
+        }
+
+        XXGroup xGroup = daoManager.getXXGroup().findByGroupName(vXGroupUser.getName());
+        if (xGroup == null) {
+            throw restErrorUtil.createRESTException("Group not found: " + vXGroupUser.getName(),
+                    MessageEnums.DATA_NOT_FOUND);
+        }
+
+        XXUser xUser = daoManager.getXXUser().getById(vXGroupUser.getUserId());
+        if (xUser == null) {
+            throw restErrorUtil.createRESTException("User not found with ID: " + vXGroupUser.getUserId(),
+                    MessageEnums.DATA_NOT_FOUND);
+        }
+
+        vXGroupUser.setParentGroupId(xGroup.getId());
+
+
         return super.updateXGroupUser(vXGroupUser);
     }
 
