@@ -4544,4 +4544,55 @@ public class TestServiceREST {
                 "serviceDef Id mismatch",
                 true);
     }
+
+    @Test
+    public void testUpdateService_IdMismatchBetweenPayloadAndURL() throws Exception {
+        // service has id=8 in payload, but URL has id=99 — should trigger BAD_REQUEST
+        RangerService service = rangerService();
+        service.setId(8L);
+        service.setName("test-service");
+
+        HttpServletRequest request = Mockito.mock(HttpServletRequest.class);
+        Mockito.when(request.getRequestURI()).thenReturn("/ranger/plugins/services/99");
+
+        WebApplicationException expectedException = new WebApplicationException(HttpServletResponse.SC_BAD_REQUEST);
+        Mockito.when(restErrorUtil.createRESTException(
+                HttpServletResponse.SC_BAD_REQUEST,
+                "serviceDef Id mismatch or service name not provided",
+                true)).thenReturn(expectedException);
+
+        Assertions.assertThrows(WebApplicationException.class, () ->
+                serviceREST.updateService(service, request));
+
+        Mockito.verify(restErrorUtil).createRESTException(
+                HttpServletResponse.SC_BAD_REQUEST,
+                "serviceDef Id mismatch or service name not provided",
+                true);
+    }
+
+    @Test
+    public void testUpdateService_BlankNameWithIdInPayload() throws Exception {
+        // service has id set but name is blank — should trigger BAD_REQUEST
+        RangerService service = rangerService();
+        service.setId(8L);
+        service.setName(""); // blank name
+
+        HttpServletRequest request = Mockito.mock(HttpServletRequest.class);
+        Mockito.when(request.getRequestURI()).thenReturn("/ranger/plugins/services/8");
+
+        WebApplicationException expectedException = new WebApplicationException(HttpServletResponse.SC_BAD_REQUEST);
+        Mockito.when(restErrorUtil.createRESTException(
+                        HttpServletResponse.SC_BAD_REQUEST,
+                        "serviceDef Id mismatch or service name not provided",
+                        true))
+                .thenReturn(expectedException);
+
+        Assertions.assertThrows(WebApplicationException.class, () ->
+                serviceREST.updateService(service, request));
+
+        Mockito.verify(restErrorUtil).createRESTException(
+                HttpServletResponse.SC_BAD_REQUEST,
+                "serviceDef Id mismatch or service name not provided",
+                true);
+    }
 }
