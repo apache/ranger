@@ -27,8 +27,9 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
-import org.apache.ranger.json.JsonDateSerializer;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import org.apache.ranger.json.JsonDateSerializer;
+
 import java.sql.Date;
 import java.text.SimpleDateFormat;
 import java.util.TimeZone;
@@ -120,8 +121,8 @@ public class VXFileSyncSourceInfo implements java.io.Serializable {
         dateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
 
         sb.append("{\"fileName\":\"").append(fileName);
-        sb.append("\", \"syncTime\":\"").append(dateFormat.format(syncTime == null? new java.util.Date() : syncTime));
-        sb.append("\", \"lastModified\":\"").append(dateFormat.format(lastModified == null? new java.util.Date() : lastModified));
+        sb.append("\", \"syncTime\":\"").append(dateFormat.format(syncTime == null ? new java.util.Date() : syncTime));
+        sb.append("\", \"lastModified\":\"").append(dateFormat.format(lastModified == null ? new java.util.Date() : lastModified));
         sb.append("\", \"totalUsersSynced\":\"").append(totalUsersSynced);
         sb.append("\", \"totalGroupsSynced\":\"").append(totalGroupsSynced);
         sb.append("\", \"totalUsersDeleted\":\"").append(totalUsersDeleted);
