@@ -27,6 +27,12 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import org.apache.ranger.json.JsonDateSerializer;
+
+import java.sql.Date;
+import java.text.SimpleDateFormat;
+import java.util.TimeZone;
 
 @JsonAutoDetect(getterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE, fieldVisibility = Visibility.ANY)
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -36,8 +42,10 @@ public class VXUnixSyncSourceInfo implements java.io.Serializable {
 
     private String unixBackend;
     private String fileName;
-    private String syncTime;
-    private String lastModified;
+    @JsonSerialize(using = JsonDateSerializer.class)
+    private Date syncTime;
+    @JsonSerialize(using = JsonDateSerializer.class)
+    private Date lastModified;
     private String minUserId;
     private String minGroupId;
     private long   totalUsersSynced;
@@ -56,19 +64,19 @@ public class VXUnixSyncSourceInfo implements java.io.Serializable {
         this.fileName = fileName;
     }
 
-    public String getSyncTime() {
+    public Date getSyncTime() {
         return syncTime;
     }
 
-    public void setSyncTime(String syncTime) {
+    public void setSyncTime(Date syncTime) {
         this.syncTime = syncTime;
     }
 
-    public String getLastModified() {
+    public Date getLastModified() {
         return lastModified;
     }
 
-    public void setLastModified(String lastModified) {
+    public void setLastModified(Date lastModified) {
         this.lastModified = lastModified;
     }
 
@@ -136,10 +144,13 @@ public class VXUnixSyncSourceInfo implements java.io.Serializable {
     }
 
     public StringBuilder toString(StringBuilder sb) {
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
+        dateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
+
         sb.append("{\"unixBackend\":\"").append(unixBackend);
         sb.append("\", \"fileName\":\"").append(fileName);
-        sb.append("\", \"syncTime\":\"").append(syncTime);
-        sb.append("\", \"lastModified\":\"").append(lastModified);
+        sb.append("\", \"syncTime\":\"").append(dateFormat.format(syncTime == null ? new java.util.Date() : syncTime));
+        sb.append("\", \"lastModified\":\"").append(dateFormat.format(lastModified == null ? new java.util.Date() : lastModified));
         sb.append("\", \"minUserId\":\"").append(minUserId);
         sb.append("\", \"minGroupId\":\"").append(minGroupId);
         sb.append("\", \"totalUsersSynced\":\"").append(totalUsersSynced);
