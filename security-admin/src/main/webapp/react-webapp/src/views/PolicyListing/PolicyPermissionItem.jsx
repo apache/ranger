@@ -21,7 +21,7 @@ import React, { useMemo, useRef, useState } from "react";
 import { Table, Button, Form } from "react-bootstrap";
 import { FieldArray } from "react-final-form-arrays";
 import { Col } from "react-bootstrap";
-import { Field } from "react-final-form";
+import { Field, useForm } from "react-final-form";
 import AsyncSelect from "react-select/async";
 import {
   find,
@@ -45,6 +45,8 @@ import {
   policyConditionUpdatedJSON
 } from "Utils/XAUtils";
 import { selectInputCustomStyles } from "Components/CommonComponents";
+import { getSelectedLeafResourceTypes, getSelectedAccessTypesForRow, buildActionReqsMapFromConditionDef, getCleanConditions } from "Utils/policyConditionUtils";
+import { usePruneStaleConditions } from "../../hooks/usePruneStaleConditions";
 
 const noneOptions = {
   label: "None",
@@ -105,7 +107,7 @@ export default function PolicyPermissionItem(props) {
   };
 
   const grpResourcesKeys = useMemo(() => {
-    const { resources = [] } = serviceCompDetails;
+    const { resources = [] } = serviceCompDetails || {};
     const grpResources = groupBy(resources, "level");
     let grpResourcesKeys = [];
     for (const resourceKey in grpResources) {
@@ -113,7 +115,45 @@ export default function PolicyPermissionItem(props) {
     }
     grpResourcesKeys = grpResourcesKeys.sort();
     return grpResourcesKeys;
-  }, []);
+  }, [serviceCompDetails?.resources]);
+
+  // Narrow dependency: only recompute when resource selection fields change,
+  // not on every keystroke in user/group/permission fields.
+  const resourceBlocks = Array.isArray(formValues?.additionalResources)
+    ? formValues.additionalResources
+    : [formValues];
+
+  const serializedResources = JSON.stringify(
+    resourceBlocks.map((b) =>
+      grpResourcesKeys.map((level) => b?.[`resourceName-${level}`]?.name || null)
+    )
+  );
+
+  const leafResourceTypes = useMemo(() => {
+    return getSelectedLeafResourceTypes(serviceCompDetails, formValues);
+  }, [serviceCompDetails, serializedResources]);
+
+  const conditionDefVal = useMemo(
+    () => policyConditionUpdatedJSON(serviceCompDetails.policyConditions),
+    [serviceCompDetails.policyConditions]
+  );
+
+  const form = useForm();
+
+  const actionReqsMap = useMemo(
+    () => buildActionReqsMapFromConditionDef(conditionDefVal),
+    [conditionDefVal]
+  );
+
+  usePruneStaleConditions({
+    formValues,
+    attrName,
+    form,
+    leafResourceTypes,
+    serviceCompDetails,
+    conditionDefVal,
+    actionReqsMap
+  });
 
   const getAccessTypeOptions = () => {
     let srcOp = [],
@@ -263,16 +303,9 @@ export default function PolicyPermissionItem(props) {
         error = "Please select user/group/role for the selected delegate Admin";
       }
       if (policyConditionVal) {
-        for (const key in policyConditionVal) {
-          if (
-            policyConditionVal[key] == null ||
-            policyConditionVal[key] == ""
-          ) {
-            delete policyConditionVal[key];
-          }
-        }
+        const newConditions = getCleanConditions(policyConditionVal);
         if (
-          Object.keys(policyConditionVal).length != 0 &&
+          Object.keys(newConditions).length != 0 &&
           !users &&
           !grps &&
           !roles
@@ -451,6 +484,7 @@ export default function PolicyPermissionItem(props) {
                             serviceCompDetails?.policyConditions?.length >
                               0 && (
                               <td key={colName} className="align-middle">
+                                {/* Per-row conditions: Editable + actionFilterContext for action-matches */}
                                 <Field
                                   className="form-control"
                                   name={`${name}.conditions`}
@@ -466,10 +500,24 @@ export default function PolicyPermissionItem(props) {
                                         {...input}
                                         placement="auto"
                                         type="custom"
-                                        conditionDefVal={policyConditionUpdatedJSON(
-                                          serviceCompDetails.policyConditions
-                                        )}
-                                        selectProps={{ isMulti: true }}
+                                        conditionDefVal={conditionDefVal}
+                                        servicedefName={serviceCompDetails?.name}
+                                        actionFilterContext={{
+                                          selectedAccessTypes:
+                                            getSelectedAccessTypesForRow(formValues, attrName, index),
+                                          leafResourceTypes,
+                                          accessTypeDefs:
+                                            serviceCompDetails?.accessTypes
+                                        }}
+                                        selectProps={{
+                                          isMulti: true,
+                                          // Portal menus to body (see Editable CONDITION_POPOVER_SELECT_PROPS)
+                                          // so a long Action list with ALL permission does not jump the page.
+                                          menuPortalTarget: document.body,
+                                          menuPosition: "fixed",
+                                          menuPlacement: "auto",
+                                          menuShouldScrollIntoView: false
+                                        }}
                                       />
                                     </div>
                                   )}

@@ -29,11 +29,21 @@ import {
   selectInputCustomStyles,
   trimInputValue
 } from "Components/CommonComponents";
+import {
+  isPerRowCondition,
+  getCleanConditions,
+  parseConditionUiHint
+} from "Utils/policyConditionUtils";
 const esprima = require("esprima");
 
 export default function PolicyConditionsComp(props) {
   const { policyConditionDetails, inputVal, showModal, handleCloseModal } =
     props;
+
+  // Policy-level modal only; action-matches is edited on each permission row (Editable).
+  const filteredPolicyConditionDetails = Array.isArray(policyConditionDetails)
+    ? policyConditionDetails.filter((c) => !isPerRowCondition(c?.name))
+    : policyConditionDetails;
 
   const accessedOpt = [
     { value: "yes", label: "Yes" },
@@ -41,12 +51,17 @@ export default function PolicyConditionsComp(props) {
   ];
 
   const handleSubmit = (values) => {
-    for (let val in values.conditions) {
-      if (values.conditions[val] == null || values.conditions[val] == "") {
-        delete values.conditions[val];
+    if (values?.conditions) {
+      const newConditions = getCleanConditions(values.conditions);
+      for (let val in newConditions) {
+        if (isPerRowCondition(val)) {
+          delete newConditions[val];
+        }
       }
+      inputVal.onChange(newConditions);
+    } else {
+      inputVal.onChange(values?.conditions);
     }
-    inputVal.onChange(values.conditions);
     handleClose();
   };
 
@@ -132,13 +147,10 @@ export default function PolicyConditionsComp(props) {
                 <Modal.Title>Policy Condition</Modal.Title>
               </Modal.Header>
               <Modal.Body>
-                {policyConditionDetails?.length > 0 &&
-                  policyConditionDetails.map((m) => {
-                    let uiHintAttb =
-                      m.uiHint != undefined && m.uiHint != ""
-                        ? JSON.parse(m.uiHint)
-                        : "";
-                    if (uiHintAttb != "") {
+                {filteredPolicyConditionDetails?.length > 0 &&
+                  filteredPolicyConditionDetails.map((m) => {
+                    const uiHintAttb = parseConditionUiHint(m.uiHint);
+                    if (uiHintAttb) {
                       if (uiHintAttb?.singleValue) {
                         return (
                           <div key={m.name}>
