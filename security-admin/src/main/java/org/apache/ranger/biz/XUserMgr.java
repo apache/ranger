@@ -1653,6 +1653,10 @@ public class XUserMgr extends XUserMgrBase {
 
         xaBizUtil.blockAuditorRoleUser();
 
+        if (vXGroupUser == null) {
+            throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST, "Groupuser not found", true);
+        }
+
         XXGroupUser xxGroupUser = null;
 
         if (vXGroupUser.getId() != null) {
