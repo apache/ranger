@@ -33,6 +33,7 @@ import org.apache.ranger.plugin.policyengine.RangerPolicyEngine;
 import org.apache.ranger.plugin.policyresourcematcher.RangerDefaultPolicyResourceMatcher;
 import org.apache.ranger.plugin.policyresourcematcher.RangerPolicyResourceMatcher;
 import org.apache.ranger.plugin.util.RangerAccessRequestUtil;
+import org.apache.ranger.plugin.util.RangerActionListMatcher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -156,11 +157,13 @@ public class RangerInlinePolicyEvaluator {
     private class GrantEvaluator {
         private final RangerInlinePolicy.Grant         grant;
         private final Set<String>                      permissions;
+        private final RangerActionListMatcher          actionMatcher;
         private final Set<RangerPolicyResourceMatcher> resourceMatchers = new HashSet<>();
 
         public GrantEvaluator(RangerInlinePolicy.Grant grant) {
-            this.grant       = grant;
-            this.permissions = policyEngine.getServiceDefHelper().expandImpliedAccessGrants(grant.getPermissions());
+            this.grant         = grant;
+            this.permissions   = policyEngine.getServiceDefHelper().expandImpliedAccessGrants(grant.getPermissions());
+            this.actionMatcher = new RangerActionListMatcher(grant.getActions());
 
             if (grant.getResources() != null) {
                 for (String resource : grant.getResources()) {
@@ -187,7 +190,7 @@ public class RangerInlinePolicyEvaluator {
         }
 
         public boolean isAllowed(RangerAccessRequest request) {
-            boolean ret = isPrincipalMatch(request) && isPermissionMatch(request) && isResourceMatch(request);
+            boolean ret = isPrincipalMatch(request) && isPermissionMatch(request) && isActionMatch(request) && isResourceMatch(request);
 
             LOG.debug("isAllowed(grant={}, request={}): ret={}", grant, request, ret);
 
@@ -234,6 +237,14 @@ public class RangerInlinePolicyEvaluator {
                     permissions.contains(request.getAccessType());
 
             LOG.debug("isPermissionMatch(grant={}, request={}): ret={}", grant, request, ret);
+
+            return ret;
+        }
+
+        private boolean isActionMatch(RangerAccessRequest request) {
+            boolean ret = actionMatcher.isMatch(request != null ? request.getAction() : null);
+
+            LOG.debug("isActionMatch(grant={}, request={}): ret={}", grant, request, ret);
 
             return ret;
         }
