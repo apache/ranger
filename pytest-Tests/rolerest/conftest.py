@@ -297,3 +297,70 @@ def temp_group(ranger_config):
                 "X-Requested-By": "ranger"
             }
         )
+
+@pytest.fixture(scope="class")
+def temp_role(ranger_config):
+
+    created_role_ids = []
+
+    def _create_role(user_list = [], group_list = [], role_list = []):
+
+        role_name = f"pytest_role_{uuid.uuid4().hex[:8]}"
+        if user_list:
+            for user in user_list:
+                assert "name" in user, "User dict must contain 'name' key"
+                assert "isAdmin" in user, "User dict must contain 'isAdmin' key"
+
+        if group_list:
+            for group in group_list:
+                assert "name" in group, "Group dict must contain 'name' key"
+                assert "isAdmin" in group, "Group dict must contain 'isAdmin' key"
+
+        if role_list:
+            for role in role_list:
+                assert "name" in role, "Role dict must contain 'name' key"
+                assert "isAdmin" in role, "Role dict must contain 'isAdmin' key"
+                
+        payload = {
+            "name": role_name,
+            "description": "Role created by pytest fixture",
+            "users": user_list,
+            "groups": group_list,
+            "roles": role_list
+        }
+
+       
+
+        response = requests.post(
+            f"{ranger_config['base_url']}/roles/roles",
+            json=payload,
+            auth=ranger_config["auth"],
+            headers=ranger_config["headers"]
+        )
+
+        assert response.status_code in (200, 201), response.text
+
+        data = response.json()
+        role_id = data["id"]
+
+        created_role_ids.append(role_id)
+
+        print(f"[Fixture] Created role {role_name} ({role_id})")
+
+        return data, role_id
+
+    yield _create_role
+
+    # -------- CLEANUP ----------
+    for rid in created_role_ids:
+        print(f"[Fixture] Cleaning role {rid}")
+
+        requests.delete(
+            f"{ranger_config['base_url']}/xusers/roles/{rid}",
+            auth=ranger_config["auth"],
+            params={"forceDelete": "true"},
+            headers={
+                **ranger_config["headers"],
+                "X-Requested-By": "ranger"
+            }
+         )
