@@ -83,6 +83,10 @@
                     <artifactId>netty-all</artifactId>
                 </exclusion>
                 <exclusion>
+                    <groupId>org.eclipse.jetty</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+                <exclusion>
                     <groupId>org.slf4j</groupId>
                     <artifactId>slf4j-log4j12</artifactId>
                 </exclusion>
@@ -95,6 +99,10 @@
             <exclusions>
                 <exclusion>
                     <groupId>ch.qos.logback</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.eclipse.jetty</groupId>
                     <artifactId>*</artifactId>
                 </exclusion>
             </exclusions>
