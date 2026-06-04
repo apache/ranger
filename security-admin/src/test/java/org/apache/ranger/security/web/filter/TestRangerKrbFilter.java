@@ -180,22 +180,8 @@ public class TestRangerKrbFilter {
     @Test
     public void testIsCustomSignerSecretProvider() throws Exception {
         RangerKrbFilter filter = new RangerKrbFilter();
-        // Custom provider (anonymous) should be detected as custom
-        SignerSecretProvider custom = new SignerSecretProvider() {
-            @Override
-            public void init(Properties config, ServletContext servletContext, long tokenValidity) {
-            }
-
-            @Override
-            public byte[] getCurrentSecret() {
-                return new byte[0];
-            }
-
-            @Override
-            public byte[][] getAllSecrets() {
-                return new byte[0][];
-            }
-        };
+        // Custom provider (mock) should be detected as custom
+        SignerSecretProvider custom = mock(SignerSecretProvider.class);
         setField(filter, "secretProvider", custom);
         assertTrue((Boolean) invoke(filter, "isCustomSignerSecretProvider"));
     }
