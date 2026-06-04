@@ -698,6 +698,7 @@ class TestUgsync:
                     }
                 ]
             }
+            temp_usr= payload["vXUsers"][0]["name"]
             expected_status = 200 # silent failure but user should not be created
             return_value -= 1 # only the valid user in payload should be created
 
@@ -720,6 +721,16 @@ class TestUgsync:
 
         assert response.json() == return_value , f"Expected response to be {return_value} for test case: {testcase}, got {response.json()}"
 
+        if testcase == "semi failure - invalid and valid users in payload":
+            assert user_exists_by_name(temp_usr, self.ranger_admin_config, self.base_url, self.headers), f"Valid user in payload is not created for test case: {testcase}"
+            resp = requests.get(
+                f"{self.base_url}/xusers/users/userName/{temp_usr}",
+                auth = self.ranger_admin_config,
+                headers = self.headers
+            )
+            assert resp.status_code == 200, f"User '{temp_usr}' missing after sync for test case: {testcase}"
+            u_id = resp.json().get("id")
+            delete_user(u_id, self.ranger_admin_config, self.base_url, self.headers)
     
     @pytest.mark.negative
     @pytest.mark.post

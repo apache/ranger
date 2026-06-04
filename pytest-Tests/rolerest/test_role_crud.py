@@ -45,6 +45,7 @@ class TestRoleCRUD:
         temp_secure_user,
         temp_keyadmin_user,
         temp_group,
+        temp_role,
         default_headers,
         ranger_config,
     ):
@@ -86,6 +87,10 @@ class TestRoleCRUD:
         # ---------- group details ----------
         cls.group, cls.group_id = temp_group()
         cls.group1, cls.group_id1 = temp_group()
+
+        # ---------- role details ----------
+        cls.role, cls.role_id = temp_role()
+        cls.role1, cls.role_id1 = temp_role()
 
         # ---------- common ----------
         cls.headers = default_headers
@@ -154,6 +159,33 @@ class TestRoleCRUD:
                 assert params["name"].lower() in r["name"].lower(), \
                     f"Role {r['name']} doesn't match filter {params['roleName']}"
                 
+
+    @pytest.mark.get
+    @pytest.mark.positive
+    @pytest.mark.parametrize(
+        "role, auth",
+        [("admin", "ranger_admin_config"), ("keyadmin", "ranger_key_admin_config"), ("auditor", "ranger_auditor_config"), ("user", "ranger_user_config")],
+    )
+    def test_get_role_by_id(self, role, auth):
+
+        auth = getattr(self, auth)
+
+        role_id = self.role_id
+
+        response = requests.get(
+            f"{self.base_url}/roles/roles/{role_id}",
+            headers=self.headers,
+            auth=auth
+        )
+        assert response.status_code == 200, f"Failed to get role by ID and got response code {response.status_code}"
+        data = response.json()
+        assert data["id"] == role_id, f"Expected role ID {role_id} but got {data['id']}"
+
+    @pytest.mark.get
+    @pytest.mark.positive
+    @pytest.mark.parametrize(
+        "role, test_case", [("admin", "r")],
+    )
 
     @pytest.mark.post
     @pytest.mark.positive
@@ -245,7 +277,101 @@ class TestRoleCRUD:
             )
             assert_response(response, [200, 204], f"Expected 200 for group deletion but got {response.status_code}")
     
-    
+    @pytest.mark.put
+    @pytest.mark.positive
+    @pytest.mark.parametrize(
+        "role", ["admin", "auditor", "keyadmin", "user", "any admin"],
+    )
+    @pytest.mark.parametrize(
+        "test_case",
+        ["update via user membership", "update via group membership", "update via role membership - user", "update via role membership - group"]
+    )
+    def test_update_role(self, request, role, test_case):
+
+        if role == "any admin":
+            user, user_id = request.getfixturevalue("temp_secure_user")("admin") 
+            auth= self.ranger_admin_config
+        else:
+            user, user_id = request.getfixturevalue("temp_secure_user")(role)
+            auth=(user["name"], "Test@123")
+
+        if test_case == "update via user membership":
+            role, r_id = request.getfixturevalue("temp_role")(user_list=[{"name": user["name"], "isAdmin": True}])
+
+        elif test_case == "update via group membership":
+            group, group_id = request.getfixturevalue("temp_group")()
+            group_list=[{"name": group["name"], "isAdmin": True}]
+            assert group_list[0]["isAdmin"] == True, "Group should be admin in this test case"
+            role, r_id = request.getfixturevalue("temp_role")(group_list=group_list)
+            assign_groups_to_user(user["name"], [group["name"]], self.ranger_admin_config, self.base_url, self.headers)
+
+        elif test_case == "update via role membership - user":
+            c_role, c_id = request.getfixturevalue("temp_role")(user_list=[{"name": user["name"], "isAdmin": True}])
+            role_list = [{"name": c_role["name"], "isAdmin": True}]
+            assert role_list[0]["isAdmin"] == True, "Role should be admin in this test case"
+            role, r_id = request.getfixturevalue("temp_role")(role_list=role_list)
+
+        elif test_case == "update via role membership - group":
+            group, group_id = request.getfixturevalue("temp_group")()
+            c_role, c_id = request.getfixturevalue("temp_role")(group_list=[{"name": group["name"], "isAdmin": True}])
+            role_list = [{"name": c_role["name"], "isAdmin": True}]
+            assert role_list[0]["isAdmin"] == True, "Role should be admin in this test case"
+            role, r_id = request.getfixturevalue("temp_role")(role_list=role_list)
+            assign_groups_to_user(user["name"], [group["name"]], self.ranger_admin_config, self.base_url, self.headers)
+
+        
+        payload = {
+            "id": r_id,
+            "name": role["name"],
+            "description": f"Updated description for {test_case}",
+            "users": [{"name": user["name"], "isAdmin": "false"}],
+        }
+
+        response = requests.put(
+            f"{self.base_url}/roles/roles/{r_id}",
+            headers=self.headers,
+            auth=auth,
+            json=payload
+        )
+        assert_response(response, 200, f"Expected 200 for {test_case} but got {response.status_code}")
+
+        data = response.json()
+        assert data["description"] == payload["description"], f"Description not updated for {test_case}"
+        # Cleanup should be done after the role dependency is removed
+        delete_role(r_id)
+        if test_case.startswith("update via role membership"):
+            delete_role(c_id) 
+
+        if "group" in test_case:
+            delete_group(group_id, self.ranger_admin_config, self.base_url, self.headers) 
+        
+        delete_user(user_id, self.ranger_admin_config, self.base_url, self.headers)
+
+
+    @pytest.mark.delete
+    @pytest.mark.positive
+    @pytest.mark.parametrize(
+        "role, auth",
+        [("admin", "ranger_admin_config"),])
+    def test_delete_role(self, role, auth, request):
+
+        if role != "admin":
+            pytest.fail("Deletion of role requires admin priviliges")
+        
+        auth = getattr(self, auth)
+
+        role, r_id = request.getfixturevalue("temp_role")()
+
+        response = requests.delete(
+            f'{self.base_url}/roles/roles/{r_id}',
+            auth = auth,
+            headers= self.headers
+        )
+
+        assert_response(response, 204, f'Expected the test_case to be returing 204, but got {response.status_code}')
+
+
+
     # NEGATIVE TESTS
 
     @pytest.mark.get
@@ -262,6 +388,19 @@ class TestRoleCRUD:
             auth=auth
         )
         assert response.status_code == 400, f"Expected 400 for {role} but got {response.status_code}"
+
+    @pytest.mark.get
+    @pytest.mark.negative
+    @pytest.mark.parametrize(
+        "test_case", ["invalid_role_id"])
+    def test_get_role_by_id_negative(self, test_case):
+        invalid_role_id = 9999999  # Assuming this role ID doesn't exist
+        response = requests.get(
+            f"{self.base_url}/roles/roles/{invalid_role_id}",
+            headers=self.headers,
+            auth=self.ranger_admin_config
+        )
+        assert response.status_code == 400, f"Expected 400 for {test_case} but got {response.status_code}"
 
     @pytest.mark.post
     @pytest.mark.negative
@@ -355,3 +494,130 @@ class TestRoleCRUD:
             if roles_resp.status_code == 200 and roles_resp.json().get("roles"):
                 role_id = roles_resp.json()["roles"][0]["id"]
                 delete_role(role_id)
+
+    @pytest.mark.put
+    @pytest.mark.negative
+    @pytest.mark.parametrize(
+        "test_case, expected_status", [
+            ("update_non_exist_role", 400),
+            ("update_via_id_mismatch", 400),
+            ("update_via_non_member_global_user", 400),
+            ("update_via_non_member_global_auditor", 400),
+            ("update_via_non_member_global_keyadmin", 400),
+            ("update via invalid payload with out required membership fields", 400),
+            ("invalid update of role name when role is linked with other role", 400)
+        ]
+    )
+    def test_update_role_negative(self, test_case, request, expected_status):
+        # For all negative test cases we will use admin user to avoid 403 and focus on the specific negative scenario
+        auth = self.ranger_admin_config
+
+        if test_case == "update_non_exist_role":
+            r_id = 999999  # Assuming this role ID doesn't exist
+            payload = {
+                "id": r_id,
+                "name": f"test-role-{uuid.uuid4()}",
+                "description": "Trying to update non-existent role"
+            }
+
+        elif test_case == "update_via_id_mismatch":
+            role, r_id = request.getfixturevalue("temp_role")()
+            payload = {
+                "id": r_id + 1,  # Mismatching ID
+                "name": role["name"],
+                "description": "Trying to update with ID mismatch"
+            }
+
+        elif test_case == "update_via_non_member_global_user":
+            role, r_id = request.getfixturevalue("temp_role")()
+            payload = {
+                "id": r_id,
+                "name": role["name"],
+                "description": "Trying to update via non-member global user"
+            }
+            auth = self.ranger_user_config  # Non-member global user
+
+        elif test_case == "update_via_non_member_global_auditor":
+            role, r_id = request.getfixturevalue("temp_role")()
+            payload = {
+                "id": r_id,
+                "name": role["name"],
+                "description": "Trying to update via non-member global auditor"
+            }
+            auth = self.ranger_auditor_config  # Non-member global auditor
+
+        elif test_case == "update_via_non_member_global_keyadmin":
+            role, r_id = request.getfixturevalue("temp_role")()
+            payload = {
+                "id": r_id,
+                "name": role["name"],
+                "description": "Trying to update via non-member global keyadmin"
+            }
+            auth = self.ranger_key_admin_config  # Non-member global keyadmin
+        
+        elif test_case == "update via invalid payload with out required membership fields":
+            role, r_id = request.getfixturevalue("temp_role")()
+            payload = {
+                "id": r_id,
+                # "name is required for update, so we will not provide it to create invalid payload"
+                "description": "Trying to update with invalid payload"
+            }
+        
+        elif test_case == "invalid update of role name when role is linked with other role":
+            # Create a parent role
+            parent_role, parent_role_id = request.getfixturevalue("temp_role")()
+            # Create a child role linked to parent role
+            child_role, child_role_id = request.getfixturevalue("temp_role")(role_list=[{"name": parent_role["name"], "isAdmin": True}])
+            payload = {
+                "id": parent_role_id,
+                "name": child_role["name"],  # Trying to update parent role name to child role name which should fail due to name conflict
+                "description": "Trying to update role name to an existing linked role name"
+            }
+            r_id = parent_role_id
+        
+        response = requests.put(
+            f"{self.base_url}/roles/roles/{r_id}",
+            headers=self.headers,
+            auth=auth,
+            json=payload
+        )
+        assert_response(response, expected_status, f"Expected {expected_status} for {test_case}")
+
+        if test_case == "invalid update of role name when role is linked with other role":
+            # Cleanup the created roles
+            delete_role(child_role_id)
+            delete_role(parent_role_id)
+        elif test_case != "update_non_exist_role":
+            delete_role(r_id)
+
+    @pytest.mark.delete
+    @pytest.mark.negative
+    @pytest.mark.parametrize(
+        "test_case, auth_name, expected_status",
+        [
+            ("delete_non_exist_role", "ranger_admin_config", 400),
+            ("unauthorized_user", "ranger_user_config", 400),
+            ("unauthorized_auditor", "ranger_auditor_config", 400),
+            ("unauthorized_key_admin", "ranger_key_admin_config", 400),
+        ]
+    )
+    def test_delete_role_negative(self, test_case, auth_name, expected_status, request):
+        auth = getattr(self, auth_name)
+
+        if test_case == "delete_non_exist_role":
+            r_id = 9999999  # Assuming this role ID doesn't exist
+
+        elif test_case.startswith("unauthorized"):
+            role, r_id = request.getfixturevalue("temp_role")()
+
+        response = requests.delete(
+            f'{self.base_url}/roles/roles/{r_id}',
+            auth = auth,
+            headers= self.headers
+        )
+
+        assert_response(response, expected_status, f'Expected {expected_status} for {test_case} but got {response.status_code}')
+
+        if test_case.startswith("unauthorized"):
+            # Cleanup the created role
+            delete_role(r_id)
