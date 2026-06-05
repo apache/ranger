@@ -32,7 +32,9 @@ fi
 
 cp ${RANGER_SCRIPTS}/hbase-site.xml /opt/hbase/conf/hbase-site.xml
 cp ${RANGER_SCRIPTS}/core-site.xml  /opt/hbase/conf/core-site.xml
-chown -R hbase:hadoop /opt/hbase/
+mkdir -p /var/log/hadoop/hbase/audit/solr/spool \
+         /var/log/hadoop/hbase/audit/audit-ingestor/spool
+chown -R hbase:hadoop /opt/hbase/ /var/log/hadoop/hbase
 
 cd ${RANGER_HOME}/ranger-hbase-plugin
 ./enable-hbase-plugin.sh

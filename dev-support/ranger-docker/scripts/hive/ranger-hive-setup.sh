@@ -203,7 +203,9 @@ fi
 su -c "${HIVE_HOME}/bin/schematool -dbType ${RANGER_DB_TYPE} -initSchema" hive
 
 mkdir -p /opt/hive/logs
-chown -R hive:hadoop /opt/hive/
+mkdir -p /var/log/hive/audit/solr/spool \
+         /var/log/hive/audit/audit-ingestor/spool
+chown -R hive:hadoop /opt/hive/ /var/log/hive
 chmod g+w /opt/hive/logs
 
 cd ${RANGER_HOME}/ranger-hive-plugin

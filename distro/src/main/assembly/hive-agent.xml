@@ -88,6 +88,10 @@
           <include>org.graalvm.sdk:graal-sdk:jar:${graalvm.version}</include>
           <include>org.graalvm.truffle:truffle-api:jar:${graalvm.version}</include>
           <include>com.ibm.icu:icu4j</include>
+          <include>org.apache.ranger:ranger-audit-core</include>
+          <include>org.apache.ranger:ranger-audit-dest-auditserver</include>
+          <include>org.apache.ranger:ranger-audit-dest-hdfs</include>
+          <include>org.apache.ranger:ranger-audit-dest-solr</include>
         </includes>
       </binaries>
     </moduleSet>

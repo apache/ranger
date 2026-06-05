@@ -34,6 +34,13 @@ cp ${RANGER_SCRIPTS}/kafka-server-jaas.conf ${KAFKA_HOME}/config/
 
 chown -R kafka:hadoop /opt/kafka/
 
+mkdir -p /var/log/kafka/audit/solr/spool \
+         /var/log/kafka/audit/hdfs/spool \
+         /var/log/kafka/audit/audit-ingestor/spool \
+         /var/log/kafka/audit/archive
+chown -R kafka:hadoop /var/log/kafka/audit
+chmod -R 775 /var/log/kafka/audit
+
 cd ${RANGER_HOME}/ranger-kafka-plugin
 ./enable-kafka-plugin.sh
 
