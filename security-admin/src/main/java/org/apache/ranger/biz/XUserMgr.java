@@ -496,18 +496,16 @@ public class XUserMgr extends XUserMgrBase {
     public VXGroup getXGroup(Long id) {
         UserSessionBase userSession = ContextUtil.getCurrentUserSession();
 
-        if (userSession != null && userSession.getLoginId() != null) {
+        if (userSession != null && userSession.isSingleRoleUserSession()) {
             VXUser loggedInVXUser = xUserService.getXUserByUserName(userSession.getLoginId());
 
             if (loggedInVXUser != null) {
-                if (loggedInVXUser.getUserRoleList().size() == 1 && loggedInVXUser.getUserRoleList().contains(RangerConstants.ROLE_USER)) {
-                    List<Long> listGroupId = daoManager.getXXGroupUser().findGroupIdListByUserId(loggedInVXUser.getId());
+                List<Long> listGroupId = daoManager.getXXGroupUser().findGroupIdListByUserId(loggedInVXUser.getId());
 
-                    if (!listGroupId.contains(id)) {
-                        logger.info(MSG_DATA_ACCESS_DENY);
+                if (!listGroupId.contains(id)) {
+                    logger.info(MSG_DATA_ACCESS_DENY);
 
-                        throw restErrorUtil.create403RESTException("Logged-In user is not allowed to access requested group data.");
-                    }
+                    throw restErrorUtil.create403RESTException("Logged-In user is not allowed to access requested group data.");
                 }
             }
         }
@@ -790,7 +788,8 @@ public class XUserMgr extends XUserMgrBase {
             //In case of user we need to fetch only its associated groups.
             UserSessionBase userSession = ContextUtil.getCurrentUserSession();
 
-            if (userSession != null && userSession.getUserRoleList().size() == 1 && userSession.getUserRoleList().contains(RangerConstants.ROLE_USER) && userSession.getLoginId() != null) {
+            if (userSession != null && userSession.isSingleRoleUserSession()
+                    && userSession.getLoginId() != null) {
                 loggedInVXUser = xUserService.getXUserByUserName(userSession.getLoginId());
 
                 if (loggedInVXUser != null) {
@@ -1861,7 +1860,14 @@ public class XUserMgr extends XUserMgrBase {
         return vXGroupList;
     }
 
-    public Set<String> getGroupsForUser(String userName) {
+    /**
+     * Returns group names via the Users/Groups API (permission-aware).
+     * Used by grant/revoke, role delegate, GDS, service admin, etc.
+     *
+     * @param userName user login id
+     * @return group names visible to the current caller context
+     */
+    public Set<String> getGroupsForUser(final String userName) {
         Set<String> ret = new HashSet<>();
 
         try {
@@ -1870,18 +1876,67 @@ public class XUserMgr extends XUserMgrBase {
             if (user != null) {
                 VXGroupList groups = getXUserGroups(user.getId());
 
-                if (groups != null && !CollectionUtils.isEmpty(groups.getList())) {
+                if (groups != null
+                        && !CollectionUtils.isEmpty(groups.getList())) {
                     for (VXGroup group : groups.getList()) {
                         ret.add(group.getName());
                     }
                 } else {
-                    logger.debug("getGroupsForUser('{}'): no groups found for user", userName);
+                    logger.debug(
+                            "getGroupsForUser('{}'): no groups found for user",
+                            userName);
                 }
             } else {
-                logger.debug("getGroupsForUser('{}'): user not found", userName);
+                logger.debug(
+                        "getGroupsForUser('{}'): user not found", userName);
             }
         } catch (Exception excp) {
             logger.error("getGroupsForUser('{}') failed", userName, excp);
+        }
+
+        return ret;
+    }
+
+    /**
+     * Returns synced group names from Ranger DB (no API permission checks).
+     * For config super-user / super-group matching at login only.
+     *
+     * @param userName user login id
+     * @return group names from {@code x_group_users}
+     */
+    public Set<String> getSyncedGroupsForUser(final String userName) {
+        Set<String> ret = new HashSet<>();
+
+        try {
+            XXUser xUser = daoManager.getXXUser().findByUserName(userName);
+
+            if (xUser == null) {
+                logger.debug(
+                        "getSyncedGroupsForUser('{}'): user not found",
+                        userName);
+
+                return ret;
+            }
+
+            List<XXGroupUser> groupUsers =
+                    daoManager.getXXGroupUser().findByUserId(xUser.getId());
+
+            if (groupUsers != null) {
+                for (XXGroupUser groupUser : groupUsers) {
+                    if (groupUser.getName() != null) {
+                        ret.add(groupUser.getName());
+                    }
+                }
+            }
+
+            if (ret.isEmpty()) {
+                logger.debug(
+                        "getSyncedGroupsForUser('{}'): no groups found",
+                        userName);
+            }
+        } catch (Exception excp) {
+            logger.error(
+                    "getSyncedGroupsForUser('{}') failed", userName, excp);
         }
 
         return ret;
@@ -2596,6 +2651,10 @@ public class XUserMgr extends XUserMgrBase {
     public boolean hasAccessToModule(String moduleName) {
         UserSessionBase userSession = ContextUtil.getCurrentUserSession();
 
+        if (userSession != null && userSession.isConfigSuperUser()) {
+            return true;
+        }
+
         if (userSession != null && userSession.getLoginId() != null) {
             VXUser vxUser = xUserService.getXUserByUserName(userSession.getLoginId());
 
@@ -3276,6 +3335,10 @@ public class XUserMgr extends XUserMgrBase {
 
     private boolean hasAccessToGetUserInfo(VXUser requestedVXUser) {
         UserSessionBase userSession = ContextUtil.getCurrentUserSession();
+
+        if (userSession != null && userSession.isConfigSuperUser()) {
+            return true;
+        }
 
         if (userSession != null && userSession.getLoginId() != null) {
             VXUser loggedInVXUser = xUserService.getXUserByUserName(userSession.getLoginId());

@@ -607,7 +607,7 @@ public class RangerSSOAuthenticationFilter implements Filter {
     }
 
     private List<GrantedAuthority> getAuthorities(String username) {
-        Collection<String>           roleList     = userMgr.getRolesByLoginId(username);
+        Collection<String>           roleList     = userMgr.getAuthenticationRolesByLoginId(username);
         final List<GrantedAuthority> grantedAuths = new ArrayList<>();
 
         for (String role : roleList) {

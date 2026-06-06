@@ -2056,7 +2056,7 @@ public class TestServiceREST {
         Mockito.when(svcStore.getServiceByName(Mockito.anyString())).thenReturn(Mockito.mock(RangerService.class));
         Mockito.when(daoManager.getXXServiceDef().findServiceDefTypeByServiceName(Mockito.anyString())).thenReturn("hdfs");
         Mockito.when(bizUtil.isUserRangerAdmin(Mockito.anyString())).thenReturn(true);
-        Mockito.when(userMgrGrantor.getRolesByLoginId(Mockito.anyString())).thenReturn(Arrays.asList("ROLE_SYS_ADMIN"));
+        Mockito.when(userMgrGrantor.getAuthenticationRolesByLoginId(Mockito.anyString())).thenReturn(Arrays.asList("ROLE_SYS_ADMIN"));
         RESTResponse restResponse = serviceREST.grantAccess(serviceName, grantRequestObj, request);
         Mockito.verify(svcStore, Mockito.times(1)).createPolicy(Mockito.any(RangerPolicy.class));
         Assertions.assertNotNull(restResponse);
@@ -2079,7 +2079,7 @@ public class TestServiceREST {
         mockValidateGrantRevokeRequest();
         Mockito.when(bizUtil.isAdmin()).thenReturn(true);
         Mockito.when(bizUtil.isUserServiceAdmin(Mockito.any(RangerService.class), Mockito.anyString())).thenReturn(true);
-        Mockito.when(userMgrGrantor.getRolesByLoginId(Mockito.anyString())).thenReturn(Arrays.asList("ROLE_SYS_ADMIN"));
+        Mockito.when(userMgrGrantor.getAuthenticationRolesByLoginId(Mockito.anyString())).thenReturn(Arrays.asList("ROLE_SYS_ADMIN"));
         RESTResponse restResponse;
         try {
             restResponse = serviceREST.secureGrantAccess(serviceName, grantRequestObj, request);

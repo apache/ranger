@@ -33,6 +33,7 @@ import org.apache.ranger.common.PropertiesUtil;
 import org.apache.ranger.common.RESTErrorUtil;
 import org.apache.ranger.common.RangerCommonEnums;
 import org.apache.ranger.common.RangerConstants;
+import org.apache.ranger.common.RangerSuperUserConfig;
 import org.apache.ranger.common.StringUtil;
 import org.apache.ranger.common.UserSessionBase;
 import org.apache.ranger.db.RangerDaoManager;
@@ -109,6 +110,10 @@ public class RangerBizUtil {
 
     @Autowired
     UserMgr userMgr;
+
+    /** Used for config super-user group lookup in {@link #isUserRangerAdmin(String)}. */
+    @Autowired
+    XUserMgr xUserMgr;
 
     @Autowired
     XUserService xUserService;
@@ -1047,12 +1052,21 @@ public class RangerBizUtil {
         // TODO: As of now we are allowing SYS_ADMIN to create/update/read/delete all the
         // services including KMS
 
-        if ("Service-Def".equalsIgnoreCase(objType) && session.isUserAdmin() && EmbeddedServiceDefsUtil.KMS_IMPL_CLASS_NAME.equals(implClassName)) {
+        // Stock sys admin cannot manage KMS service-def; config super-users may
+        // (full admin + key-admin parity via ranger.admin.super.users/groups).
+        if ("Service-Def".equalsIgnoreCase(objType) && session.isUserAdmin() && !session.isConfigSuperUser()
+                && EmbeddedServiceDefsUtil.KMS_IMPL_CLASS_NAME.equals(implClassName)) {
             throw restErrorUtil.createRESTException("System Admin cannot create/update/delete KMS " + objType, MessageEnums.OPER_NO_PERMISSION);
         }
     }
 
     public boolean checkUserAccessible(VXUser vXUser) {
+        // Config super-user (ranger.admin.super.users/groups) bypasses the
+        // mutual admin/key-admin visibility restrictions below.
+        if (isConfigSuperUser()) {
+            return true;
+        }
+
         boolean            isAccessible = true;
         Collection<String> roleList     = userMgr.getRolesByLoginId(vXUser.getName());
 
@@ -1117,13 +1131,40 @@ public class RangerBizUtil {
         return isUserInConfigParameter(rangerService, ServiceREST.Allowed_User_List_For_Grant_Revoke, userName);
     }
 
+    /**
+     * True when {@code username} is a full Ranger admin: DB sys/admin role,
+     * config super-user ({@code ranger.admin.super.users/groups}), or the
+     * current session is an effective Ranger admin per
+     * {@link UserSessionBase#isEffectiveRangerAdmin()}.
+     */
     public boolean isUserRangerAdmin(String username) {
+        if (StringUtils.isBlank(username)) {
+            return false;
+        }
+
+        UserSessionBase userSession = ContextUtil.getCurrentUserSession();
+
+        // Effective Ranger admin on current session (DB sys admin or config super-user).
+        if (userSession != null
+                && username.equalsIgnoreCase(userSession.getLoginId())
+                && userSession.isEffectiveRangerAdmin()) {
+            return true;
+        }
+
+        // Config super-user when no session context (e.g. grantor checks).
+        if (RangerSuperUserConfig.isEnabled() && xUserMgr != null
+                && RangerSuperUserConfig.isSuperUser(username,
+                        xUserMgr.getSyncedGroupsForUser(username))) {
+            return true;
+        }
+
         boolean isAdmin = false;
 
         try {
             VXUser vxUser = xUserService.getXUserByUserName(username);
 
-            if (vxUser != null && (vxUser.getUserRoleList().contains(RangerConstants.ROLE_ADMIN) || vxUser.getUserRoleList().contains(RangerConstants.ROLE_SYS_ADMIN))) {
+            if (vxUser != null && (vxUser.getUserRoleList().contains(RangerConstants.ROLE_ADMIN)
+                    || vxUser.getUserRoleList().contains(RangerConstants.ROLE_SYS_ADMIN))) {
                 isAdmin = true;
             }
         } catch (Exception ex) {
@@ -1131,6 +1172,16 @@ public class RangerBizUtil {
         }
 
         return isAdmin;
+    }
+
+    /**
+     * True when the current session is a config super-user per
+     * {@code ranger.admin.super.users} / {@code ranger.admin.super.groups}.
+     */
+    public boolean isConfigSuperUser() {
+        UserSessionBase currentUserSession = ContextUtil.getCurrentUserSession();
+
+        return currentUserSession != null && currentUserSession.isConfigSuperUser();
     }
 
     public boolean isUserServiceAdmin(RangerService rangerService, String userName) {

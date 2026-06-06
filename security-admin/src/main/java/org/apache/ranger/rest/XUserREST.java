@@ -457,7 +457,8 @@ public class XUserREST {
                     hasRole = !userRolesList.contains(RangerConstants.ROLE_KEY_ADMIN) ? userRolesList.add(RangerConstants.ROLE_KEY_ADMIN) : hasRole;
                     hasRole = !userRolesList.contains(RangerConstants.ROLE_KEY_ADMIN_AUDITOR) ? userRolesList.add(RangerConstants.ROLE_KEY_ADMIN_AUDITOR) : hasRole;
                     hasRole = !userRolesList.contains(RangerConstants.ROLE_USER) ? userRolesList.add(RangerConstants.ROLE_USER) : hasRole;
-                } else if (loggedInVXUser.getUserRoleList().contains(RangerConstants.ROLE_USER)) {
+                } else if (userSession.isSingleRoleUserSession()) {
+                    // Plain ROLE_USER self-search only; config super-users use full search below.
                     if ((CollectionUtils.isNotEmpty(userRolesList) && (userRolesList.size() != 1 || !userRolesList.contains(RangerConstants.ROLE_USER)))
                             || (userRole != null && !RangerConstants.ROLE_USER.equals(userRole))) {
                         throw restErrorUtil.create403RESTException("Logged-In user is not allowed to access requested user data.");
@@ -857,7 +858,9 @@ public class XUserREST {
         VXGroup         vXGroup     = xGroupService.getGroupByGroupName(groupName);
         UserSessionBase userSession = ContextUtil.getCurrentUserSession();
 
-        if (userSession != null && userSession.getLoginId() != null && userSession.getUserRoleList().contains(RangerConstants.ROLE_USER)) {
+        // Plain ROLE_USER may only fetch groups they belong to; not config super-users.
+        if (userSession != null && userSession.getLoginId() != null
+                && userSession.isSingleRoleUserSession()) {
             VXUser  loggedInVXUser = xUserService.getXUserByUserName(userSession.getLoginId());
             boolean isMatch        = false;
 

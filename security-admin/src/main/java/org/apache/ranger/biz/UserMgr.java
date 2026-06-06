@@ -30,12 +30,14 @@ import org.apache.ranger.common.PropertiesUtil;
 import org.apache.ranger.common.RESTErrorUtil;
 import org.apache.ranger.common.RangerCommonEnums;
 import org.apache.ranger.common.RangerConstants;
+import org.apache.ranger.common.RangerSuperUserConfig;
 import org.apache.ranger.common.SearchCriteria;
 import org.apache.ranger.common.SearchUtil;
 import org.apache.ranger.common.StringUtil;
 import org.apache.ranger.common.UserSessionBase;
 import org.apache.ranger.db.RangerDaoManager;
 import org.apache.ranger.entity.XXGroupPermission;
+import org.apache.ranger.entity.XXModuleDef;
 import org.apache.ranger.entity.XXPortalUser;
 import org.apache.ranger.entity.XXPortalUserRole;
 import org.apache.ranger.entity.XXTrxLogV2;
@@ -70,7 +72,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import static org.apache.ranger.service.RangerBaseModelService.OPERATION_UPDATE_CONTEXT;
 
@@ -638,10 +642,16 @@ public class UserMgr {
             if (userRoleList == null) {
                 userRoleList = new ArrayList<>();
 
-                List<XXPortalUserRole> gjUserRoleList = daoManager.getXXPortalUserRole().findByParentId(user.getId());
+                if (sess.isConfigSuperUser()) {
+                    userRoleList.addAll(
+                            RangerSuperUserConfig.getConfigSuperUserProfileRoles());
+                } else {
+                    List<XXPortalUserRole> gjUserRoleList =
+                            daoManager.getXXPortalUserRole().findByParentId(user.getId());
 
-                for (XXPortalUserRole userRole : gjUserRoleList) {
-                    userRoleList.add(userRole.getUserRole());
+                    for (XXPortalUserRole userRole : gjUserRoleList) {
+                        userRoleList.add(userRole.getUserRole());
+                    }
                 }
             }
 
@@ -1153,6 +1163,38 @@ public class UserMgr {
         return roleList;
     }
 
+    /**
+     * Returns DB roles augmented with config super-user roles for
+     * Spring Security authentication.
+     * Does not modify {@code x_portal_user_role}; use
+     * {@link #getRolesByLoginId(String)} for DB-only roles.
+     *
+     * @param loginId portal login id
+     * @return DB roles plus config super-user roles when applicable
+     */
+    public Collection<String> getAuthenticationRolesByLoginId(
+            final String loginId) {
+        Collection<String> roles = getRolesByLoginId(loginId);
+
+        if (StringUtils.isBlank(loginId)) {
+            return roles;
+        }
+
+        if (!RangerSuperUserConfig.isEnabled()) {
+            return roles;
+        }
+
+        Set<String> groups = xUserMgr != null
+                ? xUserMgr.getSyncedGroupsForUser(loginId)
+                : new HashSet<>();
+
+        if (!RangerSuperUserConfig.isSuperUser(loginId, groups)) {
+            return roles;
+        }
+
+        return RangerSuperUserConfig.mergeConfigSuperUserRoles(roles, false);
+    }
+
     @Transactional(readOnly = false, propagation = Propagation.REQUIRED)
     public XXPortalUser updateOldUserName(String userLoginId, String newUserName, String currentPassword) {
         if (userLoginId == null || newUserName == null || userLoginId.trim().isEmpty() || newUserName.trim().isEmpty()) {
@@ -1284,10 +1326,65 @@ public class UserMgr {
                 userProfile.setUserPermList(vxUserPermissions);
             }
 
+            applyConfigSuperUserProfileOverrides(userProfile, sess, user);
+
             userProfile.setFirstName(user.getFirstName());
             userProfile.setLastName(user.getLastName());
             userProfile.setPublicScreenName(user.getPublicScreenName());
         }
+    }
+
+    /**
+     * For config super users viewing their own profile, expose effective
+     * admin roles and modules to the UI.
+     * Does not modify {@code x_portal_user_role} or
+     * {@code x_user_module_perm}.
+     *
+     * @param userProfile profile response
+     * @param sess current session
+     * @param user portal user being loaded
+     */
+    private void applyConfigSuperUserProfileOverrides(
+            final VXPortalUser userProfile,
+            final UserSessionBase sess,
+            final XXPortalUser user) {
+        if (sess == null || userProfile == null || user == null
+                || !sess.isConfigSuperUser()) {
+            return;
+        }
+
+        if (sess.getXXPortalUser() == null
+                || !sess.getXXPortalUser().getId().equals(user.getId())) {
+            return;
+        }
+
+        List<String> effectiveRoles =
+                RangerSuperUserConfig.getConfigSuperUserProfileRoles();
+
+        userProfile.setUserRoleList(effectiveRoles);
+
+        List<XXModuleDef> moduleDefs =
+                daoManager.getXXModuleDef().getAll();
+        List<VXUserPermission> effectiveModules = new ArrayList<>();
+
+        if (CollectionUtils.isNotEmpty(moduleDefs)) {
+            XXUser xUser =
+                    daoManager.getXXUser().findByPortalUserId(user.getId());
+            Long   xUserId = xUser != null ? xUser.getId() : null;
+
+            for (XXModuleDef moduleDef : moduleDefs) {
+                VXUserPermission vxUserPermission = new VXUserPermission();
+
+                vxUserPermission.setModuleId(moduleDef.getId());
+                vxUserPermission.setModuleName(moduleDef.getModule());
+                vxUserPermission.setUserId(xUserId);
+                vxUserPermission.setIsAllowed(RangerCommonEnums.IS_ALLOWED);
+
+                effectiveModules.add(vxUserPermission);
+            }
+        }
+
+        userProfile.setUserPermList(effectiveModules);
     }
 
     /**
@@ -1528,8 +1625,12 @@ public class UserMgr {
         }
     }
 
-    private boolean hasAccessToGetUserInfo(VXPortalUser requestedVXUser) {
+    private boolean hasAccessToGetUserInfo(final VXPortalUser requestedVXUser) {
         UserSessionBase userSession = ContextUtil.getCurrentUserSession();
+
+        if (userSession != null && userSession.isConfigSuperUser()) {
+            return true;
+        }
 
         if (userSession != null && userSession.getLoginId() != null) {
             VXPortalUser loggedInVXUser = getUserProfileByLoginId(userSession.getLoginId());

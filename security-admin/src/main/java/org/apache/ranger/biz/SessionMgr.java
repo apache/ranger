@@ -29,11 +29,13 @@ import org.apache.ranger.common.PropertiesUtil;
 import org.apache.ranger.common.RESTErrorUtil;
 import org.apache.ranger.common.RangerCommonEnums;
 import org.apache.ranger.common.RangerConstants;
+import org.apache.ranger.common.RangerSuperUserConfig;
 import org.apache.ranger.common.SearchCriteria;
 import org.apache.ranger.common.StringUtil;
 import org.apache.ranger.common.UserSessionBase;
 import org.apache.ranger.db.RangerDaoManager;
 import org.apache.ranger.entity.XXAuthSession;
+import org.apache.ranger.entity.XXModuleDef;
 import org.apache.ranger.entity.XXPortalUser;
 import org.apache.ranger.entity.XXPortalUserRole;
 import org.apache.ranger.entity.XXUser;
@@ -219,7 +221,24 @@ public class SessionMgr {
         XXUser xUser = daoManager.getXXUser().findByUserName(userSession.getLoginId());
 
         if (xUser != null) {
-            List<String>                         permissionList       = daoManager.getXXModuleDef().findAccessibleModulesByUserId(userSession.getUserId(), xUser.getId());
+            List<String> permissionList;
+
+            if (userSession.isEffectiveRangerAdmin() || userSession.isKeyAdmin()) {
+                List<XXModuleDef> allModules =
+                        daoManager.getXXModuleDef().getAll();
+                permissionList = new ArrayList<>();
+
+                if (CollectionUtils.isNotEmpty(allModules)) {
+                    for (XXModuleDef moduleDef : allModules) {
+                        permissionList.add(moduleDef.getModule());
+                    }
+                }
+            } else {
+                permissionList = daoManager.getXXModuleDef()
+                        .findAccessibleModulesByUserId(
+                                userSession.getUserId(), xUser.getId());
+            }
+
             CopyOnWriteArraySet<String>          userPermissions      = new CopyOnWriteArraySet<>(permissionList);
             UserSessionBase.RangerUserPermission rangerUserPermission = userSession.getRangerUserPermission();
 
@@ -556,6 +575,52 @@ public class SessionMgr {
             userSession.setUserAdmin(false);
         }
 
+        applyConfigSuperUserSessionFlags(userSession);
+
+        if (userSession.isConfigSuperUser()) {
+            strRoleList = RangerSuperUserConfig.mergeConfigSuperUserRoles(
+                    strRoleList, true);
+        }
+
         userSession.setUserRoleList(strRoleList);
+    }
+
+    /**
+     * Applies config super-user session flags ({@code userAdmin}, {@code keyAdmin},
+     * {@code configSuperUser}) when login matches
+     * {@code ranger.admin.super.users} / super.groups.
+     */
+    private void applyConfigSuperUserSessionFlags(
+            final UserSessionBase userSession) {
+        if (userSession == null) {
+            return;
+        }
+
+        String loginId = userSession.getLoginId();
+
+        if (loginId == null) {
+            return;
+        }
+
+        if (!RangerSuperUserConfig.isEnabled()) {
+            userSession.setConfigSuperUser(false);
+            return;
+        }
+
+        Set<String> userGroups = xUserMgr.getSyncedGroupsForUser(loginId);
+
+        if (RangerSuperUserConfig.isSuperUser(loginId, userGroups)) {
+            userSession.setUserAdmin(true);
+            userSession.setKeyAdmin(true);
+            userSession.setAuditUserAdmin(false);
+            userSession.setAuditKeyAdmin(false);
+            userSession.setConfigSuperUser(true);
+
+            logger.info(
+                    "Granted full admin privileges via config for user {}",
+                    loginId);
+        } else {
+            userSession.setConfigSuperUser(false);
+        }
     }
 }

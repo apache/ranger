@@ -1272,6 +1272,7 @@ public class RoleREST {
         }
 
         try {
+            // isUserRangerAdmin includes config super-users (session + config lookup).
             if (!bizUtil.isUserRangerAdmin(effectiveUser) && !svcStore.isServiceAdminUser(serviceName, effectiveUser)) {
                 existingRole = roleStore.getRole(roleName);
 
@@ -1338,6 +1339,11 @@ public class RoleREST {
 
     private boolean ensureRoleAccess(String username, Set<String> userGroups, RangerRole role) throws Exception {
         LOG.debug("==> ensureRoleAccess({}, {})", username, role);
+
+        // Full admin access including config super-user (ranger.admin.super.users/groups).
+        if (bizUtil.isUserRangerAdmin(username)) {
+            return true;
+        }
 
         boolean                     isAccessible = false;
         List<RangerRole.RoleMember> userList     = role.getUsers();

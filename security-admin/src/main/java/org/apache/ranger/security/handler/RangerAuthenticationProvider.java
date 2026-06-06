@@ -686,7 +686,7 @@ public class RangerAuthenticationProvider implements AuthenticationProvider {
 
                 authentication = authenticator.authenticate(finalAuthentication);
 
-                return authentication;
+                return getAuthenticationWithGrantedAuthority(authentication);
             } else {
                 if (authentication != null && !authentication.isAuthenticated()) {
                     throw new BadCredentialsException("Bad credentials");
@@ -702,7 +702,7 @@ public class RangerAuthenticationProvider implements AuthenticationProvider {
     }
 
     private List<GrantedAuthority> getAuthorities(String username) {
-        Collection<String>           roleList     = userMgr.getRolesByLoginId(username);
+        Collection<String>           roleList     = userMgr.getAuthenticationRolesByLoginId(username);
         final List<GrantedAuthority> grantedAuths = new ArrayList<>();
 
         for (String role : roleList) {

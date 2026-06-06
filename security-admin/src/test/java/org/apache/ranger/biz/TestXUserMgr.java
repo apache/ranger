@@ -1346,6 +1346,46 @@ public class TestXUserMgr {
     }
 
     @Test
+    public void testGetSyncedGroupsForUser() {
+        setupUser();
+        String userName = userLoginID;
+
+        XXUserDao xxUserDao = Mockito.mock(XXUserDao.class);
+        XXUser    xxUser    = new XXUser();
+
+        xxUser.setId(userId);
+        xxUser.setName(userName);
+
+        Mockito.when(daoManager.getXXUser()).thenReturn(xxUserDao);
+        Mockito.when(xxUserDao.findByUserName(userName)).thenReturn(xxUser);
+
+        XXGroupUserDao xxGroupUserDao = Mockito.mock(XXGroupUserDao.class);
+        XXGroupUser    groupUser      = new XXGroupUser();
+
+        groupUser.setName("ldap-admins");
+
+        List<XXGroupUser> groupUsers = new ArrayList<>();
+
+        groupUsers.add(groupUser);
+
+        Mockito.when(daoManager.getXXGroupUser()).thenReturn(xxGroupUserDao);
+        Mockito.when(xxGroupUserDao.findByUserId(userId)).thenReturn(groupUsers);
+
+        Set<String> groups = xUserMgr.getSyncedGroupsForUser(userName);
+
+        Assertions.assertEquals(1, groups.size());
+        Assertions.assertTrue(groups.contains("ldap-admins"));
+        Mockito.verify(xxUserDao).findByUserName(userName);
+        Mockito.verify(xxGroupUserDao).findByUserId(userId);
+
+        Mockito.when(xxUserDao.findByUserName(userName)).thenReturn(null);
+
+        groups = xUserMgr.getSyncedGroupsForUser(userName);
+
+        Assertions.assertTrue(groups.isEmpty());
+    }
+
+    @Test
     public void test37setUserRolesByExternalID() {
         setup();
         VXUser         vXUser           = vxUser();
@@ -3251,6 +3291,9 @@ public class TestXUserMgr {
         xXPortalUser.setLoginId(userLoginID);
         xXPortalUser.setId(userId);
         currentUserSession.setXXPortalUser(xXPortalUser);
+        List<String> sessionRoles = new ArrayList<>();
+        sessionRoles.add(RangerConstants.ROLE_USER);
+        currentUserSession.setUserRoleList(sessionRoles);
         List<String> permissionList = new ArrayList<>();
         permissionList.add(RangerConstants.MODULE_USER_GROUPS);
 

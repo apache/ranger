@@ -18,6 +18,7 @@ package org.apache.ranger.biz;
 
 import org.apache.ranger.common.ContextUtil;
 import org.apache.ranger.common.MessageEnums;
+import org.apache.ranger.common.PropertiesUtil;
 import org.apache.ranger.common.RESTErrorUtil;
 import org.apache.ranger.common.RangerCommonEnums;
 import org.apache.ranger.common.RangerConstants;
@@ -67,7 +68,9 @@ import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.WebApplicationException;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
@@ -1656,6 +1659,236 @@ public class TestUserMgr {
         Mockito.when(userDao.findByLoginId(userProfile.getLoginId())).thenReturn(null);
         roleList = userMgr.getRolesByLoginId(userLoginId);
         Assertions.assertNotNull(roleList);
+    }
+
+    @Test
+    public void testGetAuthenticationRolesByLoginId_ConfigSuperUser() {
+        setup();
+        XXPortalUserDao     userDao = Mockito.mock(XXPortalUserDao.class);
+        XXPortalUserRoleDao roleDao = Mockito.mock(XXPortalUserRoleDao.class);
+
+        VXPortalUser userProfile = userProfile();
+        String       userLoginId = userProfile.getLoginId();
+
+        XXPortalUser user = new XXPortalUser();
+        user.setLoginId(userLoginId);
+        user.setId(userProfile.getId());
+
+        XXPortalUserRole xxPortalUserRole = new XXPortalUserRole();
+        xxPortalUserRole.setUserRole(RangerConstants.ROLE_USER);
+        List<XXPortalUserRole> list = new ArrayList<>();
+        list.add(xxPortalUserRole);
+
+        Mockito.when(daoManager.getXXPortalUser()).thenReturn(userDao);
+        Mockito.when(userDao.findByLoginId(userLoginId)).thenReturn(user);
+        Mockito.when(daoManager.getXXPortalUserRole()).thenReturn(roleDao);
+        Mockito.when(roleDao.findByUserId(user.getId())).thenReturn(list);
+        Mockito.when(xUserMgr.getSyncedGroupsForUser(userLoginId)).thenReturn(Collections.emptySet());
+
+        PropertiesUtil.getPropertiesMap().put(RangerConstants.RANGER_ADMIN_SUPER_USERS, userLoginId);
+
+        Collection<String> authRoles = userMgr.getAuthenticationRolesByLoginId(userLoginId);
+
+        Assertions.assertTrue(authRoles.contains(RangerConstants.ROLE_USER));
+        Assertions.assertTrue(authRoles.contains(RangerConstants.ROLE_SYS_ADMIN));
+        Assertions.assertTrue(authRoles.contains(RangerConstants.ROLE_KEY_ADMIN));
+
+        Collection<String> dbRoles = userMgr.getRolesByLoginId(userLoginId);
+        Assertions.assertEquals(Collections.singletonList(RangerConstants.ROLE_USER), dbRoles);
+
+        PropertiesUtil.getPropertiesMap().remove(RangerConstants.RANGER_ADMIN_SUPER_USERS);
+    }
+
+    @Test
+    public void testGetAuthenticationRolesByLoginId_NoConfigMatch() {
+        setup();
+        XXPortalUserDao     userDao = Mockito.mock(XXPortalUserDao.class);
+        XXPortalUserRoleDao roleDao = Mockito.mock(XXPortalUserRoleDao.class);
+
+        VXPortalUser userProfile = userProfile();
+        String       userLoginId = userProfile.getLoginId();
+
+        XXPortalUser user = new XXPortalUser();
+        user.setLoginId(userLoginId);
+        user.setId(userProfile.getId());
+
+        XXPortalUserRole xxPortalUserRole = new XXPortalUserRole();
+        xxPortalUserRole.setUserRole(RangerConstants.ROLE_USER);
+        List<XXPortalUserRole> list = new ArrayList<>();
+        list.add(xxPortalUserRole);
+
+        Mockito.when(daoManager.getXXPortalUser()).thenReturn(userDao);
+        Mockito.when(userDao.findByLoginId(userLoginId)).thenReturn(user);
+        Mockito.when(daoManager.getXXPortalUserRole()).thenReturn(roleDao);
+        Mockito.when(roleDao.findByUserId(user.getId())).thenReturn(list);
+
+        PropertiesUtil.getPropertiesMap().put(
+                RangerConstants.RANGER_ADMIN_SUPER_USERS, "other-user");
+        Mockito.when(xUserMgr.getSyncedGroupsForUser(userLoginId))
+                .thenReturn(Collections.emptySet());
+
+        Collection<String> authRoles = userMgr.getAuthenticationRolesByLoginId(userLoginId);
+
+        Assertions.assertEquals(userMgr.getRolesByLoginId(userLoginId), authRoles);
+        Mockito.verify(xUserMgr).getSyncedGroupsForUser(userLoginId);
+
+        PropertiesUtil.getPropertiesMap().remove(
+                RangerConstants.RANGER_ADMIN_SUPER_USERS);
+    }
+
+    @Test
+    public void testGetAuthenticationRolesByLoginId_ConfigDisabledSkipsGroupLookup() {
+        setup();
+        XXPortalUserDao     userDao = Mockito.mock(XXPortalUserDao.class);
+        XXPortalUserRoleDao roleDao = Mockito.mock(XXPortalUserRoleDao.class);
+
+        VXPortalUser userProfile = userProfile();
+        String       userLoginId = userProfile.getLoginId();
+
+        XXPortalUser user = new XXPortalUser();
+        user.setLoginId(userLoginId);
+        user.setId(userProfile.getId());
+
+        XXPortalUserRole xxPortalUserRole = new XXPortalUserRole();
+        xxPortalUserRole.setUserRole(RangerConstants.ROLE_USER);
+        List<XXPortalUserRole> list = new ArrayList<>();
+        list.add(xxPortalUserRole);
+
+        Mockito.when(daoManager.getXXPortalUser()).thenReturn(userDao);
+        Mockito.when(userDao.findByLoginId(userLoginId)).thenReturn(user);
+        Mockito.when(daoManager.getXXPortalUserRole()).thenReturn(roleDao);
+        Mockito.when(roleDao.findByUserId(user.getId())).thenReturn(list);
+
+        Collection<String> authRoles =
+                userMgr.getAuthenticationRolesByLoginId(userLoginId);
+
+        Assertions.assertEquals(
+                Collections.singletonList(RangerConstants.ROLE_USER),
+                authRoles);
+        Mockito.verify(xUserMgr, Mockito.never()).getSyncedGroupsForUser(
+                Mockito.anyString());
+    }
+
+    @Test
+    public void testGjUserToUserProfile_ConfigSuperUserOverridesRolesAndModules() {
+        UserSessionBase session = new UserSessionBase();
+        XXPortalUser portalUser = new XXPortalUser();
+
+        portalUser.setId(99L);
+        portalUser.setLoginId("config-admin");
+        session.setXXPortalUser(portalUser);
+        session.setUserAdmin(true);
+        session.setKeyAdmin(true);
+        session.setConfigSuperUser(true);
+
+        RangerSecurityContext context = new RangerSecurityContext();
+        context.setUserSession(session);
+        RangerContextHolder.setSecurityContext(context);
+
+        XXPortalUser user = new XXPortalUser();
+        user.setId(99L);
+        user.setLoginId("config-admin");
+        user.setEmailAddress("config-admin@example.com");
+
+        XXPortalUserRole userRole = new XXPortalUserRole();
+        userRole.setUserRole(RangerConstants.ROLE_USER);
+
+        XXPortalUserRoleDao roleDao = Mockito.mock(XXPortalUserRoleDao.class);
+        XXModuleDefDao moduleDefDao = Mockito.mock(XXModuleDefDao.class);
+        XXUserDao xUserDao = Mockito.mock(XXUserDao.class);
+
+        XXModuleDef auditModule = new XXModuleDef();
+        auditModule.setId(1L);
+        auditModule.setModule(RangerConstants.MODULE_AUDIT);
+
+        XXModuleDef keyModule = new XXModuleDef();
+        keyModule.setId(2L);
+        keyModule.setModule(RangerConstants.MODULE_KEY_MANAGER);
+
+        XXUser xUser = new XXUser();
+        xUser.setId(501L);
+
+        Mockito.when(daoManager.getXXPortalUserRole()).thenReturn(roleDao);
+        Mockito.when(roleDao.findByParentId(99L)).thenReturn(Collections.singletonList(userRole));
+        Mockito.when(daoManager.getXXUserPermission()).thenReturn(Mockito.mock(org.apache.ranger.db.XXUserPermissionDao.class));
+        Mockito.when(daoManager.getXXGroupPermission()).thenReturn(Mockito.mock(org.apache.ranger.db.XXGroupPermissionDao.class));
+        Mockito.when(daoManager.getXXUserPermission().findByUserPermissionIdAndIsAllowed(99L)).thenReturn(Collections.emptyList());
+        Mockito.when(daoManager.getXXGroupPermission().findbyVXPortalUserId(99L)).thenReturn(Collections.emptyList());
+        Mockito.when(daoManager.getXXModuleDef()).thenReturn(moduleDefDao);
+        Mockito.when(moduleDefDao.getAll()).thenReturn(Arrays.asList(auditModule, keyModule));
+        Mockito.when(daoManager.getXXUser()).thenReturn(xUserDao);
+        Mockito.when(xUserDao.findByPortalUserId(99L)).thenReturn(xUser);
+        Mockito.when(stringUtil.validateEmail("config-admin@example.com")).thenReturn(true);
+
+        VXPortalUser profile = new VXPortalUser();
+        userMgr.gjUserToUserProfile(user, profile);
+
+        Assertions.assertTrue(profile.getUserRoleList().contains(RangerConstants.ROLE_SYS_ADMIN));
+        Assertions.assertTrue(profile.getUserRoleList().contains(RangerConstants.ROLE_KEY_ADMIN));
+        Assertions.assertEquals(2, profile.getUserPermList().size());
+        Assertions.assertEquals(RangerConstants.MODULE_AUDIT, profile.getUserPermList().get(0).getModuleName());
+        Assertions.assertEquals(RangerConstants.MODULE_KEY_MANAGER, profile.getUserPermList().get(1).getModuleName());
+
+        destroySession();
+    }
+
+    @Test
+    public void testMapXXPortalUserToVXPortalUser_ConfigSuperUserPreservesProfileRoles() {
+        UserSessionBase session = new UserSessionBase();
+        XXPortalUser portalUser = new XXPortalUser();
+
+        portalUser.setId(99L);
+        portalUser.setLoginId("config-admin");
+        session.setXXPortalUser(portalUser);
+        session.setUserAdmin(true);
+        session.setKeyAdmin(true);
+        session.setConfigSuperUser(true);
+
+        RangerSecurityContext context = new RangerSecurityContext();
+        context.setUserSession(session);
+        RangerContextHolder.setSecurityContext(context);
+
+        XXPortalUser user = new XXPortalUser();
+        user.setId(99L);
+        user.setLoginId("config-admin");
+        user.setEmailAddress("config-admin@example.com");
+        user.setUserSource(RangerCommonEnums.USER_APP);
+
+        XXPortalUserRole userRole = new XXPortalUserRole();
+        userRole.setUserRole(RangerConstants.ROLE_USER);
+
+        XXPortalUserRoleDao roleDao = Mockito.mock(XXPortalUserRoleDao.class);
+        XXModuleDefDao moduleDefDao = Mockito.mock(XXModuleDefDao.class);
+        XXUserDao xUserDao = Mockito.mock(XXUserDao.class);
+
+        XXModuleDef auditModule = new XXModuleDef();
+        auditModule.setId(1L);
+        auditModule.setModule(RangerConstants.MODULE_AUDIT);
+
+        XXUser xUser = new XXUser();
+        xUser.setId(501L);
+
+        Mockito.when(daoManager.getXXPortalUserRole()).thenReturn(roleDao);
+        Mockito.when(roleDao.findByParentId(99L)).thenReturn(Collections.singletonList(userRole));
+        Mockito.when(daoManager.getXXUserPermission()).thenReturn(Mockito.mock(XXUserPermissionDao.class));
+        Mockito.when(daoManager.getXXGroupPermission()).thenReturn(Mockito.mock(XXGroupPermissionDao.class));
+        Mockito.when(daoManager.getXXUserPermission().findByUserPermissionIdAndIsAllowed(99L)).thenReturn(Collections.emptyList());
+        Mockito.when(daoManager.getXXGroupPermission().findbyVXPortalUserId(99L)).thenReturn(Collections.emptyList());
+        Mockito.when(daoManager.getXXModuleDef()).thenReturn(moduleDefDao);
+        Mockito.when(moduleDefDao.getAll()).thenReturn(Collections.singletonList(auditModule));
+        Mockito.when(daoManager.getXXUser()).thenReturn(xUserDao);
+        Mockito.when(xUserDao.findByPortalUserId(99L)).thenReturn(xUser);
+        Mockito.when(stringUtil.validateEmail("config-admin@example.com")).thenReturn(true);
+        Mockito.when(sessionMgr.getLastSuccessLoginAuthTimeByUserId("config-admin")).thenReturn(new Date());
+
+        VXPortalUser profile = userMgr.mapXXPortalUserToVXPortalUser(user, null);
+
+        Assertions.assertEquals(
+                Arrays.asList(RangerConstants.ROLE_SYS_ADMIN, RangerConstants.ROLE_KEY_ADMIN),
+                profile.getUserRoleList());
+        Assertions.assertFalse(profile.getUserRoleList().contains(RangerConstants.ROLE_USER));
+
+        destroySession();
     }
 
     @Test

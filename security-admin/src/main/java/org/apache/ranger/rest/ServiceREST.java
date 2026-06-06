@@ -848,14 +848,9 @@ public class ServiceREST {
             if (ret != null) {
                 UserSessionBase userSession = ContextUtil.getCurrentUserSession();
 
-                if (userSession != null && userSession.getLoginId() != null) {
-                    VXUser loggedInVXUser = xUserService.getXUserByUserName(userSession.getLoginId());
-
-                    if (loggedInVXUser != null) {
-                        if (loggedInVXUser.getUserRoleList().size() == 1 && loggedInVXUser.getUserRoleList().contains(RangerConstants.ROLE_USER)) {
-                            hideCriticalServiceDetailsForRoleUser(ret);
-                        }
-                    }
+                // Hide sensitive fields for plain ROLE_USER; not config super-users.
+                if (userSession != null && userSession.isSingleRoleUserSession()) {
+                    hideCriticalServiceDetailsForRoleUser(ret);
                 }
             }
         } catch (WebApplicationException excp) {
@@ -897,14 +892,9 @@ public class ServiceREST {
             if (ret != null) {
                 UserSessionBase userSession = ContextUtil.getCurrentUserSession();
 
-                if (userSession != null && userSession.getLoginId() != null) {
-                    VXUser loggedInVXUser = xUserService.getXUserByUserName(userSession.getLoginId());
-
-                    if (loggedInVXUser != null) {
-                        if (loggedInVXUser.getUserRoleList().size() == 1 && loggedInVXUser.getUserRoleList().contains(RangerConstants.ROLE_USER)) {
-                            hideCriticalServiceDetailsForRoleUser(ret);
-                        }
-                    }
+                // Hide sensitive fields for plain ROLE_USER; not config super-users.
+                if (userSession != null && userSession.isSingleRoleUserSession()) {
+                    hideCriticalServiceDetailsForRoleUser(ret);
                 }
             }
         } catch (WebApplicationException excp) {
@@ -947,23 +937,18 @@ public class ServiceREST {
             if (paginatedSvcs != null && !paginatedSvcs.getList().isEmpty()) {
                 UserSessionBase userSession = ContextUtil.getCurrentUserSession();
 
-                if (userSession != null && userSession.getLoginId() != null) {
-                    VXUser loggedInVXUser = xUserService.getXUserByUserName(userSession.getLoginId());
+                // Hide sensitive fields for plain ROLE_USER; not config super-users.
+                if (userSession != null && userSession.isSingleRoleUserSession()) {
+                    List<RangerService> updateServiceList = new ArrayList<>();
 
-                    if (loggedInVXUser != null) {
-                        if (loggedInVXUser.getUserRoleList().size() == 1 && loggedInVXUser.getUserRoleList().contains(RangerConstants.ROLE_USER)) {
-                            List<RangerService> updateServiceList = new ArrayList<>();
-
-                            for (RangerService rangerService : paginatedSvcs.getList()) {
-                                if (rangerService != null) {
-                                    updateServiceList.add(hideCriticalServiceDetailsForRoleUser(rangerService));
-                                }
-                            }
-
-                            if (!updateServiceList.isEmpty()) {
-                                paginatedSvcs.setList(updateServiceList);
-                            }
+                    for (RangerService rangerService : paginatedSvcs.getList()) {
+                        if (rangerService != null) {
+                            updateServiceList.add(hideCriticalServiceDetailsForRoleUser(rangerService));
                         }
+                    }
+
+                    if (!updateServiceList.isEmpty()) {
+                        paginatedSvcs.setList(updateServiceList);
                     }
                 }
             }
@@ -3245,7 +3230,8 @@ public class ServiceREST {
             isAdmin    = bizUtil.isAdmin();
             isKeyAdmin = bizUtil.isKeyAdmin();
         } else {
-            Collection<String> userRoles = userMgrGrantor.getRolesByLoginId(grantor);
+            // Includes config super-user privileges, not just DB portal roles.
+            Collection<String> userRoles = userMgrGrantor.getAuthenticationRolesByLoginId(grantor);
 
             userName   = grantor;
             isAdmin    = userRoles.contains(RangerConstants.ROLE_SYS_ADMIN);
