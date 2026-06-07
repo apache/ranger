@@ -1045,25 +1045,23 @@ public class RangerBizUtil {
             throw restErrorUtil.createRESTException("UserSession cannot be null, only KeyAdmin can create/update/delete " + objType, MessageEnums.OPER_NO_PERMISSION);
         }
 
-        if (session.isKeyAdmin() && !EmbeddedServiceDefsUtil.KMS_IMPL_CLASS_NAME.equals(implClassName)) {
-            throw restErrorUtil.createRESTException("KeyAdmin can create/update/delete only KMS " + objType, MessageEnums.OPER_NO_PERMISSION);
-        }
+        if (!session.isSuperUser()) {
+            boolean isKmsServiceType = EmbeddedServiceDefsUtil.KMS_IMPL_CLASS_NAME.equals(implClassName);
 
-        // TODO: As of now we are allowing SYS_ADMIN to create/update/read/delete all the
-        // services including KMS
+            if (session.isKeyAdmin() && !isKmsServiceType) {
+                throw restErrorUtil.createRESTException("KeyAdmin can create/update/delete only KMS " + objType, MessageEnums.OPER_NO_PERMISSION);
+            }
 
-        // Stock sys admin cannot manage KMS service-def; config super-users may
-        // (full admin + key-admin parity via ranger.admin.super.users/groups).
-        if ("Service-Def".equalsIgnoreCase(objType) && session.isUserAdmin() && !session.isConfigSuperUser()
-                && EmbeddedServiceDefsUtil.KMS_IMPL_CLASS_NAME.equals(implClassName)) {
-            throw restErrorUtil.createRESTException("System Admin cannot create/update/delete KMS " + objType, MessageEnums.OPER_NO_PERMISSION);
+            if (session.isUserAdmin() && isKmsServiceType && "Service-Def".equalsIgnoreCase(objType)) {
+                throw restErrorUtil.createRESTException("System Admin cannot create/update/delete KMS " + objType, MessageEnums.OPER_NO_PERMISSION);
+            }
         }
     }
 
     public boolean checkUserAccessible(VXUser vXUser) {
         // Config super-user (ranger.admin.super.users/groups) bypasses the
         // mutual admin/key-admin visibility restrictions below.
-        if (isConfigSuperUser()) {
+        if (isSuperUser()) {
             return true;
         }
 
@@ -1134,8 +1132,7 @@ public class RangerBizUtil {
     /**
      * True when {@code username} is a full Ranger admin: DB sys/admin role,
      * config super-user ({@code ranger.admin.super.users/groups}), or the
-     * current session is an effective Ranger admin per
-     * {@link UserSessionBase#isEffectiveRangerAdmin()}.
+     * current session is a Ranger admin ({@link UserSessionBase#isUserAdmin()}).
      */
     public boolean isUserRangerAdmin(String username) {
         if (StringUtils.isBlank(username)) {
@@ -1144,10 +1141,10 @@ public class RangerBizUtil {
 
         UserSessionBase userSession = ContextUtil.getCurrentUserSession();
 
-        // Effective Ranger admin on current session (DB sys admin or config super-user).
+        // Ranger admin on current session (DB sys admin or config super-user).
         if (userSession != null
                 && username.equalsIgnoreCase(userSession.getLoginId())
-                && userSession.isEffectiveRangerAdmin()) {
+                && userSession.isUserAdmin()) {
             return true;
         }
 
@@ -1178,10 +1175,10 @@ public class RangerBizUtil {
      * True when the current session is a config super-user per
      * {@code ranger.admin.super.users} / {@code ranger.admin.super.groups}.
      */
-    public boolean isConfigSuperUser() {
+    public boolean isSuperUser() {
         UserSessionBase currentUserSession = ContextUtil.getCurrentUserSession();
 
-        return currentUserSession != null && currentUserSession.isConfigSuperUser();
+        return currentUserSession != null && currentUserSession.isSuperUser();
     }
 
     public boolean isUserServiceAdmin(RangerService rangerService, String userName) {

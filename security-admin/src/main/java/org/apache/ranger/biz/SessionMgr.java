@@ -223,7 +223,7 @@ public class SessionMgr {
         if (xUser != null) {
             List<String> permissionList;
 
-            if (userSession.isEffectiveRangerAdmin() || userSession.isKeyAdmin()) {
+            if (userSession.isUserAdmin() || userSession.isKeyAdmin()) {
                 List<XXModuleDef> allModules =
                         daoManager.getXXModuleDef().getAll();
                 permissionList = new ArrayList<>();
@@ -577,7 +577,7 @@ public class SessionMgr {
 
         applyConfigSuperUserSessionFlags(userSession);
 
-        if (userSession.isConfigSuperUser()) {
+        if (userSession.isSuperUser()) {
             strRoleList = RangerSuperUserConfig.mergeConfigSuperUserRoles(
                     strRoleList, true);
         }
@@ -586,8 +586,7 @@ public class SessionMgr {
     }
 
     /**
-     * Applies config super-user session flags ({@code userAdmin}, {@code keyAdmin},
-     * {@code configSuperUser}) when login matches
+     * Applies config super-user session flag ({@code superUser}) when login matches
      * {@code ranger.admin.super.users} / super.groups.
      */
     private void applyConfigSuperUserSessionFlags(
@@ -603,24 +602,20 @@ public class SessionMgr {
         }
 
         if (!RangerSuperUserConfig.isEnabled()) {
-            userSession.setConfigSuperUser(false);
+            userSession.setSuperUser(false);
             return;
         }
 
         Set<String> userGroups = xUserMgr.getSyncedGroupsForUser(loginId);
 
         if (RangerSuperUserConfig.isSuperUser(loginId, userGroups)) {
-            userSession.setUserAdmin(true);
-            userSession.setKeyAdmin(true);
-            userSession.setAuditUserAdmin(false);
-            userSession.setAuditKeyAdmin(false);
-            userSession.setConfigSuperUser(true);
+            userSession.setSuperUser(true);
 
             logger.info(
                     "Granted full admin privileges via config for user {}",
                     loginId);
         } else {
-            userSession.setConfigSuperUser(false);
+            userSession.setSuperUser(false);
         }
     }
 }

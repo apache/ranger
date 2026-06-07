@@ -901,7 +901,7 @@ public class TestRangerBizUtil {
 
         UserSessionBase session = RangerContextHolder.getSecurityContext().getUserSession();
         session.setXXPortalUser(portalUser);
-        session.setConfigSuperUser(true);
+        session.setSuperUser(true);
 
         Assertions.assertTrue(rangerBizUtil.isUserRangerAdmin("config-super-user"));
         Assertions.assertFalse(rangerBizUtil.isUserRangerAdmin("other-user"));
@@ -999,14 +999,14 @@ public class TestRangerBizUtil {
     @Test
     public void testHasKMSPermissions_AllowsConfigSuperUserOnServiceDefKMS() {
         RangerContextHolder.getSecurityContext().getUserSession().setUserAdmin(true);
-        RangerContextHolder.getSecurityContext().getUserSession().setConfigSuperUser(true);
+        RangerContextHolder.getSecurityContext().getUserSession().setSuperUser(true);
         Assertions.assertDoesNotThrow(() -> rangerBizUtil.hasKMSPermissions("Service-Def", EmbeddedServiceDefsUtil.KMS_IMPL_CLASS_NAME));
     }
 
     @Test
     public void testCheckUserAccessible_ConfigSuperUserCanManageSysAdminUser() {
         UserSessionBase session = new UserSessionBase();
-        session.setConfigSuperUser(true);
+        session.setSuperUser(true);
 
         RangerSecurityContext context = new RangerSecurityContext();
         context.setUserSession(session);

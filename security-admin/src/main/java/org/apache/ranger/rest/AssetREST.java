@@ -573,7 +573,7 @@ public class AssetREST {
         searchUtil.extractLong(request, searchCriteria, "datasetIds", "Dataset Ids");
 
         // Config super-users see all audit logs (same as full admin), not KMS-only filtering.
-        if (!msBizUtil.isConfigSuperUser()) {
+        if (!msBizUtil.isSuperUser()) {
             // Key admin / audit key admin: KMS audits only; others: exclude KMS.
             boolean      isKeyAdmin      = msBizUtil.isKeyAdmin();
             boolean      isAuditKeyAdmin = msBizUtil.isAuditKeyAdmin();

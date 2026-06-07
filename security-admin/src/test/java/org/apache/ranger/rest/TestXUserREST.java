@@ -1650,7 +1650,7 @@ public class TestXUserREST {
         UserSessionBase currentUserSession = ContextUtil.getCurrentUserSession();
         currentUserSession.setUserAdmin(true);
         currentUserSession.setKeyAdmin(true);
-        currentUserSession.setConfigSuperUser(true);
+        currentUserSession.setSuperUser(true);
         XXPortalUser xXPortalUser = new XXPortalUser();
         xXPortalUser.setLoginId(userLoginID);
         xXPortalUser.setId(userId);

@@ -2651,7 +2651,7 @@ public class XUserMgr extends XUserMgrBase {
     public boolean hasAccessToModule(String moduleName) {
         UserSessionBase userSession = ContextUtil.getCurrentUserSession();
 
-        if (userSession != null && userSession.isConfigSuperUser()) {
+        if (userSession != null && userSession.isSuperUser()) {
             return true;
         }
 
@@ -3336,7 +3336,7 @@ public class XUserMgr extends XUserMgrBase {
     private boolean hasAccessToGetUserInfo(VXUser requestedVXUser) {
         UserSessionBase userSession = ContextUtil.getCurrentUserSession();
 
-        if (userSession != null && userSession.isConfigSuperUser()) {
+        if (userSession != null && userSession.isSuperUser()) {
             return true;
         }
 

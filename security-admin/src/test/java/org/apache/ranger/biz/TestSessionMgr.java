@@ -574,9 +574,7 @@ public class TestSessionMgr {
 
         assertTrue(userSession.isUserAdmin());
         assertTrue(userSession.isKeyAdmin());
-        assertTrue(userSession.isConfigSuperUser());
-        assertFalse(userSession.isAuditUserAdmin());
-        assertFalse(userSession.isAuditKeyAdmin());
+        assertTrue(userSession.isSuperUser());
         assertTrue(userSession.getUserRoleList().contains(RangerConstants.ROLE_SYS_ADMIN));
         assertTrue(userSession.getUserRoleList().contains(RangerConstants.ROLE_KEY_ADMIN));
         assertTrue(userSession.getUserRoleList().contains(RangerConstants.ROLE_USER));
@@ -587,7 +585,7 @@ public class TestSessionMgr {
 
         userSession.setUserAdmin(false);
         userSession.setKeyAdmin(false);
-        userSession.setConfigSuperUser(false);
+        userSession.setSuperUser(false);
 
         when(xUserMgr.getSyncedGroupsForUser("config-admin")).thenReturn(new HashSet<>(Collections.singletonList("ldap-admins")));
 
@@ -595,7 +593,7 @@ public class TestSessionMgr {
 
         assertTrue(userSession.isUserAdmin());
         assertTrue(userSession.isKeyAdmin());
-        assertTrue(userSession.isConfigSuperUser());
+        assertTrue(userSession.isSuperUser());
 
         PropertiesUtil.getPropertiesMap().remove(RangerConstants.RANGER_ADMIN_SUPER_GROUPS);
     }
@@ -627,26 +625,26 @@ public class TestSessionMgr {
 
         assertFalse(userSession.isUserAdmin());
         assertFalse(userSession.isKeyAdmin());
-        assertFalse(userSession.isConfigSuperUser());
+        assertFalse(userSession.isSuperUser());
         verify(xUserMgr, never()).getSyncedGroupsForUser(anyString());
     }
 
     @Test
-    public void testIsEffectiveRangerAdmin() {
+    public void testIsUserAdminIncludesSuperUserFlag() {
         UserSessionBase keyAdminOnly = new UserSessionBase();
 
         keyAdminOnly.setKeyAdmin(true);
-        assertFalse(keyAdminOnly.isEffectiveRangerAdmin());
+        assertFalse(keyAdminOnly.isUserAdmin());
 
         UserSessionBase sysAdmin = new UserSessionBase();
 
         sysAdmin.setUserAdmin(true);
-        assertTrue(sysAdmin.isEffectiveRangerAdmin());
+        assertTrue(sysAdmin.isUserAdmin());
 
-        UserSessionBase configSuperUser = new UserSessionBase();
+        UserSessionBase configSuperUserSession = new UserSessionBase();
 
-        configSuperUser.setConfigSuperUser(true);
-        assertTrue(configSuperUser.isEffectiveRangerAdmin());
+        configSuperUserSession.setSuperUser(true);
+        assertTrue(configSuperUserSession.isUserAdmin());
     }
 
     @Test
@@ -679,7 +677,7 @@ public class TestSessionMgr {
 
         assertTrue(userSession.isUserAdmin());
         assertTrue(userSession.isKeyAdmin());
-        assertTrue(userSession.isConfigSuperUser());
+        assertTrue(userSession.isSuperUser());
 
         PropertiesUtil.getPropertiesMap().remove(RangerConstants.RANGER_ADMIN_SUPER_USERS);
     }

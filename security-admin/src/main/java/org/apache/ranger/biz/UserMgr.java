@@ -642,7 +642,7 @@ public class UserMgr {
             if (userRoleList == null) {
                 userRoleList = new ArrayList<>();
 
-                if (sess.isConfigSuperUser()) {
+                if (sess.isSuperUser()) {
                     userRoleList.addAll(
                             RangerSuperUserConfig.getConfigSuperUserProfileRoles());
                 } else {
@@ -1349,7 +1349,7 @@ public class UserMgr {
             final UserSessionBase sess,
             final XXPortalUser user) {
         if (sess == null || userProfile == null || user == null
-                || !sess.isConfigSuperUser()) {
+                || !sess.isSuperUser()) {
             return;
         }
 
@@ -1628,7 +1628,7 @@ public class UserMgr {
     private boolean hasAccessToGetUserInfo(final VXPortalUser requestedVXUser) {
         UserSessionBase userSession = ContextUtil.getCurrentUserSession();
 
-        if (userSession != null && userSession.isConfigSuperUser()) {
+        if (userSession != null && userSession.isSuperUser()) {
             return true;
         }
 

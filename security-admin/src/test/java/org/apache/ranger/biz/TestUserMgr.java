@@ -1779,7 +1779,7 @@ public class TestUserMgr {
         session.setXXPortalUser(portalUser);
         session.setUserAdmin(true);
         session.setKeyAdmin(true);
-        session.setConfigSuperUser(true);
+        session.setSuperUser(true);
 
         RangerSecurityContext context = new RangerSecurityContext();
         context.setUserSession(session);
@@ -1842,7 +1842,7 @@ public class TestUserMgr {
         session.setXXPortalUser(portalUser);
         session.setUserAdmin(true);
         session.setKeyAdmin(true);
-        session.setConfigSuperUser(true);
+        session.setSuperUser(true);
 
         RangerSecurityContext context = new RangerSecurityContext();
         context.setUserSession(session);

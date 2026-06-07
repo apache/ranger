@@ -233,7 +233,7 @@ public class TestRoleDBStore {
 
         UserSessionBase currentUserSession = ContextUtil.getCurrentUserSession();
         currentUserSession.setUserAdmin(true);
-        currentUserSession.setConfigSuperUser(true);
+        currentUserSession.setSuperUser(true);
         currentUserSession.setUserRoleList(
                 Collections.singletonList(RangerConstants.ROLE_USER));
 
