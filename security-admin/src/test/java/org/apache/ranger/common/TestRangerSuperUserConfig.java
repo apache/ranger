@@ -155,6 +155,7 @@ public class TestRangerSuperUserConfig {
 
         PropertiesUtil.getPropertiesMap().put(
                 RangerConstants.RANGER_ADMIN_SUPER_GROUPS, "ranger-admins");
+        RangerSuperUserConfig.resetForTests();
 
         Assertions.assertTrue(RangerSuperUserConfig.isSuperGroupsConfigured());
 

@@ -40,27 +40,19 @@ import java.util.Set;
 public final class RangerSuperUserConfig {
     private static volatile RangerSuperUserConfig instance;
 
-    private  Set<String> superUsers = new HashSet<>();
-    private  Set<String> superUserGroups = new HashSet<>();
+    private final Set<String> superUsers;
+    private final Set<String> superUserGroups;
     private final boolean     superUsersConfigured;
     private final boolean     superGroupsConfigured;
     private final boolean     enabled;
 
     private RangerSuperUserConfig() {
-        String[] cfgSuperUsers      = PropertiesUtil.getPropertyStringList(RangerConstants.RANGER_ADMIN_SUPER_USERS);
-        String[] cfgSuperUserGroups = PropertiesUtil.getPropertyStringList(RangerConstants.RANGER_ADMIN_SUPER_GROUPS);
-
-        if (cfgSuperUsers != null) {
-            for (String user : cfgSuperUsers) {
-                superUsers.add(user);
-            }
-        }
-
-        if (cfgSuperUserGroups != null) {
-            for (String userGroup : cfgSuperUserGroups) {
-                superUserGroups.add(userGroup);
-            }
-        }
+        superUsers = parsePropertyValues(
+                PropertiesUtil.getPropertyStringList(
+                        RangerConstants.RANGER_ADMIN_SUPER_USERS));
+        superUserGroups = parsePropertyValues(
+                PropertiesUtil.getPropertyStringList(
+                        RangerConstants.RANGER_ADMIN_SUPER_GROUPS));
         superUsersConfigured  = !superUsers.isEmpty();
         superGroupsConfigured = !superUserGroups.isEmpty();
         enabled               = superUsersConfigured || superGroupsConfigured;
@@ -92,8 +84,8 @@ public final class RangerSuperUserConfig {
     }
 
     /**
-     * @param userName authenticated user name
-     * @return true when userName matches configured super users
+     * @param userName authenticated username
+     * @return true when userName matches configured superusers
      */
     public static boolean isSuperUser(final String userName) {
         final boolean isSuperUser;
@@ -123,8 +115,7 @@ public final class RangerSuperUserConfig {
         } else if (cfg.superUsersConfigured && cfg.matchesUser(userName)) {
             isSuperUser = true;
         } else {
-            isSuperUser = cfg.superGroupsConfigured
-                    && cfg.matchesGroups(userGroups);
+            isSuperUser = cfg.superGroupsConfigured && cfg.matchesGroups(userGroups);
         }
 
         return isSuperUser;
@@ -162,13 +153,26 @@ public final class RangerSuperUserConfig {
         return mergeConfigSuperUserRoles(Collections.emptyList(), false);
     }
 
+    private static Set<String> parsePropertyValues(final String[] values) {
+        Set<String> parsed = new HashSet<>();
+
+        if (values != null) {
+            for (String value : values) {
+                if (StringUtils.isNotBlank(value)) {
+                    parsed.add(value.trim());
+                }
+            }
+        }
+
+        return Collections.unmodifiableSet(parsed);
+    }
+
     private static RangerSuperUserConfig getInstance() {
         RangerSuperUserConfig cfg = instance;
 
         if (cfg == null) {
             synchronized (RangerSuperUserConfig.class) {
                 cfg = instance;
-
                 if (cfg == null) {
                     cfg = new RangerSuperUserConfig();
                     instance = cfg;
