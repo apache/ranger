@@ -79,6 +79,12 @@
         </dependency>
         <dependency>
             <groupId>org.apache.ranger</groupId>
+            <artifactId>ranger-audit-dest-auditserver</artifactId>
+            <version>${project.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.ranger</groupId>
             <artifactId>ranger-audit-dest-cloudwatch</artifactId>
             <version>${project.version}</version>
             <scope>provided</scope>
