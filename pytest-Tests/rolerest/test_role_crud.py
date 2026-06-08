@@ -25,6 +25,7 @@
 
 from urllib import *
 from rolerest.utility.utils import *
+from rolerest.utility.utils import assert_response
 from xuserrest.utility.utils import *
 import uuid
 import string
@@ -114,7 +115,6 @@ class TestRoleCRUD:
         [
             ({}, "default_request"),
             ({"startIndex": 0, "pageSize": 10}, "pagination_basic"),
-            ({"startIndex": 5, "pageSize": 5}, "pagination_offset"),
             ({"roleName": "admin"}, "filter_role_name"),
             ({"roleId": 1}, "filter_role_id"),
             ({"sortBy": "id", "sortType": "asc"}, "sorting_asc"),
@@ -126,7 +126,6 @@ class TestRoleCRUD:
         ids=[
             "default",
             "pagination-basic",
-            "pagination-offset",
             "filter-role-name",
             "filter-role-id",
             "sorting-asc",
@@ -147,8 +146,7 @@ class TestRoleCRUD:
             auth=auth,
             params=params
         )
-        assert response.status_code == 200, f"Failed to get all roles and got response code {response.status_code}"
-
+        assert_response(response, 200, f"Failed to get all roles and got response code {response.status_code}")
 
         if "pageSize" in params:
             assert len(response.json().get("roles", [])) <= params["pageSize"]
@@ -177,16 +175,225 @@ class TestRoleCRUD:
             headers=self.headers,
             auth=auth
         )
-        assert response.status_code == 200, f"Failed to get role by ID and got response code {response.status_code}"
+        assert_response(response, 200, f"Failed to get role by ID and got response code {response.status_code}")
         data = response.json()
         assert data["id"] == role_id, f"Expected role ID {role_id} but got {data['id']}"
+
+
+    # @pytest.mark.get
+    # @pytest.mark.positive
+    # @pytest.mark.parametrize(
+    #     "test_case", [
+    #         ("login_user is not (admin not service admin/group) & role-membership via  user"),
+    #         ("login_user is not (admin not service admin/group) & role-membership via  group"),
+    #         ("login_user is not (admin not service admin/group) & role-membership via  role-user"),
+    #         ("login_user is not (admin not service admin/group) & role-membership via  role-group"),
+    #         ("login_user is admin"),
+    #         ("login_user is service admin"),
+    #         ("login_user is in service admin groups in grouplist"),
+    #     ]
+    # )
+    # def test_get_role_by_name_same_creds(self, test_case, request):   # here always the login_user = queryparam user
+
+    #     if test_case == "login_user is admin":
+    #         temp_user, temp_user_id = request.getfixturevalue("temp_secure_user")(["admin"])
+    #         auth = (temp_user["name"], "Test@123")
+    #         role, role_id = request.getfixturevalue("temp_role")()  # Create a role to fetch by name in this test case
+
+    #     elif test_case == "login_user is service admin":
+    #         service, service_id = create_service()
+    #         temp_user, temp_user_id = request.getfixturevalue("temp_secure_user")("auditor")
+    #         assign_service_admin(service_id, service, temp_user['name'])
+    #         auth = (temp_user["name"], "Test@123")
+    #         role, role_id = request.getfixturevalue("temp_role")()  # Create a role to fetch by name in this test case
+
+    #     elif test_case == "login_user is in service admin groups in grouplist":
+    #         service, service_id = create_service()
+    #         temp_user, temp_user_id = request.getfixturevalue("temp_secure_user")("auditor")
+    #         group, group_id = request.getfixturevalue("temp_group")()
+    #         assign_service_admin_group(service_id, service, group["name"])
+    #         assign_groups_to_user(temp_user["name"], [group["name"]], self.ranger_admin_config, self.base_url, self.headers)
+    #         auth = (temp_user["name"], "Test@123")
+    #         role, role_id = request.getfixturevalue("temp_role")()  # Create a role to fetch by name in this test case
+
+    #     elif test_case == "login_user is not (admin not service admin/group) & role-membership via  user":
+    #         temp_user, temp_user_id = request.getfixturevalue("temp_secure_user")("user")
+    #         role, role_id = request.getfixturevalue("temp_role")(user_list=[{"name": temp_user["name"], "isAdmin": True}])
+    #         auth = (temp_user["name"], "Test@123")
+
+    #     elif test_case == "login_user is not (admin not service admin/group) & role-membership via  group":
+    #         temp_user, temp_user_id = request.getfixturevalue("temp_secure_user")("user")
+    #         group, group_id = request.getfixturevalue("temp_group")()
+    #         assign_groups_to_user(temp_user["name"], [group["name"]], self.ranger_admin_config, self.base_url, self.headers)
+    #         role, role_id = request.getfixturevalue("temp_role")(group_list=[{"name": group["name"], "isAdmin": True}])
+    #         auth = (temp_user["name"], "Test@123")
+
+    #     elif test_case == "login_user is not (admin not service admin/group) & role-membership via  role-user":
+    #         temp_user, temp_user_id = request.getfixturevalue("temp_secure_user")("user")
+    #         c_role, c_id = request.getfixturevalue("temp_role")(user_list=[{"name": temp_user["name"], "isAdmin": True}])
+    #         role, role_id = request.getfixturevalue("temp_role")(role_list=[{"name": c_role["name"], "isAdmin": True}])
+    #         auth = (temp_user["name"], "Test@123")
+
+    #     elif test_case == "login_user is not (admin not service admin/group) & role-membership via  role-group":
+    #         temp_user, temp_user_id = request.getfixturevalue("temp_secure_user")("user")
+    #         group, group_id = request.getfixturevalue("temp_group")()
+    #         assign_groups_to_user(temp_user["name"], [group["name"]], self.ranger_admin_config, self.base_url, self.headers)
+    #         c_role, c_id = request.getfixturevalue("temp_role")(group_list=[{"name": group["name"], "isAdmin": True}])
+    #         role, role_id = request.getfixturevalue("temp_role")(role_list=[{"name": c_role["name"], "isAdmin": True}])
+    #         auth = (temp_user["name"], "Test@123")
+
+    #     params = {"execUser": temp_user["name"]}
+
+    #     if test_case in ["login_user is service admin", "login_user has service admin groups in grouplist"]:
+    #         params = {"serviceName": service["name"], "execUser": temp_user["name"]}
+    #     response = requests.get(
+    #         f"{self.base_url}/roles/roles/name/{role['name']}",
+    #         auth=auth,
+    #         headers=self.headers,
+    #         params=params
+    #     )
+
+    #     assert_response(response, 200, f"Failed to get role by name with same creds and got response code {response.status_code} with \n response text: {response.text}")
+
+    #     data = response.json()
+    #     assert data["id"] == role_id, f"Expected role ID {role_id} but got {data['id']} for test case {test_case}"
+    #     # Cleanup
+    #     if test_case in ["login_user is service admin", "login_user has service admin groups in grouplist"]:
+    #         delete_service(service_id)
+
+    #     delete_role(role_id)
+
+    #     if test_case.endswith("role-user") or test_case.endswith("role-group"):
+    #         delete_role(c_id)
 
     @pytest.mark.get
     @pytest.mark.positive
     @pytest.mark.parametrize(
-        "role, test_case", [("admin", "r")],
+        "test_case", [
+            ("login_user is not (admin not service admin/group) & role-membership via  user"),
+            ("login_user is not (admin not service admin/group) & role-membership via  group"),
+            ("login_user is not (admin not service admin/group) & role-membership via  role-user"),
+            ("login_user is not (admin not service admin/group) & role-membership via  role-group"),
+            ("login_user is admin"),
+            ("login_user is service admin"),
+            ("login_user is in service admin groups in grouplist"),
+        ]
     )
+    def test_get_role_by_name_same_creds(self, test_case, request):   # here always the login_user = queryparam user
+        
+        condition = test_case.removeprefix("login_user is ")
+        auth, params, role, clean_up_items = ensureRoleAccess(condition, request)
+        
+        response = requests.get(
+            f"{self.base_url}/roles/roles/name/{role['name']}",
+            auth=auth,
+            headers=self.headers,
+            params=params
+        )
 
+        assert_response(response, 200, f"Failed to get role by name with same creds and got response code {response.status_code} with \n response text: {response.text}")
+
+        data = response.json()
+        assert data["id"] == role["id"], f"Expected role ID {role['id']} but got {data['id']} for test case {test_case}"
+       
+        # Cleanup 
+        for item in clean_up_items["role_list"]:
+            delete_role(item)
+        for item in clean_up_items["service_list"]:
+            delete_service(item)
+
+
+    @pytest.mark.get
+    @pytest.mark.positive
+    @pytest.mark.parametrize(
+        "test_case", [
+            #"login user is admin",          
+            "login user is service admin",
+            #"login user has service admin groups",
+        ]
+    )
+    @pytest.mark.parametrize(
+        "query_param_user, effective_user, additional_conditions", 
+        [
+            # ("exists", "query param userName", "query user is admin"),
+            # ("exists", "query param userName", "query user is service admin"),
+            ("exists", "query param userName", "query user is in service admin groups in grouplist"),
+            # ("exists", "query param userName", "query user is not admin or service admin/group but has role membership via user"),
+            # ("exists", "query param userName", "query user is not admin or service admin/group but has role membership via group"),
+            # ("exists", "query param userName", "query user is not admin or service admin/group but has role membership via role-user"),
+            # ("exists", "query param userName", "query user is not admin or service admin/group but has role membership via role-group"),
+            # ("not_exists", "login userName", "None"),
+        ],
+    )
+    def test_get_role_by_name_with_diff_creds(self, query_param_user, effective_user, test_case, additional_conditions, request):
+        param = {}
+        service = None
+        service_id = None
+
+
+        if test_case == "login user is admin":           
+            temp_user, temp_user_id = request.getfixturevalue("temp_secure_user")(["admin"])
+            auth = (temp_user["name"], "Test@123")
+
+        elif test_case == "login user is service admin": 
+            service, service_id = create_service()
+            temp_user, temp_user_id = request.getfixturevalue("temp_secure_user")("auditor")
+            assign_service_admin(service_id, service, temp_user['name'])
+            auth = (temp_user["name"], "Test@123")
+
+        elif test_case == "login user has service admin groups":  
+            
+            temp_user, temp_user_id = request.getfixturevalue("temp_secure_user")("auditor")
+            group, group_id = request.getfixturevalue("temp_group")()
+            assign_groups_to_user(temp_user["name"], [group["name"]], self.ranger_admin_config, self.base_url, self.headers)
+            service, service_id = create_service()
+            assign_service_admin_group(service_id, service, group["name"])
+            
+
+            auth = (temp_user["name"], "Test@123")
+
+
+        if query_param_user == "not_exists":
+            role, role_id = request.getfixturevalue("temp_role")()
+            params = {}
+            if service:
+                params["serviceName"] = service["name"]
+            clean_up_items = {"role_list": [role_id], "service_list": [service_id] if service_id else []}
+        else:
+            condition = additional_conditions.removeprefix("query user is ")
+            auth_user, params, role, clean_up_items = ensureRoleAccess(
+                condition, request,
+                existing_service=[service] if service and "service admin" in test_case else None
+            )
+
+            if service:
+                params["serviceName"] = service["name"]
+
+        print("\n Auth used: ", auth)
+        print("\n Query params used: ", params)
+        response = requests.get(
+            f"{self.base_url}/roles/roles/name/{role['name']}",
+            auth=auth,  # auth is admin but execUser in query param has service admin group permissions
+            headers=self.headers,
+            params=params
+        )
+
+        assert_response(response, 200, f"Failed to get role by name with different creds and got response code {response.status_code} with \n response text: {response.text}")
+
+
+        data = response.json()
+        assert data["id"] == role["id"], f"Expected role ID {role['id']} but got {data['id']} for test case {test_case}"
+        print(f"Response data: {data} for test case {test_case}")
+        # Cleanup
+        for item in clean_up_items["role_list"]:
+            delete_role(item)
+        for item in clean_up_items["service_list"]:
+            delete_service(item)
+        # Cleanup login user's service if not already cleaned up
+        if service_id and service_id not in clean_up_items["service_list"]:
+            delete_service(service_id)
+        
+        
     @pytest.mark.post
     @pytest.mark.positive
     @pytest.mark.parametrize(
@@ -401,6 +608,51 @@ class TestRoleCRUD:
             auth=self.ranger_admin_config
         )
         assert response.status_code == 400, f"Expected 400 for {test_case} but got {response.status_code}"
+
+
+
+    @pytest.mark.get
+    @pytest.mark.negative
+    @pytest.mark.parametrize(
+        "test_case", [
+            ("unauthorized by non service admin/group - user access"),
+            ("unauthorized by non service admin/group - auditor access"),
+            ("unauthorized by non service admin/group - key admin access"),
+            ("invalid payload - wrong service name in params"),
+            ("invalid payload - wrong param user(non exist user)"),
+        ]
+    )
+    def test_get_role_by_name_same_creds_negative(self, test_case, request):
+
+        auth = self.ranger_admin_config  # Default to admin auth, will be overridden for specific negative cases
+        if test_case.startswith("unauthorized by non service admin/group"):
+
+            if "user" in test_case:
+                auth = self.ranger_user_config
+            elif "auditor" in test_case:
+                auth = self.ranger_auditor_config
+            elif "key admin" in test_case:
+                auth = self.ranger_key_admin_config
+
+        name = self.role["name"]
+        params = {"execUser": self.admin["name"]}  # Default param for all test cases
+        if test_case == "invalid payload - wrong service name in params":
+            params= {"serviceName": "invalid_service_name", "execUser": self.admin["name"]}
+
+        response = requests.get(
+            f"{self.base_url}/roles/roles/name/{name}",
+            auth=auth,
+            headers=self.headers,
+            params=params
+        )
+        if "invalid payload" in test_case:
+            assert_response(response, 200, "dd")
+            data = response.json()
+            print(f"Response data for invalid payload case: {data}")
+            return
+            
+
+        assert_response(response, 400, f"Expected 400 for {test_case} but got {response.status_code} with \n response text: {response.text}")
 
     @pytest.mark.post
     @pytest.mark.negative

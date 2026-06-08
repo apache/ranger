@@ -356,7 +356,7 @@ def temp_role(ranger_config):
         print(f"[Fixture] Cleaning role {rid}")
 
         requests.delete(
-            f"{ranger_config['base_url']}/xusers/roles/{rid}",
+            f"{ranger_config['base_url']}/roles/roles/{rid}",
             auth=ranger_config["auth"],
             params={"forceDelete": "true"},
             headers={
