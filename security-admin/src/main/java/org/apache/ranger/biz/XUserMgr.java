@@ -1657,15 +1657,9 @@ public class XUserMgr extends XUserMgrBase {
             throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST, "Groupuser not found", true);
         }
 
-        XXGroupUser xxGroupUser = null;
-
-        if (vXGroupUser.getId() != null) {
-            xxGroupUser = daoManager.getXXGroupUser().getById(vXGroupUser.getId());
-            if (xxGroupUser == null) {
-                throw restErrorUtil.createRESTException(
-                        "Group-User mapping not found with ID: " + vXGroupUser.getId(),
-                        MessageEnums.DATA_NOT_FOUND);
-            }
+        if (vXGroupUser.getId() != null && daoManager.getXXGroupUser().getById(vXGroupUser.getId()) == null) {
+            throw restErrorUtil.createRESTException("Group-User mapping not found with ID: " + vXGroupUser.getId(),
+                    MessageEnums.DATA_NOT_FOUND);
         }
 
         XXGroup xGroup = daoManager.getXXGroup().findByGroupName(vXGroupUser.getName());
