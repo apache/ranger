@@ -641,11 +641,9 @@ public class UserMgr {
                 userRoleList = new ArrayList<>();
 
                 if (sess.isSuperUser()) {
-                    userRoleList.addAll(
-                            RangerSuperUserConfig.getConfigSuperUserProfileRoles());
+                    userRoleList.addAll(RangerSuperUserConfig.getConfigSuperUserProfileRoles());
                 } else {
-                    List<XXPortalUserRole> gjUserRoleList =
-                            daoManager.getXXPortalUserRole().findByParentId(user.getId());
+                    List<XXPortalUserRole> gjUserRoleList = daoManager.getXXPortalUserRole().findByParentId(user.getId());
 
                     for (XXPortalUserRole userRole : gjUserRoleList) {
                         userRoleList.add(userRole.getUserRole());
@@ -1347,32 +1345,24 @@ public class UserMgr {
      * @param sess current session
      * @param user portal user being loaded
      */
-    private void applyConfigSuperUserProfileOverrides(
-            final VXPortalUser userProfile,
-            final UserSessionBase sess,
-            final XXPortalUser user) {
-        if (sess == null || userProfile == null || user == null
-                || !sess.isSuperUser()) {
+    private void applyConfigSuperUserProfileOverrides(final VXPortalUser userProfile, final UserSessionBase sess, final XXPortalUser user) {
+        if (sess == null || userProfile == null || user == null || !sess.isSuperUser()) {
             return;
         }
 
-        if (sess.getXXPortalUser() == null
-                || !sess.getXXPortalUser().getId().equals(user.getId())) {
+        if (sess.getXXPortalUser() == null || !sess.getXXPortalUser().getId().equals(user.getId())) {
             return;
         }
 
-        List<String> effectiveRoles =
-                RangerSuperUserConfig.getConfigSuperUserProfileRoles();
+        List<String> effectiveRoles = RangerSuperUserConfig.getConfigSuperUserProfileRoles();
 
         userProfile.setUserRoleList(effectiveRoles);
 
-        List<XXModuleDef> moduleDefs =
-                daoManager.getXXModuleDef().getAll();
+        List<XXModuleDef>      moduleDefs       = daoManager.getXXModuleDef().getAll();
         List<VXUserPermission> effectiveModules = new ArrayList<>();
 
         if (CollectionUtils.isNotEmpty(moduleDefs)) {
-            XXUser xUser =
-                    daoManager.getXXUser().findByPortalUserId(user.getId());
+            XXUser xUser   = daoManager.getXXUser().findByPortalUserId(user.getId());
             Long   xUserId = xUser != null ? xUser.getId() : null;
 
             for (XXModuleDef moduleDef : moduleDefs) {
