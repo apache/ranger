@@ -577,13 +577,12 @@ public class SessionMgr {
      * Applies config super-user session flag ({@code superUser}) when login matches
      * {@code ranger.admin.super.users} / super.groups.
      */
-    private void applyConfigSuperUserSessionFlags(
-            final UserSessionBase userSession) {
+    private void applyConfigSuperUserSessionFlags(final UserSessionBase userSession) {
         if (userSession == null) {
             return;
         }
 
-        String loginId = userSession.getLoginId();
+        String        loginId = userSession.getLoginId();
         final boolean isSuperUser;
 
         if (StringUtils.isBlank(loginId)) {
@@ -600,6 +599,7 @@ public class SessionMgr {
 
         if (isSuperUser) {
             userSession.setSuperUser(true);
+
             logger.info("Granted full admin privileges via config for user {}", loginId);
         } else {
             userSession.setSuperUser(false);
