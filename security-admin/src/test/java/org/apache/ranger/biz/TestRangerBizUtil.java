@@ -23,6 +23,7 @@ import org.apache.ranger.common.MessageEnums;
 import org.apache.ranger.common.PropertiesUtil;
 import org.apache.ranger.common.RESTErrorUtil;
 import org.apache.ranger.common.RangerConstants;
+import org.apache.ranger.common.RangerSuperUserConfig;
 import org.apache.ranger.common.StringUtil;
 import org.apache.ranger.common.UserSessionBase;
 import org.apache.ranger.db.RangerDaoManager;
@@ -75,7 +76,6 @@ import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -876,15 +876,15 @@ public class TestRangerBizUtil {
 
     @Test
     public void testIsUserRangerAdmin_ConfigSuperUser() {
+        RangerSuperUserConfig.resetForTests();
         PropertiesUtil.getPropertiesMap().put(RangerConstants.RANGER_ADMIN_SUPER_USERS, "config-admin");
-
-        Mockito.when(xUserMgr.getSyncedGroupsForUser("config-admin")).thenReturn(Collections.emptySet());
 
         Assertions.assertTrue(rangerBizUtil.isUserRangerAdmin("config-admin"));
         Assertions.assertFalse(rangerBizUtil.isUserRangerAdmin("other-user"));
-        Mockito.verify(xUserMgr).getSyncedGroupsForUser("config-admin");
+        Mockito.verify(xUserMgr, Mockito.never()).getSyncedGroupsForUser("config-admin");
 
         PropertiesUtil.getPropertiesMap().remove(RangerConstants.RANGER_ADMIN_SUPER_USERS);
+        RangerSuperUserConfig.resetForTests();
     }
 
     @Test

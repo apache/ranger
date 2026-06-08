@@ -35,7 +35,6 @@ import org.apache.ranger.common.StringUtil;
 import org.apache.ranger.common.UserSessionBase;
 import org.apache.ranger.db.RangerDaoManager;
 import org.apache.ranger.entity.XXAuthSession;
-import org.apache.ranger.entity.XXModuleDef;
 import org.apache.ranger.entity.XXPortalUser;
 import org.apache.ranger.entity.XXPortalUserRole;
 import org.apache.ranger.entity.XXUser;
@@ -224,15 +223,7 @@ public class SessionMgr {
             List<String> permissionList;
 
             if (userSession.isUserAdmin() || userSession.isKeyAdmin()) {
-                List<XXModuleDef> allModules =
-                        daoManager.getXXModuleDef().getAll();
-                permissionList = new ArrayList<>();
-
-                if (CollectionUtils.isNotEmpty(allModules)) {
-                    for (XXModuleDef moduleDef : allModules) {
-                        permissionList.add(moduleDef.getModule());
-                    }
-                }
+                permissionList = daoManager.getXXModuleDef().getAllModuleNames();
             } else {
                 permissionList = daoManager.getXXModuleDef()
                         .findAccessibleModulesByUserId(
@@ -578,8 +569,7 @@ public class SessionMgr {
         applyConfigSuperUserSessionFlags(userSession);
 
         if (userSession.isSuperUser()) {
-            strRoleList = RangerSuperUserConfig.mergeConfigSuperUserRoles(
-                    strRoleList, true);
+            strRoleList = RangerSuperUserConfig.mergeConfigSuperUserRoles(strRoleList, true);
         }
 
         userSession.setUserRoleList(strRoleList);
@@ -606,14 +596,18 @@ public class SessionMgr {
             return;
         }
 
-        Set<String> userGroups = xUserMgr.getSyncedGroupsForUser(loginId);
+        final boolean isSuperUser;
 
-        if (RangerSuperUserConfig.isSuperUser(loginId, userGroups)) {
+        if (RangerSuperUserConfig.isSuperGroupsConfigured()) {
+            isSuperUser = RangerSuperUserConfig.isSuperUser(loginId,
+                    xUserMgr.getSyncedGroupsForUser(loginId));
+        } else {
+            isSuperUser = RangerSuperUserConfig.isSuperUser(loginId);
+        }
+
+        if (isSuperUser) {
             userSession.setSuperUser(true);
-
-            logger.info(
-                    "Granted full admin privileges via config for user {}",
-                    loginId);
+            logger.info("Granted full admin privileges via config for user {}", loginId);
         } else {
             userSession.setSuperUser(false);
         }

@@ -25,6 +25,7 @@ import org.apache.ranger.common.PropertiesUtil;
 import org.apache.ranger.common.RESTErrorUtil;
 import org.apache.ranger.common.RangerCommonEnums;
 import org.apache.ranger.common.RangerConstants;
+import org.apache.ranger.common.RangerSuperUserConfig;
 import org.apache.ranger.common.SearchCriteria;
 import org.apache.ranger.common.StringUtil;
 import org.apache.ranger.common.UserSessionBase;
@@ -46,6 +47,7 @@ import org.apache.ranger.service.AuthSessionService;
 import org.apache.ranger.view.VXAuthSession;
 import org.apache.ranger.view.VXAuthSessionList;
 import org.apache.ranger.view.VXLong;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
@@ -119,6 +121,13 @@ public class TestSessionMgr {
 
     @Mock
     StringUtil stringUtil;
+
+    @AfterEach
+    public void tearDownSuperUserConfig() {
+        PropertiesUtil.getPropertiesMap().remove(RangerConstants.RANGER_ADMIN_SUPER_USERS);
+        PropertiesUtil.getPropertiesMap().remove(RangerConstants.RANGER_ADMIN_SUPER_GROUPS);
+        RangerSuperUserConfig.resetForTests();
+    }
 
     @Test
     public void testProcessSuccessLogin_ExistingValidSession() {
@@ -546,6 +555,7 @@ public class TestSessionMgr {
 
     @Test
     public void testSetUserRoles_ConfigSuperUserAndGroup() {
+        RangerSuperUserConfig.resetForTests();
         PropertiesUtil.getPropertiesMap().put(RangerConstants.RANGER_ADMIN_SUPER_USERS, "config-admin");
 
         UserSessionBase userSession = new UserSessionBase();
@@ -568,7 +578,6 @@ public class TestSessionMgr {
 
         when(daoManager.getXXPortalUserRole()).thenReturn(roleDao);
         when(roleDao.findByUserId(41L)).thenReturn(Collections.singletonList(userRole));
-        when(xUserMgr.getSyncedGroupsForUser("config-admin")).thenReturn(Collections.emptySet());
 
         sessionMgr.resetUserSessionForProfiles(userSession);
 
@@ -579,8 +588,10 @@ public class TestSessionMgr {
         assertTrue(userSession.getUserRoleList().contains(RangerConstants.ROLE_KEY_ADMIN));
         assertTrue(userSession.getUserRoleList().contains(RangerConstants.ROLE_USER));
         assertFalse(userSession.isSingleRoleUserSession());
+        verify(xUserMgr, never()).getSyncedGroupsForUser(anyString());
 
         PropertiesUtil.getPropertiesMap().remove(RangerConstants.RANGER_ADMIN_SUPER_USERS);
+        RangerSuperUserConfig.resetForTests();
         PropertiesUtil.getPropertiesMap().put(RangerConstants.RANGER_ADMIN_SUPER_GROUPS, "ldap-admins");
 
         userSession.setUserAdmin(false);
@@ -649,6 +660,7 @@ public class TestSessionMgr {
 
     @Test
     public void testSetUserRoles_ConfigSuperUserGrantsKeyAdminForSysAdmin() {
+        RangerSuperUserConfig.resetForTests();
         PropertiesUtil.getPropertiesMap().put(RangerConstants.RANGER_ADMIN_SUPER_USERS, "config-admin");
 
         UserSessionBase userSession = new UserSessionBase();
@@ -671,13 +683,13 @@ public class TestSessionMgr {
 
         when(daoManager.getXXPortalUserRole()).thenReturn(roleDao);
         when(roleDao.findByUserId(42L)).thenReturn(Collections.singletonList(sysAdminRole));
-        when(xUserMgr.getSyncedGroupsForUser("config-admin")).thenReturn(Collections.emptySet());
 
         sessionMgr.resetUserSessionForProfiles(userSession);
 
         assertTrue(userSession.isUserAdmin());
         assertTrue(userSession.isKeyAdmin());
         assertTrue(userSession.isSuperUser());
+        verify(xUserMgr, never()).getSyncedGroupsForUser(anyString());
 
         PropertiesUtil.getPropertiesMap().remove(RangerConstants.RANGER_ADMIN_SUPER_USERS);
     }

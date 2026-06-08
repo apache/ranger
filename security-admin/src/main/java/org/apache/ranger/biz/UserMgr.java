@@ -1184,11 +1184,18 @@ public class UserMgr {
             return roles;
         }
 
-        Set<String> groups = xUserMgr != null
-                ? xUserMgr.getSyncedGroupsForUser(loginId)
-                : new HashSet<>();
+        final boolean configSuperUser;
 
-        if (!RangerSuperUserConfig.isSuperUser(loginId, groups)) {
+        if (RangerSuperUserConfig.isSuperGroupsConfigured()) {
+            Set<String> groups = xUserMgr != null
+                    ? xUserMgr.getSyncedGroupsForUser(loginId)
+                    : new HashSet<>();
+            configSuperUser = RangerSuperUserConfig.isSuperUser(loginId, groups);
+        } else {
+            configSuperUser = RangerSuperUserConfig.isSuperUser(loginId);
+        }
+
+        if (!configSuperUser) {
             return roles;
         }
 

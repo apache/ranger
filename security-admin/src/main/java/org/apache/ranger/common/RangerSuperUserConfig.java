@@ -37,7 +37,28 @@ import java.util.Set;
  * capabilities) without requiring corresponding roles in the Ranger database.
  */
 public final class RangerSuperUserConfig {
+    private static volatile RangerSuperUserConfig instance;
+
+    private final boolean superUsersConfigured;
+    private final boolean superGroupsConfigured;
+    private final boolean enabled;
+
     private RangerSuperUserConfig() {
+        superUsersConfigured = hasNonEmptyEntry(
+                PropertiesUtil.getPropertyStringList(
+                        RangerConstants.RANGER_ADMIN_SUPER_USERS));
+        superGroupsConfigured = hasNonEmptyEntry(
+                PropertiesUtil.getPropertyStringList(
+                        RangerConstants.RANGER_ADMIN_SUPER_GROUPS));
+        enabled = superUsersConfigured || superGroupsConfigured;
+    }
+
+    /**
+     * Clears cached config snapshot. For unit tests only after
+     * {@link PropertiesUtil} properties change.
+     */
+    public static synchronized void resetForTests() {
+        instance = null;
     }
 
     /**
@@ -46,12 +67,31 @@ public final class RangerSuperUserConfig {
      *         entry
      */
     public static boolean isEnabled() {
-        return hasNonEmptyEntry(
-                PropertiesUtil.getPropertyStringList(
-                        RangerConstants.RANGER_ADMIN_SUPER_USERS))
-                || hasNonEmptyEntry(
-                        PropertiesUtil.getPropertyStringList(
-                                RangerConstants.RANGER_ADMIN_SUPER_GROUPS));
+        return getInstance().enabled;
+    }
+
+    /**
+     * @return true when {@code ranger.admin.super.users} has at least one
+     *         non-blank entry
+     */
+    public static boolean isSuperUsersConfigured() {
+        return getInstance().superUsersConfigured;
+    }
+
+    /**
+     * @return true when {@code ranger.admin.super.groups} has at least one
+     *         non-blank entry
+     */
+    public static boolean isSuperGroupsConfigured() {
+        return getInstance().superGroupsConfigured;
+    }
+
+    /**
+     * @param loginId authenticated login id
+     * @return true when loginId matches configured super users
+     */
+    public static boolean isSuperUser(final String loginId) {
+        return isSuperUser(loginId, Collections.emptySet());
     }
 
     /**
@@ -65,15 +105,21 @@ public final class RangerSuperUserConfig {
             return false;
         }
 
-        if (matchesUserList(loginId,
+        RangerSuperUserConfig cfg = getInstance();
+
+        if (cfg.superUsersConfigured && matchesUserList(loginId,
                 PropertiesUtil.getPropertyStringList(
                         RangerConstants.RANGER_ADMIN_SUPER_USERS))) {
             return true;
         }
 
-        return matchesGroupList(userGroups,
-                PropertiesUtil.getPropertyStringList(
-                        RangerConstants.RANGER_ADMIN_SUPER_GROUPS));
+        if (cfg.superGroupsConfigured) {
+            return matchesGroupList(userGroups,
+                    PropertiesUtil.getPropertyStringList(
+                            RangerConstants.RANGER_ADMIN_SUPER_GROUPS));
+        }
+
+        return false;
     }
 
     /**
@@ -108,6 +154,23 @@ public final class RangerSuperUserConfig {
      */
     public static List<String> getConfigSuperUserProfileRoles() {
         return mergeConfigSuperUserRoles(Collections.emptyList(), false);
+    }
+
+    private static RangerSuperUserConfig getInstance() {
+        RangerSuperUserConfig cfg = instance;
+
+        if (cfg == null) {
+            synchronized (RangerSuperUserConfig.class) {
+                cfg = instance;
+
+                if (cfg == null) {
+                    cfg = new RangerSuperUserConfig();
+                    instance = cfg;
+                }
+            }
+        }
+
+        return cfg;
     }
 
     private static boolean matchesUserList(final String loginId,

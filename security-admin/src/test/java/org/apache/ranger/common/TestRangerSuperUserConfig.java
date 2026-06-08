@@ -21,6 +21,7 @@ package org.apache.ranger.common;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;
@@ -30,10 +31,16 @@ import java.util.List;
 import java.util.Set;
 
 public class TestRangerSuperUserConfig {
+    @BeforeEach
+    public void setUp() {
+        RangerSuperUserConfig.resetForTests();
+    }
+
     @AfterEach
     public void tearDown() {
         PropertiesUtil.getPropertiesMap().remove(RangerConstants.RANGER_ADMIN_SUPER_USERS);
         PropertiesUtil.getPropertiesMap().remove(RangerConstants.RANGER_ADMIN_SUPER_GROUPS);
+        RangerSuperUserConfig.resetForTests();
     }
 
     @Test

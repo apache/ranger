@@ -1149,10 +1149,19 @@ public class RangerBizUtil {
         }
 
         // Config super-user when no session context (e.g. grantor checks).
-        if (RangerSuperUserConfig.isEnabled() && xUserMgr != null
-                && RangerSuperUserConfig.isSuperUser(username,
-                        xUserMgr.getSyncedGroupsForUser(username))) {
-            return true;
+        if (RangerSuperUserConfig.isEnabled() && xUserMgr != null) {
+            final boolean configSuperUser;
+
+            if (RangerSuperUserConfig.isSuperGroupsConfigured()) {
+                configSuperUser = RangerSuperUserConfig.isSuperUser(username,
+                        xUserMgr.getSyncedGroupsForUser(username));
+            } else {
+                configSuperUser = RangerSuperUserConfig.isSuperUser(username);
+            }
+
+            if (configSuperUser) {
+                return true;
+            }
         }
 
         boolean isAdmin = false;
