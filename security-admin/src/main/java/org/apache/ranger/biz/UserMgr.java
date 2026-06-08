@@ -1184,22 +1184,17 @@ public class UserMgr {
             return roles;
         }
 
-        final boolean configSuperUser;
-
-        if (RangerSuperUserConfig.isSuperGroupsConfigured()) {
-            Set<String> groups = xUserMgr != null
-                    ? xUserMgr.getSyncedGroupsForUser(loginId)
-                    : new HashSet<>();
-            configSuperUser = RangerSuperUserConfig.isSuperUser(loginId, groups);
-        } else {
-            configSuperUser = RangerSuperUserConfig.isSuperUser(loginId);
+        if (RangerSuperUserConfig.isSuperUser(loginId)) {
+            return RangerSuperUserConfig.mergeConfigSuperUserRoles(roles, false);
         }
 
-        if (!configSuperUser) {
-            return roles;
+        if (RangerSuperUserConfig.isSuperGroupsConfigured() && xUserMgr != null
+                && RangerSuperUserConfig.isSuperUser(loginId,
+                        xUserMgr.getGroupsForUser(loginId))) {
+            return RangerSuperUserConfig.mergeConfigSuperUserRoles(roles, false);
         }
 
-        return RangerSuperUserConfig.mergeConfigSuperUserRoles(roles, false);
+        return roles;
     }
 
     @Transactional(readOnly = false, propagation = Propagation.REQUIRED)

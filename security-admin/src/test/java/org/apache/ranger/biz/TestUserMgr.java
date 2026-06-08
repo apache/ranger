@@ -1695,7 +1695,7 @@ public class TestUserMgr {
 
         Collection<String> dbRoles = userMgr.getRolesByLoginId(userLoginId);
         Assertions.assertEquals(Collections.singletonList(RangerConstants.ROLE_USER), dbRoles);
-        Mockito.verify(xUserMgr, Mockito.never()).getSyncedGroupsForUser(userLoginId);
+        Mockito.verify(xUserMgr, Mockito.never()).getGroupsForUser(userLoginId);
 
         PropertiesUtil.getPropertiesMap().remove(RangerConstants.RANGER_ADMIN_SUPER_USERS);
         RangerSuperUserConfig.resetForTests();
@@ -1731,7 +1731,7 @@ public class TestUserMgr {
         Collection<String> authRoles = userMgr.getAuthenticationRolesByLoginId(userLoginId);
 
         Assertions.assertEquals(userMgr.getRolesByLoginId(userLoginId), authRoles);
-        Mockito.verify(xUserMgr, Mockito.never()).getSyncedGroupsForUser(userLoginId);
+        Mockito.verify(xUserMgr, Mockito.never()).getGroupsForUser(userLoginId);
 
         PropertiesUtil.getPropertiesMap().remove(
                 RangerConstants.RANGER_ADMIN_SUPER_USERS);
@@ -1767,7 +1767,7 @@ public class TestUserMgr {
         Assertions.assertEquals(
                 Collections.singletonList(RangerConstants.ROLE_USER),
                 authRoles);
-        Mockito.verify(xUserMgr, Mockito.never()).getSyncedGroupsForUser(
+        Mockito.verify(xUserMgr, Mockito.never()).getGroupsForUser(
                 Mockito.anyString());
     }
 

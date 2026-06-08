@@ -586,23 +586,19 @@ public class SessionMgr {
         }
 
         String loginId = userSession.getLoginId();
-
-        if (loginId == null) {
-            return;
-        }
-
-        if (!RangerSuperUserConfig.isEnabled()) {
-            userSession.setSuperUser(false);
-            return;
-        }
-
         final boolean isSuperUser;
 
-        if (RangerSuperUserConfig.isSuperGroupsConfigured()) {
+        if (StringUtils.isBlank(loginId)) {
+            isSuperUser = false;
+        } else if (!RangerSuperUserConfig.isEnabled()) {
+            isSuperUser = false;
+        } else if (RangerSuperUserConfig.isSuperUser(loginId)) {
+            isSuperUser = true;
+        } else if (RangerSuperUserConfig.isSuperGroupsConfigured()) {
             isSuperUser = RangerSuperUserConfig.isSuperUser(loginId,
-                    xUserMgr.getSyncedGroupsForUser(loginId));
+                    xUserMgr.getGroupsForUser(loginId));
         } else {
-            isSuperUser = RangerSuperUserConfig.isSuperUser(loginId);
+            isSuperUser = false;
         }
 
         if (isSuperUser) {

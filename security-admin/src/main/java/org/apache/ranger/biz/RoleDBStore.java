@@ -314,8 +314,7 @@ public class RoleDBStore implements RoleStore {
         UserSessionBase  userSession = ContextUtil.getCurrentUserSession();
 
         // Plain ROLE_USER only; config super-users see all roles.
-        if (userSession != null && userSession.isSingleRoleUserSession()
-                && userSession.getLoginId() != null) {
+        if (userSession != null && userSession.isSingleRoleUserSession() && userSession.getLoginId() != null) {
             VXUser loggedInVXUser = xUserService.getXUserByUserName(userSession.getLoginId());
 
             if (loggedInVXUser != null) {

@@ -881,7 +881,7 @@ public class TestRangerBizUtil {
 
         Assertions.assertTrue(rangerBizUtil.isUserRangerAdmin("config-admin"));
         Assertions.assertFalse(rangerBizUtil.isUserRangerAdmin("other-user"));
-        Mockito.verify(xUserMgr, Mockito.never()).getSyncedGroupsForUser("config-admin");
+        Mockito.verify(xUserMgr, Mockito.never()).getGroupsForUser("config-admin");
 
         PropertiesUtil.getPropertiesMap().remove(RangerConstants.RANGER_ADMIN_SUPER_USERS);
         RangerSuperUserConfig.resetForTests();
@@ -890,7 +890,7 @@ public class TestRangerBizUtil {
     @Test
     public void testIsUserRangerAdmin_ConfigDisabledSkipsGroupLookup() {
         Assertions.assertFalse(rangerBizUtil.isUserRangerAdmin("any-user"));
-        Mockito.verify(xUserMgr, Mockito.never()).getSyncedGroupsForUser(
+        Mockito.verify(xUserMgr, Mockito.never()).getGroupsForUser(
                 Mockito.anyString());
     }
 

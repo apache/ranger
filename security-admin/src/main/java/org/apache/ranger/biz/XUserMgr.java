@@ -1861,85 +1861,19 @@ public class XUserMgr extends XUserMgrBase {
     }
 
     /**
-     * Returns group names via the Users/Groups API (permission-aware).
-     * Used by grant/revoke, role delegate, GDS, service admin, etc.
-     *
-     * @param userName user login id
-     * @return group names visible to the current caller context
-     */
-    public Set<String> getGroupsForUser(final String userName) {
-        Set<String> ret = new HashSet<>();
-
-        try {
-            VXUser user = getXUserByUserName(userName);
-
-            if (user != null) {
-                VXGroupList groups = getXUserGroups(user.getId());
-
-                if (groups != null
-                        && !CollectionUtils.isEmpty(groups.getList())) {
-                    for (VXGroup group : groups.getList()) {
-                        ret.add(group.getName());
-                    }
-                } else {
-                    logger.debug(
-                            "getGroupsForUser('{}'): no groups found for user",
-                            userName);
-                }
-            } else {
-                logger.debug(
-                        "getGroupsForUser('{}'): user not found", userName);
-            }
-        } catch (Exception excp) {
-            logger.error("getGroupsForUser('{}') failed", userName, excp);
-        }
-
-        return ret;
-    }
-
-    /**
-     * Returns synced group names from Ranger DB (no API permission checks).
-     * For config super-user / super-group matching at login only.
+     * Returns group names for the given user from the Ranger user store.
      *
      * @param userName user login id
      * @return group names from {@code x_group_users}
      */
-    public Set<String> getSyncedGroupsForUser(final String userName) {
-        Set<String> ret = new HashSet<>();
-
+    public Set<String> getGroupsForUser(final String userName) {
         try {
-            XXUser xUser = daoManager.getXXUser().findByUserName(userName);
-
-            if (xUser == null) {
-                logger.debug(
-                        "getSyncedGroupsForUser('{}'): user not found",
-                        userName);
-
-                return ret;
-            }
-
-            List<XXGroupUser> groupUsers =
-                    daoManager.getXXGroupUser().findByUserId(xUser.getId());
-
-            if (groupUsers != null) {
-                for (XXGroupUser groupUser : groupUsers) {
-                    if (groupUser.getName() != null) {
-                        ret.add(groupUser.getName());
-                    }
-                }
-            }
-
-            if (ret.isEmpty()) {
-                logger.debug(
-                        "getSyncedGroupsForUser('{}'): no groups found",
-                        userName);
-            }
+            return daoManager.getXXGroupUser().findGroupNamesByUserName(userName);
         } catch (Exception excp) {
-            logger.error(
-                    "getSyncedGroupsForUser('{}') failed", userName, excp);
-        }
+            logger.error("getGroupsForUser('{}') failed", userName, excp);
 
-        return ret;
+            return new HashSet<>();
+        }
     }
 
     public VXUserList getXGroupUsers(SearchCriteria searchCriteria) {

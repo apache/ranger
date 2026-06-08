@@ -588,7 +588,7 @@ public class TestSessionMgr {
         assertTrue(userSession.getUserRoleList().contains(RangerConstants.ROLE_KEY_ADMIN));
         assertTrue(userSession.getUserRoleList().contains(RangerConstants.ROLE_USER));
         assertFalse(userSession.isSingleRoleUserSession());
-        verify(xUserMgr, never()).getSyncedGroupsForUser(anyString());
+        verify(xUserMgr, never()).getGroupsForUser(anyString());
 
         PropertiesUtil.getPropertiesMap().remove(RangerConstants.RANGER_ADMIN_SUPER_USERS);
         RangerSuperUserConfig.resetForTests();
@@ -598,7 +598,7 @@ public class TestSessionMgr {
         userSession.setKeyAdmin(false);
         userSession.setSuperUser(false);
 
-        when(xUserMgr.getSyncedGroupsForUser("config-admin")).thenReturn(new HashSet<>(Collections.singletonList("ldap-admins")));
+        when(xUserMgr.getGroupsForUser("config-admin")).thenReturn(new HashSet<>(Collections.singletonList("ldap-admins")));
 
         sessionMgr.resetUserSessionForProfiles(userSession);
 
@@ -637,7 +637,7 @@ public class TestSessionMgr {
         assertFalse(userSession.isUserAdmin());
         assertFalse(userSession.isKeyAdmin());
         assertFalse(userSession.isSuperUser());
-        verify(xUserMgr, never()).getSyncedGroupsForUser(anyString());
+        verify(xUserMgr, never()).getGroupsForUser(anyString());
     }
 
     @Test
@@ -689,7 +689,7 @@ public class TestSessionMgr {
         assertTrue(userSession.isUserAdmin());
         assertTrue(userSession.isKeyAdmin());
         assertTrue(userSession.isSuperUser());
-        verify(xUserMgr, never()).getSyncedGroupsForUser(anyString());
+        verify(xUserMgr, never()).getGroupsForUser(anyString());
 
         PropertiesUtil.getPropertiesMap().remove(RangerConstants.RANGER_ADMIN_SUPER_USERS);
     }

@@ -1346,41 +1346,26 @@ public class TestXUserMgr {
     }
 
     @Test
-    public void testGetSyncedGroupsForUser() {
+    public void testGetGroupsForUserFromDao() {
         setupUser();
         String userName = userLoginID;
 
-        XXUserDao xxUserDao = Mockito.mock(XXUserDao.class);
-        XXUser    xxUser    = new XXUser();
-
-        xxUser.setId(userId);
-        xxUser.setName(userName);
-
-        Mockito.when(daoManager.getXXUser()).thenReturn(xxUserDao);
-        Mockito.when(xxUserDao.findByUserName(userName)).thenReturn(xxUser);
-
         XXGroupUserDao xxGroupUserDao = Mockito.mock(XXGroupUserDao.class);
-        XXGroupUser    groupUser      = new XXGroupUser();
-
-        groupUser.setName("ldap-admins");
-
-        List<XXGroupUser> groupUsers = new ArrayList<>();
-
-        groupUsers.add(groupUser);
 
         Mockito.when(daoManager.getXXGroupUser()).thenReturn(xxGroupUserDao);
-        Mockito.when(xxGroupUserDao.findByUserId(userId)).thenReturn(groupUsers);
+        Mockito.when(xxGroupUserDao.findGroupNamesByUserName(userName))
+                .thenReturn(new HashSet<>(Collections.singletonList("ldap-admins")));
 
-        Set<String> groups = xUserMgr.getSyncedGroupsForUser(userName);
+        Set<String> groups = xUserMgr.getGroupsForUser(userName);
 
         Assertions.assertEquals(1, groups.size());
         Assertions.assertTrue(groups.contains("ldap-admins"));
-        Mockito.verify(xxUserDao).findByUserName(userName);
-        Mockito.verify(xxGroupUserDao).findByUserId(userId);
+        Mockito.verify(xxGroupUserDao).findGroupNamesByUserName(userName);
 
-        Mockito.when(xxUserDao.findByUserName(userName)).thenReturn(null);
+        Mockito.when(xxGroupUserDao.findGroupNamesByUserName(userName))
+                .thenReturn(new HashSet<>());
 
-        groups = xUserMgr.getSyncedGroupsForUser(userName);
+        groups = xUserMgr.getGroupsForUser(userName);
 
         Assertions.assertTrue(groups.isEmpty());
     }

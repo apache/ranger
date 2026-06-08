@@ -25,6 +25,7 @@ import org.apache.commons.lang3.StringUtils;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -39,18 +40,22 @@ import java.util.Set;
 public final class RangerSuperUserConfig {
     private static volatile RangerSuperUserConfig instance;
 
-    private final boolean superUsersConfigured;
-    private final boolean superGroupsConfigured;
-    private final boolean enabled;
+    private final Set<String> superUsers;
+    private final Set<String> superUserGroups;
+    private final boolean     superUsersConfigured;
+    private final boolean     superGroupsConfigured;
+    private final boolean     enabled;
 
     private RangerSuperUserConfig() {
-        superUsersConfigured = hasNonEmptyEntry(
+        superUsers            = buildConfiguredSet(
                 PropertiesUtil.getPropertyStringList(
                         RangerConstants.RANGER_ADMIN_SUPER_USERS));
-        superGroupsConfigured = hasNonEmptyEntry(
+        superUserGroups       = buildConfiguredSet(
                 PropertiesUtil.getPropertyStringList(
                         RangerConstants.RANGER_ADMIN_SUPER_GROUPS));
-        enabled = superUsersConfigured || superGroupsConfigured;
+        superUsersConfigured  = !superUsers.isEmpty();
+        superGroupsConfigured = !superUserGroups.isEmpty();
+        enabled               = superUsersConfigured || superGroupsConfigured;
     }
 
     /**
@@ -91,12 +96,16 @@ public final class RangerSuperUserConfig {
      * @return true when loginId matches configured super users
      */
     public static boolean isSuperUser(final String loginId) {
-        return isSuperUser(loginId, Collections.emptySet());
+        if (StringUtils.isBlank(loginId) || !isEnabled()) {
+            return false;
+        }
+
+        return getInstance().matchesUser(loginId);
     }
 
     /**
      * @param loginId authenticated login id
-     * @param userGroups synced group names from Ranger user store
+     * @param userGroups group names from Ranger user store
      * @return true when loginId or groups match configured super users/groups
      */
     public static boolean isSuperUser(final String loginId,
@@ -107,16 +116,12 @@ public final class RangerSuperUserConfig {
 
         RangerSuperUserConfig cfg = getInstance();
 
-        if (cfg.superUsersConfigured && matchesUserList(loginId,
-                PropertiesUtil.getPropertyStringList(
-                        RangerConstants.RANGER_ADMIN_SUPER_USERS))) {
+        if (cfg.superUsersConfigured && cfg.matchesUser(loginId)) {
             return true;
         }
 
         if (cfg.superGroupsConfigured) {
-            return matchesGroupList(userGroups,
-                    PropertiesUtil.getPropertyStringList(
-                            RangerConstants.RANGER_ADMIN_SUPER_GROUPS));
+            return cfg.matchesGroups(userGroups);
         }
 
         return false;
@@ -173,20 +178,24 @@ public final class RangerSuperUserConfig {
         return cfg;
     }
 
-    private static boolean matchesUserList(final String loginId,
-            final String[] configuredUsers) {
-        if (configuredUsers == null || configuredUsers.length == 0) {
-            return false;
+    private static Set<String> buildConfiguredSet(final String[] values) {
+        Set<String> configured = new HashSet<>();
+
+        if (values != null) {
+            for (String value : values) {
+                if (StringUtils.isNotBlank(value)) {
+                    configured.add(value.trim());
+                }
+            }
         }
 
-        for (String configuredUser : configuredUsers) {
-            if (StringUtils.isBlank(configuredUser)) {
-                continue;
-            }
+        return Collections.unmodifiableSet(configured);
+    }
 
-            String trimmed = configuredUser.trim();
-
-            if ("*".equals(trimmed) || trimmed.equalsIgnoreCase(loginId)) {
+    private boolean matchesUser(final String loginId) {
+        for (String configuredUser : superUsers) {
+            if ("*".equals(configuredUser)
+                    || configuredUser.equalsIgnoreCase(loginId)) {
                 return true;
             }
         }
@@ -194,22 +203,14 @@ public final class RangerSuperUserConfig {
         return false;
     }
 
-    private static boolean matchesGroupList(final Set<String> userGroups,
-            final String[] configuredGroups) {
-        if (configuredGroups == null || configuredGroups.length == 0
-                || CollectionUtils.isEmpty(userGroups)) {
+    private boolean matchesGroups(final Set<String> userGroups) {
+        if (CollectionUtils.isEmpty(userGroups)) {
             return false;
         }
 
-        for (String configuredGroup : configuredGroups) {
-            if (StringUtils.isBlank(configuredGroup)) {
-                continue;
-            }
-
-            String trimmed = configuredGroup.trim();
-
-            if (RangerConstants.GROUP_PUBLIC.equalsIgnoreCase(trimmed)
-                    || containsGroupIgnoreCase(userGroups, trimmed)) {
+        for (String configuredGroup : superUserGroups) {
+            if (RangerConstants.GROUP_PUBLIC.equalsIgnoreCase(configuredGroup)
+                    || containsGroupIgnoreCase(userGroups, configuredGroup)) {
                 return true;
             }
         }
@@ -222,20 +223,6 @@ public final class RangerSuperUserConfig {
         for (String userGroup : userGroups) {
             if (userGroup != null
                     && userGroup.equalsIgnoreCase(configuredGroup)) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    private static boolean hasNonEmptyEntry(final String[] values) {
-        if (values == null || values.length == 0) {
-            return false;
-        }
-
-        for (String value : values) {
-            if (StringUtils.isNotBlank(value)) {
                 return true;
             }
         }

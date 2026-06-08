@@ -1149,19 +1149,14 @@ public class RangerBizUtil {
         }
 
         // Config super-user when no session context (e.g. grantor checks).
-        if (RangerSuperUserConfig.isEnabled() && xUserMgr != null) {
-            final boolean configSuperUser;
+        if (RangerSuperUserConfig.isSuperUser(username)) {
+            return true;
+        }
 
-            if (RangerSuperUserConfig.isSuperGroupsConfigured()) {
-                configSuperUser = RangerSuperUserConfig.isSuperUser(username,
-                        xUserMgr.getSyncedGroupsForUser(username));
-            } else {
-                configSuperUser = RangerSuperUserConfig.isSuperUser(username);
-            }
-
-            if (configSuperUser) {
-                return true;
-            }
+        if (RangerSuperUserConfig.isSuperGroupsConfigured() && xUserMgr != null
+                && RangerSuperUserConfig.isSuperUser(username,
+                        xUserMgr.getGroupsForUser(username))) {
+            return true;
         }
 
         boolean isAdmin = false;
@@ -1169,8 +1164,7 @@ public class RangerBizUtil {
         try {
             VXUser vxUser = xUserService.getXUserByUserName(username);
 
-            if (vxUser != null && (vxUser.getUserRoleList().contains(RangerConstants.ROLE_ADMIN)
-                    || vxUser.getUserRoleList().contains(RangerConstants.ROLE_SYS_ADMIN))) {
+            if (vxUser != null && (vxUser.getUserRoleList().contains(RangerConstants.ROLE_ADMIN) || vxUser.getUserRoleList().contains(RangerConstants.ROLE_SYS_ADMIN))) {
                 isAdmin = true;
             }
         } catch (Exception ex) {
