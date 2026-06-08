@@ -62,7 +62,7 @@ def init_configs(ranger_config, ranger_key_admin_config, ranger_auditor_config, 
 
 
 
-def create_service():
+def create_service(user_name = "hdfs", password = "hdfs"):
     
     unique_name = f"test_service_{uuid.uuid4().hex[:8]}"
     # Create service
@@ -72,14 +72,14 @@ def create_service():
         "type": "hdfs",
         "isEnabled": True,
         "configs": {
-            "username": "hdfs",
-            "password": "hdfs",
+            "username": user_name,
+            "password": password,
             "fs.default.name": "hdfs://localhost:9000",
             "hadoop.security.authentication": "simple",
             "hadoop.security.authorization": "true",
-            "policy.download.auth.users": "hdfs",
-            "tag.download.auth.users": "hdfs",
-            "userstore.download.auth.users": "hdfs"
+            # "policy.download.auth.users": user_name,
+            # "tag.download.auth.users": user_name,
+            # "userstore.download.auth.users": user_name
         }
     }
     svc_resp = requests.post(
@@ -122,9 +122,38 @@ def assign_service_admin(service_id, service, username):
         headers=HEADERS,
         json=update_payload 
     )
-    resp.raise_for_status()
+    #resp.raise_for_status()
     print(f"[+] User '{username}' added as service admin for service id={service_id}")
+    print("\n [+] Response of updated service admin : ", resp.json(), "\n")
 
+def assign_service_admin_group(service_id, service, groupname): 
+    configs = service.get("configs", {})
+    
+    # Ranger stores service admin groups as a comma-separated string in configs
+    existing_groups = configs.get("service.admin.groups", "")
+    group_set = set(filter(None, existing_groups.split(",")))
+    group_set.add(groupname)
+    
+    configs["service.admin.groups"] = ",".join(group_set)
+
+    update_payload = {
+        "id": service_id,
+        "name": service["name"],
+        "displayName": service.get("displayName", service["name"]),
+        "type": service["type"],
+        "isEnabled": service.get("isEnabled", True),
+        "configs": configs
+    }
+    
+    resp = requests.put(
+        f"{BASE_URL}/plugins/services/{service_id}",
+        auth=AUTH,
+        headers=HEADERS,
+        json=update_payload 
+    )
+    #resp.raise_for_status()
+    print(f"[+] Group '{groupname}' added as service admin group for service id={service_id}")
+    print("\n [+] Response of updated service admin group : ", resp.json(), "\n")
 
 def delete_service(service_id):
     resp = requests.delete(
@@ -151,3 +180,347 @@ def delete_role(role_id):
     #assert_response(resp, [200, 204], f"Failed to delete role id={role_id}: {resp.text}")
     assert resp.status_code in [200, 204], f"Failed to delete role id={role_id}: {resp.text}"
     print(f" /n /n [+] Role deleted successfully with id={role_id}. Response status: {resp.status_code}. Response text: {resp.text} /n /n")
+
+
+    #     "test_case", [
+    #         ("login_user is not (admin not service admin/group) & role-membership via  user"),
+    #         ("login_user is not (admin not service admin/group) & role-membership via  group"),
+    #         ("login_user is not (admin not service admin/group) & role-membership via  role-user"),
+    #         ("login_user is not (admin not service admin/group) & role-membership via  role-group"),
+    #         ("login_user is admin"),
+    #         ("login_user is service admin"),
+    #         ("login_user has service admin groups in grouplist"),
+    #     ]
+    # )
+    # def test_get_role_by_name_same_creds(self, test_case, request):   # here always the login_user = queryparam user
+
+    #     service, service_id = create_service()
+    #     temp_user, temp_user_id = request.getfixturevalue("temp_secure_user")("auditor")
+    #     assign_service_admin(service_id, service, temp_user['name'])
+    #     auth = (temp_user["name"], "Test@123")
+    #     role, role_id = request.getfixturevalue("temp_role")()  
+
+    #     if test_case == "login_user is admin":
+    #         temp_user, temp_user_id = request.getfixturevalue("temp_secure_user")(["admin"])
+    #         auth = (temp_user["name"], "Test@123")
+    #         role, role_id = request.getfixturevalue("temp_role")()  # Create a role to fetch by name in this test case
+
+    #     elif test_case == "login_user is service admin":
+    #         service, service_id = create_service()
+    #         temp_user, temp_user_id = request.getfixturevalue("temp_secure_user")("auditor")
+    #         assign_service_admin(service_id, service, temp_user['name'])
+    #         auth = (temp_user["name"], "Test@123")
+    #         role, role_id = request.getfixturevalue("temp_role")()  # Create a role to fetch by name in this test case
+
+    #     elif test_case == "login_user has service admin groups in grouplist":
+    #         service, service_id = create_service()
+    #         temp_user, temp_user_id = request.getfixturevalue("temp_secure_user")("auditor")
+    #         group, group_id = request.getfixturevalue("temp_group")()
+    #         assign_service_admin_group(service_id, service, group["name"])
+    #         assign_groups_to_user(temp_user["name"], [group["name"]], self.ranger_admin_config, self.base_url, self.headers)
+    #         auth = (temp_user["name"], "Test@123")
+    #         role, role_id = request.getfixturevalue("temp_role")()  # Create a role to fetch by name in this test case
+
+    #     elif test_case == "login_user is not (admin not service admin/group) & role-membership via  user":
+    #         temp_user, temp_user_id = request.getfixturevalue("temp_secure_user")("user")
+    #         role, role_id = request.getfixturevalue("temp_role")(user_list=[{"name": temp_user["name"], "isAdmin": True}])
+    #         auth = (temp_user["name"], "Test@123")
+
+    #     elif test_case == "login_user is not (admin not service admin/group) & role-membership via  group":
+    #         temp_user, temp_user_id = request.getfixturevalue("temp_secure_user")("user")
+    #         group, group_id = request.getfixturevalue("temp_group")()
+    #         assign_groups_to_user(temp_user["name"], [group["name"]], self.ranger_admin_config, self.base_url, self.headers)
+    #         role, role_id = request.getfixturevalue("temp_role")(group_list=[{"name": group["name"], "isAdmin": True}])
+    #         auth = (temp_user["name"], "Test@123")
+
+    #     elif test_case == "login_user is not (admin not service admin/group) & role-membership via  role-user":
+    #         temp_user, temp_user_id = request.getfixturevalue("temp_secure_user")("user")
+    #         c_role, c_id = request.getfixturevalue("temp_role")(user_list=[{"name": temp_user["name"], "isAdmin": True}])
+    #         role, role_id = request.getfixturevalue("temp_role")(role_list=[{"name": c_role["name"], "isAdmin": True}])
+    #         auth = (temp_user["name"], "Test@123")
+
+    #     elif test_case == "login_user is not (admin not service admin/group) & role-membership via  role-group":
+    #         temp_user, temp_user_id = request.getfixturevalue("temp_secure_user")("user")
+    #         group, group_id = request.getfixturevalue("temp_group")()
+    #         assign_groups_to_user(temp_user["name"], [group["name"]], self.ranger_admin_config, self.base_url, self.headers)
+    #         c_role, c_id = request.getfixturevalue("temp_role")(group_list=[{"name": group["name"], "isAdmin": True}])
+    #         role, role_id = request.getfixturevalue("temp_role")(role_list=[{"name": c_role["name"], "isAdmin": True}])
+    #         auth = (temp_user["name"], "Test@123")
+
+    #     params = {"execUser": temp_user["name"]}
+
+    #     if test_case in ["login_user is service admin", "login_user has service admin groups in grouplist"]:
+    #         params = {"serviceName": service["name"], "execUser": temp_user["name"]}
+
+# def ensureRoleAccess(test_case, request, existing_service = None):
+
+#     service_list = []
+
+#     if test_case == "admin":
+#         temp_user, temp_user_id = request.getfixturevalue("temp_secure_user")(["admin"])
+#         auth = (temp_user["name"], "Test@123")
+#         role, role_id = request.getfixturevalue("temp_role")()  # Create a role to fetch by name in this test case
+#         role_list = [role_id]
+    
+#     elif test_case == "service admin":
+#         if existing_service is None:
+#             service, service_id = create_service()
+#         else:
+#             service = existing_service[0]
+#             service_id = service["id"]
+#         temp_user, temp_user_id = request.getfixturevalue("temp_secure_user")("auditor")
+#         assign_service_admin(service_id, service, temp_user['name'])
+#         auth = (temp_user["name"], "Test@123")
+#         role, role_id = request.getfixturevalue("temp_role")()  # Create a role to fetch by name in this test case
+#         service_list = [service_id]
+#         role_list = [role_id]
+
+#     elif test_case == "in service admin groups in grouplist":
+#         if existing_service is None:
+#             service, service_id = create_service()
+#         else:
+#             service = existing_service[0]
+#             service_id = service["id"]
+#         temp_user, temp_user_id = request.getfixturevalue("temp_secure_user")("auditor")
+#         group, group_id = request.getfixturevalue("temp_group")()
+#         assign_service_admin_group(service_id, service, group["name"])
+#         xutils.assign_groups_to_user(temp_user["name"], [group["name"]], AUTH, BASE_URL, HEADERS)
+#         auth = (temp_user["name"], "Test@123")
+#         role, role_id = request.getfixturevalue("temp_role")()  # Create a role to fetch by name in this test case
+#         service_list = [service_id]
+#         role_list = [role_id]
+
+#     elif test_case == "not (admin not service admin/group) & role-membership via  user":
+#         temp_user, temp_user_id = request.getfixturevalue("temp_secure_user")("user")
+#         role, role_id = request.getfixturevalue("temp_role")(user_list=[{"name": temp_user["name"], "isAdmin": True}])
+#         auth = (temp_user["name"], "Test@123")
+#         role_list = [role_id]
+
+    
+#     elif test_case == "not (admin not service admin/group) & role-membership via  group":
+#         temp_user, temp_user_id = request.getfixturevalue("temp_secure_user")("user")
+#         group, group_id = request.getfixturevalue("temp_group")()
+#         xutils.assign_groups_to_user(temp_user["name"], [group["name"]], AUTH, BASE_URL, HEADERS)
+#         role, role_id = request.getfixturevalue("temp_role")(group_list=[{"name": group["name"], "isAdmin": True}])
+#         auth = (temp_user["name"], "Test@123")
+#         role_list = [role_id]
+    
+#     elif test_case == "not (admin not service admin/group) & role-membership via  role-user":
+#         temp_user, temp_user_id = request.getfixturevalue("temp_secure_user")("user")
+#         c_role, c_id = request.getfixturevalue("temp_role")(user_list=[{"name": temp_user["name"], "isAdmin": True}])
+#         role, role_id = request.getfixturevalue("temp_role")(role_list=[{"name": c_role["name"], "isAdmin": True}])
+#         auth = (temp_user["name"], "Test@123")
+#         role_list = [role_id, c_id]
+    
+#     elif test_case == "not (admin not service admin/group) & role-membership via  role-group":
+#         temp_user, temp_user_id = request.getfixturevalue("temp_secure_user")("user")
+#         group, group_id = request.getfixturevalue("temp_group")()
+#         xutils.assign_groups_to_user(temp_user["name"], [group["name"]], AUTH, BASE_URL, HEADERS)
+#         c_role, c_id = request.getfixturevalue("temp_role")(group_list=[{"name": group["name"], "isAdmin": True}])
+#         role, role_id = request.getfixturevalue("temp_role")(role_list=[{"name": c_role["name"], "isAdmin": True}])
+#         auth = (temp_user["name"], "Test@123")
+#         role_list = [role_id, c_id]
+
+
+#     params = {"execUser": temp_user["name"]}
+
+#     if test_case in ["service admin", "in service admin groups in grouplist"]:
+#         params = {"serviceName": service["name"], "execUser": temp_user["name"]}
+
+#     clean_up_items = {
+#         "role_list": role_list, # incase of c_id first role_id shld be deleted before c_id
+#         "service_list": service_list
+#     }
+#     return auth, params, role, clean_up_items
+
+
+# # correct below
+
+def ensureRoleAccess(test_case, request, existing_service=None):
+
+    service_list = []
+
+    if test_case == "admin":
+        temp_user, temp_user_id = request.getfixturevalue("temp_secure_user")(["admin"])
+        auth = (temp_user["name"], "Test@123")
+        role, role_id = request.getfixturevalue("temp_role")()
+        role_list = [role_id]
+
+    elif test_case == "service admin":
+        if existing_service is None:
+            service, service_id = create_service()
+        else:
+            service = existing_service[0]
+            service_id = service["id"]
+        temp_user, temp_user_id = request.getfixturevalue("temp_secure_user")("auditor")
+        assign_service_admin(service_id, service, temp_user['name'])
+        auth = (temp_user["name"], "Test@123")
+        role, role_id = request.getfixturevalue("temp_role")()
+        service_list = [service_id]
+        role_list = [role_id]
+
+    elif test_case == "in service admin groups in grouplist":
+        if existing_service is None:
+            service, service_id = create_service()
+        else:
+            service = existing_service[0]
+            service_id = service["id"]
+        temp_user, temp_user_id = request.getfixturevalue("temp_secure_user")("auditor")
+        group, group_id = request.getfixturevalue("temp_group")()
+        assign_service_admin_group(service_id, service, group["name"])
+        xutils.assign_groups_to_user(temp_user["name"], [group["name"]], AUTH, BASE_URL, HEADERS)
+        auth = (temp_user["name"], "Test@123")
+        role, role_id = request.getfixturevalue("temp_role")()
+        service_list = [service_id]
+        role_list = [role_id]
+
+        req = requests.get(f"{BASE_URL}/plugins/services/{service_id}", auth=AUTH, headers=HEADERS)
+        print("\n [+] Service details after assigning service admin group: ", req.json(), "\n")
+
+        req = requests.get(f"{BASE_URL}/xusers/users/{temp_user_id}", auth=AUTH, headers=HEADERS)
+        print("\n [+] User details after assigning service admin group: ", req.json(), "\n")
+
+        req = requests.get(f"{BASE_URL}/xusers/groups/{group_id}", auth=AUTH, headers=HEADERS)
+        print("\n [+] Group details after assigning service admin group: ", req.json(), "\n")
+
+
+    elif test_case.endswith("role-user"):   # must be before endswith("user")
+        temp_user, temp_user_id = request.getfixturevalue("temp_secure_user")("user")
+        c_role, c_id = request.getfixturevalue("temp_role")(user_list=[{"name": temp_user["name"], "isAdmin": True}])
+        role, role_id = request.getfixturevalue("temp_role")(role_list=[{"name": c_role["name"], "isAdmin": True}])
+        auth = (temp_user["name"], "Test@123")
+        role_list = [role_id, c_id]
+
+    elif test_case.endswith("role-group"):  # must be before endswith("group")
+        temp_user, temp_user_id = request.getfixturevalue("temp_secure_user")("user")
+        group, group_id = request.getfixturevalue("temp_group")()
+        xutils.assign_groups_to_user(temp_user["name"], [group["name"]], ("admin", "rangerR0cks!"), "http://localhost:6080/service", {
+            "Accept": "application/json",
+            "Content-Type": "application/json"
+        })
+        c_role, c_id = request.getfixturevalue("temp_role")(group_list=[{"name": group["name"], "isAdmin": True}])
+        role, role_id = request.getfixturevalue("temp_role")(role_list=[{"name": c_role["name"], "isAdmin": True}])
+        auth = (temp_user["name"], "Test@123")
+        role_list = [role_id, c_id]
+
+    elif test_case.endswith("user"):
+        temp_user, temp_user_id = request.getfixturevalue("temp_secure_user")("user")
+        role, role_id = request.getfixturevalue("temp_role")(user_list=[{"name": temp_user["name"], "isAdmin": True}])
+        auth = (temp_user["name"], "Test@123")
+        role_list = [role_id]
+
+    elif test_case.endswith("group"):
+        temp_user, temp_user_id = request.getfixturevalue("temp_secure_user")("user")
+        group, group_id = request.getfixturevalue("temp_group")()
+        xutils.assign_groups_to_user(temp_user["name"], [group["name"]], AUTH, BASE_URL, HEADERS)
+        role, role_id = request.getfixturevalue("temp_role")(group_list=[{"name": group["name"], "isAdmin": True}])
+        auth = (temp_user["name"], "Test@123")
+        role_list = [role_id]
+
+    else:
+        raise ValueError(f"Unknown test_case: '{test_case}'")  # catches mismatches early
+
+    params = {"execUser": temp_user["name"]}
+    if test_case in ["service admin", "in service admin groups in grouplist"]:
+        params = {"serviceName": service["name"], "execUser": temp_user["name"]}
+
+    clean_up_items = {"role_list": role_list, "service_list": service_list}
+    return auth, params, role, clean_up_items
+
+# # below exp
+
+# def ensureRoleAccess(test_case, request, existing_service=None):
+#     service_list = []
+#     service = None
+#     service_id = None
+
+#     if test_case == "admin":
+#         temp_user, temp_user_id = request.getfixturevalue("temp_secure_user")(["admin"])
+#         auth = (temp_user["name"], "Test@123")
+#         role, role_id = request.getfixturevalue("temp_role")()
+#         role_list = [role_id]
+
+#     elif test_case == "service admin":
+#         if existing_service is None:
+#             service, service_id = create_service()
+#             service_list = [service_id]
+#         else:
+#             service = existing_service[0]
+#             service_id = service["id"]
+
+#         temp_user, temp_user_id = request.getfixturevalue("temp_secure_user")("auditor")
+#         assign_service_admin(service_id, service, temp_user["name"])
+#         auth = (temp_user["name"], "Test@123")
+#         role, role_id = request.getfixturevalue("temp_role")()
+#         role_list = [role_id]
+
+#     elif test_case == "in service admin groups in grouplist":
+#         if existing_service is None:
+#             service, service_id = create_service()
+#             service_list = [service_id]
+#         else:
+#             service = existing_service[0]
+#             service_id = service["id"]
+
+#         temp_user, temp_user_id = request.getfixturevalue("temp_secure_user")("auditor")
+#         group, group_id = request.getfixturevalue("temp_group")()
+#         assign_service_admin_group(service_id, service, group["name"])
+#         xutils.assign_groups_to_user(temp_user["name"], [group["name"]], ("admin", "rangerR0cks!"), "http://localhost:6080/service", {
+#             "Accept": "application/json",
+#             "Content-Type": "application/json"
+#             })
+#         auth = (temp_user["name"], "Test@123")
+#         role, role_id = request.getfixturevalue("temp_role")()
+#         role_list = [role_id]
+
+#     elif test_case.endswith("role-user"):
+#         temp_user, temp_user_id = request.getfixturevalue("temp_secure_user")("user")
+#         c_role, c_id = request.getfixturevalue("temp_role")(user_list=[{"name": temp_user["name"], "isAdmin": True}])
+#         role, role_id = request.getfixturevalue("temp_role")(role_list=[{"name": c_role["name"], "isAdmin": True}])
+#         auth = (temp_user["name"], "Test@123")
+#         role_list = [role_id, c_id]
+
+#     elif test_case.endswith("role-group"):
+#         temp_user, temp_user_id = request.getfixturevalue("temp_secure_user")("auditor")
+#         group, group_id = request.getfixturevalue("temp_group")()
+#         xutils.assign_groups_to_user(
+#             temp_user["name"], [group["name"]],
+#             ranger_admin_config=("admin", "rangerR0cks!"),
+#             base_url="http://localhost:6080/service",
+#             headers=  {
+#                 "Accept": "application/json",
+#                 "Content-Type": "application/json"
+#             }
+#         )
+#         c_role, c_id = request.getfixturevalue("temp_role")(group_list=[{"name": group["name"], "isAdmin": True}])
+#         role, role_id = request.getfixturevalue("temp_role")(role_list=[{"name": c_role["name"], "isAdmin": True}])
+#         auth = (temp_user["name"], "Test@123")
+#         role_list = [role_id, c_id]
+
+#     elif test_case.endswith("user"):
+#         temp_user, temp_user_id = request.getfixturevalue("temp_secure_user")("user")
+#         role, role_id = request.getfixturevalue("temp_role")(user_list=[{"name": temp_user["name"], "isAdmin": True}])
+#         auth = (temp_user["name"], "Test@123")
+#         role_list = [role_id]
+
+#     elif test_case.endswith("group"):
+#         temp_user, temp_user_id = request.getfixturevalue("temp_secure_user")("auditor")
+#         group, group_id = request.getfixturevalue("temp_group")()
+#         xutils.assign_groups_to_user(temp_user["name"], [group["name"]], ("admin", "rangerR0cks!"), "http://localhost:6080/service", {
+#         "Accept": "application/json",
+#         "Content-Type": "application/json"
+#         })
+#         role, role_id = request.getfixturevalue("temp_role")(group_list=[{"name": group["name"], "isAdmin": True}])
+#         auth = (temp_user["name"], "Test@123")
+#         role_list = [role_id]
+
+#     else:
+#         raise ValueError(f"Unknown test_case: {test_case!r}")
+
+#     params = {"execUser": temp_user["name"]}
+    
+#     if service is not None:
+#         params["serviceName"] = service["name"]
+
+#     clean_up_items = {"role_list": role_list, "service_list": service_list}
+#     return auth, params, role, clean_up_items
