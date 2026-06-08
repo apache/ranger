@@ -130,7 +130,7 @@ public class TestRangerAuthenticationProvider {
 
     @Test
     public void getAuthenticationWithGrantedAuthority_usesRolesFromUserMgr() {
-        when(userMgr.getRolesByLoginId("carol")).thenReturn(Arrays.asList("ROLE_A", "ROLE_B"));
+        when(userMgr.getAuthenticationRolesByLoginId("carol")).thenReturn(Arrays.asList("ROLE_A", "ROLE_B"));
 
         UsernamePasswordAuthenticationToken input =
                 new UsernamePasswordAuthenticationToken(

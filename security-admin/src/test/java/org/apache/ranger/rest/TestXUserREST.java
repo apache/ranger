@@ -1557,6 +1557,7 @@ public class TestXUserREST {
         loggedInUser.setId(8L);
         loggedInUser.setName("testuser");
         loggedInUser.setUserRoleList(loggedInUserRole);
+        currentUserSession.setUserRoleList(loggedInUserRole);
 
         HttpServletRequest request = Mockito.mock(HttpServletRequest.class);
         SearchCriteria testSearchCriteria = createsearchCriteria();
@@ -1604,6 +1605,7 @@ public class TestXUserREST {
         loggedInUser.setId(8L);
         loggedInUser.setName("testuser");
         loggedInUser.setUserRoleList(loggedInUserRole);
+        currentUserSession.setUserRoleList(loggedInUserRole);
 
         VXUserList expecteUserList = new VXUserList();
         VXUser expectedUser = new VXUser();

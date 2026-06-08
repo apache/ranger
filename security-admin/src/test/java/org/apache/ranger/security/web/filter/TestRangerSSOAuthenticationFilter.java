@@ -415,7 +415,7 @@ public class TestRangerSSOAuthenticationFilter {
         RangerSSOAuthenticationFilter filter = new RangerSSOAuthenticationFilter(makeProps());
         // inject userMgr
         UserMgr userMgr = mock(UserMgr.class);
-        when(userMgr.getRolesByLoginId("bob")).thenReturn(Arrays.asList("ROLE_USER", "ROLE_ADMIN"));
+        when(userMgr.getAuthenticationRolesByLoginId("bob")).thenReturn(Arrays.asList("ROLE_USER", "ROLE_ADMIN"));
         Field uf = RangerSSOAuthenticationFilter.class.getDeclaredField("userMgr");
         uf.setAccessible(true);
         uf.set(filter, userMgr);
