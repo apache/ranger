@@ -33,6 +33,7 @@ import org.slf4j.LoggerFactory;
 
 import java.security.PrivilegedExceptionAction;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.CountDownLatch;
@@ -55,14 +56,9 @@ public class AuditProducer implements Runnable {
         producerProps = createProducerConfig(props, propPrefix);
 
         try {
-            kafkaProducer = MiscUtil.executePrivilegedAction((PrivilegedExceptionAction<KafkaProducer<String, String>>) () -> new KafkaProducer<>(producerProps));
-            LOG.info("AuditProducer(): KafkaProducer created (batch.size={}, linger.ms={}, compression.type={}, buffer.memory={}, delivery.timeout.ms={})",
-                    producerProps.get(ProducerConfig.BATCH_SIZE_CONFIG),
-                    producerProps.get(ProducerConfig.LINGER_MS_CONFIG),
-                    producerProps.get(ProducerConfig.COMPRESSION_TYPE_CONFIG),
-                    producerProps.get(ProducerConfig.BUFFER_MEMORY_CONFIG),
-                    producerProps.get(ProducerConfig.DELIVERY_TIMEOUT_MS_CONFIG));
-            LOG.info("AuditProducer(): KafkaProducer created successfully!");
+            PrivilegedExceptionAction<KafkaProducer<String, String>> createProducer = () -> new KafkaProducer<>(producerProps);
+            kafkaProducer = MiscUtil.executePrivilegedAction(createProducer);
+            LOG.info("AuditProducer(): KafkaProducer properties: {}", formatProducerPropertiesForLog(producerProps));
         } catch (Exception ex) {
             LOG.warn("AuditProducer(): Unable to create KafkaProducer - Kafka may not be available. " +
                      "Audit messages will be spooled to recovery system for retry. Error: {}", ex.getMessage());
@@ -107,6 +103,34 @@ public class AuditProducer implements Runnable {
 
     public KafkaProducer<String, String> getKafkaProducer() {
         return kafkaProducer;
+    }
+
+    private static String formatProducerPropertiesForLog(final Properties props) {
+        ArrayList<String> names = new ArrayList<>();
+
+        for (String name : props.stringPropertyNames()) {
+            names.add(name);
+        }
+
+        Collections.sort(names);
+
+        StringBuilder formatted = new StringBuilder();
+
+        for (String name : names) {
+            if (formatted.length() > 0) {
+                formatted.append(", ");
+            }
+
+            String value = props.getProperty(name);
+
+            if (AuditServerConstants.PROP_SASL_JAAS_CONFIG.equals(name)) {
+                value = "***";
+            }
+
+            formatted.append(name).append('=').append(value);
+        }
+
+        return formatted.toString();
     }
 
     /**
