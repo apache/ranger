@@ -42,6 +42,9 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class AuditProducer implements Runnable {
     private static final Logger LOG = LoggerFactory.getLogger(AuditProducer.class);
 
+    /** Max wait for REST batch send callbacks; overridable via site XML. */
+    private static volatile int batchSendTimeoutMs = AuditServerConstants.DEFAULT_PRODUCER_BATCH_SEND_TIMEOUT_MS;
+
     public Properties                    producerProps = new Properties();
     public KafkaProducer<String, String> kafkaProducer;
     private volatile boolean             running = true;
@@ -49,48 +52,16 @@ public class AuditProducer implements Runnable {
     public AuditProducer(Properties props, String propPrefix) throws Exception {
         LOG.debug("==> AuditProducer()");
 
-        producerProps.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, MiscUtil.getStringProperty(props, propPrefix + "." + AuditServerConstants.PROP_BOOTSTRAP_SERVERS));
-        producerProps.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, Class.forName("org.apache.kafka.common.serialization.StringSerializer"));
-        producerProps.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, Class.forName("org.apache.kafka.common.serialization.StringSerializer"));
-        producerProps.put(ProducerConfig.ENABLE_IDEMPOTENCE_CONFIG, "true");
-        producerProps.put(ProducerConfig.ACKS_CONFIG, "all");
-
-        String securityProtocol = MiscUtil.getStringProperty(props, propPrefix + "." + AuditServerConstants.PROP_SECURITY_PROTOCOL, AuditServerConstants.DEFAULT_SECURITY_PROTOCOL);
-        producerProps.put(AdminClientConfig.SECURITY_PROTOCOL_CONFIG, securityProtocol);
-
-        producerProps.put(AuditServerConstants.PROP_SASL_MECHANISM, MiscUtil.getStringProperty(props, propPrefix + "." + AuditServerConstants.PROP_SASL_MECHANISM, AuditServerConstants.DEFAULT_SASL_MECHANISM));
-        producerProps.put(AuditServerConstants.PROP_SASL_KERBEROS_SERVICE_NAME, AuditServerConstants.DEFAULT_SERVICE_NAME);
-
-        if (securityProtocol.toUpperCase().contains(AuditServerConstants.PROP_SECURITY_PROTOCOL_VALUE)) {
-            producerProps.put(AuditServerConstants.PROP_SASL_JAAS_CONFIG, AuditMessageQueueUtils.getJAASConfig(props, propPrefix));
-        }
-
-        producerProps.put(ProducerConfig.LINGER_MS_CONFIG, 5);
-        producerProps.put(ProducerConfig.BATCH_SIZE_CONFIG, 32 * 1024);
-
-        // Check if configured.plugins is set to determine partitioning strategy
-        // 1) configured.plugins is set then Custom AuditPartitioner is used, it allocates predefined set of partitions to each appId.
-        // 2) if configured.plugins is not set then default kafka hash based partitioner is used with initial quota of 10 partition.
-        String configuredPlugins = MiscUtil.getStringProperty(props, propPrefix + "." + AuditServerConstants.PROP_CONFIGURED_PLUGINS, "");
-        if (configuredPlugins != null && !configuredPlugins.trim().isEmpty()) {
-            // Plugin-based partitioning: use AuditPartitioner
-            String partitionerClass = MiscUtil.getStringProperty(props, propPrefix + "." + AuditServerConstants.PROP_PARTITIONER_CLASS, AuditServerConstants.DEFAULT_PARTITIONER_CLASS);
-            producerProps.put(ProducerConfig.PARTITIONER_CLASS_CONFIG, partitionerClass);
-            LOG.info("Configured plugins detected - using plugin-based partitioner: {}", partitionerClass);
-
-            // Pass all ranger.audit.ingestor.* properties to partitioner (no namespace translation)
-            for (String propName : props.stringPropertyNames()) {
-                if (propName.startsWith(propPrefix + ".")) {
-                    producerProps.put(propName, props.getProperty(propName));
-                }
-            }
-        } else {
-            // No configured plugins: use Kafka default hash-based partitioner
-            LOG.info("No configured plugins - using Kafka default hash-based partitioner");
-        }
+        producerProps = createProducerConfig(props, propPrefix);
 
         try {
             kafkaProducer = MiscUtil.executePrivilegedAction((PrivilegedExceptionAction<KafkaProducer<String, String>>) () -> new KafkaProducer<>(producerProps));
+            LOG.info("AuditProducer(): KafkaProducer created (batch.size={}, linger.ms={}, compression.type={}, buffer.memory={}, delivery.timeout.ms={})",
+                    producerProps.get(ProducerConfig.BATCH_SIZE_CONFIG),
+                    producerProps.get(ProducerConfig.LINGER_MS_CONFIG),
+                    producerProps.get(ProducerConfig.COMPRESSION_TYPE_CONFIG),
+                    producerProps.get(ProducerConfig.BUFFER_MEMORY_CONFIG),
+                    producerProps.get(ProducerConfig.DELIVERY_TIMEOUT_MS_CONFIG));
             LOG.info("AuditProducer(): KafkaProducer created successfully!");
         } catch (Exception ex) {
             LOG.warn("AuditProducer(): Unable to create KafkaProducer - Kafka may not be available. " +
@@ -123,6 +94,7 @@ public class AuditProducer implements Runnable {
         if (kafkaProducer != null) {
             try {
                 LOG.info("Closing Kafka producer...");
+                kafkaProducer.flush();
                 kafkaProducer.close();
                 LOG.info("Kafka producer closed successfully");
             } catch (Exception e) {
@@ -135,6 +107,77 @@ public class AuditProducer implements Runnable {
 
     public KafkaProducer<String, String> getKafkaProducer() {
         return kafkaProducer;
+    }
+
+    /**
+     * Build Kafka producer properties from ingestor site XML (testable without connecting to Kafka).
+     */
+    static Properties createProducerConfig(Properties props, String propPrefix) throws Exception {
+        Properties producerProps = new Properties();
+
+        producerProps.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, MiscUtil.getStringProperty(props, propPrefix + "." + AuditServerConstants.PROP_BOOTSTRAP_SERVERS));
+        producerProps.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, Class.forName("org.apache.kafka.common.serialization.StringSerializer"));
+        producerProps.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, Class.forName("org.apache.kafka.common.serialization.StringSerializer"));
+        producerProps.put(ProducerConfig.ENABLE_IDEMPOTENCE_CONFIG, "true");
+        producerProps.put(ProducerConfig.ACKS_CONFIG, "all");
+
+        String producerPrefix = propPrefix + "." + AuditServerConstants.PROP_KAFKA_PRODUCER_PREFIX;
+
+        producerProps.put(ProducerConfig.BATCH_SIZE_CONFIG,
+                MiscUtil.getIntProperty(props, producerPrefix + AuditServerConstants.PROP_PRODUCER_BATCH_SIZE,
+                        AuditServerConstants.DEFAULT_PRODUCER_BATCH_SIZE));
+        producerProps.put(ProducerConfig.LINGER_MS_CONFIG,
+                MiscUtil.getIntProperty(props, producerPrefix + AuditServerConstants.PROP_PRODUCER_LINGER_MS,
+                        AuditServerConstants.DEFAULT_PRODUCER_LINGER_MS));
+        producerProps.put(ProducerConfig.BUFFER_MEMORY_CONFIG,
+                MiscUtil.getLongProperty(props, producerPrefix + AuditServerConstants.PROP_PRODUCER_BUFFER_MEMORY,
+                        AuditServerConstants.DEFAULT_PRODUCER_BUFFER_MEMORY));
+        producerProps.put(ProducerConfig.COMPRESSION_TYPE_CONFIG,
+                MiscUtil.getStringProperty(props, producerPrefix + AuditServerConstants.PROP_PRODUCER_COMPRESSION_TYPE,
+                        AuditServerConstants.DEFAULT_PRODUCER_COMPRESSION_TYPE));
+        producerProps.put(ProducerConfig.DELIVERY_TIMEOUT_MS_CONFIG,
+                MiscUtil.getIntProperty(props, producerPrefix + AuditServerConstants.PROP_PRODUCER_DELIVERY_TIMEOUT_MS,
+                        AuditServerConstants.DEFAULT_PRODUCER_DELIVERY_TIMEOUT_MS));
+        producerProps.put(ProducerConfig.MAX_REQUEST_SIZE_CONFIG,
+                MiscUtil.getIntProperty(props, producerPrefix + AuditServerConstants.PROP_PRODUCER_MAX_REQUEST_SIZE,
+                        AuditServerConstants.DEFAULT_PRODUCER_MAX_REQUEST_SIZE));
+        producerProps.put(ProducerConfig.MAX_BLOCK_MS_CONFIG,
+                MiscUtil.getIntProperty(props, producerPrefix + AuditServerConstants.PROP_PRODUCER_MAX_BLOCK_MS,
+                        AuditServerConstants.DEFAULT_PRODUCER_MAX_BLOCK_MS));
+        producerProps.put(ProducerConfig.REQUEST_TIMEOUT_MS_CONFIG,
+                MiscUtil.getIntProperty(props, propPrefix + "." + AuditServerConstants.PROP_REQ_TIMEOUT_MS,
+                        AuditServerConstants.DEFAULT_PRODUCER_REQUEST_TIMEOUT_MS));
+
+        batchSendTimeoutMs = MiscUtil.getIntProperty(props,
+                producerPrefix + AuditServerConstants.PROP_PRODUCER_BATCH_SEND_TIMEOUT_MS,
+                AuditServerConstants.DEFAULT_PRODUCER_BATCH_SEND_TIMEOUT_MS);
+
+        String securityProtocol = MiscUtil.getStringProperty(props, propPrefix + "." + AuditServerConstants.PROP_SECURITY_PROTOCOL, AuditServerConstants.DEFAULT_SECURITY_PROTOCOL);
+        producerProps.put(AdminClientConfig.SECURITY_PROTOCOL_CONFIG, securityProtocol);
+
+        producerProps.put(AuditServerConstants.PROP_SASL_MECHANISM, MiscUtil.getStringProperty(props, propPrefix + "." + AuditServerConstants.PROP_SASL_MECHANISM, AuditServerConstants.DEFAULT_SASL_MECHANISM));
+        producerProps.put(AuditServerConstants.PROP_SASL_KERBEROS_SERVICE_NAME, AuditServerConstants.DEFAULT_SERVICE_NAME);
+
+        if (securityProtocol.toUpperCase().contains(AuditServerConstants.PROP_SECURITY_PROTOCOL_VALUE)) {
+            producerProps.put(AuditServerConstants.PROP_SASL_JAAS_CONFIG, AuditMessageQueueUtils.getJAASConfig(props, propPrefix));
+        }
+
+        String configuredPlugins = MiscUtil.getStringProperty(props, propPrefix + "." + AuditServerConstants.PROP_CONFIGURED_PLUGINS, "");
+        if (configuredPlugins != null && !configuredPlugins.trim().isEmpty()) {
+            String partitionerClass = MiscUtil.getStringProperty(props, propPrefix + "." + AuditServerConstants.PROP_PARTITIONER_CLASS, AuditServerConstants.DEFAULT_PARTITIONER_CLASS);
+            producerProps.put(ProducerConfig.PARTITIONER_CLASS_CONFIG, partitionerClass);
+            LOG.info("Configured plugins detected - using plugin-based partitioner: {}", partitionerClass);
+
+            for (String propName : props.stringPropertyNames()) {
+                if (propName.startsWith(propPrefix + ".")) {
+                    producerProps.put(propName, props.getProperty(propName));
+                }
+            }
+        } else {
+            LOG.info("No configured plugins - using Kafka default hash-based partitioner");
+        }
+
+        return producerProps;
     }
 
     public static void send(KafkaProducer<String, String> producer, String topic, String key, String value) throws Exception {
@@ -213,11 +256,12 @@ public class AuditProducer implements Runnable {
             }
         }
 
-        // max wait time before timeout
-        boolean completed = latch.await(30, TimeUnit.SECONDS);
+        // max wait time before timeout (configurable via ranger.audit.ingestor.kafka.producer.batch.send.timeout.ms)
+        boolean completed = latch.await(batchSendTimeoutMs, TimeUnit.MILLISECONDS);
 
         if (!completed) {
-            String errorMsg = String.format("Batch send timed out after 30 seconds. %d/%d events still pending", latch.getCount(), batchSize);
+            String errorMsg = String.format("Batch send timed out after %d ms. %d/%d events still pending",
+                    batchSendTimeoutMs, latch.getCount(), batchSize);
             LOG.error(errorMsg);
             throw new Exception(errorMsg);
         }
