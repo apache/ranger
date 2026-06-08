@@ -307,22 +307,22 @@ class TestRoleCRUD:
     @pytest.mark.positive
     @pytest.mark.parametrize(
         "test_case", [
-            #"login user is admin",          
+            "login user is admin",          
             "login user is service admin",
-            #"login user has service admin groups",
+            "login user has service admin groups",
         ]
     )
     @pytest.mark.parametrize(
         "query_param_user, effective_user, additional_conditions", 
         [
-            # ("exists", "query param userName", "query user is admin"),
-            # ("exists", "query param userName", "query user is service admin"),
+            ("exists", "query param userName", "query user is admin"),
+            ("exists", "query param userName", "query user is service admin"),
             ("exists", "query param userName", "query user is in service admin groups in grouplist"),
-            # ("exists", "query param userName", "query user is not admin or service admin/group but has role membership via user"),
-            # ("exists", "query param userName", "query user is not admin or service admin/group but has role membership via group"),
-            # ("exists", "query param userName", "query user is not admin or service admin/group but has role membership via role-user"),
-            # ("exists", "query param userName", "query user is not admin or service admin/group but has role membership via role-group"),
-            # ("not_exists", "login userName", "None"),
+            ("exists", "query param userName", "query user is not admin or service admin/group but has role membership via user"),
+            ("exists", "query param userName", "query user is not admin or service admin/group but has role membership via group"),
+            ("exists", "query param userName", "query user is not admin or service admin/group but has role membership via role-user"),
+            ("exists", "query param userName", "query user is not admin or service admin/group but has role membership via role-group"),
+            ("not_exists", "login userName", "None"),
         ],
     )
     def test_get_role_by_name_with_diff_creds(self, query_param_user, effective_user, test_case, additional_conditions, request):
@@ -337,20 +337,34 @@ class TestRoleCRUD:
 
         elif test_case == "login user is service admin": 
             service, service_id = create_service()
-            temp_user, temp_user_id = request.getfixturevalue("temp_secure_user")("auditor")
+            temp_user, temp_user_id = request.getfixturevalue("temp_secure_user")(["auditor"])
+            resp = requests.get(
+                f"{self.base_url}/xusers/users/userName/{temp_user['name']}",
+                headers=self.headers,
+                auth=self.ranger_admin_config
+            )
+            print(f"\n before User details for {temp_user['name']} after group assignment and service admin group assignment:\n {resp.json()} \n")
+
             assign_service_admin(service_id, service, temp_user['name'])
             auth = (temp_user["name"], "Test@123")
+            # resp = requests.get(
+            #     f"{self.base_url}/xusers/users/userName/{temp_user['name']}",
+            #     headers=self.headers,
+            #     auth=self.ranger_admin_config
+            # )
+            # print(f"\n User details for {temp_user['name']} after group assignment and service admin group assignment:\n {resp.json()} \n")
 
         elif test_case == "login user has service admin groups":  
             
-            temp_user, temp_user_id = request.getfixturevalue("temp_secure_user")("auditor")
+            temp_user, temp_user_id = request.getfixturevalue("temp_secure_user")(["auditor"])
             group, group_id = request.getfixturevalue("temp_group")()
             assign_groups_to_user(temp_user["name"], [group["name"]], self.ranger_admin_config, self.base_url, self.headers)
             service, service_id = create_service()
             assign_service_admin_group(service_id, service, group["name"])
-            
+        
 
-            auth = (temp_user["name"], "Test@123")
+
+        auth = (temp_user["name"], "Test@123")
 
 
         if query_param_user == "not_exists":
@@ -368,6 +382,7 @@ class TestRoleCRUD:
 
             if service:
                 params["serviceName"] = service["name"]
+
 
         print("\n Auth used: ", auth)
         print("\n Query params used: ", params)

@@ -351,7 +351,7 @@ def temp_role(ranger_config):
 
     yield _create_role
 
-    # -------- CLEANUP ----------
+    # # -------- CLEANUP ----------
     for rid in created_role_ids:
         print(f"[Fixture] Cleaning role {rid}")
 
