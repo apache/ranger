@@ -637,7 +637,7 @@
   <!-- Backward-compatible alias: Swagger UI historically loaded swagger.json -->
   <files>
     <file>
-      <source>${ranger.root}/docs/target/apidocs/ui/openapi.json</source>
+      <source>${project.parent.basedir}/docs/target/apidocs/ui/openapi.json</source>
       <outputDirectory>ews/webapp/apidocs</outputDirectory>
       <destName>swagger.json</destName>
       <fileMode>544</fileMode>
