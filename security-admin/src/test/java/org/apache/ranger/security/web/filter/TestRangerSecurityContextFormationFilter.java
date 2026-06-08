@@ -124,14 +124,11 @@ public class TestRangerSecurityContextFormationFilter {
 
         when(req.getParameter("createPrincipalsIfAbsent")).thenReturn("true");
 
-        FilterChain chain = new FilterChain() {
-            @Override
-            public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse) {
-                Boolean flag = RangerContextHolder.getOpContext() != null
-                        ? RangerContextHolder.getOpContext().getCreatePrincipalsIfAbsent()
-                        : null;
-                assertEquals(Boolean.TRUE, flag);
-            }
+        FilterChain chain = (servletRequest, servletResponse) -> {
+            Boolean flag = RangerContextHolder.getOpContext() != null
+                    ? RangerContextHolder.getOpContext().getCreatePrincipalsIfAbsent()
+                    : null;
+            assertEquals(Boolean.TRUE, flag);
         };
 
         filter.doFilter(req, res, chain);
@@ -222,16 +219,13 @@ public class TestRangerSecurityContextFormationFilter {
             Mockito.when(sessionMgr.processSuccessLogin(Mockito.anyInt(), Mockito.anyString(), Mockito.any(HttpServletRequest.class)))
                     .thenReturn(userSession);
 
-            FilterChain chain = new FilterChain() {
-                @Override
-                public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse) {
-                    RangerSecurityContext ctx = RangerContextHolder.getSecurityContext();
+            FilterChain chain = (servletRequest, servletResponse) -> {
+                RangerSecurityContext ctx = RangerContextHolder.getSecurityContext();
 
-                    assertNotNull(ctx);
-                    assertNotNull(ctx.getRequestContext());
-                    assertEquals("awc-request-1", ctx.getRequestContext().getServerRequestId());
-                    assertSame(userSession, ctx.getUserSession());
-                }
+                assertNotNull(ctx);
+                assertNotNull(ctx.getRequestContext());
+                assertEquals("awc-request-1", ctx.getRequestContext().getServerRequestId());
+                assertSame(userSession, ctx.getUserSession());
             };
 
             filter.doFilter(req, res, chain);
