@@ -28,6 +28,7 @@ import org.apache.kafka.clients.producer.RecordMetadata;
 import org.apache.ranger.audit.provider.MiscUtil;
 import org.apache.ranger.audit.server.AuditServerConstants;
 import org.apache.ranger.audit.utils.AuditMessageQueueUtils;
+import org.apache.ranger.audit.utils.AuditServerLogFormatter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -58,7 +59,7 @@ public class AuditProducer implements Runnable {
         try {
             PrivilegedExceptionAction<KafkaProducer<String, String>> createProducer = () -> new KafkaProducer<>(producerProps);
             kafkaProducer = MiscUtil.executePrivilegedAction(createProducer);
-            LOG.info("AuditProducer(): KafkaProducer properties: {}", formatProducerPropertiesForLog(producerProps));
+            logProducerProperties(producerProps);
         } catch (Exception ex) {
             LOG.warn("AuditProducer(): Unable to create KafkaProducer - Kafka may not be available. " +
                      "Audit messages will be spooled to recovery system for retry. Error: {}", ex.getMessage());
@@ -105,32 +106,22 @@ public class AuditProducer implements Runnable {
         return kafkaProducer;
     }
 
-    private static String formatProducerPropertiesForLog(final Properties props) {
-        ArrayList<String> names = new ArrayList<>();
-
-        for (String name : props.stringPropertyNames()) {
-            names.add(name);
-        }
-
+    private static void logProducerProperties(final Properties props) {
+        AuditServerLogFormatter.LogBuilder logBuilder = AuditServerLogFormatter.builder("AuditProducer(): KafkaProducer properties");
+        ArrayList<String> names = new ArrayList<>(props.stringPropertyNames());
         Collections.sort(names);
 
-        StringBuilder formatted = new StringBuilder();
-
         for (String name : names) {
-            if (formatted.length() > 0) {
-                formatted.append(", ");
-            }
-
             String value = props.getProperty(name);
 
             if (AuditServerConstants.PROP_SASL_JAAS_CONFIG.equals(name)) {
                 value = "***";
             }
 
-            formatted.append(name).append('=').append(value);
+            logBuilder.add(name, value);
         }
 
-        return formatted.toString();
+        logBuilder.logInfo(LOG);
     }
 
     /**
