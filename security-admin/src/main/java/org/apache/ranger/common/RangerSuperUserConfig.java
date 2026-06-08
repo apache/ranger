@@ -31,7 +31,7 @@ import java.util.List;
 import java.util.Set;
 
 /**
- * Configuration-based Ranger Admin super users and super groups.
+ * Configuration-based Ranger Admin superusers and super groups.
  * When {@code ranger.admin.super.users} or
  * {@code ranger.admin.super.groups} are set, matching authenticated users
  * receive full Ranger administrative privileges (system admin and key admin
@@ -40,19 +40,27 @@ import java.util.Set;
 public final class RangerSuperUserConfig {
     private static volatile RangerSuperUserConfig instance;
 
-    private final Set<String> superUsers;
-    private final Set<String> superUserGroups;
+    private  Set<String> superUsers = new HashSet<>();
+    private  Set<String> superUserGroups = new HashSet<>();
     private final boolean     superUsersConfigured;
     private final boolean     superGroupsConfigured;
     private final boolean     enabled;
 
     private RangerSuperUserConfig() {
-        superUsers            = buildConfiguredSet(
-                PropertiesUtil.getPropertyStringList(
-                        RangerConstants.RANGER_ADMIN_SUPER_USERS));
-        superUserGroups       = buildConfiguredSet(
-                PropertiesUtil.getPropertyStringList(
-                        RangerConstants.RANGER_ADMIN_SUPER_GROUPS));
+        String[] cfgSuperUsers      = PropertiesUtil.getPropertyStringList(RangerConstants.RANGER_ADMIN_SUPER_USERS);
+        String[] cfgSuperUserGroups = PropertiesUtil.getPropertyStringList(RangerConstants.RANGER_ADMIN_SUPER_GROUPS);
+
+        if (cfgSuperUsers != null) {
+            for (String user : cfgSuperUsers) {
+                superUsers.add(user);
+            }
+        }
+
+        if (cfgSuperUserGroups != null) {
+            for (String userGroup : cfgSuperUserGroups) {
+                superUserGroups.add(userGroup);
+            }
+        }
         superUsersConfigured  = !superUsers.isEmpty();
         superGroupsConfigured = !superUserGroups.isEmpty();
         enabled               = superUsersConfigured || superGroupsConfigured;
@@ -76,14 +84,6 @@ public final class RangerSuperUserConfig {
     }
 
     /**
-     * @return true when {@code ranger.admin.super.users} has at least one
-     *         non-blank entry
-     */
-    public static boolean isSuperUsersConfigured() {
-        return getInstance().superUsersConfigured;
-    }
-
-    /**
      * @return true when {@code ranger.admin.super.groups} has at least one
      *         non-blank entry
      */
@@ -92,39 +92,42 @@ public final class RangerSuperUserConfig {
     }
 
     /**
-     * @param loginId authenticated login id
-     * @return true when loginId matches configured super users
+     * @param userName authenticated user name
+     * @return true when userName matches configured super users
      */
-    public static boolean isSuperUser(final String loginId) {
-        if (StringUtils.isBlank(loginId) || !isEnabled()) {
-            return false;
+    public static boolean isSuperUser(final String userName) {
+        final boolean isSuperUser;
+        RangerSuperUserConfig cfg = getInstance();
+
+        if (StringUtils.isBlank(userName) || !cfg.enabled) {
+            isSuperUser = false;
+        } else if (cfg.superUsersConfigured && cfg.matchesUser(userName)) {
+            isSuperUser = true;
+        } else {
+            isSuperUser = false;
         }
 
-        return getInstance().matchesUser(loginId);
+        return isSuperUser;
     }
 
     /**
-     * @param loginId authenticated login id
+     * @param userName authenticated user name
      * @param userGroups group names from Ranger user store
-     * @return true when loginId or groups match configured super users/groups
+     * @return true when userName or groups match configured super users/groups
      */
-    public static boolean isSuperUser(final String loginId,
-            final Set<String> userGroups) {
-        if (StringUtils.isBlank(loginId) || !isEnabled()) {
-            return false;
-        }
-
+    public static boolean isSuperUser(final String userName, final Set<String> userGroups) {
+        final boolean isSuperUser;
         RangerSuperUserConfig cfg = getInstance();
-
-        if (cfg.superUsersConfigured && cfg.matchesUser(loginId)) {
-            return true;
+        if (StringUtils.isBlank(userName) || !cfg.enabled) {
+            isSuperUser = false;
+        } else if (cfg.superUsersConfigured && cfg.matchesUser(userName)) {
+            isSuperUser = true;
+        } else {
+            isSuperUser = cfg.superGroupsConfigured
+                    && cfg.matchesGroups(userGroups);
         }
 
-        if (cfg.superGroupsConfigured) {
-            return cfg.matchesGroups(userGroups);
-        }
-
-        return false;
+        return isSuperUser;
     }
 
     /**
@@ -135,9 +138,7 @@ public final class RangerSuperUserConfig {
      * @param includeRoleUser when true, adds {@code ROLE_USER} (session lists)
      * @return merged role list with stable ordering
      */
-    public static List<String> mergeConfigSuperUserRoles(
-            final Collection<String> existingRoles,
-            final boolean includeRoleUser) {
+    public static List<String> mergeConfigSuperUserRoles(final Collection<String> existingRoles, final boolean includeRoleUser) {
         LinkedHashSet<String> merged = new LinkedHashSet<>();
 
         merged.add(RangerConstants.ROLE_SYS_ADMIN);
@@ -178,55 +179,67 @@ public final class RangerSuperUserConfig {
         return cfg;
     }
 
-    private static Set<String> buildConfiguredSet(final String[] values) {
-        Set<String> configured = new HashSet<>();
+    private boolean matchesUser(final String userName) {
+        final boolean matched;
 
-        if (values != null) {
-            for (String value : values) {
-                if (StringUtils.isNotBlank(value)) {
-                    configured.add(value.trim());
+        if (StringUtils.isBlank(userName)) {
+            matched = false;
+        } else {
+            // Case-insensitive match; "*" wildcard is not handled by CollectionUtils.contains
+            boolean result = false;
+
+            for (String configuredUser : superUsers) {
+                if ("*".equals(configuredUser) || configuredUser.equalsIgnoreCase(userName)) {
+                    result = true;
+                    break;
                 }
             }
+
+            matched = result;
         }
 
-        return Collections.unmodifiableSet(configured);
-    }
-
-    private boolean matchesUser(final String loginId) {
-        for (String configuredUser : superUsers) {
-            if ("*".equals(configuredUser)
-                    || configuredUser.equalsIgnoreCase(loginId)) {
-                return true;
-            }
-        }
-
-        return false;
+        return matched;
     }
 
     private boolean matchesGroups(final Set<String> userGroups) {
+        final boolean matched;
+
         if (CollectionUtils.isEmpty(userGroups)) {
-            return false;
-        }
+            matched = false;
+        } else {
+            // Case-insensitive match; GROUP_PUBLIC is not handled by CollectionUtils.containsAny
+            boolean result = false;
 
-        for (String configuredGroup : superUserGroups) {
-            if (RangerConstants.GROUP_PUBLIC.equalsIgnoreCase(configuredGroup)
-                    || containsGroupIgnoreCase(userGroups, configuredGroup)) {
-                return true;
+            for (String configuredGroup : superUserGroups) {
+                if (RangerConstants.GROUP_PUBLIC.equalsIgnoreCase(configuredGroup) || containsGroupIgnoreCase(userGroups, configuredGroup)) {
+                    result = true;
+                    break;
+                }
             }
+
+            matched = result;
         }
 
-        return false;
+        return matched;
     }
 
-    private static boolean containsGroupIgnoreCase(final Set<String> userGroups,
-            final String configuredGroup) {
-        for (String userGroup : userGroups) {
-            if (userGroup != null
-                    && userGroup.equalsIgnoreCase(configuredGroup)) {
-                return true;
+    private static boolean containsGroupIgnoreCase(final Set<String> userGroups, final String configuredGroup) {
+        final boolean matched;
+
+        if (CollectionUtils.isEmpty(userGroups) || StringUtils.isBlank(configuredGroup)) {
+            matched = false;
+        } else {
+            boolean result = false;
+            for (String userGroup : userGroups) {
+                if (userGroup != null && userGroup.equalsIgnoreCase(configuredGroup)) {
+                    result = true;
+                    break;
+                }
             }
+
+            matched = result;
         }
 
-        return false;
+        return matched;
     }
 }

@@ -225,9 +225,7 @@ public class SessionMgr {
             if (userSession.isUserAdmin() || userSession.isKeyAdmin()) {
                 permissionList = daoManager.getXXModuleDef().getAllModuleNames();
             } else {
-                permissionList = daoManager.getXXModuleDef()
-                        .findAccessibleModulesByUserId(
-                                userSession.getUserId(), xUser.getId());
+                permissionList = daoManager.getXXModuleDef().findAccessibleModulesByUserId(userSession.getUserId(), xUser.getId());
             }
 
             CopyOnWriteArraySet<String>          userPermissions      = new CopyOnWriteArraySet<>(permissionList);
@@ -594,9 +592,8 @@ public class SessionMgr {
             isSuperUser = false;
         } else if (RangerSuperUserConfig.isSuperUser(loginId)) {
             isSuperUser = true;
-        } else if (RangerSuperUserConfig.isSuperGroupsConfigured()) {
-            isSuperUser = RangerSuperUserConfig.isSuperUser(loginId,
-                    xUserMgr.getGroupsForUser(loginId));
+        } else if (RangerSuperUserConfig.isSuperGroupsConfigured() && xUserMgr != null) {
+            isSuperUser = RangerSuperUserConfig.isSuperUser(loginId, xUserMgr.getGroupsForUser(loginId));
         } else {
             isSuperUser = false;
         }

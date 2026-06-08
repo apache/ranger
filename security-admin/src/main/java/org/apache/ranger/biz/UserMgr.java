@@ -72,9 +72,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 import static org.apache.ranger.service.RangerBaseModelService.OPERATION_UPDATE_CONTEXT;
 
@@ -1172,8 +1170,7 @@ public class UserMgr {
      * @param loginId portal login id
      * @return DB roles plus config super-user roles when applicable
      */
-    public Collection<String> getAuthenticationRolesByLoginId(
-            final String loginId) {
+    public Collection<String> getAuthenticationRolesByLoginId(final String loginId) {
         Collection<String> roles = getRolesByLoginId(loginId);
 
         if (StringUtils.isBlank(loginId)) {
@@ -1184,13 +1181,17 @@ public class UserMgr {
             return roles;
         }
 
+        final boolean configSuperUser;
+
         if (RangerSuperUserConfig.isSuperUser(loginId)) {
-            return RangerSuperUserConfig.mergeConfigSuperUserRoles(roles, false);
+            configSuperUser = true;
+        } else if (RangerSuperUserConfig.isSuperGroupsConfigured() && xUserMgr != null) {
+            configSuperUser = RangerSuperUserConfig.isSuperUser(loginId, xUserMgr.getGroupsForUser(loginId));
+        } else {
+            configSuperUser = false;
         }
 
-        if (RangerSuperUserConfig.isSuperGroupsConfigured() && xUserMgr != null
-                && RangerSuperUserConfig.isSuperUser(loginId,
-                        xUserMgr.getGroupsForUser(loginId))) {
+        if (configSuperUser) {
             return RangerSuperUserConfig.mergeConfigSuperUserRoles(roles, false);
         }
 
