@@ -859,8 +859,7 @@ public class XUserREST {
         UserSessionBase userSession = ContextUtil.getCurrentUserSession();
 
         // Plain ROLE_USER may only fetch groups they belong to; not config super-users.
-        if (userSession != null && userSession.getLoginId() != null
-                && userSession.isSingleRoleUserSession()) {
+        if (userSession != null && userSession.getLoginId() != null && userSession.isSingleRoleUserSession()) {
             VXUser  loggedInVXUser = xUserService.getXUserByUserName(userSession.getLoginId());
             boolean isMatch        = false;
 
