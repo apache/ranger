@@ -788,8 +788,7 @@ public class XUserMgr extends XUserMgrBase {
             //In case of user we need to fetch only its associated groups.
             UserSessionBase userSession = ContextUtil.getCurrentUserSession();
 
-            if (userSession != null && userSession.isSingleRoleUserSession()
-                    && userSession.getLoginId() != null) {
+            if (userSession != null && userSession.isSingleRoleUserSession() && userSession.getLoginId() != null) {
                 loggedInVXUser = xUserService.getXUserByUserName(userSession.getLoginId());
 
                 if (loggedInVXUser != null) {
