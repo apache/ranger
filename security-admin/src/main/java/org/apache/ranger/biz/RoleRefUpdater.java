@@ -283,9 +283,9 @@ public class RoleRefUpdater {
             roleUsers.removeAll(commonUsers);
             if (CollectionUtils.isNotEmpty(toDeleteUsers)) {
                 List<Long> idsToDelete = toDeleteUsers.stream()
-                    .map(userNameIdMap::get)
-                    .filter(Objects::nonNull)
-                    .collect(Collectors.toList());
+                        .map(userNameIdMap::get)
+                        .filter(Objects::nonNull)
+                        .collect(Collectors.toList());
 
                 LOG.debug("Deleting user IDs from x_role_ref_user table: {} for role ID: {}", idsToDelete, roleId);
                 dao.deleteRoleRefUserByIds(idsToDelete);
@@ -333,9 +333,9 @@ public class RoleRefUpdater {
 
             if (CollectionUtils.isNotEmpty(toDeleteGroups)) {
                 List<Long> idsToDelete = toDeleteGroups.stream()
-                    .map(groupNameIdMap::get)
-                    .filter(Objects::nonNull)
-                    .collect(Collectors.toList());
+                        .map(groupNameIdMap::get)
+                        .filter(Objects::nonNull)
+                        .collect(Collectors.toList());
 
                 LOG.debug("Deleting group IDs from x_role_ref_group table: {} for role ID: {}", idsToDelete, roleId);
                 dao.deleteRoleRefGroupByIds(idsToDelete);
@@ -384,9 +384,9 @@ public class RoleRefUpdater {
             // Delete obsolete sub-role associations
             if (!toDeleteRoles.isEmpty()) {
                 List<Long> idsToDelete = toDeleteRoles.stream()
-                    .map(subRoleNameIdMap::get)
-                    .filter(Objects::nonNull)
-                    .collect(Collectors.toList());
+                        .map(subRoleNameIdMap::get)
+                        .filter(Objects::nonNull)
+                        .collect(Collectors.toList());
 
                 LOG.debug("Deleting role IDs from x_role_ref_role table: {} for role ID: {}", idsToDelete, roleId);
                 dao.deleteRoleRefRoleByIds(idsToDelete);

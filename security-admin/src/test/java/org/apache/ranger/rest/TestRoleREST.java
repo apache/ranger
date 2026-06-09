@@ -320,7 +320,7 @@ public class TestRoleREST {
             throw new RuntimeException(e);
         }
         try {
-            Mockito.when(roleStore.updateRole(Mockito.any(RangerRole.class), Mockito.anyBoolean(), eq(isRefTableCleanupRequired) )).then(AdditionalAnswers.returnsFirstArg());
+            Mockito.when(roleStore.updateRole(Mockito.any(RangerRole.class), Mockito.anyBoolean(), eq(isRefTableCleanupRequired))).then(AdditionalAnswers.returnsFirstArg());
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
