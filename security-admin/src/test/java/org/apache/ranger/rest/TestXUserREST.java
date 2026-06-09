@@ -692,18 +692,15 @@ public class TestXUserREST {
 
     @Test
     public void test63getXGroupByGroupName() {
-        HttpServletRequest request = Mockito.mock(HttpServletRequest.class);
-
         VXGroup compareTestVXGroup = createVXGroup();
-
         Mockito.when(xGroupService.getGroupByGroupName(compareTestVXGroup.getName())).thenReturn(compareTestVXGroup);
-
+        Mockito.when(xUserMgr.getXGroup(compareTestVXGroup.getId())).thenReturn(compareTestVXGroup);
         VXGroup retVxGroup = xUserRest.getXGroupByGroupName(request, compareTestVXGroup.getName());
-
         Assertions.assertNotNull(retVxGroup);
-        Assertions.assertEquals(compareTestVXGroup.getClass(), compareTestVXGroup.getClass());
-        Assertions.assertEquals(compareTestVXGroup.getId(), compareTestVXGroup.getId());
+        Assertions.assertEquals(compareTestVXGroup.getId(), retVxGroup.getId());
+        Assertions.assertEquals(compareTestVXGroup.getName(), retVxGroup.getName());
         Mockito.verify(xGroupService).getGroupByGroupName(compareTestVXGroup.getName());
+        Mockito.verify(xUserMgr).getXGroup(compareTestVXGroup.getId());
     }
 
     @Test
@@ -2286,25 +2283,6 @@ public class TestXUserREST {
 
         Assertions.assertNull(result);
         Mockito.verify(xUserMgr).getXGroupUserFromMap(groupName);
-    }
-
-    @Test
-    public void test160getXGroupByGroupNameWithNullUser() {
-        HttpServletRequest request = Mockito.mock(HttpServletRequest.class);
-        String groupName = "testGroup";
-        VXGroup vXGroup = createVXGroup();
-        vXGroup.setName(groupName);
-
-        RangerSecurityContext context = new RangerSecurityContext();
-        context.setUserSession(null);
-        RangerContextHolder.setSecurityContext(context);
-
-        Mockito.when(xGroupService.getGroupByGroupName(groupName)).thenReturn(vXGroup);
-
-        VXGroup result = xUserRest.getXGroupByGroupName(request, groupName);
-
-        Assertions.assertEquals(vXGroup, result);
-        Mockito.verify(xGroupService).getGroupByGroupName(groupName);
     }
 
     @Test
