@@ -35,7 +35,8 @@ downloadIfNotPresent() {
   then
     echo "downloading ${urlBase}/${fileName}.."
 
-    curl -L ${urlBase}/${fileName} --output downloads/${fileName}
+    curl -fL --retry 5 --retry-all-errors --retry-delay 10 --connect-timeout 30 \
+      ${urlBase}/${fileName} --output downloads/${fileName}
   else
     echo "file already in cache: ${fileName}"
   fi

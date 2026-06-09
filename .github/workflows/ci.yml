@@ -151,9 +151,32 @@ jobs:
               exit 1;
           fi
 
+  # Download large plugin distro archives in parallel with build-17 so a slow
+  # archive.apache.org mirror does not consume the docker-build job budget.
+  plugins-download-archives:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Cache downloaded archives
+        uses: actions/cache@v5
+        with:
+          path: dev-support/ranger-docker/downloads
+          key: ${{ runner.os }}-ranger-downloads-${{ hashFiles('dev-support/ranger-docker/.env') }}
+          restore-keys: |
+            ${{ runner.os }}-ranger-downloads-
+
+      - name: Run download-archives.sh
+        run: |
+          cd dev-support/ranger-docker
+          rm -rf downloads/ozone-*
+          ./download-archives.sh hadoop hive hbase kafka knox ozone
+
   plugins-docker-build:
     needs:
       - build-17
+      - plugins-download-archives
     runs-on: ubuntu-24.04 # bumping os version for more disk space
     timeout-minutes: 60 # bumping timeout to allow containers to come up
     steps:
@@ -173,7 +196,7 @@ jobs:
       - name: Free up disk space
         run: docker system prune --all --force --volumes
 
-      - name: Cache downloaded archives
+      - name: Restore plugin archives from cache
         uses: actions/cache@v5
         with:
           path: dev-support/ranger-docker/downloads
@@ -181,7 +204,7 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-ranger-downloads-
 
-      - name: Run download-archives.sh
+      - name: Verify plugin archives (download any cache misses)
         run: |
           cd dev-support/ranger-docker
           rm -rf downloads/ozone-*
