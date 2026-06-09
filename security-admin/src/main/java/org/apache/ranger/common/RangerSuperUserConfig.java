@@ -184,66 +184,10 @@ public final class RangerSuperUserConfig {
     }
 
     private boolean matchesUser(final String userName) {
-        final boolean matched;
-
-        if (StringUtils.isBlank(userName)) {
-            matched = false;
-        } else {
-            // Case-insensitive match; "*" wildcard is not handled by CollectionUtils.contains
-            boolean result = false;
-
-            for (String configuredUser : superUsers) {
-                if ("*".equals(configuredUser) || configuredUser.equalsIgnoreCase(userName)) {
-                    result = true;
-                    break;
-                }
-            }
-
-            matched = result;
-        }
-
-        return matched;
+        return StringUtils.isNotBlank(userName) && superUsers.contains(userName);
     }
 
     private boolean matchesGroups(final Set<String> userGroups) {
-        final boolean matched;
-
-        if (CollectionUtils.isEmpty(userGroups)) {
-            matched = false;
-        } else {
-            // Case-insensitive match; GROUP_PUBLIC is not handled by CollectionUtils.containsAny
-            boolean result = false;
-
-            for (String configuredGroup : superUserGroups) {
-                if (RangerConstants.GROUP_PUBLIC.equalsIgnoreCase(configuredGroup) || containsGroupIgnoreCase(userGroups, configuredGroup)) {
-                    result = true;
-                    break;
-                }
-            }
-
-            matched = result;
-        }
-
-        return matched;
-    }
-
-    private static boolean containsGroupIgnoreCase(final Set<String> userGroups, final String configuredGroup) {
-        final boolean matched;
-
-        if (CollectionUtils.isEmpty(userGroups) || StringUtils.isBlank(configuredGroup)) {
-            matched = false;
-        } else {
-            boolean result = false;
-            for (String userGroup : userGroups) {
-                if (userGroup != null && userGroup.equalsIgnoreCase(configuredGroup)) {
-                    result = true;
-                    break;
-                }
-            }
-
-            matched = result;
-        }
-
-        return matched;
+        return CollectionUtils.isNotEmpty(userGroups) && CollectionUtils.containsAny(superUserGroups, userGroups);
     }
 }

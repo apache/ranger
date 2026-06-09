@@ -84,7 +84,7 @@ public class TestRangerHeaderPreAuthFilter {
         filter.doFilter(request, response, chain);
 
         verify(chain).doFilter(request, response);
-        verify(userMgr, never()).getAuthenticationRolesByLoginId(anyString());
+        verify(userMgr, never()).getRolesByLoginId(anyString());
         assertNull(SecurityContextHolder.getContext().getAuthentication());
     }
 
@@ -108,7 +108,7 @@ public class TestRangerHeaderPreAuthFilter {
         filter.doFilter(request, response, chain);
 
         verify(chain).doFilter(request, response);
-        verify(userMgr, never()).getAuthenticationRolesByLoginId(anyString());
+        verify(userMgr, never()).getRolesByLoginId(anyString());
         assertNull(SecurityContextHolder.getContext().getAuthentication());
     }
 
@@ -123,7 +123,7 @@ public class TestRangerHeaderPreAuthFilter {
         filter.userMgr = userMgr;
         filter.initialize();
 
-        when(userMgr.getAuthenticationRolesByLoginId("joeuser")).thenReturn(Arrays.asList("ROLE_SYS_ADMIN", "ROLE_USER"));
+        when(userMgr.getRolesByLoginId("joeuser")).thenReturn(Arrays.asList("ROLE_SYS_ADMIN", "ROLE_USER"));
 
         HttpServletRequest  request  = mock(HttpServletRequest.class);
         HttpServletResponse response = mock(HttpServletResponse.class);
@@ -173,7 +173,7 @@ public class TestRangerHeaderPreAuthFilter {
         filter.doFilter(request, response, chain);
 
         verify(chain).doFilter(request, response);
-        verify(userMgr, never()).getAuthenticationRolesByLoginId(anyString());
+        verify(userMgr, never()).getRolesByLoginId(anyString());
         assertEquals(existingAuth, SecurityContextHolder.getContext().getAuthentication());
     }
 }

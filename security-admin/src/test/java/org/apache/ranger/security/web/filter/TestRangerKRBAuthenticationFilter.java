@@ -262,7 +262,7 @@ public class TestRangerKRBAuthenticationFilter {
         RangerKRBAuthenticationFilter filter = new RangerKRBAuthenticationFilter();
         // Inject a mock userMgr to return roles
         UserMgr userMgr = Mockito.mock(UserMgr.class);
-        when(userMgr.getAuthenticationRolesByLoginId("alice")).thenReturn(Arrays.asList("ROLE_USER", "ROLE_ADMIN"));
+        when(userMgr.getRolesByLoginId("alice")).thenReturn(Arrays.asList("ROLE_USER", "ROLE_ADMIN"));
         Field f = RangerKRBAuthenticationFilter.class.getDeclaredField("userMgr");
         f.setAccessible(true);
         f.set(filter, userMgr);
@@ -280,7 +280,7 @@ public class TestRangerKRBAuthenticationFilter {
         RangerKRBAuthenticationFilter filter = new RangerKRBAuthenticationFilter();
         // Inject a mock userMgr to avoid NPE
         UserMgr userMgr = Mockito.mock(UserMgr.class);
-        when(userMgr.getAuthenticationRolesByLoginId("bob")).thenReturn(Arrays.asList("ROLE_USER"));
+        when(userMgr.getRolesByLoginId("bob")).thenReturn(Arrays.asList("ROLE_USER"));
         Field f = RangerKRBAuthenticationFilter.class.getDeclaredField("userMgr");
         f.setAccessible(true);
         f.set(filter, userMgr);

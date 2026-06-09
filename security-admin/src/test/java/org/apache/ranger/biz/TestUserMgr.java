@@ -1663,7 +1663,7 @@ public class TestUserMgr {
     }
 
     @Test
-    public void testGetAuthenticationRolesByLoginId_ConfigSuperUser() {
+    public void testGetRolesByLoginId_ConfigSuperUser() {
         setup();
         XXPortalUserDao     userDao = Mockito.mock(XXPortalUserDao.class);
         XXPortalUserRoleDao roleDao = Mockito.mock(XXPortalUserRoleDao.class);
@@ -1687,22 +1687,24 @@ public class TestUserMgr {
         RangerSuperUserConfig.resetForTests();
         PropertiesUtil.getPropertiesMap().put(RangerConstants.RANGER_ADMIN_SUPER_USERS, userLoginId);
 
-        Collection<String> authRoles = userMgr.getAuthenticationRolesByLoginId(userLoginId);
+        Collection<String> roles = userMgr.getRolesByLoginId(userLoginId);
 
-        Assertions.assertTrue(authRoles.contains(RangerConstants.ROLE_USER));
-        Assertions.assertTrue(authRoles.contains(RangerConstants.ROLE_SYS_ADMIN));
-        Assertions.assertTrue(authRoles.contains(RangerConstants.ROLE_KEY_ADMIN));
+        Assertions.assertTrue(roles.contains(RangerConstants.ROLE_USER));
+        Assertions.assertTrue(roles.contains(RangerConstants.ROLE_SYS_ADMIN));
+        Assertions.assertTrue(roles.contains(RangerConstants.ROLE_KEY_ADMIN));
+
+        PropertiesUtil.getPropertiesMap().remove(RangerConstants.RANGER_ADMIN_SUPER_USERS);
+        RangerSuperUserConfig.resetForTests();
 
         Collection<String> dbRoles = userMgr.getRolesByLoginId(userLoginId);
         Assertions.assertEquals(Collections.singletonList(RangerConstants.ROLE_USER), dbRoles);
         Mockito.verify(xUserMgr, Mockito.never()).getGroupsForUser(userLoginId);
 
-        PropertiesUtil.getPropertiesMap().remove(RangerConstants.RANGER_ADMIN_SUPER_USERS);
         RangerSuperUserConfig.resetForTests();
     }
 
     @Test
-    public void testGetAuthenticationRolesByLoginId_NoConfigMatch() {
+    public void testGetRolesByLoginId_NoConfigMatch() {
         setup();
         XXPortalUserDao     userDao = Mockito.mock(XXPortalUserDao.class);
         XXPortalUserRoleDao roleDao = Mockito.mock(XXPortalUserRoleDao.class);
@@ -1728,9 +1730,9 @@ public class TestUserMgr {
         PropertiesUtil.getPropertiesMap().put(
                 RangerConstants.RANGER_ADMIN_SUPER_USERS, "other-user");
 
-        Collection<String> authRoles = userMgr.getAuthenticationRolesByLoginId(userLoginId);
+        Collection<String> roles = userMgr.getRolesByLoginId(userLoginId);
 
-        Assertions.assertEquals(userMgr.getRolesByLoginId(userLoginId), authRoles);
+        Assertions.assertEquals(Collections.singletonList(RangerConstants.ROLE_USER), roles);
         Mockito.verify(xUserMgr, Mockito.never()).getGroupsForUser(userLoginId);
 
         PropertiesUtil.getPropertiesMap().remove(
@@ -1739,7 +1741,7 @@ public class TestUserMgr {
     }
 
     @Test
-    public void testGetAuthenticationRolesByLoginId_ConfigDisabledSkipsGroupLookup() {
+    public void testGetRolesByLoginId_ConfigDisabledSkipsGroupLookup() {
         setup();
         XXPortalUserDao     userDao = Mockito.mock(XXPortalUserDao.class);
         XXPortalUserRoleDao roleDao = Mockito.mock(XXPortalUserRoleDao.class);
@@ -1761,12 +1763,11 @@ public class TestUserMgr {
         Mockito.when(daoManager.getXXPortalUserRole()).thenReturn(roleDao);
         Mockito.when(roleDao.findByUserId(user.getId())).thenReturn(list);
 
-        Collection<String> authRoles =
-                userMgr.getAuthenticationRolesByLoginId(userLoginId);
+        Collection<String> roles = userMgr.getRolesByLoginId(userLoginId);
 
         Assertions.assertEquals(
                 Collections.singletonList(RangerConstants.ROLE_USER),
-                authRoles);
+                roles);
         Mockito.verify(xUserMgr, Mockito.never()).getGroupsForUser(
                 Mockito.anyString());
     }

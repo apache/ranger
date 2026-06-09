@@ -109,7 +109,7 @@ public class RangerHeaderPreAuthFilter extends GenericFilterBean {
      */
     private List<GrantedAuthority> getAuthoritiesFromRanger(String username) {
         List<GrantedAuthority> ret      = new ArrayList<>();
-        Collection<String>     roleList = userMgr.getAuthenticationRolesByLoginId(username);
+        Collection<String>     roleList = userMgr.getRolesByLoginId(username);
 
         if (roleList != null) {
             for (String role : roleList) {

@@ -1156,27 +1156,8 @@ public class UserMgr {
             return DEFAULT_ROLE_LIST;
         }
 
-        return roleList;
-    }
-
-    /**
-     * Returns DB roles augmented with config super-user roles for
-     * Spring Security authentication.
-     * Does not modify {@code x_portal_user_role}; use
-     * {@link #getRolesByLoginId(String)} for DB-only roles.
-     *
-     * @param loginId portal login id
-     * @return DB roles plus config super-user roles when applicable
-     */
-    public Collection<String> getAuthenticationRolesByLoginId(final String loginId) {
-        Collection<String> roles = getRolesByLoginId(loginId);
-
-        if (StringUtils.isBlank(loginId)) {
-            return roles;
-        }
-
         if (!RangerSuperUserConfig.isEnabled()) {
-            return roles;
+            return roleList;
         }
 
         final boolean configSuperUser;
@@ -1190,10 +1171,10 @@ public class UserMgr {
         }
 
         if (configSuperUser) {
-            return RangerSuperUserConfig.mergeConfigSuperUserRoles(roles, false);
+            return RangerSuperUserConfig.mergeConfigSuperUserRoles(roleList, false);
         }
 
-        return roles;
+        return roleList;
     }
 
     @Transactional(readOnly = false, propagation = Propagation.REQUIRED)

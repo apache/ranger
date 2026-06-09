@@ -45,10 +45,11 @@ public class TestRangerSuperUserConfig {
 
     @Test
     public void testIsSuperUser_ByConfiguredUser() {
-        PropertiesUtil.getPropertiesMap().put(RangerConstants.RANGER_ADMIN_SUPER_USERS, "alice, BOB");
+        PropertiesUtil.getPropertiesMap().put(RangerConstants.RANGER_ADMIN_SUPER_USERS, "alice, bob");
 
         Assertions.assertTrue(RangerSuperUserConfig.isSuperUser("alice", Collections.emptySet()));
         Assertions.assertTrue(RangerSuperUserConfig.isSuperUser("bob", Collections.emptySet()));
+        Assertions.assertFalse(RangerSuperUserConfig.isSuperUser("BOB", Collections.emptySet()));
         Assertions.assertFalse(RangerSuperUserConfig.isSuperUser("carol", Collections.emptySet()));
     }
 
@@ -65,70 +66,38 @@ public class TestRangerSuperUserConfig {
     }
 
     @Test
-    public void testIsSuperUser_ByConfiguredGroupCaseInsensitive_ConfigUpper() {
+    public void testIsSuperUser_GroupMatchIsCaseSensitive() {
         PropertiesUtil.getPropertiesMap().put(
                 RangerConstants.RANGER_ADMIN_SUPER_GROUPS, "testgroup_3A");
 
         Set<String> groups = new HashSet<>();
 
-        groups.add("testgroup_3a");
-
+        groups.add("testgroup_3A");
         Assertions.assertTrue(
+                RangerSuperUserConfig.isSuperUser("testuser_7", groups));
+
+        groups.clear();
+        groups.add("testgroup_3a");
+        Assertions.assertFalse(
                 RangerSuperUserConfig.isSuperUser("testuser_7", groups));
     }
 
     @Test
-    public void testIsSuperUser_ByConfiguredGroupCaseInsensitive_ConfigLower() {
-        PropertiesUtil.getPropertiesMap().put(
-                RangerConstants.RANGER_ADMIN_SUPER_GROUPS, "Ranger-Admins");
-
-        Set<String> groups = new HashSet<>();
-
-        groups.add("ranger-admins");
-
-        Assertions.assertTrue(
-                RangerSuperUserConfig.isSuperUser("carol", groups));
-    }
-
-    @Test
-    public void testIsSuperUser_WildcardUser() {
+    public void testIsSuperUser_WildcardUserIsNotSpecial() {
         PropertiesUtil.getPropertiesMap().put(RangerConstants.RANGER_ADMIN_SUPER_USERS, "*");
 
-        Assertions.assertTrue(RangerSuperUserConfig.isSuperUser("anyone", Collections.emptySet()));
+        Assertions.assertFalse(RangerSuperUserConfig.isSuperUser("anyone", Collections.emptySet()));
     }
 
     @Test
-    public void testIsSuperUser_PublicGroup() {
+    public void testIsSuperUser_PublicGroupIsNotSpecial() {
         PropertiesUtil.getPropertiesMap().put(
                 RangerConstants.RANGER_ADMIN_SUPER_GROUPS,
                 RangerConstants.GROUP_PUBLIC);
 
-        Assertions.assertTrue(RangerSuperUserConfig.isSuperUser("carol", Collections.singleton("other-group")));
-    }
-
-    @Test
-    public void testIsSuperUser_PublicGroup_EmptyGroups() {
-        PropertiesUtil.getPropertiesMap().put(
-                RangerConstants.RANGER_ADMIN_SUPER_GROUPS,
-                RangerConstants.GROUP_PUBLIC);
-
+        Assertions.assertFalse(
+                RangerSuperUserConfig.isSuperUser("carol", Collections.singleton("other-group")));
         Assertions.assertFalse(RangerSuperUserConfig.isSuperUser("carol", Collections.emptySet()));
-    }
-
-    @Test
-    public void testIsSuperUser_PublicGroupCaseInsensitive() {
-        PropertiesUtil.getPropertiesMap().put(
-                RangerConstants.RANGER_ADMIN_SUPER_GROUPS, "PUBLIC");
-
-        Assertions.assertTrue(
-                RangerSuperUserConfig.isSuperUser("carol", Collections.singleton("other-group")));
-
-        RangerSuperUserConfig.resetForTests();
-        PropertiesUtil.getPropertiesMap().put(
-                RangerConstants.RANGER_ADMIN_SUPER_GROUPS, "Public");
-
-        Assertions.assertTrue(
-                RangerSuperUserConfig.isSuperUser("carol", Collections.singleton("other-group")));
     }
 
     @Test
@@ -248,18 +217,11 @@ public class TestRangerSuperUserConfig {
     }
 
     @Test
-    public void testIsEnabled_WhenWildcardOnly() {
+    public void testIsEnabled_WhenWildcardConfiguredAsLiteralUser() {
         PropertiesUtil.getPropertiesMap().put(RangerConstants.RANGER_ADMIN_SUPER_USERS, "*");
 
         Assertions.assertTrue(RangerSuperUserConfig.isEnabled());
-    }
-
-    @Test
-    public void testIsEnabled_WhenPublicGroupOnly() {
-        PropertiesUtil.getPropertiesMap().put(
-                RangerConstants.RANGER_ADMIN_SUPER_GROUPS, RangerConstants.GROUP_PUBLIC);
-
-        Assertions.assertTrue(RangerSuperUserConfig.isEnabled());
+        Assertions.assertTrue(RangerSuperUserConfig.isSuperUser("*", Collections.emptySet()));
     }
 
     @Test

@@ -702,7 +702,7 @@ public class RangerAuthenticationProvider implements AuthenticationProvider {
     }
 
     private List<GrantedAuthority> getAuthorities(String username) {
-        Collection<String>           roleList     = userMgr.getAuthenticationRolesByLoginId(username);
+        Collection<String>           roleList     = userMgr.getRolesByLoginId(username);
         final List<GrantedAuthority> grantedAuths = new ArrayList<>();
 
         for (String role : roleList) {

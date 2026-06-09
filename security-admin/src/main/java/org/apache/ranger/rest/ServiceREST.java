@@ -3231,7 +3231,7 @@ public class ServiceREST {
             isKeyAdmin = bizUtil.isKeyAdmin();
         } else {
             // Includes config super-user privileges, not just DB portal roles.
-            Collection<String> userRoles = userMgrGrantor.getAuthenticationRolesByLoginId(grantor);
+            Collection<String> userRoles = userMgrGrantor.getRolesByLoginId(grantor);
 
             userName   = grantor;
             isAdmin    = userRoles.contains(RangerConstants.ROLE_SYS_ADMIN);
