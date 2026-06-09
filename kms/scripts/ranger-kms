@@ -112,7 +112,7 @@ fi
 
 KMS_CONF_DIR=${RANGER_KMS_EWS_DIR}/webapp/WEB-INF/classes/conf
 SERVER_NAME=rangerkms
-cp="-cp ${RANGER_KMS_EWS_CONF_DIR}:${RANGER_KMS_EWS_DIR}/lib/*:${JAVA_HOME}/lib/*:${RANGER_HADOOP_CONF_DIR}/*:$CLASSPATH"
+cp="-cp ${RANGER_KMS_EWS_CONF_DIR}:${RANGER_KMS_EWS_DIR}/lib/*:${RANGER_KMS_EWS_DIR}/webapp/WEB-INF/lib/*:${JAVA_HOME}/lib/*:${RANGER_HADOOP_CONF_DIR}/*:$CLASSPATH"
 JAVA_OPTS="${JAVA_OPTS} ${DB_SSL_PARAM} -Dmetric.type=${arg3} -Duser=${USER} -Dhostname=${HOSTNAME} -Dservername=${SERVER_NAME} -Dcatalina.base=${RANGER_KMS_EWS_DIR} -Dkms.config.dir=${KMS_CONF_DIR} -Dlogback.configurationFile=file:${KMS_LOG_PROPERTIES_FILE} -Dkms.log.dir=${TOMCAT_LOG_DIR} $cp"
 createRangerKMSPid () {
 	SLEEP_TIME_AFTER_START=5
