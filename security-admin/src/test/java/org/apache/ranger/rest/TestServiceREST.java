@@ -1912,6 +1912,7 @@ public class TestServiceREST {
         loggedInUser.setId(8L);
         loggedInUser.setName("testuser");
         loggedInUser.setUserRoleList(loggedInUserRole);
+        currentUserSession.setUserRoleList(loggedInUserRole);
         Mockito.when(xUserService.getXUserByUserName("testuser")).thenReturn(loggedInUser);
         Mockito.when(svcStore.getService(Id)).thenReturn(actualService);
 
@@ -1948,6 +1949,7 @@ public class TestServiceREST {
         loggedInUser.setId(8L);
         loggedInUser.setName("testuser");
         loggedInUser.setUserRoleList(loggedInUserRole);
+        currentUserSession.setUserRoleList(loggedInUserRole);
         Mockito.when(xUserService.getXUserByUserName("testuser")).thenReturn(loggedInUser);
         Mockito.when(svcStore.getServiceByName(actualService.getName())).thenReturn(actualService);
 
@@ -1986,6 +1988,7 @@ public class TestServiceREST {
         loggedInUser.setId(8L);
         loggedInUser.setName("testuser");
         loggedInUser.setUserRoleList(loggedInUserRole);
+        currentUserSession.setUserRoleList(loggedInUserRole);
 
         Map<String, String> configs = new HashMap<>();
         configs.put("username", "servicemgr");

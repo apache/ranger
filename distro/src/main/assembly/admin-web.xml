@@ -633,4 +633,14 @@
       <directoryMode>0755</directoryMode>
     </fileSet>
   </fileSets>
+
+  <!-- Backward-compatible alias: Swagger UI historically loaded swagger.json -->
+  <files>
+    <file>
+      <source>${project.parent.basedir}/docs/target/apidocs/ui/openapi.json</source>
+      <outputDirectory>ews/webapp/apidocs</outputDirectory>
+      <destName>swagger.json</destName>
+      <fileMode>544</fileMode>
+    </file>
+  </files>
 </assembly>
