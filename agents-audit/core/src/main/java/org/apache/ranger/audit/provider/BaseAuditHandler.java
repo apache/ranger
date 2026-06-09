@@ -51,7 +51,7 @@ public abstract class BaseAuditHandler implements AuditHandler {
     public static final String RANGER_POLICYMGR_TRUSTSTORE_FILE_TYPE_DEFAULT     = "jks";
     public static final String RANGER_SSL_KEYMANAGER_ALGO_TYPE                   = KeyManagerFactory.getDefaultAlgorithm();
     public static final String RANGER_SSL_TRUSTMANAGER_ALGO_TYPE                 = TrustManagerFactory.getDefaultAlgorithm();
-    public static final String RANGER_SSL_CONTEXT_ALGO_TYPE                      = "TLSv1.2";
+    public static final String RANGER_SSL_CONTEXT_ALGO_TYPE                      = "TLS";
     public static final String PROP_CONFIG                                       = "config";
     public static final String FAILED_TO_LOG_AUDIT_EVENT                         = "failed to log audit event: {}";
     public static final String PROP_NAME                                         = "name";

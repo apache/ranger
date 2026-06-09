@@ -59,7 +59,7 @@ public class RangerSslHelper {
     static final String           RANGER_POLICYMGR_TRUSTSTORE_FILE_TYPE_DEFAULT     = "jks";
     static final String           RANGER_SSL_KEYMANAGER_ALGO_TYPE                   = KeyManagerFactory.getDefaultAlgorithm();
     static final String           RANGER_SSL_TRUSTMANAGER_ALGO_TYPE                 = TrustManagerFactory.getDefaultAlgorithm();
-    static final String           RANGER_SSL_CONTEXT_ALGO_TYPE                      = "TLSv1.2";
+    static final String           RANGER_SSL_CONTEXT_ALGO_TYPE                      = "TLS";
     static final HostnameVerifier _Hv                                               = (urlHostName, session) -> session.getPeerHost().equals(urlHostName);
 
     final   String mSslConfigFileName;
