@@ -95,6 +95,16 @@ public class RoleDBStore implements RoleStore {
     public void init() throws Exception {}
 
     @Override
+    public RangerRole createRole(RangerRole role, Boolean createNonExistUserGroupRole) throws Exception {
+        return createRole(role, createNonExistUserGroupRole, false);
+    }
+
+    @Override
+    public RangerRole updateRole(RangerRole role, Boolean createNonExistUserGroupRole) throws Exception {
+        return updateRole(role, createNonExistUserGroupRole, true);
+    }
+
+    @Override
     public RangerRole createRole(RangerRole role, Boolean createNonExistUserGroupRole, Boolean isRefTableCleanupRequired) throws Exception {
         LOG.debug("==> RoleDBStore.createRole()");
 

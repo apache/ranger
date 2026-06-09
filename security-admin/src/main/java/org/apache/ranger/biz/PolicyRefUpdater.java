@@ -211,7 +211,7 @@ public class PolicyRefUpdater {
         }
 
         final boolean policyExists = xPolicy != null && xPolicy.getId() != null
-                && daoMgr.getXXPolicy().getById(xPolicy.getId()) != null;
+                && daoMgr.getXXPolicy().getCountById(xPolicy.getId()) > 0;
 
         if (CollectionUtils.isNotEmpty(roleNames)) {
             LOG.debug("x_policy_ref_role - New role entries to insert for policy ID {}: {}", policyId, roleNames);
@@ -568,19 +568,17 @@ public class PolicyRefUpdater {
         }
 
         public XXPolicyRefRole getPolicyRef() {
-            Long id = resolveRoleId(false);
-
-            if (id != null && policyExists) {
-                XXPolicyRefRole xPolRole = new XXPolicyRefRole();
-
-                xPolRole.setPolicyId(xPolicy.getId());
-                xPolRole.setRoleId(id);
-                xPolRole.setRoleName(name);
-
-                return xPolRole;
+            if (!policyExists || roleId == null) {
+                return null;
             }
 
-            return null;
+            XXPolicyRefRole xPolRole = new XXPolicyRefRole();
+
+            xPolRole.setPolicyId(xPolicy.getId());
+            xPolRole.setRoleId(roleId);
+            xPolRole.setRoleName(name);
+
+            return xPolRole;
         }
 
         public void createPolicyRef(Long id) {
@@ -656,19 +654,17 @@ public class PolicyRefUpdater {
         }
 
         public XXPolicyRefGroup getPolicyRef() {
-            Long id = resolveGroupId(false);
-
-            if (id != null && policyExists) {
-                XXPolicyRefGroup xPolGroup = new XXPolicyRefGroup();
-
-                xPolGroup.setPolicyId(xPolicy.getId());
-                xPolGroup.setGroupId(id);
-                xPolGroup.setGroupName(name);
-
-                return xPolGroup;
+            if (!policyExists || groupId == null) {
+                return null;
             }
 
-            return null;
+            XXPolicyRefGroup xPolGroup = new XXPolicyRefGroup();
+
+            xPolGroup.setPolicyId(xPolicy.getId());
+            xPolGroup.setGroupId(groupId);
+            xPolGroup.setGroupName(name);
+
+            return xPolGroup;
         }
 
         public void createPolicyRef(Long id) {
@@ -749,19 +745,17 @@ public class PolicyRefUpdater {
         }
 
         public XXPolicyRefUser getPolicyRef() {
-            Long id = resolveUserId(false);
-
-            if (id != null && policyExists) {
-                XXPolicyRefUser xPolUser = new XXPolicyRefUser();
-
-                xPolUser.setPolicyId(xPolicy.getId());
-                xPolUser.setUserId(id);
-                xPolUser.setUserName(name);
-
-                return xPolUser;
+            if (!policyExists || userId == null) {
+                return null;
             }
 
-            return null;
+            XXPolicyRefUser xPolUser = new XXPolicyRefUser();
+
+            xPolUser.setPolicyId(xPolicy.getId());
+            xPolUser.setUserId(userId);
+            xPolUser.setUserName(name);
+
+            return xPolUser;
         }
 
         public void createPolicyRef(Long id) {

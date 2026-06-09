@@ -28,9 +28,17 @@ import java.util.List;
 public interface RoleStore {
     void init() throws Exception;
 
-    RangerRole createRole(RangerRole role, Boolean createNonExistUserGroup, Boolean isRefTableCleanupRequired) throws Exception;
+    RangerRole createRole(RangerRole role, Boolean createNonExistUserGroup) throws Exception;
 
-    RangerRole updateRole(RangerRole role, Boolean createNonExistUserGroup, Boolean isRefTableCleanupRequired) throws Exception;
+    RangerRole updateRole(RangerRole role, Boolean createNonExistUserGroup) throws Exception;
+
+    default RangerRole createRole(RangerRole role, Boolean createNonExistUserGroup, Boolean isRefTableCleanupRequired) throws Exception {
+        return createRole(role, createNonExistUserGroup);
+    }
+
+    default RangerRole updateRole(RangerRole role, Boolean createNonExistUserGroup, Boolean isRefTableCleanupRequired) throws Exception {
+        return updateRole(role, createNonExistUserGroup);
+    }
 
     void deleteRole(String roleName) throws Exception;
 

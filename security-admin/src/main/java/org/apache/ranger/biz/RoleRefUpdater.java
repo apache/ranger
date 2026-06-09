@@ -92,7 +92,7 @@ public class RoleRefUpdater {
         boolean oldBulkMode = RangerBizUtil.isBulkMode();
 
         final Long        roleId      = rangerRole.getId();
-        final boolean     roleExists  = roleId != null && daoMgr.getXXRole().getById(roleId) != null;
+        final boolean     roleExists  = roleId != null;
         final Set<String> roleUsers   = new HashSet<>();
         final Set<String> roleGroups = new HashSet<>();
         final Set<String> roleRoles  = new HashSet<>();

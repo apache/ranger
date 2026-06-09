@@ -202,7 +202,7 @@ public class TestPolicyRefUpdater {
 
         org.apache.ranger.db.XXPolicyDao policyDao = mock(org.apache.ranger.db.XXPolicyDao.class);
         when(daoMgr.getXXPolicy()).thenReturn(policyDao);
-        when(policyDao.getById(xPolicy.getId())).thenReturn(xPolicy);
+        when(policyDao.getCountById(xPolicy.getId())).thenReturn(1L);
 
         XXUserDao userDao = mock(XXUserDao.class);
         when(daoMgr.getXXUser()).thenReturn(userDao);
