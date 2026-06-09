@@ -164,10 +164,11 @@ public class RangerSolrAuthorizer extends SearchComponent implements Authorizati
             // At the end will we iterate this list and invoke Ranger to check for privileges.
             List<RangerAccessRequestImpl> rangerRequests = new ArrayList<>();
 
-            // The following logic is taken from Sentry See in SentrySolrPluginImpl.java.
+            Object handler = context.getHandler();
 
-            if (context.getHandler() instanceof PermissionNameProvider) {
-                PermissionNameProvider.Name perm = ((PermissionNameProvider) context.getHandler()).getPermissionName(context);
+            // The following logic is taken from Sentry See in SentrySolrPluginImpl.java.
+            if (handler instanceof PermissionNameProvider) {
+                PermissionNameProvider.Name perm = ((PermissionNameProvider) handler).getPermissionName(context);
 
                 switch (perm) {
                     case READ_PERM:
@@ -251,7 +252,7 @@ public class RangerSolrAuthorizer extends SearchComponent implements Authorizati
                     }
                 }
             } else {
-                logger.warn("Request Handler: {} is not an instance of PermissionNameProvider and so we are not able to authenticate the request. Check SOLR-11623 for more information.", context.getHandler().getClass().getName());
+                logger.warn("Request Handler: {} is not an instance of PermissionNameProvider and so we are not able to authenticate the request. Check SOLR-11623 for more information.", handler == null ? null : handler.getClass().getName());
             }
 
             /*

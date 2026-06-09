@@ -56,7 +56,7 @@ public class UnixAuthenticationService {
     private static final Logger LOG = LoggerFactory.getLogger(UnixAuthenticationService.class);
 
     private static final String serviceName                          = "UnixAuthenticationService";
-    private static final String SSL_ALGORITHM                        = "TLSv1.2";
+    private static final String SSL_ALGORITHM                        = "TLS";
     private static final String REMOTE_LOGIN_AUTH_SERVICE_PORT_PARAM = "ranger.usersync.port";
     private static final String SSL_KEYSTORE_PATH_PARAM              = "ranger.usersync.keystore.file";
     private static final String SSL_TRUSTSTORE_PATH_PARAM            = "ranger.usersync.truststore.file";

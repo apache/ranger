@@ -62,7 +62,7 @@ public class RemoteUnixLoginModule implements LoginModule {
     private static final String SSL_ENABLED_PARAM                    = "ranger.unixauth.ssl.enabled";
     private static final String SERVER_CERT_VALIDATION_PARAM         = "ranger.unixauth.server.cert.validation";
     private static final String JAAS_ENABLED_PARAM                   = "ranger.unixauth.remote.login.enabled";
-    private static final String SSL_ALGORITHM                        = "TLSv1.2";
+    private static final String SSL_ALGORITHM                        = "TLS";
 
     private String userName;
     private String remoteHostName;

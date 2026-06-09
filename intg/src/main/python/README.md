@@ -141,8 +141,8 @@ Authentication options:
   - install dependency: `pip install requests-kerberos`
   - use `HTTPKerberosAuth()` as `auth` in `RangerPDPClient`
 - **Trusted header**
-  - pass caller header (default `X-Forwarded-User`, configurable by `ranger.pdp.authn.header.username`)
-  - recommended only behind a trusted proxy
+  - pass caller header (must be configured using `ranger.pdp.authn.header.username`)
+  - only behind a trusted proxy
 - **JWT bearer**
   - pass `Authorization: Bearer <token>` in request headers
 

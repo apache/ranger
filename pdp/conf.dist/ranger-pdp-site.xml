@@ -138,9 +138,10 @@
     </description>
   </property>
 
+  <!-- must be explicitly set -->
   <property>
     <name>ranger.pdp.authn.header.username</name>
-    <value>X-Forwarded-User</value>
+    <value></value>
     <description>HTTP header name from which the authenticated username is read.</description>
   </property>
 
@@ -161,12 +162,6 @@
     <name>ranger.pdp.authn.jwt.public.key</name>
     <value/>
     <description>PEM-encoded public key for verifying JWT signatures.</description>
-  </property>
-
-  <property>
-    <name>ranger.pdp.authn.jwt.cookie.name</name>
-    <value>hadoop-jwt</value>
-    <description>Cookie name from which a JWT bearer token may be read.</description>
   </property>
 
   <property>

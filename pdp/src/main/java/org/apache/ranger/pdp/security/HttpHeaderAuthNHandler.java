@@ -50,7 +50,7 @@ public class HttpHeaderAuthNHandler implements PdpAuthNHandler {
 
     @Override
     public void init(Properties config) {
-        usernameHeader = config.getProperty(RangerPdpConstants.PROP_AUTHN_HEADER_USERNAME, "X-Forwarded-User");
+        usernameHeader = config.getProperty(RangerPdpConstants.PROP_AUTHN_HEADER_USERNAME);
 
         LOG.info("HttpHeaderAuthHandler initialized; username header={}", usernameHeader);
     }

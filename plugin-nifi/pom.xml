@@ -59,12 +59,7 @@
         </dependency>
         <dependency>
             <groupId>org.apache.ranger</groupId>
-            <artifactId>ranger-audit-dest-hdfs</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.ranger</groupId>
-            <artifactId>ranger-audit-dest-solr</artifactId>
+            <artifactId>ranger-audit-dest-auditserver</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>

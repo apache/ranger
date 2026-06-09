@@ -359,7 +359,7 @@ public class ServiceREST {
         // if serviceDef.id is null, then set param 'id' into serviceDef Object
         if (serviceDef.getId() == null) {
             serviceDef.setId(id);
-        } else if (StringUtils.isBlank(serviceDef.getName()) && !serviceDef.getId().equals(id)) {
+        } else if (StringUtils.isBlank(serviceDef.getName()) || !serviceDef.getId().equals(id)) {
             throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST, "serviceDef Id mismatch", true);
         }
 
@@ -734,6 +734,26 @@ public class ServiceREST {
     @PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.UPDATE_SERVICE + "\")")
     public RangerService updateService(RangerService service, @Context HttpServletRequest request) {
         LOG.debug("==> ServiceREST.updateService(): {}", service);
+        // if service.id and param 'id' are specified, service.id should be same as the param 'id'
+        // if service.id is null, then set param 'id' into service Object
+        if (request != null) {
+            String requestURI = request.getRequestURI();
+            if (requestURI != null) {
+                String[] parts = requestURI.split("/");
+                try {
+                    Long id = Long.parseLong(parts[parts.length - 1]);
+                    if (service.getId() == null) {
+                        service.setId(id);
+                    } else if (StringUtils.isBlank(service.getName()) || !service.getId().equals(id)) {
+                        throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST, "serviceDef Id mismatch or service name not provided", true);
+                    }
+                } catch (NumberFormatException e) {
+                    LOG.warn("Could not parse service id from request URI: {}", requestURI);
+                }
+            }
+        } else {
+            LOG.debug("HttpServletRequest is null, skipping URI-based ID validation");
+        }
 
         RangerService    ret;
         RangerPerfTracer perf = null;
@@ -828,14 +848,9 @@ public class ServiceREST {
             if (ret != null) {
                 UserSessionBase userSession = ContextUtil.getCurrentUserSession();
 
-                if (userSession != null && userSession.getLoginId() != null) {
-                    VXUser loggedInVXUser = xUserService.getXUserByUserName(userSession.getLoginId());
-
-                    if (loggedInVXUser != null) {
-                        if (loggedInVXUser.getUserRoleList().size() == 1 && loggedInVXUser.getUserRoleList().contains(RangerConstants.ROLE_USER)) {
-                            hideCriticalServiceDetailsForRoleUser(ret);
-                        }
-                    }
+                // Hide sensitive fields for plain ROLE_USER; not config super-users.
+                if (userSession != null && userSession.isSingleRoleUserSession()) {
+                    hideCriticalServiceDetailsForRoleUser(ret);
                 }
             }
         } catch (WebApplicationException excp) {
@@ -877,14 +892,9 @@ public class ServiceREST {
             if (ret != null) {
                 UserSessionBase userSession = ContextUtil.getCurrentUserSession();
 
-                if (userSession != null && userSession.getLoginId() != null) {
-                    VXUser loggedInVXUser = xUserService.getXUserByUserName(userSession.getLoginId());
-
-                    if (loggedInVXUser != null) {
-                        if (loggedInVXUser.getUserRoleList().size() == 1 && loggedInVXUser.getUserRoleList().contains(RangerConstants.ROLE_USER)) {
-                            hideCriticalServiceDetailsForRoleUser(ret);
-                        }
-                    }
+                // Hide sensitive fields for plain ROLE_USER; not config super-users.
+                if (userSession != null && userSession.isSingleRoleUserSession()) {
+                    hideCriticalServiceDetailsForRoleUser(ret);
                 }
             }
         } catch (WebApplicationException excp) {
@@ -927,23 +937,18 @@ public class ServiceREST {
             if (paginatedSvcs != null && !paginatedSvcs.getList().isEmpty()) {
                 UserSessionBase userSession = ContextUtil.getCurrentUserSession();
 
-                if (userSession != null && userSession.getLoginId() != null) {
-                    VXUser loggedInVXUser = xUserService.getXUserByUserName(userSession.getLoginId());
+                // Hide sensitive fields for plain ROLE_USER; not config super-users.
+                if (userSession != null && userSession.isSingleRoleUserSession()) {
+                    List<RangerService> updateServiceList = new ArrayList<>();
 
-                    if (loggedInVXUser != null) {
-                        if (loggedInVXUser.getUserRoleList().size() == 1 && loggedInVXUser.getUserRoleList().contains(RangerConstants.ROLE_USER)) {
-                            List<RangerService> updateServiceList = new ArrayList<>();
-
-                            for (RangerService rangerService : paginatedSvcs.getList()) {
-                                if (rangerService != null) {
-                                    updateServiceList.add(hideCriticalServiceDetailsForRoleUser(rangerService));
-                                }
-                            }
-
-                            if (!updateServiceList.isEmpty()) {
-                                paginatedSvcs.setList(updateServiceList);
-                            }
+                    for (RangerService rangerService : paginatedSvcs.getList()) {
+                        if (rangerService != null) {
+                            updateServiceList.add(hideCriticalServiceDetailsForRoleUser(rangerService));
                         }
+                    }
+
+                    if (!updateServiceList.isEmpty()) {
+                        paginatedSvcs.setList(updateServiceList);
                     }
                 }
             }
@@ -3225,6 +3230,7 @@ public class ServiceREST {
             isAdmin    = bizUtil.isAdmin();
             isKeyAdmin = bizUtil.isKeyAdmin();
         } else {
+            // Includes config super-user privileges, not just DB portal roles.
             Collection<String> userRoles = userMgrGrantor.getRolesByLoginId(grantor);
 
             userName   = grantor;

@@ -65,6 +65,7 @@ import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
@@ -605,6 +606,31 @@ public class TestAssetREST {
         Mockito.verify(searchUtil).extractStringList(Mockito.any(HttpServletRequest.class), (SearchCriteria) Mockito.any(), Mockito.eq("zoneName"), Mockito.eq("Zone Name List"), Mockito.eq("zoneName"), Mockito.eq(null), Mockito.eq(null));
         Mockito.verify(searchUtil).extractCommonCriterias(Mockito.any(HttpServletRequest.class), Mockito.any());
         Mockito.verifyNoMoreInteractions(searchUtil, assetMgr, daoManager);
+    }
+
+    @Test
+    public void testGetAccessLogsForConfigSuperUser() {
+        SearchCriteria      searchCriteria    = new SearchCriteria();
+        List<SortField>     sortFields        = null;
+        List<VXAccessAudit> vXAccessAudits    = new ArrayList<>();
+        VXAccessAuditList   vXAccessAuditList = new VXAccessAuditList();
+        vXAccessAuditList.setVXAccessAudits(vXAccessAudits);
+        Mockito.when(searchUtil.extractCommonCriterias(request, sortFields)).thenReturn(searchCriteria);
+        Mockito.when(searchUtil.extractString(Mockito.any(), Mockito.any(), Mockito.anyString(), Mockito.anyString(), Mockito.anyString())).thenReturn("test");
+        Mockito.when(searchUtil.extractInt(Mockito.any(), Mockito.any(), Mockito.anyString(), Mockito.anyString())).thenReturn(8);
+        Mockito.when(searchUtil.extractDate(Mockito.any(), Mockito.any(), Mockito.anyString(), Mockito.anyString(), Mockito.anyString())).thenReturn(new Date());
+        Mockito.when(searchUtil.extractLong(Mockito.any(), Mockito.any(), Mockito.anyString(), Mockito.anyString())).thenReturn(8L);
+        Mockito.when(msBizUtil.isSuperUser()).thenReturn(true);
+        ArgumentCaptor<SearchCriteria> criteriaCaptor = ArgumentCaptor.forClass(SearchCriteria.class);
+        Mockito.when(assetMgr.getAccessLogs(criteriaCaptor.capture())).thenReturn(vXAccessAuditList);
+        VXAccessAuditList expectedVXAccessAuditList = assetREST.getAccessLogs(request, null);
+        Assertions.assertEquals(vXAccessAuditList, expectedVXAccessAuditList);
+        Assertions.assertFalse(criteriaCaptor.getValue().getParamList().containsKey("repoType"));
+        Assertions.assertFalse(criteriaCaptor.getValue().getParamList().containsKey("-repoType"));
+        Mockito.verify(msBizUtil).isSuperUser();
+        Mockito.verify(msBizUtil, Mockito.never()).isKeyAdmin();
+        Mockito.verify(daoManager, Mockito.never()).getXXServiceDef();
+        Mockito.verify(assetMgr).getAccessLogs(searchCriteria);
     }
 
     @Test

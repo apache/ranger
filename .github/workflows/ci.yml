@@ -52,6 +52,8 @@ jobs:
         with:
           java-version: '17'
           distribution: 'temurin'
+      - name: Clear npm cache
+        run: npm cache clean --force
       - name: build (17)
         run: mvn -T 8 clean verify --no-transfer-progress -B -V
 

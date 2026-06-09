@@ -33,6 +33,7 @@ import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
@@ -61,13 +62,17 @@ public class RangerJSONAuditWriterTest {
         assertTrue(jsonAuditWriter.logJSON(Collections.singleton("This event will be logged in write(create) mode!")));
         assertTrue(jsonAuditWriter.reUseLastLogFile);
 
-        when(jsonAuditWriter.getLogFileStream()).thenThrow(new IOException("Unable to fetch log file stream!"));
-        assertFalse(jsonAuditWriter.logJSON(Collections.singleton("This event will not be logged due to exception!")));
+        synchronized (jsonAuditWriter) {
+            doThrow(new IOException("Unable to fetch log file stream!"))
+                    .when(jsonAuditWriter).getLogFileStream();
+            assertFalse(jsonAuditWriter.logJSON(
+                    Collections.singleton("This event will not be logged due to exception!")));
 
-        assertNull(jsonAuditWriter.ostream);
-        assertNull(jsonAuditWriter.logWriter);
-        assertNotNull(jsonAuditWriter.auditPath);
-        assertNotNull(jsonAuditWriter.fullPath);
+            assertNull(jsonAuditWriter.ostream);
+            assertNull(jsonAuditWriter.logWriter);
+            assertNotNull(jsonAuditWriter.auditPath);
+            assertNotNull(jsonAuditWriter.fullPath);
+        }
 
         reset(jsonAuditWriter);
         assertTrue(jsonAuditWriter.logJSON(Collections.singleton("Last log file will be opened in append mode and this event will be written")));
@@ -91,13 +96,17 @@ public class RangerJSONAuditWriterTest {
         assertTrue(jsonAuditWriter.reUseLastLogFile);
         assertTrue(jsonAuditWriter.logJSON(Collections.singleton("This event will be logged in write(create) mode!")));
 
-        when(jsonAuditWriter.getLogFileStream()).thenThrow(new IOException("Unable to fetch log file stream!"));
-        assertFalse(jsonAuditWriter.logJSON(Collections.singleton("This event will not be logged due to exception!")));
+        synchronized (jsonAuditWriter) {
+            doThrow(new IOException("Unable to fetch log file stream!"))
+                    .when(jsonAuditWriter).getLogFileStream();
+            assertFalse(jsonAuditWriter.logJSON(
+                    Collections.singleton("This event will not be logged due to exception!")));
 
-        assertNull(jsonAuditWriter.ostream);
-        assertNull(jsonAuditWriter.logWriter);
-        assertNotNull(jsonAuditWriter.auditPath);
-        assertNotNull(jsonAuditWriter.fullPath);
+            assertNull(jsonAuditWriter.ostream);
+            assertNull(jsonAuditWriter.logWriter);
+            assertNotNull(jsonAuditWriter.auditPath);
+            assertNotNull(jsonAuditWriter.fullPath);
+        }
 
         reset(jsonAuditWriter);
 

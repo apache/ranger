@@ -1399,6 +1399,10 @@
 	</named-query>
 
 	<!-- VXModuleDef -->
+	<named-query name="XXModuleDef.findAllModuleNames">
+		<query>SELECT obj.module FROM XXModuleDef obj</query>
+	</named-query>
+
 	<named-query name="XXModuleDef.findByModuleId">
 		<query>SELECT obj FROM XXModuleDef obj
 			   WHERE obj.id=:id

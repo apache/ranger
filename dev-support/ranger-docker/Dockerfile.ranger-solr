@@ -16,7 +16,7 @@
 
 ARG RANGER_BASE_IMAGE=apache/ranger-base
 ARG RANGER_BASE_VERSION=20260123-2-8
-ARG SOLR_VERSION=8.11.3
+ARG SOLR_VERSION=9.4.1
 FROM ${RANGER_BASE_IMAGE}:${RANGER_BASE_VERSION} AS ranger-base
 FROM solr:${SOLR_VERSION}
 
@@ -39,7 +39,8 @@ RUN tar xvfz /home/ranger/dist/ranger-${SOLR_PLUGIN_VERSION}-solr-plugin.tar.gz 
     ln -s /opt/ranger/ranger-${SOLR_PLUGIN_VERSION}-solr-plugin /opt/ranger/ranger-solr-plugin && \
     rm -f /home/ranger/dist/ranger-${SOLR_PLUGIN_VERSION}-solr-plugin.tar.gz && \
     rm -f /opt/ranger/ranger-solr-plugin/install.properties && \
-    chown -R solr:solr /opt/ranger
+    mkdir -p /var/solr/data /etc/ranger && \
+    chown -R solr:solr /opt/ranger /var/solr /etc/ranger
 
 ENTRYPOINT [ "/opt/ranger/ranger-solr.sh" ]
 CMD ["solr-foreground"]

@@ -25,6 +25,7 @@ import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerResourceDef;
 import org.apache.ranger.plugin.model.validation.RangerServiceDefHelper.Delegate;
+import org.apache.ranger.plugin.resourcematcher.RangerAbstractResourceMatcher;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Test;
@@ -34,15 +35,23 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.io.InputStreamReader;
 import java.util.Calendar;
+import java.util.ConcurrentModificationException;
 import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static java.util.Objects.requireNonNull;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNotSame;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
@@ -405,6 +414,66 @@ public class TestRangerServiceDefHelper {
 
         assertEquals("bucket", svcDefHelper.getRrnTemplate("bucket"));
         assertEquals("bucket/path", svcDefHelper.getRrnTemplate("path"));
+    }
+
+    @Test
+    public void test_getWildcardEnabledResourceDef_returnsWildcardEnabledCopy() {
+        RangerResourceDef database = createResourceDef("database", "");
+        RangerResourceDef table = createResourceDef("table", "database", true);
+        when(serviceDef.getResources()).thenReturn(Lists.newArrayList(database, table));
+        helper = new RangerServiceDefHelper(serviceDef);
+        RangerResourceDef wildcardDefDatabase = helper.getWildcardEnabledResourceDef("database", RangerPolicy.POLICY_TYPE_ACCESS);
+        RangerResourceDef wildcardDefTable = helper.getWildcardEnabledResourceDef("table", RangerPolicy.POLICY_TYPE_ACCESS);
+        assertNotNull(wildcardDefDatabase, "getWildcardEnabledResourceDef() should not return null for a valid resource");
+        assertNotSame(database, wildcardDefDatabase, "getWildcardEnabledResourceDef() must return a copy, not the original");
+        assertNotSame(table, wildcardDefTable, "getWildcardEnabledResourceDef() must return a copy, not the original");
+        assertEquals(Boolean.TRUE.toString(), wildcardDefDatabase.getMatcherOptions().get(RangerAbstractResourceMatcher.OPTION_WILD_CARD),
+                "Wildcard option must be set to true on the returned copy");
+        assertEquals(Boolean.TRUE.toString(), wildcardDefTable.getMatcherOptions().get(RangerAbstractResourceMatcher.OPTION_WILD_CARD),
+                "Wildcard option must be set to true on the returned copy");
+    }
+
+    @Test
+    public void test_getWildcardEnabledResourceDef_threadSafety() throws InterruptedException {
+        int numberOfThreads = 3;
+        int numberOfIterations = 50;
+
+        RangerResourceDef database = createResourceDef("database", "");
+        RangerResourceDef table = createResourceDef("table", "database", true);
+        RangerResourceDef column = createResourceDef("column", "table", true);
+
+        when(serviceDef.getResources()).thenReturn(Lists.newArrayList(database, table, column));
+        helper = new RangerServiceDefHelper(serviceDef);
+        AtomicBoolean cmeObserved = new AtomicBoolean(false);
+        AtomicInteger successCount = new AtomicInteger(0);
+
+        for (int iter = 0; iter < numberOfIterations && !cmeObserved.get(); iter++) {
+            CountDownLatch startLatch = new CountDownLatch(1);
+            CountDownLatch doneLatch = new CountDownLatch(numberOfThreads);
+            ExecutorService pool = Executors.newFixedThreadPool(numberOfThreads);
+            for (int t = 0; t < numberOfThreads; t++) {
+                pool.submit(() -> {
+                    try {
+                        startLatch.await();
+                        RangerResourceDef def = helper.getWildcardEnabledResourceDef("database", RangerPolicy.POLICY_TYPE_ACCESS);
+                        if (def != null) {
+                            successCount.incrementAndGet();
+                        }
+                    } catch (ConcurrentModificationException e) {
+                        cmeObserved.set(true);
+                    } catch (InterruptedException e) {
+                        Thread.currentThread().interrupt();
+                    } finally {
+                        doneLatch.countDown();
+                    }
+                });
+            }
+            startLatch.countDown();
+            doneLatch.await(10, TimeUnit.SECONDS);
+            pool.shutdownNow();
+        }
+        assertFalse(cmeObserved.get(), "ConcurrentModificationException must never occur — wildcardEnabledResourceDefs must be thread-safe after eager init fix");
+        assertEquals(numberOfThreads * numberOfIterations, successCount.get(), "All concurrent calls must return a valid result");
     }
 
     RangerResourceDef createResourceDef(String name, String parent) {

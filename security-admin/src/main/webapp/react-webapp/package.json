@@ -40,7 +40,7 @@
     "mini-css-extract-plugin": "^1.5.1",
     "moment-timezone": "^0.5.34",
     "prop-types": "^15.8.1",
-    "qs": "^6.15.1",
+    "qs": "^6.15.2",
     "react": "^18.2.0",
     "react-bootstrap": "^2.10.0",
     "react-datetime": "^3.2.0",
@@ -59,7 +59,7 @@
     "tether": "^2.0.0",
     "webpack": "^5.105.1",
     "webpack-cli": "^5.0.0",
-    "webpack-dev-server": "^5.2.2",
+    "webpack-dev-server": "^5.2.4",
     "webpack-merge": "^5.8.0"
   }
 }
