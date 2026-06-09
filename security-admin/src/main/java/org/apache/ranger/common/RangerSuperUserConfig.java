@@ -47,12 +47,8 @@ public final class RangerSuperUserConfig {
     private final boolean     enabled;
 
     private RangerSuperUserConfig() {
-        superUsers = parsePropertyValues(
-                PropertiesUtil.getPropertyStringList(
-                        RangerConstants.RANGER_ADMIN_SUPER_USERS));
-        superUserGroups = parsePropertyValues(
-                PropertiesUtil.getPropertyStringList(
-                        RangerConstants.RANGER_ADMIN_SUPER_GROUPS));
+        superUsers            = parsePropertyValues(PropertiesUtil.getPropertyStringList(RangerConstants.RANGER_ADMIN_SUPER_USERS));
+        superUserGroups       = parsePropertyValues(PropertiesUtil.getPropertyStringList(RangerConstants.RANGER_ADMIN_SUPER_GROUPS));
         superUsersConfigured  = !superUsers.isEmpty();
         superGroupsConfigured = !superUserGroups.isEmpty();
         enabled               = superUsersConfigured || superGroupsConfigured;
@@ -88,15 +84,13 @@ public final class RangerSuperUserConfig {
      * @return true when userName matches configured superusers
      */
     public static boolean isSuperUser(final String userName) {
-        final boolean isSuperUser;
+        final boolean         isSuperUser;
         RangerSuperUserConfig cfg = getInstance();
 
         if (StringUtils.isBlank(userName) || !cfg.enabled) {
             isSuperUser = false;
-        } else if (cfg.superUsersConfigured && cfg.matchesUser(userName)) {
-            isSuperUser = true;
         } else {
-            isSuperUser = false;
+            isSuperUser = cfg.superUsersConfigured && cfg.matchesUser(userName);
         }
 
         return isSuperUser;
@@ -108,8 +102,9 @@ public final class RangerSuperUserConfig {
      * @return true when userName or groups match configured super users/groups
      */
     public static boolean isSuperUser(final String userName, final Set<String> userGroups) {
-        final boolean isSuperUser;
+        final boolean         isSuperUser;
         RangerSuperUserConfig cfg = getInstance();
+
         if (StringUtils.isBlank(userName) || !cfg.enabled) {
             isSuperUser = false;
         } else if (cfg.superUsersConfigured && cfg.matchesUser(userName)) {
