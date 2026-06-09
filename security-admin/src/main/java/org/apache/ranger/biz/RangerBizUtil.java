@@ -1142,9 +1142,7 @@ public class RangerBizUtil {
         UserSessionBase userSession = ContextUtil.getCurrentUserSession();
 
         // Ranger admin on current session (DB sys admin or config super-user).
-        if (userSession != null
-                && username.equalsIgnoreCase(userSession.getLoginId())
-                && userSession.isUserAdmin()) {
+        if (userSession != null && username.equalsIgnoreCase(userSession.getLoginId()) && userSession.isUserAdmin()) {
             return true;
         }
 
