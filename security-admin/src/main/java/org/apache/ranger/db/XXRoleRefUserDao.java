@@ -26,8 +26,11 @@ import org.springframework.stereotype.Service;
 
 import javax.persistence.NoResultException;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 public class XXRoleRefUserDao extends BaseDao<XXRoleRefUser> {
@@ -62,6 +65,26 @@ public class XXRoleRefUserDao extends BaseDao<XXRoleRefUser> {
             }
         }
 
+        return ret;
+    }
+
+    public Map<String, Long> findUserNameIdMapByRoleId(Long roleId) {
+        Map<String, Long> ret = Collections.emptyMap();
+        if (roleId != null) {
+            try {
+                Collection<Object[]> results = getEntityManager()
+                        .createNamedQuery("XXRoleRefUser.findUserNameIdByRoleId", Object[].class)
+                        .setParameter("roleId", roleId)
+                        .getResultList();
+                ret = results.stream().collect(
+                        Collectors.toMap(
+                                object -> (String) object[0],
+                                object -> (Long) object[1],
+                                (existing, replacement) -> existing));
+            } catch (NoResultException e) {
+                // ignore
+            }
+        }
         return ret;
     }
 

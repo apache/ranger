@@ -95,6 +95,16 @@ public class RoleDBStore implements RoleStore {
 
     @Override
     public RangerRole createRole(RangerRole role, Boolean createNonExistUserGroupRole) throws Exception {
+        return createRole(role, createNonExistUserGroupRole, false);
+    }
+
+    @Override
+    public RangerRole updateRole(RangerRole role, Boolean createNonExistUserGroupRole) throws Exception {
+        return updateRole(role, createNonExistUserGroupRole, true);
+    }
+
+    @Override
+    public RangerRole createRole(RangerRole role, Boolean createNonExistUserGroupRole, Boolean isRefTableCleanupRequired) throws Exception {
         LOG.debug("==> RoleDBStore.createRole()");
 
         XXRole xxRole = daoMgr.getXXRole().findByRoleName(role.getName());
@@ -114,7 +124,7 @@ public class RoleDBStore implements RoleStore {
             throw new Exception("Cannot create role:[" + role + "]");
         }
 
-        roleRefUpdater.createNewRoleMappingForRefTable(createdRole, createNonExistUserGroupRole);
+        roleRefUpdater.createNewRoleMappingForRefTable(createdRole, createNonExistUserGroupRole, isRefTableCleanupRequired);
 
         roleService.createTransactionLog(createdRole, null, RangerBaseModelService.OPERATION_CREATE_CONTEXT);
 
@@ -122,7 +132,7 @@ public class RoleDBStore implements RoleStore {
     }
 
     @Override
-    public RangerRole updateRole(RangerRole role, Boolean createNonExistUserGroupRole) throws Exception {
+    public RangerRole updateRole(RangerRole role, Boolean createNonExistUserGroupRole, Boolean isRefTableCleanupRequired) throws Exception {
         XXRole xxRole = daoMgr.getXXRole().findByRoleId(role.getId());
 
         if (xxRole == null) {
@@ -149,7 +159,7 @@ public class RoleDBStore implements RoleStore {
             throw new Exception("Cannot update role:[" + role + "]");
         }
 
-        roleRefUpdater.createNewRoleMappingForRefTable(updatedRole, createNonExistUserGroupRole);
+        roleRefUpdater.createNewRoleMappingForRefTable(updatedRole, createNonExistUserGroupRole, isRefTableCleanupRequired);
 
         roleService.updatePolicyVersions(updatedRole.getId());
 

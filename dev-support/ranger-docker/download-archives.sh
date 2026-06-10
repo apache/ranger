@@ -35,7 +35,10 @@ downloadIfNotPresent() {
   then
     echo "downloading ${urlBase}/${fileName}.."
 
-    curl -L ${urlBase}/${fileName} --output downloads/${fileName}
+    # -f: fail on HTTP errors; -L: follow redirects; --retry*: tolerate transient
+    # archive.apache.org / Maven mirror failures during CI cold-cache downloads.
+    curl -fL --retry 3 --retry-all-errors --retry-delay 10 --connect-timeout 30 \
+      ${urlBase}/${fileName} --output downloads/${fileName}
   else
     echo "file already in cache: ${fileName}"
   fi
