@@ -18,6 +18,28 @@
 
 cd "${OZONE_HOME}"/ranger-ozone-plugin || exit
 
+# SCM Ratis leader election can lag compose depends_on; avoid OM failing with
+# Connection refused / ServerNotLeaderException on first SCM RPC.
+wait_for_scm() {
+  local scm_host="${OZONE_SCM_HOST:-scm}"
+  local scm_port="${OZONE_SCM_CLIENT_PORT:-9863}"
+  local max_wait_sec="${OZONE_SCM_WAIT_SEC:-120}"
+  local deadline=$((SECONDS + max_wait_sec))
+
+  echo "Waiting for SCM at ${scm_host}:${scm_port} (up to ${max_wait_sec}s)..."
+  while (( SECONDS < deadline )); do
+    if (echo > "/dev/tcp/${scm_host}/${scm_port}") 2>/dev/null; then
+      sleep 5
+      echo "SCM port open; proceeding with Ozone plugin enable"
+      return 0
+    fi
+    sleep 2
+  done
+  echo "ERROR: timed out waiting for SCM at ${scm_host}:${scm_port}" >&2
+  exit 1
+}
+wait_for_scm
+
 if [[ ! -f "${OZONE_HOME}"/.setupDone ]];
 then
   if [ ! -d conf ]; then
