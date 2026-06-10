@@ -16,7 +16,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Knox 2.0.0 predates upstream KNOX-3210 JDK 17 support in knox-functions.sh.
+# Knox 2.1.0+ supports JDK 17 cert generation; keep exports for compatibility with
+# internal APIs still referenced in gateway startup (KNOX-3210 / KNOX-2923).
 KNOX_JDK17_JAVA_OPTS="--add-exports=java.base/sun.security.x509=ALL-UNNAMED --add-exports=java.base/sun.security.pkcs=ALL-UNNAMED --add-exports=java.naming/com.sun.jndi.ldap=ALL-UNNAMED --add-opens=java.base/sun.security.util=ALL-UNNAMED --add-exports=java.base/jdk.internal.misc=ALL-UNNAMED --add-opens=java.base/java.lang=ALL-UNNAMED --add-exports=java.base/sun.net.util=ALL-UNNAMED --add-exports=java.base/sun.net.dns=ALL-UNNAMED"
 
 export KNOX_GATEWAY_MEM_OPTS="${KNOX_GATEWAY_MEM_OPTS} ${KNOX_JDK17_JAVA_OPTS}"
