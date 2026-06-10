@@ -33,7 +33,6 @@
                 <include>org.apache.ranger:authz-embedded</include>
                 <include>org.apache.ranger:ranger-audit-core</include>
                 <include>org.apache.ranger:ranger-audit-dest-auditserver</include>
-                <include>org.apache.ranger:ranger-audit-dest-solr</include>
                 <include>org.apache.ranger:ranger-authn</include>
                 <include>org.apache.ranger:ranger-authz-api</include>
                 <include>org.apache.ranger:ranger-common-utils</include>
@@ -120,10 +119,8 @@
 
                     <!-- Audit sinks -->
                     <include>org.apache.solr:solr-solrj</include>
-                    <include>org.apache.httpcomponents:httpasyncclient:jar:${httpcomponents.httpasyncclient.version}</include>
                     <include>org.apache.httpcomponents:httpmime:jar:${httpcomponents.httpmime.version}</include>
                     <include>org.apache.httpcomponents:httpclient:jar:${httpcomponents.httpclient.version}</include>
-                    <include>org.apache.httpcomponents:httpcore-nio:jar:${httpcomponents.httpcore.version}</include>
                     <include>org.apache.httpcomponents:httpcore:jar:${httpcomponents.httpcore.version}</include>
                     <include>org.apache.zookeeper:zookeeper:jar:${zookeeper.version}</include>
                     <include>org.noggit:noggit</include>
