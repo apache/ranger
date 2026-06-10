@@ -44,8 +44,20 @@ downloadIfNotPresent() {
   fi
 }
 
-# Ozone compose mounts downloads/ozone-${OZONE_VERSION}/ (extracted tree), not the tarball.
-# Re-extract only when the dir is missing, incomplete, or older than the tarball.
+# Ozone is special among plugin archives: docker-compose.ranger-ozone.yml bind-mounts the
+# *extracted* tree (downloads/ozone-${OZONE_VERSION}/), not the .tar.gz. Other services
+# (Hadoop, Knox, etc.) only need the tarball at image build time.
+#
+# GitHub Actions caches dev-support/ranger-docker/downloads keyed on .env. On a warm cache
+# hit, downloadIfNotPresent skips network I/O but we still need a valid extract dir.
+# Previously CI ran "rm -rf downloads/ozone-*" before every verify step, forcing a full
+# re-download and re-extract on every job even when the cache was populated.
+#
+# extractOzoneIfNeeded() keeps tarball + extract dir in sync and only re-extracts when:
+#   - the extract dir is missing or incomplete (no bin/ozone), or
+#   - the tarball changed (new download or OZONE_VERSION bump in .env).
+# A stamp file (.ozone-extract.stamp) records tarball mtime+size; directory mtimes are
+# not reliable after tar extract. Stale ozone-* paths from partial cache restores are removed.
 extractOzoneIfNeeded() {
   local tarball="downloads/ozone-${OZONE_VERSION}.tar.gz"
   local extractDir="downloads/ozone-${OZONE_VERSION}"
@@ -57,6 +69,16 @@ extractOzoneIfNeeded() {
     exit 1
   fi
 
+  # Identity of the cached tarball (mtime:size). Written into the extract dir after a
+  # successful extract so the next CI run can skip tar when nothing changed.
+  local stampFile="${extractDir}/.ozone-extract.stamp"
+  local tarballId
+  if stat --version >/dev/null 2>&1; then
+    tarballId=$(stat -c '%Y:%s' "${tarball}")
+  else
+    tarballId=$(stat -f '%m:%z' "${tarball}")
+  fi
+
   local needExtract=false
   if [ ! -d "${extractDir}" ]; then
     needExtract=true
@@ -65,9 +87,9 @@ extractOzoneIfNeeded() {
     needExtract=true
     echo "ozone extract dir incomplete, re-extracting: ${extractDir}"
     rm -rf "${extractDir}"
-  elif [ "${tarball}" -nt "${extractDir}" ]; then
+  elif [ ! -f "${stampFile}" ] || [ "$(cat "${stampFile}")" != "${tarballId}" ]; then
     needExtract=true
-    echo "ozone tarball newer than extract dir, re-extracting"
+    echo "ozone tarball changed or stamp missing, re-extracting"
     rm -rf "${extractDir}"
   else
     echo "ozone extract dir up to date: ${extractDir}"
@@ -75,9 +97,10 @@ extractOzoneIfNeeded() {
 
   if [ "${needExtract}" = true ]; then
     tar xzf "${tarball}" --directory=downloads/
+    echo "${tarballId}" > "${stampFile}"
   fi
 
-  # Remove other ozone versions left from partial cache restores after .env bumps.
+  # When OZONE_VERSION changes, restore-keys may leave an older tarball/dir in downloads/.
   local stale
   for stale in downloads/ozone-*.tar.gz; do
     [ -e "${stale}" ] || continue
