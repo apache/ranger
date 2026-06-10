@@ -22,15 +22,9 @@
 #
 
 #
-# Load .env file to get versions to download. Do not source it directly:
-# values like JAVA_OPTS contain spaces and are valid for docker compose .env
-# files, but not valid shell assignments unless quoted.
+# source .env file to get versions to download
 #
-while IFS='=' read -r key value; do
-  if [[ "${key}" =~ ^[A-Za-z_][A-Za-z0-9_]*$ ]]; then
-    export "${key}=${value}"
-  fi
-done < .env
+source .env
 
 
 downloadIfNotPresent() {
@@ -41,6 +35,8 @@ downloadIfNotPresent() {
   then
     echo "downloading ${urlBase}/${fileName}.."
 
+    # -f: fail on HTTP errors; -L: follow redirects; --retry*: tolerate transient
+    # archive.apache.org / Maven mirror failures during CI cold-cache downloads.
     curl -fL --retry 3 --retry-all-errors --retry-delay 10 --connect-timeout 30 \
       ${urlBase}/${fileName} --output downloads/${fileName}
   else
@@ -49,8 +45,19 @@ downloadIfNotPresent() {
 }
 
 # Ozone is special among plugin archives: docker-compose.ranger-ozone.yml bind-mounts the
-# *extracted* tree (downloads/ozone-${OZONE_VERSION}/), not the .tar.gz. On a warm CI
-# cache hit, downloadIfNotPresent skips network I/O but we still need a valid extract dir.
+# *extracted* tree (downloads/ozone-${OZONE_VERSION}/), not the .tar.gz. Other services
+# (Hadoop, Knox, etc.) only need the tarball at image build time.
+#
+# GitHub Actions caches dev-support/ranger-docker/downloads keyed on .env. On a warm cache
+# hit, downloadIfNotPresent skips network I/O but we still need a valid extract dir.
+# Previously CI ran "rm -rf downloads/ozone-*" before every verify step, forcing a full
+# re-download and re-extract on every job even when the cache was populated.
+#
+# extractOzoneIfNeeded() keeps tarball + extract dir in sync and only re-extracts when:
+#   - the extract dir is missing or incomplete (no bin/ozone), or
+#   - the tarball changed (new download or OZONE_VERSION bump in .env).
+# A stamp file (.ozone-extract.stamp) records tarball mtime+size; directory mtimes are
+# not reliable after tar extract. Stale ozone-* paths from partial cache restores are removed.
 extractOzoneIfNeeded() {
   local tarball="downloads/ozone-${OZONE_VERSION}.tar.gz"
   local extractDir="downloads/ozone-${OZONE_VERSION}"
@@ -62,6 +69,8 @@ extractOzoneIfNeeded() {
     exit 1
   fi
 
+  # Identity of the cached tarball (mtime:size). Written into the extract dir after a
+  # successful extract so the next CI run can skip tar when nothing changed.
   local stampFile="${extractDir}/.ozone-extract.stamp"
   local tarballId
   if stat --version >/dev/null 2>&1; then
@@ -91,6 +100,7 @@ extractOzoneIfNeeded() {
     echo "${tarballId}" > "${stampFile}"
   fi
 
+  # When OZONE_VERSION changes, restore-keys may leave an older tarball/dir in downloads/.
   local stale
   for stale in downloads/ozone-*.tar.gz; do
     [ -e "${stale}" ] || continue
@@ -118,9 +128,11 @@ then
     downloadIfNotPresent hbase-${HBASE_VERSION}-bin.tar.gz      https://archive.apache.org/dist/hbase/${HBASE_VERSION}
     downloadIfNotPresent apache-hive-${HIVE_VERSION}-bin.tar.gz https://archive.apache.org/dist/hive/hive-${HIVE_VERSION}
     downloadIfNotPresent hadoop-${HIVE_HADOOP_VERSION}.tar.gz   https://archive.apache.org/dist/hadoop/common/hadoop-${HIVE_HADOOP_VERSION}
+    downloadIfNotPresent apache-tez-${TEZ_VERSION}-bin.tar.gz   https://archive.apache.org/dist/tez/${TEZ_VERSION}
     downloadIfNotPresent kafka_2.12-${KAFKA_VERSION}.tgz        https://archive.apache.org/dist/kafka/${KAFKA_VERSION}
     downloadIfNotPresent knox-${KNOX_VERSION}.tar.gz            https://archive.apache.org/dist/knox/${KNOX_VERSION}
     extractOzoneIfNeeded
+    downloadIfNotPresent opensearch-${OPENSEARCH_VERSION}-linux-x64.tar.gz https://artifacts.opensearch.org/releases/bundle/opensearch/${OPENSEARCH_VERSION}
 else
   for arg in "$@"; do
     if [[ $arg == 'hadoop' ]]
@@ -133,6 +145,7 @@ else
     then
       downloadIfNotPresent apache-hive-${HIVE_VERSION}-bin.tar.gz https://archive.apache.org/dist/hive/hive-${HIVE_VERSION}
       downloadIfNotPresent hadoop-${HIVE_HADOOP_VERSION}.tar.gz   https://archive.apache.org/dist/hadoop/common/hadoop-${HIVE_HADOOP_VERSION}
+      downloadIfNotPresent apache-tez-${TEZ_VERSION}-bin.tar.gz   https://archive.apache.org/dist/tez/${TEZ_VERSION}
     elif [[ $arg == 'kafka' ]]
     then
       downloadIfNotPresent kafka_2.12-${KAFKA_VERSION}.tgz        https://archive.apache.org/dist/kafka/${KAFKA_VERSION}
@@ -142,6 +155,9 @@ else
     elif [[ $arg == 'ozone' ]]
     then
       extractOzoneIfNeeded
+    elif [[ $arg == 'opensearch' ]]
+    then
+      downloadIfNotPresent opensearch-${OPENSEARCH_VERSION}-linux-x64.tar.gz https://artifacts.opensearch.org/releases/bundle/opensearch/${OPENSEARCH_VERSION}
     else
       echo "Passed argument $arg is invalid!"
     fi
