@@ -174,7 +174,6 @@ jobs:
       - name: Run download-archives.sh
         run: |
           cd dev-support/ranger-docker
-          rm -rf downloads/ozone-*
           ./download-archives.sh hadoop hive hbase kafka knox ozone
 
   plugins-docker-build:
@@ -211,7 +210,6 @@ jobs:
       - name: Verify plugin archives (download any cache misses)
         run: |
           cd dev-support/ranger-docker
-          rm -rf downloads/ozone-*
           ./download-archives.sh hadoop hive hbase kafka knox ozone
 
       - name: Build all ranger-plugin images

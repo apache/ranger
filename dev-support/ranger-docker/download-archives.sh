@@ -44,6 +44,55 @@ downloadIfNotPresent() {
   fi
 }
 
+# Ozone compose mounts downloads/ozone-${OZONE_VERSION}/ (extracted tree), not the tarball.
+# Re-extract only when the dir is missing, incomplete, or older than the tarball.
+extractOzoneIfNeeded() {
+  local tarball="downloads/ozone-${OZONE_VERSION}.tar.gz"
+  local extractDir="downloads/ozone-${OZONE_VERSION}"
+
+  downloadIfNotPresent ozone-${OZONE_VERSION}.tar.gz https://archive.apache.org/dist/ozone/${OZONE_VERSION}
+
+  if [ ! -f "${tarball}" ]; then
+    echo "ERROR: missing ${tarball}" >&2
+    exit 1
+  fi
+
+  local needExtract=false
+  if [ ! -d "${extractDir}" ]; then
+    needExtract=true
+    echo "ozone extract dir missing: ${extractDir}"
+  elif [ ! -f "${extractDir}/bin/ozone" ]; then
+    needExtract=true
+    echo "ozone extract dir incomplete, re-extracting: ${extractDir}"
+    rm -rf "${extractDir}"
+  elif [ "${tarball}" -nt "${extractDir}" ]; then
+    needExtract=true
+    echo "ozone tarball newer than extract dir, re-extracting"
+    rm -rf "${extractDir}"
+  else
+    echo "ozone extract dir up to date: ${extractDir}"
+  fi
+
+  if [ "${needExtract}" = true ]; then
+    tar xzf "${tarball}" --directory=downloads/
+  fi
+
+  # Remove other ozone versions left from partial cache restores after .env bumps.
+  local stale
+  for stale in downloads/ozone-*.tar.gz; do
+    [ -e "${stale}" ] || continue
+    [ "${stale}" = "${tarball}" ] && continue
+    echo "removing stale ozone tarball: ${stale}"
+    rm -f "${stale}"
+  done
+  for stale in downloads/ozone-*/; do
+    [ -d "${stale}" ] || continue
+    [ "${stale}" = "${extractDir}/" ] && continue
+    echo "removing stale ozone extract dir: ${stale}"
+    rm -rf "${stale}"
+  done
+}
+
 downloadIfNotPresent postgresql-42.2.16.jre7.jar            "https://search.maven.org/remotecontent?filepath=org/postgresql/postgresql/42.2.16.jre7"
 downloadIfNotPresent mysql-connector-java-8.0.28.jar        "https://search.maven.org/remotecontent?filepath=mysql/mysql-connector-java/8.0.28"
 downloadIfNotPresent ojdbc8.jar                             https://download.oracle.com/otn-pub/otn_software/jdbc/236
@@ -59,11 +108,7 @@ then
     downloadIfNotPresent apache-tez-${TEZ_VERSION}-bin.tar.gz   https://archive.apache.org/dist/tez/${TEZ_VERSION}
     downloadIfNotPresent kafka_2.12-${KAFKA_VERSION}.tgz        https://archive.apache.org/dist/kafka/${KAFKA_VERSION}
     downloadIfNotPresent knox-${KNOX_VERSION}.tar.gz            https://archive.apache.org/dist/knox/${KNOX_VERSION}
-    downloadIfNotPresent ozone-${OZONE_VERSION}.tar.gz          https://archive.apache.org/dist/ozone/${OZONE_VERSION}
-    if [ ! -d downloads/ozone-${OZONE_VERSION} ]
-    then
-      tar xvfz downloads/ozone-${OZONE_VERSION}.tar.gz --directory=downloads/
-    fi
+    extractOzoneIfNeeded
     downloadIfNotPresent opensearch-${OPENSEARCH_VERSION}-linux-x64.tar.gz https://artifacts.opensearch.org/releases/bundle/opensearch/${OPENSEARCH_VERSION}
 else
   for arg in "$@"; do
@@ -86,11 +131,7 @@ else
       downloadIfNotPresent knox-${KNOX_VERSION}.tar.gz            https://archive.apache.org/dist/knox/${KNOX_VERSION}
     elif [[ $arg == 'ozone' ]]
     then
-      downloadIfNotPresent ozone-${OZONE_VERSION}.tar.gz          https://archive.apache.org/dist/ozone/${OZONE_VERSION}
-      if [ ! -d downloads/ozone-${OZONE_VERSION} ]
-      then
-        tar xvfz downloads/ozone-${OZONE_VERSION}.tar.gz --directory=downloads/
-      fi
+      extractOzoneIfNeeded
     elif [[ $arg == 'opensearch' ]]
     then
       downloadIfNotPresent opensearch-${OPENSEARCH_VERSION}-linux-x64.tar.gz https://artifacts.opensearch.org/releases/bundle/opensearch/${OPENSEARCH_VERSION}
