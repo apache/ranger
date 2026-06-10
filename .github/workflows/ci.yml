@@ -171,10 +171,11 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-ranger-downloads-
 
+      # Populates downloads/ for plugins-docker-build; Ozone tarball + extract dir are
+      # cached together (extractOzoneIfNeeded in download-archives.sh).
       - name: Run download-archives.sh
         run: |
           cd dev-support/ranger-docker
-          rm -rf downloads/ozone-*
           ./download-archives.sh hadoop hive hbase kafka knox ozone
 
   plugins-docker-build:
@@ -208,10 +209,11 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-ranger-downloads-
 
+      # Idempotent: skips downloads already in the Actions cache; Ozone re-extract runs
+      # only when the tarball or extract dir is missing/stale (see extractOzoneIfNeeded).
       - name: Verify plugin archives (download any cache misses)
         run: |
           cd dev-support/ranger-docker
-          rm -rf downloads/ozone-*
           ./download-archives.sh hadoop hive hbase kafka knox ozone
 
       - name: Build all ranger-plugin images
