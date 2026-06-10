@@ -16,30 +16,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-cat <<EOF > /etc/ssh/ssh_config
-Host *
-   StrictHostKeyChecking no
-   UserKnownHostsFile=/dev/null
-EOF
+# Knox 2.0.0 predates upstream KNOX-3210 JDK 17 support in knox-functions.sh.
+KNOX_JDK17_JAVA_OPTS="--add-exports=java.base/sun.security.x509=ALL-UNNAMED --add-exports=java.base/sun.security.pkcs=ALL-UNNAMED --add-exports=java.naming/com.sun.jndi.ldap=ALL-UNNAMED --add-opens=java.base/sun.security.util=ALL-UNNAMED --add-exports=java.base/jdk.internal.misc=ALL-UNNAMED --add-opens=java.base/java.lang=ALL-UNNAMED --add-exports=java.base/sun.net.util=ALL-UNNAMED --add-exports=java.base/sun.net.dns=ALL-UNNAMED"
 
-if [ "${KERBEROS_ENABLED}" == "true" ]
-then
-  ${RANGER_SCRIPTS}/wait_for_keytab.sh knox.keytab
-  ${RANGER_SCRIPTS}/wait_for_testusers_keytab.sh
-fi
-
-cp ${RANGER_SCRIPTS}/core-site.xml /opt/knox/conf/
-cp ${RANGER_SCRIPTS}/hdfs-site.xml /opt/knox/conf/
-
-chown -R knox:knox /opt/knox/
-
-mkdir -p /opt/knox/logs
-chown -R knox:knox /opt/knox/
-chmod g+w /opt/knox/logs
-
-if ! grep -q 'knox-jdk17-env.sh' /opt/knox/bin/knox-env.sh 2>/dev/null; then
-  echo '. "${RANGER_SCRIPTS}/knox-jdk17-env.sh"' >> /opt/knox/bin/knox-env.sh
-fi
-
-cd ${RANGER_HOME}/ranger-knox-plugin
-./enable-knox-plugin.sh
+export KNOX_GATEWAY_MEM_OPTS="${KNOX_GATEWAY_MEM_OPTS} ${KNOX_JDK17_JAVA_OPTS}"
+export KNOX_LDAP_MEM_OPTS="${KNOX_LDAP_MEM_OPTS} ${KNOX_JDK17_JAVA_OPTS}"
