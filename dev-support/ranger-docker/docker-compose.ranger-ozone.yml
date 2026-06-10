@@ -35,6 +35,10 @@ services:
       - 9874:9874
       - 9862:9862
     depends_on:
+      scm:
+        condition: service_started
+      datanode:
+        condition: service_started
       ranger:
         condition: service_started
       ranger-solr:

@@ -26,8 +26,9 @@ then
   else
     echo "conf directory exists already!"
   fi
-  echo "export JAVA_HOME=${JAVA_HOME}" >> conf/ozone-env.sh
-  sudo JAVA_HOME=/usr/lib/jvm/jre/ ./enable-ozone-plugin.sh
+  enable_java_home="${JAVA_HOME:-/usr/lib/jvm/jre/}"
+  echo "export JAVA_HOME=${enable_java_home}" >> conf/ozone-env.sh
+  sudo JAVA_HOME="${enable_java_home}" ./enable-ozone-plugin.sh
   touch "${OZONE_HOME}"/.setupDone
 else
   echo "Ranger Ozone Plugin Installation is already complete!"
