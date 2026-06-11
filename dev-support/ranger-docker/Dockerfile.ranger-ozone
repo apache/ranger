@@ -15,8 +15,8 @@
 # limitations under the License.
 
 ARG OZONE_RUNNER_IMAGE=apache/ozone-runner
-# Keep in sync with .env; 20241108-jdk17-1 is multi-arch (arm64+amd64), 20241022-jdk17-1 is amd64-only.
-ARG OZONE_RUNNER_VERSION=20241108-jdk17-1
+# Keep in sync with .env; Ozone 2.0+ needs jdk21 runner (20260106-1-jdk21 is multi-arch arm64+amd64).
+ARG OZONE_RUNNER_VERSION=20260106-1-jdk21
 FROM ${OZONE_RUNNER_IMAGE}:${OZONE_RUNNER_VERSION}
 
 ARG OZONE_HOME
