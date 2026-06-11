@@ -462,7 +462,74 @@ class TestRoleCRUD:
         assert isinstance(data, list), f"Expected response to be a list of roles but got {type(data)} for special test case"
         assert role['name'] in data, f"Expected role {role['name']} to be in the response but got {data} for special test case"
 
-            
+    @pytest.mark.get
+    @pytest.mark.positive
+    @pytest.mark.parametrize(
+        "test_case, auth", [
+            ("login user is admin", "ranger_admin_config"),
+            ("login user is auditor", "ranger_auditor_config"),
+            ("login user is key admin", "ranger_key_admin_config"),
+            ("login user is user - checking direct role membership only", "ranger_user_config"),
+            ("login user is user - checking direct group role membership only", "ranger_user_config"),
+            ("login user is user - with another login_role in userRoleList", "create"),
+        ])
+    def test_get_lookup_roles(self, test_case, auth, request):
+        if "is user" in test_case:
+            if test_case.endswith("checking direct role membership only"):
+                test_user, test_user_id = request.getfixturevalue("temp_secure_user")(["user"])
+                assert len(test_user["userRoleList"]) == 1 , "User should have only one role for this test case"
+            elif test_case.endswith("checking direct group role membership only"):
+                test_user, test_user_id = request.getfixturevalue("temp_secure_user")(["user"])
+                assert len(test_user["userRoleList"]) == 1 , "User should have only one role for this test case"
+            else:
+                test_user, test_user_id = request.getfixturevalue("temp_secure_user")(["user", "admin"])
+                assert len(test_user["userRoleList"]) >1 , "User should have multiple roles for this test case"
+            role, role_id = request.getfixturevalue("temp_role")(user_list=[{"name": test_user["name"], "isAdmin": False}])
+            auth = (test_user["name"], "Test@123")
+        else:
+            auth = getattr(self, auth)
+            role, role_id = request.getfixturevalue("temp_role")() 
+
+        role1, role_id1 = request.getfixturevalue("temp_role")() # independent role
+
+        response = requests.get(
+            f"{self.base_url}/roles/lookup/roles",
+            auth=auth,
+            headers=self.headers
+        )
+
+        # validation
+        assert_response(response, 200, f"Failed to get lookup roles and got response code {response.status_code} with \n response text: {response.text}")
+        data = response.json()
+        assert isinstance(data, dict), f"Expected response to be a dictionary of roles but got {type(data)} for test case {test_case}"
+        
+        role_names = [r['name'] for r in data.get('roles', [])]
+        if "checking direct" in test_case:
+            assert role1['name'] not in role_names, f"Expected independent role {role1['name']} to not be in the response but got {role_names} for test case {test_case}"
+            assert role['name'] in role_names, f"Expected role {role['name']} to be in the response but got {role_names} for test case {test_case}"
+        else:
+            assert role["name"] in role_names and role1["name"] in role_names, f"Expected roles {role['name']} and {role1['name']} to be in the response but got {role_names} for test case {test_case}"
+    
+    @pytest.mark.get
+    @pytest.mark.positive
+    @pytest.mark.parametrize(
+        "auth", ["ranger_user_config", "ranger_auditor_config", "ranger_key_admin_config", "ranger_admin_config"])
+    def test_get_lookup_rolenames(self, auth, request):
+        role, role_id = request.getfixturevalue("temp_role")() 
+        auth = getattr(self, auth)
+
+        response = requests.get(
+            f"{self.base_url}/roles/lookup/roles/names",
+            auth=auth,
+            headers=self.headers
+        )
+
+        assert_response(response, 200, f"Failed to get lookup role names and got response code {response.status_code} with \n response text: {response.text}")
+        data = response.json()
+        assert isinstance(data, dict), f"Expected response to be a dictionary but got {type(data)} for test case with auth {auth}"
+        role_names = [r['value'] for r in data["vXStrings"]]
+        assert role["name"] in role_names, f"Expected role {role['name']} to be in the response but got {role_names} for test case with auth {auth}"
+
     @pytest.mark.post
     @pytest.mark.positive
     @pytest.mark.parametrize(
@@ -910,6 +977,31 @@ class TestRoleCRUD:
             headers=self.headers
         )
         assert_response(response, 400, f"Expected 400 for {test_case} but got {response.status_code} with \n response text: {response.text}")
+
+    @pytest.mark.get
+    @pytest.mark.negative
+    @pytest.mark.parametrize(
+        "test_case, response_code", [
+            ("invalid auth creds", 401),
+            ("single user with no membership", 200),    # silent failure
+        ])
+    def test_get_lookup_roles_negative(self, test_case, response_code):
+        if test_case == "single user with no membership":
+            temp_user, temp_user_id = self.user, self.ranger_user_id
+            auth = (temp_user["name"], "Test@123")
+        elif test_case == "invalid auth creds":
+            auth = ("invalid_user", "invalid_pass")
+        response = requests.get(
+            f"{self.base_url}/roles/lookup/roles",
+            auth=auth,
+            headers=self.headers
+        )
+        assert_response(response, response_code, f"Expected {response_code} for {test_case} but got {response.status_code} with \n response text: {response.text}")
+        if test_case == "single user with no membership":
+            data = response.json()
+            assert isinstance(data, dict), f"Expected response to be a dictionary of roles but got {type(data)} for test case {test_case}"
+            assert data.get("roles") == [], f"Expected empty roles list for user with no membership but got {data.get('roles')} for test case {test_case}"
+    
 
     @pytest.mark.post
     @pytest.mark.negative
