@@ -513,10 +513,6 @@ export default function PolicyPermissionItem(props) {
                                           isMulti: true,
                                           // Portal menus to body (see Editable CONDITION_POPOVER_SELECT_PROPS)
                                           // so a long Action list with ALL permission does not jump the page.
-                                          menuPortalTarget: document.body,
-                                          menuPosition: "fixed",
-                                          menuPlacement: "auto",
-                                          menuShouldScrollIntoView: false
                                         }}
                                       />
                                     </div>
