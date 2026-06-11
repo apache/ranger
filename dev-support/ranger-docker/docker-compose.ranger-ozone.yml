@@ -9,7 +9,7 @@ services:
       - ranger
     ports:
       - 9864
-    command: ["/opt/hadoop/bin/ozone","datanode"]
+    command: bash -c "sudo mkdir -p /data/hdds /data/metadata && sudo chown -R hadoop:hadoop /data && exec /opt/hadoop/bin/ozone datanode"
     env_file:
       - ./scripts/ozone/docker-config
   om:
