@@ -374,7 +374,75 @@
     <property>
         <name>ranger.audit.ingestor.kafka.request.timeout.ms</name>
         <value>60000</value>
+        <description>Kafka producer and AdminClient request timeout (ms)</description>
     </property>
+
+    <!-- KAFKA PRODUCER PERFORMANCE (AuditProducer → ProducerConfig) -->
+    <property>
+        <name>ranger.audit.ingestor.kafka.producer.batch.size</name>
+        <value>131072</value>
+        <description>Kafka batch.size in bytes. Default 128 KiB (65536–262144 for high volume).</description>
+    </property>
+
+    <property>
+        <name>ranger.audit.ingestor.kafka.producer.linger.ms</name>
+        <value>20</value>
+        <description>Wait up to this many ms to coalesce records into larger batches (10–50 typical).</description>
+    </property>
+
+    <property>
+        <name>ranger.audit.ingestor.kafka.producer.buffer.memory</name>
+        <value>134217728</value>
+        <description>Producer buffer memory in bytes. Default 128 MiB.</description>
+    </property>
+
+    <property>
+        <name>ranger.audit.ingestor.kafka.producer.compression.type</name>
+        <value>lz4</value>
+        <description>Compression for audit JSON (lz4 recommended: low CPU, good ratio).</description>
+    </property>
+
+    <property>
+        <name>ranger.audit.ingestor.kafka.producer.delivery.timeout.ms</name>
+        <value>120000</value>
+        <description>Upper bound on producer delivery attempts including retries (ms).</description>
+    </property>
+
+    <property>
+        <name>ranger.audit.ingestor.kafka.producer.max.request.size</name>
+        <value>1048576</value>
+        <description>Max size of a produce request; must be less than broker message.max.bytes.</description>
+    </property>
+
+    <property>
+        <name>ranger.audit.ingestor.kafka.producer.max.block.ms</name>
+        <value>60000</value>
+        <description>Max time producer blocks when buffer is full (backpressure).</description>
+    </property>
+
+    <property>
+        <name>ranger.audit.ingestor.kafka.producer.batch.send.timeout.ms</name>
+        <value>30000</value>
+        <description>Application timeout waiting for REST batch send callbacks (ms).</description>
+    </property>
+
+    <!-- Optional topic configs at create time (leave unset for broker defaults; enable for production RF>=3) -->
+    <!--
+    <property>
+        <name>ranger.audit.ingestor.kafka.topic.retention.ms</name>
+        <value>604800000</value>
+        <description>7-day Kafka retention for ranger_audits (replay buffer, not long-term archive)</description>
+    </property>
+    <property>
+        <name>ranger.audit.ingestor.kafka.topic.compression.type</name>
+        <value>lz4</value>
+    </property>
+    <property>
+        <name>ranger.audit.ingestor.kafka.topic.min.insync.replicas</name>
+        <value>2</value>
+        <description>Use only when replication.factor is 3+</description>
+    </property>
+    -->
 
     <property>
         <name>ranger.audit.ingestor.kafka.connections.max.idle.ms</name>
