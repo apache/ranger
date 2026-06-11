@@ -85,6 +85,12 @@ public class AuditMessageQueueUtils {
                     LOG.info("Creating topic '{}' with {} partitions and replication factor {}", topicName, partitions, replicationFactor);
 
                     NewTopic topic = new NewTopic(topicName, partitions, replicationFactor);
+                    Map<String, String> topicConfigs = buildTopicConfigs(props, propPrefix);
+
+                    if (topicConfigs != null && !topicConfigs.isEmpty()) {
+                        topic.configs(topicConfigs);
+                        LOG.info("Topic '{}' configs: {}", topicName, topicConfigs);
+                    }
 
                     admin.createTopics(Collections.singletonList(topic)).all().get();
 
@@ -363,5 +369,28 @@ public class AuditMessageQueueUtils {
         }
 
         return totalPartitions;
+    }
+
+    /**
+     * Optional topic-level configs for {@code ranger_audits} at create time.
+     * Properties are applied only when set and non-blank in site XML.
+     */
+    static Map<String, String> buildTopicConfigs(Properties props, String propPrefix) {
+        Map<String, String> configs = new HashMap<>();
+
+        putTopicConfigIfSet(configs, props, propPrefix, AuditServerConstants.PROP_TOPIC_RETENTION_MS, "retention.ms");
+        putTopicConfigIfSet(configs, props, propPrefix, AuditServerConstants.PROP_TOPIC_COMPRESSION_TYPE, "compression.type");
+        putTopicConfigIfSet(configs, props, propPrefix, AuditServerConstants.PROP_TOPIC_MIN_INSYNC_REPLICAS, "min.insync.replicas");
+
+        return configs;
+    }
+
+    private static void putTopicConfigIfSet(Map<String, String> configs, Properties props, String propPrefix,
+            String rangerPropSuffix, String kafkaConfigKey) {
+        String value = MiscUtil.getStringProperty(props, propPrefix + "." + rangerPropSuffix);
+
+        if (value != null && !value.trim().isEmpty()) {
+            configs.put(kafkaConfigKey, value.trim());
+        }
     }
 }

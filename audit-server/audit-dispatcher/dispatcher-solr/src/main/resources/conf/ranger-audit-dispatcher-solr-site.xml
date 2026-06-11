@@ -91,6 +91,30 @@
         <description>Maximum records per poll for batch processing</description>
     </property>
 
+    <property>
+        <name>ranger.audit.dispatcher.partition.assignment.strategy</name>
+        <value>org.apache.kafka.clients.consumer.CooperativeStickyAssignor</value>
+        <description>Cooperative sticky assignor for K8s pod churn (Kafka 3.9+). Override with RangeAssignor if needed.</description>
+    </property>
+
+    <property>
+        <name>ranger.audit.dispatcher.session.timeout.ms</name>
+        <value>60000</value>
+        <description>Consumer session timeout (failure detection). Must be &gt; 3 × heartbeat.interval.ms.</description>
+    </property>
+
+    <property>
+        <name>ranger.audit.dispatcher.heartbeat.interval.ms</name>
+        <value>10000</value>
+        <description>Consumer heartbeat interval while idle.</description>
+    </property>
+
+    <property>
+        <name>ranger.audit.dispatcher.max.poll.interval.ms</name>
+        <value>300000</value>
+        <description>Max time between poll() calls while processing a batch (Solr indexing). Increase if batches are slow.</description>
+    </property>
+
     <!-- Solr Dispatcher Class -->
     <property>
         <name>ranger.audit.dispatcher.class</name>
