@@ -9,7 +9,7 @@ services:
       - ranger
     ports:
       - 9864
-    command: ["/opt/hadoop/bin/ozone","datanode"]
+    command: bash -c "sudo mkdir -p /data/hdds /data/metadata && sudo chown -R hadoop:hadoop /data && exec /opt/hadoop/bin/ozone datanode"
     env_file:
       - ./scripts/ozone/docker-config
   om:
@@ -42,14 +42,14 @@ services:
       ranger-solr:
         condition: service_started
     environment:
-      ENSURE_OM_INITIALIZED: /data/metadata/om/current/VERSION
       OZONE_OPTS: -XX:-UseContainerSupport -Dcom.sun.net.ssl.checkRevocation=false
       OZONE_HOME: /opt/hadoop
       OZONE_PLUGIN_VERSION: ${OZONE_PLUGIN_VERSION}
       OZONE_VERSION: ${OZONE_VERSION}
     env_file:
       - ./scripts/ozone/docker-config
-    command: bash -c "/opt/hadoop/ranger-ozone-plugin/ranger-ozone-setup.sh && /opt/hadoop/bin/ozone om"
+    # Ozone 2.1 entrypoint init uses obsolete -createObjectStore fallback; use --init explicitly.
+    command: bash -c "/opt/hadoop/ranger-ozone-plugin/ranger-ozone-setup.sh && (test -f /data/metadata/om/current/VERSION || /opt/hadoop/bin/ozone om --init) && exec /opt/hadoop/bin/ozone om"
   scm:
     image: ${OZONE_RUNNER_IMAGE}:${OZONE_RUNNER_VERSION}
     container_name: ozone-scm
@@ -64,9 +64,8 @@ services:
     env_file:
       - ./scripts/ozone/docker-config
     environment:
-      ENSURE_SCM_INITIALIZED: /data/metadata/scm/current/VERSION
       OZONE-SITE.XML_hdds.scm.safemode.min.datanode: "${OZONE_SAFEMODE_MIN_DATANODES:-1}"
-    command: ["/opt/hadoop/bin/ozone","scm"]
+    command: bash -c "(test -f /data/metadata/scm/current/VERSION || /opt/hadoop/bin/ozone scm --init) && exec /opt/hadoop/bin/ozone scm"
 
 networks:
   ranger:
