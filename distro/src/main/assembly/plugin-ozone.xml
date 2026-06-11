@@ -116,6 +116,7 @@
                     <include>joda-time:joda-time</include>
                     <include>com.carrotsearch:hppc</include>
                     <include>io.airlift:aircompressor:jar:${aircompressor.version}</include>
+                    <include>javax.annotation:javax.annotation-api</include>
                     <include>javax.inject:javax.inject</include>
                     <include>javax.ws.rs:javax.ws.rs-api</include>
                     <include>org.apache.hadoop.thirdparty:hadoop-shaded-guava:jar:${hadoop-shaded-guava.version}</include>
