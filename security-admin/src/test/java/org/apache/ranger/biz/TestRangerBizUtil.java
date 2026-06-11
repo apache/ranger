@@ -1191,4 +1191,46 @@ public class TestRangerBizUtil {
         VXResponse vXResponse = new VXResponse();
         Assertions.assertTrue(rangerBizUtil.matchHbasePolicy("t/f/c", resList, vXResponse, 115L, permission));
     }
+
+    @Test
+    void testFailUnauthenticatedDownload_blocksWhenNoSessionAndFlagFalse() {
+        RangerContextHolder.setSecurityContext(null);
+        Assertions.assertThrows(Exception.class, () -> rangerBizUtil.failUnauthenticatedDownloadIfNotAllowed());
+    }
+
+    @Test
+    void testFailUnauthenticatedDownload_allowsWhenSessionPresent() {
+        Assertions.assertDoesNotThrow(() -> rangerBizUtil.failUnauthenticatedDownloadIfNotAllowed());
+    }
+
+    @Test
+    void testFailUnauthenticatedDownload_allowsWhenFlagTrue() throws Exception {
+        RangerContextHolder.setSecurityContext(null);
+        setField("allowUnauthenticatedDownloadAccessInSecureEnvironment", true);
+        Assertions.assertDoesNotThrow(() -> rangerBizUtil.failUnauthenticatedDownloadIfNotAllowed());
+    }
+
+    @Test
+    void testFailUnauthenticated_blocksWhenNoSessionAndFlagFalse() {
+        RangerContextHolder.setSecurityContext(null);
+        Assertions.assertThrows(Exception.class, () -> rangerBizUtil.failUnauthenticatedIfNotAllowed());
+    }
+
+    @Test
+    void testFailUnauthenticated_allowsWhenSessionPresent() {
+        Assertions.assertDoesNotThrow(() -> rangerBizUtil.failUnauthenticatedIfNotAllowed());
+    }
+
+    @Test
+    void testFailUnauthenticated_allowsWhenFlagTrue() throws Exception {
+        RangerContextHolder.setSecurityContext(null);
+        setField("allowUnauthenticatedAccessInSecureEnvironment", true);
+        Assertions.assertDoesNotThrow(() -> rangerBizUtil.failUnauthenticatedIfNotAllowed());
+    }
+
+    private void setField(String name, Object value) throws Exception {
+        Field f = RangerBizUtil.class.getDeclaredField(name);
+        f.setAccessible(true);
+        f.set(rangerBizUtil, value);
+    }
 }

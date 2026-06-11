@@ -23,7 +23,6 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOCase;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.ranger.authorization.hadoop.config.RangerAdminConfig;
 import org.apache.ranger.common.AppConstants;
 import org.apache.ranger.common.ContextUtil;
@@ -546,22 +545,16 @@ public class RangerBizUtil {
     }
 
     public void failUnauthenticatedIfNotAllowed() throws Exception {
-        if (UserGroupInformation.isSecurityEnabled()) {
-            UserSessionBase currentUserSession = ContextUtil.getCurrentUserSession();
-
-            if (currentUserSession == null && !allowUnauthenticatedAccessInSecureEnvironment) {
-                throw new Exception("Unauthenticated access not allowed");
-            }
+        UserSessionBase currentUserSession = ContextUtil.getCurrentUserSession();
+        if (currentUserSession == null && !allowUnauthenticatedAccessInSecureEnvironment) {
+            throw new Exception("Unauthenticated access not allowed");
         }
     }
 
     public void failUnauthenticatedDownloadIfNotAllowed() throws Exception {
-        if (UserGroupInformation.isSecurityEnabled()) {
-            UserSessionBase currentUserSession = ContextUtil.getCurrentUserSession();
-
-            if (currentUserSession == null && !allowUnauthenticatedDownloadAccessInSecureEnvironment) {
-                throw new Exception("Unauthenticated access not allowed");
-            }
+        UserSessionBase currentUserSession = ContextUtil.getCurrentUserSession();
+        if (currentUserSession == null && !allowUnauthenticatedDownloadAccessInSecureEnvironment) {
+            throw new Exception("Unauthenticated access not allowed");
         }
     }
 
