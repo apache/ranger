@@ -61,12 +61,13 @@ export const usePruneStaleConditions = ({
   const serializedPruneDeps = serializePruneDeps(formValues, attrName);
 
   useEffect(() => {
-    if (!formValues[attrName] || !isArray(formValues[attrName])) {
+    const items = formValues?.[attrName];
+    if (!items || !isArray(items)) {
       return;
     }
 
     let hasChanges = false;
-    const newItems = [...formValues[attrName]];
+    const newItems = [...items];
 
     newItems.forEach((item, index) => {
       if (!item.conditions) {
