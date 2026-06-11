@@ -68,6 +68,7 @@ public class TestRangerOzoneAuthorizer {
     private final OzoneObj   vol2  = new OzoneObjInfo.Builder().setResType(OzoneObj.ResourceType.VOLUME).setStoreType(OzoneObj.StoreType.OZONE).setVolumeName("vol2").build();
     private final OzoneGrant grantList = new OzoneGrant(new HashSet<>(Arrays.asList(vol1, buck1)), Collections.singleton(IAccessAuthorizer.ACLType.LIST));
     private final OzoneGrant grantRead = new OzoneGrant(Collections.singleton(key1), Collections.singleton(IAccessAuthorizer.ACLType.READ));
+    private final OzoneGrant grantWriteWithS3Actions = new OzoneGrant(Collections.singleton(key1), Collections.singleton(IAccessAuthorizer.ACLType.WRITE), new HashSet<>(Arrays.asList("AbortMultipartUpload", "PutObjectTagging")));
 
     private final RequestContext.Builder reqCtxBuilder = RequestContext.newBuilder()
             .setHost(hostname)
@@ -200,5 +201,76 @@ public class TestRangerOzoneAuthorizer {
         assertFalse(ozoneAuthorizer.checkAccess(vol2, ctxListWithSessionPolicy), "session-policy should not allow list on volume vol2");
         assertTrue(ozoneAuthorizer.checkAccess(buck1, ctxListWithSessionPolicy), "session-policy should allow list on bucket vol1/buck1");
         assertTrue(ozoneAuthorizer.checkAccess(key1, ctxReadWithSessionPolicy), "session-policy should allow read on key vol1/buck1/key1");
+    }
+
+    @Test
+    public void testAssumeRoleWithS3ActionsInGrant() throws Exception {
+        // Verify that S3 actions from OzoneGrant are propagated to RangerInlinePolicy.Grant
+        // Note - these tests use policy 103 in om_dev_ozone.json
+        Set<OzoneGrant>   grants  = Collections.singleton(grantWriteWithS3Actions);
+        AssumeRoleRequest request = new AssumeRoleRequest(hostname, ipAddress, user1, role1, grants);
+
+        String sessionPolicy = ozoneAuthorizer.generateAssumeRoleSessionPolicy(request);
+
+        assertNotNull(sessionPolicy);
+
+        RangerInlinePolicy inlinePolicy = JsonUtilsV2.jsonToObj(sessionPolicy, RangerInlinePolicy.class);
+
+        assertNotNull(inlinePolicy.getGrants());
+        assertEquals(1, inlinePolicy.getGrants().size());
+
+        RangerInlinePolicy.Grant grant = inlinePolicy.getGrants().iterator().next();
+
+        // Verify S3 actions are set on the grant
+        assertNotNull(grant.getActions(), "S3 actions should be propagated to the inline policy grant");
+        assertEquals(new HashSet<>(Arrays.asList("AbortMultipartUpload", "PutObjectTagging")), grant.getActions());
+        assertEquals(Collections.singleton("write"), grant.getPermissions());
+        assertTrue(grant.getResources().contains("key:vol1/buck1/key1"));
+    }
+
+    @Test
+    public void testCheckAccessWithS3Action() throws Exception {
+        // Verify that checkAccess passes the S3 action from RequestContext to the Ranger request,
+        // allowing action-based inline policy evaluation
+        // Note - these tests use policy 103 in om_dev_ozone.json
+        Set<OzoneGrant>   grants  = Collections.singleton(grantWriteWithS3Actions);
+        AssumeRoleRequest request = new AssumeRoleRequest(hostname, ipAddress, user1, role1, grants);
+
+        String sessionPolicy = ozoneAuthorizer.generateAssumeRoleSessionPolicy(request);
+
+        assertNotNull(sessionPolicy);
+
+        // AbortMultipartUpload should be allowed - it matches the grant's S3 actions
+        RequestContext ctxWriteAbortMultipartUpload = reqCtxBuilder
+                .setAclRights(IAccessAuthorizer.ACLType.WRITE)
+                .setRecursiveAccessCheck(false)
+                .setSessionPolicy(sessionPolicy)
+                .setS3Action("AbortMultipartUpload")
+                .build();
+
+        assertTrue(ozoneAuthorizer.checkAccess(key1, ctxWriteAbortMultipartUpload),
+                "session-policy should allow write on key1 when S3 action is AbortMultipartUpload");
+
+        // GetObject should be denied - it doesn't match the grant's S3 actions [AbortMultipartUpload, PutObjectTagging]
+        RequestContext ctxWriteGetObject = reqCtxBuilder
+                .setAclRights(IAccessAuthorizer.ACLType.WRITE)
+                .setRecursiveAccessCheck(false)
+                .setSessionPolicy(sessionPolicy)
+                .setS3Action("GetObject")
+                .build();
+
+        assertFalse(ozoneAuthorizer.checkAccess(key1, ctxWriteGetObject),
+                "session-policy should deny write on key1 when S3 action is GetObject (not in grant)");
+
+        // No S3 action specified should bypass action restriction (allow through)
+        RequestContext ctxWriteNoAction = reqCtxBuilder
+                .setAclRights(IAccessAuthorizer.ACLType.WRITE)
+                .setRecursiveAccessCheck(false)
+                .setSessionPolicy(sessionPolicy)
+                .setS3Action(null)
+                .build();
+
+        assertTrue(ozoneAuthorizer.checkAccess(key1, ctxWriteNoAction),
+                "session-policy should allow write on key1 when no S3 action is specified (bypass)");
     }
 }

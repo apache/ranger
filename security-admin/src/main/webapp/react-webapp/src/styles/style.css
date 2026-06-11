@@ -1611,6 +1611,18 @@ header {
   text-align: center;
 }
 
+.table-responsive > .table.policy-permission-table > tbody > tr > td {
+  white-space: normal;
+}
+
+.policy-permission-table .badge,
+.policy-permission-table .editable-label {
+  white-space: normal;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  max-width: 100%;
+}
+
 /* Button toggle tag*/
 .switch.btn-xs {
   border-radius: 15px;
