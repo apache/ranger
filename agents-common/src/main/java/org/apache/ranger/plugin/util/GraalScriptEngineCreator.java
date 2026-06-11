@@ -52,7 +52,7 @@ public class GraalScriptEngineCreator implements ScriptEngineCreator {
     private final Object ctxBuilder;
 
     public GraalScriptEngineCreator() {
-        Method createMeth = null;
+        Method createMethod = null;
         Object builder = null;
         try {
             Object hostAccess = buildHostAccess();
@@ -60,11 +60,11 @@ public class GraalScriptEngineCreator implements ScriptEngineCreator {
             Class<?> engineCls = Class.forName(CLS_ENGINE);
             Class<?> graalJsCls = Class.forName(CLS_GRAAL_JS_ENGINE);
             Class<?> ctxBldCls = Class.forName(CLS_CONTEXT_BUILDER);
-            createMeth = graalJsCls.getMethod("create", engineCls, ctxBldCls);
+            createMethod = graalJsCls.getMethod("create", engineCls, ctxBldCls);
         } catch (Throwable t) {
             LOG.warn("GraalScriptEngineCreator(): failed to initialize", t);
         } finally {
-            this.createMethod = createMeth;
+            this.createMethod = createMethod;
             this.ctxBuilder = builder;
         }
     }
@@ -89,12 +89,12 @@ public class GraalScriptEngineCreator implements ScriptEngineCreator {
         Class<?> hostAccessCls = Class.forName(CLS_HOST_ACCESS);
         Class<?> haBuilderCls = Class.forName(CLS_HOST_ACCESS_BUILDER);
         Object haBuilder = hostAccessCls.getMethod("newBuilder").invoke(null);
-        Method allowAccessMeth = haBuilderCls.getMethod("allowAccess", Executable.class);
+        Method allowAccessMethod = haBuilderCls.getMethod("allowAccess", Executable.class);
         for (String className : SCRIPT_API_CLASSES) {
             try {
                 for (Method m : Class.forName(className).getDeclaredMethods()) {
                     if (Modifier.isPublic(m.getModifiers()) && !Modifier.isStatic(m.getModifiers())) {
-                        allowAccessMeth.invoke(haBuilder, m);
+                        allowAccessMethod.invoke(haBuilder, m);
                     }
                 }
             } catch (ClassNotFoundException e) {
