@@ -36,13 +36,13 @@ limitations under the License.
 
 **Draft confidence:** 18 documented / 0 maintainer / 47 inferred. The model is overwhelmingly hypothesis at this stage; the §14 questions are the path to promoting *(inferred)* claims to *(maintainer)*.
 
-**What Apache Ranger is.** Apache Ranger is "a framework to enable, monitor and manage comprehensive data security across the Hadoop ecosystem" *(documented — ranger.apache.org)*. It provides centralized authorization, audit, and key management for Hadoop-ecosystem data services (HDFS, Hive, HBase, Kafka, Knox, YARN, Solr, Atlas, Ozone, Presto/Trino, and others). The administrator defines access-control policies in a central web application (Ranger Admin); lightweight per-service Java plugins, deployed inside each data service's own process, pull those policies and enforce authorization decisions locally on every access request. In threat-model terms Ranger is a **distributed Policy Decision / Policy Enforcement system**: the policy decision authority lives with the admin server (which authors and distributes policy), but the actual *enforcement* (the PEP) runs as plugin code co-located inside the data service it guards *(documented — FAQ: plugins "run as part of the same process as the namenode (HDFS), Hive2Server(Hive), HBase server (Hbase)")*.
+**What Apache Ranger is.** Apache Ranger is "a framework to enable, monitor and manage comprehensive data security across 20+ data processing services" *(documented — ranger.apache.org)*. It provides centralized & fine-grained authorization, audit, and key management for data services (Trino, Polaris, Ozone, HDFS, Hive, HBase, Kafka, NiFi, Knox, Kudu, YARN, Solr, Atlas and others). The administrator defines access-control policies in a central web application (Ranger Admin); lightweight per-service Java plugins, deployed inside each data service's own process, pull those policies and enforce authorization decisions locally on every access request. In threat-model terms Ranger is a **distributed Policy Decision / Policy Enforcement system**: the policy decision authority lives with the admin server (which authors and distributes policy), but the actual *enforcement* (the PEP) runs as plugin code co-located inside the data service it guards *(documented — FAQ: plugins "run as part of the same process as the namenode (HDFS), Hive2Server(Hive), HBase server (Hbase)")*.
 
 ---
 
 ## §2 Scope and intended use
 
-**Primary intended use.** Centralized authoring of fine-grained authorization policies (resource-based and tag-based) and their enforcement across many independent Hadoop-ecosystem data services, plus unified audit of access decisions and a key-management service (Ranger KMS) for HDFS transparent encryption *(documented — ranger.apache.org goals: "Centralized security administration", "Fine grained authorization", "Centralize auditing of user access")*.
+**Primary intended use.** Centralized authoring of fine-grained authorization policies (resource-based and tag-based) and their enforcement across many independent data services, plus unified audit of access decisions and a key-management service (Ranger KMS) for HDFS transparent encryption *(documented — ranger.apache.org goals: "Centralized security administration", "Fine grained authorization", "Centralize auditing of user access")*.
 
 **Deployment context.** Ranger is **not** an in-process library. It is a multi-component distributed system deployed across a cluster: a central web application/daemon (Ranger Admin, default port 6080 *(documented — README)*), a user/group sync daemon, an optional tag-sync daemon, the Ranger KMS daemon, and a fleet of plugins each embedded inside a separate data-service process on separate (typically trusted, intra-cluster) hosts *(documented — README lists Admin Tool, User Synchronization, and component plugins as the deployment tiers)*.
 
@@ -63,7 +63,7 @@ limitations under the License.
 | Plugin shims / classloader | `ranger-*-plugin-shim/`, `ranger-plugin-classloader/` | Class loading inside host service | **In** (as part of PEP delivery) |
 | User/group sync | `ugsync/`, `ugsync-util/`, `unixauth*/` | LDAP/AD/Unix; writes to Admin DB | **In** |
 | Tag sync | `tagsync/` | Atlas/Kafka; writes to Admin | **In** |
-| Audit framework | `agents-audit/`, `audit-server/` | Solr/HDFS/DB audit sinks | **In** |
+| Audit framework | `agents-audit/`, `audit-server/` | Solr/OpenSearch/Kafka/HDFS/DB audit sinks | **In** |
 | Ranger KMS | `kms/`, `plugin-kms/` | Key store (DB/HSM), HDFS NameNode/DataNode | **In** (model at its own trust level — handles key material) |
 | Authentication | `ranger-authn/`, `unixauthservice/`, `agents-cred/`, `credentialbuilder/` | Kerberos/SPNEGO/LDAP; credential stores | **In** |
 | Examples / sample app | `ranger-examples/` (`sampleapp`, `plugin-sampleapp`, `sample-client`) *(documented — repo layout)* | Demo only | **Out** — see §3 |
