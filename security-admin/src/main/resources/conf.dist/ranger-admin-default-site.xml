@@ -517,6 +517,34 @@
 		<value>true</value>
 	</property>
 	<property>
+		<name>ranger.audit.opensearch.urls</name>
+		<value></value>
+	</property>
+	<property>
+		<name>ranger.audit.opensearch.protocol</name>
+		<value>http</value>
+	</property>
+	<property>
+		<name>ranger.audit.opensearch.port</name>
+		<value>9200</value>
+	</property>
+	<property>
+		<name>ranger.audit.opensearch.user</name>
+		<value></value>
+	</property>
+	<property>
+		<name>ranger.audit.opensearch.password</name>
+		<value></value>
+	</property>
+	<property>
+		<name>ranger.audit.opensearch.index</name>
+		<value>ranger_audits</value>
+	</property>
+	<property>
+		<name>ranger.audit.opensearch.bootstrap.enabled</name>
+		<value>true</value>
+	</property>
+	<property>
 		<name>ranger.audit.solr.max.retry</name>
 		<value>30</value>
 		<description>Maximum no. of retry to setup solr</description>

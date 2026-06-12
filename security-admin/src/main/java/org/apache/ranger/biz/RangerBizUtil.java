@@ -87,6 +87,7 @@ public class RangerBizUtil {
     public static final  String  AUDIT_STORE_RDBMS          = "DB";
     public static final  String  AUDIT_STORE_SOLR           = "solr";
     public static final  String  AUDIT_STORE_ELASTIC_SEARCH = "elasticSearch";
+    public static final  String  AUDIT_STORE_OPENSEARCH     = "opensearch";
     public static final  String  AUDIT_STORE_CLOUD_WATCH    = "cloudwatch";
     public static final  boolean BATCH_CLEAR_ENABLED        = PropertiesUtil.getBooleanProperty("ranger.jpa.jdbc.batch-clear.enable", true);
     public static final  int     POLICY_BATCH_SIZE          = PropertiesUtil.getIntProperty("ranger.jpa.jdbc.batch-clear.size", 10);
