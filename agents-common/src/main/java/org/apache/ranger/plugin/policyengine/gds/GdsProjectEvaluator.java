@@ -40,6 +40,7 @@ import org.slf4j.LoggerFactory;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.List;
 import java.util.Set;
 
@@ -97,7 +98,8 @@ public class GdsProjectEvaluator {
     }
 
     public void evaluate(RangerAccessRequest request, GdsAccessResult result) {
-        LOG.debug("==> GdsDatasetEvaluator.evaluate({}, {})", request, result);
+        LOG.debug("==> GdsProjectEvaluator.evaluate({}, {})", request, result);
+        final Date accessTime = request.getAccessTime() != null ? request.getAccessTime() : new Date();
 
         if (isActive()) {
             result.addProject(getName());
@@ -110,7 +112,11 @@ public class GdsProjectEvaluator {
                     RangerAccessRequestUtil.setAllRequestedAccessTypes(projectRequest.getContext(), null);
                     RangerAccessRequestUtil.setAccessTypeACLResults(projectRequest.getContext(), null);
 
-                    policyEvaluators.forEach(e -> e.evaluate(projectRequest, projectResult));
+                    policyEvaluators.forEach(e -> {
+                        if (e.isApplicable(accessTime)) {
+                            e.evaluate(projectRequest, projectResult);
+                        }
+                    });
                 } finally {
                     RangerAccessRequestUtil.setAccessTypeResults(projectRequest.getContext(), null);
                     RangerAccessRequestUtil.setAccessTypeACLResults(projectRequest.getContext(), null);
@@ -134,7 +140,7 @@ public class GdsProjectEvaluator {
             }
         }
 
-        LOG.debug("<== GdsDatasetEvaluator.evaluate({}, {})", request, result);
+        LOG.debug("<== GdsProjectEvaluator.evaluate({}, {})", request, result);
     }
 
     public void getResourceACLs(RangerAccessRequest request, RangerResourceACLs acls, boolean isConditional, Set<String> allowedAccessTypes) {
