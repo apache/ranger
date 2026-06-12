@@ -20,6 +20,7 @@ package org.apache.ranger.audit.provider;
 
 import org.apache.hadoop.util.ShutdownHookManager;
 import org.apache.ranger.audit.destination.AuditDestination;
+import org.apache.ranger.audit.destination.MetricsAuditDestination;
 import org.apache.ranger.audit.queue.AuditAsyncQueue;
 import org.apache.ranger.audit.queue.AuditBatchQueue;
 import org.apache.ranger.audit.queue.AuditFileQueue;
@@ -445,6 +446,8 @@ public class AuditProviderFactory {
                 provider = getAuditProvider(props, propPrefix, consumer);
             } else if (providerName.equalsIgnoreCase("async")) {
                 provider = new AuditAsyncQueue(consumer);
+            } else if (providerName.equalsIgnoreCase("metrics")) {
+                provider = new MetricsAuditDestination();
             } else {
                 LOG.error("Provider name doesn't have any class associated with it. providerName={}, propertyPrefix={}", providerName, propPrefix);
             }
