@@ -725,15 +725,10 @@ def is_valid_date(value):
 def validate_sync_source_info(payload, response_json):
     from datetime import datetime
 
-    # priority = [
-    #     "ldapSyncSourceInfo",
-    #     "unixSyncSourceInfo",
-    #     "fileSyncSourceInfo"
-    # ]
     priority = [
+        "ldapSyncSourceInfo",
         "unixSyncSourceInfo",
-        "fileSyncSourceInfo",
-        "ldapSyncSourceInfo"
+        "fileSyncSourceInfo"
     ]
 
     selected_source = None
