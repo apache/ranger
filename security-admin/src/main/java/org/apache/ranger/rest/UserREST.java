@@ -274,6 +274,7 @@ public class UserREST {
             long                inactivityTimeout = PropertiesUtil.getLongProperty("ranger.service.inactivity.timeout", 15 * 60);
 
             configProperties.put("inactivityTimeout", Long.toString(inactivityTimeout));
+            configProperties.put("authenticationMethod", PropertiesUtil.getProperty("ranger.authentication.method", "NONE"));
 
             VXPortalUser userProfile = userManager.getUserProfileByLoginId();
 

@@ -117,9 +117,14 @@ public class XXAuthSession extends XXDBBase implements java.io.Serializable {
     public static final  int    AUTH_TYPE_TRUSTED_PROXY = 4;
 
     /**
+     * AUTH_TYPE_SAML is an element of enum AuthType. Its value is "AUTH_TYPE_SAML".
+     */
+    public static final int AUTH_TYPE_SAML = 5;
+
+    /**
      * Max value for enum AuthType_MAX
      */
-    public static final  int AuthType_MAX = 4;
+    public static final  int AuthType_MAX = 5;
 
     @Id
     @SequenceGenerator(name = "X_AUTH_SESS_SEQ", sequenceName = "X_AUTH_SESS_SEQ", allocationSize = 1)
