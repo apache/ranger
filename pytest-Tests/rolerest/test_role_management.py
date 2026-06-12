@@ -987,7 +987,7 @@ class TestRoleCRUD:
         ])
     def test_get_lookup_roles_negative(self, test_case, response_code):
         if test_case == "single user with no membership":
-            temp_user, temp_user_id = self.user, self.ranger_user_id
+            temp_user, temp_user_id = self.user1, self.ranger_user_id1
             auth = (temp_user["name"], "Test@123")
         elif test_case == "invalid auth creds":
             auth = ("invalid_user", "invalid_pass")
