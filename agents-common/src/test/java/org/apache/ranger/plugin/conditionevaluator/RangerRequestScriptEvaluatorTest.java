@@ -39,6 +39,7 @@ import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -46,6 +47,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
 
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -553,6 +555,64 @@ public class RangerRequestScriptEvaluatorTest {
         evaluator = new RangerRequestScriptEvaluator(request, scriptEngine, false);
 
         Assertions.assertEquals(new HashSet<>(Arrays.asList("PCI", "PII")), evaluator.evaluateScript("ctx.getAllTagTypes()"));
+    }
+
+    @Test
+    void testBlockJavaClassReferencesWithDefaultConfig() {
+        RangerRequestScriptEvaluator evaluator = createEvaluator();
+        long nonce = System.nanoTime();
+
+        String mJavaType = tempFilePath("javatype", nonce);
+        String mPackages = tempFilePath("packages", nonce);
+        String mCtxRef = tempFilePath("ctxref", nonce);
+        String mRetRef = tempFilePath("retref", nonce);
+        String mTagRef = tempFilePath("tagref", nonce);
+        String mTagAttr = tempFilePath("tagattr", nonce);
+        String mNewFile = tempFilePath("newfile", nonce);
+
+        Function<String, String> reflectExec = marker ->
+                "var Str   = OBJ.getClass().getClassLoader().loadClass('java.lang.String');"
+                        + "var rtClz = OBJ.getClass().getClassLoader().loadClass('java.lang.Runtime');"
+                        + "var rt    = rtClz.getMethod('getRuntime').invoke(null);"
+                        + "rtClz.getMethod('exec', Str).invoke(rt, 'touch " + marker + "').waitFor();";
+
+        Map<String, String[]> vectors = new HashMap<>();
+        vectors.put("Java.type('java.lang.Runtime').exec()", new String[] {
+                "var p = Java.type('java.lang.Runtime').getRuntime().exec('touch " + mJavaType + "'); p.waitFor();", mJavaType});
+        vectors.put("java.lang.Runtime (Packages namespace)", new String[] {
+                "var p = java.lang.Runtime.getRuntime().exec('touch " + mPackages + "'); p.waitFor();", mPackages});
+        vectors.put("reflection off ctx", new String[] {
+                reflectExec.apply(mCtxRef).replace("OBJ", "ctx"), mCtxRef});
+        vectors.put("reflection off returned ctx.getCurrentTag()", new String[] {
+                reflectExec.apply(mRetRef).replace("OBJ", "ctx.getCurrentTag()"), mRetRef});
+        vectors.put("reflection off bound 'tag'", new String[] {
+                reflectExec.apply(mTagRef).replace("OBJ", "tag"), mTagRef});
+        vectors.put("reflection off bound 'tagAttr'", new String[] {
+                reflectExec.apply(mTagAttr).replace("OBJ", "tagAttr"), mTagAttr});
+        vectors.put("constructor new java.io.File().createNewFile()", new String[] {
+                "var f = new java.io.File('" + mNewFile + "'); f.createNewFile();", mNewFile});
+
+        List<String> escaped = new ArrayList<>();
+        for (Map.Entry<String, String[]> e : vectors.entrySet()) {
+            File m = new File(e.getValue()[1]);
+            m.delete(); // Just to make sure file does not exist before the script runs. This is a clean-state guarantee
+            evaluator.evaluateScript(e.getValue()[0]); // returns null when blocked; never rethrows
+            if (m.exists()) { // The file existing after eval is the ground truth that the OS command actually ran
+                escaped.add(e.getKey() + "  -> created " + m);
+                m.delete();
+            }
+        }
+        Assertions.assertTrue(escaped.isEmpty(), "Sandbox escape OS command executed via:\n  " + String.join("\n  ", escaped));
+    }
+
+    private RangerRequestScriptEvaluator createEvaluator() {
+        RangerAccessRequest request = createRequest("test-user", Collections.emptySet(), Collections.emptySet(),
+                Collections.singletonList(new RangerTag("PII", Collections.singletonMap("attr1", "v1"))));
+        return new RangerRequestScriptEvaluator(request, scriptEngine, false);
+    }
+
+    private static String tempFilePath(String tag, long nonce) {
+        return new File(System.getProperty("java.io.tmpdir"), "ranger_test_" + tag + "_" + nonce).getAbsolutePath();
     }
 
     RangerAccessRequest createRequest(String userName, Set<String> userGroups, Set<String> userRoles, List<RangerTag> resourceTags) {
