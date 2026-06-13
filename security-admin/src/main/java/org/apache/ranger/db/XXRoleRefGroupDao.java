@@ -19,51 +19,55 @@
 
 package org.apache.ranger.db;
 
-import java.util.Collections;
-import java.util.List;
-
-import javax.persistence.NoResultException;
-
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.ranger.common.db.BaseDao;
 import org.apache.ranger.entity.XXRoleRefGroup;
 import org.springframework.stereotype.Service;
 
-@Service
-public class XXRoleRefGroupDao extends BaseDao<XXRoleRefGroup>{
+import javax.persistence.NoResultException;
 
-    public XXRoleRefGroupDao(RangerDaoManagerBase daoManager)  {
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
+@Service
+public class XXRoleRefGroupDao extends BaseDao<XXRoleRefGroup> {
+    public XXRoleRefGroupDao(RangerDaoManagerBase daoManager) {
         super(daoManager);
     }
 
     public List<XXRoleRefGroup> findByRoleId(Long roleId) {
-        if(roleId == null) {
-            return Collections.EMPTY_LIST;
+        if (roleId == null) {
+            return Collections.emptyList();
         }
+
         try {
             return getEntityManager()
                     .createNamedQuery("XXRoleRefGroup.findByRoleId", tClass)
                     .setParameter("roleId", roleId).getResultList();
         } catch (NoResultException e) {
-            return Collections.EMPTY_LIST;
+            return Collections.emptyList();
         }
     }
 
     public List<XXRoleRefGroup> findByGroupId(Long groupId) {
-        if(groupId == null) {
-            return Collections.EMPTY_LIST;
+        if (groupId == null) {
+            return Collections.emptyList();
         }
+
         try {
             return getEntityManager()
                     .createNamedQuery("XXRoleRefGroup.findByGroupId", tClass)
                     .setParameter("groupId", groupId).getResultList();
         } catch (NoResultException e) {
-            return Collections.EMPTY_LIST;
+            return Collections.emptyList();
         }
     }
 
     public List<Long> findIdsByRoleId(Long roleId) {
-        List<Long> ret = Collections.EMPTY_LIST;
+        List<Long> ret = Collections.emptyList();
 
         if (roleId != null) {
             try {
@@ -71,7 +75,7 @@ public class XXRoleRefGroupDao extends BaseDao<XXRoleRefGroup>{
                         .createNamedQuery("XXRoleRefGroup.findIdsByRoleId", Long.class)
                         .setParameter("roleId", roleId).getResultList();
             } catch (NoResultException e) {
-                ret = Collections.EMPTY_LIST;
+                // ignore
             }
         }
 
@@ -80,14 +84,35 @@ public class XXRoleRefGroupDao extends BaseDao<XXRoleRefGroup>{
 
     public List<XXRoleRefGroup> findByGroupName(String groupName) {
         if (groupName == null) {
-            return Collections.EMPTY_LIST;
+            return Collections.emptyList();
         }
+
         try {
             return getEntityManager().createNamedQuery("XXRoleRefGroup.findByGroupName", tClass)
                     .setParameter("groupName", groupName).getResultList();
         } catch (NoResultException e) {
-            return Collections.EMPTY_LIST;
+            return Collections.emptyList();
         }
+    }
+
+    public Map<String, Long> findGroupNameIdByRoleId(Long roleId) {
+        Map<String, Long> ret = Collections.emptyMap();
+        if (roleId != null) {
+            try {
+                Collection<Object[]> results = getEntityManager()
+                        .createNamedQuery("XXRoleRefGroup.findGroupNameIdByRoleId", Object[].class)
+                        .setParameter("roleId", roleId)
+                        .getResultList();
+                ret = results.stream().collect(
+                        Collectors.toMap(
+                                object -> (String) object[0],
+                                object -> (Long) object[1],
+                                (existing, replacement) -> existing));
+            } catch (NoResultException e) {
+                // ignore
+            }
+        }
+        return ret;
     }
 
     public void deleteRoleRefGroupByIds(List<Long> ids) {
@@ -95,5 +120,4 @@ public class XXRoleRefGroupDao extends BaseDao<XXRoleRefGroup>{
             batchDeleteByIds("XXRoleRefGroup.deleteRoleRefGroupByIds", ids, "ids");
         }
     }
-
 }

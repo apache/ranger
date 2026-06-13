@@ -171,7 +171,7 @@ public class RoleREST {
             if (containsInvalidMember(role.getUsers())) {
                 throw new Exception("Invalid role user(s)");
             }
-            ret = roleStore.createRole(role, createNonExistUserGroup);
+            ret = roleStore.createRole(role, createNonExistUserGroup, false);
         } catch(WebApplicationException excp) {
             throw excp;
         } catch(Throwable excp) {
@@ -224,7 +224,7 @@ public class RoleREST {
             if (containsInvalidMember(role.getUsers())) {
                 throw new Exception("Invalid role user(s)");
             }
-            ret = roleStore.updateRole(role, createNonExistUserGroup);
+            ret = roleStore.updateRole(role, createNonExistUserGroup, true);
         } catch(WebApplicationException excp) {
             throw excp;
         } catch(Throwable excp) {
@@ -527,7 +527,7 @@ public class RoleREST {
 												}
 											}
 											else {
-												roleStore.updateRole(roleInJson, createNonExistUserGroupRole);
+												roleStore.updateRole(roleInJson, createNonExistUserGroupRole, true);
 												totalRoleUpdate++;
 											}
 										} catch (WebApplicationException excp) {
@@ -546,7 +546,7 @@ public class RoleREST {
 									ret.setStatusCode(RESTResponse.STATUS_SUCCESS);
 								} else if (!roleNameList.contains(roleNameInJson) && (!roleNameInJson.isEmpty())) {
 									try {
-										roleStore.createRole(roleInJson, createNonExistUserGroupRole);
+										roleStore.createRole(roleInJson, createNonExistUserGroupRole, false);
 									} catch (WebApplicationException excp) {
 										throw excp;
 									} catch (Throwable excp) {
@@ -708,7 +708,7 @@ public class RoleREST {
             role.setUsers(new ArrayList<>(roleUsers));
             role.setGroups(new ArrayList<>(roleGroups));
 
-            role = roleStore.updateRole(role,false);
+            role = roleStore.updateRole(role, false, true);
 
         } catch(WebApplicationException excp) {
             throw excp;
@@ -764,7 +764,7 @@ public class RoleREST {
                 }
             }
 
-            role = roleStore.updateRole(role, false);
+            role = roleStore.updateRole(role, false, true);
 
         } catch(WebApplicationException excp) {
             throw excp;
@@ -812,7 +812,7 @@ public class RoleREST {
                 }
             }
 
-            role = roleStore.updateRole(role, false);
+            role = roleStore.updateRole(role, false, true);
 
         } catch(WebApplicationException excp) {
             throw excp;
@@ -1383,7 +1383,7 @@ public class RoleREST {
             role.setGroups(new ArrayList<>(roleGroups));
             role.setRoles(new ArrayList<>(roleRoles));
 
-            role = roleStore.updateRole(role, false);
+            role = roleStore.updateRole(role, false, true);
 
         } catch(WebApplicationException excp) {
             throw excp;
@@ -1440,7 +1440,7 @@ public class RoleREST {
                 }
             }
 
-            role = roleStore.updateRole(role, false);
+            role = roleStore.updateRole(role, false, true);
 
         } catch(WebApplicationException excp) {
             throw excp;
@@ -1485,7 +1485,7 @@ public class RoleREST {
                 }
             }
 
-            role = roleStore.updateRole(role, false);
+            role = roleStore.updateRole(role, false, true);
 
         } catch(WebApplicationException excp) {
             throw excp;

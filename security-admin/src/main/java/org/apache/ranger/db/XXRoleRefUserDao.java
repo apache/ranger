@@ -19,38 +19,41 @@
 
 package org.apache.ranger.db;
 
-import java.util.Collections;
-import java.util.List;
-
-import javax.persistence.NoResultException;
-
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.ranger.common.db.BaseDao;
 import org.apache.ranger.entity.XXRoleRefUser;
 import org.springframework.stereotype.Service;
 
-@Service
-public class XXRoleRefUserDao extends BaseDao<XXRoleRefUser>{
+import javax.persistence.NoResultException;
 
-    public XXRoleRefUserDao(RangerDaoManagerBase daoManager)  {
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
+@Service
+public class XXRoleRefUserDao extends BaseDao<XXRoleRefUser> {
+    public XXRoleRefUserDao(RangerDaoManagerBase daoManager) {
         super(daoManager);
     }
 
     public List<XXRoleRefUser> findByRoleId(Long roleId) {
-        if(roleId == null) {
-            return Collections.EMPTY_LIST;
+        if (roleId == null) {
+            return Collections.emptyList();
         }
+
         try {
             return getEntityManager()
                     .createNamedQuery("XXRoleRefUser.findByRoleId", tClass)
                     .setParameter("roleId", roleId).getResultList();
         } catch (NoResultException e) {
-            return Collections.EMPTY_LIST;
+            return Collections.emptyList();
         }
     }
 
     public List<Long> findIdsByRoleId(Long roleId) {
-        List<Long> ret = Collections.EMPTY_LIST;
+        List<Long> ret = Collections.emptyList();
 
         if (roleId != null) {
             try {
@@ -58,35 +61,57 @@ public class XXRoleRefUserDao extends BaseDao<XXRoleRefUser>{
                         .createNamedQuery("XXRoleRefUser.findIdsByRoleId", Long.class)
                         .setParameter("roleId", roleId).getResultList();
             } catch (NoResultException e) {
-                ret = Collections.EMPTY_LIST;
+                // ignore
             }
         }
 
         return ret;
     }
 
-    public List<XXRoleRefUser> findByUserId(Long userId) {
-        if(userId == null) {
-            return Collections.EMPTY_LIST;
+    public Map<String, Long> findUserNameIdMapByRoleId(Long roleId) {
+        Map<String, Long> ret = Collections.emptyMap();
+        if (roleId != null) {
+            try {
+                Collection<Object[]> results = getEntityManager()
+                        .createNamedQuery("XXRoleRefUser.findUserNameIdByRoleId", Object[].class)
+                        .setParameter("roleId", roleId)
+                        .getResultList();
+                ret = results.stream().collect(
+                        Collectors.toMap(
+                                object -> (String) object[0],
+                                object -> (Long) object[1],
+                                (existing, replacement) -> existing));
+            } catch (NoResultException e) {
+                // ignore
+            }
         }
+        return ret;
+    }
+
+    public List<XXRoleRefUser> findByUserId(Long userId) {
+        if (userId == null) {
+            return Collections.emptyList();
+        }
+
         try {
             return getEntityManager()
                     .createNamedQuery("XXRoleRefUser.findByUserId", tClass)
                     .setParameter("userId", userId).getResultList();
         } catch (NoResultException e) {
-            return Collections.EMPTY_LIST;
+            return Collections.emptyList();
         }
     }
 
     public List<XXRoleRefUser> findByUserName(String userName) {
         if (userName == null) {
-            return Collections.EMPTY_LIST;
+            return Collections.emptyList();
         }
+
         try {
             return getEntityManager().createNamedQuery("XXRoleRefUser.findByUserName", tClass)
                     .setParameter("userName", userName).getResultList();
         } catch (NoResultException e) {
-            return Collections.EMPTY_LIST;
+            return Collections.emptyList();
         }
     }
 

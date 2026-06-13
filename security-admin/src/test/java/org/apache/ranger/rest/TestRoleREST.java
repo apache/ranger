@@ -142,7 +142,7 @@ public class TestRoleREST {
         Mockito.when(bizUtil.isUserRangerAdmin(Mockito.anyString())).thenReturn(true);
         RangerRole rangerRole = createRole();
         try {
-            Mockito.when(roleStore.createRole(Mockito.any(RangerRole.class), eq(createNonExistUserGroup))).
+            Mockito.when(roleStore.createRole(Mockito.any(RangerRole.class), eq(createNonExistUserGroup), eq(false))).
                     thenReturn(rangerRole);
         } catch (Exception e) {
             throw new RuntimeException(e);
@@ -169,7 +169,7 @@ public class TestRoleREST {
             throw new RuntimeException(e);
         }
         try {
-            Mockito.when(roleStore.updateRole(Mockito.any(RangerRole.class),Mockito.anyBoolean())).thenReturn(rangerRole);
+            Mockito.when(roleStore.updateRole(Mockito.any(RangerRole.class), Mockito.anyBoolean(), eq(true))).thenReturn(rangerRole);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -282,7 +282,7 @@ public class TestRoleREST {
             throw new RuntimeException(e);
         }
         try {
-            Mockito.when(roleStore.updateRole(Mockito.any(RangerRole.class),Mockito.anyBoolean())).
+            Mockito.when(roleStore.updateRole(Mockito.any(RangerRole.class), Mockito.anyBoolean(), eq(true))).
                     then(AdditionalAnswers.returnsFirstArg());
         } catch (Exception e) {
             throw new RuntimeException(e);
@@ -312,7 +312,7 @@ public class TestRoleREST {
             throw new RuntimeException(e);
         }
         try {
-            Mockito.when(roleStore.updateRole(Mockito.any(RangerRole.class),Mockito.anyBoolean())).
+            Mockito.when(roleStore.updateRole(Mockito.any(RangerRole.class), Mockito.anyBoolean(), eq(true))).
                     then(AdditionalAnswers.returnsFirstArg());
         } catch (Exception e) {
             throw new RuntimeException(e);
@@ -351,7 +351,7 @@ public class TestRoleREST {
             throw new RuntimeException(e);
         }
         try {
-            Mockito.when(roleStore.updateRole(Mockito.any(RangerRole.class),Mockito.anyBoolean())).
+            Mockito.when(roleStore.updateRole(Mockito.any(RangerRole.class), Mockito.anyBoolean(), eq(true))).
                     then(AdditionalAnswers.returnsFirstArg());
         } catch (Exception e) {
             throw new RuntimeException(e);
@@ -374,7 +374,7 @@ public class TestRoleREST {
         GrantRevokeRoleRequest grantRevokeRoleRequest = createGrantRevokeRoleRequest();
         Mockito.when(bizUtil.isUserRangerAdmin(Mockito.anyString())).thenReturn(true,true,true);
         try {
-            Mockito.when(roleStore.updateRole(Mockito.any(RangerRole.class),Mockito.anyBoolean())).
+            Mockito.when(roleStore.updateRole(Mockito.any(RangerRole.class), Mockito.anyBoolean(), eq(true))).
                     then(AdditionalAnswers.returnsFirstArg());
         } catch (Exception e) {
             throw new RuntimeException(e);
@@ -402,7 +402,7 @@ public class TestRoleREST {
             throw new RuntimeException(e);
         }
         try {
-            Mockito.when(roleStore.updateRole(Mockito.any(RangerRole.class),Mockito.anyBoolean())).
+            Mockito.when(roleStore.updateRole(Mockito.any(RangerRole.class), Mockito.anyBoolean(), eq(true))).
                     then(AdditionalAnswers.returnsFirstArg());
         } catch (Exception e) {
             throw new RuntimeException(e);
@@ -604,7 +604,7 @@ public class TestRoleREST {
             throw new RuntimeException(e);
         }
         try {
-            Mockito.when(roleStore.updateRole(Mockito.any(RangerRole.class),Mockito.anyBoolean())).
+            Mockito.when(roleStore.updateRole(Mockito.any(RangerRole.class), Mockito.anyBoolean(), eq(true))).
                     then(AdditionalAnswers.returnsFirstArg());
         } catch (Exception e) {
             throw new RuntimeException(e);
@@ -672,7 +672,7 @@ public class TestRoleREST {
             throw new RuntimeException(e);
         }
         try {
-            Mockito.when(roleStore.updateRole(Mockito.any(RangerRole.class),Mockito.anyBoolean())).
+            Mockito.when(roleStore.updateRole(Mockito.any(RangerRole.class), Mockito.anyBoolean(), eq(true))).
                     then(AdditionalAnswers.returnsFirstArg());
         } catch (Exception e) {
             throw new RuntimeException(e);
@@ -1105,7 +1105,7 @@ public class TestRoleREST {
 
 		Mockito.when(searchUtil.getSearchFilter(request, roleService.sortFields)).thenReturn(filter);
 		Mockito.when(roleStore.getRoleNames(Mockito.any(SearchFilter.class))).thenReturn(roleList);
-		Mockito.when(roleStore.createRole(Mockito.any(RangerRole.class), eq(createNonExistUserGroupRole)))
+		Mockito.when(roleStore.createRole(Mockito.any(RangerRole.class), eq(createNonExistUserGroupRole), eq(false)))
 				.thenReturn(rangerRole);
 
 		RESTResponse resp = roleRest.importRolesFromFile(request, uploadedInputStream, fileDetail, updateIfExists,
@@ -1135,7 +1135,7 @@ public class TestRoleREST {
 
 		Mockito.when(searchUtil.getSearchFilter(request, roleService.sortFields)).thenReturn(filter);
 		Mockito.when(roleStore.getRoleNames(Mockito.any(SearchFilter.class))).thenReturn(roleList);
-		Mockito.when(roleStore.createRole(Mockito.any(RangerRole.class), eq(createNonExistUserGroupRole)))
+		Mockito.when(roleStore.createRole(Mockito.any(RangerRole.class), eq(createNonExistUserGroupRole), eq(false)))
 				.thenReturn(rangerRole);
 
 		RESTResponse resp = roleRest.importRolesFromFile(request, uploadedInputStream, fileDetail, updateIfExists,
@@ -1166,7 +1166,9 @@ public class TestRoleREST {
 		Mockito.when(searchUtil.getSearchFilter(request, roleService.sortFields)).thenReturn(filter);
 		Mockito.when(roleStore.getRoleNames(Mockito.any(SearchFilter.class))).thenReturn(roleList);
 		Mockito.when(roleStore.getRole(Mockito.anyString())).thenReturn(rangerRole);
-		Mockito.when(roleStore.createRole(Mockito.any(RangerRole.class), eq(createNonExistUserGroupRole)))
+		Mockito.when(roleStore.createRole(Mockito.any(RangerRole.class), eq(createNonExistUserGroupRole), eq(false)))
+				.thenReturn(rangerRole);
+		Mockito.when(roleStore.updateRole(Mockito.any(RangerRole.class), eq(createNonExistUserGroupRole), eq(true)))
 				.thenReturn(rangerRole);
 
 		RESTResponse resp = roleRest.importRolesFromFile(request, uploadedInputStream, fileDetail, updateIfExists,

@@ -1988,6 +1988,10 @@
 				<query>select obj.id from XXRoleRefUser obj  where obj.roleId = :roleId</query>
 		</named-query>
 
+		<named-query name="XXRoleRefUser.findUserNameIdByRoleId">
+					<query>SELECT obj.userName, obj.id FROM XXRoleRefUser obj WHERE obj.roleId = :roleId</query>
+		</named-query>
+
     <named-query name="XXRoleRefUser.findByUserId">
         <query>select obj from XXRoleRefUser obj where obj.userId = :userId</query>
     </named-query>
@@ -2012,6 +2016,10 @@
         <query>select obj from XXRoleRefGroup obj where obj.groupName = :groupName </query>
     </named-query>
 
+	<named-query name="XXRoleRefGroup.findGroupNameIdByRoleId">
+				<query>SELECT obj.groupName, obj.id FROM XXRoleRefGroup obj WHERE obj.roleId = :roleId</query>
+	</named-query>
+
     <named-query name="XXRoleRefRole.findByRoleId">
         <query>select obj from XXRoleRefRole obj  where obj.roleId = :roleId</query>
     </named-query>
@@ -2031,6 +2039,10 @@
 	<named-query name="XXRoleRefRole.findRoleRefRoleCount">
         <query>select count(obj.roleId) from XXRoleRefRole obj where obj.subRoleName = :subRoleName </query>
     </named-query>
+
+	<named-query name="XXRoleRefRole.findSubRoleNameIdByRoleId">
+		<query>SELECT obj.subRoleName, obj.id FROM XXRoleRefRole obj WHERE obj.roleId = :roleId</query>
+	</named-query>
 
 	<named-query name="XXRoleRefGroup.deleteRoleRefGroupByIds">
 				<query>DELETE FROM XXRoleRefGroup obj WHERE obj.id IN :ids </query>
