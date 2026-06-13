@@ -43,6 +43,10 @@ public class RangerConstants extends RangerCommonEnums {
     public final static String ROLE_ADMIN_AUDITOR = "ROLE_ADMIN_AUDITOR";
     public final static String ROLE_KEY_ADMIN_AUDITOR = "ROLE_KEY_ADMIN_AUDITOR";
     public final static String ROLE_FIELD = "Roles";
+
+	public static final String RANGER_ADMIN_SUPER_USERS  = "ranger.admin.super.users";
+	public static final String RANGER_ADMIN_SUPER_GROUPS = "ranger.admin.super.groups";
+
 	// Action constants
 	public final static String ACTION_EDIT = "edit";
 	public final static String ACTION_CHANGE = "change";

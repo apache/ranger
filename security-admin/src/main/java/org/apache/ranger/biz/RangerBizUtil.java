@@ -45,6 +45,7 @@ import org.apache.ranger.common.PropertiesUtil;
 import org.apache.ranger.common.RESTErrorUtil;
 import org.apache.ranger.common.RangerCommonEnums;
 import org.apache.ranger.common.RangerConstants;
+import org.apache.ranger.common.RangerSuperUserConfig;
 import org.apache.ranger.common.StringUtil;
 import org.apache.ranger.common.UserSessionBase;
 import org.apache.ranger.db.RangerDaoManager;
@@ -94,6 +95,10 @@ public class RangerBizUtil {
 
 	@Autowired
 	UserMgr userMgr;
+
+	/** Used for config super-user group lookup in {@link #isUserRangerAdmin(String)}. */
+	@Autowired
+	XUserMgr xUserMgr;
 
 	@Autowired
 	XUserService xUserService;
@@ -1338,21 +1343,26 @@ public class RangerBizUtil {
 					+ objType, MessageEnums.OPER_NO_PERMISSION);
 		}
 
-		if (session.isKeyAdmin() && !EmbeddedServiceDefsUtil.KMS_IMPL_CLASS_NAME.equals(implClassName)) {
-			throw restErrorUtil.createRESTException("KeyAdmin can create/update/delete only KMS " + objType,
-					MessageEnums.OPER_NO_PERMISSION);
-		}
+		if (!session.isSuperUser()) {
+			boolean isKmsServiceType = EmbeddedServiceDefsUtil.KMS_IMPL_CLASS_NAME.equals(implClassName);
 
-		// TODO: As of now we are allowing SYS_ADMIN to create/update/read/delete all the
-		// services including KMS
+			if (session.isKeyAdmin() && !isKmsServiceType) {
+				throw restErrorUtil.createRESTException("KeyAdmin can create/update/delete only KMS " + objType,
+						MessageEnums.OPER_NO_PERMISSION);
+			}
 
-		if ("Service-Def".equalsIgnoreCase(objType) && session.isUserAdmin() && EmbeddedServiceDefsUtil.KMS_IMPL_CLASS_NAME.equals(implClassName)) {
-			throw restErrorUtil.createRESTException("System Admin cannot create/update/delete KMS " + objType,
-					MessageEnums.OPER_NO_PERMISSION);
+			if (session.isUserAdmin() && isKmsServiceType && "Service-Def".equalsIgnoreCase(objType)) {
+				throw restErrorUtil.createRESTException("System Admin cannot create/update/delete KMS " + objType,
+						MessageEnums.OPER_NO_PERMISSION);
+			}
 		}
 	}
 
 	public boolean checkUserAccessible(VXUser vXUser) {
+		if (isSuperUser()) {
+			return true;
+		}
+
                 boolean isAccessible = true;
                 Collection<String> roleList = userMgr.getRolesByLoginId(vXUser
                                 .getName());
@@ -1417,6 +1427,30 @@ public class RangerBizUtil {
 	}
 
 	public boolean isUserRangerAdmin(String username) {
+		if (StringUtils.isBlank(username)) {
+			return false;
+		}
+
+		UserSessionBase userSession = ContextUtil.getCurrentUserSession();
+
+		if (userSession != null && username.equalsIgnoreCase(userSession.getLoginId()) && userSession.isUserAdmin()) {
+			return true;
+		}
+
+		final boolean configSuperUser;
+
+		if (RangerSuperUserConfig.isSuperUser(username)) {
+			configSuperUser = true;
+		} else if (RangerSuperUserConfig.isSuperGroupsConfigured() && xUserMgr != null) {
+			configSuperUser = RangerSuperUserConfig.isSuperUser(username, xUserMgr.getGroupsForUser(username));
+		} else {
+			configSuperUser = false;
+		}
+
+		if (configSuperUser) {
+			return true;
+		}
+
 		boolean isAdmin = false;
 		try {
 			VXUser vxUser = xUserService.getXUserByUserName(username);
@@ -1426,6 +1460,12 @@ public class RangerBizUtil {
 		} catch (Exception ex) {
 		}
 		return isAdmin;
+	}
+
+	public boolean isSuperUser() {
+		UserSessionBase currentUserSession = ContextUtil.getCurrentUserSession();
+
+		return currentUserSession != null && currentUserSession.isSuperUser();
 	}
 
 	public boolean isUserServiceAdmin(RangerService rangerService, String userName) {

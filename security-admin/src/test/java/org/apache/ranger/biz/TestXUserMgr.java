@@ -18,6 +18,7 @@ package org.apache.ranger.biz;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -1654,34 +1655,29 @@ public class TestXUserMgr {
 	@Test
 	public void test36getGroupsForUser() {
 		setupUser();
-		VXUser vxUser = vxUser();
-		VXGroup vxGroup=vxGroup();
 		String userName = userLoginID;
-		Mockito.when(xUserService.getXUserByUserName(userName)).thenReturn(vxUser);
-		VXGroupUserList vxGroupUserList = vxGroupUserList();
-		Mockito.when(xGroupUserService.searchXGroupUsers((SearchCriteria) Mockito.any())).thenReturn(vxGroupUserList);
-		Mockito.when(xGroupService.readResource(userId)).thenReturn(vxGroup);
-		XXModuleDefDao modDef = Mockito.mock(XXModuleDefDao.class);
-		Mockito.when(daoManager.getXXModuleDef()).thenReturn(modDef);
-		List<String> lstModule = new ArrayList<String>();
-		lstModule.add(RangerConstants.MODULE_USER_GROUPS);
-		lstModule.add(RangerConstants.MODULE_RESOURCE_BASED_POLICIES);
-		Mockito.when(modDef.findAccessibleModulesByUserId(Mockito.anyLong(),
-		Mockito.anyLong())).thenReturn(lstModule);
+
+		XXGroupUserDao xxGroupUserDao = Mockito.mock(XXGroupUserDao.class);
+		Mockito.when(daoManager.getXXGroupUser()).thenReturn(xxGroupUserDao);
+		Mockito.when(xxGroupUserDao.findGroupNamesByUserName(userName))
+				.thenReturn(new HashSet<String>(Collections.singletonList("test-group")));
+
 		Set<String> list = xUserMgr.getGroupsForUser(userName);
+
 		Assert.assertNotNull(list);
-		Mockito.verify(xUserService, Mockito.atLeast(2)).getXUserByUserName(userName);
-		Mockito.verify(modDef).findAccessibleModulesByUserId(Mockito.anyLong(),Mockito.anyLong());
-		Mockito.when(xUserService.getXUserByUserName(userName)).thenReturn(null);
+		Assert.assertEquals(1, list.size());
+		Assert.assertTrue(list.contains("test-group"));
+		Mockito.verify(xxGroupUserDao).findGroupNamesByUserName(userName);
+
+		Mockito.when(xxGroupUserDao.findGroupNamesByUserName(userName))
+				.thenReturn(new HashSet<String>());
 		list = xUserMgr.getGroupsForUser(userName);
 		Assert.assertTrue(list.isEmpty());
-		Mockito.verify(xUserService, Mockito.atLeast(2)).getXUserByUserName(userName);
-		Mockito.verify(modDef).findAccessibleModulesByUserId(Mockito.anyLong(),Mockito.anyLong());
-		Mockito.when(xUserService.getXUserByUserName(userName)).thenReturn(null);
+
+		Mockito.when(xxGroupUserDao.findGroupNamesByUserName(userName))
+				.thenThrow(new RuntimeException("dao failure"));
 		list = xUserMgr.getGroupsForUser(userName);
 		Assert.assertTrue(list.isEmpty());
-		Mockito.verify(xUserService, Mockito.atLeast(2)).getXUserByUserName(userName);
-		Mockito.verify(modDef).findAccessibleModulesByUserId(Mockito.anyLong(),Mockito.anyLong());
 	}
 
 	@Test
@@ -3529,6 +3525,7 @@ public class TestXUserMgr {
 		loggedInUser.setId(8L);
 		loggedInUser.setName("testuser");
 		loggedInUser.setUserRoleList(loggedInUserRole);
+		currentUserSession.setUserRoleList(loggedInUserRole);
 		loggedInUser.setGroupIdList(groupIdList);
 		
 		VXUser vxUser = vxUser();
@@ -3580,6 +3577,7 @@ public class TestXUserMgr {
 		loggedInUser.setId(8L);
 		loggedInUser.setName("testuser");
 		loggedInUser.setUserRoleList(loggedInUserRole);
+		currentUserSession.setUserRoleList(loggedInUserRole);
 		loggedInUser.setGroupIdList(groupIdList);
 		
 		VXUser vxUser = vxUser();
@@ -3589,7 +3587,15 @@ public class TestXUserMgr {
 		vxUser.setName("test3");
 		vxUser.setUserRoleList(userRole);
 		vxUser.setUserSource(RangerCommonEnums.USER_UNIX);
+
+		XXGroupUserDao mockxxGroupUserDao = Mockito.mock(XXGroupUserDao.class);
+		Mockito.when(daoManager.getXXGroupUser()).thenReturn(mockxxGroupUserDao);
+		Mockito.when(mockxxGroupUserDao.findGroupIdListByUserId(loggedInUser.getId())).thenReturn(groupIdList);
+		Mockito.when(xUserService.getXUserByUserName(userLoginID)).thenReturn(loggedInUser);
 		Mockito.when(xGroupService.readResourceWithOutLogin(5L)).thenReturn(expectedVXGroup);
+		XXModuleDefDao xXModuleDefDao = Mockito.mock(XXModuleDefDao.class);
+		Mockito.when(daoManager.getXXModuleDef()).thenReturn(xXModuleDefDao);
+		Mockito.when(xXModuleDefDao.findAccessibleModulesByUserId(Mockito.anyLong(), Mockito.anyLong())).thenReturn(permissionList);
 
 		VXGroup rcvVXGroup = xUserMgr.getXGroup(5L);
 		Assert.assertNotNull(rcvVXGroup);

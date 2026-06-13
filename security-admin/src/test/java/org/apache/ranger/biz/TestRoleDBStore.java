@@ -216,6 +216,36 @@ public class TestRoleDBStore {
     }
 
     @Test
+    public void testGetRolesForUser_ConfigSuperUserSeesAllRoles() throws Exception {
+        RangerRole     rangerRole     = getRangerRole();
+        RangerRoleList rangerRoleList = new RangerRoleList();
+        XXRole         xxRole         = getTestRole();
+        List<XXRole>   xxRoles        = Collections.singletonList(xxRole);
+        SearchFilter   searchFilter   = new SearchFilter();
+        XXRoleDao      xxRoleDao      = Mockito.mock(XXRoleDao.class);
+
+        Mockito.when(daoMgr.getXXRole()).thenReturn(xxRoleDao);
+        Mockito.when(xxRoleDao.getAll()).thenReturn(xxRoles);
+        Mockito.when(roleService.read(xxRole.getId())).thenReturn(rangerRole);
+
+        RangerSecurityContext context = new RangerSecurityContext();
+        context.setUserSession(new UserSessionBase());
+        RangerContextHolder.setSecurityContext(context);
+
+        UserSessionBase currentUserSession = ContextUtil.getCurrentUserSession();
+        currentUserSession.setUserAdmin(true);
+        currentUserSession.setSuperUser(true);
+        currentUserSession.setUserRoleList(
+                Collections.singletonList(RangerConstants.ROLE_USER));
+
+        RangerRoleList rangerRoleListInDB =
+                roleDBStore.getRolesForUser(searchFilter, rangerRoleList);
+
+        Assert.assertNotNull(rangerRoleListInDB);
+        Assert.assertEquals(1, rangerRoleListInDB.getList().size());
+    }
+
+    @Test
     public void testGetRolesByServiceId() {
         XXService    xxService  = getXXService();
         XXRoleDao    xxRoleDao  = Mockito.mock(XXRoleDao.class);

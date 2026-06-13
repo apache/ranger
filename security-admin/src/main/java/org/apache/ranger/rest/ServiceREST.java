@@ -900,17 +900,8 @@ public class ServiceREST {
 			if (ret != null) {
 				UserSessionBase userSession = ContextUtil
 						.getCurrentUserSession();
-				if (userSession != null && userSession.getLoginId() != null) {
-					VXUser loggedInVXUser = xUserService
-							.getXUserByUserName(userSession.getLoginId());
-					if (loggedInVXUser != null) {
-						if (loggedInVXUser.getUserRoleList().size() == 1
-								&& loggedInVXUser.getUserRoleList().contains(
-										RangerConstants.ROLE_USER)) {
-							
-							ret = hideCriticalServiceDetailsForRoleUser(ret);
-						}
-					}
+				if (userSession != null && userSession.isSingleRoleUserSession()) {
+					ret = hideCriticalServiceDetailsForRoleUser(ret);
 				}
 			}
 		} catch(WebApplicationException excp) {
@@ -955,17 +946,8 @@ public class ServiceREST {
 			if (ret != null) {
 				UserSessionBase userSession = ContextUtil
 						.getCurrentUserSession();
-				if (userSession != null && userSession.getLoginId() != null) {
-					VXUser loggedInVXUser = xUserService
-							.getXUserByUserName(userSession.getLoginId());
-					if (loggedInVXUser != null) {
-						if (loggedInVXUser.getUserRoleList().size() == 1
-								&& loggedInVXUser.getUserRoleList().contains(
-										RangerConstants.ROLE_USER)) {
-
-							ret = hideCriticalServiceDetailsForRoleUser(ret);
-						}
-					}
+				if (userSession != null && userSession.isSingleRoleUserSession()) {
+					ret = hideCriticalServiceDetailsForRoleUser(ret);
 				}
 			}
 			
@@ -1015,26 +997,15 @@ public class ServiceREST {
 			if(paginatedSvcs!= null && !paginatedSvcs.getList().isEmpty()){
 				UserSessionBase userSession = ContextUtil
 						.getCurrentUserSession();
-				if (userSession != null && userSession.getLoginId() != null) {
-					VXUser loggedInVXUser = xUserService
-							.getXUserByUserName(userSession.getLoginId());
-					if (loggedInVXUser != null) {
-						if (loggedInVXUser.getUserRoleList().size() == 1
-								&& loggedInVXUser.getUserRoleList().contains(
-										RangerConstants.ROLE_USER)) {
-							
-							List<RangerService> updateServiceList = new ArrayList<RangerService>();
-							for(RangerService rangerService : paginatedSvcs.getList()){
-								
-								if(rangerService != null){
-									updateServiceList.add(hideCriticalServiceDetailsForRoleUser(rangerService));
-								}
-							}
-							
-							if(updateServiceList != null && !updateServiceList.isEmpty()){
-								paginatedSvcs.setList(updateServiceList);
-							}
+				if (userSession != null && userSession.isSingleRoleUserSession()) {
+					List<RangerService> updateServiceList = new ArrayList<RangerService>();
+					for(RangerService rangerService : paginatedSvcs.getList()){
+						if(rangerService != null){
+							updateServiceList.add(hideCriticalServiceDetailsForRoleUser(rangerService));
 						}
+					}
+					if(!updateServiceList.isEmpty()){
+						paginatedSvcs.setList(updateServiceList);
 					}
 				}
 			}

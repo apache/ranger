@@ -18,6 +18,7 @@ package org.apache.ranger.biz;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
@@ -30,7 +31,9 @@ import org.apache.ranger.common.ContextUtil;
 import org.apache.ranger.common.MessageEnums;
 import org.apache.ranger.common.RESTErrorUtil;
 import org.apache.ranger.common.RangerCommonEnums;
+import org.apache.ranger.common.PropertiesUtil;
 import org.apache.ranger.common.RangerConstants;
+import org.apache.ranger.common.RangerSuperUserConfig;
 import org.apache.ranger.common.SearchCriteria;
 import org.apache.ranger.common.SearchUtil;
 import org.apache.ranger.common.StringUtil;
@@ -1738,6 +1741,48 @@ public class TestUserMgr {
 		Mockito.when(userDao.findByLoginId(userProfile.getLoginId())).thenReturn(null);
 		roleList = userMgr.getRolesByLoginId(userLoginId);
 		Assert.assertNotNull(roleList);
+	}
+
+	@Test
+	public void testGetRolesByLoginId_ConfigSuperUser() {
+		setup();
+		XXPortalUserDao userDao = Mockito.mock(XXPortalUserDao.class);
+		XXPortalUserRoleDao roleDao = Mockito.mock(XXPortalUserRoleDao.class);
+
+		VXPortalUser userProfile = userProfile();
+		String userLoginId = userProfile.getLoginId();
+
+		XXPortalUser user = new XXPortalUser();
+		user.setLoginId(userLoginId);
+		user.setId(userProfile.getId());
+
+		XXPortalUserRole xxPortalUserRole = new XXPortalUserRole();
+		xxPortalUserRole.setUserRole(RangerConstants.ROLE_USER);
+		List<XXPortalUserRole> list = new ArrayList<XXPortalUserRole>();
+		list.add(xxPortalUserRole);
+
+		Mockito.when(daoManager.getXXPortalUser()).thenReturn(userDao);
+		Mockito.when(userDao.findByLoginId(userLoginId)).thenReturn(user);
+		Mockito.when(daoManager.getXXPortalUserRole()).thenReturn(roleDao);
+		Mockito.when(roleDao.findByUserId(user.getId())).thenReturn(list);
+
+		RangerSuperUserConfig.resetForTests();
+		PropertiesUtil.getPropertiesMap().put(RangerConstants.RANGER_ADMIN_SUPER_USERS, userLoginId);
+
+		Collection<String> roles = userMgr.getRolesByLoginId(userLoginId);
+
+		Assert.assertTrue(roles.contains(RangerConstants.ROLE_USER));
+		Assert.assertTrue(roles.contains(RangerConstants.ROLE_SYS_ADMIN));
+		Assert.assertTrue(roles.contains(RangerConstants.ROLE_KEY_ADMIN));
+
+		PropertiesUtil.getPropertiesMap().remove(RangerConstants.RANGER_ADMIN_SUPER_USERS);
+		RangerSuperUserConfig.resetForTests();
+
+		Collection<String> dbRoles = userMgr.getRolesByLoginId(userLoginId);
+		Assert.assertEquals(Collections.singletonList(RangerConstants.ROLE_USER), dbRoles);
+		Mockito.verify(xUserMgr, Mockito.never()).getGroupsForUser(userLoginId);
+
+		RangerSuperUserConfig.resetForTests();
 	}
 
 	@Test

@@ -78,6 +78,7 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.junit.runners.MethodSorters;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
@@ -675,6 +676,7 @@ public class TestAssetREST {
 				.thenReturn(new Date());
 		Mockito.when(searchUtil.extractLong((HttpServletRequest) Mockito.any(),
 				(SearchCriteria) Mockito.any(), Mockito.anyString(), Mockito.anyString())).thenReturn((Long) 8l);
+		Mockito.when(msBizUtil.isSuperUser()).thenReturn(false);
 		Mockito.when(msBizUtil.isKeyAdmin()).thenReturn(false);
 		Mockito.when(daoManager.getXXServiceDef()).thenReturn(xxServiceDefDao);
 		XXServiceDef xServiceDef = new XXServiceDef();
@@ -710,6 +712,38 @@ public class TestAssetREST {
 	}
 
 	@Test
+	public void testGetAccessLogsForConfigSuperUser() {
+		SearchCriteria searchCriteria = new SearchCriteria();
+		List<SortField> sortFields = null;
+		List<VXAccessAudit> vXAccessAudits = new ArrayList<VXAccessAudit>();
+		VXAccessAuditList vXAccessAuditList = new VXAccessAuditList();
+		vXAccessAuditList.setVXAccessAudits(vXAccessAudits);
+		Mockito.when(searchUtil.extractCommonCriterias(request, sortFields)).thenReturn(searchCriteria);
+		Mockito.when(searchUtil.extractString((HttpServletRequest) Mockito.any(),
+				(SearchCriteria) Mockito.any(), Mockito.anyString(), Mockito.anyString(), Mockito.anyString()))
+				.thenReturn("test");
+		Mockito.when(searchUtil.extractInt((HttpServletRequest) Mockito.any(),
+				(SearchCriteria) Mockito.any(), Mockito.anyString(), Mockito.anyString()))
+				.thenReturn((Integer) 8);
+		Mockito.when(searchUtil.extractDate((HttpServletRequest) Mockito.any(),
+				(SearchCriteria) Mockito.any(), Mockito.anyString(), Mockito.anyString(), Mockito.anyString()))
+				.thenReturn(new Date());
+		Mockito.when(searchUtil.extractLong((HttpServletRequest) Mockito.any(),
+				(SearchCriteria) Mockito.any(), Mockito.anyString(), Mockito.anyString())).thenReturn((Long) 8l);
+		Mockito.when(msBizUtil.isSuperUser()).thenReturn(true);
+		ArgumentCaptor<SearchCriteria> criteriaCaptor = ArgumentCaptor.forClass(SearchCriteria.class);
+		Mockito.when(assetMgr.getAccessLogs(criteriaCaptor.capture())).thenReturn(vXAccessAuditList);
+		VXAccessAuditList expectedVXAccessAuditList = assetREST.getAccessLogs(request, null);
+		Assert.assertEquals(vXAccessAuditList, expectedVXAccessAuditList);
+		Assert.assertFalse(criteriaCaptor.getValue().getParamList().containsKey("repoType"));
+		Assert.assertFalse(criteriaCaptor.getValue().getParamList().containsKey("-repoType"));
+		Mockito.verify(msBizUtil).isSuperUser();
+		Mockito.verify(msBizUtil, Mockito.never()).isKeyAdmin();
+		Mockito.verify(daoManager, Mockito.never()).getXXServiceDef();
+		Mockito.verify(assetMgr).getAccessLogs(searchCriteria);
+	}
+
+	@Test
 	public void testGetAccessLogsForKms() {
 		SearchCriteria searchCriteria = new SearchCriteria();
 		List<SortField> sortFields = null;
@@ -730,6 +764,7 @@ public class TestAssetREST {
 				(SearchCriteria) Mockito.any(), Mockito.anyString(), Mockito.anyString())).thenReturn((Long) 8l);
 		Mockito.when(searchUtil.extractLong((HttpServletRequest) Mockito.any(),
 				(SearchCriteria) Mockito.any(), Mockito.anyString(), Mockito.anyString())).thenReturn((Long) 8l);
+		Mockito.when(msBizUtil.isSuperUser()).thenReturn(false);
 		Mockito.when(msBizUtil.isKeyAdmin()).thenReturn(true);
 		Mockito.when(daoManager.getXXServiceDef()).thenReturn(xxServiceDefDao);
 		XXServiceDef xServiceDef = new XXServiceDef();
@@ -739,6 +774,7 @@ public class TestAssetREST {
 		Mockito.when(assetMgr.getAccessLogs(searchCriteria)).thenReturn(vXAccessAuditList);
 		VXAccessAuditList expectedVXAccessAuditList = assetREST.getAccessLogs(request, null);
 		Assert.assertEquals(vXAccessAuditList, expectedVXAccessAuditList);
+		Mockito.verify(msBizUtil).isSuperUser();
 		Mockito.verify(msBizUtil).isKeyAdmin();
 		Mockito.verify(assetMgr).getAccessLogs(searchCriteria);
 		Mockito.verify(daoManager).getXXServiceDef();
