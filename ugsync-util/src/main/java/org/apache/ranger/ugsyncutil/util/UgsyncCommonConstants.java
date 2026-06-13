@@ -22,10 +22,14 @@ package org.apache.ranger.ugsyncutil.util;
 public class UgsyncCommonConstants {
     public enum CaseConversion { NONE, TO_LOWER, TO_UPPER }
 
-    public static final String ORIGINAL_NAME = "original_name";
+    public static final String ORIGINAL_NAME  = "original_name";
     public static final String FULL_NAME     = "full_name";
     public static final String SYNC_SOURCE   = "sync_source";
     public static final String LDAP_URL      = "ldap_url";
+    public static final String PRINCIPAL     = "ranger.usersync.kerberos.principal";
+    public static final String AUTHENTICATION_TYPE = "hadoop.security.authentication";
+    public static final String KEYTAB        = "ranger.usersync.kerberos.keytab";
+    public static final String NAME_RULE     = "hadoop.security.auth_to_local";
 
     public static final String UGSYNC_NONE_CASE_CONVERSION_VALUE = "none";
     public static final String UGSYNC_LOWER_CASE_CONVERSION_VALUE = "lower";
