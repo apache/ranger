@@ -210,6 +210,9 @@ public class PolicyRefUpdater {
             createPrincipalsIfAbsent = false;
         }
 
+        final boolean policyExists = xPolicy != null && xPolicy.getId() != null
+                && daoMgr.getXXPolicy().getCountById(xPolicy.getId()) > 0;
+
         if (CollectionUtils.isNotEmpty(roleNames)) {
             LOG.debug("x_policy_ref_role - New role entries to insert for policy ID {}: {}", policyId, roleNames);
 
@@ -222,7 +225,7 @@ public class PolicyRefUpdater {
 
             for (String roleName : filteredRoleNames) {
                 Long                 roleId     = nameToId.get(roleName);
-                PolicyRoleAssociator associator = new PolicyRoleAssociator(roleName, roleId, xPolicy);
+                PolicyRoleAssociator associator = new PolicyRoleAssociator(roleName, roleId, xPolicy, policyExists);
 
                 if (roleId != null) {
                     XXPolicyRefRole roleRef = associator.getPolicyRef();
@@ -257,7 +260,7 @@ public class PolicyRefUpdater {
 
             for (String groupName : filteredGroupNames) {
                 Long                  groupId    = nameToId.get(groupName);
-                PolicyGroupAssociator associator = new PolicyGroupAssociator(groupName, groupId, xPolicy);
+                PolicyGroupAssociator associator = new PolicyGroupAssociator(groupName, groupId, xPolicy, policyExists);
 
                 if (groupId != null) {
                     XXPolicyRefGroup groupRef = associator.getPolicyRef();
@@ -292,7 +295,7 @@ public class PolicyRefUpdater {
 
             for (String userName : filteredUserNames) {
                 Long                 userId     = nameToId.get(userName);
-                PolicyUserAssociator associator = new PolicyUserAssociator(userName, userId, xPolicy);
+                PolicyUserAssociator associator = new PolicyUserAssociator(userName, userId, xPolicy, policyExists);
 
                 if (userId != null) {
                     XXPolicyRefUser userRef = associator.getPolicyRef();
@@ -551,39 +554,35 @@ public class PolicyRefUpdater {
 
     public enum PRINCIPAL_TYPE { USER, GROUP, ROLE }
 
-    private boolean doesPolicyExist(XXPolicy policy) {
-        return daoMgr.getXXPolicy().getById(policy.getId()) != null;
-    }
-
     private class PolicyRoleAssociator implements Runnable {
         private final String   name;
         private final Long     roleId;
         private final XXPolicy xPolicy;
+        private final boolean  policyExists;
 
-        PolicyRoleAssociator(String name, Long roleId, XXPolicy xPolicy) {
-            this.name    = name;
-            this.roleId  = roleId;
-            this.xPolicy = xPolicy;
+        PolicyRoleAssociator(String name, Long roleId, XXPolicy xPolicy, boolean policyExists) {
+            this.name         = name;
+            this.roleId       = roleId;
+            this.xPolicy      = xPolicy;
+            this.policyExists = policyExists;
         }
 
         public XXPolicyRefRole getPolicyRef() {
-            Long id = resolveRoleId(false);
-
-            if (id != null && doesPolicyExist(xPolicy)) {
-                XXPolicyRefRole xPolRole = new XXPolicyRefRole();
-
-                xPolRole.setPolicyId(xPolicy.getId());
-                xPolRole.setRoleId(id);
-                xPolRole.setRoleName(name);
-
-                return xPolRole;
+            if (!policyExists || roleId == null) {
+                return null;
             }
 
-            return null;
+            XXPolicyRefRole xPolRole = new XXPolicyRefRole();
+
+            xPolRole.setPolicyId(xPolicy.getId());
+            xPolRole.setRoleId(roleId);
+            xPolRole.setRoleName(name);
+
+            return xPolRole;
         }
 
         public void createPolicyRef(Long id) {
-            if (doesPolicyExist(xPolicy)) {
+            if (policyExists) {
                 XXPolicyRefRole xPolRole = new XXPolicyRefRole();
 
                 xPolRole.setPolicyId(xPolicy.getId());
@@ -632,7 +631,7 @@ public class PolicyRefUpdater {
 
             try {
                 RangerRole rRole       = new RangerRole(name, null, null, null, null);
-                RangerRole createdRole = roleStore.createRole(rRole, false);
+                RangerRole createdRole = roleStore.createRole(rRole, false, false);
 
                 return createdRole.getId();
             } catch (Exception e) {
@@ -645,31 +644,31 @@ public class PolicyRefUpdater {
         private final String   name;
         private final Long     groupId;
         private final XXPolicy xPolicy;
+        private final boolean  policyExists;
 
-        PolicyGroupAssociator(String name, Long groupId, XXPolicy xPolicy) {
-            this.name     = name;
-            this.groupId  = groupId;
-            this.xPolicy  = xPolicy;
+        PolicyGroupAssociator(String name, Long groupId, XXPolicy xPolicy, boolean policyExists) {
+            this.name         = name;
+            this.groupId      = groupId;
+            this.xPolicy      = xPolicy;
+            this.policyExists = policyExists;
         }
 
         public XXPolicyRefGroup getPolicyRef() {
-            Long id = resolveGroupId(false);
-
-            if (id != null && doesPolicyExist(xPolicy)) {
-                XXPolicyRefGroup xPolGroup = new XXPolicyRefGroup();
-
-                xPolGroup.setPolicyId(xPolicy.getId());
-                xPolGroup.setGroupId(id);
-                xPolGroup.setGroupName(name);
-
-                return xPolGroup;
+            if (!policyExists || groupId == null) {
+                return null;
             }
 
-            return null;
+            XXPolicyRefGroup xPolGroup = new XXPolicyRefGroup();
+
+            xPolGroup.setPolicyId(xPolicy.getId());
+            xPolGroup.setGroupId(groupId);
+            xPolGroup.setGroupName(name);
+
+            return xPolGroup;
         }
 
         public void createPolicyRef(Long id) {
-            if (doesPolicyExist(xPolicy)) {
+            if (policyExists) {
                 XXPolicyRefGroup xPolGroup = new XXPolicyRefGroup();
 
                 xPolGroup.setPolicyId(xPolicy.getId());
@@ -736,31 +735,31 @@ public class PolicyRefUpdater {
         private final String   name;
         private final Long     userId;
         private final XXPolicy xPolicy;
+        private final boolean  policyExists;
 
-        PolicyUserAssociator(String name, Long userId, XXPolicy xPolicy) {
-            this.name    = name;
-            this.userId  = userId;
-            this.xPolicy = xPolicy;
+        PolicyUserAssociator(String name, Long userId, XXPolicy xPolicy, boolean policyExists) {
+            this.name         = name;
+            this.userId       = userId;
+            this.xPolicy      = xPolicy;
+            this.policyExists = policyExists;
         }
 
         public XXPolicyRefUser getPolicyRef() {
-            Long id = resolveUserId(false);
-
-            if (id != null && doesPolicyExist(xPolicy)) {
-                XXPolicyRefUser xPolUser = new XXPolicyRefUser();
-
-                xPolUser.setPolicyId(xPolicy.getId());
-                xPolUser.setUserId(id);
-                xPolUser.setUserName(name);
-
-                return xPolUser;
+            if (!policyExists || userId == null) {
+                return null;
             }
 
-            return null;
+            XXPolicyRefUser xPolUser = new XXPolicyRefUser();
+
+            xPolUser.setPolicyId(xPolicy.getId());
+            xPolUser.setUserId(userId);
+            xPolUser.setUserName(name);
+
+            return xPolUser;
         }
 
         public void createPolicyRef(Long id) {
-            if (doesPolicyExist(xPolicy)) {
+            if (policyExists) {
                 XXPolicyRefUser xPolUser = new XXPolicyRefUser();
 
                 xPolUser.setPolicyId(xPolicy.getId());

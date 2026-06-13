@@ -33,6 +33,15 @@ public interface RoleStore {
 
     RangerRole       updateRole(RangerRole role, Boolean createNonExistUserGroup) throws Exception;
 
+    default RangerRole createRole(RangerRole role, Boolean createNonExistUserGroup, Boolean isRefTableCleanupRequired) throws Exception {
+        return createRole(role, createNonExistUserGroup);
+    }
+
+    default RangerRole updateRole(RangerRole role, Boolean createNonExistUserGroup, Boolean isRefTableCleanupRequired) throws Exception {
+        return updateRole(role, createNonExistUserGroup);
+    }
+
+
     void             deleteRole(String roleName) throws Exception;
 
     void             deleteRole(Long roleId) throws Exception;
