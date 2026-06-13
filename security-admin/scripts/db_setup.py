@@ -151,7 +151,7 @@ def dbversionBasedOnUserName(userName):
 	return version
 
 def set_env_val(command):
-	proc = subprocess.Popen(command, stdout = subprocess.PIPE)
+	proc = subprocess.Popen(command, stdout = subprocess.PIPE, text=True)
 	for line in proc.stdout:
 		(key, _, value) = line.decode('utf8').partition('=')
 		os.environ[key] = value.rstrip()
