@@ -42,12 +42,14 @@ import org.apache.ranger.common.PropertiesUtil;
 import org.apache.ranger.common.RESTErrorUtil;
 import org.apache.ranger.common.RangerCommonEnums;
 import org.apache.ranger.common.RangerConstants;
+import org.apache.ranger.common.RangerSuperUserConfig;
 import org.apache.ranger.common.SearchCriteria;
 import org.apache.ranger.common.SearchUtil;
 import org.apache.ranger.common.StringUtil;
 import org.apache.ranger.common.UserSessionBase;
 import org.apache.ranger.db.RangerDaoManager;
 import org.apache.ranger.entity.XXGroupPermission;
+import org.apache.ranger.entity.XXModuleDef;
 import org.apache.ranger.entity.XXPortalUser;
 import org.apache.ranger.entity.XXPortalUserRole;
 import org.apache.ranger.entity.XXTrxLogV2;
@@ -575,11 +577,16 @@ public class UserMgr {
 				|| sess.getXXPortalUser().getId().equals(user.getId())) {
 			if (userRoleList == null) {
 				userRoleList = new ArrayList<String>();
-				List<XXPortalUserRole> gjUserRoleList = daoManager
-						.getXXPortalUserRole().findByParentId(user.getId());
 
-				for (XXPortalUserRole userRole : gjUserRoleList) {
-					userRoleList.add(userRole.getUserRole());
+				if (sess.isSuperUser()) {
+					userRoleList.addAll(RangerSuperUserConfig.getConfigSuperUserProfileRoles());
+				} else {
+					List<XXPortalUserRole> gjUserRoleList = daoManager
+							.getXXPortalUserRole().findByParentId(user.getId());
+
+					for (XXPortalUserRole userRole : gjUserRoleList) {
+						userRoleList.add(userRole.getUserRole());
+					}
 				}
 			}
 
@@ -638,6 +645,9 @@ public class UserMgr {
 				userProfile.setGroupPermissions(groupPermissions);
 				userProfile.setUserPermList(vxUserPermissions);
 			}
+
+			applyConfigSuperUserProfileOverrides(userProfile, sess, user);
+
 			userProfile.setFirstName(user.getFirstName());
 			userProfile.setLastName(user.getLastName());
 			userProfile.setPublicScreenName(user.getPublicScreenName());
@@ -1313,7 +1323,65 @@ public class UserMgr {
 		if(roleList==null || roleList.size()==0){
 			return DEFAULT_ROLE_LIST;
 		}
+
+		if (!RangerSuperUserConfig.isEnabled()) {
+			return roleList;
+		}
+
+		final boolean configSuperUser;
+
+		if (RangerSuperUserConfig.isSuperUser(loginId)) {
+			configSuperUser = true;
+		} else if (RangerSuperUserConfig.isSuperGroupsConfigured() && xUserMgr != null) {
+			configSuperUser = RangerSuperUserConfig.isSuperUser(loginId, xUserMgr.getGroupsForUser(loginId));
+		} else {
+			configSuperUser = false;
+		}
+
+		if (configSuperUser) {
+			return RangerSuperUserConfig.mergeConfigSuperUserRoles(roleList, false);
+		}
+
 		return roleList;
+	}
+
+	/**
+	 * For config super users viewing their own profile, expose effective
+	 * admin roles and modules to the UI.
+	 */
+	private void applyConfigSuperUserProfileOverrides(final VXPortalUser userProfile, final UserSessionBase sess, final XXPortalUser user) {
+		if (sess == null || userProfile == null || user == null || !sess.isSuperUser()) {
+			return;
+		}
+
+		if (sess.getXXPortalUser() == null || !sess.getXXPortalUser().getId().equals(user.getId())) {
+			return;
+		}
+
+		List<String> effectiveRoles = RangerSuperUserConfig.getConfigSuperUserProfileRoles();
+
+		userProfile.setUserRoleList(effectiveRoles);
+
+		List<XXModuleDef> moduleDefs = daoManager.getXXModuleDef().getAll();
+		List<VXUserPermission> effectiveModules = new ArrayList<VXUserPermission>();
+
+		if (CollectionUtils.isNotEmpty(moduleDefs)) {
+			XXUser xUser = daoManager.getXXUser().findByPortalUserId(user.getId());
+			Long xUserId = xUser != null ? xUser.getId() : null;
+
+			for (XXModuleDef moduleDef : moduleDefs) {
+				VXUserPermission vxUserPermission = new VXUserPermission();
+
+				vxUserPermission.setModuleId(moduleDef.getId());
+				vxUserPermission.setModuleName(moduleDef.getModule());
+				vxUserPermission.setUserId(xUserId);
+				vxUserPermission.setIsAllowed(RangerCommonEnums.IS_ALLOWED);
+
+				effectiveModules.add(vxUserPermission);
+			}
+		}
+
+		userProfile.setUserPermList(effectiveModules);
 	}
 
         @Transactional(readOnly = false, propagation = Propagation.REQUIRED)

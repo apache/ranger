@@ -37,6 +37,8 @@ public class UserSessionBase implements Serializable {
     private boolean userAuditAdmin = false;
     private boolean auditKeyAdmin = false;
 	private boolean keyAdmin = false;
+	/** Set at login when login matches {@code ranger.admin.super.users} / super.groups. */
+	private boolean superUser = false;
 	private int authProvider = RangerConstants.USER_APP;
 	private List<String> userRoleList = new ArrayList<String>();
 	private RangerUserPermission rangerUserPermission;
@@ -66,11 +68,11 @@ public class UserSessionBase implements Serializable {
 	}
 
 	public boolean isUserAdmin() {
-		return userAdmin;
+		return superUser || userAdmin;
 	}
 	
     public boolean isAuditUserAdmin() {
-        return userAuditAdmin;
+        return superUser || userAuditAdmin;
     }
 
     public void setAuditUserAdmin(boolean userAuditAdmin) {
@@ -117,7 +119,26 @@ public class UserSessionBase implements Serializable {
 	}
 
 	public boolean isKeyAdmin() {
-		return keyAdmin;
+		return superUser || keyAdmin;
+	}
+
+	public boolean isSuperUser() {
+		return superUser;
+	}
+
+	public void setSuperUser(final boolean superUser) {
+		this.superUser = superUser;
+	}
+
+	/**
+	 * True when the portal DB role is only {@code ROLE_USER} and the session
+	 * is not a Ranger admin ({@link #isUserAdmin()}).
+	 */
+	public boolean isSingleRoleUserSession() {
+		return userRoleList != null
+				&& userRoleList.size() == 1
+				&& userRoleList.contains(RangerConstants.ROLE_USER)
+				&& !isUserAdmin();
 	}
 
 	public void setKeyAdmin(boolean keyAdmin) {
@@ -125,7 +146,7 @@ public class UserSessionBase implements Serializable {
 	}
 
     public boolean isAuditKeyAdmin() {
-        return auditKeyAdmin;
+        return superUser || auditKeyAdmin;
     }
 
     public void setAuditKeyAdmin(boolean auditKeyAdmin) {

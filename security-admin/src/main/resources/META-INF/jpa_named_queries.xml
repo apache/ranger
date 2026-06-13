@@ -1393,6 +1393,10 @@
 		</query>
 	</named-query>
 
+	<named-query name="XXModuleDef.findAllModuleNames">
+		<query>SELECT obj.module FROM XXModuleDef obj</query>
+	</named-query>
+
 	<named-query name="XXModuleDef.findAllAccessibleModulesByUserId">
 		<query>SELECT obj.module FROM XXModuleDef obj 
 		WHERE obj.id in (SELECT userPerm.moduleId FROM XXUserPermission userPerm WHERE userPerm.userId=:portalUserId and userPerm.isAllowed=:isAllowed)

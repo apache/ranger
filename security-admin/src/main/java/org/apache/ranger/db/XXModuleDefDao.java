@@ -51,6 +51,16 @@ public class XXModuleDefDao extends BaseDao<XXModuleDef>{
 		return null;
 	}
 
+	public List<String> getAllModuleNames() {
+		try {
+			return getEntityManager()
+					.createNamedQuery("XXModuleDef.findAllModuleNames", String.class)
+					.getResultList();
+		} catch (Exception e) {
+			return new ArrayList<String>();
+		}
+	}
+
 
 	public XXModuleDef  findByModuleId(Long id) {
 		if(id == null) {

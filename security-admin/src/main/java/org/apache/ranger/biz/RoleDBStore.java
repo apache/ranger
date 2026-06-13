@@ -33,7 +33,6 @@ import org.apache.ranger.biz.ServiceDBStore.REMOVE_REF_TYPE;
 import org.apache.ranger.common.ContextUtil;
 import org.apache.ranger.common.MessageEnums;
 import org.apache.ranger.common.RESTErrorUtil;
-import org.apache.ranger.common.RangerConstants;
 import org.apache.ranger.common.RangerRoleCache;
 import org.apache.ranger.common.UserSessionBase;
 import org.apache.ranger.common.db.RangerTransactionSynchronizationAdapter;
@@ -315,25 +314,29 @@ public class RoleDBStore implements RoleStore {
 		List<RangerRole> roles;
 		UserSessionBase  userSession = ContextUtil.getCurrentUserSession();
 
-		if (userSession != null && userSession.getUserRoleList().size() == 1
-				&& userSession.getUserRoleList().contains(RangerConstants.ROLE_USER)
+		if (userSession != null && userSession.isSingleRoleUserSession()
 				&& userSession.getLoginId() != null) {
 			VXUser       loggedInVXUser = xUserService.getXUserByUserName(userSession.getLoginId());
-			List<XXRole> xxRoles        = daoMgr.getXXRole().findByUserId(loggedInVXUser.getId());
 
-			roles = new ArrayList<>();
+			if (loggedInVXUser != null) {
+				List<XXRole> xxRoles        = daoMgr.getXXRole().findByUserId(loggedInVXUser.getId());
 
-			if (CollectionUtils.isNotEmpty(xxRoles)) {
-				for (XXRole xxRole : xxRoles) {
-					roles.add(roleService.read(xxRole.getId()));
+				roles = new ArrayList<>();
+
+				if (CollectionUtils.isNotEmpty(xxRoles)) {
+					for (XXRole xxRole : xxRoles) {
+						roles.add(roleService.read(xxRole.getId()));
+					}
 				}
-			}
 
-			if (predicateUtil != null && !filter.isEmpty()) {
-				List<RangerRole> copy = new ArrayList<>(roles);
+				if (predicateUtil != null && !filter.isEmpty()) {
+					List<RangerRole> copy = new ArrayList<>(roles);
 
-				predicateUtil.applyFilter(copy, filter);
-				roles = copy;
+					predicateUtil.applyFilter(copy, filter);
+					roles = copy;
+				}
+			} else {
+				roles = getRoles(filter);
 			}
 		} else {
 			roles = getRoles(filter);

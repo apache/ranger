@@ -2161,7 +2161,7 @@ public class TestServiceREST {
 		loggedInUser.setId(8L);
 		loggedInUser.setName("testuser");
 		loggedInUser.setUserRoleList(loggedInUserRole);
-		Mockito.when(xUserService.getXUserByUserName("testuser")).thenReturn(loggedInUser);
+		currentUserSession.setUserRoleList(loggedInUserRole);
 		Mockito.when(svcStore.getService(Id)).thenReturn(actualService);
 
 		RangerService service = serviceREST.getService(Id);
@@ -2197,7 +2197,7 @@ public class TestServiceREST {
 		loggedInUser.setId(8L);
 		loggedInUser.setName("testuser");
 		loggedInUser.setUserRoleList(loggedInUserRole);
-		Mockito.when(xUserService.getXUserByUserName("testuser")).thenReturn(loggedInUser);
+		currentUserSession.setUserRoleList(loggedInUserRole);
 		Mockito.when(svcStore.getServiceByName(actualService.getName())).thenReturn(actualService);
 
 		RangerService service = serviceREST.getServiceByName(actualService.getName());
@@ -2235,7 +2235,8 @@ public class TestServiceREST {
 		loggedInUser.setId(8L);
 		loggedInUser.setName("testuser");
 		loggedInUser.setUserRoleList(loggedInUserRole);
-		
+		currentUserSession.setUserRoleList(loggedInUserRole);
+
 		Map<String, String> configs = new HashMap<String, String>();
 		configs.put("username", "servicemgr");
 		configs.put("password", "servicemgr");
@@ -2271,7 +2272,6 @@ public class TestServiceREST {
 		SearchFilter filter = new SearchFilter();
 		Mockito.when(searchUtil.getSearchFilter(request, svcService.sortFields)).thenReturn(filter);
 		Mockito.when(svcStore.getPaginatedServices(filter)).thenReturn(paginatedSvcs);
-		Mockito.when(xUserService.getXUserByUserName("testuser")).thenReturn(loggedInUser);
 		RangerServiceList retServiceList = serviceREST.getServices(request);
 		Assert.assertNotNull(retServiceList);
 		Assert.assertNull(retServiceList.getServices().get(0).getDescription());

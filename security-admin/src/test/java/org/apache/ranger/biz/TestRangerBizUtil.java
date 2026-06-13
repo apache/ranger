@@ -26,8 +26,10 @@ import javax.ws.rs.WebApplicationException;
 import org.apache.ranger.common.AppConstants;
 import org.apache.ranger.common.ContextUtil;
 import org.apache.ranger.common.MessageEnums;
+import org.apache.ranger.common.PropertiesUtil;
 import org.apache.ranger.common.RESTErrorUtil;
 import org.apache.ranger.common.RangerConstants;
+import org.apache.ranger.common.RangerSuperUserConfig;
 import org.apache.ranger.common.StringUtil;
 import org.apache.ranger.common.UserSessionBase;
 import org.apache.ranger.db.RangerDaoManager;
@@ -76,6 +78,9 @@ public class TestRangerBizUtil {
 
         @Mock
         UserMgr userMgr;
+
+        @Mock
+        XUserMgr xUserMgr;
 
         @Mock
         ContextUtil contextUtil;
@@ -650,6 +655,50 @@ public class TestRangerBizUtil {
                 rangerBizUtilMock.blockAuditorRoleUser();
                 Mockito.verify(rangerBizUtilMock).blockAuditorRoleUser();
 
+        }
+
+        @Test
+        public void testIsUserRangerAdmin_ConfigSuperUser() {
+                RangerSuperUserConfig.resetForTests();
+                PropertiesUtil.getPropertiesMap().put(RangerConstants.RANGER_ADMIN_SUPER_USERS, "config-admin");
+
+                Assert.assertTrue(rangerBizUtil.isUserRangerAdmin("config-admin"));
+                Assert.assertFalse(rangerBizUtil.isUserRangerAdmin("other-user"));
+                Mockito.verify(xUserMgr, Mockito.never()).getGroupsForUser("config-admin");
+
+                PropertiesUtil.getPropertiesMap().remove(RangerConstants.RANGER_ADMIN_SUPER_USERS);
+                RangerSuperUserConfig.resetForTests();
+        }
+
+        @Test
+        public void testIsUserRangerAdmin_ConfigDisabledSkipsGroupLookup() {
+                Assert.assertFalse(rangerBizUtil.isUserRangerAdmin("any-user"));
+                Mockito.verify(xUserMgr, Mockito.never()).getGroupsForUser(Mockito.anyString());
+        }
+
+        @Test
+        public void testIsUserRangerAdmin_SessionEffectiveRangerAdmin() {
+                XXPortalUser portalUser = new XXPortalUser();
+                portalUser.setLoginId("config-super-user");
+
+                UserSessionBase session = RangerContextHolder.getSecurityContext().getUserSession();
+                session.setXXPortalUser(portalUser);
+                session.setSuperUser(true);
+
+                Assert.assertTrue(rangerBizUtil.isUserRangerAdmin("config-super-user"));
+                Assert.assertFalse(rangerBizUtil.isUserRangerAdmin("other-user"));
+        }
+
+        @Test
+        public void testCheckUserAccessible_ConfigSuperUserCanManageSysAdminUser() {
+                UserSessionBase session = new UserSessionBase();
+                session.setSuperUser(true);
+
+                RangerSecurityContext context = new RangerSecurityContext();
+                context.setUserSession(session);
+                RangerContextHolder.setSecurityContext(context);
+
+                Assert.assertTrue(rangerBizUtil.checkUserAccessible(vXUser));
         }
 
 }
