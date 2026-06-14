@@ -285,21 +285,31 @@
                DEFAULT
         </value>
         <description>
-            Kerberos auth_to_local rules: map service/host@REALM to the short username checked
-            against ranger.audit.ingestor.service.&lt;repo&gt;.allowed.users (Policy Manager
-            policy.download.auth.users).
+            Kerberos auth_to_local rules for mapping authenticated principals to short usernames
+            checked against ranger.audit.ingestor.service.&lt;repo&gt;.allowed.users (aligned with
+            Policy Manager policy.download.auth.users). Uses Hadoop KerberosName syntax.
+
+            IMPORTANT: These rules only apply to Kerberos/SPNEGO authentication. JWT and basic auth
+            usernames are already in short form and pass through unchanged.
 
             Order matters — service-specific RULE lines run before the user@REALM fallback.
 
-            Hadoop: nn/dn/jn/hdfs/* -&gt; hdfs (dev_hdfs); rm/nm/yarn/* -&gt; yarn (dev_yarn);
-            jhs/* -&gt; mapred.
-            Plugins: hive/* -&gt; hive (dev_hive); hbase/* -&gt; hbase (dev_hbase);
-            kafka/* -&gt; kafka (dev_kafka); knox/* -&gt; knox (dev_knox);
-            rangerkms/* -&gt; rangerkms (dev_kms); trino/* -&gt; trino (dev_trino);
-            ozone/* -&gt; ozone; om/* -&gt; om; scm/* -&gt; scm; dn/* -&gt; dn (dev_ozone);
-            solr/* -&gt; solr (dev_solr); atlas/* -&gt; atlas (dev_atlas);
-            kudu/* -&gt; kudu (dev_kudu); nifi/* -&gt; nifi (dev_nifi).
-            Fallback: user@REALM -&gt; user; then DEFAULT.
+            Hadoop:
+            - RULE:[2:$1/$2@$0]([ndj]n/.*@.*|hdfs/.*@.*)s/.*/hdfs/  # nn,dn,jn,hdfs/* -&gt; hdfs (dev_hdfs)
+            - RULE:[2:$1/$2@$0]([rn]m/.*@.*|yarn/.*@.*)s/.*/yarn/   # rm,nm,yarn/* -&gt; yarn (dev_yarn)
+            - RULE:[2:$1/$2@$0](jhs/.*@.*)s/.*/mapred/              # jhs/* -&gt; mapred
+
+            Plugins:
+            - hive/* -&gt; hive (dev_hive); hbase/* -&gt; hbase (dev_hbase)
+            - kafka/* -&gt; kafka (dev_kafka); knox/* -&gt; knox (dev_knox)
+            - rangerkms/* -&gt; rangerkms (dev_kms); trino/* -&gt; trino (dev_trino)
+            - ozone/* -&gt; ozone; om/* -&gt; om; scm/* -&gt; scm; dn/* -&gt; dn (dev_ozone)
+            - solr/* -&gt; solr (dev_solr); atlas/* -&gt; atlas (dev_atlas)
+            - kudu/* -&gt; kudu (dev_kudu); nifi/* -&gt; nifi (dev_nifi)
+
+            Fallback:
+            - RULE:[1:$1@$0](.*@.*)s/@.*//  # user@REALM -&gt; user
+            - DEFAULT
         </description>
     </property>
 
