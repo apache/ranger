@@ -60,10 +60,11 @@ limitations under the License.
 
 | Family | Representative entry point | Touches outside its process | In this model? |
 | --- | --- | --- | --- |
-| Ranger Admin web app (PDP + admin) | `security-admin/`, REST `/service/...`, `/public/v2/api/...` *(documented — API docs)* | DB, network (serves plugins + UI), LDAP/AD | **In** |
-| Per-service plugins (PEPs) | `hdfs-agent/`, `hive-agent/`, `hbase-agent/`, `plugin-kafka/`, `plugin-*`, `agents-common/`, `pdp/` | Embedded in host service; network to Admin; audit sink | **In** |
+| Ranger Admin web app | `security-admin/`, `agents-common/`, REST `/service/...`, `/public/v2/api/...` *(documented — API docs)* | DB, network (serves plugins + UI), LDAP/AD | **In** |
+| PDP service | `pdp/`, `authz-api/`, `authz-embedded/`, `authz-remote/` | Network (serves remote authz API); Admin (policy pull); audit sink | **In** *(maintainer, 2026-06-12 — §14 Q6/Q10)* |
+| Per-service plugins (PEPs) | `*-agent/` (`hdfs-agent/`, `hive-agent/`, `hbase-agent/`), `plugin-*/` (`plugin-kafka/`, `plugin-nifi`, `plugin-ozone`, `plugin-trino`, `plugin-kms`), `agents-common/` | Embedded in host service; network to Admin; audit sink | **In** |
 | Plugin shims / classloader | `ranger-*-plugin-shim/`, `ranger-plugin-classloader/` | Class loading inside host service | **In** (as part of PEP delivery) |
-| User/group sync | `ugsync/`, `ugsync-util/`, `unixauth*/` | LDAP/AD/Unix; writes to Admin DB | **In** |
+| User/group sync | `ugsync/`, `ugsync-util/` | LDAP/AD/Unix; writes to Admin DB | **In** |
 | Tag sync | `tagsync/` | Atlas/Kafka; writes to Admin | **In** |
 | Audit framework | `agents-audit/`, `audit-server/` | Solr/OpenSearch/Kafka/HDFS/DB audit sinks | **In** |
 | Ranger KMS | `kms/`, `plugin-kms/` | Key store (DB/HSM), HDFS NameNode/DataNode | **In** (model at its own trust level — handles key material) |
