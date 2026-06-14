@@ -101,7 +101,8 @@ limitations under the License.
 
 **Reachability preconditions per component (the triager's first test):**
 
-- A finding in a **plugin / `pdp/` / `agents-common`** is in-model only if reachable from a policy-evaluation input — i.e., from the (principal, resource, action) tuple of an untrusted access request, or from the downloaded policy document, or from the plugin's local config *(inferred)*.
+- A finding in a **plugin / `agents-common`** is in-model only if reachable from a policy-evaluation input — i.e., from the (principal, resource, action) tuple of an untrusted access request, or from the downloaded policy document, or from the plugin's local config *(inferred)*.
+- A finding in the **PDP service (`pdp/`, `authz-api/`, `authz-embedded/`, `authz-remote/`)** is reached over the network, not in-process. Its authorization API (`/authz/*`) requires an authenticated client (Kerberos/JWT/trusted-header; the server refuses to start with no auth handler configured), so treat it like an authenticated **Ranger Admin REST** endpoint — there is no anonymous path into the authz API. Only the liveness/readiness/metrics probes (`/health/live`, `/health/ready`, `/metrics`) are reachable unauthenticated, mirroring Admin's public health/metrics bucket (§14 Q10) *(inferred)*.
 - A finding in **Ranger Admin REST** is in-model only if reachable by an actor the endpoint's auth permits — distinguish endpoints reachable by an *unauthenticated* network peer from those requiring an authenticated admin/plugin identity *(inferred)*.
 - A finding in **usersync/tagsync** is in-model only if reachable from the external identity/tag source data or its configuration *(inferred)*.
 - A finding in **Ranger KMS** is in-model only if reachable from a key-operation request or the key store contents *(inferred)*.
