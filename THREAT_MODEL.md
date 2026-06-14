@@ -44,7 +44,7 @@ limitations under the License.
 
 **Primary intended use.** Centralized authoring of fine-grained authorization policies (resource-based and tag-based) and their enforcement across many independent data services, plus unified audit of access decisions and a key-management service (Ranger KMS) for HDFS transparent encryption *(documented — ranger.apache.org goals: "Centralized security administration", "Fine grained authorization", "Centralize auditing of user access")*.
 
-**Deployment context.** Ranger is **not** an in-process library. It is a multi-component distributed system deployed across a cluster: a central web application/daemon (Ranger Admin, default port 6080 *(documented — README)*), a user/group sync daemon, an optional tag-sync daemon, the Ranger KMS daemon, and a fleet of plugins each embedded inside a separate data-service process on separate (typically trusted, intra-cluster) hosts *(documented — README lists Admin Tool, User Synchronization, and component plugins as the deployment tiers)*.
+**Deployment context.** Ranger is **not** an in-process library. It is a multi-component distributed system deployed across a cluster: a central web application/daemon (Ranger Admin, default port 6080 *(documented — README)*), a user/group sync daemon, an optional tag-sync daemon, the Ranger KMS daemon, the Ranger PDP server that exposes a network authorization API for non-embedded callers and a fleet of plugins each embedded inside a separate data-service process on separate (typically trusted, intra-cluster) hosts *(documented — README lists Admin Tool, User Synchronization, and component plugins as the deployment tiers)*.
 
 **Caller roles.** Because Ranger is a distributed service rather than a single library, "the caller" splits into distinct roles, each modeled separately in §6/§7:
 
@@ -96,6 +96,8 @@ limitations under the License.
 3. **Admin UI / REST client ↔ Ranger Admin (administration).** Administrators author policy and read audits over `/service/...` and `/public/v2/api/...` REST endpoints *(documented — API docs)*. This is the highest-value boundary: anyone who can author policy can grant themselves or others access to all guarded data.
 
 4. **Usersync/tagsync ↔ Admin, and Admin ↔ DB / audit sink / key store.** Internal data-plane boundaries; integrity of the user/group/role data and the policy store determines the integrity of every downstream decision *(inferred)*.
+
+5. **Client ↔ PDP service** (remote authorization request). Where a caller cannot embed a PEP, it calls the PDP's /authz/* API with (principal, resource, action). Authenticated (Kerberos/JWT/trusted-header); the resource/action are attacker-influenced, the principal is asserted by the authenticated caller — same trust split as the in-process PEP, but over the network (inferred).
 
 **Data flow (authorization path).** Untrusted user request → host service authenticates principal → host service calls embedded Ranger plugin with (principal, resource, action) → plugin evaluates locally-cached policy (resource-based + tag-based) → returns allow/deny → plugin emits an audit record to the configured sink → host service enforces the decision *(documented in part — FAQ; full flow inferred)*.
 
