@@ -106,7 +106,7 @@
     <!-- SOLR DESTINATION CONFIGURATION -->
     <property>
         <name>xasecure.audit.destination.solr.urls</name>
-        <value>http://ranger-solr:8983/solr/ranger_audits</value>
+        <value>http://ranger-solr.rangernw:8983/solr/ranger_audits</value>
         <description>
             Solr URLs for audits when SolrCloud is not enabled.
             Docker supports only standalone mode for now,
