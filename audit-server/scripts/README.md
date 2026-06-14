@@ -30,6 +30,8 @@ The codebase is organized into two main directories:
 - `audit-ingestor/`
 - `audit-dispatcher/` (contains a unified dispatcher application that dynamically loads specific dispatcher types)
 
+**Troubleshooting:** Plugin audits rejected with HTTP 403 from ingestor (KMS, Kafka, Ozone, etc.) — see [README-AUDIT-INGESTOR-SERVICE-ALLOWLIST.md](../README-AUDIT-INGESTOR-SERVICE-ALLOWLIST.md).
+
 ## Prerequisites
 
 Before running these scripts, ensure you have:
