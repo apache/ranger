@@ -242,24 +242,6 @@
         <description>Allowed users for dev_solr (Solr plugin)</description>
     </property>
 
-    <property>
-        <name>ranger.audit.ingestor.service.dev_atlas.allowed.users</name>
-        <value>atlas</value>
-        <description>Allowed users for dev_atlas (Atlas)</description>
-    </property>
-
-    <property>
-        <name>ranger.audit.ingestor.service.dev_kudu.allowed.users</name>
-        <value>kudu</value>
-        <description>Allowed users for dev_kudu (Kudu master/tserver)</description>
-    </property>
-
-    <property>
-        <name>ranger.audit.ingestor.service.dev_nifi.allowed.users</name>
-        <value>nifi</value>
-        <description>Allowed users for dev_nifi (NiFi)</description>
-    </property>
-
     <!-- AUTH_TO_LOCAL RULES FOR KERBEROS PRINCIPAL MAPPING -->
     <property>
         <name>ranger.audit.ingestor.auth.to.local</name>
@@ -278,9 +260,6 @@
                RULE:[2:$1/$2@$0](scm/.*@.*)s/.*/scm/
                RULE:[2:$1/$2@$0](dn/.*@.*)s/.*/dn/
                RULE:[2:$1/$2@$0](solr/.*@.*)s/.*/solr/
-               RULE:[2:$1/$2@$0](atlas/.*@.*)s/.*/atlas/
-               RULE:[2:$1/$2@$0](kudu/.*@.*)s/.*/kudu/
-               RULE:[2:$1/$2@$0](nifi/.*@.*)s/.*/nifi/
                RULE:[1:$1@$0](.*@.*)s/@.*//
                DEFAULT
         </value>
@@ -308,9 +287,6 @@
             - RULE:[2:$1/$2@$0](scm/.*@.*)s/.*/scm/                    # scm/* -> scm (dev_ozone)
             - RULE:[2:$1/$2@$0](dn/.*@.*)s/.*/dn/                      # dn/* -> dn (dev_ozone)
             - RULE:[2:$1/$2@$0](solr/.*@.*)s/.*/solr/                  # solr/* -> solr (dev_solr)
-            - RULE:[2:$1/$2@$0](atlas/.*@.*)s/.*/atlas/                # atlas/* -> atlas (dev_atlas)
-            - RULE:[2:$1/$2@$0](kudu/.*@.*)s/.*/kudu/                  # kudu/* -> kudu (dev_kudu)
-            - RULE:[2:$1/$2@$0](nifi/.*@.*)s/.*/nifi/                  # nifi/* -> nifi (dev_nifi)
             - RULE:[1:$1@$0](.*@.*)s/@.*//                             # user@REALM -> user
             - DEFAULT
         </description>

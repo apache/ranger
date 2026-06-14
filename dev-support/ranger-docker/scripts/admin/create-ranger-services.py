@@ -148,32 +148,7 @@ solr = RangerService({'name': 'dev_solr', 'type': 'solr',
                                  'ranger.plugin.super.users': 'solr',
                                  'ranger.plugin.solr.policy.refresh.synchronous':'true'}})
 
-atlas = RangerService({'name': 'dev_atlas', 'type': 'atlas',
-                       'configs': {'username': 'atlas', 'password': 'atlas',
-                                   'atlas.rest.address': 'http://atlas:21000',
-                                   'policy.download.auth.users': 'atlas',
-                                   'tag.download.auth.users': 'atlas',
-                                   'userstore.download.auth.users': 'atlas',
-                                   'ranger.plugin.atlas.policy.refresh.synchronous': 'true'}})
-
-kudu = RangerService({'name': 'dev_kudu', 'type': 'kudu',
-                      'configs': {'username': 'kudu', 'password': 'kudu',
-                                  'policy.download.auth.users': 'kudu',
-                                  'tag.download.auth.users': 'kudu',
-                                  'userstore.download.auth.users': 'kudu',
-                                  'ranger.plugin.kudu.policy.refresh.synchronous': 'true'}})
-
-nifi = RangerService({'name': 'dev_nifi', 'type': 'nifi',
-                      'configs': {'username': 'nifi', 'password': 'nifi',
-                                  'nifi.url': 'http://ranger-nifi.rangernw:8080/nifi-api/resources',
-                                  'nifi.authentication': 'NONE',
-                                  'nifi.ssl.use.default.context': 'false',
-                                  'policy.download.auth.users': 'nifi',
-                                  'tag.download.auth.users': 'nifi',
-                                  'userstore.download.auth.users': 'nifi',
-                                  'ranger.plugin.nifi.policy.refresh.synchronous': 'true'}})
-
-services = [hdfs, yarn, hive, hbase, kafka, knox, kms, trino, ozone, solr, atlas, kudu, nifi]
+services = [hdfs, yarn, hive, hbase, kafka, knox, kms, trino, ozone, solr]
 for service in services:
     try:
         if service_not_exists(service):
