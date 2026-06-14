@@ -21,9 +21,9 @@ limitations under the License.
 - **Project:** Apache Ranger
 - **Repository:** https://github.com/apache/ranger
 - **Version/commit modeled against:** `master` branch as of 2026-06-03 (no specific release tag; this v0 predates maintainer review).
-- **Threat-model authors:** Drafted by the ASF Security team as a v0 pre-flight artifact for an automated agentic security scan. **Not yet reviewed by the Apache Ranger PMC.**
-- **Date:** 2026-06-03
-- **Status:** Draft — awaiting Ranger PMC review. Every position here is provisional until the PMC confirms, corrects, or strikes it (see §14).
+- **Threat-model authors:** Drafted by the ASF Security team as a v0 pre-flight artifact for an automated agentic security scan; **reviewed by the Apache Ranger PMC (Abhishek Kumar, `@kumaab`) on 2026-06-12**, who answered every §14 question — those answers are folded into §1–§13 below.
+- **Date:** 2026-06-03 (v0); 2026-06-12 (v1, PMC-reviewed).
+- **Status:** v1 — PMC-reviewed. All §14 questions were answered by the Ranger PMC on 2026-06-12 and folded in; the claims they confirm are promoted to *(maintainer)*. Abhishek Kumar (PMC) volunteered to own ongoing revision (§14 Q20).
 
 **Version binding.** Once ratified, this model is intended to be versioned alongside Ranger and tagged with releases. A report against Ranger version *N* should be triaged against the model as it stood at *N*, not at HEAD. This v0 carries no such binding yet.
 
@@ -31,10 +31,10 @@ limitations under the License.
 
 **Provenance legend.** Every non-trivial claim carries exactly one tag:
 - *(documented)* — stated in Ranger's own docs (README, ranger.apache.org, FAQ, API docs) or directly verifiable from the public repository layout; cited inline.
-- *(maintainer)* — stated by a Ranger maintainer in response to this process. **There are none yet** — this is v0 with no maintainer input.
-- *(inferred)* — reasoned from code/repo structure, absence of a feature, or general domain knowledge; not yet confirmed. Every *(inferred)* claim has a matching question in §14.
+- *(maintainer)* — stated by a Ranger maintainer in response to this process. As of 2026-06-12 the PMC has answered all 20 §14 questions (see §14); the load-bearing claims they confirmed are tagged *(maintainer, 2026-06-12)*.
+- *(inferred)* — reasoned from code/repo structure, absence of a feature, or general domain knowledge. Remaining *(inferred)* tags are claims the PMC has not yet individually ratified beyond the §14 answers.
 
-**Draft confidence:** 18 documented / 0 maintainer / 47 inferred. The model is overwhelmingly hypothesis at this stage; the §14 questions are the path to promoting *(inferred)* claims to *(maintainer)*.
+**Confidence:** PMC-reviewed v1 — all 20 §14 questions answered by the maintainer on 2026-06-12 and folded into §1–§13. A handful of items (e.g. the "no resource guarantee" line, §8 #6) were explicitly deferred by the PMC for later ratification.
 
 **What Apache Ranger is.** Apache Ranger is "a framework to enable, monitor and manage comprehensive data security across 20+ data processing services" *(documented — ranger.apache.org)*. It provides centralized & fine-grained authorization, audit, and key management for data services (Trino, Polaris, Ozone, HDFS, Hive, HBase, Kafka, NiFi, Knox, Kudu, YARN, Solr, Atlas and others). The administrator defines access-control policies in a central web application (Ranger Admin); lightweight per-service Java plugins, deployed inside each data service's own process, pull those policies and enforce authorization decisions locally on every access request. In threat-model terms Ranger is a **distributed Policy Decision / Policy Enforcement system**: the policy decision authority lives with the admin server (which authors and distributes policy), but the actual *enforcement* (the PEP) runs as plugin code co-located inside the data service it guards *(documented — FAQ: plugins "run as part of the same process as the namenode (HDFS), Hive2Server(Hive), HBase server (Hbase)")*.
 
@@ -50,9 +50,11 @@ limitations under the License.
 
 - **Security administrator** — authors policies, manages users/roles, views audits via the Admin UI or REST API. Trusted for the instance.
 - **Delegated administrator** — a group owner to whom administration of a subset of resources has been delegated *(documented — FAQ: "delegate administration of certain data to other group owners")*. Trusted for their delegated scope only.
-- **Deployed plugin (PEP)** — code running inside a data service, authenticated to the Admin server, that downloads policy and enforces it. Trusted to enforce honestly *(inferred)*.
-- **End user of the guarded data service** — the principal whose HDFS/Hive/etc. access Ranger authorizes. **Untrusted** with respect to the decisions Ranger makes about them; they do not interact with Ranger directly but their identity and requested action are the inputs to the PEP *(inferred)*.
-- **Identity source** — LDAP/AD/Unix that usersync reads from. Trusted as the authority for user/group membership *(inferred)*.
+- **Deployed plugin (PEP)** — code running inside a data service, authenticated to the Admin server, that downloads policy and enforces it. **Fully trusted once authenticated** — a deliberate design choice (§7) *(maintainer, 2026-06-12 — §14 Q8)*.
+- **End user of the guarded data service** — the principal whose HDFS/Hive/etc. access Ranger authorizes. **Untrusted** with respect to the decisions Ranger makes about them; they do not interact with Ranger directly but their identity and requested action are the inputs to the PEP. Ranger does **not** authenticate the end user at access time — the host service does *(maintainer, 2026-06-12 — §14 Q7)*.
+- **Identity source** — LDAP/AD/Unix that usersync reads from. Trusted as the authority for user/group membership *(maintainer, 2026-06-12 — §14 Q16)*.
+- **Auditor** — may view policies and access audits but not author them (writes are blocked) *(maintainer, 2026-06-12 — §14 Q5/Q10)*.
+- **Key Admin** — administers Ranger KMS keys only *(maintainer, 2026-06-12 — §14 Q5)*.
 
 **Component-family table.**
 
@@ -66,15 +68,14 @@ limitations under the License.
 | Audit framework | `agents-audit/`, `audit-server/` | Solr/OpenSearch/Kafka/HDFS/DB audit sinks | **In** |
 | Ranger KMS | `kms/`, `plugin-kms/` | Key store (DB/HSM), HDFS NameNode/DataNode | **In** (model at its own trust level — handles key material) |
 | Authentication | `ranger-authn/`, `unixauthservice/`, `agents-cred/`, `credentialbuilder/` | Kerberos/SPNEGO/LDAP; credential stores | **In** |
-| Examples / sample app | `ranger-examples/` (`sampleapp`, `plugin-sampleapp`, `sample-client`) *(documented — repo layout)* | Demo only | **Out** — see §3 |
-| Build / install / migration tooling | `distro/`, `agents-installer/`, `migration-util/`, `dev-support/`, `build_ranger_using_docker.sh` | Build/deploy host | **Out** — see §3 |
+| Examples / sample app + tools | `ranger-examples/`, `ranger-tools/` *(documented — repo layout)* | Demo / utility | **In** *(maintainer, 2026-06-12 — §14 Q4)* |
+| Build / install / migration / ugsync tooling | `distro/`, `agents-installer/`, `migration-util/`, ugsync `filesourceusersynctool`/`ldapconfigchecktool`, `dev-support/` | Build/deploy host | **Out** *(maintainer, 2026-06-12 — §14 Q4)* |
 
 ---
 
 ## §3 Out of scope (explicit non-goals)
 
-- **`ranger-examples/` (sample app, plugin-sampleapp, sample-client).** Shipped as demonstration/integration scaffolding *(documented — repo layout)*. Treated as unsupported for security purposes; a finding here is `OUT-OF-MODEL: unsupported-component` *(inferred)*.
-- **Build, packaging, install, and migration tooling** (`distro/`, `agents-installer/`, `migration-util/`, Docker build scripts). SDLC/deployment hygiene, not the runtime trust surface *(inferred)*.
+- **Build, packaging, install, and migration tooling** (`distro/`, `agents-installer/`, `migration-util/`, Docker build scripts) **and the ugsync utilities `filesourceusersynctool` / `ldapconfigchecktool`.** SDLC/deployment hygiene, not the runtime trust surface *(maintainer, 2026-06-12 — §14 Q4)*. **Note:** unlike a typical project, `ranger-examples/` and `ranger-tools/` are **IN** scope here per the PMC (§2) — do not treat example/tool code as out-of-model.
 - **The guarded data services themselves.** Ranger authorizes access *within* HDFS, Hive, HBase, etc., but it does not own those services' own attack surface (e.g., an HDFS RPC bug). Ranger's responsibility begins at the authorization decision and ends at returning allow/deny to the host service *(inferred)*.
 - **Authentication of end users.** Ranger authorizes an *already-authenticated* principal; establishing that the principal is who they claim (Kerberos ticket validation, etc.) is performed by the host data service / cluster Kerberos infrastructure, not by Ranger's PDP. Ranger trusts the identity the PEP presents *(inferred)*.
 - **Network transport security as a Ranger guarantee.** Whether plugin↔Admin and UI↔Admin traffic is TLS-protected is a deployment configuration concern; Ranger supports it but does not enforce it at the protocol layer *(inferred)*.
@@ -89,7 +90,7 @@ limitations under the License.
 
 1. **End user ↔ guarded data service (the access request).** The user's identity + requested resource/action enters the host service, which calls the embedded Ranger plugin (PEP). This is the primary *untrusted-input* boundary: the requested resource name and action are derived from an untrusted user, though the *identity* is asserted by the host service's authentication layer, which Ranger trusts *(inferred)*.
 
-2. **Plugin (PEP) ↔ Ranger Admin (policy distribution).** Plugins "pull the policy-changes using REST API at a configured regular interval (e.g.: 30 second)" *(documented — FAQ)*. The plugin trusts that the policy it downloads genuinely originates from the legitimate Admin server, and the Admin trusts that only authorized plugins download policy. This boundary is authenticated *(inferred — mechanism, likely Kerberos/SPNEGO or service credentials, to be confirmed)*. Plugins cache the last-known policy and "function even if the policy server is temporarily down" *(documented — FAQ)*, so the cache is load-bearing.
+2. **Plugin (PEP) ↔ Ranger Admin (policy distribution).** Plugins "pull the policy-changes using REST API at a configured regular interval (e.g.: 30 second)" *(documented — FAQ)*. The plugin trusts that the policy it downloads genuinely originates from the legitimate Admin server, and the Admin trusts that only authorized plugins download policy. This boundary is authenticated via **Kerberos, JWT, or header-based auth with a trusted proxy** — the policy-download path (and the separate PDP service process) requires an authenticated identity *(maintainer, 2026-06-12 — §14 Q6/Q10)*. Plugins cache the last-known policy and "function even if the policy server is temporarily down" *(documented — FAQ)*, so the cache is load-bearing.
 
 3. **Admin UI / REST client ↔ Ranger Admin (administration).** Administrators author policy and read audits over `/service/...` and `/public/v2/api/...` REST endpoints *(documented — API docs)*. This is the highest-value boundary: anyone who can author policy can grant themselves or others access to all guarded data.
 
@@ -127,10 +128,10 @@ limitations under the License.
 
 Ranger's security envelope is governed primarily by **runtime configuration**, not compile-time flags. The variants that change which properties hold:
 
-- **TLS on plugin↔Admin and UI↔Admin.** Default and whether HTTP (non-TLS) is a supported production posture is unconfirmed *(inferred — wave-1 question)*. If the default is plaintext, policy in transit is exposed; this is the canonical "insecure-default" case the rubric flags.
-- **Authentication mode for the Admin** (Kerberos/SPNEGO vs. LDAP/AD vs. Unix vs. local "admin" account). The shipped default admin credential and whether it must be rotated before exposure is unconfirmed *(inferred)*.
+- **TLS on plugin↔Admin and UI↔Admin.** TLS is recommended in production, but **plaintext HTTP is the shipped and supported default** *(maintainer, 2026-06-12 — §14 Q2)*. Because plaintext is a *supported* posture, a report that reduces to "traffic is unencrypted by default" is `BY-DESIGN` / operator-hardening, not `VALID`.
+- **Authentication mode for the Admin** (Kerberos/SPNEGO, LDAP/AD, Unix, PAM, Knox SSO, header/JWT, or internal DB) *(maintainer, 2026-06-12 — §14 Q7)*. Ranger seeds accounts (`admin`, `rangerusersync`, `rangertagsync`, `keyadmin`) at bootstrap, but **the installer mandates an explicit, complexity-checked password on fresh install** — a seeded/default password is **not** a supported production posture *(maintainer, 2026-06-12 — §14 Q3)*.
 - **Audit destination** (Solr / HDFS / DB / log file / none). Disabling audit voids the §8 auditability property *(inferred)*.
-- **`deny`-by-default vs. fallback-to-native-ACL** when no Ranger policy matches a request. This is a security-defining knob and its default must be pinned *(inferred — wave-1 question)*.
+- **No-match behavior:** when Ranger is the ACL enforcer and no policy matches, the result is **deny** — **except the HDFS service**, where it falls through to the host's native ACLs *(maintainer, 2026-06-12 — §14 Q1/Q9)*.
 - **KMS key store** (DB-backed vs. HSM/KeySecure). Changes the confidentiality guarantee for key material *(inferred)*.
 
 For each knob whose default is the less-secure value, the PMC's ruling (supported production posture → reports are `VALID`; vs. dev-convenience requiring operator action → `OUT-OF-MODEL: non-default-build`) is recorded once confirmed. **No ruling exists yet.**
@@ -173,9 +174,9 @@ Ranger is a network service, so the trust table is keyed by endpoint/message, no
 - **An attacker with code execution on a node running a plugin.** They are inside the PEP's own process/host and can bypass enforcement locally; Ranger cannot defend a PEP against its own compromised host *(inferred)*.
 - **A fully-trusted security administrator acting maliciously.** The top-level admin is the root of authority for the Ranger instance; the model does not defend the guarded data against a malicious omnipotent admin (delegated admins overreaching *is* in scope) *(inferred)*.
 - **Compromise of the backing database, audit store, or key store directly** (bypassing Ranger) — that is the store's own trust boundary *(inferred)*.
-- **Side-channel / timing adversaries** against the policy engine or KMS *(inferred)*.
+- **Side-channel / timing adversaries** against the policy engine or KMS *(maintainer, 2026-06-12 — §14 Q19: out of scope)*.
 
-**Authenticated-but-Byzantine participant.** Ranger is a distributed PDP/PEP system: a plugin holds a legitimate service identity and could, if its host is compromised, behave arbitrarily (return wrong decisions, withhold audit). Whether Ranger makes any cross-node integrity claim under a misbehaving-but-authenticated plugin, or treats every PEP as fully trusted once authenticated, must be stated *(inferred — see §14)*.
+**Authenticated-but-Byzantine participant.** Ranger is a distributed PDP/PEP system: a plugin holds a legitimate service identity and could, if its host is compromised, behave arbitrarily (return wrong decisions, withhold audit). **Ranger treats every PEP as fully trusted once authenticated and makes no cross-node integrity claim** — complete plugin trust is a deliberate design choice that keeps runtime overhead low *(maintainer, 2026-06-12 — §14 Q8)*.
 
 ---
 
@@ -183,17 +184,17 @@ Ranger is a network service, so the trust table is keyed by endpoint/message, no
 
 *(All entries below are hypothesized for the PMC to confirm; none are maintainer-ratified yet.)*
 
-1. **Authorization decisions reflect the authored policy.** Given correctly-distributed policy and a correctly-authenticated principal, a plugin's allow/deny matches what the central policy specifies for that (principal, resource, action). *Violation symptom:* a user is granted access the policy denies (or denied access the policy grants) — i.e., a policy-evaluation/matching bug. *Severity:* security-critical (authorization bypass → CVE-class). *(inferred)*
+1. **Authorization decisions reflect the authored policy.** Given correctly-distributed policy and a correctly-authenticated principal, a plugin's allow/deny matches what the central policy specifies for that (principal, resource, action). *Violation symptom:* a user is granted access the policy denies (or denied access the policy grants) — i.e., a policy-evaluation/matching bug. *Severity:* security-critical — **an existing deny-policy (or the absence of any grant) that nonetheless yields access is CVE-class `VALID`** *(maintainer, 2026-06-12 — §14 Q11)*.
 
 2. **Centralized policy is faithfully distributed to enforcement points.** Policy authored in Admin is delivered to plugins via the periodic pull and applied; plugins fall back to last-cached policy when Admin is unreachable rather than failing open arbitrarily. *Violation symptom:* a plugin enforces stale or wrong policy in a way that grants access the current policy denies; or distribution lets an attacker substitute policy. *Severity:* security-critical. *(documented in part — FAQ on pull interval + cache fallback; the "faithfully/integrity" guarantee is inferred)*
 
 3. **Administrative actions are access-controlled.** Authoring/modifying policy, managing users/roles, and reading audits via the REST API and UI require appropriate authenticated, authorized identity; delegated admins are confined to their delegated scope. *Violation symptom:* an unauthenticated or under-privileged actor authors/reads policy, escalates a role, or reads audit/keys. *Severity:* security-critical. *(documented in part — delegation in FAQ; enforcement details inferred)*
 
-4. **Access decisions are audited.** Allow/deny decisions and administrative actions are recorded to the configured audit sink. *Violation symptom:* an in-scope access produces no audit record, or audit can be silently suppressed/forged by a non-admin. *Severity:* security-relevant (integrity of the audit trail); often correctness-only for missed records, critical for forgeable records. *(documented — ranger.apache.org: "Centralize auditing of user access and administrative actions")*
+4. **Access decisions are audited.** Allow/deny decisions and administrative actions are recorded to the configured audit sink. *Violation symptom:* an in-scope access produces no audit record, or audit can be silently suppressed/forged by a non-admin. *Severity:* security-relevant — **a non-admin able to tamper or forge audit records IS a security finding** *(maintainer, 2026-06-12 — §14 Q14)*; missed records alone are correctness-grade. *(documented — ranger.apache.org: "Centralize auditing of user access and administrative actions")*
 
-5. **KMS authorizes key access per policy.** Ranger KMS releases key material only to clients authorized by key-access policy. *Violation symptom:* unauthorized key retrieval / decryption capability. *Severity:* security-critical. *(inferred)*
+5. **KMS authorizes key access per policy.** Ranger KMS releases key material only to clients authorized by key-access policy. *Violation symptom:* unauthorized key retrieval / decryption capability. *Severity:* security-critical — **the key is the KMS-policy resource; unauthorized key retrieval is CVE-class `VALID`** *(maintainer, 2026-06-12 — §14 Q13)*.
 
-6. **Policy evaluation is bounded and thread-safe.** Each authorization call terminates promptly and concurrent evaluation during a policy refresh does not corrupt decisions. *Violation symptom:* hang/CPU exhaustion inside the host service on crafted resource input, or a race producing a wrong decision. *Severity:* availability-critical (a hung PEP can stall the host service) for DoS; critical for the race. *Threshold:* to be set — is super-linear evaluation cost in policy size or resource-string length a bug? *(inferred — §14)*
+6. **Policy evaluation is bounded and thread-safe.** Each authorization call terminates promptly and concurrent evaluation during a policy refresh does not corrupt decisions. *Violation symptom:* hang/CPU exhaustion inside the host service on crafted resource input, or a race producing a wrong decision. *Severity:* the engine is bounded and thread-safe *(maintainer, 2026-06-12 — §14 Q12)*. **Super-linear evaluation cost in policy size or resource-string length is NOT a bug**; a **hang inside the host service may be** a security issue; whether *no* resource guarantee is made was deferred by the PMC for later ratification.
 
 ---
 
@@ -204,12 +205,12 @@ Ranger is a network service, so the trust table is keyed by endpoint/message, no
 - **No authentication of end users.** Ranger authorizes an already-authenticated principal; it does not establish identity. A forged/spoofed principal accepted by the host service's authentication layer is the host service's / cluster Kerberos's problem, not Ranger's *(inferred)*.
 - **No protection against a malicious top-level administrator.** The admin is the root of trust for the instance *(inferred)*.
 - **No defense of a plugin against its own compromised host.** A PEP running in a compromised data-service process can be bypassed locally *(inferred)*.
-- **No transport security guarantee by default (to confirm).** Ranger supports TLS but does not enforce it at the protocol layer; plaintext deployment exposes policy and audit in transit *(inferred)*.
+- **No transport security by default.** Plaintext HTTP is the supported default *(maintainer, 2026-06-12 — §14 Q2)*; Ranger supports TLS but does not enforce it at the protocol layer. Plaintext deployment exposes policy and audit in transit.
 - **No guarantee about the guarded service's own attack surface.** Ranger only renders authorization decisions *(inferred)*.
 
 **False friends (highest-value warnings — confirm):**
 - **A Ranger "deny" is not a sandbox.** Enforcement depends on the host service actually calling the plugin for every access path. A code path in the guarded service that does not consult the plugin is not protected by Ranger *(inferred)*.
-- **Cached policy is availability, not authority.** The "works when Admin is down" cache *(documented — FAQ)* means a plugin can enforce *stale* policy: a just-revoked grant may persist until the next successful pull. Operators must not treat revocation as instantaneous *(inferred)*.
+- **Cached policy is availability, not authority.** The "works when Admin is down" cache *(documented — FAQ)* means a plugin can enforce *stale* policy: a just-revoked grant may persist until the next successful pull. Operators must not treat revocation as instantaneous — the propagation delay is **by design** *(maintainer, 2026-06-12 — §14 Q15)*.
 - **Audit is a record, not a control.** An audit entry does not prevent access; it documents it. Absence of an audit record is not proof access was blocked *(inferred)*.
 - **Tag-based policy depends on the freshness/integrity of tagsync.** A policy keyed on a classification tag is only as trustworthy as the tag feed from Atlas *(inferred)*.
 
@@ -255,10 +256,13 @@ For Ranger the "downstream user" is the **cluster operator** who deploys Admin +
 *(To be populated by the PMC from real scanner/report history — this is a high-value section the team cannot fill from public sources alone.)*
 
 Provisional candidates *(inferred)*:
-- Reports against `ranger-examples/` (sampleapp, sample-client) — out of scope per §3.
+- Reports against build/install/migration tooling or the ugsync utilities (`filesourceusersynctool`, `ldapconfigchecktool`) — out of scope per §3. *(Note: `ranger-examples/` and `ranger-tools/` are **in** scope per the PMC — do not file them as non-findings.)*
 - "Plugin runs with the host service's privileges" — by design; the PEP is co-located inside the guarded service (§4). Not a privilege-escalation finding on its own.
 - "Plugin serves stale policy when Admin is down" — documented availability behavior (§8 #2, FAQ), not a bug.
-- "Default admin password" / "HTTP listener on 6080" flagged by a config scanner — an operator-hardening item (§10), `VALID-HARDENING` at most, not a code vulnerability — *pending PMC ruling on whether the insecure default is supported posture*.
+- "HTTP listener on 6080 / plaintext by default" flagged by a config scanner — plaintext is the supported default (§5a, §9), so this is `BY-DESIGN` / operator-hardening, not a code vulnerability *(maintainer, 2026-06-12 — §14 Q2)*.
+- **Resource-name canonicalization mismatch** between the host service and the policy engine — a **shared responsibility** with the host service, not a Ranger-only defect *(maintainer, 2026-06-12 — §14 Q17)*.
+
+**Correction (do NOT wave off):** a "default/seeded admin password" finding is **not** a non-finding — the installer mandates a complexity-checked password on fresh install, so a seeded/default password is not a supported posture (§5a) *(maintainer, 2026-06-12 — §14 Q3/Q18)*.
 
 ---
 
@@ -290,34 +294,36 @@ Provisional candidates *(inferred)*:
 
 ---
 
-## §14 Open questions for the maintainers
+## §14 Open questions — RESOLVED by the Ranger PMC (2026-06-12)
 
-Every *(inferred)* claim above routes to a question below. Each states a proposed answer to confirm, correct, or strike. Grouped in waves.
+The Apache Ranger PMC (**Abhishek Kumar, `@kumaab`**) reviewed this model on [apache/ranger#994](https://github.com/apache/ranger/pull/994) and answered all 20 open questions on **2026-06-12**. The answers are recorded below and folded into §1–§13; confirmed claims are promoted to *(maintainer, 2026-06-12)*. Abhishek volunteered to own ongoing revision (Q20).
 
-**Wave 1 — Scope, defaults, and the decisions that reshape everything**
-1. **No-match default:** When no Ranger policy matches a request, does the plugin **deny**, or fall through to the host service's native ACLs? We assume it depends on per-service config; what is the shipped default? (→ §5a, §8 #2, §11a)
-2. **Transport security default:** Is TLS on plugin↔Admin and UI↔Admin required for a supported production deployment, or is plaintext a supported posture? (→ §5a, §9, §13 `non-default-build` vs `VALID`)
-3. **Default admin credential:** Does Ranger ship a default admin account/password, and is rotating it a documented operator requirement before exposure? (→ §5a, §10, §11a)
-4. **Scope confirmation:** Are `ranger-examples/` and the install/migration tooling correctly out of model? Any other shipped-but-unsupported code we missed? (→ §2, §3)
-5. **Caller roles:** Is the five-role breakdown in §2 (admin / delegated admin / plugin / end user / identity source) correct and complete? (→ §2, §7)
+**Wave 1 — scope & defaults**
+1. **No-match default:** when Ranger is the ACL enforcer the result is **deny**, **except HDFS**, where it falls through to the host's native ACLs.
+2. **Transport security default:** TLS is recommended in production; **plaintext HTTP is the shipped/supported default**.
+3. **Default admin credential:** Ranger seeds accounts (`admin`, `rangerusersync`, `rangertagsync`, `keyadmin`) as install-bootstrap values, but the standard installer **requires an explicit, complexity-checked password on fresh install** (changeable any time via UI/REST). **A seeded/default password is not a supported production posture.**
+4. **Scope:** **`ranger-examples` and `ranger-tools` are IN scope.** Out of model: `migration-util` and the ugsync utilities (`filesourceusersynctool`, `ldapconfigchecktool`).
+5. **Caller roles:** the breakdown is correct; **add an Auditor role** (view policies + audits, no writes) and a **Key Admin role** (KMS only).
 
-**Wave 2 — Trust boundaries and authentication**
-6. **Plugin↔Admin auth mechanism:** How does a plugin authenticate to Admin to download policy, and how does it verify the policy's origin (Kerberos/SPNEGO? service credentials? signed policy)? (→ §4, §6)
-7. **End-user identity trust:** Do we correctly model Ranger as trusting the principal identity asserted by the host service (Kerberos), and *not* performing user authentication itself? (→ §3, §9)
-8. **Byzantine plugin:** Once authenticated, is a plugin fully trusted, with no cross-node integrity claim if its host is compromised? (→ §7)
-9. **Fail mode on total evaluation failure:** If a plugin can neither evaluate fresh nor cached policy, does it deny, or defer to the host service? (→ §5, §8 #2)
-10. **REST endpoint auth matrix:** Which `/service/...` and `/public/v2/api/...` endpoints are reachable unauthenticated vs. require admin vs. require a plugin identity? (→ §6, §8 #3)
+**Wave 2 — trust & authentication**
+6. **Plugin↔Admin auth:** plugins and the PDP service (a *separate process*, not a plugin) authenticate via **Kerberos, JWT, or header-based auth with a trusted proxy** to download policy.
+7. **End-user identity:** Ranger Admin authenticates **management/UI users** (LDAP, AD, Unix, PAM, Kerberos/SPNEGO, Knox SSO, header, JWT, internal DB). At **data-access time Ranger does not authenticate the end user** — the host service authenticates the principal and the PEP hands Ranger an already-authenticated principal.
+8. **Byzantine plugin:** **full trust once authenticated** — a deliberate design choice that keeps runtime overhead low; **Ranger makes no cross-node integrity claim**.
+9. **Fail mode:** if a plugin can neither evaluate fresh nor cached policy it **denies** — except the HDFS plugin, which can fall through to native ACLs.
+10. **REST endpoint matrix:** three buckets — (1) **public** (login/static, `/service/actuator/health`, `/service/metrics/**`); (2) **plugin/PEP identity** (policy/tag/role/user/GDS download + grant/revoke — `security="none"` at Spring but app-layer authenticated by service client-cert or SPNEGO, with `secure/...download` variants requiring a user in `policy.download.auth.users`); (3) **authenticated admin/user** (everything else: policy/service/user/role/zone/audit CRUD, plugin info, KMS keys — session + `@PreAuthorize` RBAC, writes blocked for read-only Auditor).
 
-**Wave 3 — Properties, resources, and KMS**
-11. **Authorization-bypass severity:** Confirm a policy-evaluation/matching bug that grants denied access is CVE-class `VALID`. (→ §8 #1, §13)
-12. **Resource bound / DoS line:** Is super-linear policy-evaluation cost (in policy count or resource-string length) a bug? Is a hang inside the host service a security issue? Or is no resource guarantee made? (→ §8 #6)
-13. **KMS authorization:** Confirm Ranger KMS releases key material only per key-access policy, and that unauthorized key retrieval is `VALID`/CVE-class. (→ §8 #5)
-14. **Audit integrity:** Is a forgeable/suppressible audit record (by a non-admin) a security finding, or is audit best-effort? (→ §8 #4, §9)
-15. **Stale-policy window as disclaimed:** Confirm that the revocation-propagation delay (pull interval + cache) is by-design, not a bug. (→ §9 false friends, §11a)
+**Wave 3 — properties, resources, KMS**
+11. **Authorization-bypass severity:** an existing deny-policy (or absence of a grant) that nonetheless yields access is **CVE-class `VALID`**.
+12. **Resource / DoS line:** "policy evaluation is bounded and thread-safe" is correct; **super-linear evaluation cost is NOT a bug**; a **hang inside the host service could be** a security issue; whether *no* resource guarantee is made is **left for later ratification**.
+13. **KMS authorization:** the key is the KMS-policy resource; **unauthorized key retrieval is CVE-class `VALID`**.
+14. **Audit integrity:** a non-admin able to **tamper audit records IS a security finding**.
+15. **Stale-policy window:** revocation-propagation delay (pull interval + cache) is **by design**.
 
-**Wave 4 — Misuse, non-findings, and ownership**
-16. **Tagsync/usersync trust:** Confirm policy is only as trustworthy as the tag/identity source, and injection upstream of Ranger is out of model (`trusted-input`). (→ §6, §9, §11)
-17. **Resource canonicalization:** Is mismatch between host-service resource naming and policy-engine matching (path normalization, case, wildcards) a known bypass class you actively defend, or a shared responsibility with the host service? (→ §9, §11)
-18. **Known non-findings:** What do scanners/researchers most often report against Ranger that you consider a non-finding, and why? (→ §11a — needs maintainer history)
-19. **Side channels / co-tenancy:** Confirm timing/side-channel adversaries against the policy engine and KMS are out of scope. (→ §7)
-20. **Document ownership & coexistence:** Since Ranger has no `SECURITY.md`, should this become the canonical security model linked from the project site, and who on the PMC owns its revision? (→ §1; meta)
+**Wave 4 — misuse, non-findings, ownership**
+16. **Tagsync/usersync trust:** confirmed — policy is only as trustworthy as the tag/identity source; upstream injection is out of model.
+17. **Resource canonicalization:** resource names must map correctly between service and policy — a **shared responsibility** with the host service.
+18. **Known non-findings:** the §11a list is a good starting point and can evolve; **one correction — admin password is mandated at installation, so an insecure default password is NOT a supported posture** (folded into §5a/§11a).
+19. **Side channels / co-tenancy:** **out of scope.**
+20. **Ownership:** yes — this becomes the canonical Ranger security model; **Abhishek Kumar volunteers to own its revision.**
+
+*Remaining genuinely-open item:* whether Ranger makes **no resource guarantee at all** (§8 #6) — the PMC deferred this for later ratification.
