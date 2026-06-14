@@ -33,7 +33,7 @@ then
   KRB5_CONF="-Djava.security.krb5.conf=/etc/krb5.conf"
   KERBEROS_KEYTAB="-Dsolr.kerberos.keytab=/etc/keytabs/HTTP.keytab"
   KERBEROS_PRINCIPAL="-Dsolr.kerberos.principal=HTTP/ranger-solr.rangernw@EXAMPLE.COM"
-  COOKIE_DOMAIN="-Dsolr.kerberos.cookie.domain=ranger-solr"
+  COOKIE_DOMAIN="-Dsolr.kerberos.cookie.domain=ranger-solr.rangernw"
   KERBEROS_NAME_RULES="-Dsolr.kerberos.name.rules=RULE:[2:\$1/\$2@\$0]([ndj]n/.*@EXAMPLE\.COM)s/.*/hdfs/\
 RULE:[2:\$1/\$2@\$0]([rn]m/.*@EXAMPLE\.COM)s/.*/yarn/\
 RULE:[2:\$1/\$2@\$0](jhs/.*@EXAMPLE\.COM)s/.*/mapred/\
