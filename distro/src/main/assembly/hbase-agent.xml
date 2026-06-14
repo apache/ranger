@@ -73,6 +73,8 @@
           <include>org.eclipse.jetty:jetty-client:jar:${jetty-client.version}</include>
           <include>org.glassfish.jersey.core:jersey-client</include>
           <include>org.glassfish.jersey.core:jersey-common</include>
+          <include>org.glassfish.jersey.ext:jersey-entity-filtering:jar:${jersey-client.version}</include>
+          <include>org.glassfish.jersey.media:jersey-media-json-jackson</include>
           <include>org.graalvm.js:js:jar:${graalvm.version}</include>
           <include>org.graalvm.js:js-scriptengine:jar:${graalvm.version}</include>
           <include>org.graalvm.regex:regex:jar:${graalvm.version}</include>
