@@ -242,6 +242,12 @@
         <description>Allowed users for dev_solr (Solr plugin)</description>
     </property>
 
+    <property>
+        <name>ranger.audit.ingestor.service.dev_elasticsearch.allowed.users</name>
+        <value>opensearch</value>
+        <description>Allowed users for dev_elasticsearch (OpenSearch in Docker; Kerberos principal opensearch/*)</description>
+    </property>
+
     <!-- AUTH_TO_LOCAL RULES FOR KERBEROS PRINCIPAL MAPPING -->
     <property>
         <name>ranger.audit.ingestor.auth.to.local</name>
@@ -260,6 +266,7 @@
                RULE:[2:$1/$2@$0](scm/.*@.*)s/.*/scm/
                RULE:[2:$1/$2@$0](dn/.*@.*)s/.*/dn/
                RULE:[2:$1/$2@$0](solr/.*@.*)s/.*/solr/
+               RULE:[2:$1/$2@$0](opensearch/.*@.*)s/.*/opensearch/
                RULE:[1:$1@$0](.*@.*)s/@.*//
                DEFAULT
         </value>
@@ -287,6 +294,7 @@
             - RULE:[2:$1/$2@$0](scm/.*@.*)s/.*/scm/                    # scm/* -> scm (dev_ozone)
             - RULE:[2:$1/$2@$0](dn/.*@.*)s/.*/dn/                      # dn/* -> dn (dev_ozone)
             - RULE:[2:$1/$2@$0](solr/.*@.*)s/.*/solr/                  # solr/* -> solr (dev_solr)
+            - RULE:[2:$1/$2@$0](opensearch/.*@.*)s/.*/opensearch/        # opensearch/* -> opensearch (dev_elasticsearch)
             - RULE:[1:$1@$0](.*@.*)s/@.*//                             # user@REALM -> user
             - DEFAULT
         </description>
