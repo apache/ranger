@@ -243,6 +243,12 @@
     </property>
 
     <property>
+        <name>ranger.audit.ingestor.service.dev_tag.allowed.users</name>
+        <value>rangertagsync</value>
+        <description>Allowed users for dev_tag (TagSync service)</description>
+    </property>
+
+    <property>
         <name>ranger.audit.ingestor.service.dev_elasticsearch.allowed.users</name>
         <value>opensearch</value>
         <description>Allowed users for dev_elasticsearch (OpenSearch in Docker; Kerberos principal opensearch/*)</description>
@@ -266,14 +272,15 @@
                RULE:[2:$1/$2@$0](scm/.*@.*)s/.*/scm/
                RULE:[2:$1/$2@$0](dn/.*@.*)s/.*/dn/
                RULE:[2:$1/$2@$0](solr/.*@.*)s/.*/solr/
+               RULE:[2:$1/$2@$0](rangertagsync/.*@.*)s/.*/rangertagsync/
                RULE:[2:$1/$2@$0](opensearch/.*@.*)s/.*/opensearch/
                RULE:[1:$1@$0](.*@.*)s/@.*//
                DEFAULT
         </value>
-        <description>
+        <description><![CDATA[
             Kerberos auth_to_local rules for mapping authenticated principals to service names.
             Uses Hadoop KerberosName syntax to convert full Kerberos principals to short usernames
-            checked against ranger.audit.ingestor.service.&lt;repo&gt;.allowed.users (Policy Manager
+            checked against ranger.audit.ingestor.service.<repo>.allowed.users (Policy Manager
             policy.download.auth.users).
 
             IMPORTANT: These rules only apply to Kerberos/SPNEGO authentication. JWT and basic auth
@@ -294,10 +301,11 @@
             - RULE:[2:$1/$2@$0](scm/.*@.*)s/.*/scm/                    # scm/* -> scm (dev_ozone)
             - RULE:[2:$1/$2@$0](dn/.*@.*)s/.*/dn/                      # dn/* -> dn (dev_ozone)
             - RULE:[2:$1/$2@$0](solr/.*@.*)s/.*/solr/                  # solr/* -> solr (dev_solr)
+            - RULE:[2:$1/$2@$0](rangertagsync/.*@.*)s/.*/rangertagsync/  # rangertagsync/* -> rangertagsync (dev_tag)
             - RULE:[2:$1/$2@$0](opensearch/.*@.*)s/.*/opensearch/        # opensearch/* -> opensearch (dev_elasticsearch)
             - RULE:[1:$1@$0](.*@.*)s/@.*//                             # user@REALM -> user
             - DEFAULT
-        </description>
+        ]]></description>
     </property>
 
 

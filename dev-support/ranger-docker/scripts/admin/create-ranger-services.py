@@ -148,6 +148,9 @@ solr = RangerService({'name': 'dev_solr', 'type': 'solr',
                                  'ranger.plugin.super.users': 'solr',
                                  'ranger.plugin.solr.policy.refresh.synchronous':'true'}})
 
+tag = RangerService({'name': 'dev_tag', 'type': 'tag',
+                     'configs': {'ranger.plugin.audit.filters': "[ {'accessResult': 'DENIED', 'isAudited': true} ]"}})
+
 elasticsearch = RangerService({'name': 'dev_elasticsearch', 'type': 'elasticsearch',
                                'configs': {'username': 'opensearch', 'password': 'opensearch',
                                            'elasticsearch.url': 'http://ranger-opensearch.rangernw:9200',
@@ -156,7 +159,7 @@ elasticsearch = RangerService({'name': 'dev_elasticsearch', 'type': 'elasticsear
                                            'userstore.download.auth.users': 'opensearch',
                                            'ranger.plugin.elasticsearch.policy.refresh.synchronous': 'true'}})
 
-services = [hdfs, yarn, hive, hbase, kafka, knox, kms, trino, ozone, solr, elasticsearch]
+services = [tag, hdfs, yarn, hive, hbase, kafka, knox, kms, trino, ozone, solr, elasticsearch]
 for service in services:
     try:
         if service_not_exists(service):
