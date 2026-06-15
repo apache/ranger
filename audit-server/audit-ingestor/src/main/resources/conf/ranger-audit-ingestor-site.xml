@@ -185,19 +185,61 @@
     <property>
         <name>ranger.audit.ingestor.service.dev_hdfs.allowed.users</name>
         <value>hdfs</value>
-        <description>Comma-separated list of allowed users that can send audits for dev_hdfs service</description>
+        <description>Allowed users for dev_hdfs (Policy Manager service name; from policy.download.auth.users)</description>
+    </property>
+
+    <property>
+        <name>ranger.audit.ingestor.service.dev_yarn.allowed.users</name>
+        <value>yarn</value>
+        <description>Allowed users for dev_yarn (YARN RM/NM)</description>
     </property>
 
     <property>
         <name>ranger.audit.ingestor.service.dev_hive.allowed.users</name>
         <value>hive</value>
-        <description>Comma-separated list of allowed users that can send audits for dev_hive service.</description>
+        <description>Allowed users for dev_hive (HiveServer2 + Metastore)</description>
     </property>
 
     <property>
         <name>ranger.audit.ingestor.service.dev_hbase.allowed.users</name>
         <value>hbase</value>
-        <description>Comma-separated list of allowed users that can send audits for dev_hbase service.</description>
+        <description>Allowed users for dev_hbase (HBase Master + RegionServer)</description>
+    </property>
+
+    <property>
+        <name>ranger.audit.ingestor.service.dev_kafka.allowed.users</name>
+        <value>kafka</value>
+        <description>Allowed users for dev_kafka</description>
+    </property>
+
+    <property>
+        <name>ranger.audit.ingestor.service.dev_knox.allowed.users</name>
+        <value>knox</value>
+        <description>Allowed users for dev_knox</description>
+    </property>
+
+    <property>
+        <name>ranger.audit.ingestor.service.dev_kms.allowed.users</name>
+        <value>rangerkms</value>
+        <description>Allowed users for dev_kms</description>
+    </property>
+
+    <property>
+        <name>ranger.audit.ingestor.service.dev_trino.allowed.users</name>
+        <value>trino</value>
+        <description>Allowed users for dev_trino</description>
+    </property>
+
+    <property>
+        <name>ranger.audit.ingestor.service.dev_ozone.allowed.users</name>
+        <value>om</value>
+        <description>Allowed users for dev_ozone (Ozone Manager; Ranger plugin runs on OM only)</description>
+    </property>
+
+    <property>
+        <name>ranger.audit.ingestor.service.dev_solr.allowed.users</name>
+        <value>solr</value>
+        <description>Allowed users for dev_solr (Solr plugin)</description>
     </property>
 
     <!-- AUTH_TO_LOCAL RULES FOR KERBEROS PRINCIPAL MAPPING -->
@@ -210,20 +252,22 @@
                RULE:[1:$1@$0](.*@.*)s/@.*//
                DEFAULT
         </value>
-        <description>
+        <description><![CDATA[
             Kerberos auth_to_local rules for mapping authenticated principals to service names.
-            Uses Hadoop KerberosName syntax to convert full Kerberos principals to short usernames.
+            Uses Hadoop KerberosName syntax to convert full Kerberos principals to short usernames
+            checked against ranger.audit.ingestor.service.<repo>.allowed.users (Policy Manager
+            policy.download.auth.users).
 
             IMPORTANT: These rules only apply to Kerberos/SPNEGO authentication. JWT and basic auth
             usernames are already in short form and pass through unchanged.
 
             Default rules provided:
-            - RULE:[2:$1/$2@$0]([ndj]n/.*@.*|hdfs/.*@.*)s/.*/hdfs/     # nn,dn,jn,hdfs/* -> hdfs
-            - RULE:[2:$1/$2@$0]([rn]m/.*@.*|yarn/.*@.*)s/.*/yarn/      # rm,nm,yarn/* -> yarn
+            - RULE:[2:$1/$2@$0]([ndj]n/.*@.*|hdfs/.*@.*)s/.*/hdfs/     # nn,dn,jn,hdfs/* -> hdfs (dev_hdfs)
+            - RULE:[2:$1/$2@$0]([rn]m/.*@.*|yarn/.*@.*)s/.*/yarn/      # rm,nm,yarn/* -> yarn (dev_yarn)
             - RULE:[2:$1/$2@$0](jhs/.*@.*)s/.*/mapred/                 # jhs/* -> mapred
             - RULE:[1:$1@$0](.*@.*)s/@.*//                             # user@REALM -> user
             - DEFAULT
-        </description>
+        ]]></description>
     </property>
 
 
