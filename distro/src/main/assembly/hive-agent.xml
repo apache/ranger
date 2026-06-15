@@ -57,31 +57,16 @@
         <directoryMode>755</directoryMode>
         <fileMode>644</fileMode>
         <includes>
-          <include>com.carrotsearch:hppc</include>
-          <include>com.fasterxml.jackson.core:jackson-annotations:jar:${fasterxml.jackson.version}</include>
-          <include>com.fasterxml.jackson.core:jackson-core:jar:${fasterxml.jackson.version}</include>
-          <include>com.fasterxml.jackson.core:jackson-databind:jar:${fasterxml.jackson.databind.version}</include>
-          <include>com.fasterxml.jackson.jaxrs:jackson-jaxrs-base:jar:${fasterxml.jackson.version}</include>
-          <include>com.fasterxml.jackson.jaxrs:jackson-jaxrs-json-provider:jar:${fasterxml.jackson.version}</include>
-          <include>com.fasterxml.jackson.module:jackson-module-jaxb-annotations:jar:${fasterxml.jackson.version}</include>
-          <include>commons-collections:commons-collections</include>
           <include>jakarta.ws.rs:jakarta.ws.rs-api</include>
-          <include>javax.annotation:javax.annotation-api</include>
-          <include>joda-time:joda-time</include>
           <include>org.apache.hadoop.thirdparty:hadoop-shaded-guava:jar:${hadoop-shaded-guava.version}</include>
-          <include>com.fasterxml.jackson.jaxrs:jackson-jaxrs-json-provider:jar:${fasterxml.jackson.version}</include>
-          <include>com.fasterxml.jackson.jaxrs:jackson-jaxrs-base:jar:${fasterxml.jackson.version}</include>
-          <include>com.fasterxml.jackson.module:jackson-module-jaxb-annotations:jar:${fasterxml.jackson.version}</include>
           <include>org.apache.httpcomponents:httpasyncclient:jar:${httpcomponents.httpasyncclient.version}</include>
-          <include>org.apache.httpcomponents:httpclient:jar:${httpcomponents.httpclient.version}</include>
-          <include>org.apache.httpcomponents:httpcore-nio:jar:${httpcomponents.httpcore.version}</include>
-          <include>org.apache.httpcomponents:httpcore:jar:${httpcomponents.httpcore.version}</include>
           <include>org.apache.httpcomponents:httpmime:jar:${httpcomponents.httpmime.version}</include>
           <include>org.apache.solr:solr-solrj:jar:${solr.version}</include>
           <include>org.eclipse.jetty:jetty-client:jar:${jetty-client.version}</include>
           <include>org.glassfish.jersey.core:jersey-client</include>
           <include>org.glassfish.jersey.core:jersey-common</include>
           <include>org.glassfish.jersey.media:jersey-media-json-jackson</include>
+          <include>com.fasterxml.jackson.module:jackson-module-jaxb-annotations:jar:2.16.1</include>
           <include>org.graalvm.js:js:jar:${graalvm.version}</include>
           <include>org.graalvm.js:js-scriptengine:jar:${graalvm.version}</include>
           <include>org.graalvm.regex:regex:jar:${graalvm.version}</include>
