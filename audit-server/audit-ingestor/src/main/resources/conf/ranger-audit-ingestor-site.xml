@@ -232,8 +232,8 @@
 
     <property>
         <name>ranger.audit.ingestor.service.dev_ozone.allowed.users</name>
-        <value>ozone,om,scm,dn</value>
-        <description>Allowed users for dev_ozone (OM, SCM, DataNode)</description>
+        <value>om</value>
+        <description>Allowed users for dev_ozone (Ozone Manager; Ranger plugin runs on OM only)</description>
     </property>
 
     <property>
@@ -273,21 +273,6 @@
                RULE:[2:$1/$2@$0]([ndj]n/.*@.*|hdfs/.*@.*)s/.*/hdfs/
                RULE:[2:$1/$2@$0]([rn]m/.*@.*|yarn/.*@.*)s/.*/yarn/
                RULE:[2:$1/$2@$0](jhs/.*@.*)s/.*/mapred/
-               RULE:[2:$1/$2@$0](hive/.*@.*)s/.*/hive/
-               RULE:[2:$1/$2@$0](hbase/.*@.*)s/.*/hbase/
-               RULE:[2:$1/$2@$0](kafka/.*@.*)s/.*/kafka/
-               RULE:[2:$1/$2@$0](knox/.*@.*)s/.*/knox/
-               RULE:[2:$1/$2@$0](rangerkms/.*@.*)s/.*/rangerkms/
-               RULE:[2:$1/$2@$0](trino/.*@.*)s/.*/trino/
-               RULE:[2:$1/$2@$0](ozone/.*@.*)s/.*/ozone/
-               RULE:[2:$1/$2@$0](om/.*@.*)s/.*/om/
-               RULE:[2:$1/$2@$0](scm/.*@.*)s/.*/scm/
-               RULE:[2:$1/$2@$0](dn/.*@.*)s/.*/dn/
-               RULE:[2:$1/$2@$0](solr/.*@.*)s/.*/solr/
-               RULE:[2:$1/$2@$0](rangertagsync/.*@.*)s/.*/rangertagsync/
-               RULE:[2:$1/$2@$0](atlas/.*@.*)s/.*/atlas/
-               RULE:[2:$1/$2@$0](kudu/.*@.*)s/.*/kudu/
-               RULE:[2:$1/$2@$0](nifi/.*@.*)s/.*/nifi/
                RULE:[1:$1@$0](.*@.*)s/@.*//
                DEFAULT
         </value>
@@ -304,21 +289,6 @@
             - RULE:[2:$1/$2@$0]([ndj]n/.*@.*|hdfs/.*@.*)s/.*/hdfs/     # nn,dn,jn,hdfs/* -> hdfs (dev_hdfs)
             - RULE:[2:$1/$2@$0]([rn]m/.*@.*|yarn/.*@.*)s/.*/yarn/      # rm,nm,yarn/* -> yarn (dev_yarn)
             - RULE:[2:$1/$2@$0](jhs/.*@.*)s/.*/mapred/                 # jhs/* -> mapred
-            - RULE:[2:$1/$2@$0](hive/.*@.*)s/.*/hive/                  # hive/* -> hive (dev_hive)
-            - RULE:[2:$1/$2@$0](hbase/.*@.*)s/.*/hbase/                # hbase/* -> hbase (dev_hbase)
-            - RULE:[2:$1/$2@$0](kafka/.*@.*)s/.*/kafka/                # kafka/* -> kafka (dev_kafka)
-            - RULE:[2:$1/$2@$0](knox/.*@.*)s/.*/knox/                  # knox/* -> knox (dev_knox)
-            - RULE:[2:$1/$2@$0](rangerkms/.*@.*)s/.*/rangerkms/        # rangerkms/* -> rangerkms (dev_kms)
-            - RULE:[2:$1/$2@$0](trino/.*@.*)s/.*/trino/                # trino/* -> trino (dev_trino)
-            - RULE:[2:$1/$2@$0](ozone/.*@.*)s/.*/ozone/                # ozone/* -> ozone (dev_ozone)
-            - RULE:[2:$1/$2@$0](om/.*@.*)s/.*/om/                      # om/* -> om (dev_ozone)
-            - RULE:[2:$1/$2@$0](scm/.*@.*)s/.*/scm/                    # scm/* -> scm (dev_ozone)
-            - RULE:[2:$1/$2@$0](dn/.*@.*)s/.*/dn/                      # dn/* -> dn (dev_ozone)
-            - RULE:[2:$1/$2@$0](solr/.*@.*)s/.*/solr/                  # solr/* -> solr (dev_solr)
-            - RULE:[2:$1/$2@$0](rangertagsync/.*@.*)s/.*/rangertagsync/  # rangertagsync/* -> rangertagsync (dev_tag)
-            - RULE:[2:$1/$2@$0](atlas/.*@.*)s/.*/atlas/                # atlas/* -> atlas (dev_atlas)
-            - RULE:[2:$1/$2@$0](kudu/.*@.*)s/.*/kudu/                  # kudu/* -> kudu (dev_kudu)
-            - RULE:[2:$1/$2@$0](nifi/.*@.*)s/.*/nifi/                  # nifi/* -> nifi (dev_nifi)
             - RULE:[1:$1@$0](.*@.*)s/@.*//                             # user@REALM -> user
             - DEFAULT
         ]]></description>
