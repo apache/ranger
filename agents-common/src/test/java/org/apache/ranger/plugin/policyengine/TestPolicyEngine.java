@@ -817,8 +817,7 @@ public class TestPolicyEngine {
     }
 
     private void runTestCaseTests(RangerPolicyEngine policyEngine, RangerServiceDef serviceDef, String testName, List<TestData> tests) {
-        // Sequential: shared policyEngine is not safe for parallel sub-test evaluation ({USER} token context).
-        tests.forEach(test -> {
+        tests.parallelStream().forEach(test -> {
             RangerAccessRequest request = test.request;
 
             if (request.getContext().containsKey(RangerAccessRequestUtil.KEY_CONTEXT_TAGS) ||

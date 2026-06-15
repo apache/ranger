@@ -26,7 +26,7 @@
     "tags": {
       "1": {
         "type": "PII",
-        "attributes": { "expiry": "2099/12/31" },
+        "attributes": { "expiry": "2026/06/15" },
         "id": 1,
         "guid": "tag-pii-1-guid"
       },

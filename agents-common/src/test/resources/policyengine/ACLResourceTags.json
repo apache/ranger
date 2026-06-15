@@ -43,7 +43,7 @@
     "tags": {
       "1": {
         "type": "EXPIRES_ON",
-        "attributes": { "expiry_date": "2099/12/31" },
+        "attributes": { "expiry_date": "2026/06/15" },
         "id": 1,
         "guid": "tag-expires-on-1-guid"
       },
@@ -61,19 +61,19 @@
       },
       "4": {
         "type": "RESTRICTED-FINAL",
-        "attributes": { "activation_date": "2099/12/31" },
+        "attributes": { "activation_date": "2026/06/15" },
         "id": 4,
         "guid": "tag-restricted-final-4-guid"
       },
       "5": {
         "type": "PII",
-        "attributes": { "expiry": "2099/12/31" },
+        "attributes": { "expiry": "2026/06/15" },
         "id": 5,
         "guid": "tag-pii-5-guid"
       },
       "6": {
         "type": "PII-FINAL",
-        "attributes": { "expiry": "2099/12/31" },
+        "attributes": { "expiry": "2026/06/15" },
         "id": 6,
         "guid": "tag-pii-final-6-guid"
       },

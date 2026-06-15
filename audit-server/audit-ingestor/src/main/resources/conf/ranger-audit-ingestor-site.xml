@@ -242,30 +242,6 @@
         <description>Allowed users for dev_solr (Solr plugin)</description>
     </property>
 
-    <property>
-        <name>ranger.audit.ingestor.service.dev_tag.allowed.users</name>
-        <value>rangertagsync</value>
-        <description>Allowed users for dev_tag (TagSync service)</description>
-    </property>
-
-    <property>
-        <name>ranger.audit.ingestor.service.dev_atlas.allowed.users</name>
-        <value>atlas</value>
-        <description>Allowed users for dev_atlas (Atlas)</description>
-    </property>
-
-    <property>
-        <name>ranger.audit.ingestor.service.dev_kudu.allowed.users</name>
-        <value>kudu</value>
-        <description>Allowed users for dev_kudu (Kudu master/tserver)</description>
-    </property>
-
-    <property>
-        <name>ranger.audit.ingestor.service.dev_nifi.allowed.users</name>
-        <value>nifi</value>
-        <description>Allowed users for dev_nifi (NiFi)</description>
-    </property>
-
     <!-- AUTH_TO_LOCAL RULES FOR KERBEROS PRINCIPAL MAPPING -->
     <property>
         <name>ranger.audit.ingestor.auth.to.local</name>
