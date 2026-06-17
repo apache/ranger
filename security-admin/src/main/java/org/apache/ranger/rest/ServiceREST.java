@@ -196,6 +196,7 @@ public class ServiceREST {
     public static final String PURGE_RECORD_TYPE_LOGIN_LOGS         = "login_records";
     public static final String PURGE_RECORD_TYPE_TRX_LOGS           = "trx_records";
     public static final String PURGE_RECORD_TYPE_POLICY_EXPORT_LOGS = "policy_export_logs";
+    public static final String ERR_VALIDATE_CONFIG_ADMIN_ONLY       = "Only system administrators can validate service configs";
 
     private final RangerAdminConfig config                              = RangerAdminConfig.getInstance();
     private final int               maxPolicyNameLength                 = config.getInt("ranger.policyname.maxlength", 255);
@@ -1078,6 +1079,10 @@ public class ServiceREST {
         VXResponse       ret;
         RangerPerfTracer perf = null;
 
+        if (!bizUtil.isAdmin()) {
+            LOG.warn("Unauthorized validateConfig attempt by user: {}", bizUtil.getCurrentUserLoginId());
+            throw restErrorUtil.createRESTException(HttpServletResponse.SC_FORBIDDEN, ERR_VALIDATE_CONFIG_ADMIN_ONLY, true);
+        }
         try {
             if (RangerPerfTracer.isPerfTraceEnabled(PERF_LOG)) {
                 perf = RangerPerfTracer.getPerfTracer(PERF_LOG, "ServiceREST.validateConfig(serviceName=" + service.getName() + ")");
