@@ -55,6 +55,7 @@ public class DefaultSchemaRegistryClient implements ISchemaRegistryClient {
     private static final String SCHEMA_REGISTRY_PATH         = "/api/v1/schemaregistry";
     private static final String SCHEMAS_PATH                 = SCHEMA_REGISTRY_PATH + "/schemas/";
     private static final String SCHEMA_REGISTRY_VERSION_PATH = SCHEMA_REGISTRY_PATH + "/version";
+    public static final String ERR_CLASS_NOT_IMPLEMENTING_URL_SELECTOR = ": class does not implement UrlSelector";
     private static final String SSL_ALGORITHM                = "TLS";
 
     private final Client                             client;
@@ -248,7 +249,11 @@ public class DefaultSchemaRegistryClient implements ISchemaRegistryClient {
             urlSelector = new LoadBalancedFailoverUrlSelector(rootCatalogURL);
         } else {
             try {
-                urlSelector = (UrlSelector) Class.forName(urlSelectorClass).getConstructor(String.class).newInstance(rootCatalogURL);
+                Class<?> clazz = Class.forName(urlSelectorClass);
+                if (!UrlSelector.class.isAssignableFrom(clazz)) {
+                    throw new RuntimeException(urlSelectorClass + ERR_CLASS_NOT_IMPLEMENTING_URL_SELECTOR);
+                }
+                urlSelector = (UrlSelector) clazz.getConstructor(String.class).newInstance(rootCatalogURL);
             } catch (InstantiationException | IllegalAccessException | ClassNotFoundException | NoSuchMethodException | InvocationTargetException e) {
                 throw new RuntimeException(e);
             }
