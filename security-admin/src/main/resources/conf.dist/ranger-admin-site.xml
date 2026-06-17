@@ -278,11 +278,11 @@
 	</property>
 	<property>
 		<name>ranger.admin.authn.header.username</name>
-		<value>x-awc-username</value>
+		<value></value>
 	</property>
 	<property>
 		<name>ranger.admin.authn.header.requestid</name>
-		<value>x-awc-requestid</value>
+		<value></value>
 	</property>
 	<!-- Trusted header auth properties end -->
 	<!-- Kerberos Properties starts-->	
@@ -420,6 +420,16 @@
 			<name>ranger.admin.init.purge.transaction_records.retention.days
 			</name>
 			<value>0</value>
+		</property>
+		<property>
+			<name>ranger.admin.super.users</name>
+			<value></value>
+			<description>Comma-separated list of users granted full Ranger administrative privileges at login (system admin and key admin capabilities), independent of database roles. Empty or absent disables config-based super users.</description>
+		</property>
+		<property>
+			<name>ranger.admin.super.groups</name>
+			<value></value>
+			<description>Comma-separated list of groups whose members are granted full Ranger administrative privileges at login (system admin and key admin capabilities), independent of database roles. Empty or absent disables config-based super groups.</description>
 		</property>
 	<property>
 		<name>xasecure.audit.jaas.Client.loginModuleName</name>

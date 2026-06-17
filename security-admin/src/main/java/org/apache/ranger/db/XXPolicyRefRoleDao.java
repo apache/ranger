@@ -28,8 +28,11 @@ import org.springframework.stereotype.Service;
 import javax.persistence.NoResultException;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 public class XXPolicyRefRoleDao extends BaseDao<XXPolicyRefRole> {
@@ -132,5 +135,31 @@ public class XXPolicyRefRoleDao extends BaseDao<XXPolicyRefRole> {
         }
 
         batchDeleteByIds("XXPolicyRefRole.deleteByIds", ids, "ids");
+    }
+
+    public Map<String, Long> findRoleNameIdByPolicyId(Long policyId) {
+        Map<String, Long> ret = Collections.emptyMap();
+        if (policyId != null) {
+            try {
+                Collection<Object[]> results = getEntityManager()
+                        .createNamedQuery("XXPolicyRefRole.findRoleNameIdByPolicyId", Object[].class)
+                        .setParameter("policyId", policyId)
+                        .getResultList();
+                ret = results.stream().collect(
+                        Collectors.toMap(
+                                object -> (String) object[0],
+                                object -> (Long) object[1]));
+            } catch (NoResultException e) {
+                // ignore
+            }
+        }
+        return ret;
+    }
+
+    public void deletePolicyRefRoleByIds(List<Long> ids) {
+        if (CollectionUtils.isEmpty(ids)) {
+            return;
+        }
+        batchDeleteByIds("XXPolicyRefRole.deletePolicyRefRoleByIds", ids, "ids");
     }
 }

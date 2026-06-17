@@ -30,7 +30,11 @@ on:
     branches: [ "master" ]
 
 env:
-  MAVEN_OPTS: -Dhttp.keepAlive=false -Dmaven.wagon.http.pool=false -Dmaven.wagon.http.retryHandler.class=standard -Dmaven.wagon.http.retryHandler.count=3
+  MAVEN_OPTS: -Xmx5g -Dhttp.keepAlive=false -Dmaven.wagon.http.pool=false -Dmaven.wagon.http.retryHandler.class=standard -Dmaven.wagon.http.retryHandler.count=3
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   build-17:
@@ -52,6 +56,8 @@ jobs:
         with:
           java-version: '17'
           distribution: 'temurin'
+      - name: Clear npm cache
+        run: npm cache clean --force
       - name: build (17)
         run: mvn -T 8 clean verify --no-transfer-progress -B -V
 
@@ -87,6 +93,7 @@ jobs:
       - name: Copy artifacts for docker build
         run: |
           mv ranger-*-admin.tar.gz dev-support/ranger-docker/dist
+          mv ranger-*-pdp.tar.gz dev-support/ranger-docker/dist
           mv ranger-*-usersync.tar.gz dev-support/ranger-docker/dist
           mv ranger-*-tagsync.tar.gz dev-support/ranger-docker/dist
           mv ranger-*-kms.tar.gz dev-support/ranger-docker/dist
@@ -108,6 +115,7 @@ jobs:
           export RANGER_DB_TYPE=postgres
           docker compose \
           -f docker-compose.ranger.yml \
+          -f docker-compose.ranger-pdp.yml \
           -f docker-compose.ranger-usersync.yml \
           -f docker-compose.ranger-tagsync.yml \
           -f docker-compose.ranger-kms.yml build
@@ -118,6 +126,7 @@ jobs:
           export RANGER_DB_TYPE=postgres
           docker compose \
           -f docker-compose.ranger.yml \
+          -f docker-compose.ranger-pdp.yml \
           -f docker-compose.ranger-usersync.yml \
           -f docker-compose.ranger-tagsync.yml \
           -f docker-compose.ranger-kms.yml up -d
@@ -125,7 +134,7 @@ jobs:
       - name: Check status of containers and remove them
         run: |
           sleep 60
-          containers=(ranger ranger-zk ranger-solr ranger-postgres ranger-usersync ranger-tagsync ranger-kms);
+          containers=(ranger ranger-zk ranger-solr ranger-postgres ranger-pdp ranger-usersync ranger-tagsync ranger-kms);
           flag=true;
           for container in "${containers[@]}"; do
               if [[ $(docker inspect -f '{{.State.Running}}' $container 2>/dev/null) == "true" ]]; then
@@ -146,9 +155,33 @@ jobs:
               exit 1;
           fi
 
+  # Download large plugin distro archives in parallel with build-17 so a slow
+  # archive.apache.org mirror does not consume the docker-build job budget.
+  plugins-download-archives:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Cache downloaded archives
+        uses: actions/cache@v5
+        with:
+          path: dev-support/ranger-docker/downloads
+          key: ${{ runner.os }}-ranger-downloads-${{ hashFiles('dev-support/ranger-docker/.env') }}
+          restore-keys: |
+            ${{ runner.os }}-ranger-downloads-
+
+      # Populates downloads/ for plugins-docker-build; Ozone tarball + extract dir are
+      # cached together (extractOzoneIfNeeded in download-archives.sh).
+      - name: Run download-archives.sh
+        run: |
+          cd dev-support/ranger-docker
+          ./download-archives.sh hadoop hive hbase kafka knox ozone
+
   plugins-docker-build:
     needs:
       - build-17
+      - plugins-download-archives
     runs-on: ubuntu-24.04 # bumping os version for more disk space
     timeout-minutes: 60 # bumping timeout to allow containers to come up
     steps:
@@ -168,7 +201,7 @@ jobs:
       - name: Free up disk space
         run: docker system prune --all --force --volumes
 
-      - name: Cache downloaded archives
+      - name: Restore plugin archives from cache
         uses: actions/cache@v5
         with:
           path: dev-support/ranger-docker/downloads
@@ -176,10 +209,11 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-ranger-downloads-
 
-      - name: Run download-archives.sh
+      # Idempotent: skips downloads already in the Actions cache; Ozone re-extract runs
+      # only when the tarball or extract dir is missing/stale (see extractOzoneIfNeeded).
+      - name: Verify plugin archives (download any cache misses)
         run: |
           cd dev-support/ranger-docker
-          rm -rf downloads/ozone-*
           ./download-archives.sh hadoop hive hbase kafka knox ozone
 
       - name: Build all ranger-plugin images

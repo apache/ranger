@@ -17,19 +17,27 @@
 
 package org.apache.ranger.db;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.ranger.common.db.BaseDao;
 import org.apache.ranger.entity.XXRole;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import javax.persistence.NoResultException;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 public class XXRoleDao extends BaseDao<XXRole> {
+    private static final Logger logger = LoggerFactory.getLogger(XXRoleDao.class);
+
     /**
      * Default Constructor
      */
@@ -120,5 +128,22 @@ public class XXRoleDao extends BaseDao<XXRole> {
             ret = Collections.emptyList();
         }
         return ret;
+    }
+
+    public Map<String, Long> getIdsByRoleNames(Collection<String> roleNames) {
+        if (CollectionUtils.isNotEmpty(roleNames)) {
+            try {
+                Collection<Object[]> result = getEntityManager()
+                        .createNamedQuery("XXRole.getIdsByRoleNames", Object[].class)
+                        .setParameter("roleNames", roleNames)
+                        .getResultList();
+
+                return result.stream().collect(Collectors.toMap(object -> (String) (object[1]), object -> (Long) (object[0])));
+            } catch (NoResultException e) {
+                logger.debug(e.getMessage());
+            }
+        }
+
+        return Collections.emptyMap();
     }
 }

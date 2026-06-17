@@ -507,14 +507,23 @@ public class RangerServiceDefHelper {
 
                         this.hierarchies.put(policyType, Collections.unmodifiableSet(hierarchies));
                         hierarchyKeys.put(policyType, Collections.unmodifiableSet(hierachyKeys));
+                        Map<String, RangerResourceDef> wildcardMap = new HashMap<>(resources.size());
+                        for (RangerResourceDef res : resources) {
+                            if (res != null) {
+                                wildcardMap.putIfAbsent(res.getName(), createWildcardEnabledResourceDef(res));
+                            }
+                        }
+                        wildcardEnabledResourceDefs.put(policyType, Collections.unmodifiableMap(wildcardMap));
                     } else {
                         isValid = false;
                         hierarchies.put(policyType, EMPTY_RESOURCE_HIERARCHY);
                         hierarchyKeys.put(policyType, Collections.emptySet());
+                        wildcardEnabledResourceDefs.put(policyType, Collections.emptyMap());
                     }
                 } else {
                     hierarchies.put(policyType, EMPTY_RESOURCE_HIERARCHY);
                     hierarchyKeys.put(policyType, Collections.emptySet());
+                    wildcardEnabledResourceDefs.put(policyType, Collections.emptyMap());
                 }
             }
 
@@ -546,6 +555,12 @@ public class RangerServiceDefHelper {
             valid = isValid;
 
             LOG.debug("Found [{}] resource hierarchies for service [{}] update-date[{}]: {}", hierarchies.size(), serviceName, serviceDefFreshnessDate, hierarchies);
+        }
+
+        private RangerResourceDef createWildcardEnabledResourceDef(RangerResourceDef resourceDef) {
+            RangerResourceDef ret = new RangerResourceDef(resourceDef);
+            ret.getMatcherOptions().put(RangerAbstractResourceMatcher.OPTION_WILD_CARD, Boolean.TRUE.toString());
+            return ret;
         }
 
         public void patchServiceDefWithDefaultValues() {
@@ -686,31 +701,11 @@ public class RangerServiceDefHelper {
             if (policyType == null) {
                 policyType = RangerPolicy.POLICY_TYPE_ACCESS;
             }
-
-            Map<String, RangerResourceDef> wResourceDefs = wildcardEnabledResourceDefs.computeIfAbsent(policyType, k -> new HashMap<>());
-            RangerResourceDef              ret           = null;
-
-            if (!wResourceDefs.containsKey(resourceName)) {
-                List<RangerResourceDef> resourceDefs = getResourceDefs(servicedef, policyType);
-
-                if (resourceDefs != null) {
-                    for (RangerResourceDef resourceDef : resourceDefs) {
-                        if (StringUtils.equals(resourceName, resourceDef.getName())) {
-                            ret = new RangerResourceDef(resourceDef);
-
-                            ret.getMatcherOptions().put(RangerAbstractResourceMatcher.OPTION_WILD_CARD, Boolean.TRUE.toString());
-
-                            break;
-                        }
-                    }
-                }
-
-                wResourceDefs.put(resourceName, ret);
-            } else {
-                ret = wResourceDefs.get(resourceName);
+            Map<String, RangerResourceDef> wResourceDefs = wildcardEnabledResourceDefs.get(policyType);
+            if (wResourceDefs == null) {
+                return null;
             }
-
-            return ret;
+            return wResourceDefs.get(resourceName);
         }
 
         List<RangerResourceDef> getResourceDefs(RangerServiceDef serviceDef, Integer policyType) {

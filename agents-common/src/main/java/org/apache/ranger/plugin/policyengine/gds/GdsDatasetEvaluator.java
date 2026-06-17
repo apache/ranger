@@ -41,6 +41,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.List;
 import java.util.Set;
 
@@ -108,6 +109,7 @@ public class GdsDatasetEvaluator {
 
     public void evaluate(RangerAccessRequest request, GdsAccessResult result, Collection<GdsProjectEvaluator> projectsToEval) {
         LOG.debug("==> GdsDatasetEvaluator.evaluate({}, {}, {})", request, result, projectsToEval);
+        final Date accessTime = request.getAccessTime() != null ? request.getAccessTime() : new Date();
 
         if (isActive()) {
             result.addDataset(getName());
@@ -121,7 +123,11 @@ public class GdsDatasetEvaluator {
                     RangerAccessRequestUtil.setAccessTypeResults(datasetRequest.getContext(), null);
                     RangerAccessRequestUtil.setAccessTypeACLResults(datasetRequest.getContext(), null);
 
-                    policyEvaluators.forEach(e -> e.evaluate(datasetRequest, datasetResult));
+                    policyEvaluators.forEach(e -> {
+                        if (e.isApplicable(accessTime)) {
+                            e.evaluate(datasetRequest, datasetResult);
+                        }
+                    });
                 } finally {
                     RangerAccessRequestUtil.setAccessTypeResults(datasetRequest.getContext(), null);
                     RangerAccessRequestUtil.setAccessTypeACLResults(datasetRequest.getContext(), null);

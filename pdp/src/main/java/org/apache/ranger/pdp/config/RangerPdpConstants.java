@@ -71,7 +71,6 @@ public final class RangerPdpConstants {
     public static final String PROP_AUTHN_JWT_ENABLED      = PROP_AUTHN_JWT_PREFIX + "enabled";
     public static final String PROP_AUTHN_JWT_PROVIDER_URL = PROP_AUTHN_JWT_PREFIX + "provider.url";
     public static final String PROP_AUTHN_JWT_PUBLIC_KEY   = PROP_AUTHN_JWT_PREFIX + "public.key";
-    public static final String PROP_AUTHN_JWT_COOKIE_NAME  = PROP_AUTHN_JWT_PREFIX + "cookie.name";
     public static final String PROP_AUTHN_JWT_AUDIENCES    = PROP_AUTHN_JWT_PREFIX + "audiences";
 
     // Kerberos/SPNEGO auth

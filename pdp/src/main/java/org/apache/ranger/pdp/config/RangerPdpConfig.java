@@ -140,7 +140,7 @@ public class RangerPdpConfig {
     }
 
     public String getHeaderAuthnUsername() {
-        return get(RangerPdpConstants.PROP_AUTHN_HEADER_USERNAME, "X-Forwarded-User");
+        return get(RangerPdpConstants.PROP_AUTHN_HEADER_USERNAME, "");
     }
 
     // --- JWT bearer token auth ---
@@ -154,10 +154,6 @@ public class RangerPdpConfig {
 
     public String getJwtPublicKey() {
         return get(RangerPdpConstants.PROP_AUTHN_JWT_PUBLIC_KEY, "");
-    }
-
-    public String getJwtCookieName() {
-        return get(RangerPdpConstants.PROP_AUTHN_JWT_COOKIE_NAME, "hadoop-jwt");
     }
 
     public String getJwtAudiences() {

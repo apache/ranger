@@ -61,8 +61,17 @@ public class RangerHeaderPreAuthFilter extends GenericFilterBean {
 
     @PostConstruct
     protected void initialize() {
-        headerAuthEnabled  = PropertiesUtil.getBooleanProperty(PROP_HEADER_AUTH_ENABLED, false);
-        userNameHeaderName = PropertiesUtil.getProperty(PROP_USERNAME_HEADER_NAME);
+        headerAuthEnabled = PropertiesUtil.getBooleanProperty(PROP_HEADER_AUTH_ENABLED, false);
+
+        if (headerAuthEnabled) {
+            userNameHeaderName = PropertiesUtil.getProperty(PROP_USERNAME_HEADER_NAME);
+
+            if (StringUtils.isBlank(userNameHeaderName)) {
+                LOG.warn("Disabling header-based authentication, as configuration {} is not set", PROP_USERNAME_HEADER_NAME);
+
+                headerAuthEnabled = false;
+            }
+        }
     }
 
     @Override

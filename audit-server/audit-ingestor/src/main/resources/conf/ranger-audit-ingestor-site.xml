@@ -1,0 +1,570 @@
+<!--
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License. See accompanying LICENSE file.
+-->
+<configuration>
+    <!-- RANGER AUDIT INGESTOR SERVICE CONFIGURATION -->
+    <!-- Server Configuration -->
+    <property>
+        <name>log.dir</name>
+        <value>${audit.server.log.dir}</value>
+        <description>Log directory for Ranger Audit Server service</description>
+    </property>
+
+    <property>
+        <name>ranger.audit.ingestor.webapp.dir</name>
+        <value>webapp/audit-ingestor</value>
+        <description>Path to the extracted webapp directory (relative to AUDIT_SERVER_HOME_DIR). Must be extracted directory, not WAR file, because Jersey cannot scan packages in unexpanded WAR files.</description>
+    </property>
+
+    <property>
+        <name>ranger.audit.ingestor.contextName</name>
+        <value>/</value>
+    </property>
+
+    <property>
+        <name>ranger.audit.ingestor.host</name>
+        <value>ranger-audit-ingestor.rangernw</value>
+        <description>
+            - In Docker: Use full service name with domain (e.g., ranger-audit-ingestor.rangernw)
+            - In VM: Use the actual FQDN (e.g., ranger.example.com)
+        </description>
+    </property>
+
+    <property>
+        <name>ranger.audit.ingestor.http.port</name>
+        <value>7081</value>
+    </property>
+
+    <property>
+        <name>ranger.audit.ingestor.https.port</name>
+        <value>7182</value>
+    </property>
+
+    <property>
+        <name>ranger.audit.ingestor.https.attrib.ssl.enabled</name>
+        <value>false</value>
+    </property>
+
+    <!-- HTTPS/SSL Configuration -->
+    <property>
+        <name>ranger.audit.ingestor.https.attrib.keystore.keyalias</name>
+        <value>myKey</value>
+    </property>
+
+    <property>
+        <name>ranger.audit.ingestor.https.attrib.keystore.pass</name>
+        <value>_</value>
+    </property>
+
+    <property>
+        <name>ranger.audit.ingestor.https.attrib.keystore.file</name>
+        <value>/etc/ranger/ranger-audit-ingestor/keys/server.jks</value>
+    </property>
+
+    <property>
+        <name>ranger.audit.ingestor.https.attrib.keystore.credential.alias</name>
+        <value>keyStoreCredentialAlias</value>
+    </property>
+
+    <property>
+        <name>ranger.audit.ingestor.tomcat.ciphers</name>
+        <value></value>
+    </property>
+
+    <!-- KERBEROS CONFIGURATION FOR REST API (INCOMING REQUESTS) used by kerberos filter -->
+    <property>
+        <name>hadoop.security.authentication</name>
+        <value>kerberos</value>
+        <description>
+            Hadoop authentication type. Must be set to "kerberos" for EmbeddedServer to call
+            UGI.loginUserFromKeytab() and load principal credentials for SPNEGO authentication.
+        </description>
+    </property>
+
+    <property>
+        <name>ranger.audit.ingestor.kerberos.enabled</name>
+        <value>true</value>
+        <description>Enable Kerberos authentication for incoming REST API requests</description>
+    </property>
+
+    <property>
+        <name>ranger.audit.ingestor.kerberos.type</name>
+        <value>kerberos</value>
+        <description>Authentication type: kerberos or simple</description>
+    </property>
+
+    <property>
+        <name>ranger.audit.ingestor.kerberos.principal</name>
+        <value>HTTP/_HOST@EXAMPLE.COM</value>
+        <description>
+            INCOMING: SPNEGO HTTP principal for authenticating REST API requests FROM plugins.
+            This principal must be present in the keytab file.
+        </description>
+    </property>
+
+    <property>
+        <name>ranger.audit.ingestor.kerberos.keytab</name>
+        <value>/etc/keytabs/HTTP.keytab</value>
+        <description>
+            Keytab file containing HTTP principal for SPNEGO authentication
+        </description>
+    </property>
+
+    <property>
+        <name>ranger.audit.ingestor.kerberos.name.rules</name>
+        <value>DEFAULT</value>
+        <description>Kerberos name rules for principal mapping</description>
+    </property>
+
+    <property>
+        <name>ranger.audit.ingestor.bind.address</name>
+        <value>ranger-audit-ingestor.rangernw</value>
+        <description>
+            Hostname for Kerberos principal _HOST resolution in HTTP principal
+            - Example: If set to "myhost.example.com" and principal is "HTTP/_HOST@REALM",
+            it becomes "HTTP/myhost.example.com@REALM"
+            - In Docker: Use full service name with domain (e.g., ranger-audit-ingestor.rangernw)
+            - In VM: Use the actual FQDN (e.g., ranger.example.com)
+            - MUST match the hostname in the keytab principal
+        </description>
+    </property>
+
+    <property>
+        <name>ranger.audit.ingestor.cookie.path</name>
+        <value>/</value>
+        <description>Cookie path for delegation token</description>
+    </property>
+
+    <!-- JWT AUTHENTICATION CONFIGURATION to support JWT authentication -->
+    <property>
+        <name>config.prefix</name>
+        <value>ranger.audit.jwt.auth</value>
+        <description>Configuration prefix for JWT authentication</description>
+    </property>
+
+    <property>
+        <name>ranger.audit.jwt.auth.enabled</name>
+        <value>false</value>
+        <description>Enable JWT authentication for audit REST API</description>
+    </property>
+
+    <property>
+        <name>ranger.audit.jwt.auth.provider-url</name>
+        <value>http://localhost:9180/rest/jwks</value>
+        <description>JWKS provider URL for JWT token validation</description>
+    </property>
+
+    <property>
+        <name>ranger.audit.jwt.auth.public-key</name>
+        <value></value>
+        <description>JWT public key in PEM format (alternative to provider-url)</description>
+    </property>
+
+    <property>
+        <name>ranger.audit.jwt.auth.cookie.name</name>
+        <value>hadoop-jwt</value>
+        <description>Name of the cookie containing JWT token</description>
+    </property>
+
+    <property>
+        <name>ranger.audit.jwt.auth.audiences</name>
+        <value></value>
+        <description>Expected audiences for JWT validation (comma-separated)</description>
+    </property>
+
+    <property>
+        <name>ranger.audit.ingestor.service.dev_hdfs.allowed.users</name>
+        <value>hdfs</value>
+        <description>Allowed users for dev_hdfs (Policy Manager service name; from policy.download.auth.users)</description>
+    </property>
+
+    <property>
+        <name>ranger.audit.ingestor.service.dev_yarn.allowed.users</name>
+        <value>yarn</value>
+        <description>Allowed users for dev_yarn (YARN RM/NM)</description>
+    </property>
+
+    <property>
+        <name>ranger.audit.ingestor.service.dev_hive.allowed.users</name>
+        <value>hive</value>
+        <description>Allowed users for dev_hive (HiveServer2 + Metastore)</description>
+    </property>
+
+    <property>
+        <name>ranger.audit.ingestor.service.dev_hbase.allowed.users</name>
+        <value>hbase</value>
+        <description>Allowed users for dev_hbase (HBase Master + RegionServer)</description>
+    </property>
+
+    <property>
+        <name>ranger.audit.ingestor.service.dev_kafka.allowed.users</name>
+        <value>kafka</value>
+        <description>Allowed users for dev_kafka</description>
+    </property>
+
+    <property>
+        <name>ranger.audit.ingestor.service.dev_knox.allowed.users</name>
+        <value>knox</value>
+        <description>Allowed users for dev_knox</description>
+    </property>
+
+    <property>
+        <name>ranger.audit.ingestor.service.dev_kms.allowed.users</name>
+        <value>rangerkms</value>
+        <description>Allowed users for dev_kms</description>
+    </property>
+
+    <property>
+        <name>ranger.audit.ingestor.service.dev_trino.allowed.users</name>
+        <value>trino</value>
+        <description>Allowed users for dev_trino</description>
+    </property>
+
+    <property>
+        <name>ranger.audit.ingestor.service.dev_ozone.allowed.users</name>
+        <value>om</value>
+        <description>Allowed users for dev_ozone (Ozone Manager; Ranger plugin runs on OM only)</description>
+    </property>
+
+    <property>
+        <name>ranger.audit.ingestor.service.dev_solr.allowed.users</name>
+        <value>solr</value>
+        <description>Allowed users for dev_solr (Solr plugin)</description>
+    </property>
+
+    <!-- AUTH_TO_LOCAL RULES FOR KERBEROS PRINCIPAL MAPPING -->
+    <property>
+        <name>ranger.audit.ingestor.auth.to.local</name>
+        <value>
+               RULE:[2:$1/$2@$0]([ndj]n/.*@.*|hdfs/.*@.*)s/.*/hdfs/
+               RULE:[2:$1/$2@$0]([rn]m/.*@.*|yarn/.*@.*)s/.*/yarn/
+               RULE:[2:$1/$2@$0](jhs/.*@.*)s/.*/mapred/
+               RULE:[1:$1@$0](.*@.*)s/@.*//
+               DEFAULT
+        </value>
+        <description><![CDATA[
+            Kerberos auth_to_local rules for mapping authenticated principals to service names.
+            Uses Hadoop KerberosName syntax to convert full Kerberos principals to short usernames
+            checked against ranger.audit.ingestor.service.<repo>.allowed.users (Policy Manager
+            policy.download.auth.users).
+
+            IMPORTANT: These rules only apply to Kerberos/SPNEGO authentication. JWT and basic auth
+            usernames are already in short form and pass through unchanged.
+
+            Default rules provided:
+            - RULE:[2:$1/$2@$0]([ndj]n/.*@.*|hdfs/.*@.*)s/.*/hdfs/     # nn,dn,jn,hdfs/* -> hdfs (dev_hdfs)
+            - RULE:[2:$1/$2@$0]([rn]m/.*@.*|yarn/.*@.*)s/.*/yarn/      # rm,nm,yarn/* -> yarn (dev_yarn)
+            - RULE:[2:$1/$2@$0](jhs/.*@.*)s/.*/mapred/                 # jhs/* -> mapred
+            - RULE:[1:$1@$0](.*@.*)s/@.*//                             # user@REALM -> user
+            - DEFAULT
+        ]]></description>
+    </property>
+
+
+    <property>
+        <name>ranger.audit.ingestor.service.kerberos.principal</name>
+        <value>rangerauditserver/_HOST@EXAMPLE.COM</value>
+        <description>
+            rangerauditserver user kerberos principal for authentication into kafka
+        </description>
+    </property>
+
+    <property>
+        <name>ranger.audit.ingestor.service.kerberos.keytab</name>
+        <value>/etc/keytabs/rangerauditserver.keytab</value>
+        <description>
+            keytab of the rangerauditserver principal
+        </description>
+    </property>
+
+    <!-- CONFIGURATION TO ENABLE AUDIT DESTINATION CONFIGURATION -->
+    <property>
+        <name>xasecure.audit.destination.kafka</name>
+        <value>true</value>
+    </property>
+
+    <!-- KAFKA PRODUCER CONFIGURATION IN THE INGESTOR -->
+    <property>
+        <name>ranger.audit.ingestor.kafka.bootstrap.servers</name>
+        <value>ranger-kafka.rangernw:9092</value>
+        <description>
+            Kafka broker hosts for Kafka audit destination.
+            example: kafka-broker1:9092,kafka-broker2:9092,kafka-broker3:9092
+            In Docker, use the service name of the kafka brokers: ranger-kafka.rangernw:9092
+        </description>
+    </property>
+
+    <property>
+        <name>ranger.audit.ingestor.kafka.topic.name</name>
+        <value>ranger_audits</value>
+    </property>
+
+    <property>
+        <name>ranger.audit.ingestor.kafka.partitioner.class</name>
+        <value>org.apache.ranger.audit.producer.kafka.AuditPartitioner</value>
+        <description>
+            Kafka partitioner class for distributing audit messages across partitions.
+            Default: org.apache.ranger.audit.producer.kafka.AuditPartitioner (plugin-based partitioning)
+            Note: If configured.plugins is not set, uses Kafka's default hash-based partitioner instead.
+            Can be overridden with custom implementation of org.apache.kafka.clients.producer.Partitioner
+        </description>
+    </property>
+
+    <property>
+        <name>ranger.audit.ingestor.kafka.configured.plugins</name>
+        <value>hdfs,yarn,knox,hiveServer2,hiveMetastore,kafka,hbaseRegional,hbaseMaster,solr,trino,ozone,kudu,nifi</value>
+        <description>
+            Comma-separated list of configured plugin IDs.
+            If set: Uses AuditPartitioner with auto-calculated partitions (sum of plugin allocations + buffer).
+            If empty/not set: Uses Kafka default hash-based partitioner with topic.partitions value.
+            Each plugin receives dedicated partitions based on topic.partitions.per.configured.plugin (default: 3).
+        </description>
+    </property>
+
+    <property>
+        <name>ranger.audit.ingestor.kafka.topic.partitions.per.configured.plugin</name>
+        <value>3</value>
+        <description>
+            Default number of partitions per configured plugin.
+            Can be overridden per plugin using plugin.partition.overrides.{pluginName} properties.
+            Used ONLY when configured.plugins is set (for plugin-based partitioning).
+            Ignored when configured.plugins is empty.
+        </description>
+    </property>
+
+    <property>
+        <name>ranger.audit.ingestor.kafka.topic.partitions.buffer</name>
+        <value>9</value>
+        <description>
+            Number of buffer partitions reserved for unconfigured plugins.
+            Used ONLY when configured.plugins is set (for plugin-based partitioning).
+            Total = (sum of plugin partitions) + (buffer partitions).
+            Example: 7 plugins × 3 + 9 buffer = 30 total.
+            Ignored when configured.plugins is empty.
+        </description>
+    </property>
+
+    <!-- partition allocation overrides for plugins -->
+    <!-- Uncomment and set values to override the default partition count for high/low volume plugins -->
+    <!-- Plugins without overrides use the default (topic.partitions.per.configured.plugin) -->
+    <!--
+    <property>
+        <name>ranger.audit.ingestor.kafka.plugin.partition.overrides.hdfs</name>
+        <value>3</value>
+        <description>HDFS plugin partition count override</description>
+    </property>
+    <property>
+        <name>ranger.audit.ingestor.kafka.plugin.partition.overrides.hiveServer2</name>
+        <value>2</value>
+        <description>HiveServer plugin partition count override</description>
+    </property>
+    <property>
+        <name>ranger.audit.ingestor.kafka.plugin.partition.overrides.kafka</name>
+        <value>5</value>
+        <description>Kafka plugin partition count override</description>
+    </property>
+     -->
+
+    <property>
+        <name>ranger.audit.ingestor.kafka.topic.partitions</name>
+        <value>10</value>
+        <description>
+            Number of partitions for the Kafka audit topic.
+            Used ONLY when configured.plugins is NOT set (empty) for hash-based partitioning.
+            When configured.plugins is set, partitions are auto-calculated from plugin configuration.
+            Default: 10 partitions (sufficient for small-medium deployments)
+            Recommendations for hash-based mode:
+            - Small deployments (1-3 consumers): 10 partitions
+            - Medium deployments (4-10 consumers): 20-30 partitions
+            - Large deployments (10+ consumers): 50+ partitions
+        </description>
+    </property>
+
+    <property>
+        <name>ranger.audit.ingestor.kafka.replication.factor</name>
+        <value>1</value>
+        <description>
+            Replication factor for the Kafka audit topic.
+            Default: 3 (production with multiple brokers)
+            Development/Single broker: 1 (current setting for Docker environment)
+            Must not exceed the number of available Kafka brokers.
+        </description>
+    </property>
+
+    <property>
+        <name>ranger.audit.ingestor.kafka.security.protocol</name>
+        <value>SASL_PLAINTEXT</value>
+        <description>
+            Security protocol for Kafka audit destination.
+            example: PLAINTEXT for non-Kerberos mode, SASL_PLAINTEXT for Kerberos mode, SASL_SSL for SSL mode
+        </description>
+    </property>
+
+    <property>
+        <name>ranger.audit.ingestor.kafka.sasl.mechanism</name>
+        <value>GSSAPI</value>
+    </property>
+
+    <property>
+        <name>ranger.audit.ingestor.kafka.request.timeout.ms</name>
+        <value>60000</value>
+        <description>Kafka producer and AdminClient request timeout (ms)</description>
+    </property>
+
+    <!-- KAFKA PRODUCER PERFORMANCE (AuditProducer → ProducerConfig) -->
+    <property>
+        <name>ranger.audit.ingestor.kafka.producer.batch.size</name>
+        <value>131072</value>
+        <description>Kafka batch.size in bytes. Default 128 KiB (65536–262144 for high volume).</description>
+    </property>
+
+    <property>
+        <name>ranger.audit.ingestor.kafka.producer.linger.ms</name>
+        <value>20</value>
+        <description>Wait up to this many ms to coalesce records into larger batches (10–50 typical).</description>
+    </property>
+
+    <property>
+        <name>ranger.audit.ingestor.kafka.producer.buffer.memory</name>
+        <value>134217728</value>
+        <description>Producer buffer memory in bytes. Default 128 MiB.</description>
+    </property>
+
+    <property>
+        <name>ranger.audit.ingestor.kafka.producer.compression.type</name>
+        <value>lz4</value>
+        <description>Compression for audit JSON (lz4 recommended: low CPU, good ratio).</description>
+    </property>
+
+    <property>
+        <name>ranger.audit.ingestor.kafka.producer.delivery.timeout.ms</name>
+        <value>120000</value>
+        <description>Upper bound on producer delivery attempts including retries (ms).</description>
+    </property>
+
+    <property>
+        <name>ranger.audit.ingestor.kafka.producer.max.request.size</name>
+        <value>1048576</value>
+        <description>Max size of a produce request; must be less than broker message.max.bytes.</description>
+    </property>
+
+    <property>
+        <name>ranger.audit.ingestor.kafka.producer.max.block.ms</name>
+        <value>60000</value>
+        <description>Max time producer blocks when buffer is full (backpressure).</description>
+    </property>
+
+    <property>
+        <name>ranger.audit.ingestor.kafka.producer.batch.send.timeout.ms</name>
+        <value>30000</value>
+        <description>Application timeout waiting for REST batch send callbacks (ms).</description>
+    </property>
+
+    <!-- Optional topic configs at create time (leave unset for broker defaults; enable for production RF>=3) -->
+    <!--
+    <property>
+        <name>ranger.audit.ingestor.kafka.topic.retention.ms</name>
+        <value>604800000</value>
+        <description>7-day Kafka retention for ranger_audits (replay buffer, not long-term archive)</description>
+    </property>
+    <property>
+        <name>ranger.audit.ingestor.kafka.topic.compression.type</name>
+        <value>lz4</value>
+    </property>
+    <property>
+        <name>ranger.audit.ingestor.kafka.topic.min.insync.replicas</name>
+        <value>2</value>
+        <description>Use only when replication.factor is 3+</description>
+    </property>
+    -->
+
+    <property>
+        <name>ranger.audit.ingestor.kafka.connections.max.idle.ms</name>
+        <value>90000</value>
+    </property>
+
+    <!-- AUDIT RECOVERY CONFIGURATION (FOR KAFKA SEND FAILURES) -->
+    <property>
+        <name>ranger.audit.ingestor.recovery.enabled</name>
+        <value>true</value>
+        <description>
+            Enable audit message recovery system. When enabled, failed audit messages are written to local spool files
+            and retried to Kafka automatically.
+        </description>
+    </property>
+
+    <property>
+        <name>ranger.audit.ingestor.recovery.spool.dir</name>
+        <value>/var/log/ranger/ranger-audit-ingestor/audit/spool</value>
+        <description>
+            Directory for storing .failed files with audit messages that failed to send to Kafka.
+            Files remain here until successfully processed, then moved to archive as .processed files.
+        </description>
+    </property>
+
+    <property>
+        <name>ranger.audit.ingestor.recovery.archive.dir</name>
+        <value>/var/log/ranger/ranger-audit-ingestor/audit/archive</value>
+        <description>
+            Directory for successfully processed files. Files are moved here with .processed extension
+            after all messages are successfully retried to Kafka. Old .processed files are automatically
+            deleted based on retention policy (max.processed.files).
+        </description>
+    </property>
+
+    <property>
+        <name>ranger.audit.ingestor.recovery.file.rotation.interval.sec</name>
+        <value>300</value>
+        <description>
+            Time interval in seconds for rotating spool files. Default is 300 seconds (5 minutes).
+            A new spool file is created after this interval.
+        </description>
+    </property>
+
+    <property>
+        <name>ranger.audit.ingestor.recovery.max.messages.per.file</name>
+        <value>10000</value>
+        <description>
+            Maximum number of messages to write per spool file before rotation.
+            File is closed and moved to archive after reaching this limit.
+        </description>
+    </property>
+
+    <property>
+        <name>ranger.audit.ingestor.recovery.retry.interval.sec</name>
+        <value>60</value>
+        <description>
+            Time interval in seconds between retry attempts for archived files.
+            Default is 60 seconds (1 minute).
+        </description>
+    </property>
+
+    <property>
+        <name>ranger.audit.ingestor.recovery.archive.max.processed.files</name>
+        <value>100</value>
+        <description>
+            Maximum number of .processed files to retain in archive directory.
+            Oldest .processed files are deleted when this limit is exceeded.
+            Failed messages remain in spool directory as .failed files for retry.
+        </description>
+    </property>
+
+    <property>
+        <name>ranger.audit.ingestor.recovery.retry.max.attempts</name>
+        <value>3</value>
+        <description>
+            Maximum number of retry attempts per message before keeping file as .failed in spool.
+            Default is 3 attempts with exponential backoff.
+        </description>
+    </property>
+</configuration>

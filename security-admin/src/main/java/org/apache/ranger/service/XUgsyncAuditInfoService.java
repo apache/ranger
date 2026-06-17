@@ -115,14 +115,14 @@ public class XUgsyncAuditInfoService extends XUgsyncAuditInfoServiceBase<XXUgsyn
         vxUgsyncAuditInfo.setUserName(ContextUtil.getCurrentUserLoginId());
 
         // Process the sync source information
-        if (vxUgsyncAuditInfo.getUnixSyncSourceInfo() != null) {
+        if (vxUgsyncAuditInfo.getLdapSyncSourceInfo() != null) {
+            vxUgsyncAuditInfo.setSyncSourceInfo(jsonUtil.jsonToMap(vxUgsyncAuditInfo.getLdapSyncSourceInfo().toString()));
+        }
+        else if (vxUgsyncAuditInfo.getUnixSyncSourceInfo() != null) {
             vxUgsyncAuditInfo.setSyncSourceInfo(jsonUtil.jsonToMap(vxUgsyncAuditInfo.getUnixSyncSourceInfo().toString()));
         } else if (vxUgsyncAuditInfo.getFileSyncSourceInfo() != null) {
             vxUgsyncAuditInfo.setSyncSourceInfo(jsonUtil.jsonToMap(vxUgsyncAuditInfo.getFileSyncSourceInfo().toString()));
-        } else if (vxUgsyncAuditInfo.getLdapSyncSourceInfo() != null) {
-            vxUgsyncAuditInfo.setSyncSourceInfo(jsonUtil.jsonToMap(vxUgsyncAuditInfo.getLdapSyncSourceInfo().toString()));
         }
-
         return createResource(vxUgsyncAuditInfo);
     }
 

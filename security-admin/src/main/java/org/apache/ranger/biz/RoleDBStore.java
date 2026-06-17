@@ -25,7 +25,6 @@ import org.apache.ranger.biz.ServiceDBStore.REMOVE_REF_TYPE;
 import org.apache.ranger.common.ContextUtil;
 import org.apache.ranger.common.MessageEnums;
 import org.apache.ranger.common.RESTErrorUtil;
-import org.apache.ranger.common.RangerConstants;
 import org.apache.ranger.common.RangerRoleCache;
 import org.apache.ranger.common.UserSessionBase;
 import org.apache.ranger.common.db.RangerTransactionSynchronizationAdapter;
@@ -96,6 +95,16 @@ public class RoleDBStore implements RoleStore {
 
     @Override
     public RangerRole createRole(RangerRole role, Boolean createNonExistUserGroupRole) throws Exception {
+        return createRole(role, createNonExistUserGroupRole, false);
+    }
+
+    @Override
+    public RangerRole updateRole(RangerRole role, Boolean createNonExistUserGroupRole) throws Exception {
+        return updateRole(role, createNonExistUserGroupRole, true);
+    }
+
+    @Override
+    public RangerRole createRole(RangerRole role, Boolean createNonExistUserGroupRole, Boolean isRefTableCleanupRequired) throws Exception {
         LOG.debug("==> RoleDBStore.createRole()");
 
         XXRole xxRole = daoMgr.getXXRole().findByRoleName(role.getName());
@@ -115,7 +124,7 @@ public class RoleDBStore implements RoleStore {
             throw new Exception("Cannot create role:[" + role + "]");
         }
 
-        roleRefUpdater.createNewRoleMappingForRefTable(createdRole, createNonExistUserGroupRole);
+        roleRefUpdater.createNewRoleMappingForRefTable(createdRole, createNonExistUserGroupRole, isRefTableCleanupRequired);
 
         roleService.createTransactionLog(createdRole, null, RangerBaseModelService.OPERATION_CREATE_CONTEXT);
 
@@ -123,7 +132,7 @@ public class RoleDBStore implements RoleStore {
     }
 
     @Override
-    public RangerRole updateRole(RangerRole role, Boolean createNonExistUserGroupRole) throws Exception {
+    public RangerRole updateRole(RangerRole role, Boolean createNonExistUserGroupRole, Boolean isRefTableCleanupRequired) throws Exception {
         XXRole xxRole = daoMgr.getXXRole().findByRoleId(role.getId());
 
         if (xxRole == null) {
@@ -150,7 +159,7 @@ public class RoleDBStore implements RoleStore {
             throw new Exception("Cannot update role:[" + role + "]");
         }
 
-        roleRefUpdater.createNewRoleMappingForRefTable(updatedRole, createNonExistUserGroupRole);
+        roleRefUpdater.createNewRoleMappingForRefTable(updatedRole, createNonExistUserGroupRole, isRefTableCleanupRequired);
 
         roleService.updatePolicyVersions(updatedRole.getId());
 
@@ -314,24 +323,30 @@ public class RoleDBStore implements RoleStore {
         List<RangerRole> roles;
         UserSessionBase  userSession = ContextUtil.getCurrentUserSession();
 
-        if (userSession != null && userSession.getUserRoleList().size() == 1 && userSession.getUserRoleList().contains(RangerConstants.ROLE_USER) && userSession.getLoginId() != null) {
-            VXUser       loggedInVXUser = xUserService.getXUserByUserName(userSession.getLoginId());
-            List<XXRole> xxRoles        = daoMgr.getXXRole().findByUserId(loggedInVXUser.getId());
+        // Plain ROLE_USER only; config super-users see all roles.
+        if (userSession != null && userSession.isSingleRoleUserSession() && userSession.getLoginId() != null) {
+            VXUser loggedInVXUser = xUserService.getXUserByUserName(userSession.getLoginId());
 
-            roles = new ArrayList<>();
+            if (loggedInVXUser != null) {
+                List<XXRole> xxRoles = daoMgr.getXXRole().findByUserId(loggedInVXUser.getId());
 
-            if (CollectionUtils.isNotEmpty(xxRoles)) {
-                for (XXRole xxRole : xxRoles) {
-                    roles.add(roleService.read(xxRole.getId()));
+                roles = new ArrayList<>();
+
+                if (CollectionUtils.isNotEmpty(xxRoles)) {
+                    for (XXRole xxRole : xxRoles) {
+                        roles.add(roleService.read(xxRole.getId()));
+                    }
                 }
-            }
 
-            if (predicateUtil != null && !filter.isEmpty()) {
-                List<RangerRole> copy = new ArrayList<>(roles);
+                if (predicateUtil != null && !filter.isEmpty()) {
+                    List<RangerRole> copy = new ArrayList<>(roles);
 
-                predicateUtil.applyFilter(copy, filter);
+                    predicateUtil.applyFilter(copy, filter);
 
-                roles = copy;
+                    roles = copy;
+                }
+            } else {
+                roles = getRoles(filter);
             }
         } else {
             roles = getRoles(filter);

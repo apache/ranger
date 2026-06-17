@@ -17,17 +17,27 @@
 
 package org.apache.ranger.db;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.ranger.common.db.BaseDao;
 import org.apache.ranger.entity.XXPolicyConditionDef;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import javax.persistence.NoResultException;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 public class XXPolicyConditionDefDao extends BaseDao<XXPolicyConditionDef> {
+    private static final Logger logger = LoggerFactory.getLogger(XXPolicyConditionDefDao.class);
+
     public XXPolicyConditionDefDao(RangerDaoManagerBase daoManager) {
         super(daoManager);
     }
@@ -59,5 +69,23 @@ public class XXPolicyConditionDefDao extends BaseDao<XXPolicyConditionDef> {
         } catch (NoResultException e) {
             return null;
         }
+    }
+
+    public Map<String, Long> findConditionDefIdsByServiceDefIdAndNames(Long serviceDefId, Set<String> names) {
+        if (serviceDefId != null && CollectionUtils.isNotEmpty(names)) {
+            try {
+                Collection<Object[]> result = getEntityManager()
+                        .createNamedQuery("XXPolicyConditionDef.findConditionDefIdsByServiceDefIdAndNames", Object[].class)
+                        .setParameter("serviceDefId", serviceDefId)
+                        .setParameter("names", names)
+                        .getResultList();
+
+                return result.stream().collect(Collectors.toMap(object -> (String) object[1], object -> (Long) object[0], (a, b) -> a));
+            } catch (NoResultException e) {
+                logger.debug(e.getMessage());
+            }
+        }
+
+        return Collections.emptyMap();
     }
 }

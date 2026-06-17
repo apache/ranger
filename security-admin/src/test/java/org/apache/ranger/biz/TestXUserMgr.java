@@ -132,6 +132,7 @@ import javax.ws.rs.WebApplicationException;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -1316,33 +1317,54 @@ public class TestXUserMgr {
     @Test
     public void test36getGroupsForUser() {
         setupUser();
-        VXUser  vxUser   = vxUser();
-        VXGroup vxGroup  = vxGroup();
-        String  userName = userLoginID;
-        Mockito.when(xUserService.getXUserByUserName(userName)).thenReturn(vxUser);
-        VXGroupUserList vxGroupUserList = vxGroupUserList();
-        Mockito.when(xGroupUserService.searchXGroupUsers(Mockito.any())).thenReturn(vxGroupUserList);
-        Mockito.when(xGroupService.readResource(userId)).thenReturn(vxGroup);
-        XXModuleDefDao modDef = Mockito.mock(XXModuleDefDao.class);
-        Mockito.when(daoManager.getXXModuleDef()).thenReturn(modDef);
-        List<String> lstModule = new ArrayList<>();
-        lstModule.add(RangerConstants.MODULE_USER_GROUPS);
-        lstModule.add(RangerConstants.MODULE_RESOURCE_BASED_POLICIES);
-        Mockito.when(modDef.findAccessibleModulesByUserId(Mockito.anyLong(), Mockito.anyLong())).thenReturn(lstModule);
+        String userName = userLoginID;
+
+        XXGroupUserDao xxGroupUserDao = Mockito.mock(XXGroupUserDao.class);
+        Mockito.when(daoManager.getXXGroupUser()).thenReturn(xxGroupUserDao);
+        Mockito.when(xxGroupUserDao.findGroupNamesByUserName(userName))
+                .thenReturn(new HashSet<>(Collections.singletonList("test-group")));
+
         Set<String> list = xUserMgr.getGroupsForUser(userName);
+
         Assertions.assertNotNull(list);
-        Mockito.verify(xUserService, Mockito.atLeast(2)).getXUserByUserName(userName);
-        Mockito.verify(modDef).findAccessibleModulesByUserId(Mockito.anyLong(), Mockito.anyLong());
-        Mockito.when(xUserService.getXUserByUserName(userName)).thenReturn(null);
+        Assertions.assertEquals(1, list.size());
+        Assertions.assertTrue(list.contains("test-group"));
+        Mockito.verify(xxGroupUserDao).findGroupNamesByUserName(userName);
+
+        Mockito.when(xxGroupUserDao.findGroupNamesByUserName(userName))
+                .thenReturn(new HashSet<>());
         list = xUserMgr.getGroupsForUser(userName);
         Assertions.assertTrue(list.isEmpty());
-        Mockito.verify(xUserService, Mockito.atLeast(2)).getXUserByUserName(userName);
-        Mockito.verify(modDef).findAccessibleModulesByUserId(Mockito.anyLong(), Mockito.anyLong());
-        Mockito.when(xUserService.getXUserByUserName(userName)).thenReturn(null);
+
+        Mockito.when(xxGroupUserDao.findGroupNamesByUserName(userName))
+                .thenThrow(new RuntimeException("dao failure"));
         list = xUserMgr.getGroupsForUser(userName);
         Assertions.assertTrue(list.isEmpty());
-        Mockito.verify(xUserService, Mockito.atLeast(2)).getXUserByUserName(userName);
-        Mockito.verify(modDef).findAccessibleModulesByUserId(Mockito.anyLong(), Mockito.anyLong());
+    }
+
+    @Test
+    public void testGetGroupsForUserFromDao() {
+        setupUser();
+        String userName = userLoginID;
+
+        XXGroupUserDao xxGroupUserDao = Mockito.mock(XXGroupUserDao.class);
+
+        Mockito.when(daoManager.getXXGroupUser()).thenReturn(xxGroupUserDao);
+        Mockito.when(xxGroupUserDao.findGroupNamesByUserName(userName))
+                .thenReturn(new HashSet<>(Collections.singletonList("ldap-admins")));
+
+        Set<String> groups = xUserMgr.getGroupsForUser(userName);
+
+        Assertions.assertEquals(1, groups.size());
+        Assertions.assertTrue(groups.contains("ldap-admins"));
+        Mockito.verify(xxGroupUserDao).findGroupNamesByUserName(userName);
+
+        Mockito.when(xxGroupUserDao.findGroupNamesByUserName(userName))
+                .thenReturn(new HashSet<>());
+
+        groups = xUserMgr.getGroupsForUser(userName);
+
+        Assertions.assertTrue(groups.isEmpty());
     }
 
     @Test
@@ -3251,6 +3273,9 @@ public class TestXUserMgr {
         xXPortalUser.setLoginId(userLoginID);
         xXPortalUser.setId(userId);
         currentUserSession.setXXPortalUser(xXPortalUser);
+        List<String> sessionRoles = new ArrayList<>();
+        sessionRoles.add(RangerConstants.ROLE_USER);
+        currentUserSession.setUserRoleList(sessionRoles);
         List<String> permissionList = new ArrayList<>();
         permissionList.add(RangerConstants.MODULE_USER_GROUPS);
 

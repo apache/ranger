@@ -215,6 +215,38 @@ public class TestRoleDBStore {
     }
 
     @Test
+    public void testGetRolesForUser_ConfigSuperUserSeesAllRoles() throws Exception {
+        RangerRole     rangerRole     = getRangerRole();
+        RangerRoleList rangerRoleList = new RangerRoleList();
+        XXRole         xxRole         = getTestRole();
+        List<XXRole>   xxRoles        = Collections.singletonList(xxRole);
+        SearchFilter   searchFilter   = new SearchFilter();
+        XXRoleDao      xxRoleDao      = Mockito.mock(XXRoleDao.class);
+
+        Mockito.when(daoMgr.getXXRole()).thenReturn(xxRoleDao);
+        Mockito.when(xxRoleDao.getAll()).thenReturn(xxRoles);
+        Mockito.when(roleService.read(xxRole.getId())).thenReturn(rangerRole);
+
+        RangerSecurityContext context = new RangerSecurityContext();
+        context.setUserSession(new UserSessionBase());
+        RangerContextHolder.setSecurityContext(context);
+
+        UserSessionBase currentUserSession = ContextUtil.getCurrentUserSession();
+        currentUserSession.setUserAdmin(true);
+        currentUserSession.setSuperUser(true);
+        currentUserSession.setUserRoleList(
+                Collections.singletonList(RangerConstants.ROLE_USER));
+
+        RangerRoleList rangerRoleListInDB =
+                roleDBStore.getRolesForUser(searchFilter, rangerRoleList);
+
+        Assertions.assertNotNull(rangerRoleListInDB);
+        Assertions.assertEquals(1, rangerRoleListInDB.getList().size());
+        Mockito.verify(xxRoleDao).getAll();
+        Mockito.verify(xxRoleDao, Mockito.never()).findByUserId(Mockito.anyLong());
+    }
+
+    @Test
     public void testGetRolesByServiceId() {
         XXService    xxService  = getXXService();
         XXRoleDao    xxRoleDao  = Mockito.mock(XXRoleDao.class);
@@ -389,7 +421,7 @@ public class TestRoleDBStore {
         Mockito.when(daoMgr.getXXRole()).thenReturn(xxRoleDao);
         Mockito.when(xxRoleDao.findByRoleName(roleName)).thenReturn(xxRole);
         Mockito.when(restErrorUtil.createRESTException(Mockito.anyString(), Mockito.any())).thenThrow(new WebApplicationException());
-        Assertions.assertThrows(WebApplicationException.class, () -> roleDBStore.createRole(rangerRole, true));
+        Assertions.assertThrows(WebApplicationException.class, () -> roleDBStore.createRole(rangerRole, true, false));
     }
 
     @Test
@@ -403,10 +435,10 @@ public class TestRoleDBStore {
         Mockito.when(roleService.create(rangerRole)).thenReturn(rangerRole);
         Mockito.when(roleService.read(xxRole.getId())).thenReturn(rangerRole);
         Mockito.doNothing().when(transactionSynchronizationAdapter).executeOnTransactionCommit(Mockito.any());
-        Mockito.doNothing().when(roleRefUpdater).createNewRoleMappingForRefTable(Mockito.any(), Mockito.anyBoolean());
+        Mockito.doNothing().when(roleRefUpdater).createNewRoleMappingForRefTable(Mockito.any(), Mockito.anyBoolean(), Mockito.anyBoolean());
         Mockito.doNothing().when(roleService).createTransactionLog(Mockito.any(), Mockito.any(), Mockito.anyInt());
 
-        roleDBStore.createRole(rangerRole, true);
+        roleDBStore.createRole(rangerRole, true, false);
     }
 
     @Test
@@ -417,7 +449,7 @@ public class TestRoleDBStore {
         Mockito.when(daoMgr.getXXRole()).thenReturn(xxRoleDao);
         Mockito.when(xxRoleDao.findByRoleId(rangerRole.getId())).thenReturn(null);
         Mockito.when(restErrorUtil.createRESTException(Mockito.anyString())).thenThrow(new WebApplicationException());
-        Assertions.assertThrows(WebApplicationException.class, () -> roleDBStore.updateRole(rangerRole, true));
+        Assertions.assertThrows(WebApplicationException.class, () -> roleDBStore.updateRole(rangerRole, true, true));
     }
 
     @Test
@@ -430,11 +462,11 @@ public class TestRoleDBStore {
         Mockito.when(xxRoleDao.findByRoleId(rangerRole.getId())).thenReturn(xxRole);
         Mockito.doNothing().when(transactionSynchronizationAdapter).executeOnTransactionCommit(Mockito.any());
         Mockito.when(roleService.update(rangerRole)).thenReturn(rangerRole);
-        Mockito.doNothing().when(roleRefUpdater).createNewRoleMappingForRefTable(Mockito.any(), Mockito.anyBoolean());
+        Mockito.doNothing().when(roleRefUpdater).createNewRoleMappingForRefTable(Mockito.any(), Mockito.anyBoolean(), Mockito.anyBoolean());
         Mockito.doNothing().when(roleService).updatePolicyVersions(rangerRole.getId());
         Mockito.doNothing().when(roleService).createTransactionLog(Mockito.any(), Mockito.any(), Mockito.anyInt());
 
-        roleDBStore.updateRole(rangerRole, true);
+        roleDBStore.updateRole(rangerRole, true, true);
     }
 
     @Test
@@ -544,7 +576,7 @@ public class TestRoleDBStore {
         toUpdate.setName("new-name");
 
         try {
-            roleDBStore.updateRole(toUpdate, true);
+            roleDBStore.updateRole(toUpdate, true, true);
             Assertions.fail("Expected exception for name change not allowed");
         } catch (Exception expected) {
             Assertions.assertTrue(expected.getMessage().contains("can not be updated"));

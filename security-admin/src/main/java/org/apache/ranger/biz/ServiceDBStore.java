@@ -1472,11 +1472,9 @@ public class ServiceDBStore extends AbstractServiceStore {
 
         XXPolicy newUpdPolicy = daoMgr.getXXPolicy().getById(policy.getId());
 
-        policyRefUpdater.cleanupRefTables(policy);
-
         deleteExistingPolicyLabel(policy);
 
-        policyRefUpdater.createNewPolMappingForRefTable(policy, newUpdPolicy, xServiceDef, bizUtil.getCreatePrincipalsIfAbsent());
+        policyRefUpdater.createNewPolMappingForRefTable(policy, newUpdPolicy, xServiceDef, bizUtil.getCreatePrincipalsIfAbsent(), true);
 
         createOrMapLabels(newUpdPolicy, uniquePolicyLabels);
 
@@ -2290,7 +2288,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 
         XXPolicy xCreatedPolicy = daoMgr.getXXPolicy().getById(policy.getId());
 
-        policyRefUpdater.createNewPolMappingForRefTable(policy, xCreatedPolicy, xServiceDef, createPrincipalsIfAbsent);
+        policyRefUpdater.createNewPolMappingForRefTable(policy, xCreatedPolicy, xServiceDef, createPrincipalsIfAbsent, false);
 
         createOrMapLabels(xCreatedPolicy, uniquePolicyLabels);
 

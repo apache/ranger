@@ -37,5 +37,9 @@ mkdir -p /opt/knox/logs
 chown -R knox:knox /opt/knox/
 chmod g+w /opt/knox/logs
 
+if ! grep -q 'knox-jdk17-env.sh' /opt/knox/bin/knox-env.sh 2>/dev/null; then
+  echo '. "${RANGER_SCRIPTS}/knox-jdk17-env.sh"' >> /opt/knox/bin/knox-env.sh
+fi
+
 cd ${RANGER_HOME}/ranger-knox-plugin
 ./enable-knox-plugin.sh

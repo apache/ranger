@@ -47,7 +47,7 @@ import java.util.Map;
  */
 public class NiFiRegistryConnectionMgr {
     private static final Logger LOG           = LoggerFactory.getLogger(NiFiRegistryConnectionMgr.class);
-    private static final String SSL_ALGORITHM = "TLSv1.2";
+    private static final String SSL_ALGORITHM = "TLS";
 
     private static final String API_RESOURCES_PATH = "/nifi-registry-api/policies/resources";
     static final         String INVALID_URL_MSG    = "NiFi Registry URL must be a valid URL of the form http(s)://<hostname>(:<port>)" + API_RESOURCES_PATH;

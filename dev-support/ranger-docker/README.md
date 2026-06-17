@@ -24,7 +24,7 @@ Use Dockerfiles in this directory to create docker images and run them to build 
 ### Environment Setup
 
 - Ensure that you have recent version of Docker installed from [docker.io](http://www.docker.io) (as of this writing: Engine v24.0.5, Compose v2.20.2).
-   Make sure to configure docker with at least 6gb of memory.
+   Make sure to configure docker with at least 8gb of memory.
 
 - Update environment variables in ```.env``` file, if necessary
 
@@ -119,7 +119,19 @@ docker compose -f docker-compose.ranger.yml -f docker-compose.ranger-usersync.ym
 docker compose -f docker-compose.ranger.yml -f docker-compose.ranger-usersync.yml -f docker-compose.ranger-tagsync.yml -f docker-compose.ranger-kms.yml -f docker-compose.ranger-hadoop.yml -f docker-compose.ranger-hbase.yml -f docker-compose.ranger-kafka.yml -f docker-compose.ranger-hive.yml -f docker-compose.ranger-trino.yml -f docker-compose.ranger-knox.yml up -d --no-deps --force-recreate --build <service-1> <service-2>
 ~~~
 
-#### To bring up audit server, solr and hdfs consumer. Make sure kafka,solr and hdfs containers are running before bring up audit server.
+#### To bring up audit server ingestor + dispatchers. Make sure kafka, solr, and hdfs containers are running before bringing up audit server services.
 ~~~
-docker compose  -f docker-compose.ranger.yml -f docker-compose.ranger-hadoop.yml -f docker-compose.ranger-kafka.yml -f docker-compose.ranger-audit-server.yml  up -d
+docker compose -f docker-compose.ranger.yml -f docker-compose.ranger-hadoop.yml -f docker-compose.ranger-kafka.yml -f docker-compose.ranger-audit-server.yml up -d
+~~~
+
+#### To bring up audit server services individually:
+~~~
+# Audit ingestor
+docker compose -f docker-compose.ranger.yml -f docker-compose.ranger-kafka.yml -f docker-compose.ranger-audit-ingestor.yml up -d
+
+# Solr dispatcher
+docker compose -f docker-compose.ranger.yml -f docker-compose.ranger-kafka.yml -f docker-compose.ranger-audit-dispatcher-solr.yml up -d
+
+# HDFS dispatcher
+docker compose -f docker-compose.ranger.yml -f docker-compose.ranger-hadoop.yml -f docker-compose.ranger-kafka.yml -f docker-compose.ranger-audit-dispatcher-hdfs.yml up -d
 ~~~

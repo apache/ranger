@@ -98,7 +98,7 @@ public class CustomSSLSocketFactory extends SSLSocketFactory {
                 }
             }
 
-            sslContext = SSLContext.getInstance("TLSv1.2");
+            sslContext = SSLContext.getInstance("TLS");
 
             sslContext.init(kmList, tmList, new SecureRandom());
 
