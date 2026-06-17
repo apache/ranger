@@ -218,19 +218,23 @@ is_command () {
 }
 
 get_distro(){
-	log "[I] Checking distribution name.."
-	ver=$(cat /etc/*{issues,release,version} 2> /dev/null)
-	if [[ $(echo $ver | grep DISTRIB_ID) ]]; then
-	  DIST_NAME=$(lsb_release -si)
-	elif [[ $(echo $ver | grep -E '^NAME=' | cut -d'"' -f2) ]]; then
-	  DIST_NAME=$(echo $ver | grep -E '^NAME=' | cut -d'"' -f2)
-	else
-	  DIST_NAME=$(echo $ver | cut -d ' ' -f 1 | sort -u | head -1)
-	fi
-	export $DIST_NAME
-	log "[I] Found distribution : $DIST_NAME"
-
+    log "[I] Checking distribution name.."
+    ver=$(cat /etc/*{issues,release,version} 2> /dev/null)
+    if [[ $(echo $ver | grep DISTRIB_ID) ]]; then
+        DIST_NAME=$(lsb_release -si 2> /dev/null)
+        if test -z "${DIST_NAME}" ;
+        then
+            DIST_NAME=$(cat /etc/lsb-release 2> /dev/null  | grep DISTRIB_ID | cut -d= -f2)
+        fi
+    elif [[ $(echo $ver | grep -E '^NAME=' | cut -d'"' -f2) ]]; then
+        DIST_NAME=$(echo $ver | grep -E '^NAME=' | cut -d'"' -f2)
+    else
+        DIST_NAME=$(echo $ver | cut -d ' ' -f 1 | sort -u | head -1)
+    fi
+    export $DIST_NAME
+    log "[I] Found distribution : $DIST_NAME"
 }
+
 #Get Properties from File without erroring out if property is not there
 #$1 -> propertyName $2 -> fileName $3 -> variableName $4 -> failIfNotFound
 getPropertyFromFileNoExit(){
@@ -1520,57 +1524,62 @@ setup_install_files(){
                 log "[I] Creating ${WEBAPP_ROOT}/WEB-INF/classes/lib"
                 mkdir -p ${WEBAPP_ROOT}/WEB-INF/classes/lib
 	fi
-	if [ -d ${WEBAPP_ROOT}/WEB-INF/classes/lib ]; then
-		chown -R ${unix_user} ${WEBAPP_ROOT}/WEB-INF/classes/lib
-	fi
 
-	if [ -d /etc/init.d ]; then
-                log "[I] Setting up init.d"
-                cp ${INSTALL_DIR}/ews/${RANGER_ADMIN_INITD} /etc/init.d/${RANGER_ADMIN}
-                chmod ug+rx /etc/init.d/${RANGER_ADMIN}
-
-                if [ -d /etc/rc2.d ]
-                then
-		RC_DIR=/etc/rc2.d
-		log "[I] Creating script S88${RANGER_ADMIN}/K90${RANGER_ADMIN} in $RC_DIR directory .... "
-		rm -f $RC_DIR/S88${RANGER_ADMIN}  $RC_DIR/K90${RANGER_ADMIN}
-		ln -s /etc/init.d/${RANGER_ADMIN} $RC_DIR/S88${RANGER_ADMIN}
-		ln -s /etc/init.d/${RANGER_ADMIN} $RC_DIR/K90${RANGER_ADMIN}
-                fi
-
-                if [ -d /etc/rc3.d ]
-                then
-		RC_DIR=/etc/rc3.d
-		log "[I] Creating script S88${RANGER_ADMIN}/K90${RANGER_ADMIN} in $RC_DIR directory .... "
-		rm -f $RC_DIR/S88${RANGER_ADMIN}  $RC_DIR/K90${RANGER_ADMIN}
-		ln -s /etc/init.d/${RANGER_ADMIN} $RC_DIR/S88${RANGER_ADMIN}
-		ln -s /etc/init.d/${RANGER_ADMIN} $RC_DIR/K90${RANGER_ADMIN}
-                fi
-
-                # SUSE has rc2.d and rc3.d under /etc/rc.d
-                if [ -d /etc/rc.d/rc2.d ]
-                then
-		RC_DIR=/etc/rc.d/rc2.d
-		log "[I] Creating script S88${RANGER_ADMIN}/K90${RANGER_ADMIN} in $RC_DIR directory .... "
-		rm -f $RC_DIR/S88${RANGER_ADMIN}  $RC_DIR/K90${RANGER_ADMIN}
-		ln -s /etc/init.d/${RANGER_ADMIN} $RC_DIR/S88${RANGER_ADMIN}
-		ln -s /etc/init.d/${RANGER_ADMIN} $RC_DIR/K90${RANGER_ADMIN}
-                fi
-
-                if [ -d /etc/rc.d/rc3.d ]
-                then
-		RC_DIR=/etc/rc.d/rc3.d
-		log "[I] Creating script S88${RANGER_ADMIN}/K90${RANGER_ADMIN} in $RC_DIR directory .... "
-		rm -f $RC_DIR/S88${RANGER_ADMIN}  $RC_DIR/K90${RANGER_ADMIN}
-		ln -s /etc/init.d/${RANGER_ADMIN} $RC_DIR/S88${RANGER_ADMIN}
-		ln -s /etc/init.d/${RANGER_ADMIN} $RC_DIR/K90${RANGER_ADMIN}
-                fi
-	fi
-	if [  -f /etc/init.d/${RANGER_ADMIN} ]; then
-		if [ "${unix_user}" != "" ]; then
-			sed  's/^LINUX_USER=.*$/LINUX_USER='${unix_user}'/g' -i  /etc/init.d/${RANGER_ADMIN}
+    if [ $(id -u) -eq 0 ]
+    then
+	
+		if [ -d ${WEBAPP_ROOT}/WEB-INF/classes/lib ]; then
+			chown -R ${unix_user} ${WEBAPP_ROOT}/WEB-INF/classes/lib
 		fi
-	fi
+	
+		if [ -d /etc/init.d ]; then
+	                log "[I] Setting up init.d"
+	                cp ${INSTALL_DIR}/ews/${RANGER_ADMIN_INITD} /etc/init.d/${RANGER_ADMIN}
+	                chmod ug+rx /etc/init.d/${RANGER_ADMIN}
+	
+	                if [ -d /etc/rc2.d ]
+	                then
+			RC_DIR=/etc/rc2.d
+			log "[I] Creating script S88${RANGER_ADMIN}/K90${RANGER_ADMIN} in $RC_DIR directory .... "
+			rm -f $RC_DIR/S88${RANGER_ADMIN}  $RC_DIR/K90${RANGER_ADMIN}
+			ln -s /etc/init.d/${RANGER_ADMIN} $RC_DIR/S88${RANGER_ADMIN}
+			ln -s /etc/init.d/${RANGER_ADMIN} $RC_DIR/K90${RANGER_ADMIN}
+	                fi
+	
+	                if [ -d /etc/rc3.d ]
+	                then
+			RC_DIR=/etc/rc3.d
+			log "[I] Creating script S88${RANGER_ADMIN}/K90${RANGER_ADMIN} in $RC_DIR directory .... "
+			rm -f $RC_DIR/S88${RANGER_ADMIN}  $RC_DIR/K90${RANGER_ADMIN}
+			ln -s /etc/init.d/${RANGER_ADMIN} $RC_DIR/S88${RANGER_ADMIN}
+			ln -s /etc/init.d/${RANGER_ADMIN} $RC_DIR/K90${RANGER_ADMIN}
+	                fi
+	
+	                # SUSE has rc2.d and rc3.d under /etc/rc.d
+	                if [ -d /etc/rc.d/rc2.d ]
+	                then
+			RC_DIR=/etc/rc.d/rc2.d
+			log "[I] Creating script S88${RANGER_ADMIN}/K90${RANGER_ADMIN} in $RC_DIR directory .... "
+			rm -f $RC_DIR/S88${RANGER_ADMIN}  $RC_DIR/K90${RANGER_ADMIN}
+			ln -s /etc/init.d/${RANGER_ADMIN} $RC_DIR/S88${RANGER_ADMIN}
+			ln -s /etc/init.d/${RANGER_ADMIN} $RC_DIR/K90${RANGER_ADMIN}
+	                fi
+	
+	                if [ -d /etc/rc.d/rc3.d ]
+	                then
+			RC_DIR=/etc/rc.d/rc3.d
+			log "[I] Creating script S88${RANGER_ADMIN}/K90${RANGER_ADMIN} in $RC_DIR directory .... "
+			rm -f $RC_DIR/S88${RANGER_ADMIN}  $RC_DIR/K90${RANGER_ADMIN}
+			ln -s /etc/init.d/${RANGER_ADMIN} $RC_DIR/S88${RANGER_ADMIN}
+			ln -s /etc/init.d/${RANGER_ADMIN} $RC_DIR/K90${RANGER_ADMIN}
+	                fi
+		fi
+		if [  -f /etc/init.d/${RANGER_ADMIN} ]; then
+			if [ "${unix_user}" != "" ]; then
+				sed  's/^LINUX_USER=.*$/LINUX_USER='${unix_user}'/g' -i  /etc/init.d/${RANGER_ADMIN}
+			fi
+		fi
+    fi
 
 	if [ -z "${RANGER_ADMIN_LOGBACK_CONF_FILE}" ]; then
 		RANGER_ADMIN_LOGBACK_CONF_FILE=${WEBAPP_ROOT}/WEB-INF/classes/conf/logback.xml
@@ -1634,19 +1643,21 @@ setup_install_files(){
 	fi
 	log "[I] Setting up installation files and directory DONE";
 
-	if [ ! -f ${INSTALL_DIR}/rpm ]; then
-                if [ -d ${INSTALL_DIR} ]
-                then
-		chown -R ${unix_user}:${unix_group} ${INSTALL_DIR}
-		chown -R ${unix_user}:${unix_group} ${INSTALL_DIR}/*
-                fi
-	fi
-
-	# Copy ranger-admin-services to /usr/bin
-	if [ ! \( -e /usr/bin/ranger-admin \) ]
+	if [ $(id -u) -eq 0 ]
 	then
-		ln -sf ${INSTALL_DIR}/ews/ranger-admin-services.sh /usr/bin/ranger-admin
-		chmod ug+rx /usr/bin/ranger-admin	
+		if [ ! -f ${INSTALL_DIR}/rpm ]; then
+    		if [ -d ${INSTALL_DIR} ]
+        	then
+				chown -R ${unix_user}:${unix_group} ${INSTALL_DIR}
+				chown -R ${unix_user}:${unix_group} ${INSTALL_DIR}/*
+         	fi
+		fi
+		# Copy ranger-admin-services to /usr/bin
+		if [ ! \( -e /usr/bin/ranger-admin \) ]
+		then
+			ln -sf ${INSTALL_DIR}/ews/ranger-admin-services.sh /usr/bin/ranger-admin
+			chmod ug+rx /usr/bin/ranger-admin	
+		fi
 	fi
 }
 python_command_for_change_password(){
