@@ -81,7 +81,7 @@ hbase = RangerService({'name': 'dev_hbase', 'type': 'hbase',
 
 kms = RangerService({'name': 'dev_kms', 'type': 'kms',
                      'configs': {'username': 'keyadmin', 'password': 'rangerR0cks!',
-                                 'provider': 'http://ranger-kms.rangernw:9292',
+                                 'provider': 'kms://http@ranger-kms.rangernw:9292/kms',
                                  'policy.download.auth.users': 'rangerkms',
                                  'tag.download.auth.users': 'rangerkms',
                                  'userstore.download.auth.users': 'rangerkms',
