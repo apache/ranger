@@ -201,6 +201,7 @@
                             <include>com.fasterxml.jackson.core:jackson-core:jar:${fasterxml.jackson.version}</include>
                             <include>com.fasterxml.jackson.core:jackson-databind:jar:${fasterxml.jackson.databind.version}</include>
                             <include>org.javassist:javassist</include>
+                            <include>org.apache.ranger:ranger-common-utils</include>
                         </includes>
                     </dependencySet>
                 </dependencySets>
@@ -273,6 +274,7 @@
             <useAllReactorProjects>true</useAllReactorProjects>
             <includes>
                 <include>org.apache.ranger:ranger-util</include>
+                <include>org.apache.ranger:ranger-common-utils</include>
                 <include>org.apache.ranger:ranger-kms-plugin-shim</include>
                 <include>org.apache.ranger:ranger-plugin-classloader</include>
                 <include>org.apache.ranger:credentialbuilder</include>
