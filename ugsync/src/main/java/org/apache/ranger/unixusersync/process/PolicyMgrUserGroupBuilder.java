@@ -291,6 +291,7 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
         noOfModifiedUsers    = 0;
         noOfModifiedGroups   = 0;
         computeRolesForUsers = new HashSet<>();
+        deltaGroupUsers      = new HashMap<>();
 
         if (!isStartupFlag && computeDeletes) {
             LOG.info("Computing deleted users/groups");
