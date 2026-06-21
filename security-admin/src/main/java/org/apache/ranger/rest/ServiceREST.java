@@ -1185,7 +1185,10 @@ public class ServiceREST {
 
                     RangerService rangerService = svcStore.getServiceByName(serviceName);
                     String        zoneName      = getRangerAdminZoneName(serviceName, grantRequest);
-                    boolean       isAdmin       = bizUtil.isUserRangerAdmin(userName) || bizUtil.isUserServiceAdmin(rangerService, userName) || hasAdminAccess(serviceName, zoneName, userName, userGroups, resource, accessTypes);
+                    boolean       isAdmin       = bizUtil.isUserRangerAdmin(userName)
+                            || bizUtil.isUserServiceAdmin(rangerService, userName)
+                            || bizUtil.isUserAllowed(rangerService, Allowed_User_List_For_Grant_Revoke)
+                            || hasAdminAccess(serviceName, zoneName, userName, userGroups, resource, accessTypes);
 
                     if (!isAdmin) {
                         throw restErrorUtil.createGrantRevokeRESTException("User doesn't have necessary permission to grant access");
@@ -1304,7 +1307,10 @@ public class ServiceREST {
                             isAllowed = true;
                         }
                     } else {
-                        isAllowed = bizUtil.isUserRangerAdmin(userName) || bizUtil.isUserServiceAdmin(rangerService, userName) || hasAdminAccess(serviceName, zoneName, userName, userGroups, resource, accessTypes);
+                        isAllowed = bizUtil.isUserRangerAdmin(userName)
+                                || bizUtil.isUserServiceAdmin(rangerService, userName)
+                                || bizUtil.isUserAllowed(rangerService, Allowed_User_List_For_Grant_Revoke)
+                                || hasAdminAccess(serviceName, zoneName, userName, userGroups, resource, accessTypes);
                     }
 
                     if (isAllowed) {
@@ -1510,7 +1516,10 @@ public class ServiceREST {
                             isAllowed = true;
                         }
                     } else {
-                        isAllowed = bizUtil.isUserRangerAdmin(userName) || bizUtil.isUserServiceAdmin(rangerService, userName) || hasAdminAccess(serviceName, zoneName, userName, userGroups, resource, accessTypes);
+                        isAllowed = bizUtil.isUserRangerAdmin(userName)
+                                || bizUtil.isUserServiceAdmin(rangerService, userName)
+                                || bizUtil.isUserAllowed(rangerService, Allowed_User_List_For_Grant_Revoke)
+                                || hasAdminAccess(serviceName, zoneName, userName, userGroups, resource, accessTypes);
                     }
 
                     if (isAllowed) {
@@ -1551,7 +1560,7 @@ public class ServiceREST {
         }
 
         LOG.debug("<== ServiceREST.secureRevokeAccess({}, {}) :{}", serviceName, revokeRequest, ret);
-
+        LOG.info("<== ServiceREST.secureRevokeAccess({}, {}) :{}", serviceName, revokeRequest, ret);
         return ret;
     }
 
@@ -4372,29 +4381,33 @@ public class ServiceREST {
     }
 
     private void validateGrantees(Set<String> grantees) {
-        for (String userName : grantees) {
-            try {
-                VXUser vxUser = xUserService.getXUserByUserName(userName);
+        if (CollectionUtils.isNotEmpty(grantees)) {
+            for (String userName : grantees) {
+                try {
+                    VXUser vxUser = xUserService.getXUserByUserName(userName);
 
-                if (vxUser == null) {
+                    if (vxUser == null) {
+                        throw restErrorUtil.createGrantRevokeRESTException("Grantee user " + userName + " doesn't exist");
+                    }
+                } catch (Exception e) {
                     throw restErrorUtil.createGrantRevokeRESTException("Grantee user " + userName + " doesn't exist");
                 }
-            } catch (Exception e) {
-                throw restErrorUtil.createGrantRevokeRESTException("Grantee user " + userName + " doesn't exist");
             }
         }
     }
 
     private void validateGroups(Set<String> groups) {
-        for (String groupName : groups) {
-            try {
-                VXGroup vxGroup = userMgr.getGroupByGroupName(groupName);
+        if (CollectionUtils.isNotEmpty(groups)) {
+            for (String groupName : groups) {
+                try {
+                    VXGroup vxGroup = userMgr.getGroupByGroupName(groupName);
 
-                if (vxGroup == null) {
+                    if (vxGroup == null) {
+                        throw restErrorUtil.createGrantRevokeRESTException("Grantee group " + groupName + " doesn't exist");
+                    }
+                } catch (Exception e) {
                     throw restErrorUtil.createGrantRevokeRESTException("Grantee group " + groupName + " doesn't exist");
                 }
-            } catch (Exception e) {
-                throw restErrorUtil.createGrantRevokeRESTException("Grantee group " + groupName + " doesn't exist");
             }
         }
     }
