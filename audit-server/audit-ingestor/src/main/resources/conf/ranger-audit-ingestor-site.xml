@@ -236,6 +236,12 @@
         <description>Allowed users for dev_ozone (Ozone Manager; Ranger plugin runs on OM only)</description>
     </property>
 
+    <property>
+        <name>ranger.audit.ingestor.service.dev_solr.allowed.users</name>
+        <value>solr</value>
+        <description>Allowed users for dev_solr (Solr plugin)</description>
+    </property>
+
     <!-- AUTH_TO_LOCAL RULES FOR KERBEROS PRINCIPAL MAPPING -->
     <property>
         <name>ranger.audit.ingestor.auth.to.local</name>
