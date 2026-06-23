@@ -154,10 +154,12 @@ public abstract class AbstractKerberosUser implements KerberosUser {
      * Proactively renew credentials when the TGT is missing or has passed
      * {@link #TICKET_RENEW_WINDOW} (80%) of its lifetime.
      *
-     * <p>Called on every {@link KerberosAction#execute()} before the privileged action runs,
-     * so long-lived Solr audit queries refresh before the TGT expires.
+     * <p>Called on every {@link KerberosAction#execute()} before the privileged
+     * action runs, so long-lived Solr audit queries refresh before the TGT
+     * expires.
      *
-     * @return {@code true} if relogin was performed, {@code false} if the TGT is still valid
+     * @return {@code true} if relogin was performed, {@code false} if the TGT
+     *         is still valid
      * @throws LoginException if relogin fails
      */
     @Override
@@ -185,17 +187,18 @@ public abstract class AbstractKerberosUser implements KerberosUser {
      * Renews JAAS credentials for proactive TGT refresh and for error recovery.
      *
      * <p>With {@code useKeyTab=true} and {@code useTicketCache=true}
-     * (shipped Solr dispatcher default), the previous {@code logout(); login()} sequence at
-     * the 80% TGT renewal window leaves {@code Krb5LoginModule} with no encryption key for the
-     * ticket cache and fails with {@code "No key to store"}, stopping audit indexing until
-     * process restart. For keytab-backed users, calling {@code loginContext.login()} on the
-     * existing {@link LoginContext} and {@link Subject} renews from the keytab without
-     * clearing credentials first. The {@link Subject} is preserved across relogin because
-     * other components may hold references to it.
+     * (shipped Solr dispatcher default), the previous {@code logout(); login()}
+     * sequence at the 80% TGT renewal window leaves {@code Krb5LoginModule}
+     * with no encryption key for the ticket cache and fails with
+     * {@code "No key to store"}, stopping audit indexing until process restart.
+     * For keytab-backed users, calling {@code loginContext.login()} on the
+     * existing {@link LoginContext} and {@link Subject} renews from the keytab
+     * without clearing credentials first. The {@link Subject} is preserved
+     * across relogin because other components may hold references to it.
      *
-     * <p>Non-keytab principals, or callers that are not yet logged in, use the traditional
-     * {@code logout(); login()} path. In-place keytab relogin failures also fall back to
-     * that path.
+     * <p>Non-keytab principals, or callers that are not yet logged in, use the
+     * traditional {@code logout(); login()} path. In-place keytab relogin
+     * failures also fall back to that path.
      *
      * @throws LoginException if relogin fails
      * @see KerberosJAASConfigUser#useKeytabRelogin()
@@ -203,15 +206,20 @@ public abstract class AbstractKerberosUser implements KerberosUser {
     public synchronized void performRelogin() throws LoginException {
         if (useKeytabRelogin() && isLoggedIn() && loginContext != null) {
             try {
-                // Renew TGT from keytab without logout(); avoids "No key to store" when useTicketCache=true.
+                // In-place keytab relogin without logout() (useTicketCache=true).
                 loginContext.login();
                 loggedIn.set(true);
 
-                LOG.info("Successful in-place keytab relogin for {}", getPrincipal());
+                LOG.info(
+                        "Successful in-place keytab relogin for {}",
+                        getPrincipal());
 
                 return;
             } catch (LoginException e) {
-                LOG.warn("In-place keytab relogin failed for {}, falling back to logout/login: {}", getPrincipal(), e.getMessage());
+                LOG.warn(
+                        "In-place keytab relogin failed for {}, "
+                                + "falling back to logout/login: {}",
+                        getPrincipal(), e.getMessage());
             }
         }
 
@@ -220,10 +228,12 @@ public abstract class AbstractKerberosUser implements KerberosUser {
     }
 
     /**
-     * Whether {@link #performRelogin()} should renew from keytab in place (no {@code logout()}
-     * first). Default {@code false}; {@link KerberosJAASConfigUser} returns {@code true} when
-     * JAAS {@code useKeyTab} is enabled. Gated on keytab capability, not on
-     * {@code useTicketCache}, because only keytab principals can safely skip logout.
+     * Whether {@link #performRelogin()} should renew from keytab in place (no
+     * {@code logout()} first). Default {@code false};
+     * {@link KerberosJAASConfigUser} returns {@code true} when JAAS
+     * {@code useKeyTab} is enabled. Gated on keytab capability, not on
+     * {@code useTicketCache}, because only keytab principals can safely skip
+     * logout.
      *
      * @return {@code true} to use in-place keytab relogin
      */
@@ -249,10 +259,12 @@ public abstract class AbstractKerberosUser implements KerberosUser {
     /**
      * Returns the Kerberos TGT from the JAAS {@link Subject}, if present.
      *
-     * @return the user's TGT, or {@code null} if the subject is uninitialized or has no TGT
+     * @return the user's TGT, or {@code null} if the subject is uninitialized
+     *         or has no TGT
      */
     private synchronized KerberosTicket getTGT() {
-        // Subject is created lazily on first login(); null before that is expected.
+        // Subject is created lazily on first login(); null before that is
+        // expected.
         if (subject == null) {
             return null;
         }

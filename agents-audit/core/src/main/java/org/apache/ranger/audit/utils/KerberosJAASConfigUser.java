@@ -63,9 +63,10 @@ public class KerberosJAASConfigUser extends AbstractKerberosUser {
     }
 
     /**
-     * Solr/Kafka outbound JAAS clients (audit dispatcher, plugin Solr destination) use
-     * {@code useKeyTab=true}. Opt those principals into in-place keytab relogin so shipped
-     * {@code useTicketCache=true} does not fail at TGT renewal with {@code "No key to store"}.
+     * Solr/Kafka outbound JAAS clients (audit dispatcher, plugin Solr
+     * destination) use {@code useKeyTab=true}. Opt those principals into
+     * in-place keytab relogin so shipped {@code useTicketCache=true} does not
+     * fail at TGT renewal with {@code "No key to store"}.
      */
     @Override
     protected boolean useKeytabRelogin() {

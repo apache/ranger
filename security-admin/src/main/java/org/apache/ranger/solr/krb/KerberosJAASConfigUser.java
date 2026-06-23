@@ -63,9 +63,9 @@ public class KerberosJAASConfigUser extends AbstractKerberosUser {
     }
 
     /**
-     * Admin Solr audit queries use {@code useKeyTab=true}. Opt those principals into in-place
-     * keytab relogin so shipped {@code useTicketCache=true} does not fail at TGT renewal
-     * with {@code "No key to store"}.
+     * Admin Solr audit queries use {@code useKeyTab=true}. Opt those principals
+     * into in-place keytab relogin so shipped {@code useTicketCache=true} does
+     * not fail at TGT renewal with {@code "No key to store"}.
      */
     @Override
     protected boolean useKeytabRelogin() {

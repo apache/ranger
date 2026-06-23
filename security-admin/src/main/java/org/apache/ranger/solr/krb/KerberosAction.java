@@ -46,10 +46,13 @@ public class KerberosAction<T> {
     }
 
     /**
-     * Runs {@code action} as {@code kerberosUser}: lazy login, proactive TGT refresh at
-     * 80% lifetime ({@link KerberosUser#checkTGTAndRelogin()}), then the privileged action.
-     * On {@link SecurityException}, relogin once via {@link AbstractKerberosUser#performRelogin()}
-     * (keytab-safe) and retry.
+     * Runs {@code action} as {@code kerberosUser}: lazy login, proactive TGT
+     * refresh at 80% lifetime ({@link KerberosUser#checkTGTAndRelogin()}),
+     * then the privileged action. On {@link SecurityException}, relogin once via
+     * {@link AbstractKerberosUser#performRelogin()} (keytab-safe) and retry.
+     *
+     * @return the result of {@code action}
+     * @throws Exception if login, relogin, or the privileged action fails
      */
     public T execute() throws Exception {
         T result;
@@ -67,21 +70,23 @@ public class KerberosAction<T> {
             }
         }
 
-        // check if we need to re-login, will only happen if re-login window is reached (80% of TGT life)
+        // check if we need to re-login, will only happen if re-login window is
+        // reached (80% of TGT life)
         try {
             kerberosUser.checkTGTAndRelogin();
         } catch (LoginException e) {
             throw new Exception("Relogin check failed due to: " + e.getMessage(), e);
         }
 
-        // On SecurityException, relogin and retry once. Use performRelogin() for
-        // AbstractKerberosUser so keytab clients skip logout first; bare logout/login
-        // reproduces "No key to store" when useTicketCache is true.
+        // On SecurityException, relogin and retry once. Use performRelogin()
+        // for AbstractKerberosUser so keytab clients skip logout first; bare
+        // logout/login reproduces "No key to store" when useTicketCache is true.
         try {
             result = kerberosUser.doAs(action);
         } catch (SecurityException se) {
             if (logger != null) {
-                logger.info("Privileged action failed, attempting relogin and retrying...");
+                logger.info(
+                        "Privileged action failed, attempting relogin and retrying...");
                 logger.debug("", se);
             }
 
@@ -95,12 +100,14 @@ public class KerberosAction<T> {
 
                 result = kerberosUser.doAs(action);
             } catch (Exception e) {
-                throw new Exception("Retrying privileged action failed due to: " + e.getMessage(), e);
+                throw new Exception(
+                        "Retrying privileged action failed due to: " + e.getMessage(), e);
             }
         } catch (PrivilegedActionException pae) {
             final Exception cause = pae.getException();
 
-            throw new Exception("Privileged action failed due to: " + cause.getMessage(), cause);
+            throw new Exception(
+                    "Privileged action failed due to: " + cause.getMessage(), cause);
         }
 
         return result;
