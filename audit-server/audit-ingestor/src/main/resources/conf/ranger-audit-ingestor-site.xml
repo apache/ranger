@@ -352,7 +352,7 @@
 
     <property>
         <name>ranger.audit.ingestor.kafka.configured.plugins</name>
-        <value></value>
+        <value>hdfs,yarn,knox,hive,hiveServer2,hiveMetastore,kafka,hbaseRegional,hbaseMaster,solr,trino,ozone,kudu,nifi</value>
         <description>
             Comma-separated plugin IDs (agentId / Kafka record key) that receive dedicated partition ranges in static mode.
             Leave empty by default; add only the plugins you deploy.
@@ -369,7 +369,7 @@
               - Dynamic mode: seeds the initial plan from this list when ranger_audit_partition_plan is empty;
                 runtime changes use partition-plan REST, not XML edits.
 
-            Example plugin IDs (pick what you run): hdfs, yarn, knox, hiveServer2, hiveMetastore, kafka,
+            Example plugin IDs (pick what you run): hdfs, yarn, knox, hive, hiveServer2, hiveMetastore, kafka,
             hbaseRegional, hbaseMaster, solr, trino, ozone, kudu, nifi.
             Per-plugin partition count: kafka.topic.partitions.per.configured.plugin (default 3), overridable via
             kafka.plugin.partition.overrides.{pluginId}.
@@ -394,7 +394,7 @@
             Number of buffer partitions reserved for unconfigured plugins.
             Used ONLY when configured.plugins is set (for plugin-based partitioning).
             Total = (sum of plugin partitions) + (buffer partitions).
-            Example: 7 plugins × 3 + 9 buffer = 30 total.
+            Example: 14 plugins × 3 + 9 buffer = 51 total.
             Ignored when configured.plugins is empty (hash-based or dynamic buffer-only bootstrap).
         </description>
     </property>
