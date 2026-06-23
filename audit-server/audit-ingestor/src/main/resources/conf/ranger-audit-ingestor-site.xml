@@ -184,7 +184,7 @@
 
     <property>
         <name>ranger.audit.ingestor.service.dev_hdfs.allowed.users</name>
-        <value>hdfs,nn</value>
+        <value>hdfs</value>
         <description>Allowed users for dev_hdfs (Policy Manager service name; from policy.download.auth.users)</description>
     </property>
 
@@ -234,13 +234,6 @@
         <name>ranger.audit.ingestor.service.dev_ozone.allowed.users</name>
         <value>om</value>
         <description>Allowed users for dev_ozone (Ozone Manager; Ranger plugin runs on OM only)</description>
-    </property>
-
-    <property>
-        <name>ranger.audit.ingestor.service.dev_solr.allowed.users</name>
-        <value>solr</value>
-        <description>Allowed users for dev_solr (Solr plugin)</description>
-
     </property>
 
     <!-- AUTH_TO_LOCAL RULES FOR KERBEROS PRINCIPAL MAPPING -->
@@ -395,7 +388,7 @@
             Number of buffer partitions reserved for unconfigured plugins.
             Used ONLY when configured.plugins is set (for plugin-based partitioning).
             Total = (sum of plugin partitions) + (buffer partitions).
-            Example: 2 plugins × 3 + 9 buffer = 15 total.
+            Example: 7 plugins × 3 + 9 buffer = 30 total.
             Ignored when configured.plugins is empty (hash-based or dynamic buffer-only bootstrap).
         </description>
     </property>
