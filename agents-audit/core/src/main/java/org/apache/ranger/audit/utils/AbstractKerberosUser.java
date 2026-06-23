@@ -172,19 +172,8 @@ public abstract class AbstractKerberosUser implements KerberosUser {
 
         LOG.debug("Performing relogin for {}", getPrincipal());
 
-        // Standard relogin: logout then login with existing JAAS context.
-        // With useTicketCache=true, logout() can leave the ticket cache in a state
-        // where login() fails with "No key to store"; recreate context and retry.
-        try {
-            logout();
-            login();
-        } catch (LoginException e) {
-            LOG.warn("Relogin failed for {}, recreating JAAS login context: {}", getPrincipal(), e.getMessage());
-            loginContext = null;
-            subject        = new Subject();
-            loggedIn.set(false);
-            login();
-        }
+        logout();
+        login();
 
         return true;
     }
