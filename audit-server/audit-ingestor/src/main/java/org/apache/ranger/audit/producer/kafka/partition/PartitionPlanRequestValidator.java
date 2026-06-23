@@ -24,8 +24,8 @@ import org.apache.ranger.audit.producer.kafka.partition.constants.PartitionPlanC
 import org.apache.ranger.audit.producer.kafka.partition.exception.PartitionPlanException;
 import org.apache.ranger.audit.producer.kafka.partition.model.OnboardService;
 import org.apache.ranger.audit.producer.kafka.partition.model.PartitionPlanReplacement;
-import org.apache.ranger.audit.producer.kafka.partition.model.PromotePlugin;
 import org.apache.ranger.audit.producer.kafka.partition.model.PluginScale;
+import org.apache.ranger.audit.producer.kafka.partition.model.PromotePlugin;
 
 import java.util.List;
 

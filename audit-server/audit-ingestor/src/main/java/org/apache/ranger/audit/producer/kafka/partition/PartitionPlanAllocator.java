@@ -30,7 +30,8 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
+
+import static java.util.Objects.requireNonNull;
 
 /** Append-only plan updates: promote unknown plugins and scale hot plugins without reshuffling. */
 public class PartitionPlanAllocator {
@@ -175,7 +176,7 @@ public class PartitionPlanAllocator {
     }
 
     private static void assertPromoteNotConflicting(PartitionPlan current, String pluginId, int partitionCount, String repo, List<String> allowedUsers) {
-        PluginPartitionAssignment existing = Objects.requireNonNull(current.getPlugins().get(pluginId));
+        PluginPartitionAssignment existing = requireNonNull(current.getPlugins().get(pluginId));
         if (existing.getPartitions().size() != partitionCount) {
             throw new PartitionPlanException("Plugin '" + pluginId + "' already has " + existing.getPartitions().size() + " dedicated partition(s); requested " + partitionCount);
         }

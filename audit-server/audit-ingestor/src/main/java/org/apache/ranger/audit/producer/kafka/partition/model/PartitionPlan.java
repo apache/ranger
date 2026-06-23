@@ -24,7 +24,6 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import java.io.Serializable;
 import org.apache.ranger.audit.producer.kafka.partition.PartitionPlanValidator;
 import org.apache.ranger.audit.producer.kafka.partition.exception.PartitionPlanException;
 import org.apache.ranger.audit.provider.MiscUtil;
@@ -36,7 +35,7 @@ import java.util.Objects;
 
 @JsonAutoDetect(getterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE, fieldVisibility = Visibility.ANY)
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class PartitionPlan implements Serializable {
+public class PartitionPlan implements java.io.Serializable {
     private final String topic;
     private final int version;
     private final int topicPartitionCount;

@@ -27,7 +27,6 @@ import org.apache.ranger.audit.producer.kafka.partition.AuthToLocalRuleComposer;
 import org.apache.ranger.audit.producer.kafka.partition.PartitionPlanHolder;
 import org.apache.ranger.audit.producer.kafka.partition.PartitionPlanKafkaConfig;
 import org.apache.ranger.audit.producer.kafka.partition.PartitionPlanService;
-import org.apache.ranger.audit.producer.kafka.partition.PartitionPlanUpdateApplier;
 import org.apache.ranger.audit.producer.kafka.partition.ServiceAllowlistResolver;
 import org.apache.ranger.audit.producer.kafka.partition.exception.PartitionPlanConflictException;
 import org.apache.ranger.audit.producer.kafka.partition.exception.PartitionPlanException;
