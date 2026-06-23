@@ -34,6 +34,8 @@ import javax.security.auth.login.LoginException;
 public class KerberosJAASConfigUser extends AbstractKerberosUser {
     private static final Logger LOG = LoggerFactory.getLogger(KerberosJAASConfigUser.class);
 
+    private static final String JAAS_USE_KEYTAB = "useKeyTab";
+
     private final String        configName;
     private final Configuration config;
 
@@ -58,6 +60,34 @@ public class KerberosJAASConfigUser extends AbstractKerberosUser {
         }
 
         return ret;
+    }
+
+    /**
+     * Solr/Kafka outbound JAAS clients (audit dispatcher, plugin Solr destination) use
+     * {@code useKeyTab=true}. Opt those principals into in-place keytab relogin so shipped
+     * {@code useTicketCache=true} does not fail at TGT renewal with {@code "No key to store"}.
+     */
+    @Override
+    protected boolean useKeytabRelogin() {
+        return isJaasOptionTrue(JAAS_USE_KEYTAB);
+    }
+
+    private boolean isJaasOptionTrue(String optionName) {
+        AppConfigurationEntry[] entries = config.getAppConfigurationEntry(configName);
+
+        if (entries == null) {
+            return false;
+        }
+
+        for (AppConfigurationEntry entry : entries) {
+            Object value = entry.getOptions().get(optionName);
+
+            if (value != null && "true".equalsIgnoreCase(value.toString())) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     @Override

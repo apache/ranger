@@ -175,7 +175,7 @@
 
     <property>
         <name>xasecure.audit.jaas.Client.option.useTicketCache</name>
-        <value>false</value>
+        <value>true</value>
         <description>Allow use of cached Kerberos tickets for Solr authentication</description>
     </property>
 

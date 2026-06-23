@@ -45,6 +45,12 @@ public class KerberosAction<T> {
         Validate.notNull(this.logger);
     }
 
+    /**
+     * Runs {@code action} as {@code kerberosUser}: lazy login, proactive TGT refresh at
+     * 80% lifetime ({@link KerberosUser#checkTGTAndRelogin()}), then the privileged action.
+     * On {@link SecurityException}, relogin once via {@link AbstractKerberosUser#performRelogin()}
+     * (keytab-safe) and retry.
+     */
     public T execute() throws Exception {
         T result;
 
@@ -66,7 +72,9 @@ public class KerberosAction<T> {
             throw new Exception("Relogin check failed due to: " + e.getMessage(), e);
         }
 
-        // attempt to execute the action, if an exception is caught attempt to logout/login and retry
+        // On SecurityException, relogin and retry once. Use performRelogin() for
+        // AbstractKerberosUser so keytab clients skip logout first; bare logout/login
+        // reproduces "No key to store" when useTicketCache is true.
         try {
             result = kerberosUser.doAs(action);
         } catch (SecurityException se) {
@@ -74,8 +82,12 @@ public class KerberosAction<T> {
             logger.debug("", se);
 
             try {
-                kerberosUser.logout();
-                kerberosUser.login();
+                if (kerberosUser instanceof AbstractKerberosUser) {
+                    ((AbstractKerberosUser) kerberosUser).performRelogin();
+                } else {
+                    kerberosUser.logout();
+                    kerberosUser.login();
+                }
 
                 result = kerberosUser.doAs(action);
             } catch (Exception e) {
