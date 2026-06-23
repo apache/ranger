@@ -158,7 +158,7 @@
     <property>
         <name>xasecure.audit.jaas.Client.option.useTicketCache</name>
         <value>false</value>
-        <description>Use keytab for Solr auth (ticket cache breaks relogin with "No key to store")</description>
+        <description>Allow use of cached Kerberos tickets for Solr authentication</description>
     </property>
 
     <property>
