@@ -172,8 +172,16 @@ public abstract class AbstractKerberosUser implements KerberosUser {
 
         LOG.debug("Performing relogin for {}", getPrincipal());
 
-        logout();
-        login();
+        try {
+            logout();
+            login();
+        } catch (LoginException e) {
+            LOG.warn("Relogin failed for {}, recreating JAAS login context: {}", getPrincipal(), e.getMessage());
+            loginContext = null;
+            subject        = new Subject();
+            loggedIn.set(false);
+            login();
+        }
 
         return true;
     }
