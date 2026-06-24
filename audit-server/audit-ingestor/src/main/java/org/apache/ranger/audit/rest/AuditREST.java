@@ -377,32 +377,42 @@ public class AuditREST {
      * When unset, any authenticated principal may call partition-plan (backward compatible).
      */
     private Response authorizePartitionPlanAdmin(HttpServletRequest request, String operation) {
-        String user = getAuthenticatedUser(request);
+        Response ret  = null;
+        String   user = getAuthenticatedUser(request);
+
         if (StringUtils.isBlank(user)) {
             LOG.error("{} rejected: authentication required", operation);
-            return Response.status(Response.Status.UNAUTHORIZED).entity(buildErrorResponse("Authentication required")).build();
+            ret = Response.status(Response.Status.UNAUTHORIZED).entity(buildErrorResponse("Authentication required")).build();
+        } else {
+            Set<String> adminUsers = partitionPlanService.getPartitionPlanAdminUsers();
+
+            if (!adminUsers.isEmpty() && !adminUsers.contains(user)) {
+                LOG.error("{} rejected: user '{}' is not in partition plan admin allowlist", operation, user);
+                ret = Response.status(Response.Status.FORBIDDEN).entity(buildErrorResponse("User is not authorized to manage partition plan")).build();
+            }
         }
-        Set<String> adminUsers = partitionPlanService.getPartitionPlanAdminUsers();
-        if (!adminUsers.isEmpty() && !adminUsers.contains(user)) {
-            LOG.error("{} rejected: user '{}' is not in partition plan admin allowlist", operation, user);
-            return Response.status(Response.Status.FORBIDDEN).entity(buildErrorResponse("User is not authorized to manage partition plan")).build();
-        }
-        return null;
+
+        return ret;
     }
 
     /** Maps service/infrastructure failures to 503; client validation mistakes to 400. */
     private static Response.Status resolvePartitionPlanErrorStatus(PartitionPlanException error) {
+        Response.Status ret = Response.Status.BAD_REQUEST;
+
         if (error.getCause() != null) {
-            return Response.Status.SERVICE_UNAVAILABLE;
+            ret = Response.Status.SERVICE_UNAVAILABLE;
+        } else {
+            String message = error.getMessage();
+
+            if (message != null && (message.contains("Partition plan is not loaded in memory")
+                    || message.contains("Partition plan disappeared during update")
+                    || message.contains("No partition plan found in Kafka")
+                    || message.contains("Mandatory read-back failed"))) {
+                ret = Response.Status.SERVICE_UNAVAILABLE;
+            }
         }
-        String message = error.getMessage();
-        if (message != null && (message.contains("Partition plan is not loaded in memory")
-                || message.contains("Partition plan disappeared during update")
-                || message.contains("No partition plan found in Kafka")
-                || message.contains("Mandatory read-back failed"))) {
-            return Response.Status.SERVICE_UNAVAILABLE;
-        }
-        return Response.Status.BAD_REQUEST;
+
+        return ret;
     }
 
     /** Records the authenticated admin user on plan mutations. */
@@ -452,24 +462,24 @@ public class AuditREST {
      * For JWT or basic auth, the username is already in short form and returned as-is.
      */
     private String applyAuthToLocal(String principal) {
-        if (StringUtils.isEmpty(principal)) {
-            return principal;
+        String ret = principal;
+
+        if (StringUtils.isNotEmpty(principal)) {
+            // Check if this looks like a Kerberos principal (has @ or /)
+            if (!principal.contains("@") && !principal.contains("/")) {
+                LOG.debug("Username '{}' is already a short name (JWT/basic auth), no auth_to_local mapping needed", principal);
+            } else {
+                try {
+                    KerberosName kerberosName = new KerberosName(principal);
+
+                    ret = kerberosName.getShortName();
+                } catch (Exception e) {
+                    LOG.warn("Failed to apply auth_to_local rules to principal '{}': {}. Using original principal.", principal, e.getMessage());
+                }
+            }
         }
 
-        // Check if this looks like a Kerberos principal (has @ or /)
-        if (!principal.contains("@") && !principal.contains("/")) {
-            LOG.debug("Username '{}' is already a short name (JWT/basic auth), no auth_to_local mapping needed", principal);
-            return principal;
-        }
-
-        try {
-            KerberosName kerberosName = new KerberosName(principal);
-
-            return kerberosName.getShortName();
-        } catch (Exception e) {
-            LOG.warn("Failed to apply auth_to_local rules to principal '{}': {}. Using original principal.", principal, e.getMessage());
-            return principal;
-        }
+        return ret;
     }
 
     /**

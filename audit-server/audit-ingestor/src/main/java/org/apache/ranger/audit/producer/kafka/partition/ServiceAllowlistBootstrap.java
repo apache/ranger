@@ -80,14 +80,17 @@ public class ServiceAllowlistBootstrap {
      */
     public static PartitionPlan mergeSiteXmlAllowlistsWhenPlanServicesMissing(
             PartitionPlan partitionPlan, Properties ingestorProperties) {
-        if (partitionPlan == null || (partitionPlan.getServices() != null && !partitionPlan.getServices().isEmpty())) {
-            return partitionPlan;
+        PartitionPlan ret = partitionPlan;
+
+        if (partitionPlan != null && (partitionPlan.getServices() == null || partitionPlan.getServices().isEmpty())) {
+            Map<String, ServiceAllowlistEntry> siteXmlAllowlistEntries = loadAllowlistsFromProperties(ingestorProperties);
+
+            if (!siteXmlAllowlistEntries.isEmpty()) {
+                ret = partitionPlan.toBuilder().services(siteXmlAllowlistEntries).build();
+            }
         }
-        Map<String, ServiceAllowlistEntry> siteXmlAllowlistEntries = loadAllowlistsFromProperties(ingestorProperties);
-        if (siteXmlAllowlistEntries.isEmpty()) {
-            return partitionPlan;
-        }
-        return partitionPlan.toBuilder().services(siteXmlAllowlistEntries).build();
+
+        return ret;
     }
 
     private static List<String> parseAllowedUserShortNames(String allowedUsersPropertyValue) {

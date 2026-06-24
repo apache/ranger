@@ -123,13 +123,17 @@ public class PartitionPlanRequestValidator {
         if (allowedUsers == null || allowedUsers.isEmpty()) {
             throw new PartitionPlanException("allowedUsers are required");
         }
+
         boolean hasNonBlankUser = false;
+
         for (String allowedUserShortName : allowedUsers) {
             if (StringUtils.isNotBlank(allowedUserShortName)) {
                 hasNonBlankUser = true;
+
                 break;
             }
         }
+
         if (!hasNonBlankUser) {
             throw new PartitionPlanException("allowedUsers must contain at least one non-blank username");
         }

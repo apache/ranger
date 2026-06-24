@@ -150,11 +150,14 @@ public class AuthToLocalRuleComposer {
     }
 
     private boolean isPartitionPlanTopicPresent(Properties ingestorProperties, String ingestorPropertyPrefix) {
+        boolean ret                   = AuditMessageQueueUtils.partitionPlanTopicExists(ingestorProperties, ingestorPropertyPrefix);
         Boolean topicExistsOverride = partitionPlanTopicExistsTestOverride;
+
         if (topicExistsOverride != null) {
-            return topicExistsOverride;
+            ret = topicExistsOverride;
         }
-        return AuditMessageQueueUtils.partitionPlanTopicExists(ingestorProperties, ingestorPropertyPrefix);
+
+        return ret;
     }
 
     /**

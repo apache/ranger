@@ -149,54 +149,82 @@ public class PartitionPlanAllocator {
      * True when plugin onboard with {@code partitionCount} and optional services already matches the current plan.
      */
     public static boolean isOnboardAlreadyApplied(PartitionPlan current, String pluginId, int partitionCount, Map<String, ServiceAllowlistEntry> servicesMap) {
-        if (current == null || !pluginHasPartitionCount(current, pluginId, partitionCount)) {
-            return false;
-        }
-        if (servicesMap == null || servicesMap.isEmpty()) {
-            return true;
-        }
-        for (Map.Entry<String, ServiceAllowlistEntry> entry : servicesMap.entrySet()) {
-            String repo = entry.getKey().trim();
-            ServiceAllowlistEntry existing = current.getServices().get(repo);
-            ServiceAllowlistEntry expected = withPluginId(entry.getValue(), pluginId);
-            if (existing == null || !serviceEntryMatches(existing, expected, pluginId)) {
-                return false;
+        boolean ret = false;
+
+        if (current != null && pluginHasPartitionCount(current, pluginId, partitionCount)) {
+            ret = true;
+
+            if (servicesMap != null && !servicesMap.isEmpty()) {
+                for (Map.Entry<String, ServiceAllowlistEntry> entry : servicesMap.entrySet()) {
+                    String               repo     = entry.getKey().trim();
+                    ServiceAllowlistEntry existing = current.getServices().get(repo);
+                    ServiceAllowlistEntry expected = withPluginId(entry.getValue(), pluginId);
+
+                    if (existing == null || !serviceEntryMatches(existing, expected, pluginId)) {
+                        ret = false;
+
+                        break;
+                    }
+                }
             }
         }
-        return true;
+
+        return ret;
     }
 
     /**
      * True when a service-only update request is already satisfied (scale mutations are never treated as no-op).
      */
     public static boolean isUpdateAlreadyApplied(PartitionPlan current, String pluginId, UpdatePlugin updateRequest) {
-        if (current == null || updateRequest == null) {
-            return false;
-        }
-        Integer additionalPartitions = updateRequest.getAdditionalPartitions();
-        if (additionalPartitions != null && additionalPartitions >= 1) {
-            return false;
-        }
-        for (String repo : updateRequest.getRemoveServices()) {
-            if (current.getServices().containsKey(repo.trim())) {
-                return false;
+        boolean ret = false;
+
+        if (current != null && updateRequest != null) {
+            Integer additionalPartitions = updateRequest.getAdditionalPartitions();
+
+            if (additionalPartitions == null || additionalPartitions < 1) {
+                ret = true;
+
+                for (String repo : updateRequest.getRemoveServices()) {
+                    if (current.getServices().containsKey(repo.trim())) {
+                        ret = false;
+
+                        break;
+                    }
+                }
+
+                if (ret) {
+                    for (Map.Entry<String, ServiceAllowlistEntry> entry : updateRequest.getAddServices().entrySet()) {
+                        ServiceAllowlistEntry existing = current.getServices().get(entry.getKey().trim());
+                        ServiceAllowlistEntry expected = withPluginId(entry.getValue(), pluginId);
+
+                        if (existing == null || !serviceEntryMatches(existing, expected, pluginId)) {
+                            ret = false;
+
+                            break;
+                        }
+                    }
+                }
+
+                if (ret) {
+                    for (Map.Entry<String, ServiceAllowlistEntry> entry : updateRequest.getUpdateServices().entrySet()) {
+                        ServiceAllowlistEntry existing = current.getServices().get(entry.getKey().trim());
+                        ServiceAllowlistEntry expected = withPluginId(entry.getValue(), pluginId);
+
+                        if (existing == null || !serviceEntryMatches(existing, expected, pluginId)) {
+                            ret = false;
+
+                            break;
+                        }
+                    }
+                }
+
+                if (ret) {
+                    ret = updateRequest.hasMutationDelta();
+                }
             }
         }
-        for (Map.Entry<String, ServiceAllowlistEntry> entry : updateRequest.getAddServices().entrySet()) {
-            ServiceAllowlistEntry existing = current.getServices().get(entry.getKey().trim());
-            ServiceAllowlistEntry expected = withPluginId(entry.getValue(), pluginId);
-            if (existing == null || !serviceEntryMatches(existing, expected, pluginId)) {
-                return false;
-            }
-        }
-        for (Map.Entry<String, ServiceAllowlistEntry> entry : updateRequest.getUpdateServices().entrySet()) {
-            ServiceAllowlistEntry existing = current.getServices().get(entry.getKey().trim());
-            ServiceAllowlistEntry expected = withPluginId(entry.getValue(), pluginId);
-            if (existing == null || !serviceEntryMatches(existing, expected, pluginId)) {
-                return false;
-            }
-        }
-        return updateRequest.hasMutationDelta();
+
+        return ret;
     }
 
     /**
@@ -204,14 +232,18 @@ public class PartitionPlanAllocator {
      * the service allowlist already matches {@code allowedUsers}.
      */
     public static boolean isPromoteAlreadyApplied(PartitionPlan current, String pluginId, int partitionCount, String repo, List<String> allowedUsers) {
-        if (current == null || !pluginHasPartitionCount(current, pluginId, partitionCount)) {
-            return false;
+        boolean ret = false;
+
+        if (current != null && pluginHasPartitionCount(current, pluginId, partitionCount)) {
+            if (StringUtils.isNotBlank(repo)) {
+                ServiceAllowlistEntry existing = current.getServices().get(repo.trim());
+                ret = existing != null && existing.hasSameAllowedUsers(allowedUsers);
+            } else {
+                ret = true;
+            }
         }
-        if (StringUtils.isNotBlank(repo)) {
-            ServiceAllowlistEntry existing = current.getServices().get(repo.trim());
-            return existing != null && existing.hasSameAllowedUsers(allowedUsers);
-        }
-        return true;
+
+        return ret;
     }
 
     /** Applies a merged plan with append-only checks against the current plan. */

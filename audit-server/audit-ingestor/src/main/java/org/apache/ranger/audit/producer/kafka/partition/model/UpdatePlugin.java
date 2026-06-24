@@ -78,15 +78,18 @@ public class UpdatePlugin implements Serializable {
 
     /** True when at least one mutation field is present. */
     public boolean hasMutationDelta() {
+        boolean ret = false;
+
         if (additionalPartitions != null && additionalPartitions >= 1) {
-            return true;
+            ret = true;
+        } else if (!addServices.isEmpty()) {
+            ret = true;
+        } else if (!updateServices.isEmpty()) {
+            ret = true;
+        } else if (!removeServices.isEmpty()) {
+            ret = true;
         }
-        if (!addServices.isEmpty()) {
-            return true;
-        }
-        if (!updateServices.isEmpty()) {
-            return true;
-        }
-        return !removeServices.isEmpty();
+
+        return ret;
     }
 }

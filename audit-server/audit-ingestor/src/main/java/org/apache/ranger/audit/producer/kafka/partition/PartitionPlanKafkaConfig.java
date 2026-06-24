@@ -49,30 +49,38 @@ public class PartitionPlanKafkaConfig {
 
     /** Resolves short usernames allowed to call partition-plan admin REST (empty = any authenticated principal). */
     public static Set<String> resolvePartitionPlanAdminUsers(Properties props, String propPrefix) {
-        String configured = MiscUtil.getStringProperty(props, propPrefix + "." + AuditServerConstants.PROP_PARTITION_PLAN_ALLOWED_USERS, "");
-        if (configured == null || configured.isBlank()) {
-            return Collections.emptySet();
-        }
-        Set<String> users = new LinkedHashSet<>();
-        for (String user : configured.split(",")) {
-            if (user != null && !user.isBlank()) {
-                users.add(user.trim());
+        Set<String>             ret       = Collections.emptySet();
+        String                  configured = MiscUtil.getStringProperty(props, propPrefix + "." + AuditServerConstants.PROP_PARTITION_PLAN_ALLOWED_USERS, "");
+
+        if (configured != null && !configured.isBlank()) {
+            Set<String> users = new LinkedHashSet<>();
+
+            for (String user : configured.split(",")) {
+                if (user != null && !user.isBlank()) {
+                    users.add(user.trim());
+                }
             }
+            ret = users;
         }
-        return users;
+
+        return ret;
     }
 
     /** Returns whether the Kafka producer partitioner should use the in-memory dynamic plan. */
     public static boolean isDynamicPartitionPlanEnabled(Map<String, ?> configs, String ingestorPropPrefix) {
-        String key = ingestorPropPrefix + "." + AuditServerConstants.PROP_PARTITION_PLAN_DYNAMIC_ENABLED;
-        Object val = configs.get(key);
-        if (val == null) {
-            return false;
+        boolean     ret = false;
+        String      key = ingestorPropPrefix + "." + AuditServerConstants.PROP_PARTITION_PLAN_DYNAMIC_ENABLED;
+        Object      val = configs.get(key);
+
+        if (val != null) {
+            if (val instanceof Boolean) {
+                ret = (Boolean) val;
+            } else {
+                ret = Boolean.parseBoolean(val.toString());
+            }
         }
-        if (val instanceof Boolean) {
-            return (Boolean) val;
-        }
-        return Boolean.parseBoolean(val.toString());
+
+        return ret;
     }
 
     /** Resolves how often each ingestor pod reloads the plan from Kafka. */

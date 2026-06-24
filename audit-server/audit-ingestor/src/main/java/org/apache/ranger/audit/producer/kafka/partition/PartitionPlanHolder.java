@@ -67,18 +67,22 @@ public class PartitionPlanHolder {
      * allowlist union ({@link AuthToLocalRuleComposer#collectAllowedUserShortNames}).
      */
     public Set<String> getAllowedUsersForService(String serviceName) {
-        PartitionPlan plan = planRef.get();
-        if (plan == null || plan.getServices() == null || plan.getServices().isEmpty()) {
-            return null;
+        Set<String>           ret  = null;
+        PartitionPlan         plan = planRef.get();
+
+        if (plan != null && plan.getServices() != null && !plan.getServices().isEmpty()) {
+            ServiceAllowlistEntry entry = plan.getServices().get(serviceName);
+
+            if (entry != null) {
+                if (entry.getAllowedUsers().isEmpty()) {
+                    ret = Collections.emptySet();
+                } else {
+                    ret = Collections.unmodifiableSet(new LinkedHashSet<>(entry.getAllowedUsers()));
+                }
+            }
         }
-        ServiceAllowlistEntry entry = plan.getServices().get(serviceName);
-        if (entry == null) {
-            return null;
-        }
-        if (entry.getAllowedUsers().isEmpty()) {
-            return Collections.emptySet();
-        }
-        return Collections.unmodifiableSet(new LinkedHashSet<>(entry.getAllowedUsers()));
+
+        return ret;
     }
 
     /** Clears holder state between unit tests. */

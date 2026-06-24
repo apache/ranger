@@ -119,10 +119,13 @@ public class PartitionPlanService {
 
     private static Set<String> cachePartitionPlanAdminUsers(Properties configProps) {
         Set<String> adminUsers = PartitionPlanKafkaConfig.resolvePartitionPlanAdminUsers(configProps, INGESTOR_PROP_PREFIX);
-        if (adminUsers.isEmpty()) {
-            return adminUsers;
+        Set<String> ret        = adminUsers;
+
+        if (!adminUsers.isEmpty()) {
+            ret = Collections.unmodifiableSet(adminUsers);
         }
-        return Collections.unmodifiableSet(adminUsers);
+
+        return ret;
     }
 
     /** Validates version, grows the audit topic if needed, writes the plan, and reloads memory. */
