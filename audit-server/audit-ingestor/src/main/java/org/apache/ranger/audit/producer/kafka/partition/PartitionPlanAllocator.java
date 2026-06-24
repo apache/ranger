@@ -24,18 +24,73 @@ import org.apache.ranger.audit.producer.kafka.partition.exception.PartitionPlanE
 import org.apache.ranger.audit.producer.kafka.partition.model.PartitionPlan;
 import org.apache.ranger.audit.producer.kafka.partition.model.PluginPartitionAssignment;
 import org.apache.ranger.audit.producer.kafka.partition.model.ServiceAllowlistEntry;
+import org.apache.ranger.audit.producer.kafka.partition.model.UpdatePlugin;
 
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 import static java.util.Objects.requireNonNull;
 
 /** Append-only plan updates: promote unknown plugins and scale hot plugins without reshuffling. */
 public class PartitionPlanAllocator {
     private PartitionPlanAllocator() {
+    }
+
+    /**
+     * Onboard a plugin: promote from buffer and register service allowlists tagged with {@code pluginId}.
+     */
+    public static PartitionPlan onboardPlugin(PartitionPlan current, String pluginId, int partitionCount, Map<String, ServiceAllowlistEntry> servicesMap, String updatedBy) {
+        requireMutationInputs(current, pluginId, partitionCount, updatedBy);
+        if (current.getPlugins().containsKey(pluginId)) {
+            assertOnboardNotConflicting(current, pluginId, partitionCount, servicesMap);
+            throw new PartitionPlanException("Plugin '" + pluginId + "' already has dedicated partitions");
+        }
+
+        List<Integer> remainingBuffer = new ArrayList<>(current.getBuffer().getPartitions());
+        List<Integer> newPluginIds    = takeFromBuffer(remainingBuffer, partitionCount);
+        int topicPartitionCount       = appendTailPartitions(newPluginIds, current.getTopicPartitionCount(), partitionCount - newPluginIds.size());
+
+        Map<String, PluginPartitionAssignment> plugins = addPluginAssignment(current, pluginId, newPluginIds);
+        Map<String, ServiceAllowlistEntry> services    = mergeServicesWithPluginId(current.getServices(), servicesMap, pluginId);
+        return commitPlanUpdate(current, updatedBy, topicPartitionCount, plugins, remainingBuffer, services);
+    }
+
+    /**
+     * Update an onboarded plugin: scale tail partitions and/or mutate service allowlists in one version bump.
+     */
+    public static PartitionPlan updatePlugin(PartitionPlan current, String pluginId, UpdatePlugin updateRequest, String updatedBy) {
+        if (current == null || updateRequest == null) {
+            throw new PartitionPlanException("Current plan and update request are required");
+        }
+        if (StringUtils.isBlank(pluginId) || StringUtils.isBlank(updatedBy)) {
+            throw new PartitionPlanException("pluginId and updatedBy are required");
+        }
+        PartitionPlanValidator.validate(current);
+
+        Map<String, ServiceAllowlistEntry> services = new LinkedHashMap<>(current.getServices());
+        Map<String, PluginPartitionAssignment> plugins = new LinkedHashMap<>(current.getPlugins());
+        List<Integer> bufferIds = new ArrayList<>(current.getBuffer().getPartitions());
+        int topicPartitionCount = current.getTopicPartitionCount();
+
+        applyServiceRemovals(current, services, pluginId, updateRequest.getRemoveServices());
+        applyServiceUpdates(current, services, pluginId, updateRequest.getUpdateServices());
+        applyServiceAdditions(current, services, pluginId, updateRequest.getAddServices());
+
+        Integer additionalPartitions = updateRequest.getAdditionalPartitions();
+        if (additionalPartitions != null && additionalPartitions >= 1) {
+            if (!plugins.containsKey(pluginId)) {
+                throw new PartitionPlanException("Plugin '" + pluginId + "' is not configured; onboard it first");
+            }
+            List<Integer> pluginIds = new ArrayList<>(plugins.get(pluginId).getPartitions());
+            topicPartitionCount = appendTailPartitions(pluginIds, topicPartitionCount, additionalPartitions);
+            plugins.put(pluginId, new PluginPartitionAssignment(pluginIds));
+        }
+
+        return commitPlanUpdate(current, updatedBy, topicPartitionCount, plugins, bufferIds, services);
     }
 
     public static PartitionPlan promotePlugin(PartitionPlan current, String pluginId, int partitionCount, String updatedBy) {
@@ -91,6 +146,60 @@ public class PartitionPlanAllocator {
     }
 
     /**
+     * True when plugin onboard with {@code partitionCount} and optional services already matches the current plan.
+     */
+    public static boolean isOnboardAlreadyApplied(PartitionPlan current, String pluginId, int partitionCount, Map<String, ServiceAllowlistEntry> servicesMap) {
+        if (current == null || !pluginHasPartitionCount(current, pluginId, partitionCount)) {
+            return false;
+        }
+        if (servicesMap == null || servicesMap.isEmpty()) {
+            return true;
+        }
+        for (Map.Entry<String, ServiceAllowlistEntry> entry : servicesMap.entrySet()) {
+            String repo = entry.getKey().trim();
+            ServiceAllowlistEntry existing = current.getServices().get(repo);
+            ServiceAllowlistEntry expected = withPluginId(entry.getValue(), pluginId);
+            if (existing == null || !serviceEntryMatches(existing, expected, pluginId)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /**
+     * True when a service-only update request is already satisfied (scale mutations are never treated as no-op).
+     */
+    public static boolean isUpdateAlreadyApplied(PartitionPlan current, String pluginId, UpdatePlugin updateRequest) {
+        if (current == null || updateRequest == null) {
+            return false;
+        }
+        Integer additionalPartitions = updateRequest.getAdditionalPartitions();
+        if (additionalPartitions != null && additionalPartitions >= 1) {
+            return false;
+        }
+        for (String repo : updateRequest.getRemoveServices()) {
+            if (current.getServices().containsKey(repo.trim())) {
+                return false;
+            }
+        }
+        for (Map.Entry<String, ServiceAllowlistEntry> entry : updateRequest.getAddServices().entrySet()) {
+            ServiceAllowlistEntry existing = current.getServices().get(entry.getKey().trim());
+            ServiceAllowlistEntry expected = withPluginId(entry.getValue(), pluginId);
+            if (existing == null || !serviceEntryMatches(existing, expected, pluginId)) {
+                return false;
+            }
+        }
+        for (Map.Entry<String, ServiceAllowlistEntry> entry : updateRequest.getUpdateServices().entrySet()) {
+            ServiceAllowlistEntry existing = current.getServices().get(entry.getKey().trim());
+            ServiceAllowlistEntry expected = withPluginId(entry.getValue(), pluginId);
+            if (existing == null || !serviceEntryMatches(existing, expected, pluginId)) {
+                return false;
+            }
+        }
+        return updateRequest.hasMutationDelta();
+    }
+
+    /**
      * True when the plugin is already promoted with {@code partitionCount} slots and, when {@code repo} is set,
      * the service allowlist already matches {@code allowedUsers}.
      */
@@ -105,11 +214,6 @@ public class PartitionPlanAllocator {
         return true;
     }
 
-    /** True when onboard request matches current allowlist and plugin assignment. */
-    public static boolean isOnboardAlreadyApplied(PartitionPlan current, String repo, String pluginId, int partitionCount, List<String> allowedUsers) {
-        return isPromoteAlreadyApplied(current, pluginId, partitionCount, repo, allowedUsers);
-    }
-
     /** Applies a merged plan with append-only checks against the current plan. */
     public static PartitionPlan replacePlan(PartitionPlan current, PartitionPlan proposed) {
         if (current == null || proposed == null) {
@@ -122,6 +226,58 @@ public class PartitionPlanAllocator {
         PartitionPlanValidator.validate(next);
         PartitionPlanValidator.validateAppendOnly(current, next);
         return next;
+    }
+
+    private static void applyServiceRemovals(PartitionPlan current, Map<String, ServiceAllowlistEntry> services, String pluginId, List<String> removeServices) {
+        for (String repoName : removeServices) {
+            String repo = repoName.trim();
+            verifyServiceOwnedByPlugin(current, repo, pluginId);
+            services.remove(repo);
+        }
+    }
+
+    private static void applyServiceUpdates(PartitionPlan current, Map<String, ServiceAllowlistEntry> services, String pluginId, Map<String, ServiceAllowlistEntry> updateServices) {
+        for (Map.Entry<String, ServiceAllowlistEntry> entry : updateServices.entrySet()) {
+            String repo = entry.getKey().trim();
+            verifyServiceOwnedByPlugin(current, repo, pluginId);
+            services.put(repo, withPluginId(entry.getValue(), pluginId));
+        }
+    }
+
+    private static void applyServiceAdditions(PartitionPlan current, Map<String, ServiceAllowlistEntry> services, String pluginId, Map<String, ServiceAllowlistEntry> addServices) {
+        for (Map.Entry<String, ServiceAllowlistEntry> entry : addServices.entrySet()) {
+            String repo = entry.getKey().trim();
+            ServiceAllowlistEntry existing = current.getServices().get(repo);
+            if (existing != null) {
+                assertServiceOwnedByPlugin(existing, repo, pluginId);
+            }
+            services.put(repo, withPluginId(entry.getValue(), pluginId));
+        }
+    }
+
+    private static void verifyServiceOwnedByPlugin(PartitionPlan current, String repo, String pluginId) {
+        ServiceAllowlistEntry existing = current.getServices().get(repo);
+        if (existing == null) {
+            throw new PartitionPlanException("Service '" + repo + "' is not configured");
+        }
+        assertServiceOwnedByPlugin(existing, repo, pluginId);
+    }
+
+    private static void assertServiceOwnedByPlugin(ServiceAllowlistEntry existing, String repo, String pluginId) {
+        if (existing.getPluginId() != null && !Objects.equals(existing.getPluginId(), pluginId)) {
+            throw new PartitionPlanException("Service '" + repo + "' belongs to plugin '" + existing.getPluginId() + "'");
+        }
+    }
+
+    private static boolean serviceEntryMatches(ServiceAllowlistEntry existing, ServiceAllowlistEntry expected, String pluginId) {
+        return existing.hasSameAllowedUsers(expected.getAllowedUsers()) && Objects.equals(existing.getPluginId(), pluginId);
+    }
+
+    private static ServiceAllowlistEntry withPluginId(ServiceAllowlistEntry entry, String pluginId) {
+        if (entry == null) {
+            throw new PartitionPlanException("Service allowlist entry is required");
+        }
+        return new ServiceAllowlistEntry(entry.getAllowedUsers(), entry.getSource(), entry.getNotes(), pluginId);
     }
 
     /** Pull up to count partition IDs from the front of the buffer list. */
@@ -162,6 +318,26 @@ public class PartitionPlanAllocator {
         return next;
     }
 
+    private static Map<String, ServiceAllowlistEntry> mergeServicesWithPluginId(Map<String, ServiceAllowlistEntry> currentServices, Map<String, ServiceAllowlistEntry> servicesMap, String pluginId) {
+        Map<String, ServiceAllowlistEntry> services = new LinkedHashMap<>(currentServices);
+        if (servicesMap == null || servicesMap.isEmpty()) {
+            return services;
+        }
+        for (Map.Entry<String, ServiceAllowlistEntry> entry : servicesMap.entrySet()) {
+            String repo = entry.getKey().trim();
+            ServiceAllowlistEntry tagged = withPluginId(entry.getValue(), pluginId);
+            ServiceAllowlistEntry existing = services.get(repo);
+            if (existing != null && !existing.hasSameAllowedUsers(tagged.getAllowedUsers())) {
+                throw new PartitionPlanException("Service '" + repo + "' already exists with different allowedUsers");
+            }
+            if (existing != null && existing.getPluginId() != null && !Objects.equals(existing.getPluginId(), pluginId)) {
+                throw new PartitionPlanException("Service '" + repo + "' belongs to plugin '" + existing.getPluginId() + "'");
+            }
+            services.put(repo, tagged);
+        }
+        return services;
+    }
+
     private static Map<String, ServiceAllowlistEntry> mergeServiceAllowlist(Map<String, ServiceAllowlistEntry> currentServices, String repo, List<String> allowedUsers) {
         Map<String, ServiceAllowlistEntry> services = new LinkedHashMap<>(currentServices);
         if (StringUtils.isNotBlank(repo) && allowedUsers != null && !allowedUsers.isEmpty()) {
@@ -173,6 +349,22 @@ public class PartitionPlanAllocator {
     private static boolean pluginHasPartitionCount(PartitionPlan current, String pluginId, int partitionCount) {
         PluginPartitionAssignment assignment = current.getPlugins().get(pluginId);
         return assignment != null && assignment.getPartitions().size() == partitionCount;
+    }
+
+    private static void assertOnboardNotConflicting(PartitionPlan current, String pluginId, int partitionCount, Map<String, ServiceAllowlistEntry> servicesMap) {
+        PluginPartitionAssignment existing = requireNonNull(current.getPlugins().get(pluginId));
+        if (existing.getPartitions().size() != partitionCount) {
+            throw new PartitionPlanException("Plugin '" + pluginId + "' already has " + existing.getPartitions().size() + " dedicated partition(s); requested " + partitionCount);
+        }
+        if (servicesMap != null) {
+            for (Map.Entry<String, ServiceAllowlistEntry> entry : servicesMap.entrySet()) {
+                String repo = entry.getKey().trim();
+                ServiceAllowlistEntry serviceEntry = current.getServices().get(repo);
+                if (serviceEntry != null && !serviceEntry.hasSameAllowedUsers(entry.getValue().getAllowedUsers())) {
+                    throw new PartitionPlanException("Service '" + repo + "' already exists with different allowedUsers");
+                }
+            }
+        }
     }
 
     private static void assertPromoteNotConflicting(PartitionPlan current, String pluginId, int partitionCount, String repo, List<String> allowedUsers) {

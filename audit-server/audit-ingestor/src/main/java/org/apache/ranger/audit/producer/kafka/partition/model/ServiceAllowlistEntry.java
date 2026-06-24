@@ -38,20 +38,26 @@ public class ServiceAllowlistEntry implements Serializable {
     private final List<String> allowedUsers;
     private final String source;
     private final String notes;
+    private final String pluginId;
 
     @JsonCreator
-    public ServiceAllowlistEntry(@JsonProperty("allowedUsers") List<String> allowedUsers, @JsonProperty("source") String source, @JsonProperty("notes") String notes) {
+    public ServiceAllowlistEntry(@JsonProperty("allowedUsers") List<String> allowedUsers, @JsonProperty("source") String source, @JsonProperty("notes") String notes, @JsonProperty("pluginId") String pluginId) {
         this.allowedUsers = copyAllowedUsers(allowedUsers);
         this.source       = source;
         this.notes        = notes;
+        this.pluginId     = pluginId;
     }
 
     public static ServiceAllowlistEntry ofUsers(String... users) {
-        return new ServiceAllowlistEntry(List.of(users), null, null);
+        return new ServiceAllowlistEntry(List.of(users), null, null, null);
     }
 
     public static ServiceAllowlistEntry ofUsers(List<String> users) {
-        return new ServiceAllowlistEntry(users, null, null);
+        return new ServiceAllowlistEntry(users, null, null, null);
+    }
+
+    public static ServiceAllowlistEntry ofUsers(List<String> users, String pluginId) {
+        return new ServiceAllowlistEntry(users, null, null, pluginId);
     }
 
     private static List<String> copyAllowedUsers(List<String> allowedUsers) {
@@ -79,7 +85,11 @@ public class ServiceAllowlistEntry implements Serializable {
         return notes;
     }
 
-    /** True when normalized allowedUsers match (ignores source and notes). */
+    public String getPluginId() {
+        return pluginId;
+    }
+
+    /** True when normalized allowedUsers match (ignores source, notes, and pluginId). */
     public boolean hasSameAllowedUsers(List<String> users) {
         return Objects.equals(allowedUsers, ofUsers(users).getAllowedUsers());
     }
@@ -95,11 +105,12 @@ public class ServiceAllowlistEntry implements Serializable {
         ServiceAllowlistEntry otherAllowlistEntry = (ServiceAllowlistEntry) otherServiceAllowlistEntryObj;
         return Objects.equals(allowedUsers, otherAllowlistEntry.allowedUsers)
                 && Objects.equals(source, otherAllowlistEntry.source)
-                && Objects.equals(notes, otherAllowlistEntry.notes);
+                && Objects.equals(notes, otherAllowlistEntry.notes)
+                && Objects.equals(pluginId, otherAllowlistEntry.pluginId);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(allowedUsers, source, notes);
+        return Objects.hash(allowedUsers, source, notes, pluginId);
     }
 }

@@ -83,7 +83,7 @@ public class PartitionPlanHolderTest {
 
     @Test
     public void testInstallRejectsEmptyServiceAllowlist() {
-        Map<String, ServiceAllowlistEntry> services = Map.of("dev_hdfs", new ServiceAllowlistEntry(List.of(), "test", null));
+        Map<String, ServiceAllowlistEntry> services = Map.of("dev_hdfs", new ServiceAllowlistEntry(List.of(), "test", null, null));
         PartitionPlan plan = basePlanBuilder().services(services).build();
 
         assertThrows(PartitionPlanException.class, () -> PartitionPlanHolder.getInstance().install(plan, TOPIC_PARTITIONS));

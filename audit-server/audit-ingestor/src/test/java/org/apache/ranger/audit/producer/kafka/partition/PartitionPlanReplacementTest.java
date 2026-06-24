@@ -18,13 +18,12 @@
 package org.apache.ranger.audit.producer.kafka.partition;
 
 import org.apache.ranger.audit.producer.kafka.partition.exception.PartitionPlanException;
-import org.apache.ranger.audit.producer.kafka.partition.model.OnboardService;
+import org.apache.ranger.audit.producer.kafka.partition.model.OnboardPlugin;
 import org.apache.ranger.audit.producer.kafka.partition.model.PartitionPlan;
 import org.apache.ranger.audit.producer.kafka.partition.model.PartitionPlanReplacement;
 import org.apache.ranger.audit.producer.kafka.partition.model.PluginPartitionAssignment;
-import org.apache.ranger.audit.producer.kafka.partition.model.PluginScale;
-import org.apache.ranger.audit.producer.kafka.partition.model.PromotePlugin;
 import org.apache.ranger.audit.producer.kafka.partition.model.ServiceAllowlistEntry;
+import org.apache.ranger.audit.producer.kafka.partition.model.UpdatePlugin;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -134,21 +133,35 @@ public class PartitionPlanReplacementTest {
     }
 
     @Test
-    public void testRequestValidatorRejectsBlankPromotePluginId() {
+    public void testRequestValidatorRejectsBlankOnboardPluginId() {
         assertThrows(PartitionPlanException.class,
-                () -> PartitionPlanRequestValidator.validatePromotePlugin(new PromotePlugin("", 2, 1)));
+                () -> PartitionPlanRequestValidator.validateOnboardPlugin(new OnboardPlugin("", 2, 1)));
+    }
+
+    @Test
+    public void testRequestValidatorRejectsOnboardMissingServices() {
+        PartitionPlanException error = assertThrows(PartitionPlanException.class,
+                () -> PartitionPlanRequestValidator.validateOnboardPlugin(new OnboardPlugin("trino", 2, 1)));
+
+        assertTrue(error.getMessage().contains("services are required"));
     }
 
     @Test
     public void testRequestValidatorRejectsOnboardServiceWithoutAllowedUsers() {
+        Map<String, ServiceAllowlistEntry> services = Map.of("dev_trino", ServiceAllowlistEntry.ofUsers(List.of("  ")));
         assertThrows(PartitionPlanException.class,
-                () -> PartitionPlanRequestValidator.validateOnboardService(
-                        new OnboardService("dev_trino", "trino", 2, List.of("  "), 1)));
+                () -> PartitionPlanRequestValidator.validateOnboardPlugin(new OnboardPlugin("trino", 2, 1, services)));
     }
 
     @Test
-    public void testRequestValidatorRejectsScaleWithZeroAdditionalPartitions() {
+    public void testRequestValidatorRejectsUpdateWithZeroAdditionalPartitions() {
         assertThrows(PartitionPlanException.class,
-                () -> PartitionPlanRequestValidator.validateScalePlugin("hiveServer2", new PluginScale(0, 1)));
+                () -> PartitionPlanRequestValidator.validateUpdatePlugin("hiveServer2", new UpdatePlugin(1, 0, null, null, null)));
+    }
+
+    @Test
+    public void testRequestValidatorRejectsUpdateWithoutMutationDelta() {
+        assertThrows(PartitionPlanException.class,
+                () -> PartitionPlanRequestValidator.validateUpdatePlugin("hiveServer2", new UpdatePlugin(1, null, null, null, null)));
     }
 }

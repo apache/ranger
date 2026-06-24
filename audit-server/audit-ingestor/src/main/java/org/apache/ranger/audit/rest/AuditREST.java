@@ -30,11 +30,9 @@ import org.apache.ranger.audit.producer.kafka.partition.PartitionPlanService;
 import org.apache.ranger.audit.producer.kafka.partition.ServiceAllowlistResolver;
 import org.apache.ranger.audit.producer.kafka.partition.exception.PartitionPlanConflictException;
 import org.apache.ranger.audit.producer.kafka.partition.exception.PartitionPlanException;
-import org.apache.ranger.audit.producer.kafka.partition.model.OnboardService;
+import org.apache.ranger.audit.producer.kafka.partition.model.OnboardPlugin;
 import org.apache.ranger.audit.producer.kafka.partition.model.PartitionPlan;
-import org.apache.ranger.audit.producer.kafka.partition.model.PartitionPlanReplacement;
-import org.apache.ranger.audit.producer.kafka.partition.model.PluginScale;
-import org.apache.ranger.audit.producer.kafka.partition.model.PromotePlugin;
+import org.apache.ranger.audit.producer.kafka.partition.model.UpdatePlugin;
 import org.apache.ranger.audit.provider.MiscUtil;
 import org.apache.ranger.audit.server.AuditServerConfig;
 import org.apache.ranger.audit.server.AuditServerConstants;
@@ -283,44 +281,13 @@ public class AuditREST {
         return ret;
     }
 
-    /** Applies a partial update to the partition plan (optimistic lock via expectedVersion). */
-    @PATCH
-    @Path("/partition-plan")
-    @Consumes("application/json")
-    @Produces("application/json")
-    public Response patchPartitionPlan(PartitionPlanReplacement partitionPlanUpdate, @Context HttpServletRequest httpRequest) {
-        LOG.debug("==> AuditREST.patchPartitionPlan()");
-        Response ret;
-        if (!partitionPlanService.isDynamicPartitionPlanEnabled()) {
-            ret = partitionPlanDisabled("PATCH /partition-plan");
-        } else {
-            Response authFailure = authorizePartitionPlanAdmin(httpRequest, "PATCH /partition-plan");
-            if (authFailure != null) {
-                ret = authFailure;
-            } else {
-                try {
-                    ret = toSuccessfulPartitionPlanResponse(partitionPlanService.mergePartitionPlan(partitionPlanUpdate, resolveUpdatedBy(httpRequest)));
-                } catch (PartitionPlanConflictException e) {
-                    ret = toPartitionPlanConflictResponse("PATCH /partition-plan", e);
-                } catch (PartitionPlanException e) {
-                    ret = toPartitionPlanErrorResponse("PATCH /partition-plan", e);
-                } catch (Exception e) {
-                    LOG.error("Unexpected error patching partition plan", e);
-                    ret = Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(buildErrorResponse("Failed to patch partition plan")).build();
-                }
-            }
-        }
-        LOG.debug("<== AuditREST.patchPartitionPlan(): status={}", ret.getStatus());
-        return ret;
-    }
-
-    /** Promotes a plugin from the buffer to dedicated partitions. */
+    /** Onboards a plugin from the buffer and registers service allowlists. */
     @POST
     @Path("/partition-plan/plugins")
     @Consumes("application/json")
     @Produces("application/json")
-    public Response createPluginAssignment(PromotePlugin request, @Context HttpServletRequest httpRequest) {
-        LOG.debug("==> AuditREST.createPluginAssignment(pluginId={})", request != null ? request.getPluginId() : null);
+    public Response onboardPlugin(OnboardPlugin request, @Context HttpServletRequest httpRequest) {
+        LOG.debug("==> AuditREST.onboardPlugin(pluginId={})", request != null ? request.getPluginId() : null);
         Response ret;
         if (!partitionPlanService.isDynamicPartitionPlanEnabled()) {
             ret = partitionPlanDisabled("POST /partition-plan/plugins");
@@ -330,28 +297,28 @@ public class AuditREST {
                 ret = authFailure;
             } else {
                 try {
-                    ret = toSuccessfulPartitionPlanResponse(partitionPlanService.promotePlugin(request, resolveUpdatedBy(httpRequest)));
+                    ret = toSuccessfulPartitionPlanResponse(partitionPlanService.onboardPlugin(request, resolveUpdatedBy(httpRequest)));
                 } catch (PartitionPlanConflictException e) {
                     ret = toPartitionPlanConflictResponse("POST /partition-plan/plugins", e);
                 } catch (PartitionPlanException e) {
                     ret = toPartitionPlanErrorResponse("POST /partition-plan/plugins", e);
                 } catch (Exception e) {
-                    LOG.error("Unexpected error creating plugin assignment in partition plan", e);
-                    ret = Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(buildErrorResponse("Failed to create plugin assignment in partition plan")).build();
+                    LOG.error("Unexpected error onboarding plugin in partition plan", e);
+                    ret = Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(buildErrorResponse("Failed to onboard plugin in partition plan")).build();
                 }
             }
         }
-        LOG.debug("<== AuditREST.createPluginAssignment(): status={}", ret.getStatus());
+        LOG.debug("<== AuditREST.onboardPlugin(): status={}", ret.getStatus());
         return ret;
     }
 
-    /** Appends tail partitions to an existing plugin assignment. */
+    /** Updates an onboarded plugin: scale partitions and/or mutate service allowlists. */
     @PATCH
     @Path("/partition-plan/plugins/{pluginId}")
     @Consumes("application/json")
     @Produces("application/json")
-    public Response scalePluginAssignment(@PathParam("pluginId") String pluginId, PluginScale pluginScale, @Context HttpServletRequest httpRequest) {
-        LOG.debug("==> AuditREST.scalePluginAssignment(pluginId={})", pluginId);
+    public Response updatePlugin(@PathParam("pluginId") String pluginId, UpdatePlugin updateRequest, @Context HttpServletRequest httpRequest) {
+        LOG.debug("==> AuditREST.updatePlugin(pluginId={})", pluginId);
         Response ret;
         if (!partitionPlanService.isDynamicPartitionPlanEnabled()) {
             ret = partitionPlanDisabled("PATCH /partition-plan/plugins/{pluginId}");
@@ -361,50 +328,18 @@ public class AuditREST {
                 ret = authFailure;
             } else {
                 try {
-                    ret = toSuccessfulPartitionPlanResponse(partitionPlanService.scalePlugin(pluginId, pluginScale, resolveUpdatedBy(httpRequest)));
+                    ret = toSuccessfulPartitionPlanResponse(partitionPlanService.updatePlugin(pluginId, updateRequest, resolveUpdatedBy(httpRequest)));
                 } catch (PartitionPlanConflictException e) {
                     ret = toPartitionPlanConflictResponse("PATCH /partition-plan/plugins/" + pluginId, e);
                 } catch (PartitionPlanException e) {
                     ret = toPartitionPlanErrorResponse("PATCH /partition-plan/plugins/" + pluginId, e);
                 } catch (Exception e) {
-                    LOG.error("Unexpected error scaling plugin assignment in partition plan", e);
-                    ret = Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(buildErrorResponse("Failed to scale plugin assignment in partition plan")).build();
+                    LOG.error("Unexpected error updating plugin in partition plan", e);
+                    ret = Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(buildErrorResponse("Failed to update plugin in partition plan")).build();
                 }
             }
         }
-        LOG.debug("<== AuditREST.scalePluginAssignment(): status={}", ret.getStatus());
-        return ret;
-    }
-
-    /** Onboards a service: upsert allowlist and promote plugin partitions in one plan version. */
-    @POST
-    @Path("/partition-plan/services")
-    @Consumes("application/json")
-    @Produces("application/json")
-    public Response createService(OnboardService request, @Context HttpServletRequest httpRequest) {
-        LOG.debug("==> AuditREST.createService(serviceName={}, pluginId={})",
-                request != null ? request.getServiceName() : null, request != null ? request.getPluginId() : null);
-        Response ret;
-        if (!partitionPlanService.isDynamicPartitionPlanEnabled()) {
-            ret = partitionPlanDisabled("POST /partition-plan/services");
-        } else {
-            Response authFailure = authorizePartitionPlanAdmin(httpRequest, "POST /partition-plan/services");
-            if (authFailure != null) {
-                ret = authFailure;
-            } else {
-                try {
-                    ret = toSuccessfulPartitionPlanResponse(partitionPlanService.onboardService(request, resolveUpdatedBy(httpRequest)));
-                } catch (PartitionPlanConflictException e) {
-                    ret = toPartitionPlanConflictResponse("POST /partition-plan/services", e);
-                } catch (PartitionPlanException e) {
-                    ret = toPartitionPlanErrorResponse("POST /partition-plan/services", e);
-                } catch (Exception e) {
-                    LOG.error("Unexpected error creating service in partition plan", e);
-                    ret = Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(buildErrorResponse("Failed to create service in partition plan")).build();
-                }
-            }
-        }
-        LOG.debug("<== AuditREST.createService(): status={}", ret.getStatus());
+        LOG.debug("<== AuditREST.updatePlugin(): status={}", ret.getStatus());
         return ret;
     }
 

@@ -64,7 +64,7 @@ public class ServiceAllowlistBootstrap {
             }
             allowlistEntriesByRepo.put(
                     serviceRepoName.trim(),
-                    new ServiceAllowlistEntry(allowedUserShortNames, ALLOWLIST_SOURCE_SITE_XML, null));
+                    new ServiceAllowlistEntry(allowedUserShortNames, ALLOWLIST_SOURCE_SITE_XML, null, null));
         }
         return allowlistEntriesByRepo;
     }
