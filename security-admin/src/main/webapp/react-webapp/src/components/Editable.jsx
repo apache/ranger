@@ -777,7 +777,7 @@ const Editable = (props) => {
     let errors, uiHintVal;
     if (selectValRef?.current) {
       // Re-validate action-matches against current row permissions before persisting.
-      sortBy(Object.keys(selectValRef.current)).map((property) => {
+      sortBy(Object.keys(selectValRef.current)).forEach((property) => {
         let conditionObj = find(conditionDefVal, function (m) {
           if (m.name == property) {
             return m;

@@ -76,6 +76,13 @@ export const usePruneStaleConditions = ({
 
       const accesses = getSelectedAccessTypesForRow(formValues, attrName, index);
       if (accesses.length === 0) {
+        const actionMatches = item.conditions?.["action-matches"];
+        if (Array.isArray(actionMatches) && actionMatches.length > 0) {
+          const newConditions = { ...item.conditions };
+          delete newConditions["action-matches"];
+          newItems[index] = { ...item, conditions: newConditions };
+          hasChanges = true;
+        }
         return;
       }
 

@@ -113,25 +113,36 @@ export default function PolicyPermissionItem(props) {
     for (const resourceKey in grpResources) {
       grpResourcesKeys.push(+resourceKey);
     }
-    grpResourcesKeys = grpResourcesKeys.sort();
+    grpResourcesKeys = grpResourcesKeys.sort((a, b) => a - b);
     return grpResourcesKeys;
   }, [serviceCompDetails?.resources]);
 
-  // Narrow dependency: only recompute when resource selection fields change,
-  // not on every keystroke in user/group/permission fields.
-  const resourceBlocks = Array.isArray(formValues?.additionalResources)
-    ? formValues.additionalResources
-    : [formValues];
+  // Narrow dependency: only recompute leafResourceTypes when resource selection
+  // fields change, not on every keystroke in user/group/permission fields.
+  const resourceSelectionPart = (sel) => {
+    if (!sel) {
+      return "";
+    }
+    return `${sel.name ?? ""}:${sel.value ?? ""}`;
+  };
 
-  const serializedResources = JSON.stringify(
-    resourceBlocks.map((b) =>
-      grpResourcesKeys.map((level) => b?.[`resourceName-${level}`]?.name || null)
-    )
-  );
+  const resourceSelectionSignature = Array.isArray(formValues?.additionalResources)
+    ? formValues.additionalResources
+        .map((b) =>
+          grpResourcesKeys
+            .map((level) => resourceSelectionPart(b?.[`resourceName-${level}`]))
+            .join("|")
+        )
+        .join(";")
+    : grpResourcesKeys
+        .map((level) =>
+          resourceSelectionPart(formValues?.[`resourceName-${level}`])
+        )
+        .join("|");
 
   const leafResourceTypes = useMemo(() => {
     return getSelectedLeafResourceTypes(serviceCompDetails, formValues);
-  }, [serviceCompDetails, serializedResources]);
+  }, [serviceCompDetails, resourceSelectionSignature]);
 
   const conditionDefVal = useMemo(
     () => policyConditionUpdatedJSON(serviceCompDetails.policyConditions),
