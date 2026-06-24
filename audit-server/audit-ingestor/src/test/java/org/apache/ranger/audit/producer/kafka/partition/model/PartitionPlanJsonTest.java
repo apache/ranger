@@ -28,6 +28,7 @@ import java.util.Map;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertIterableEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class PartitionPlanJsonTest {
     @Test
@@ -55,6 +56,21 @@ public class PartitionPlanJsonTest {
         PartitionPlan parsed = PartitionPlan.fromJson(plan.toJson());
 
         assertIterableEquals(List.of("hive"), parsed.getServices().get("dev_hive").getAllowedUsers());
+    }
+
+    @Test
+    public void testSameContentAsIgnoresVersionAndMetadata() {
+        PartitionPlan plan = PartitionPlan.builder()
+                .topic("ranger_audits")
+                .version(1)
+                .topicPartitionCount(6)
+                .plugins(Map.of("hdfs", PluginPartitionAssignment.of(0, 1, 2)))
+                .buffer(PluginPartitionAssignment.of(3, 4, 5))
+                .services(Map.of("dev_hive", ServiceAllowlistEntry.ofUsers("hive")))
+                .build();
+        PartitionPlan withMetadata = plan.toBuilder().version(99).updatedAt("later").updatedBy("other").build();
+
+        assertTrue(plan.sameContentAs(withMetadata));
     }
 
     @Test

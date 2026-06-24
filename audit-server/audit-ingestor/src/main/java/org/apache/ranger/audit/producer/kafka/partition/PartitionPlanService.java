@@ -29,6 +29,7 @@ import org.apache.ranger.audit.server.AuditServerConfig;
 import org.apache.ranger.audit.server.AuditServerConstants;
 import org.springframework.stereotype.Component;
 
+import java.util.Collections;
 import java.util.Properties;
 import java.util.Set;
 
@@ -41,21 +42,25 @@ public class PartitionPlanService {
     private final PartitionPlanHolder holder;
     private final PartitionPlanRegistryFactory registryFactory;
     private final KafkaAuditTopicPartitionGrower auditTopicPartitionGrower;
+    private final boolean dynamicPartitionPlanEnabled;
+    private final Set<String> partitionPlanAdminUsers;
 
     public PartitionPlanService() {
         this(AuditServerConfig.getInstance().getProperties(), PartitionPlanHolder.getInstance(), new PartitionPlanRegistryFactory(), new KafkaAuditTopicPartitionGrower());
     }
 
     PartitionPlanService(Properties configProps, PartitionPlanHolder holder, PartitionPlanRegistryFactory registryFactory, KafkaAuditTopicPartitionGrower auditTopicPartitionGrower) {
-        this.configProps               = configProps;
-        this.holder                    = holder;
-        this.registryFactory           = registryFactory;
-        this.auditTopicPartitionGrower = auditTopicPartitionGrower;
+        this.configProps                    = configProps;
+        this.holder                         = holder;
+        this.registryFactory                = registryFactory;
+        this.auditTopicPartitionGrower      = auditTopicPartitionGrower;
+        this.dynamicPartitionPlanEnabled    = PartitionPlanKafkaConfig.isDynamicPartitionPlanEnabled(configProps, INGESTOR_PROP_PREFIX);
+        this.partitionPlanAdminUsers        = cachePartitionPlanAdminUsers(configProps);
     }
 
     /** Returns whether dynamic partition-plan mode is enabled in ingestor configuration. */
     public boolean isDynamicPartitionPlanEnabled() {
-        return PartitionPlanKafkaConfig.isDynamicPartitionPlanEnabled(configProps, INGESTOR_PROP_PREFIX);
+        return dynamicPartitionPlanEnabled;
     }
 
     /** Returns the plan currently installed in memory on this ingestor pod. */
@@ -109,7 +114,15 @@ public class PartitionPlanService {
 
     /** Returns configured admin short usernames for partition-plan REST (empty = not restricted beyond authentication). */
     public Set<String> getPartitionPlanAdminUsers() {
-        return PartitionPlanKafkaConfig.resolvePartitionPlanAdminUsers(configProps, INGESTOR_PROP_PREFIX);
+        return partitionPlanAdminUsers;
+    }
+
+    private static Set<String> cachePartitionPlanAdminUsers(Properties configProps) {
+        Set<String> adminUsers = PartitionPlanKafkaConfig.resolvePartitionPlanAdminUsers(configProps, INGESTOR_PROP_PREFIX);
+        if (adminUsers.isEmpty()) {
+            return adminUsers;
+        }
+        return Collections.unmodifiableSet(adminUsers);
     }
 
     /** Validates version, grows the audit topic if needed, writes the plan, and reloads memory. */
