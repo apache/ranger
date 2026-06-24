@@ -38,10 +38,12 @@ public class KerberosJAASConfigUser extends AbstractKerberosUser {
 
     private final String        configName;
     private final Configuration config;
+    private final boolean       optionUseKeyTab;
 
     public KerberosJAASConfigUser(final String configName, final Configuration config) {
-        this.configName = configName;
-        this.config     = config;
+        this.configName      = configName;
+        this.config          = config;
+        this.optionUseKeyTab = getBooleanOption(JAAS_USE_KEYTAB);
     }
 
     @Override
@@ -69,25 +71,26 @@ public class KerberosJAASConfigUser extends AbstractKerberosUser {
      */
     @Override
     protected boolean useKeytabRelogin() {
-        return isJaasOptionTrue(JAAS_USE_KEYTAB);
+        return optionUseKeyTab;
     }
 
-    private boolean isJaasOptionTrue(String optionName) {
+    private boolean getBooleanOption(String optionName) {
+        boolean                 ret     = false;
         AppConfigurationEntry[] entries = config.getAppConfigurationEntry(configName);
 
-        if (entries == null) {
-            return false;
-        }
+        if (entries != null) {
+            for (AppConfigurationEntry entry : entries) {
+                Object value = entry.getOptions().get(optionName);
 
-        for (AppConfigurationEntry entry : entries) {
-            Object value = entry.getOptions().get(optionName);
+                if (value != null && Boolean.parseBoolean(value.toString())) {
+                    ret = true;
 
-            if (value != null && "true".equalsIgnoreCase(value.toString())) {
-                return true;
+                    break;
+                }
             }
         }
 
-        return false;
+        return ret;
     }
 
     @Override
