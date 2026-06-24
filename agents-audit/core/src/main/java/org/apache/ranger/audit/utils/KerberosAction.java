@@ -23,6 +23,7 @@ import org.apache.commons.lang3.Validate;
 import org.slf4j.Logger;
 
 import javax.security.auth.login.LoginException;
+
 import java.security.PrivilegedActionException;
 import java.security.PrivilegedExceptionAction;
 
@@ -30,42 +31,54 @@ import java.security.PrivilegedExceptionAction;
  * Helper class for processors to perform an action as a KerberosUser.
  */
 public class KerberosAction<T> {
-
-    private final KerberosUser kerberosUser;
+    private final KerberosUser                 kerberosUser;
     private final PrivilegedExceptionAction<T> action;
-    private final Logger logger;
+    private final Logger                       logger;
 
-    public KerberosAction(final KerberosUser kerberosUser,
-                          final PrivilegedExceptionAction<T> action,
-                          final Logger logger) {
+    public KerberosAction(final KerberosUser kerberosUser, final PrivilegedExceptionAction<T> action, final Logger logger) {
         this.kerberosUser = kerberosUser;
-        this.action = action;
-        this.logger = logger;
+        this.action       = action;
+        this.logger       = logger;
+
         Validate.notNull(this.kerberosUser);
         Validate.notNull(this.action);
         Validate.notNull(this.logger);
     }
 
+    /**
+     * Runs {@code action} as {@code kerberosUser}: lazy login, proactive TGT
+     * refresh at 80% lifetime ({@link KerberosUser#checkTGTAndRelogin()}),
+     * then the privileged action. On {@link SecurityException}, relogin once via
+     * {@link AbstractKerberosUser#performRelogin()} (keytab-safe) and retry.
+     *
+     * @return the result of {@code action}
+     * @throws Exception if login, relogin, or the privileged action fails
+     */
     public T execute() throws Exception {
         T result;
+
         // lazily login the first time the processor executes
         if (!kerberosUser.isLoggedIn()) {
             try {
                 kerberosUser.login();
-                logger.info("Successful login for " + kerberosUser.getPrincipal());
+
+                logger.info("Successful login for {}", kerberosUser.getPrincipal());
             } catch (LoginException e) {
                 throw new Exception("Login failed due to: " + e.getMessage(), e);
             }
         }
 
-        // check if we need to re-login, will only happen if re-login window is reached (80% of TGT life)
+        // check if we need to re-login, will only happen if re-login window is
+        // reached (80% of TGT life)
         try {
             kerberosUser.checkTGTAndRelogin();
         } catch (LoginException e) {
             throw new Exception("Relogin check failed due to: " + e.getMessage(), e);
         }
 
-        // attempt to execute the action, if an exception is caught attempt to logout/login and retry
+        // On SecurityException, relogin and retry once. Use performRelogin()
+        // for AbstractKerberosUser so keytab clients skip logout first; bare
+        // logout/login reproduces "No key to store" when useTicketCache is true.
         try {
             result = kerberosUser.doAs(action);
         } catch (SecurityException se) {
@@ -73,11 +86,17 @@ public class KerberosAction<T> {
             logger.debug("", se);
 
             try {
-                kerberosUser.logout();
-                kerberosUser.login();
+                if (kerberosUser instanceof AbstractKerberosUser) {
+                    ((AbstractKerberosUser) kerberosUser).performRelogin();
+                } else {
+                    kerberosUser.logout();
+                    kerberosUser.login();
+                }
+
                 result = kerberosUser.doAs(action);
             } catch (Exception e) {
-                throw new Exception("Retrying privileged action failed due to: " + e.getMessage(), e);
+                throw new Exception(
+                        "Retrying privileged action failed due to: " + e.getMessage(), e);
             }
         } catch (PrivilegedActionException pae) {
             final Exception cause = pae.getException();
