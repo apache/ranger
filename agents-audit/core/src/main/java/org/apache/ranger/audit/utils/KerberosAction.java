@@ -82,8 +82,7 @@ public class KerberosAction<T> {
         try {
             result = kerberosUser.doAs(action);
         } catch (SecurityException se) {
-            logger.info(
-                    "Privileged action failed, attempting relogin and retrying...");
+            logger.info("Privileged action failed, attempting relogin and retrying...");
             logger.debug("", se);
 
             try {

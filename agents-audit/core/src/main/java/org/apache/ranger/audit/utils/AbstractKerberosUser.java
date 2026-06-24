@@ -211,16 +211,11 @@ public abstract class AbstractKerberosUser implements KerberosUser {
                 loginContext.login();
                 loggedIn.set(true);
 
-                LOG.debug(
-                        "Successful in-place keytab relogin for {}",
-                        getPrincipal());
+                LOG.debug("Successful in-place keytab relogin for {}", getPrincipal());
 
                 return;
             } catch (LoginException e) {
-                LOG.warn(
-                        "In-place keytab relogin failed for {}, "
-                                + "falling back to logout/login: {}",
-                        getPrincipal(), e.getMessage());
+                LOG.warn("In-place keytab relogin failed for {}, falling back to logout/login: {}", getPrincipal(), e.getMessage());
             }
         }
 
