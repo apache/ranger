@@ -36,6 +36,12 @@ BEGIN
 END
 
 GO
+DROP VIEW IF EXISTS dbo.vx_audit_metrics_by_hours
+GO
+DROP VIEW IF EXISTS dbo.vx_audit_metrics_by_days
+GO
+call dbo.removeForeignKeysAndTable('x_audit_metrics')
+GO
 call dbo.removeForeignKeysAndTable('x_rms_mapping_provider')
 GO
 call dbo.removeForeignKeysAndTable('x_rms_resource_mapping')
@@ -2092,6 +2098,35 @@ CONSTRAINT x_rms_mapping_provider_UK_name UNIQUE(name)
 );
 GO
 
+CREATE TABLE dbo.x_audit_metrics(
+id bigint IDENTITY NOT NULL,
+service_type bigint DEFAULT NULL NULL,
+service_name varchar(255) DEFAULT NULL NULL,
+app_id varchar(255) DEFAULT NULL NULL,
+cluster_name varchar(255) DEFAULT NULL NULL,
+client_ip varchar(255) DEFAULT NULL NULL,
+metrics_text varchar(4000) DEFAULT NULL NULL,
+throughput_unit varchar(255) DEFAULT NULL NULL,
+number_of_audits bigint DEFAULT 0 NOT NULL,
+version bigint  DEFAULT 0 NOT NULL,
+create_time datetime DEFAULT NULL NULL,
+update_time datetime DEFAULT NULL NULL,
+added_by_id bigint DEFAULT NULL NULL,
+upd_by_id bigint  DEFAULT NULL NULL,
+CONSTRAINT x_x_audit_metrics_PK_id PRIMARY KEY CLUSTERED(id),
+)
+GO
+ALTER TABLE dbo.x_audit_metrics ADD CONSTRAINT x_audit_metrics_FK_service_type FOREIGN KEY(service_type) REFERENCES dbo.x_service_def (id)
+GO
+ALTER TABLE dbo.x_audit_metrics ADD CONSTRAINT x_audit_metrics_FK_added_by_id FOREIGN KEY(added_by_id) REFERENCES dbo.x_portal_user (id)
+GO
+ALTER TABLE dbo.x_audit_metrics ADD CONSTRAINT x_audit_metrics_FK_upd_by_id FOREIGN KEY(upd_by_id) REFERENCES dbo.x_portal_user (id)
+GO
+CREATE VIEW vx_audit_metrics_by_hours AS select service_type, service_name, app_id, cluster_name, client_ip, HOUR(create_time) as hours, sum(number_of_audits) as numberOfAudits from x_audit_metrics where (cast(CREATE_TIME as date) = CURRENT_DATE) group by service_type, service_name, app_id, cluster_name, client_ip, hours ORDER BY hours;
+GO
+CREATE VIEW	vx_audit_metrics_by_days AS select service_type, service_name, app_id, cluster_name, client_ip, DAY(create_time) as days, sum(number_of_audits) as numberOfAudits, cast(create_time as date) as auditDate from x_audit_metrics group by  service_type, service_name, app_id, cluster_name, client_ip, days, auditDate ORDER BY auditDate, days;
+GO
+
 insert into x_portal_user (create_time,update_time,first_name,last_name,pub_scr_name,login_id,password,email,status) values (GETDATE(),GETDATE(),'Admin','','Admin','admin','ceb4f32325eda6142bd65215f4c0f371','',1)
 GO
 insert into x_portal_user_role (create_time,update_time,user_id,user_role,status) values (GETDATE(),GETDATE(),dbo.getXportalUIdByLoginId('admin'),'ROLE_SYS_ADMIN',1)
@@ -2221,6 +2256,10 @@ GO
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('059',CURRENT_TIMESTAMP,'Ranger 1.0.0',CURRENT_TIMESTAMP,'localhost','Y');
 GO
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('060',CURRENT_TIMESTAMP,'Ranger 1.0.0',CURRENT_TIMESTAMP,'localhost','Y');
+GO
+INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('063',CURRENT_TIMESTAMP,'Ranger 1.0.0',CURRENT_TIMESTAMP,'localhost','Y');
+GO
+INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('064',CURRENT_TIMESTAMP,'Ranger 1.0.0',CURRENT_TIMESTAMP,'localhost','Y');
 GO
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('065',CURRENT_TIMESTAMP,'Ranger 1.0.0',CURRENT_TIMESTAMP,'localhost','Y');
 GO

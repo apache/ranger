@@ -2271,6 +2271,43 @@
 		</query>
 	</named-query>
 
+	<!-- XXAuditMetrics -->
+	<named-query name="XXAuditMetrics.findLatestAuditMetricsByServiceTypeAndName">
+		<query>select obj from XXAuditMetrics obj where obj.serviceType = :serviceType and obj.serviceName = :serviceName
+			and obj.id = (select max(auditMetrics.id) from XXAuditMetrics auditMetrics where auditMetrics.serviceType = :serviceType
+			and auditMetrics.serviceName = :serviceName)
+		</query>
+	</named-query>
+
+	<named-query name="XXAuditMetrics.findById">
+		<query>select obj from XXAuditMetrics obj where obj.id = :id</query>
+	</named-query>
+
+	<named-query name="XXAuditMetrics.findAllLatestAuditMetrics">
+		<query>select obj from XXAuditMetrics obj
+			where obj.id in (select max(auditMetrics.id) from XXAuditMetrics auditMetrics
+			                 where auditMetrics.serviceType in (select service.type from XXService service )
+                             group by auditMetrics.serviceType, auditMetrics.serviceName, auditMetrics.appId, auditMetrics.clusterName, auditMetrics.clientIP)
+		</query>
+	</named-query>
+
+	<named-query name="XXAuditMetrics.deleteOlderThan">
+		<query>delete from XXAuditMetrics obj where obj.createTime &lt; :olderThanInDays
+				and obj.serviceName = :serviceName
+				and obj.serviceType = :serviceType
+
+		</query>
+	</named-query>
+
+	<named-query name="XXAuditMetrics.getCountOfAuditMetrics">
+		<query>
+			select count(obj.id) from XXAuditMetrics obj
+			where obj.createTime &lt; :olderThanInDays
+			and obj.serviceType = :serviceType
+			and obj.serviceName = :serviceName
+		</query>
+	</named-query>
+
 	<named-query name="XXPolicy.findByZoneId">
 		<query>select obj from XXPolicy obj where obj.zoneId = :zoneId</query>
 	</named-query>
