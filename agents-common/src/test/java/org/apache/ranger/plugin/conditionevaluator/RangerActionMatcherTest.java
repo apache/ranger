@@ -31,9 +31,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-public class RangerActionMatcherTest {
+class RangerActionMatcherTest {
     @Test
-    public void testNullOrEmptyConditionMatchesAll() {
+    void testNullOrEmptyConditionMatchesAll() {
         final RangerActionMatcher matcherNull = createMatcher(null);
 
         assertTrue(matcherNull.isMatched(createRequest("PutObject")));
@@ -46,7 +46,7 @@ public class RangerActionMatcherTest {
     }
 
     @Test
-    public void testWildcardMatchesAll() {
+    void testWildcardMatchesAll() {
         final RangerActionMatcher matcher = createMatcher(new String[] {"*"});
 
         assertTrue(matcher.isMatched(createRequest("GetObject")));
@@ -55,7 +55,7 @@ public class RangerActionMatcherTest {
     }
 
     @Test
-    public void testNoRequestActionDoesNotEnforce() {
+    void testNoRequestActionDoesNotEnforce() {
         final RangerActionMatcher matcher = createMatcher(new String[] {"PutObject"});
 
         assertTrue(matcher.isMatched(createRequest(null)));
@@ -64,7 +64,7 @@ public class RangerActionMatcherTest {
     }
 
     @Test
-    public void testExactMatchCaseInsensitive() {
+    void testExactMatchCaseInsensitive() {
         final RangerActionMatcher matcher = createMatcher(new String[] {"GetObject"});
 
         assertTrue(matcher.isMatched(createRequest("GetObject")));
@@ -73,7 +73,7 @@ public class RangerActionMatcherTest {
     }
 
     @Test
-    public void testTrailingWildcardPrefixMatchCaseInsensitive() {
+    void testTrailingWildcardPrefixMatchCaseInsensitive() {
         final RangerActionMatcher matcher = createMatcher(new String[] {"Put*"});
 
         assertTrue(matcher.isMatched(createRequest("PutObject")));

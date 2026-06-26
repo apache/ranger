@@ -28,9 +28,9 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class RangerActionListMatcherTest {
+class RangerActionListMatcherTest {
     @Test
-    public void testNullActionsMatchAll() {
+    void testNullActionsMatchAll() {
         final RangerActionListMatcher matcher = new RangerActionListMatcher(null);
 
         assertTrue(matcher.isMatch("PutObject"));
@@ -40,7 +40,7 @@ public class RangerActionListMatcherTest {
     }
 
     @Test
-    public void testEmptyActionsMatchAll() {
+    void testEmptyActionsMatchAll() {
         final RangerActionListMatcher matcher = new RangerActionListMatcher(Collections.emptyList());
 
         assertTrue(matcher.isMatch("PutObject"));
@@ -49,7 +49,7 @@ public class RangerActionListMatcherTest {
     }
 
     @Test
-    public void testUniversalWildcard() {
+    void testUniversalWildcard() {
         final RangerActionListMatcher matcher = new RangerActionListMatcher(Arrays.asList("*"));
 
         assertTrue(matcher.isMatch("PutObject"));
@@ -59,7 +59,7 @@ public class RangerActionListMatcherTest {
     }
 
     @Test
-    public void testBareWildcardWithSpaces() {
+    void testBareWildcardWithSpaces() {
         // "  *  " after trim becomes "*" which should be treated as allow-all
         final RangerActionListMatcher matcher = new RangerActionListMatcher(Arrays.asList("  *  "));
 
@@ -68,7 +68,7 @@ public class RangerActionListMatcherTest {
     }
 
     @Test
-    public void testExactMatchCaseInsensitive() {
+    void testExactMatchCaseInsensitive() {
         final RangerActionListMatcher matcher = new RangerActionListMatcher(Arrays.asList("GetObject"));
 
         assertTrue(matcher.isMatch("GetObject"));
@@ -79,7 +79,7 @@ public class RangerActionListMatcherTest {
     }
 
     @Test
-    public void testMultipleExactActions() {
+    void testMultipleExactActions() {
         final RangerActionListMatcher matcher = new RangerActionListMatcher(
                 Arrays.asList("GetObject", "PutObject", "DeleteObject"));
 
@@ -91,7 +91,7 @@ public class RangerActionListMatcherTest {
     }
 
     @Test
-    public void testSinglePrefixWildcard() {
+    void testSinglePrefixWildcard() {
         final RangerActionListMatcher matcher = new RangerActionListMatcher(Arrays.asList("Put*"));
 
         assertTrue(matcher.isMatch("PutObject"));
@@ -102,7 +102,7 @@ public class RangerActionListMatcherTest {
     }
 
     @Test
-    public void testMultiplePrefixWildcards() {
+    void testMultiplePrefixWildcards() {
         final RangerActionListMatcher matcher = new RangerActionListMatcher(
                 Arrays.asList("Put*", "Get*"));
 
@@ -115,7 +115,7 @@ public class RangerActionListMatcherTest {
     }
 
     @Test
-    public void testMixedExactAndPrefix() {
+    void testMixedExactAndPrefix() {
         final RangerActionListMatcher matcher = new RangerActionListMatcher(
                 Arrays.asList("GetObject", "Put*", "ListBucket"));
 
@@ -129,7 +129,7 @@ public class RangerActionListMatcherTest {
     }
 
     @Test
-    public void testPrefixOptimizationRedundantPrefixes() {
+    void testPrefixOptimizationRedundantPrefixes() {
         // The constructor optimizes prefix patterns by removing any longer prefix that is
         // already covered by a shorter one. Here "Put*" matches anything starting with "put"
         // (lowercased), which is a superset of what "PutObject*" matches (only things starting
@@ -145,7 +145,7 @@ public class RangerActionListMatcherTest {
     }
 
     @Test
-    public void testPrefixOptimizationNonRedundant() {
+    void testPrefixOptimizationNonRedundant() {
         // "Put*" and "Get*" are independent — neither covers the other
         final RangerActionListMatcher matcher = new RangerActionListMatcher(
                 Arrays.asList("Put*", "Get*"));
@@ -156,7 +156,7 @@ public class RangerActionListMatcherTest {
     }
 
     @Test
-    public void testDuplicatePrefixes() {
+    void testDuplicatePrefixes() {
         // Duplicate "Put*" entries should be handled gracefully
         final RangerActionListMatcher matcher = new RangerActionListMatcher(
                 Arrays.asList("Put*", "Put*", "Put*"));
@@ -166,7 +166,7 @@ public class RangerActionListMatcherTest {
     }
 
     @Test
-    public void testBlankRequestActionBypassesRestriction() {
+    void testBlankRequestActionBypassesRestriction() {
         final RangerActionListMatcher matcher = new RangerActionListMatcher(
                 Arrays.asList("PutObject"));
 
@@ -177,7 +177,7 @@ public class RangerActionListMatcherTest {
     }
 
     @Test
-    public void testBlankEntriesInActionsIgnored() {
+    void testBlankEntriesInActionsIgnored() {
         final RangerActionListMatcher matcher = new RangerActionListMatcher(
                 Arrays.asList("", "  ", "PutObject"));
 
@@ -186,7 +186,7 @@ public class RangerActionListMatcherTest {
     }
 
     @Test
-    public void testPrefixWildcardCaseInsensitive() {
+    void testPrefixWildcardCaseInsensitive() {
         final RangerActionListMatcher matcher = new RangerActionListMatcher(Arrays.asList("Put*"));
 
         assertTrue(matcher.isMatch("PUTOBJECT"));
@@ -195,7 +195,7 @@ public class RangerActionListMatcherTest {
     }
 
     @Test
-    public void testWildcardAmongOtherActions() {
+    void testWildcardAmongOtherActions() {
         // If "*" appears alongside other actions, it should still match all
         final RangerActionListMatcher matcher = new RangerActionListMatcher(
                 Arrays.asList("PutObject", "*", "GetObject"));
@@ -206,7 +206,7 @@ public class RangerActionListMatcherTest {
     }
 
     @Test
-    public void testSingleCharacterPrefix() {
+    void testSingleCharacterPrefix() {
         // "G*" should match anything starting with G
         final RangerActionListMatcher matcher = new RangerActionListMatcher(Arrays.asList("G*"));
 
@@ -216,7 +216,7 @@ public class RangerActionListMatcherTest {
     }
 
     @Test
-    public void testAllOzoneS3Actions() {
+    void testAllOzoneS3Actions() {
         // Grant with both wildcards and exact actions matching Ozone S3 patterns
         final List<String> grantActions = Arrays.asList("Get*", "List*", "PutObject");
         final RangerActionListMatcher matcher = new RangerActionListMatcher(grantActions);
