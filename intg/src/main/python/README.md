@@ -218,14 +218,14 @@ of each sample before running it against your environment.
 
 ### Runnable examples by task
 
-| Task | Sample script | What it demonstrates |
-| --- | --- | --- |
-| Ranger Admin — services, policies, roles, tags | [`sample_client.py`](https://github.com/apache/ranger/blob/master/ranger-examples/sample-client/src/main/python/sample_client.py) | Service-def and service CRUD, access/data-masking/row-filter policies, roles, service tags |
-| User and group management | [`user_mgmt.py`](https://github.com/apache/ranger/blob/master/ranger-examples/sample-client/src/main/python/user_mgmt.py) | List/create/delete users and groups, group-user mappings |
-| Ranger KMS | [`sample_kms_client.py`](https://github.com/apache/ranger/blob/master/ranger-examples/sample-client/src/main/python/sample_kms_client.py) | Key lifecycle, encrypt/decrypt/reencrypt, metadata and status |
-| PDP authorization | [`sample_pdp_client.py`](https://github.com/apache/ranger/blob/master/ranger-examples/sample-client/src/main/python/sample_pdp_client.py) | `authorize`, `authorize_multi`, `get_resource_permissions` |
-| Governed Data Sharing (GDS) | [`sample_gds_client.py`](https://github.com/apache/ranger/blob/master/ranger-examples/sample-client/src/main/python/sample_gds_client.py) | Datasets, projects, datashares, shared resources, GDS policies |
-| Security zones (v2) | [`security_zone_v2.py`](https://github.com/apache/ranger/blob/master/ranger-examples/sample-client/src/main/python/security_zone_v2.py) | Create/update security zones and zone resources |
+| Task                                                | Sample script | What it demonstrates                                                                  |
+|-----------------------------------------------------| --- |---------------------------------------------------------------------------------------|
+| Ranger Admin — services, policies, roles, tags CRUD | [`sample_client.py`](https://github.com/apache/ranger/blob/master/ranger-examples/sample-client/src/main/python/sample_client.py) | service-def and service, access/data-masking/row-filter policies, roles, service tags |
+| User and group management                           | [`user_mgmt.py`](https://github.com/apache/ranger/blob/master/ranger-examples/sample-client/src/main/python/user_mgmt.py) | List/create/delete users and groups, group-user mappings                              |
+| Ranger KMS                                          | [`sample_kms_client.py`](https://github.com/apache/ranger/blob/master/ranger-examples/sample-client/src/main/python/sample_kms_client.py) | Key lifecycle, encrypt/decrypt/reencrypt, metadata and status                         |
+| PDP AuthZ                                           | [`sample_pdp_client.py`](https://github.com/apache/ranger/blob/master/ranger-examples/sample-client/src/main/python/sample_pdp_client.py) | Authz/MultiAuthz calls to PDP Server                                                  |
+| Governed Data Sharing (GDS)                         | [`sample_gds_client.py`](https://github.com/apache/ranger/blob/master/ranger-examples/sample-client/src/main/python/sample_gds_client.py) | Projects, datasets, datashares, shared resources, GDS policies                        |
+| Security zones (v2)                                 | [`security_zone_v2.py`](https://github.com/apache/ranger/blob/master/ranger-examples/sample-client/src/main/python/security_zone_v2.py) | Create/update security zones and zone resources                                       |
 
 All samples live under
 [`ranger-examples/sample-client/src/main/python`](https://github.com/apache/ranger/tree/master/ranger-examples/sample-client/src/main/python).
