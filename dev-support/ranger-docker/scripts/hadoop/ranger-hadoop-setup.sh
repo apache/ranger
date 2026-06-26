@@ -66,6 +66,14 @@ else
     echo "WARNING: Tez directory not found at /opt/tez"
 fi
 
+# Audit spool dirs (Solr/HDFS/audit-server destinations)
+mkdir -p /var/log/hadoop/hdfs/audit/solr/spool \
+         /var/log/hadoop/hdfs/audit/hdfs/spool \
+         /var/log/hadoop/hdfs/audit/audit-ingestor/spool \
+         /var/log/hadoop/hdfs/audit/archive
+chown -R hdfs:hadoop /var/log/hadoop/hdfs/audit
+chmod -R 775 /var/log/hadoop/hdfs/audit
+
 cd ${RANGER_HOME}/ranger-hdfs-plugin
 ./enable-hdfs-plugin.sh
 

@@ -33,8 +33,6 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import javax.servlet.FilterChain;
-import javax.servlet.ServletRequest;
-import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -130,22 +128,19 @@ public class TestRangerHeaderPreAuthFilter {
 
         when(request.getHeader("x-awc-username")).thenReturn("joeuser");
 
-        FilterChain chain = new FilterChain() {
-            @Override
-            public void doFilter(ServletRequest req, ServletResponse res) {
-                org.springframework.security.core.Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        FilterChain chain = (req, res) -> {
+            org.springframework.security.core.Authentication auth = SecurityContextHolder.getContext().getAuthentication();
 
-                assertNotNull(auth);
-                assertTrue(auth instanceof RangerAuthenticationToken);
-                RangerAuthenticationToken rangerAuth = (RangerAuthenticationToken) auth;
-                assertEquals(XXAuthSession.AUTH_TYPE_TRUSTED_PROXY, rangerAuth.getAuthType());
-                assertEquals("joeuser", auth.getName());
+            assertNotNull(auth);
+            assertTrue(auth instanceof RangerAuthenticationToken);
+            RangerAuthenticationToken rangerAuth = (RangerAuthenticationToken) auth;
+            assertEquals(XXAuthSession.AUTH_TYPE_TRUSTED_PROXY, rangerAuth.getAuthType());
+            assertEquals("joeuser", auth.getName());
 
-                Collection<?> authorities = auth.getAuthorities();
-                assertEquals(2, authorities.size());
-                assertTrue(authorities.stream().anyMatch(a -> "ROLE_SYS_ADMIN".equals(a.toString())));
-                assertTrue(authorities.stream().anyMatch(a -> "ROLE_USER".equals(a.toString())));
-            }
+            Collection<?> authorities = auth.getAuthorities();
+            assertEquals(2, authorities.size());
+            assertTrue(authorities.stream().anyMatch(a -> "ROLE_SYS_ADMIN".equals(a.toString())));
+            assertTrue(authorities.stream().anyMatch(a -> "ROLE_USER".equals(a.toString())));
         };
 
         filter.doFilter(request, response, chain);

@@ -86,6 +86,10 @@
         <directoryMode>755</directoryMode>
         <fileMode>644</fileMode>
         <includes>
+            <include>org.apache.ranger:ranger-audit-core</include>
+            <include>org.apache.ranger:ranger-audit-dest-auditserver</include>
+            <include>org.apache.ranger:ranger-audit-dest-hdfs</include>
+            <include>org.apache.ranger:ranger-audit-dest-solr</include>
             <include>com.carrotsearch:hppc</include>
             <include>commons-collections:commons-collections</include>
             <include>io.airlift:aircompressor:jar:${aircompressor.version}</include>

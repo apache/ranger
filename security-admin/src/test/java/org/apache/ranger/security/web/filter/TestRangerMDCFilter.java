@@ -30,7 +30,6 @@ import org.slf4j.MDC;
 import javax.servlet.FilterChain;
 import javax.servlet.FilterConfig;
 import javax.servlet.ServletException;
-import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -88,12 +87,7 @@ public class TestRangerMDCFilter {
 
         ServletResponse response = mock(ServletResponse.class);
 
-        FilterChain chain = new FilterChain() {
-            @Override
-            public void doFilter(ServletRequest req, ServletResponse res) throws IOException, ServletException {
-                assertEquals("abc-123", MDC.get("RID"));
-            }
-        };
+        FilterChain chain = (req, res) -> assertEquals("abc-123", MDC.get("RID"));
 
         filter.doFilter(request, response, chain);
 
@@ -110,13 +104,7 @@ public class TestRangerMDCFilter {
         HttpServletRequest request = mock(HttpServletRequest.class);
         ServletResponse response = mock(ServletResponse.class);
 
-        FilterChain chain = new FilterChain() {
-            @Override
-            public void doFilter(ServletRequest req, ServletResponse res) {
-                // MDC should not be set
-                assertNull(MDC.get(RangerMDCFilter.DEFAULT_MDC_KEY));
-            }
-        };
+        FilterChain chain = (req, res) -> assertNull(MDC.get(RangerMDCFilter.DEFAULT_MDC_KEY));
 
         filter.doFilter(request, response, chain);
     }

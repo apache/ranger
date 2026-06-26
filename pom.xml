@@ -145,7 +145,7 @@
         <jericho.html.version>3.4</jericho.html.version>
         <jersey-client.version>2.47</jersey-client.version>
         <jettison.version>1.5.4</jettison.version>
-        <jetty-client.version>9.4.56.v20240826</jetty-client.version>
+        <jetty-client.version>9.4.58.v20250814</jetty-client.version>
         <jline.version>0.9.94</jline.version>
         <joda.time.version>2.10.6</joda.time.version>
         <jopt-simple.version>3.2</jopt-simple.version>
@@ -321,6 +321,10 @@
                     <exclusion>
                         <groupId>org.codehaus.jettison</groupId>
                         <artifactId>jettison</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.eclipse.jetty</groupId>
+                        <artifactId>*</artifactId>
                     </exclusion>
                     <exclusion>
                         <groupId>org.jline</groupId>
