@@ -37,6 +37,7 @@ import java.util.stream.Collectors;
 
 public class AuditOpenSearchDispatcher extends AuditDispatcherBase {
     private static final Logger LOG = LoggerFactory.getLogger(AuditOpenSearchDispatcher.class);
+
     private static final String DEFAULT_GROUP = "ranger_audit_opensearch_dispatcher_group";
     private static final long   RETRY_SLEEP_MS = 5000L;
 
@@ -90,10 +91,12 @@ public class AuditOpenSearchDispatcher extends AuditDispatcherBase {
     }
 
     private void processMessageBatch(final Collection<String> audits) throws Exception {
-        boolean processed = audits != null && !audits.isEmpty() && openSearchAuditDestination.logJSON(audits);
+        if (audits != null && !audits.isEmpty()) {
+            boolean processed =  openSearchAuditDestination.logJSON(audits);
 
-        if (!processed) {
-            throw new Exception("Failure in sending audits into OpenSearch");
+            if (!processed) {
+                throw new Exception("Failure in sending audits into OpenSearch");
+            }
         }
     }
 
@@ -113,15 +116,19 @@ public class AuditOpenSearchDispatcher extends AuditDispatcherBase {
 
                 try {
                     List<String> auditBatch = tpRecords.stream().map(ConsumerRecord::value).collect(Collectors.toList());
+
                     processMessageBatch(auditBatch);
 
                     ConsumerRecord<String, String> last = tpRecords.get(tpRecords.size() - 1);
+
                     pendingOffsets.put(tp, new OffsetAndMetadata(last.offset() + 1));
+
                     messagesProcessedSinceLastCommit.addAndGet(tpRecords.size());
                 } catch (Exception e) {
                     LOG.error("Error processing batch in worker '{}', partition={}, batch size: {}", workerId, tp, tpRecords.size(), e);
 
                     ConsumerRecord<String, String> first = tpRecords.get(0);
+
                     pendingOffsets.put(tp, new OffsetAndMetadata(first.offset()));
 
                     try {
