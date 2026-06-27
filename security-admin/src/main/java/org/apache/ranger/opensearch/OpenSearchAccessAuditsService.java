@@ -57,7 +57,7 @@ public class OpenSearchAccessAuditsService extends org.apache.ranger.AccessAudit
     OpenSearchUtil openSearchUtil;
 
     public VXAccessAuditList searchXAccessAudits(SearchCriteria searchCriteria) {
-        RestClient client = openSearchMgr.getClient();
+        RestClient    client              = openSearchMgr.getClient();
         final boolean hiveQueryVisibility = PropertiesUtil.getBooleanProperty("ranger.audit.hive.query.visibility", true);
 
         if (client == null) {
@@ -134,7 +134,7 @@ public class OpenSearchAccessAuditsService extends org.apache.ranger.AccessAudit
 
     private VXAccessAudit populateViewBean(Map<String, Object> source) {
         VXAccessAudit accessAudit = new VXAccessAudit();
-        Object value;
+        Object        value;
 
         value = source.get("id");
         if (value != null) {
