@@ -32,6 +32,7 @@ import {
   isSystemAdmin
 } from "../../../utils/XAUtils";
 import { fetchApi } from "Utils/fetchAPI";
+import { isPerRowCondition } from "Utils/policyConditionUtils";
 import { maxBy, find, isEmpty, isArray, isEqual, isObject } from "lodash";
 import userGreyIcon from "../../../images/user-grey.svg";
 import groupGreyIcon from "../../../images/group-grey.svg";
@@ -677,6 +678,9 @@ function AccessGrantForm({
                             </Button>
                           </div>
                           {Object.keys(values.conditions).map((keyName) => {
+                            if (isPerRowCondition(keyName)) {
+                              return null;
+                            }
                             if (
                               values.conditions[keyName] != "" &&
                               values.conditions[keyName] != null

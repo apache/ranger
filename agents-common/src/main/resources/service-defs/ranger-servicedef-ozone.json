@@ -117,6 +117,14 @@
       "label":       "IP Address Range",
       "description": "IP Address Range",
       "uiHint" :     "{ \"isMultiValue\":true }"
+    },
+    {
+      "itemId":      2,
+      "name":        "action-matches",
+      "evaluator":   "org.apache.ranger.plugin.conditionevaluator.RangerActionMatcher",
+      "label":       "Action",
+      "description": "Action",
+      "uiHint":      "{ \"isMultiValue\":true, \"options\": [\"*\", \"Get*\", \"List*\", \"Put*\", \"Delete*\", \"Create*\", \"GetObject\", \"GetObjectTagging\", \"PutObject\", \"PutObjectTagging\", \"ListBucket\", \"CreateBucket\", \"DeleteBucket\", \"GetBucketAcl\", \"PutBucketAcl\", \"ListBucketMultipartUploads\", \"DeleteObject\", \"ListAllMyBuckets\", \"ListMultipartUploadParts\", \"AbortMultipartUpload\", \"DeleteObjectTagging\"], \"actionRequirementsFile\": \"ozone\" }"
     }
   ]
 }
