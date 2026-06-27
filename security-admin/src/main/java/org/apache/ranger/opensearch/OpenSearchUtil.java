@@ -38,6 +38,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
+import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -53,17 +54,14 @@ import java.util.stream.Collectors;
 @Component
 public class OpenSearchUtil {
     private static final Logger LOG = LoggerFactory.getLogger(OpenSearchUtil.class);
-    private static final ObjectMapper MAPPER = new ObjectMapper();
-    private static final String LUCENE_SPECIAL_CHARS = "+-=&|><!(){}[]^\"~*?:\\/";
 
-    private final String dateFormatStr = "yyyy-MM-dd'T'HH:mm:ss'Z'";
-    private final SimpleDateFormat dateFormat = new SimpleDateFormat(dateFormatStr);
+    private static final ObjectMapper MAPPER               = new ObjectMapper();
+    private static final String       LUCENE_SPECIAL_CHARS = "+-=&|><!(){}[]^\"~*?:\\/";
+    private static final String       DATE_FORMAT_STR      = "yyyy-MM-dd'T'HH:mm:ss'Z'";
 
-    @Autowired
-    StringUtil stringUtil;
-
-    public OpenSearchUtil() {
-        String timeZone = PropertiesUtil.getProperty("xa.elasticSearch.timezone");
+    private static final ThreadLocal<DateFormat> DATE_FORMAT = ThreadLocal.withInitial(() -> {
+        SimpleDateFormat dateFormat = new SimpleDateFormat(DATE_FORMAT_STR);
+        String           timeZone   = PropertiesUtil.getProperty("xa.elasticSearch.timezone");
 
         if (timeZone != null) {
             LOG.info("Setting timezone to {}", timeZone);
@@ -74,6 +72,14 @@ public class OpenSearchUtil {
                 LOG.error("Error setting timezone. TimeZone = {}", timeZone);
             }
         }
+
+        return dateFormat;
+    });
+
+    @Autowired
+    StringUtil stringUtil;
+
+    public OpenSearchUtil() {
     }
 
     public OpenSearchSearchResult searchResources(SearchCriteria searchCriteria, List<SearchField> searchFields, List<SortField> sortFields, RestClient client, String index) throws IOException {
@@ -85,14 +91,12 @@ public class OpenSearchUtil {
 
         request.setEntity(new NStringEntity(body, ContentType.APPLICATION_JSON));
 
-        Response response = client.performRequest(request);
-        String json = EntityUtils.toString(response.getEntity());
-        JsonNode root     = MAPPER.readTree(json);
-
-        long totalHits = root.at("/hits/total/value").asLong(0);
-        JsonNode hitsArray = root.at("/hits/hits");
-
-        List<Map<String, Object>> sources = new ArrayList<>();
+        Response                  response  = client.performRequest(request);
+        String                    json      = EntityUtils.toString(response.getEntity());
+        JsonNode                  root      = MAPPER.readTree(json);
+        long                      totalHits = root.at("/hits/total/value").asLong(0);
+        JsonNode                  hitsArray = root.at("/hits/hits");
+        List<Map<String, Object>> sources   = new ArrayList<>();
 
         if (hitsArray.isArray()) {
             for (JsonNode hit : hitsArray) {
@@ -119,18 +123,16 @@ public class OpenSearchUtil {
 
         mgetBody.put("ids", ids);
 
-        String body = MAPPER.writeValueAsString(mgetBody);
-
+        String   body   = MAPPER.writeValueAsString(mgetBody);
         Request request = new Request("POST", "/" + index + "/_mget");
 
         request.setEntity(new NStringEntity(body, ContentType.APPLICATION_JSON));
 
-        Response response = client.performRequest(request);
-        String json = EntityUtils.toString(response.getEntity());
-        JsonNode root     = MAPPER.readTree(json);
-        JsonNode docsNode = root.get("docs");
-
-        List<Map<String, Object>> results = new ArrayList<>();
+        Response                  response = client.performRequest(request);
+        String                    json     = EntityUtils.toString(response.getEntity());
+        JsonNode                  root     = MAPPER.readTree(json);
+        JsonNode                  docsNode = root.get("docs");
+        List<Map<String, Object>> results  = new ArrayList<>();
 
         if (docsNode != null && docsNode.isArray()) {
             for (JsonNode doc : docsNode) {
@@ -151,22 +153,23 @@ public class OpenSearchUtil {
     }
 
     String buildSearchBody(SearchCriteria searchCriteria, List<SearchField> searchFields, List<SortField> sortFields) {
-        List<Map<String, Object>> mustClauses = new ArrayList<>();
-        Date fromDate = null;
-        Date toDate = null;
-        String dateFieldName = null;
+        List<Map<String, Object>> mustClauses  = new ArrayList<>();
+        Date                     fromDate      = null;
+        Date                     toDate        = null;
+        String                   dateFieldName = null;
 
         if (searchCriteria.getParamList() != null) {
             for (SearchField field : searchFields) {
                 String clientFieldName = field.getClientFieldName();
-                String fieldName = field.getFieldName();
-                SearchField.DATA_TYPE dataType = field.getDataType();
-                SearchField.SEARCH_TYPE searchType = field.getSearchType();
-                Object paramValue = searchCriteria.getParamValue(clientFieldName);
+                Object paramValue      = searchCriteria.getParamValue(clientFieldName);
 
                 if (paramValue == null || paramValue.toString().isEmpty()) {
                     continue;
                 }
+
+                String                  fieldName  = field.getFieldName();
+                SearchField.DATA_TYPE   dataType   = field.getDataType();
+                SearchField.SEARCH_TYPE searchType = field.getSearchType();
 
                 if (dataType == SearchField.DATA_TYPE.DATE) {
                     if (paramValue instanceof Date) {
@@ -219,55 +222,45 @@ public class OpenSearchUtil {
         if (fieldName.startsWith("-")) {
             Map<String, Object> inner = buildClause(fieldName.substring(1), dataType, searchType, paramValue);
 
-            if (inner == null) {
-                return null;
+            if (inner != null) {
+                return Map.of("bool", Map.of("must_not", List.of(inner)));
             }
-
-            return Map.of("bool", Map.of("must_not", List.of(inner)));
-        }
-
-        if (paramValue instanceof Collection) {
+        } else if (paramValue instanceof Collection) {
             Collection<?> valueList = (Collection<?>) paramValue;
 
-            if (valueList.isEmpty()) {
-                return null;
+            if (!valueList.isEmpty()) {
+                String queryString = valueList.stream().map(v -> "(" + escapeLucene(v.toString().trim().toLowerCase()) + ")").collect(Collectors.joining(" OR "));
+
+                return Map.of("query_string", Map.of("query", queryString, "default_field", fieldName));
             }
-
-            String queryString = valueList.stream().map(v -> "(" + escapeLucene(v.toString().trim().toLowerCase()) + ")").collect(Collectors.joining(" OR "));
-
-            return Map.of("query_string", Map.of("query", queryString, "default_field", fieldName));
-        }
-
-        if (searchType == SearchField.SEARCH_TYPE.PARTIAL) {
+        } else if (searchType == SearchField.SEARCH_TYPE.PARTIAL) {
             String value = paramValue.toString().trim();
 
-            if (value.isEmpty()) {
-                return null;
+            if (!value.isEmpty()) {
+                return Map.of("query_string", Map.of("query", "*" + escapeLucene(value.toLowerCase()) + "*", "default_field", fieldName));
             }
-
-            return Map.of("query_string", Map.of("query", "*" + escapeLucene(value.toLowerCase()) + "*", "default_field", fieldName));
         } else {
             String value = paramValue.toString().trim();
 
-            if (value.isEmpty()) {
-                return null;
+            if (!value.isEmpty()) {
+                return Map.of("match_phrase", Map.of(fieldName, escapeLucene(value.toLowerCase())));
             }
-
-            return Map.of("match_phrase", Map.of(fieldName, escapeLucene(value.toLowerCase())));
         }
+
+        return null;
     }
 
     private Map<String, Object> buildDateRange(String fieldName, Date fromDate, Date toDate) {
         Map<String, Object> rangeParams = new LinkedHashMap<>();
 
-        rangeParams.put("format", dateFormatStr);
+        rangeParams.put("format", DATE_FORMAT_STR);
 
         if (fromDate != null) {
-            rangeParams.put("gte", dateFormat.format(fromDate));
+            rangeParams.put("gte", DATE_FORMAT.get().format(fromDate));
         }
 
         if (toDate != null) {
-            rangeParams.put("lte", dateFormat.format(toDate));
+            rangeParams.put("lte", DATE_FORMAT.get().format(toDate));
         }
 
         return Map.of("range", Map.of(fieldName, rangeParams));
@@ -283,7 +276,9 @@ public class OpenSearchUtil {
             for (SortField sortField : sortFields) {
                 if (sortBy.equalsIgnoreCase(sortField.getParamName())) {
                     querySortBy = sortField.getFieldName();
+
                     searchCriteria.setSortBy(sortField.getParamName());
+
                     break;
                 }
             }
@@ -293,8 +288,10 @@ public class OpenSearchUtil {
             for (SortField sortField : sortFields) {
                 if (sortField.isDefault()) {
                     querySortBy = sortField.getFieldName();
+
                     searchCriteria.setSortBy(sortField.getParamName());
                     searchCriteria.setSortType(sortField.getDefaultOrder().name());
+
                     break;
                 }
             }
