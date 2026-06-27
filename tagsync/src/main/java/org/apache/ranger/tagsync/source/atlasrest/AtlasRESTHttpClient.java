@@ -24,23 +24,20 @@ import org.apache.atlas.model.discovery.SearchParameters;
 import org.apache.atlas.model.typedef.AtlasTypesDef;
 import org.apache.atlas.type.AtlasType;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.security.UserGroupInformation;
+import org.apache.ranger.plugin.util.RangerRESTClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.ws.rs.core.Response;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.net.HttpURLConnection;
-import java.net.URL;
-import java.nio.charset.StandardCharsets;
 import java.security.PrivilegedExceptionAction;
-import java.util.Base64;
 
 /**
  * Minimal Atlas REST client for TagSync.
  *
- * <p>Uses {@link HttpURLConnection} instead of {@code AtlasClientV2} so TagSync
+ * <p>Uses {@link RangerRESTClient} for SSL, HA URL failover, and auth so TagSync
  * does not load the Atlas Jersey 1.x client on the same classpath as Ranger's
  * Jersey 2.x REST sink.
  */
@@ -50,151 +47,100 @@ public final class AtlasRESTHttpClient {
             LoggerFactory.getLogger(AtlasRESTHttpClient.class);
 
     /** Atlas basic search API path (POST). */
-    private static final String SEARCH_PATH = "api/atlas/v2/search/basic";
+    private static final String SEARCH_PATH = "/api/atlas/v2/search/basic";
 
     /** Atlas typedef export API path (GET). */
-    private static final String TYPEDEFS_PATH = "api/atlas/v2/types/typedefs/";
+    private static final String TYPEDEFS_PATH = "/api/atlas/v2/types/typedefs/";
 
-    /** Minimum HTTP status treated as an error response. */
-    private static final int HTTP_STATUS_CLIENT_ERROR = 400;
+    private final RangerRESTClient restClient;
+    private final boolean          kerberized;
 
-    private AtlasRESTHttpClient() {
-        // utility class
+    /**
+     * Create an Atlas REST client backed by {@link RangerRESTClient}.
+     *
+     * @param restUrls          comma-separated Atlas REST base URLs
+     * @param sslConfigFile     SSL config file for HTTPS endpoints
+     * @param config            Hadoop configuration
+     * @param userNamePassword  basic-auth credentials; ignored when kerberized
+     * @param kerberized        {@code true} when TagSync uses a keytab
+     */
+    public AtlasRESTHttpClient(final String restUrls, final String sslConfigFile, final Configuration config, final String[] userNamePassword, final boolean kerberized) {
+        this.kerberized = kerberized;
+        this.restClient = new RangerRESTClient(restUrls, sslConfigFile, config, "ranger.tagsync");
+
+        if (userNamePassword != null && userNamePassword.length >= 2 && StringUtils.isNotEmpty(userNamePassword[0])) {
+            restClient.setBasicAuthInfo(userNamePassword[0], userNamePassword[1]);
+        }
+
+        restClient.getClient();
     }
 
     /**
      * Search Atlas for entities matching the given parameters.
      *
-     * @param restBaseUrl       Atlas REST base URL ending with {@code /}
-     * @param searchParameters  search filter (classification, limit, etc.)
-     * @param userNamePassword  basic-auth credentials; empty for Kerberos
-     * @param useKerberos       {@code true} when TagSync uses a keytab
+     * @param searchParameters search filter (classification, limit, etc.)
      * @return parsed search result
-     * @throws IOException when the REST call fails
+     * @throws Exception when the REST call fails on all configured URLs
      */
-    public static AtlasSearchResult facetedSearch(final String restBaseUrl,
-            final SearchParameters searchParameters,
-            final String[] userNamePassword, final boolean useKerberos)
-            throws IOException {
-        String body = AtlasType.toJson(searchParameters);
-        String json = postJson(restBaseUrl + SEARCH_PATH, body,
-                userNamePassword, useKerberos);
-
+    public AtlasSearchResult facetedSearch(final SearchParameters searchParameters)
+            throws Exception {
+        Response response = execute(() -> restClient.post(SEARCH_PATH, null, searchParameters));
+        String json = readResponseBody(response, SEARCH_PATH);
         return AtlasType.fromJson(json, AtlasSearchResult.class);
     }
 
     /**
      * Download all Atlas type definitions.
      *
-     * @param restBaseUrl       Atlas REST base URL ending with {@code /}
-     * @param userNamePassword  basic-auth credentials; empty for Kerberos
-     * @param useKerberos       {@code true} when TagSync uses a keytab
      * @return typedef bundle from Atlas
-     * @throws IOException when the REST call fails
+     * @throws Exception when the REST call fails on all configured URLs
      */
-    public static AtlasTypesDef getAllTypeDefs(final String restBaseUrl,
-            final String[] userNamePassword, final boolean useKerberos)
-            throws IOException {
-        String json = getJson(restBaseUrl + TYPEDEFS_PATH, userNamePassword,
-                useKerberos);
+    public AtlasTypesDef getAllTypeDefs() throws Exception {
+        Response response = execute(() -> restClient.get(TYPEDEFS_PATH, null));
+        String json = readResponseBody(response, TYPEDEFS_PATH);
 
         return AtlasType.fromJson(json, AtlasTypesDef.class);
     }
 
-    private static String postJson(final String url, final String body,
-            final String[] userNamePassword, final boolean useKerberos)
-            throws IOException {
-        return execute(url, "POST", body, userNamePassword, useKerberos);
-    }
-
-    private static String getJson(final String url,
-            final String[] userNamePassword, final boolean useKerberos)
-            throws IOException {
-        return execute(url, "GET", null, userNamePassword, useKerberos);
-    }
-
-    private static String execute(final String url, final String method,
-            final String body, final String[] userNamePassword,
-            final boolean useKerberos) throws IOException {
-        if (useKerberosAuth(userNamePassword, useKerberos)) {
+    private Response execute(final RestCall restCall) throws Exception {
+        if (kerberized) {
             UserGroupInformation ugi = UserGroupInformation.getLoginUser();
 
             ugi.checkTGTAndReloginFromKeytab();
 
             try {
-                return ugi.doAs((PrivilegedExceptionAction<String>) () -> openAndRead(url, method, body, null, true));
+                return ugi.doAs((PrivilegedExceptionAction<Response>) restCall::run);
             } catch (InterruptedException interruptedException) {
                 Thread.currentThread().interrupt();
-                throw new IOException("Atlas REST call interrupted",
-                        interruptedException);
+                throw new IOException("Atlas REST call interrupted", interruptedException);
             }
         }
 
-        return openAndRead(url, method, body, userNamePassword, false);
+        return restCall.run();
     }
 
-    private static boolean useKerberosAuth(final String[] userNamePassword,
-            final boolean useKerberos) {
-        return useKerberos && (userNamePassword == null || userNamePassword.length == 0 || StringUtils.isBlank(userNamePassword[0]));
-    }
-
-    private static String openAndRead(final String url, final String method,
-            final String body, final String[] userNamePassword,
-            final boolean kerberos) throws IOException {
-        HttpURLConnection connection =
-                (HttpURLConnection) new URL(url).openConnection();
-
-        connection.setRequestMethod(method);
-        connection.setRequestProperty("Accept", "application/json");
-        connection.setRequestProperty("Content-Type", "application/json");
-
-        if (!kerberos && userNamePassword != null && userNamePassword.length >= 2 && StringUtils.isNotEmpty(userNamePassword[0])) {
-            String credentials = userNamePassword[0] + ":"
-                    + userNamePassword[1];
-            String encoded = Base64.getEncoder().encodeToString(
-                    credentials.getBytes(StandardCharsets.UTF_8));
-
-            connection.setRequestProperty("Authorization", "Basic " + encoded);
+    private String readResponseBody(final Response response, final String relativeUrl)
+            throws IOException {
+        if (response == null) {
+            throw new IOException("Atlas REST " + relativeUrl + " failed: no response from any configured URL");
         }
 
-        if (body != null) {
-            connection.setDoOutput(true);
-            byte[] payload = body.getBytes(StandardCharsets.UTF_8);
+        int status = response.getStatus();
+        String body = response.hasEntity() ? response.readEntity(String.class) : "";
 
-            connection.setRequestProperty("Content-Length",
-                    String.valueOf(payload.length));
-
-            try (OutputStream outputStream = connection.getOutputStream()) {
-                outputStream.write(payload);
-            }
-        }
-
-        int status = connection.getResponseCode();
-        InputStream stream = status >= HTTP_STATUS_CLIENT_ERROR
-                ? connection.getErrorStream()
-                : connection.getInputStream();
-
-        if (stream == null) {
-            throw new IOException("Atlas REST " + method + " " + url + " returned HTTP " + status + " with empty body");
-        }
-
-        String response = readStream(stream);
-
-        if (status >= HTTP_STATUS_CLIENT_ERROR) {
-            throw new IOException("Atlas REST " + method + " " + url + " failed with HTTP " + status + ": " + response);
+        if (status != Response.Status.OK.getStatusCode()) {
+            throw new IOException("Atlas REST " + relativeUrl + " failed with HTTP " + status + ": " + body);
         }
 
         if (LOG.isDebugEnabled()) {
-            LOG.debug("Atlas REST {} {} -> HTTP {}", method, url, status);
+            LOG.debug("Atlas REST {} -> HTTP {}", relativeUrl, status);
         }
 
-        return response;
+        return body;
     }
 
-    private static String readStream(final InputStream stream)
-            throws IOException {
-        byte[] buffer = stream.readAllBytes();
-
-        return new String(buffer, StandardCharsets.UTF_8);
+    @FunctionalInterface
+    private interface RestCall {
+        Response run() throws Exception;
     }
 }

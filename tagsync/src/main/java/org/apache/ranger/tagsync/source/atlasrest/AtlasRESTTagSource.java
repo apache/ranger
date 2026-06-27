@@ -72,7 +72,7 @@ public class AtlasRESTTagSource extends AbstractTagSource implements Runnable {
     });
 
     private long     sleepTimeBetweenCycleInMillis;
-    private String[] restUrls;
+    private AtlasRESTHttpClient atlasRestClient;
     private boolean  isKerberized;
     private String[] userNamePassword;
     private int      entitiesBatchSize = TagSyncConfig.DEFAULT_TAGSYNC_ATLASREST_SOURCE_ENTITIES_BATCH_SIZE;
@@ -137,12 +137,12 @@ public class AtlasRESTTagSource extends AbstractTagSource implements Runnable {
         LOG.debug("kerberized={}", isKerberized);
 
         if (StringUtils.isNotEmpty(restEndpoint)) {
-            this.restUrls = restEndpoint.split(",");
-
-            for (int i = 0; i < restUrls.length; i++) {
-                if (!restUrls[i].endsWith("/")) {
-                    restUrls[i] += "/";
-                }
+            try {
+                atlasRestClient = new AtlasRESTHttpClient(restEndpoint, sslConfigFile,
+                        TagSyncConfig.getInstance(), userNamePassword, isKerberized);
+            } catch (RuntimeException exception) {
+                LOG.error("Failed to initialize Atlas REST client", exception);
+                ret = false;
             }
         } else {
             LOG.info("AtlasEndpoint not specified, Initial download of Atlas-entities cannot be done.");
@@ -228,11 +228,9 @@ public class AtlasRESTTagSource extends AbstractTagSource implements Runnable {
 
         List<RangerAtlasEntityWithTags> ret = new ArrayList<>();
 
-        if (restUrls == null || restUrls.length == 0) {
+        if (atlasRestClient == null) {
             return ret;
         }
-
-        String restBaseUrl = restUrls[0];
 
         SearchParameters searchParams = new SearchParameters();
 
@@ -254,10 +252,8 @@ public class AtlasRESTTagSource extends AbstractTagSource implements Runnable {
             isMoreData = false;
 
             try {
-                searchResult = AtlasRESTHttpClient.facetedSearch(restBaseUrl,
-                        searchParams, userNamePassword, isKerberized);
-                AtlasTypesDef typesDef = AtlasRESTHttpClient.getAllTypeDefs(
-                        restBaseUrl, userNamePassword, isKerberized);
+                searchResult = atlasRestClient.facetedSearch(searchParams);
+                AtlasTypesDef typesDef = atlasRestClient.getAllTypeDefs();
 
                 tty = typeRegistry.lockTypeRegistryForUpdate();
                 tty.addTypes(typesDef);
@@ -265,9 +261,11 @@ public class AtlasRESTTagSource extends AbstractTagSource implements Runnable {
             } catch (IOException excp) {
                 LOG.error("failed to download tags from Atlas", excp);
                 ret = null;
+                break;
             } catch (Exception unexpectedException) {
                 LOG.error("Failed to download tags from Atlas due to unexpected exception", unexpectedException);
                 ret = null;
+                break;
             } finally {
                 if (tty != null) {
                     typeRegistry.releaseTypeRegistryForUpdate(tty, commitUpdates);
@@ -316,7 +314,7 @@ public class AtlasRESTTagSource extends AbstractTagSource implements Runnable {
         }
         while (isMoreData);
 
-        LOG.debug("<== getAtlasActiveEntities(), count={}", ret.size());
+        LOG.debug("<== getAtlasActiveEntities(), count={}", ret == null ? 0 : ret.size());
 
         return ret;
     }
