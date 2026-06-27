@@ -27,32 +27,28 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 class OpenSearchMgrTest {
     @Test
     void buildRestClientBuilder_basicAuth() {
-        RestClientBuilder builder = OpenSearchMgr.buildRestClientBuilder(
-                "localhost", "http", "admin", "password", 9200);
+        RestClientBuilder builder = OpenSearchMgr.buildRestClientBuilder("localhost", "http", "admin", "password", 9200);
 
         assertNotNull(builder);
     }
 
     @Test
     void buildRestClientBuilder_noAuth() {
-        RestClientBuilder builder = OpenSearchMgr.buildRestClientBuilder(
-                "localhost", "http", "", "", 9200);
+        RestClientBuilder builder = OpenSearchMgr.buildRestClientBuilder("localhost", "http", "", "", 9200);
 
         assertNotNull(builder);
     }
 
     @Test
     void buildRestClientBuilder_noneCredentials() {
-        RestClientBuilder builder = OpenSearchMgr.buildRestClientBuilder(
-                "localhost", "https", "NONE", "NONE", 9200);
+        RestClientBuilder builder = OpenSearchMgr.buildRestClientBuilder("localhost", "https", "NONE", "NONE", 9200);
 
         assertNotNull(builder);
     }
 
     @Test
     void buildRestClientBuilder_multipleHosts() {
-        RestClientBuilder builder = OpenSearchMgr.buildRestClientBuilder(
-                "host1,host2,host3", "http", "user", "pass", 9200);
+        RestClientBuilder builder = OpenSearchMgr.buildRestClientBuilder("host1,host2,host3", "http", "user", "pass", 9200);
 
         assertNotNull(builder);
     }
