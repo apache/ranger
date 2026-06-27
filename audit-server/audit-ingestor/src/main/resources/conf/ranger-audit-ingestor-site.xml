@@ -360,8 +360,7 @@
             Empty (recommended greenfield):
               - Static mode: Kafka default hash partitioner using kafka.topic.partitions below.
               - Dynamic mode (kafka.partition.plan.dynamic.enabled=true): first bootstrap plan uses all
-                kafka.topic.partitions as buffer; onboard plugins via POST /api/audit/partition-plan/services
-                or promote without editing this list.
+                kafka.topic.partitions as buffer; onboard plugins via POST /api/audit/partition-plan/plugins.
 
             Non-empty (static / bootstrap seed):
               - Uses AuditPartitioner: total partitions = sum(per-plugin counts) + kafka.topic.partitions.buffer.

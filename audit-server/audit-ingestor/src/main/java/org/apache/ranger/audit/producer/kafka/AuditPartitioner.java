@@ -232,7 +232,7 @@ public class AuditPartitioner implements Partitioner {
      * Used for buffer-pool routing and for plan-not-loaded fallback.
      */
     private static int hashAppIdToPartitionIndex(String appId, int slotCount) {
-        return Math.abs(appId.hashCode() % slotCount);
+        return Math.floorMod(appId.hashCode(), slotCount);
     }
 
     /**

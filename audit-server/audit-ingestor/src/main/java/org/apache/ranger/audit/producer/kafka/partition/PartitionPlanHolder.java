@@ -61,7 +61,8 @@ public class PartitionPlanHolder {
      * Returns allowed short usernames for a service repo from the in-memory registry document.
      * {@code null} when the plan has no {@code services} block, or when the repo is not present
      * in the plan (caller should fall back to static XML).
-     * Returns an empty set when the repo is present with an explicit empty allowlist (deny all).
+     * Returns a non-empty set when the repo is present; {@link PartitionPlanValidator} rejects
+     * plans whose {@code allowedUsers} list is empty at install time.
      *
      * <p>Used by {@link ServiceAllowlistResolver} for per-repo POST authorization — not for the global
      * allowlist union ({@link AuthToLocalRuleComposer#collectAllowedUserShortNames}).
