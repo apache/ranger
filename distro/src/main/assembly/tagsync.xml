@@ -69,9 +69,6 @@
 							<include>javax.inject:javax.inject</include>
 							<include>javax.xml.bind:jaxb-api</include>
 							<include>joda-time:joda-time</include>
-							<include>org.apache.atlas:atlas-client-common:jar:${atlas.version}</include>
-							<include>org.apache.atlas:atlas-client-v1:jar:${atlas.version}</include>
-							<include>org.apache.atlas:atlas-client-v2:jar:${atlas.version}</include>
 							<include>org.apache.atlas:atlas-common:jar:${atlas.version}</include>
 							<include>org.apache.atlas:atlas-intg:jar:${atlas.version}</include>
 							<include>org.apache.atlas:atlas-notification:jar:${atlas.version}</include>
