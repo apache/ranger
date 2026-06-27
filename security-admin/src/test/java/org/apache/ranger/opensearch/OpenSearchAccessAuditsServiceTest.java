@@ -82,6 +82,7 @@ class OpenSearchAccessAuditsServiceTest {
         service.setRestErrorUtil(restErrorUtil);
 
         java.lang.reflect.Field daoField = org.apache.ranger.AccessAuditsService.class.getDeclaredField("daoManager");
+
         daoField.setAccessible(true);
         daoField.set(service, daoManager);
     }
@@ -117,6 +118,7 @@ class OpenSearchAccessAuditsServiceTest {
         when(openSearchMgr.getIndex()).thenReturn("ranger_audits");
 
         Map<String, Object> doc1 = new HashMap<>();
+
         doc1.put("id", "test-id-001");
         doc1.put("reqUser", "testuser1");
         doc1.put("resource", "/tmp/test");
@@ -127,6 +129,7 @@ class OpenSearchAccessAuditsServiceTest {
         doc1.put("action", "read");
 
         List<Map<String, Object>> sources = new ArrayList<>();
+
         sources.add(doc1);
 
         OpenSearchSearchResult mockResult = new OpenSearchSearchResult(1, sources);
@@ -137,6 +140,7 @@ class OpenSearchAccessAuditsServiceTest {
         when(daoManager.getXXServiceDef()).thenReturn(xxServiceDefDao);
 
         SearchCriteria criteria = new SearchCriteria();
+
         criteria.setMaxRows(25);
         criteria.setStartIndex(0);
 
@@ -163,6 +167,7 @@ class OpenSearchAccessAuditsServiceTest {
                 .thenReturn(mockResult);
 
         SearchCriteria criteria = new SearchCriteria();
+
         criteria.setMaxRows(25);
         criteria.setStartIndex(0);
 
