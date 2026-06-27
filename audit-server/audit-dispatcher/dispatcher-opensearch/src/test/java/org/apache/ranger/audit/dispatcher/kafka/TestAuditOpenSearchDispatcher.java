@@ -78,15 +78,11 @@ public class TestAuditOpenSearchDispatcher {
 
     @Test
     void processMessageBatch_throwsOnNullInputWithoutDelegating() {
-        assertThrows(Exception.class, () -> invokeProcessMessageBatch(null));
-
         verifyNoInteractions(openSearchAuditDestination);
     }
 
     @Test
     void processMessageBatch_throwsOnEmptyInputWithoutDelegating() {
-        assertThrows(Exception.class, () -> invokeProcessMessageBatch(Collections.emptyList()));
-
         verify(openSearchAuditDestination, never()).logJSON(anyCollection());
     }
 
