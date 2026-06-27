@@ -31,6 +31,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.ws.rs.core.Response;
+
 import java.io.IOException;
 import java.security.PrivilegedExceptionAction;
 
@@ -43,8 +44,7 @@ import java.security.PrivilegedExceptionAction;
  */
 public final class AtlasRESTHttpClient {
     /** Class logger. */
-    private static final Logger LOG =
-            LoggerFactory.getLogger(AtlasRESTHttpClient.class);
+    private static final Logger LOG = LoggerFactory.getLogger(AtlasRESTHttpClient.class);
 
     /** Atlas basic search API path (POST). */
     private static final String SEARCH_PATH = "/api/atlas/v2/search/basic";
@@ -52,7 +52,10 @@ public final class AtlasRESTHttpClient {
     /** Atlas typedef export API path (GET). */
     private static final String TYPEDEFS_PATH = "/api/atlas/v2/types/typedefs/";
 
+    /** Ranger REST client with SSL and HA URL support. */
     private final RangerRESTClient restClient;
+
+    /** Whether TagSync runs with Kerberos credentials. */
     private final boolean          kerberized;
 
     /**
@@ -61,11 +64,11 @@ public final class AtlasRESTHttpClient {
      * @param restUrls          comma-separated Atlas REST base URLs
      * @param sslConfigFile     SSL config file for HTTPS endpoints
      * @param config            Hadoop configuration
-     * @param userNamePassword  basic-auth credentials; ignored when kerberized
-     * @param kerberized        {@code true} when TagSync uses a keytab
+     * @param userNamePassword  basic-auth credentials when configured
+     * @param useKerberos       {@code true} when TagSync uses a keytab
      */
-    public AtlasRESTHttpClient(final String restUrls, final String sslConfigFile, final Configuration config, final String[] userNamePassword, final boolean kerberized) {
-        this.kerberized = kerberized;
+    public AtlasRESTHttpClient(final String restUrls, final String sslConfigFile, final Configuration config, final String[] userNamePassword, final boolean useKerberos) {
+        this.kerberized = useKerberos;
         this.restClient = new RangerRESTClient(restUrls, sslConfigFile, config, "ranger.tagsync");
 
         if (userNamePassword != null && userNamePassword.length >= 2 && StringUtils.isNotEmpty(userNamePassword[0])) {
@@ -82,10 +85,10 @@ public final class AtlasRESTHttpClient {
      * @return parsed search result
      * @throws Exception when the REST call fails on all configured URLs
      */
-    public AtlasSearchResult facetedSearch(final SearchParameters searchParameters)
-            throws Exception {
+    public AtlasSearchResult facetedSearch(final SearchParameters searchParameters) throws Exception {
         Response response = execute(() -> restClient.post(SEARCH_PATH, null, searchParameters));
         String json = readResponseBody(response, SEARCH_PATH);
+
         return AtlasType.fromJson(json, AtlasSearchResult.class);
     }
 
@@ -103,24 +106,27 @@ public final class AtlasRESTHttpClient {
     }
 
     private Response execute(final RestCall restCall) throws Exception {
+        Response ret;
+
         if (kerberized) {
             UserGroupInformation ugi = UserGroupInformation.getLoginUser();
 
             ugi.checkTGTAndReloginFromKeytab();
 
             try {
-                return ugi.doAs((PrivilegedExceptionAction<Response>) restCall::run);
+                ret = ugi.doAs((PrivilegedExceptionAction<Response>) restCall::run);
             } catch (InterruptedException interruptedException) {
                 Thread.currentThread().interrupt();
                 throw new IOException("Atlas REST call interrupted", interruptedException);
             }
+        } else {
+            ret = restCall.run();
         }
 
-        return restCall.run();
+        return ret;
     }
 
-    private String readResponseBody(final Response response, final String relativeUrl)
-            throws IOException {
+    private String readResponseBody(final Response response, final String relativeUrl) throws IOException {
         if (response == null) {
             throw new IOException("Atlas REST " + relativeUrl + " failed: no response from any configured URL");
         }

@@ -138,8 +138,7 @@ public class AtlasRESTTagSource extends AbstractTagSource implements Runnable {
 
         if (StringUtils.isNotEmpty(restEndpoint)) {
             try {
-                atlasRestClient = new AtlasRESTHttpClient(restEndpoint, sslConfigFile,
-                        TagSyncConfig.getInstance(), userNamePassword, isKerberized);
+                atlasRestClient = new AtlasRESTHttpClient(restEndpoint, sslConfigFile, TagSyncConfig.getInstance(), userNamePassword, isKerberized);
             } catch (RuntimeException exception) {
                 LOG.error("Failed to initialize Atlas REST client", exception);
                 ret = false;
