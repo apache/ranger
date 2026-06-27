@@ -42,7 +42,7 @@ import java.util.Base64;
  *
  * <p>Uses {@link HttpURLConnection} instead of {@code AtlasClientV2} so TagSync
  * does not load the Atlas Jersey 1.x client on the same classpath as Ranger's
- * Jersey 2.x REST sink (see RANGER-4076).
+ * Jersey 2.x REST sink.
  */
 public final class AtlasRESTHttpClient {
     /** Class logger. */
@@ -122,8 +122,7 @@ public final class AtlasRESTHttpClient {
             ugi.checkTGTAndReloginFromKeytab();
 
             try {
-                return ugi.doAs((PrivilegedExceptionAction<String>) () ->
-                        openAndRead(url, method, body, null, true));
+                return ugi.doAs((PrivilegedExceptionAction<String>) () -> openAndRead(url, method, body, null, true));
             } catch (InterruptedException interruptedException) {
                 Thread.currentThread().interrupt();
                 throw new IOException("Atlas REST call interrupted",
@@ -136,9 +135,7 @@ public final class AtlasRESTHttpClient {
 
     private static boolean useKerberosAuth(final String[] userNamePassword,
             final boolean useKerberos) {
-        return useKerberos && (userNamePassword == null
-                || userNamePassword.length == 0
-                || StringUtils.isBlank(userNamePassword[0]));
+        return useKerberos && (userNamePassword == null || userNamePassword.length == 0 || StringUtils.isBlank(userNamePassword[0]));
     }
 
     private static String openAndRead(final String url, final String method,
@@ -151,9 +148,7 @@ public final class AtlasRESTHttpClient {
         connection.setRequestProperty("Accept", "application/json");
         connection.setRequestProperty("Content-Type", "application/json");
 
-        if (!kerberos && userNamePassword != null
-                && userNamePassword.length >= 2
-                && StringUtils.isNotEmpty(userNamePassword[0])) {
+        if (!kerberos && userNamePassword != null && userNamePassword.length >= 2 && StringUtils.isNotEmpty(userNamePassword[0])) {
             String credentials = userNamePassword[0] + ":"
                     + userNamePassword[1];
             String encoded = Base64.getEncoder().encodeToString(
@@ -180,15 +175,13 @@ public final class AtlasRESTHttpClient {
                 : connection.getInputStream();
 
         if (stream == null) {
-            throw new IOException("Atlas REST " + method + " " + url
-                    + " returned HTTP " + status + " with empty body");
+            throw new IOException("Atlas REST " + method + " " + url + " returned HTTP " + status + " with empty body");
         }
 
         String response = readStream(stream);
 
         if (status >= HTTP_STATUS_CLIENT_ERROR) {
-            throw new IOException("Atlas REST " + method + " " + url
-                    + " failed with HTTP " + status + ": " + response);
+            throw new IOException("Atlas REST " + method + " " + url + " failed with HTTP " + status + ": " + response);
         }
 
         if (LOG.isDebugEnabled()) {

@@ -321,6 +321,9 @@ public class AtlasRESTTagSource extends AbstractTagSource implements Runnable {
         return ret;
     }
 
+    /*
+     * Returns a list of <EntityNotificationWrapper.RangerAtlasClassification>
+     */
     private List<EntityNotificationWrapper.RangerAtlasClassification> resolveTag(AtlasTypeRegistry typeRegistry, AtlasClassification classification) {
         List<EntityNotificationWrapper.RangerAtlasClassification> ret        = new ArrayList<>();
         String                                                    typeName   = classification.getTypeName();
@@ -359,8 +362,10 @@ public class AtlasRESTTagSource extends AbstractTagSource implements Runnable {
                     validitySchedules = EntityNotificationWrapper.convertTimeSpecFromAtlasToRanger(validityPeriods);
                 }
 
+                // Add most derived classificationType with all attributes
                 ret.add(new EntityNotificationWrapper.RangerAtlasClassification(typeName, allAttributes, validitySchedules));
 
+                // Find base classification types
                 Set<String> superTypeNames = classificationType.getAllSuperTypes();
                 for (String superTypeName : superTypeNames) {
                     AtlasClassificationType superType = typeRegistry.getClassificationTypeByName(superTypeName);
