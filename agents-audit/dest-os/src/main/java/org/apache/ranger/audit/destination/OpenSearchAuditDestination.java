@@ -78,14 +78,17 @@ public class OpenSearchAuditDestination extends AuditDestination {
     public static final String AUTH_TYPE_BASIC    = "basic";
     public static final String AUTH_TYPE_NONE     = "none";
 
-    private static final ObjectMapper MAPPER = new ObjectMapper();
+    private static final ObjectMapper                  MAPPER      = new ObjectMapper();
     private static final ThreadLocal<SimpleDateFormat> DATE_FORMAT = ThreadLocal.withInitial(() -> {
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
+
         sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
+
         return sdf;
     });
 
     private volatile RestClient client;
+
     private String index;
     private String user;
     private String password;
@@ -143,8 +146,8 @@ public class OpenSearchAuditDestination extends AuditDestination {
             return true;
         }
 
-        boolean      ret           = false;
-        RestClient   currentClient = getClient();
+        boolean    ret           = false;
+        RestClient currentClient = getClient();
 
         if (currentClient == null) {
             LOG.error("OpenSearch client is null. Cannot write audit events.");
@@ -153,16 +156,18 @@ public class OpenSearchAuditDestination extends AuditDestination {
                 StringBuilder bulk = new StringBuilder();
 
                 for (AuditEventBase event : events) {
-                    AuthzAuditEvent auditEvent = (AuthzAuditEvent) event;
-                    Map<String, Object> doc = toDoc(auditEvent);
-                    String id = (String) doc.get("id");
+                    AuthzAuditEvent     auditEvent = (AuthzAuditEvent) event;
+                    Map<String, Object> doc        = toDoc(auditEvent);
+                    String              id         = (String) doc.get("id");
 
                     if (StringUtils.isBlank(id)) {
                         id = UUID.randomUUID().toString();
+
                         doc.put("id", id);
                     }
 
                     Map<String, Object> indexProps = new HashMap<>();
+
                     indexProps.put("_index", index);
                     indexProps.put("_id", id);
 
@@ -171,6 +176,7 @@ public class OpenSearchAuditDestination extends AuditDestination {
                 }
 
                 Request request = new Request("POST", "/_bulk");
+
                 request.setEntity(new NStringEntity(bulk.toString(), ContentType.create("application/x-ndjson", StandardCharsets.UTF_8)));
 
                 Response response   = currentClient.performRequest(request);
@@ -180,6 +186,7 @@ public class OpenSearchAuditDestination extends AuditDestination {
                     LOG.error("OpenSearch bulk request failed: HTTP {}", statusCode);
                 } else {
                     String responseBody = EntityUtils.toString(response.getEntity());
+
                     @SuppressWarnings("unchecked")
                     Map<String, Object> responseMap = MAPPER.readValue(responseBody, Map.class);
 
@@ -211,28 +218,31 @@ public class OpenSearchAuditDestination extends AuditDestination {
         if (client == null) {
             if (StringUtils.isBlank(urls) || "NONE".equalsIgnoreCase(urls)) {
                 LOG.error("OpenSearch URLs not configured");
+
                 return null;
             }
 
-            HttpHost[] hosts = Arrays.stream(urls.split(",")).map(String::trim).filter(h -> !h.isEmpty()).map(h -> new HttpHost(h, port, protocol)).toArray(HttpHost[]::new);
-            RestClientBuilder builder = RestClient.builder(hosts);
-
-            String resolvedAuthType = resolveAuthType(authType, user, password);
+            HttpHost[]        hosts            = Arrays.stream(urls.split(",")).map(String::trim).filter(h -> !h.isEmpty()).map(h -> new HttpHost(h, port, protocol)).toArray(HttpHost[]::new);
+            RestClientBuilder builder          = RestClient.builder(hosts);
+            String            resolvedAuthType = resolveAuthType(authType, user, password);
 
             if (AUTH_TYPE_KERBEROS.equals(resolvedAuthType)) {
                 String principal = isConfigured(kerberosPrincipal) ? kerberosPrincipal : user;
                 String keytab    = isConfigured(kerberosKeytab) ? kerberosKeytab : password;
 
                 KerberosCredentialsProvider credentialsProvider = CredentialsProviderUtil.getKerberosCredentials(principal, keytab);
-                Lookup<AuthSchemeProvider> authRegistry = RegistryBuilder.<AuthSchemeProvider>create().register(AuthSchemes.SPNEGO, new SPNegoSchemeFactory()).build();
+                Lookup<AuthSchemeProvider>  authRegistry        = RegistryBuilder.<AuthSchemeProvider>create().register(AuthSchemes.SPNEGO, new SPNegoSchemeFactory()).build();
 
                 builder.setHttpClientConfigCallback(httpClientBuilder -> httpClientBuilder.setDefaultCredentialsProvider(credentialsProvider).setDefaultAuthSchemeRegistry(authRegistry));
+
                 LOG.info("OpenSearch client configured with Kerberos authentication for principal: {}", principal);
             } else if (AUTH_TYPE_BASIC.equals(resolvedAuthType)) {
                 CredentialsProvider credentialsProvider = new BasicCredentialsProvider();
+
                 credentialsProvider.setCredentials(AuthScope.ANY, new UsernamePasswordCredentials(user, password));
 
                 builder.setHttpClientConfigCallback(httpClientBuilder -> httpClientBuilder.setDefaultCredentialsProvider(credentialsProvider));
+
                 LOG.info("OpenSearch client configured with basic authentication for user: {}", user);
             } else {
                 LOG.info("OpenSearch client configured without authentication");
