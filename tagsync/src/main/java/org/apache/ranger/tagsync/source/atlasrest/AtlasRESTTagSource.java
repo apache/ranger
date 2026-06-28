@@ -248,22 +248,30 @@ public class AtlasRESTTagSource extends AbstractTagSource implements Runnable {
             boolean                                      commitUpdates = false;
 
             searchParams.setOffset(nextStartIndex);
+
             isMoreData = false;
 
             try {
                 searchResult = atlasRestClient.facetedSearch(searchParams);
+
                 AtlasTypesDef typesDef = atlasRestClient.getAllTypeDefs();
 
                 tty = typeRegistry.lockTypeRegistryForUpdate();
+
                 tty.addTypes(typesDef);
+
                 commitUpdates = true;
             } catch (IOException excp) {
                 LOG.error("failed to download tags from Atlas", excp);
+
                 ret = null;
+
                 break;
             } catch (Exception unexpectedException) {
                 LOG.error("Failed to download tags from Atlas due to unexpected exception", unexpectedException);
+
                 ret = null;
+
                 break;
             } finally {
                 if (tty != null) {
@@ -272,23 +280,28 @@ public class AtlasRESTTagSource extends AbstractTagSource implements Runnable {
             }
 
             if (commitUpdates && searchResult != null) {
-                LOG.debug(AtlasType.toJson(searchResult));
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug(AtlasType.toJson(searchResult));
+                }
 
                 List<AtlasEntityHeader> entityHeaders = searchResult.getEntities();
 
                 if (CollectionUtils.isNotEmpty(entityHeaders)) {
                     nextStartIndex += entityHeaders.size();
-                    isMoreData = true;
+                    isMoreData     = true;
 
                     for (AtlasEntityHeader header : entityHeaders) {
                         if (!header.getStatus().equals(AtlasEntity.Status.ACTIVE)) {
                             LOG.debug("Skipping entity because it is not ACTIVE, header:[{}]", header);
+
                             continue;
                         }
 
                         String typeName = header.getTypeName();
+
                         if (!AtlasResourceMapperUtil.isEntityTypeHandled(typeName)) {
                             LOG.debug("Not fetching Atlas entities of type:[{}]", typeName);
+
                             continue;
                         }
 
@@ -296,6 +309,7 @@ public class AtlasRESTTagSource extends AbstractTagSource implements Runnable {
 
                         for (AtlasClassification classification : header.getClassifications()) {
                             List<EntityNotificationWrapper.RangerAtlasClassification> tags = resolveTag(typeRegistry, classification);
+
                             if (tags != null) {
                                 allTagsForEntity.addAll(tags);
                             }
