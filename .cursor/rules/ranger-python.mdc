@@ -1,0 +1,88 @@
+---
+description: Apache Ranger Python client and test conventions (apache-ranger on PyPI)
+globs: intg/**/*.py,ranger-examples/sample-client/**/*.py
+alwaysApply: false
+---
+
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one
+  or more contributor license agreements.  See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership.  The ASF licenses this file
+  to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License.  You may obtain a copy of the License at
+
+      http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+
+# Ranger Python client (`apache-ranger`)
+
+**Authoritative package root:** `intg/src/main/python/` — packaging via `setup.py` there only. Do not add duplicate `setup.py` scripts elsewhere.
+
+**Python version:** `apache-ranger` targets **Python 3.13+** (`python_requires` in `setup.py`).
+
+## Style and structure
+
+- Preserve the ASF license header on new files (match neighboring modules).
+- Match existing layout: `apache_ranger/client/` for HTTP clients, `apache_ranger/model/` for typed models, `utils.py` for coercion helpers.
+- Reuse `type_coerce` / `type_coerce_attrs()` — accept dict-like input and coerce to model types; do not duplicate parsing logic.
+- Keep changes minimal; follow naming, imports, and spacing of the file you edit.
+
+## Vertical alignment
+
+Within a **consecutive block** of related lines, align `=` (and dict values after `:` where keys share one dict):
+
+```python
+self.status_code = status_code
+self.response    = response
+self.content     = content
+
+from apache_ranger.exceptions           import RangerServiceException
+from apache_ranger.model.ranger_service import RangerService
+
+RangerAuthzRequest({
+    "requestId": "req-1",
+    "user":      RangerUserInfo({"name": "alice"}),
+    "access":    RangerAccessInfo({...}),
+    "context":   RangerAccessContext({...}),
+})
+```
+
+Apply alignment only within the block; do not pad unrelated single assignments. Reference points: `exceptions.py`, `sample_pdp_client.py`, `test_ranger_client.py`.
+
+## Model and sample data
+
+Use **compact dict literals** — one line per top-level field when still readable (`sample_pdp_client.py`). Avoid verbose nesting when a flat line is clear.
+
+## Unit tests
+
+Primary test file: `intg/src/test/python/test_ranger_client.py`
+
+Run from `intg/`:
+
+```bash
+PYTHONPATH=src/main/python python -B src/test/python/test_ranger_client.py
+```
+
+Split tests **by client** — one `unittest.TestCase` per area (`TestRangerClient`, `TestGDSClient`, `TestPDPClient`).
+
+Fixtures: shared data as **class-level constants** (`URL`, `AUTH`, `AUTHZ_REQUEST`); single-use data inline in the test method.
+
+Assertions and mocking:
+
+- Prefer `assertRaises`, `assertIsNone`, `assertIsInstance` over bare `try/except`.
+- Assert **current** client behavior — not obsolete error text or exceptions.
+- Mock at the boundary: `Session` for Admin HTTP, `client_http.call_api` for GDS/PDP.
+- Only add tests for real coercion, exports, or API wiring.
+
+## References
+
+- `intg/src/main/python/README.md` — published API surface and quickstarts
+- `ranger-examples/sample-client/src/main/python/` — Admin, GDS, PDP, KMS usage examples
