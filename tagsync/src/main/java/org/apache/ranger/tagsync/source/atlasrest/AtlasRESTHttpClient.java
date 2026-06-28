@@ -43,19 +43,12 @@ import java.security.PrivilegedExceptionAction;
  * Jersey 2.x REST sink.
  */
 public final class AtlasRESTHttpClient {
-    /** Class logger. */
     private static final Logger LOG = LoggerFactory.getLogger(AtlasRESTHttpClient.class);
 
-    /** Atlas basic search API path (POST). */
-    private static final String SEARCH_PATH = "/api/atlas/v2/search/basic";
-
-    /** Atlas typedef export API path (GET). */
+    private static final String SEARCH_PATH   = "/api/atlas/v2/search/basic";
     private static final String TYPEDEFS_PATH = "/api/atlas/v2/types/typedefs/";
 
-    /** Ranger REST client with SSL and HA URL support. */
     private final RangerRESTClient restClient;
-
-    /** Whether TagSync runs with Kerberos credentials. */
     private final boolean          kerberized;
 
     /**
@@ -87,7 +80,7 @@ public final class AtlasRESTHttpClient {
      */
     public AtlasSearchResult facetedSearch(final SearchParameters searchParameters) throws Exception {
         Response response = execute(() -> restClient.post(SEARCH_PATH, null, searchParameters));
-        String json = readResponseBody(response, SEARCH_PATH);
+        String   json     = readResponseBody(response, SEARCH_PATH);
 
         return AtlasType.fromJson(json, AtlasSearchResult.class);
     }
@@ -100,7 +93,7 @@ public final class AtlasRESTHttpClient {
      */
     public AtlasTypesDef getAllTypeDefs() throws Exception {
         Response response = execute(() -> restClient.get(TYPEDEFS_PATH, null));
-        String json = readResponseBody(response, TYPEDEFS_PATH);
+        String   json     = readResponseBody(response, TYPEDEFS_PATH);
 
         return AtlasType.fromJson(json, AtlasTypesDef.class);
     }
@@ -117,6 +110,7 @@ public final class AtlasRESTHttpClient {
                 ret = ugi.doAs((PrivilegedExceptionAction<Response>) restCall::run);
             } catch (InterruptedException interruptedException) {
                 Thread.currentThread().interrupt();
+
                 throw new IOException("Atlas REST call interrupted", interruptedException);
             }
         } else {
@@ -131,8 +125,8 @@ public final class AtlasRESTHttpClient {
             throw new IOException("Atlas REST " + relativeUrl + " failed: no response from any configured URL");
         }
 
-        int status = response.getStatus();
-        String body = response.hasEntity() ? response.readEntity(String.class) : "";
+        int    status = response.getStatus();
+        String body   = response.hasEntity() ? response.readEntity(String.class) : "";
 
         if (status != Response.Status.OK.getStatusCode()) {
             throw new IOException("Atlas REST " + relativeUrl + " failed with HTTP " + status + ": " + body);
