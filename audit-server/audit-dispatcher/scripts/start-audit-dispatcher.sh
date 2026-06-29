@@ -36,6 +36,10 @@ if [ -z "${DISPATCHER_TYPE}" ]; then
 fi
 
 CONF_FILE="${AUDIT_DISPATCHER_CONF_DIR}/ranger-audit-dispatcher-${DISPATCHER_TYPE}-site.xml"
+LOGBACK_CONFIG_FILE="${AUDIT_DISPATCHER_CONF_DIR}/logback.xml"
+if [ -n "${DISPATCHER_TYPE}" ] && [ -f "${AUDIT_DISPATCHER_CONF_DIR}/logback-${DISPATCHER_TYPE}.xml" ]; then
+  LOGBACK_CONFIG_FILE="${AUDIT_DISPATCHER_CONF_DIR}/logback-${DISPATCHER_TYPE}.xml"
+fi
 
 # Set default heap size if not set
 if [ -z "${AUDIT_DISPATCHER_HEAP}" ]; then
@@ -44,7 +48,7 @@ fi
 
 # Set default Java options if not set
 if [ -z "${AUDIT_DISPATCHER_OPTS}" ]; then
-  AUDIT_DISPATCHER_OPTS="-Dlogback.configurationFile=${AUDIT_DISPATCHER_CONF_DIR}/logback.xml \
+  AUDIT_DISPATCHER_OPTS="-Dlogback.configurationFile=${LOGBACK_CONFIG_FILE} \
     -Daudit.dispatcher.log.dir=${AUDIT_DISPATCHER_LOG_DIR} \
     -Daudit.dispatcher.log.file=ranger-audit-dispatcher.log \
     -Djava.net.preferIPv4Stack=true \

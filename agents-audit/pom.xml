@@ -37,6 +37,7 @@
         <module>dest-hdfs</module>
         <module>dest-kafka</module>
         <module>dest-log4j</module>
+        <module>dest-os</module>
         <module>dest-solr</module>
         <module>orc-util</module>
     </modules>

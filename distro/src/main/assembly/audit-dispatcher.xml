@@ -56,6 +56,15 @@
       <fileMode>644</fileMode>
     </fileSet>
 
+    <fileSet>
+      <outputDirectory>conf</outputDirectory>
+      <directory>${project.parent.basedir}/audit-server/audit-dispatcher/dispatcher-opensearch/src/main/resources/conf</directory>
+      <includes>
+        <include>ranger-audit-dispatcher-opensearch-site.xml</include>
+      </includes>
+      <fileMode>644</fileMode>
+    </fileSet>
+
     <!-- Version file -->
     <fileSet>
       <outputDirectory></outputDirectory>
@@ -98,6 +107,22 @@
       </includes>
     </fileSet>
 
+    <!-- OpenSearch Dispatcher dependencies -->
+    <fileSet>
+      <outputDirectory>lib/dispatchers/opensearch</outputDirectory>
+      <directory>${project.parent.basedir}/audit-server/audit-dispatcher/dispatcher-opensearch/target/lib</directory>
+      <includes>
+        <include>*.jar</include>
+      </includes>
+    </fileSet>
+    <fileSet>
+      <outputDirectory>lib/dispatchers/opensearch</outputDirectory>
+      <directory>${project.parent.basedir}/audit-server/audit-dispatcher/dispatcher-opensearch/target</directory>
+      <includes>
+        <include>audit-dispatcher-opensearch-${project.version}.jar</include>
+      </includes>
+    </fileSet>
+
     <!-- Solr Dispatcher dependencies -->
     <fileSet>
       <outputDirectory>lib/dispatchers/solr</outputDirectory>
@@ -116,6 +141,13 @@
   </fileSets>
 
   <files>
+    <file>
+      <outputDirectory>conf</outputDirectory>
+      <source>${project.parent.basedir}/audit-server/audit-dispatcher/dispatcher-opensearch/src/main/resources/conf/logback.xml</source>
+      <destName>logback-opensearch.xml</destName>
+      <fileMode>644</fileMode>
+    </file>
+
     <!-- Unified WAR file -->
     <file>
       <outputDirectory>webapp</outputDirectory>
