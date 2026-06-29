@@ -48,9 +48,8 @@ public class AtlasTagSource extends AbstractTagSource {
     private static final Logger LOG = LoggerFactory.getLogger(AtlasTagSource.class);
 
     public static final String TAGSYNC_ATLAS_PROPERTIES_FILE_NAME = "atlas-application.properties";
-    public static final String TAGSYNC_ATLAS_KAFKA_ENDPOINTS    = "atlas.kafka.bootstrap.servers";
-    public static final String TAGSYNC_ATLAS_ZOOKEEPER_ENDPOINT = "atlas.kafka.zookeeper.connect";
-    public static final String TAGSYNC_ATLAS_CONSUMER_GROUP     = "atlas.kafka.entities.group.id";
+    public static final String TAGSYNC_ATLAS_KAFKA_ENDPOINTS = "atlas.kafka.bootstrap.servers";
+    public static final String TAGSYNC_ATLAS_CONSUMER_GROUP  = "atlas.kafka.entities.group.id";
     public static final int MAX_WAIT_TIME_IN_MILLIS = 1000;
     private int maxBatchSize;
 
@@ -91,10 +90,6 @@ public class AtlasTagSource extends AbstractTagSource {
             if (StringUtils.isBlank(atlasProperties.getProperty(TAGSYNC_ATLAS_KAFKA_ENDPOINTS))) {
                 ret = false;
                 LOG.error("Value of property '{}' is not specified!", TAGSYNC_ATLAS_KAFKA_ENDPOINTS);
-            }
-            if (StringUtils.isBlank(atlasProperties.getProperty(TAGSYNC_ATLAS_ZOOKEEPER_ENDPOINT))) {
-                ret = false;
-                LOG.error("Value of property '{}' is not specified!", TAGSYNC_ATLAS_ZOOKEEPER_ENDPOINT);
             }
             if (StringUtils.isBlank(atlasProperties.getProperty(TAGSYNC_ATLAS_CONSUMER_GROUP))) {
                 ret = false;
