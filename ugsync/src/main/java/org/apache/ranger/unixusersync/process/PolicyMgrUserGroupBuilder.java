@@ -81,7 +81,6 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
     public static final String PM_UPDATE_USERS_ROLES_URI             = "/service/xusers/users/roleassignments";
     /* ******************* */
 
-    private static final String  AUTHENTICATION_TYPE                 = "hadoop.security.authentication";
     private static final String  AUTH_KERBEROS                       = "kerberos";
     private static final String  KERBEROS_PRINCIPAL                  = "ranger.usersync.kerberos.principal";
     private static final String  KERBEROS_KEYTAB                     = "ranger.usersync.kerberos.keytab";
@@ -205,7 +204,7 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
         String keyStoreType      = config.getSSLKeyStoreType();
         String trustStoreType    = config.getSSLTrustStoreType();
 
-        authenticationType = config.getProperty(AUTHENTICATION_TYPE, "simple");
+        authenticationType = config.getProperty(UgsyncCommonConstants.AUTHENTICATION_TYPE, "simple");
 
         try {
             principal = SecureClientLogin.getPrincipal(config.getProperty(KERBEROS_PRINCIPAL, ""), localHostname);
