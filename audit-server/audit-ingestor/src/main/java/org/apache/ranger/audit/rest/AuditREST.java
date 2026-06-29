@@ -23,6 +23,16 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.security.authentication.util.KerberosName;
 import org.apache.ranger.audit.model.AuthzAuditEvent;
 import org.apache.ranger.audit.producer.AuditDestinationMgr;
+import org.apache.ranger.audit.producer.kafka.partition.AuthToLocalRuleComposer;
+import org.apache.ranger.audit.producer.kafka.partition.PartitionPlanHolder;
+import org.apache.ranger.audit.producer.kafka.partition.PartitionPlanKafkaConfig;
+import org.apache.ranger.audit.producer.kafka.partition.PartitionPlanService;
+import org.apache.ranger.audit.producer.kafka.partition.ServiceAllowlistResolver;
+import org.apache.ranger.audit.producer.kafka.partition.exception.PartitionPlanConflictException;
+import org.apache.ranger.audit.producer.kafka.partition.exception.PartitionPlanException;
+import org.apache.ranger.audit.producer.kafka.partition.model.OnboardPlugin;
+import org.apache.ranger.audit.producer.kafka.partition.model.PartitionPlan;
+import org.apache.ranger.audit.producer.kafka.partition.model.UpdatePlugin;
 import org.apache.ranger.audit.provider.MiscUtil;
 import org.apache.ranger.audit.server.AuditServerConfig;
 import org.apache.ranger.audit.server.AuditServerConstants;
@@ -35,8 +45,10 @@ import org.springframework.stereotype.Component;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
+import javax.ws.rs.PATCH;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
@@ -67,6 +79,9 @@ public class AuditREST {
 
     @Autowired
     AuditDestinationMgr auditDestinationMgr;
+
+    @Autowired
+    PartitionPlanService partitionPlanService;
 
     /**
      * Health check endpoint
@@ -147,7 +162,7 @@ public class AuditREST {
     }
 
     /**
-     *  Access Audits producer endpoint.
+     * Access Audits producer endpoint.
      *  @param serviceName Required query parameter to identify the source service (hdfs, hive, kafka, solr, etc.)
      *  @param appId Optional query parameter for batch processing - identifies the application instance
      *  @param accessAudits List of audit events to process
@@ -240,6 +255,172 @@ public class AuditREST {
         return ret;
     }
 
+    /** Returns the in-memory partition plan when dynamic mode is enabled. */
+    @GET
+    @Path("/partition-plan")
+    @Produces("application/json")
+    public Response getPartitionPlan(@Context HttpServletRequest httpRequest) {
+        LOG.debug("==> AuditREST.getPartitionPlan()");
+        Response ret;
+        if (!partitionPlanService.isDynamicPartitionPlanEnabled()) {
+            ret = partitionPlanDisabled("GET /partition-plan");
+        } else {
+            Response authFailure = authorizePartitionPlanAdmin(httpRequest, "GET /partition-plan");
+            if (authFailure != null) {
+                ret = authFailure;
+            } else {
+                try {
+                    ret = Response.ok(partitionPlanService.getPartitionPlan().toJson()).build();
+                } catch (PartitionPlanException e) {
+                    LOG.error("Partition plan GET failed", e);
+                    ret = Response.status(Response.Status.SERVICE_UNAVAILABLE).entity(buildErrorResponse(e.getMessage())).build();
+                }
+            }
+        }
+        LOG.debug("<== AuditREST.getPartitionPlan(): status={}", ret.getStatus());
+        return ret;
+    }
+
+    /** Onboards a plugin from the buffer and registers service allowlists. */
+    @POST
+    @Path("/partition-plan/plugins")
+    @Consumes("application/json")
+    @Produces("application/json")
+    public Response onboardPlugin(OnboardPlugin request, @Context HttpServletRequest httpRequest) {
+        LOG.debug("==> AuditREST.onboardPlugin(pluginId={})", request != null ? request.getPluginId() : null);
+        Response ret;
+        if (!partitionPlanService.isDynamicPartitionPlanEnabled()) {
+            ret = partitionPlanDisabled("POST /partition-plan/plugins");
+        } else {
+            Response authFailure = authorizePartitionPlanAdmin(httpRequest, "POST /partition-plan/plugins");
+            if (authFailure != null) {
+                ret = authFailure;
+            } else {
+                try {
+                    ret = toSuccessfulPartitionPlanResponse(partitionPlanService.onboardPlugin(request, resolveUpdatedBy(httpRequest)));
+                } catch (PartitionPlanConflictException e) {
+                    ret = toPartitionPlanConflictResponse("POST /partition-plan/plugins", e);
+                } catch (PartitionPlanException e) {
+                    ret = toPartitionPlanErrorResponse("POST /partition-plan/plugins", e);
+                } catch (Exception e) {
+                    LOG.error("Unexpected error onboarding plugin in partition plan", e);
+                    ret = Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(buildErrorResponse("Failed to onboard plugin in partition plan")).build();
+                }
+            }
+        }
+        LOG.debug("<== AuditREST.onboardPlugin(): status={}", ret.getStatus());
+        return ret;
+    }
+
+    /** Updates an onboarded plugin: scale partitions and/or mutate service allowlists. */
+    @PATCH
+    @Path("/partition-plan/plugins/{pluginId}")
+    @Consumes("application/json")
+    @Produces("application/json")
+    public Response updatePlugin(@PathParam("pluginId") String pluginId, UpdatePlugin updateRequest, @Context HttpServletRequest httpRequest) {
+        LOG.debug("==> AuditREST.updatePlugin(pluginId={})", pluginId);
+        Response ret;
+        if (!partitionPlanService.isDynamicPartitionPlanEnabled()) {
+            ret = partitionPlanDisabled("PATCH /partition-plan/plugins/{pluginId}");
+        } else {
+            Response authFailure = authorizePartitionPlanAdmin(httpRequest, "PATCH /partition-plan/plugins/{pluginId}");
+            if (authFailure != null) {
+                ret = authFailure;
+            } else {
+                try {
+                    ret = toSuccessfulPartitionPlanResponse(partitionPlanService.updatePlugin(pluginId, updateRequest, resolveUpdatedBy(httpRequest)));
+                } catch (PartitionPlanConflictException e) {
+                    ret = toPartitionPlanConflictResponse("PATCH /partition-plan/plugins/" + pluginId, e);
+                } catch (PartitionPlanException e) {
+                    ret = toPartitionPlanErrorResponse("PATCH /partition-plan/plugins/" + pluginId, e);
+                } catch (Exception e) {
+                    LOG.error("Unexpected error updating plugin in partition plan", e);
+                    ret = Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(buildErrorResponse("Failed to update plugin in partition plan")).build();
+                }
+            }
+        }
+        LOG.debug("<== AuditREST.updatePlugin(): status={}", ret.getStatus());
+        return ret;
+    }
+
+    /** Returns HTTP 200 with the updated plan JSON body. */
+    private Response toSuccessfulPartitionPlanResponse(PartitionPlan updatedPlan) {
+        return Response.ok(updatedPlan.toJson()).build();
+    }
+
+    /** Returns HTTP 409 with the current plan when optimistic locking fails. */
+    private Response toPartitionPlanConflictResponse(String operation, PartitionPlanConflictException conflict) {
+        PartitionPlan currentPlan = conflict.getCurrentPlan();
+        if (currentPlan == null) {
+            LOG.error("{} rejected: partition plan version conflict (current plan unavailable)", operation, conflict);
+            return Response.status(Response.Status.CONFLICT).entity(buildErrorResponse("Partition plan version conflict")).build();
+        }
+        LOG.error("{} rejected: partition plan version conflict; current version is {}", operation, currentPlan.getVersion(), conflict);
+        return Response.status(Response.Status.CONFLICT).entity(currentPlan.toJson()).build();
+    }
+
+    /** Returns HTTP 400 or 503 for validation and Kafka admin failures. */
+    private Response toPartitionPlanErrorResponse(String operation, PartitionPlanException error) {
+        Response.Status status = resolvePartitionPlanErrorStatus(error);
+        LOG.error("{} failed: {}", operation, error.getMessage(), error);
+        return Response.status(status).entity(buildErrorResponse(error.getMessage())).build();
+    }
+
+    /** Returns HTTP 503 when dynamic partition-plan mode is disabled. */
+    private Response partitionPlanDisabled(String operation) {
+        LOG.error("{} rejected: dynamic partition plan is not enabled", operation);
+        return Response.status(Response.Status.SERVICE_UNAVAILABLE).entity(buildErrorResponse("Dynamic partition plan is not enabled")).build();
+    }
+
+    /**
+     * When {@code kafka.partition.plan.allowed.users} is configured, restrict partition-plan REST to those short names.
+     * When unset, any authenticated principal may call partition-plan (backward compatible).
+     */
+    private Response authorizePartitionPlanAdmin(HttpServletRequest request, String operation) {
+        Response ret  = null;
+        String   user = getAuthenticatedUser(request);
+
+        if (StringUtils.isBlank(user)) {
+            LOG.error("{} rejected: authentication required", operation);
+            ret = Response.status(Response.Status.UNAUTHORIZED).entity(buildErrorResponse("Authentication required")).build();
+        } else {
+            Set<String> adminUsers = partitionPlanService.getPartitionPlanAdminUsers();
+
+            if (!adminUsers.isEmpty() && !adminUsers.contains(user)) {
+                LOG.error("{} rejected: user '{}' is not in partition plan admin allowlist", operation, user);
+                ret = Response.status(Response.Status.FORBIDDEN).entity(buildErrorResponse("User is not authorized to manage partition plan")).build();
+            }
+        }
+
+        return ret;
+    }
+
+    /** Maps service/infrastructure failures to 503; client validation mistakes to 400. */
+    private static Response.Status resolvePartitionPlanErrorStatus(PartitionPlanException error) {
+        Response.Status ret = Response.Status.BAD_REQUEST;
+
+        if (error.getCause() != null) {
+            ret = Response.Status.SERVICE_UNAVAILABLE;
+        } else {
+            String message = error.getMessage();
+
+            if (message != null && (message.contains("Partition plan is not loaded in memory")
+                    || message.contains("Partition plan disappeared during update")
+                    || message.contains("No partition plan found in Kafka")
+                    || message.contains("Mandatory read-back failed"))) {
+                ret = Response.Status.SERVICE_UNAVAILABLE;
+            }
+        }
+
+        return ret;
+    }
+
+    /** Records the authenticated admin user on plan mutations. */
+    private String resolveUpdatedBy(HttpServletRequest request) {
+        String user = getAuthenticatedUser(request);
+        return StringUtils.isNotBlank(user) ? user : "rest-api";
+    }
+
     private String buildResponse(Map<String, Object> respMap) {
         try {
             return MiscUtil.getMapper().writeValueAsString(respMap);
@@ -281,42 +462,48 @@ public class AuditREST {
      * For JWT or basic auth, the username is already in short form and returned as-is.
      */
     private String applyAuthToLocal(String principal) {
-        if (StringUtils.isEmpty(principal)) {
-            return principal;
+        String ret = principal;
+
+        if (StringUtils.isNotEmpty(principal)) {
+            // Check if this looks like a Kerberos principal (has @ or /)
+            if (!principal.contains("@") && !principal.contains("/")) {
+                LOG.debug("Username '{}' is already a short name (JWT/basic auth), no auth_to_local mapping needed", principal);
+            } else {
+                try {
+                    KerberosName kerberosName = new KerberosName(principal);
+
+                    ret = kerberosName.getShortName();
+                } catch (Exception e) {
+                    LOG.warn("Failed to apply auth_to_local rules to principal '{}': {}. Using original principal.", principal, e.getMessage());
+                }
+            }
         }
 
-        // Check if this looks like a Kerberos principal (has @ or /)
-        if (!principal.contains("@") && !principal.contains("/")) {
-            LOG.debug("Username '{}' is already a short name (JWT/basic auth), no auth_to_local mapping needed", principal);
-            return principal;
-        }
-
-        try {
-            KerberosName kerberosName = new KerberosName(principal);
-
-            return kerberosName.getShortName();
-        } catch (Exception e) {
-            LOG.warn("Failed to apply auth_to_local rules to principal '{}': {}. Using original principal.", principal, e.getMessage());
-            return principal;
-        }
+        return ret;
     }
 
     /**
-     * Rules are loaded from ranger.audit.ingestor.auth.to.local property in ranger-audit-ingestor-site.xml.
+     * Loads the auth_to_local catalog from ranger-audit-ingestor-site.xml. When dynamic partition-plan
+     * mode is disabled, applies the full catalog immediately. When enabled, applies static XML rules
+     * only if the partition-plan Kafka topic does not exist yet; otherwise composed rules are installed
+     * on {@link PartitionPlanHolder#install(PartitionPlan, Integer)} via {@link AuthToLocalRuleComposer#applyForPlan}.
      */
     private static void initializeAuthToLocal() {
         AuditServerConfig config = AuditServerConfig.getInstance();
         String authToLocalRules = config.get(AuditServerConstants.PROP_AUTH_TO_LOCAL);
-        if (StringUtils.isNotEmpty(authToLocalRules)) {
-            try {
-                KerberosName.setRules(authToLocalRules);
-                LOG.debug("Auth_to_local rules: {}", authToLocalRules);
-            } catch (Exception e) {
-                LOG.error("Failed to set auth_to_local rules from configuration: {}", e.getMessage(), e);
-            }
-        } else {
+        if (StringUtils.isEmpty(authToLocalRules)) {
             LOG.warn("No auth_to_local rules configured. Kerberos principal mapping may not work correctly.");
             LOG.warn("Set property '{}' in ranger-audit-ingestor-site.xml", AuditServerConstants.PROP_AUTH_TO_LOCAL);
+            return;
+        }
+
+        AuthToLocalRuleComposer composer = AuthToLocalRuleComposer.getInstance();
+        composer.initializeFromConfig();
+        if (PartitionPlanKafkaConfig.isDynamicPartitionPlanEnabled(config.getProperties(), PartitionPlanService.INGESTOR_PROP_PREFIX)) {
+            composer.applyStartupRulesForDynamicMode(config.getProperties(), PartitionPlanService.INGESTOR_PROP_PREFIX);
+        } else {
+            composer.applyStaticRules();
+            LOG.debug("Applied static auth_to_local catalog from site XML");
         }
     }
 
@@ -327,18 +514,17 @@ public class AuditREST {
      * @return true if user is allowed, false otherwise
      */
     private boolean isAllowedServiceUser(String serviceName, String userName) {
-        boolean ret;
-
-        if (StringUtils.isNotBlank(serviceName) && StringUtils.isNotBlank(userName)) {
-            Set<String> allowedUsers = allowedServiceUsers.get(serviceName);
-
-            ret = allowedUsers != null && allowedUsers.contains(userName);
-        } else {
-            ret = false;
-        }
-
-        LOG.debug("isAllowedServiceUser(serviceName={}, userName={}): ret={}", serviceName, userName, ret);
-
+        boolean dynamicEnabled = partitionPlanService != null
+                && partitionPlanService.isDynamicPartitionPlanEnabled();
+        boolean ret = ServiceAllowlistResolver.isAllowedServiceUser(
+                serviceName,
+                userName,
+                dynamicEnabled,
+                PartitionPlanHolder.getInstance(),
+                allowedServiceUsers);
+        LOG.debug(
+                "isAllowedServiceUser(serviceName={}, userName={}, dynamic={}): ret={}",
+                serviceName, userName, dynamicEnabled, ret);
         return ret;
     }
 
