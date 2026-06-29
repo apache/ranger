@@ -81,6 +81,9 @@ services:
     image: ranger-zk
     container_name: ranger-zk
     hostname: ranger-zk.rangernw
+    depends_on:
+      ranger-kdc:
+        condition: service_healthy
     volumes:
       - ./dist/keytabs/ranger-zk:/etc/keytabs
       - ./scripts/kdc/krb5.conf:/etc/krb5.conf:ro

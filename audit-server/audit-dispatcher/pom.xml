@@ -34,6 +34,7 @@
         <module>dispatcher-app</module>
         <module>dispatcher-common</module>
         <module>dispatcher-hdfs</module>
+        <module>dispatcher-opensearch</module>
         <module>dispatcher-solr</module>
     </modules>
 

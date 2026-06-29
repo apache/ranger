@@ -87,6 +87,12 @@
         </dependency>
         <dependency>
             <groupId>org.apache.ranger</groupId>
+            <artifactId>audit-dispatcher-opensearch</artifactId>
+            <version>${project.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.ranger</groupId>
             <artifactId>audit-dispatcher-solr</artifactId>
             <version>${project.version}</version>
             <scope>provided</scope>
