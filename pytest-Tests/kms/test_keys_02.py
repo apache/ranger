@@ -25,10 +25,11 @@
 
 import requests
 import pytest
-from kms.utils import fetch_logs
+from kms.utils import (
+    krb_requests, fetch_logs,
+    BASE_URL, PARAMS
+)
 
-BASE_URL = "http://localhost:9292/kms/v1"
-PARAMS={"user.name":"keyadmin"}
 
 # ***********************************************************************************
 # Test to check after key roll over ->  new version= old version+1
@@ -39,11 +40,11 @@ def test_versionIncrement_after_rollover(headers):
         "name":key_name
     }
     #create key
-    response=requests.post(f"{BASE_URL}/keys",json=key_data,params=PARAMS,headers=headers)
+    response=krb_requests.post(f"{BASE_URL}/keys",json=key_data,params=PARAMS,headers=headers)
     assert response.status_code == 201, f"Key creation failed: {response.text}"
 
     #check version before roll over
-    response_before= requests.get(f"{BASE_URL}/key/{key_name}/_currentversion", headers=headers, params=PARAMS)
+    response_before= krb_requests.get(f"{BASE_URL}/key/{key_name}/_currentversion", headers=headers, params=PARAMS)
     assert response_before.status_code == 200, f"Failed to get current version. Response: {response_before.text}"
 
     #extract version number
@@ -52,11 +53,11 @@ def test_versionIncrement_after_rollover(headers):
     print(f"version before: {version_num_before}" )
 
     #roll over
-    response = requests.post(f"{BASE_URL}/key/{key_name}", json={}, headers=headers, params=PARAMS)
+    response = krb_requests.post(f"{BASE_URL}/key/{key_name}", json={}, headers=headers, params=PARAMS)
     assert response.status_code==200, f"failed to perform roll over . Response:{response.text}"
 
     #check version after roll over
-    response_after= requests.get(f"{BASE_URL}/key/{key_name}/_currentversion", headers=headers, params=PARAMS)
+    response_after= krb_requests.get(f"{BASE_URL}/key/{key_name}/_currentversion", headers=headers, params=PARAMS)
     assert response_after.status_code == 200, f"Failed to get current version. Response: {response_after.text}"
 
     #extract new version number
@@ -69,7 +70,7 @@ def test_versionIncrement_after_rollover(headers):
     )
 
     # Cleanup key after test
-    requests.delete(f"{BASE_URL}/key/{key_name}", params=PARAMS)
+    krb_requests.delete(f"{BASE_URL}/key/{key_name}", params=PARAMS)
 
 
 # ***********************************************************************************
@@ -77,19 +78,21 @@ def test_versionIncrement_after_rollover(headers):
 # ***********************************************************************************
 def test_key_material(headers):
     key_name="test-key"
+    # Chinmay bhaiya here the length is Required 256, but got 128 so changing key_data
     key_material="G90ZtTKOWIICXG_wpqx0tA"
 
     key_data={
         "name":key_name,
-        "material":key_material
+        "material":key_material,
+        "length": 128 # added here
     }
 
     #create key
-    response=requests.post(f"{BASE_URL}/keys",json=key_data,params=PARAMS,headers=headers)
+    response=krb_requests.post(f"{BASE_URL}/keys",json=key_data,params=PARAMS,headers=headers)
     assert response.status_code == 201, f"Key creation failed: {response.text}"
 
     #check material from currentversion
-    version_response= requests.get(f"{BASE_URL}/key/{key_name}/_currentversion", headers=headers, params=PARAMS)
+    version_response= krb_requests.get(f"{BASE_URL}/key/{key_name}/_currentversion", headers=headers, params=PARAMS)
     assert version_response.status_code == 200, f"Failed to get current version. Response: {version_response.text}"
 
     response_keyMaterial= version_response.json()
@@ -98,7 +101,7 @@ def test_key_material(headers):
     assert key_material== response_keyMaterial, f"Key material not matching. Passed key material: {key_material}, Got Key material: {response_keyMaterial}"
 
     # Cleanup key after test
-    requests.delete(f"{BASE_URL}/key/{key_name}", params=PARAMS)
+    krb_requests.delete(f"{BASE_URL}/key/{key_name}", params=PARAMS)
 
 
 # ***********************************************************************************
@@ -112,13 +115,12 @@ def test_deleted_key_not_in_list(headers):
     }
 
     #create key
-    response=requests.post(f"{BASE_URL}/keys",json=key_data,params=PARAMS,headers=headers)
+    response=krb_requests.post(f"{BASE_URL}/keys",json=key_data,params=PARAMS,headers=headers)
     assert response.status_code == 201, f"Key creation failed: {response.text}"
 
     # Delete key
-    requests.delete(f"{BASE_URL}/key/{key_name}", params=PARAMS)
-
-    list_response= requests.get(f"{BASE_URL}/keys/names",params=PARAMS)
+    krb_requests.delete(f"{BASE_URL}/key/{key_name}", params=PARAMS)
+    list_response= krb_requests.get(f"{BASE_URL}/keys/names",params=PARAMS)
 
     key_list= list_response.json()
 
@@ -138,12 +140,12 @@ def test_bulk_key_operation(headers):
             "name": name,
         }
 
-        response = requests.post(f"{BASE_URL}/keys", json=key_data, params=PARAMS, headers=headers)
+        response = krb_requests.post(f"{BASE_URL}/keys", json=key_data, params=PARAMS, headers=headers)
         assert response.status_code == 201, f"Failed to create key {name}: {response.text}"
         created_keys.append(name)
 
     # Get all keys and verify they exist
-    list_response = requests.get(f"{BASE_URL}/keys/names", headers=headers, params=PARAMS)
+    list_response = krb_requests.get(f"{BASE_URL}/keys/names", headers=headers, params=PARAMS)
     assert list_response.status_code == 200, f"Fetching key list failed: {list_response.text}"
 
     all_keys = list_response.json()
@@ -153,16 +155,16 @@ def test_bulk_key_operation(headers):
 
     # Get metadata for each key
     for name in created_keys:
-        meta_response = requests.get(f"{BASE_URL}/key/{name}", headers=headers, params=PARAMS)
+        meta_response = krb_requests.get(f"{BASE_URL}/key/{name}", headers=headers, params=PARAMS)
         assert meta_response.status_code == 200, f"Failed to get metadata for key {name}"
 
     # Delete all 5 keys
     for name in created_keys:
-        del_response = requests.delete(f"{BASE_URL}/key/{name}", params=PARAMS)
+        del_response = krb_requests.delete(f"{BASE_URL}/key/{name}", params=PARAMS)
         assert del_response.status_code==200, f"Failed to delete key {name}: {del_response.text}"
 
     # Verify keys are deleted
-    final_list_response = requests.get(f"{BASE_URL}/keys/names", headers=headers, params=PARAMS)
+    final_list_response = krb_requests.get(f"{BASE_URL}/keys/names", headers=headers, params=PARAMS)
     assert final_list_response.status_code == 200, f"Fetching key list after deletion failed"
     final_keys = final_list_response.json()
 

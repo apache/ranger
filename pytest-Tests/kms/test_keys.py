@@ -25,10 +25,11 @@
 
 import requests
 import pytest
-from kms.utils import fetch_logs
+from kms.utils import (
+    krb_requests, fetch_logs,
+    BASE_URL, PARAMS
+)
 
-BASE_URL = "http://localhost:9292/kms/v1"
-PARAMS={"user.name":"keyadmin"}
 
 class TestKeyManagement:
 
@@ -43,13 +44,13 @@ class TestKeyManagement:
             "length": 128,
             "description": "New key for checking key creation functionality"
         }
-        response = requests.post(f"{BASE_URL}/keys",headers=headers, json=key_data,params=PARAMS)
+        response = krb_requests.post(f"{BASE_URL}/keys",headers=headers, json=key_data,params=PARAMS)
 
         if response.status_code != 201:
             error_logs = fetch_logs()  # Fetch logs on failure
             pytest.fail(f"Key creation failed. API Response: {response.text}\nLogs:\n{error_logs}")
 
-        requests.delete(f"{BASE_URL}/key/key2",params=PARAMS)               #cleanup key2
+        krb_requests.delete(f"{BASE_URL}/key/key2",params=PARAMS)               #cleanup key2
 
     #---------------------------------creation key validation------------------------------
     @pytest.mark.parametrize("name, expected_status", [
@@ -65,14 +66,14 @@ class TestKeyManagement:
             "length": 128,
             "description": "Validation test"
         }
-        response = requests.post(f"{BASE_URL}/keys", json=key_data, headers=headers,params=PARAMS)
+        response = krb_requests.post(f"{BASE_URL}/keys", json=key_data, headers=headers,params=PARAMS)
 
         if response.status_code != expected_status:
             error_logs = fetch_logs()  # Fetch logs on failure
             pytest.fail(f"Key validation failed. API Response: {response.text}\nLogs:\n{error_logs}")
 
         if expected_status == 201:
-            requests.delete(f"{BASE_URL}/key/{name}", params=PARAMS)
+            krb_requests.delete(f"{BASE_URL}/key/{name}", params=PARAMS)
 
     # Negative test----duplicate key creation test ----------------------------------------------
     def test_duplicate_key_creation(self, headers):
@@ -84,17 +85,13 @@ class TestKeyManagement:
             "description": "Testing duplicate key creation"
         }
 
-        response1 = requests.post(f"{BASE_URL}/keys", headers=headers, json=key_data, params=PARAMS)
+        response1 = krb_requests.post(f"{BASE_URL}/keys", headers=headers, json=key_data, params=PARAMS)
         assert response1.status_code == 201, f"Initial key creation failed: {response1.text}"
 
         # creating the same key again
-        response2 = requests.post(f"{BASE_URL}/keys", headers=headers, json=key_data, params=PARAMS)
+        response2 = krb_requests.post(f"{BASE_URL}/keys", headers=headers, json=key_data, params=PARAMS)
 
         assert response2.status_code == 500, f"Duplicate key got created, expected to fail"
 
         # Cleanup
-        requests.delete(f"{BASE_URL}/key/{key_name}", params=PARAMS)
-
-
-
-
+        krb_requests.delete(f"{BASE_URL}/key/{key_name}", params=PARAMS)
