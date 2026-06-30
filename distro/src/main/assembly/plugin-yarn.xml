@@ -64,6 +64,7 @@
           <include>com.fasterxml.jackson.jaxrs:jackson-jaxrs-base:jar:${fasterxml.jackson.version}</include>
           <include>com.fasterxml.jackson.jaxrs:jackson-jaxrs-json-provider:jar:${fasterxml.jackson.version}</include>
           <include>com.fasterxml.jackson.module:jackson-module-jaxb-annotations:jar:${fasterxml.jackson.version}</include>
+          <include>org.slf4j:slf4j-api:jar:${slf4j-api.version}</include>
           <include>commons-collections:commons-collections</include>
           <include>io.airlift:aircompressor:jar:${aircompressor.version}</include>
           <include>jakarta.ws.rs:jakarta.ws.rs-api</include>
