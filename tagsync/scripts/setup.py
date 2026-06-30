@@ -440,7 +440,10 @@ def main():
 		mergeProps['ranger.tagsync.dest.ranger.username'] = 'rangertagsync'
 
 	if (tagsyncKSPath != ''):
-		tagadminPasswd = 'rangertagsync'
+		if ('rangerTagsync_password' in globalDict and globalDict['rangerTagsync_password'] != ''):
+			tagadminPasswd = globalDict['rangerTagsync_password']
+		else:
+			tagadminPasswd = 'rangertagsync'
 		tagadminAlias = 'tagadmin.user.password'
 		updatePropertyInJCKSFile(tagsyncKSPath,tagadminAlias,tagadminPasswd)
 		os.chown(tagsyncKSPath,ownerId,groupId)
