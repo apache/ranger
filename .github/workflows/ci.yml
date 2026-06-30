@@ -26,6 +26,9 @@ name: CI
 
 on:
   push:
+    branches:
+      - master
+      - ranger-2.9
   pull_request:
     branches: [ "master" ]
 
