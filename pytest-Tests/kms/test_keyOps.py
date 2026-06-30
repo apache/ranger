@@ -27,10 +27,11 @@
 import requests
 import pytest
 import time
-from kms.utils import fetch_logs
+from kms.utils import (
+    krb_requests, fetch_logs,
+    BASE_URL, PARAMS
+)
 
-BASE_URL = "http://localhost:9292/kms/v1"
-PARAMS = {"user.name": "keyadmin"}
 
 @pytest.mark.usefixtures("create_test_key")
 class TestKeyOperations:
@@ -43,42 +44,79 @@ class TestKeyOperations:
             "length": 128,
             "description": "Key to check roll over functionality"
         }
-        key_creation_response = requests.post(f"{BASE_URL}/keys", headers=headers, json=data, params=PARAMS)
 
+        krb_requests.delete(f"{BASE_URL}/key/rollover-key", params=PARAMS)
+
+        key_creation_response = krb_requests.post(f"{BASE_URL}/keys", headers=headers, json=data, params=PARAMS)
+
+        
         if key_creation_response.status_code != 201:        #log check
-            logs=fetch_logs()
+            logs = fetch_logs()
             pytest.fail(f"Create key operation failed. API Response: {key_creation_response.text}\nLogs:\n{logs}")
+        
+        # cleanup after test
+        krb_requests.delete(f"{BASE_URL}/key/rollover-key", params=PARAMS)
 
-
+    ##chinmay bhaiya here the rollover code i gave to llm since giving error
     # ***********************************************************************************
     #  Parametrized Roll over of key
     # ***********************************************************************************
-    @pytest.mark.parametrize("key_name, expected_status", [
-        ("rollover-key", 200),             # Valid key rollover
-        ("non-existent-key", 500)          # Rollover on a non-existent key
-    ])
+    # @pytest.mark.parametrize("key_name, expected_status", [
+    #     ("rollover-key", 200),             # Valid key rollover
+    #     ("non-existent-key", 500)          # Rollover on a non-existent key
+    # ])
 
+    # def test_roll_over_key(self, headers, key_name, expected_status):
+
+    #     response = krb_requests.post(f"{BASE_URL}/key/{key_name}", json={}, headers=headers, params=PARAMS)
+
+    #     if response.status_code != expected_status:      #log check
+    #         logs=fetch_logs()
+    #         pytest.fail(f"Rollover key operation failed. API Response: {response.status_code} {response.text}\nLogs:\n{logs}")
+
+    #     # Cleanup after test
+    #     krb_requests.delete(f"{BASE_URL}/key/rollover-key", params=PARAMS)
+
+    @pytest.mark.parametrize("key_name, expected_status", [
+        ("rollover-key", 200),
+        ("non-existent-key", 500)
+    ])
     def test_roll_over_key(self, headers, key_name, expected_status):
-        response = requests.post(f"{BASE_URL}/key/{key_name}", json={}, headers=headers, params=PARAMS)
+
+        if key_name == "rollover-key":
+            data = {
+                "name": "rollover-key",
+                "cipher": "AES/CTR/NoPadding",
+                "length": 128,
+                "description": "Key to check roll over functionality"
+            }
+
+            krb_requests.delete(f"{BASE_URL}/key/rollover-key", params=PARAMS)
+            krb_requests.post(f"{BASE_URL}/keys", headers=headers, json=data, params=PARAMS)
+
+        response = krb_requests.post(
+            f"{BASE_URL}/key/{key_name}",
+            json={},
+            headers=headers,
+            params=PARAMS
+        )
 
         if response.status_code != expected_status:      #log check
-            logs=fetch_logs()
-            pytest.fail(f"Rollover key operation failed. API Response: {response.text}\nLogs:\n{logs}")
+            logs = fetch_logs()
+            pytest.fail(f"Rollover key operation failed. API Response: {response.status_code} {response.text}\nLogs:\n{logs}")
 
-        # Cleanup after test
-        requests.delete(f"{BASE_URL}/key/rollover-key", params=PARAMS)
-
+        krb_requests.delete(f"{BASE_URL}/key/rollover-key", params=PARAMS)
 
     # ***********************************************************************************
     # Test for checking roll overed key has new material
     # ***********************************************************************************
     def test_roll_over_new_material(self, headers):
-        old_metadata = requests.get(f"{BASE_URL}/key/key1/_metadata", headers=headers, params=PARAMS)
+        old_metadata = krb_requests.get(f"{BASE_URL}/key/key1/_metadata", headers=headers, params=PARAMS)
         print("Old Metadata:", old_metadata.json())
 
-        requests.post(f"{BASE_URL}/key/key1", json={}, headers=headers, params=PARAMS)      #roll-over here
+        krb_requests.post(f"{BASE_URL}/key/key1", json={}, headers=headers, params=PARAMS)      #roll-over here
 
-        new_metadata = requests.get(f"{BASE_URL}/key/key1/_metadata", headers=headers, params=PARAMS)
+        new_metadata = krb_requests.get(f"{BASE_URL}/key/key1/_metadata", headers=headers, params=PARAMS)
         print("New Metadata:", new_metadata.json())
 
         assert old_metadata.json() != new_metadata.json(), "Key rollover should create new key material."
@@ -90,7 +128,7 @@ class TestKeyOperations:
     def test_generate_data_key_and_decrypt(self, headers, create_test_key):
         # Generate Data Key
         key_name=create_test_key["name"]
-        response = requests.get(f"{BASE_URL}/key/{key_name}/_dek", headers=headers, params=PARAMS)
+        response = krb_requests.get(f"{BASE_URL}/key/{key_name}/_dek", headers=headers, params=PARAMS)
 
         if response.status_code != 200:         #log check
             logs=fetch_logs()
@@ -122,7 +160,7 @@ class TestKeyOperations:
         }
 
         DECRYPT_PARAMS = {"user.name": "keyadmin","eek_op":"decrypt"}
-        decrypt_response = requests.post(f"{BASE_URL}/keyversion/{version_name}/_eek", json=decrypt_payload, headers=headers, params=DECRYPT_PARAMS)
+        decrypt_response = krb_requests.post(f"{BASE_URL}/keyversion/{version_name}/_eek", json=decrypt_payload, headers=headers, params=DECRYPT_PARAMS)
 
         if decrypt_response.status_code != 200:       #log check
             logs=fetch_logs()
@@ -143,13 +181,13 @@ class TestKeyOperations:
         # Step 1: Create the key
         key_name = "reencrypt-key"
         data = {"name": key_name}
-        create_response = requests.post(f"{BASE_URL}/keys", headers=headers, json=data, params=PARAMS)
+        create_response = krb_requests.post(f"{BASE_URL}/keys", headers=headers, json=data, params=PARAMS)
         logs=fetch_logs()
         assert create_response.status_code == 201, f"Key creation failed: {create_response.text}\nLogs:\n{logs}"
 
         try:
             # Step 2: Generate an Encrypted DEK (EDEK) using the key
-            generate_response = requests.get(f"{BASE_URL}/key/{key_name}/_dek", headers=headers, params=PARAMS)
+            generate_response = krb_requests.get(f"{BASE_URL}/key/{key_name}/_dek", headers=headers, params=PARAMS)
             logs=fetch_logs()
             assert generate_response.status_code == 200, f"EEK generation failed: {generate_response.text}\nLogs:\n{logs}"
 
@@ -170,12 +208,12 @@ class TestKeyOperations:
             ]
 
             # Step 3: Rotate the key (to create a new version)
-            rollover_response = requests.post(f"{BASE_URL}/key/{key_name}", json={}, headers=headers, params=PARAMS)
+            rollover_response = krb_requests.post(f"{BASE_URL}/key/{key_name}", json={}, headers=headers, params=PARAMS)
             assert rollover_response.status_code == 200, f"Key rollover failed: {rollover_response.text}"
 
             # Step 4: Call the reencryptEncryptedKeys API
             reencrypt_url = f"{BASE_URL}/key/{key_name}/_reencryptbatch"
-            reencrypt_response = requests.post(reencrypt_url, headers=headers, json=edek_payload, params=PARAMS)
+            reencrypt_response = krb_requests.post(reencrypt_url, headers=headers, json=edek_payload, params=PARAMS)
             assert reencrypt_response.status_code == 200, f"Re-encrypt call failed: {reencrypt_response.text}"
 
             # Step 5: Validate the response EDEKs
@@ -189,7 +227,7 @@ class TestKeyOperations:
 
         finally:
             # Cleanup key
-            requests.delete(f"{BASE_URL}/key/{key_name}", params=PARAMS)
+            krb_requests.delete(f"{BASE_URL}/key/{key_name}", params=PARAMS)
 
 
 
@@ -202,30 +240,30 @@ class TestKeyOperations:
         data = {"name": key_name}
 
         # Step 1: Create a key
-        create_response = requests.post(f"{BASE_URL}/keys", headers=headers, json=data, params=PARAMS)
+        create_response = krb_requests.post(f"{BASE_URL}/keys", headers=headers, json=data, params=PARAMS)
         assert create_response.status_code == 201, "Key creation failed"
 
         # Step 2: Roll over (creates @1, cached)
-        roll_response = requests.post(f"{BASE_URL}/key/{key_name}", json={}, headers=headers, params=PARAMS)
+        roll_response = krb_requests.post(f"{BASE_URL}/key/{key_name}", json={}, headers=headers, params=PARAMS)
         assert roll_response.status_code == 200, "Rollover failed"
 
         # Step 3: Delete the key (DB is clean, cache still references @1)
-        delete_response = requests.delete(f"{BASE_URL}/key/{key_name}", headers=headers, params=PARAMS)
+        delete_response = krb_requests.delete(f"{BASE_URL}/key/{key_name}", headers=headers, params=PARAMS)
         assert delete_response.status_code == 200, "Key deletion failed"
 
         time.sleep(5)
 
         # Step 4: Recreate the key (creates only @0 in DB, cache still stale @1)
-        recreate_response = requests.post(f"{BASE_URL}/keys", headers=headers, json=data, params=PARAMS)
+        recreate_response = krb_requests.post(f"{BASE_URL}/keys", headers=headers, json=data, params=PARAMS)
         assert recreate_response.status_code == 201, "Key recreation failed"
 
         # Step 5: Invalidate cache – forces KMS to reload latest version from DB
         invalidate_params = {"user.name": "keyadmin", "action": "invalidateCache"}
-        invalidate_response = requests.post(f"{BASE_URL}/key/{key_name}", json={}, headers=headers, params=invalidate_params)
+        invalidate_response = krb_requests.post(f"{BASE_URL}/key/{key_name}", json={}, headers=headers, params=invalidate_params)
         assert invalidate_response.status_code == 200, "Invalidate cache failed"
 
         # Step 6: try DEK – should succeed (correct version @0 loaded)
-        dek_response = requests.get(f"{BASE_URL}/key/{key_name}/_dek", headers=headers, params=PARAMS)
+        dek_response = krb_requests.get(f"{BASE_URL}/key/{key_name}/_dek", headers=headers, params=PARAMS)
         assert dek_response.status_code == 200, "DEK generation should succeed after cache invalidation"
 
-        requests.delete(f"{BASE_URL}/key/{key_name}", headers=headers, params=PARAMS)
+        krb_requests.delete(f"{BASE_URL}/key/{key_name}", headers=headers, params=PARAMS)
