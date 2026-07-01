@@ -19,6 +19,8 @@
 
 package org.apache.ranger.tagsync.source.atlas;
 
+import org.apache.atlas.ApplicationProperties;
+import org.apache.atlas.AtlasException;
 import org.apache.atlas.kafka.AtlasKafkaMessage;
 import org.apache.atlas.kafka.NotificationProvider;
 import org.apache.atlas.model.notification.EntityNotification;
@@ -26,6 +28,7 @@ import org.apache.atlas.notification.NotificationConsumer;
 import org.apache.atlas.notification.NotificationInterface;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
+import org.apache.commons.configuration.Configuration;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kafka.common.TopicPartition;
 import org.apache.ranger.authorization.utils.JsonUtils;
@@ -36,8 +39,6 @@ import org.apache.ranger.tagsync.source.atlasrest.RangerAtlasEntityWithTags;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -48,9 +49,8 @@ public class AtlasTagSource extends AbstractTagSource {
     private static final Logger LOG = LoggerFactory.getLogger(AtlasTagSource.class);
 
     public static final String TAGSYNC_ATLAS_PROPERTIES_FILE_NAME = "atlas-application.properties";
-    public static final String TAGSYNC_ATLAS_KAFKA_ENDPOINTS    = "atlas.kafka.bootstrap.servers";
-    public static final String TAGSYNC_ATLAS_ZOOKEEPER_ENDPOINT = "atlas.kafka.zookeeper.connect";
-    public static final String TAGSYNC_ATLAS_CONSUMER_GROUP     = "atlas.kafka.entities.group.id";
+    public static final String TAGSYNC_ATLAS_KAFKA_ENDPOINTS = "atlas.kafka.bootstrap.servers";
+    public static final String TAGSYNC_ATLAS_CONSUMER_GROUP  = "atlas.kafka.entities.group.id";
     public static final int MAX_WAIT_TIME_IN_MILLIS = 1000;
     private int maxBatchSize;
 
@@ -61,44 +61,16 @@ public class AtlasTagSource extends AbstractTagSource {
     public boolean initialize(Properties properties) {
         LOG.debug("==> AtlasTagSource.initialize()");
 
-        Properties atlasProperties = new Properties();
-
         boolean ret = AtlasResourceMapperUtil.initializeAtlasResourceMappers(properties);
 
-        if (ret) {
-            InputStream inputStream = getClass().getClassLoader().getResourceAsStream(TAGSYNC_ATLAS_PROPERTIES_FILE_NAME);
+        Configuration atlasConfiguration = null;
 
-            if (inputStream != null) {
-                try {
-                    atlasProperties.load(inputStream);
-                } catch (Exception exception) {
-                    ret = false;
-                    LOG.error("Cannot load Atlas application properties file, file-name: {}", TAGSYNC_ATLAS_PROPERTIES_FILE_NAME, exception);
-                } finally {
-                    try {
-                        inputStream.close();
-                    } catch (IOException ioException) {
-                        LOG.error("Cannot close Atlas application properties file, file-name: {}", TAGSYNC_ATLAS_PROPERTIES_FILE_NAME, ioException);
-                    }
-                }
+        if (ret) {
+            atlasConfiguration = loadAtlasConfiguration();
+            if (atlasConfiguration == null) {
+                ret = false;
             } else {
-                ret = false;
-                LOG.error("Cannot find Atlas application properties file");
-            }
-        }
-
-        if (ret) {
-            if (StringUtils.isBlank(atlasProperties.getProperty(TAGSYNC_ATLAS_KAFKA_ENDPOINTS))) {
-                ret = false;
-                LOG.error("Value of property '{}' is not specified!", TAGSYNC_ATLAS_KAFKA_ENDPOINTS);
-            }
-            if (StringUtils.isBlank(atlasProperties.getProperty(TAGSYNC_ATLAS_ZOOKEEPER_ENDPOINT))) {
-                ret = false;
-                LOG.error("Value of property '{}' is not specified!", TAGSYNC_ATLAS_ZOOKEEPER_ENDPOINT);
-            }
-            if (StringUtils.isBlank(atlasProperties.getProperty(TAGSYNC_ATLAS_CONSUMER_GROUP))) {
-                ret = false;
-                LOG.error("Value of property '{}' is not specified!", TAGSYNC_ATLAS_CONSUMER_GROUP);
+                ret = validateRequiredAtlasKafkaProperties(atlasConfiguration);
             }
         }
 
@@ -114,6 +86,40 @@ public class AtlasTagSource extends AbstractTagSource {
         LOG.debug("<== AtlasTagSource.initialize(), result={}", ret);
 
         return ret;
+    }
+
+    private Configuration loadAtlasConfiguration() {
+        try {
+            ApplicationProperties.forceReload();
+            return ApplicationProperties.get();
+        } catch (AtlasException exception) {
+            LOG.error("Cannot load Atlas application properties file: {}", TAGSYNC_ATLAS_PROPERTIES_FILE_NAME, exception);
+            return null;
+        }
+    }
+
+    boolean validateRequiredAtlasKafkaProperties(Properties atlasProperties) {
+        if (StringUtils.isBlank(atlasProperties.getProperty(TAGSYNC_ATLAS_KAFKA_ENDPOINTS))) {
+            LOG.error("Value of property '{}' is not specified!", TAGSYNC_ATLAS_KAFKA_ENDPOINTS);
+            return false;
+        }
+        if (StringUtils.isBlank(atlasProperties.getProperty(TAGSYNC_ATLAS_CONSUMER_GROUP))) {
+            LOG.error("Value of property '{}' is not specified!", TAGSYNC_ATLAS_CONSUMER_GROUP);
+            return false;
+        }
+        return true;
+    }
+
+    boolean validateRequiredAtlasKafkaProperties(Configuration atlasConfiguration) {
+        if (StringUtils.isBlank(atlasConfiguration.getString(TAGSYNC_ATLAS_KAFKA_ENDPOINTS))) {
+            LOG.error("Value of property '{}' is not specified!", TAGSYNC_ATLAS_KAFKA_ENDPOINTS);
+            return false;
+        }
+        if (StringUtils.isBlank(atlasConfiguration.getString(TAGSYNC_ATLAS_CONSUMER_GROUP))) {
+            LOG.error("Value of property '{}' is not specified!", TAGSYNC_ATLAS_CONSUMER_GROUP);
+            return false;
+        }
+        return true;
     }
 
     @Override
