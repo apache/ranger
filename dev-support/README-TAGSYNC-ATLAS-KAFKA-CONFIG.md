@@ -42,15 +42,17 @@ Set these in `install.properties` (installer writes `conf/atlas-application.prop
 | `TAG_SOURCE_ATLAS_KAFKA_SERVICE_NAME` | `atlas.kafka.sasl.kerberos.service.name` | If Kerberos |
 | `TAG_SOURCE_ATLAS_KERBEROS_PRINCIPAL` / `KEYTAB` | `atlas.jaas.KafkaClient.*` | If Kerberos |
 
-### Example — PLAINTEXT (Atlas metadata bus / KRaft)
+### Example — PLAINTEXT (Atlas metadata bus / KRaft coexist)
+
+Use when Atlas publishes `ATLAS_ENTITIES` on a **separate PLAINTEXT** metadata Kafka (e.g. `atlas-kafka` in Atlas+Ranger coexist stacks).
 
 `install.properties`:
 
 ```properties
 TAG_SOURCE_ATLAS_ENABLED=true
-TAG_SOURCE_ATLAS_KAFKA_BOOTSTRAP_SERVERS=atlas-kafka.example.com:9092
-TAG_SOURCE_ATLAS_KAFKA_ENTITIES_GROUP_ID=ranger_entities_consumer
-TAG_SOURCE_ATLAS_KAFKA_SECURITY_PROTOCOL=PLAINTEXT
+TAG_SOURCE_ATLAS_KAFKA_BOOTSTRAP_SERVERS = atlas-kafka.example.com:9092
+TAG_SOURCE_ATLAS_KAFKA_ENTITIES_GROUP_ID = ranger_entities_consumer
+TAG_SOURCE_ATLAS_KAFKA_SECURITY_PROTOCOL = PLAINTEXT
 TAG_SOURCE_ATLASREST_ENABLED=false
 TAG_SOURCE_FILE_ENABLED=false
 ```
@@ -65,19 +67,23 @@ atlas.kafka.security.protocol=PLAINTEXT
 
 ### Example — Kerberos (secured Atlas Kafka)
 
+Use when Atlas entity notifications are on a **SASL** Kafka broker. In **ranger-docker**, that is typically `ranger-kafka.rangernw:9092` (not PLAINTEXT).
+
 `install.properties`:
 
 ```properties
 TAG_SOURCE_ATLAS_ENABLED=true
-TAG_SOURCE_ATLAS_KAFKA_BOOTSTRAP_SERVERS=kafka1.example.com:9092,kafka2.example.com:9092
-TAG_SOURCE_ATLAS_KAFKA_ENTITIES_GROUP_ID=ranger_entities_consumer
-TAG_SOURCE_ATLAS_KAFKA_SECURITY_PROTOCOL=SASL_PLAINTEXT
-TAG_SOURCE_ATLAS_KAFKA_SERVICE_NAME=kafka
-TAG_SOURCE_ATLAS_KERBEROS_PRINCIPAL=rangertagsync/tagsync.example.com@EXAMPLE.COM
-TAG_SOURCE_ATLAS_KERBEROS_KEYTAB=/etc/security/keytabs/rangertagsync.keytab
+TAG_SOURCE_ATLAS_KAFKA_BOOTSTRAP_SERVERS = ranger-kafka.rangernw:9092
+TAG_SOURCE_ATLAS_KAFKA_ENTITIES_GROUP_ID = ranger_entities_consumer
+TAG_SOURCE_ATLAS_KAFKA_SECURITY_PROTOCOL = SASL_PLAINTEXT
+TAG_SOURCE_ATLAS_KAFKA_SERVICE_NAME = kafka
+TAG_SOURCE_ATLAS_KERBEROS_PRINCIPAL = rangertagsync/ranger-tagsync.rangernw@EXAMPLE.COM
+TAG_SOURCE_ATLAS_KERBEROS_KEYTAB = /etc/keytabs/rangertagsync.keytab
 ```
 
 Requires `is_secure=true` in install so Kerberos JAAS is written for the Atlas Kafka client.
+
+See also: `dev-support/ranger-docker/scripts/tagsync/ranger-tagsync-install.properties`.
 
 ---
 
@@ -167,24 +173,11 @@ If Tag Sync reads tags over Atlas REST instead of Kafka, Atlas Kafka properties 
 
 ```properties
 TAG_SOURCE_ATLASREST_ENABLED=true
-TAG_SOURCE_ATLASREST_ENDPOINT=http://atlas-host:21000
+TAG_SOURCE_ATLASREST_ENDPOINT = http://localhost:21000
 TAG_SOURCE_ATLAS_ENABLED=false
 ```
 
 Enable via `ranger.tagsync.source.atlasrest` in `ranger-tagsync-site.xml`.
-
----
-
-## Code / config files changed (RANGER-5658)
-
-| File | Change |
-|------|--------|
-| `tagsync/.../AtlasTagSource.java` | Drop ZK validation; load props via `ApplicationProperties` + `-Datlas.conf` |
-| `tagsync/scripts/setup.py` | `atlas_kafka_uses_kerberos()` — JAAS only for `SASL_*`; always emit `security.protocol` |
-| `tagsync/scripts/ranger-tagsync-services.sh` | `-Datlas.conf=${TAGSYNC_CONF_DIR}` |
-| `tagsync/scripts/install.properties` | Remove `TAG_SOURCE_ATLAS_KAFKA_ZOOKEEPER_CONNECT` |
-| `tagsync/conf/templates/installprop2xml.properties` | Remove ZK install → Atlas mapping |
-| `dev-support/ranger-docker/scripts/tagsync/ranger-tagsync-install.properties` | Kafka on `atlas-kafka`, PLAINTEXT, REST/file off |
 
 ---
 
