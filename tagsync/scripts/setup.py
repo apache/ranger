@@ -215,6 +215,15 @@ def updatePropertyInJCKSFile(jcksFileName,propName,value):
 		sys.exit(1)
 	return ret
 
+def atlas_kafka_uses_kerberos(props):
+	"""Kerberos JAAS for Atlas Kafka consumer only when SASL is configured (not PLAINTEXT)."""
+	if not configure_security:
+		return False
+	protocol = props.get(TAG_SOURCE_ATLAS_KAFKA_SECURITY_PROTOCOL_KEY, 'PLAINTEXT')
+	if protocol is None:
+		return False
+	return protocol.strip().upper().startswith('SASL')
+
 def convertInstallPropsToXML(props):
 	directKeyMap = getPropertiesConfigMap(join(installTemplateDirName,install2xmlMapFileName))
 	ret = {}
@@ -224,6 +233,7 @@ def convertInstallPropsToXML(props):
 
 	atlas_principal = ''
 	atlas_keytab = ''
+	atlas_kafka_kerberos = atlas_kafka_uses_kerberos(props)
 
 	for k,v in props.items():
 		if (k in list(directKeyMap)):
@@ -234,20 +244,20 @@ def convertInstallPropsToXML(props):
 				atlasOutFile.write(newKey + "=" + v + "\n")
 			elif (k == TAGSYNC_ATLAS_CONSUMER_GROUP_KEY):
 				atlasOutFile.write(newKey + "=" + v + "\n")
-			elif (configure_security and k == TAG_SOURCE_ATLAS_KAKFA_SERVICE_NAME_KEY):
+			elif (k == TAG_SOURCE_ATLAS_KAFKA_SECURITY_PROTOCOL_KEY):
 				atlasOutFile.write(newKey + "=" + v + "\n")
-			elif (configure_security and k == TAG_SOURCE_ATLAS_KAFKA_SECURITY_PROTOCOL_KEY):
+			elif (atlas_kafka_kerberos and k == TAG_SOURCE_ATLAS_KAKFA_SERVICE_NAME_KEY):
 				atlasOutFile.write(newKey + "=" + v + "\n")
-			elif (configure_security and k == TAG_SOURCE_ATLAS_KERBEROS_PRINCIPAL_KEY):
+			elif (atlas_kafka_kerberos and k == TAG_SOURCE_ATLAS_KERBEROS_PRINCIPAL_KEY):
 				atlas_principal = v
-			elif (configure_security and k == TAG_SOURCE_ATLAS_KERBEROS_KEYTAB_KEY):
+			elif (atlas_kafka_kerberos and k == TAG_SOURCE_ATLAS_KERBEROS_KEYTAB_KEY):
 				atlas_keytab = v
 			else:
 				ret[newKey] = v
 		else:
 			print("INFO: Direct Key not found:%s" % (k))
 
-	if (configure_security):
+	if atlas_kafka_kerberos and atlas_principal and atlas_keytab:
 		atlasOutFile.write("atlas.jaas.KafkaClient.loginModuleName = com.sun.security.auth.module.Krb5LoginModule" + "\n")
 		atlasOutFile.write("atlas.jaas.KafkaClient.loginModuleControlFlag = required" + "\n")
 		atlasOutFile.write("atlas.jaas.KafkaClient.option.useKeyTab = true" + "\n")
