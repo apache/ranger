@@ -71,7 +71,7 @@ public class AtlasTagSource extends AbstractTagSource {
             if (ret) {
                 NotificationInterface                          notification = NotificationProvider.get();
                 List<NotificationConsumer<EntityNotification>> iterators    = notification.createConsumers(NotificationInterface.NotificationType.ENTITIES, 1);
-    
+
                 maxBatchSize = TagSyncConfig.getSinkMaxBatchSize(properties);
                 consumerTask = new ConsumerRunnable(iterators.get(0));
             }
@@ -119,13 +119,13 @@ public class AtlasTagSource extends AbstractTagSource {
         } else {
             if (StringUtils.isBlank(atlasProperties.getProperty(TAGSYNC_ATLAS_KAFKA_ENDPOINTS))) {
                 LOG.error("missing value for mandatory property '{}'", TAGSYNC_ATLAS_KAFKA_ENDPOINTS);
-    
+
                 ret = false;
             }
-    
+
             if (StringUtils.isBlank(atlasProperties.getProperty(TAGSYNC_ATLAS_CONSUMER_GROUP))) {
                 LOG.error("missing value for mandatory property '{}'", TAGSYNC_ATLAS_CONSUMER_GROUP);
-    
+
                 ret = false;
             }
         }
@@ -144,7 +144,7 @@ public class AtlasTagSource extends AbstractTagSource {
 
                 ret = false;
             }
-    
+
             if (StringUtils.isBlank(atlasConfiguration.getString(TAGSYNC_ATLAS_CONSUMER_GROUP))) {
                 LOG.error("missing value for mandatory property '{}'", TAGSYNC_ATLAS_CONSUMER_GROUP);
 
