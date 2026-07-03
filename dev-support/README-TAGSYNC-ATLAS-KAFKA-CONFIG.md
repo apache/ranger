@@ -116,7 +116,7 @@ Without this, `AtlasTagSource` may not load installer-generated `atlas-applicati
 
 ### Docker (ranger-docker)
 
-Default sample (`ranger-tagsync-install.properties`): **Atlas REST on**, **Atlas Kafka off**. Set `TAG_SOURCE_ATLAS_ENABLED=true` and `TAG_SOURCE_ATLASREST_ENABLED=false` when consuming `ATLAS_ENTITIES` from Kafka.
+Default sample (`ranger-tagsync-install.properties`): **file source on** (no Atlas server in ranger-docker), **Atlas REST off**, **Atlas Kafka off**. For Atlas+Ranger coexist stacks, set `TAG_SOURCE_ATLAS_ENABLED=true`, `TAG_SOURCE_ATLASREST_ENABLED=false`, and `TAG_SOURCE_FILE_ENABLED=false` to consume `ATLAS_ENTITIES` from Kafka.
 
 ```bash
 cd dev-support/ranger-docker
