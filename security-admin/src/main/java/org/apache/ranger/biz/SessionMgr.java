@@ -236,7 +236,7 @@ public class SessionMgr {
 		XXUser xUser = daoManager.getXXUser().findByUserName(userSession.getLoginId());
 		if (xUser != null) {
 			List<String> permissionList;
-			if (userSession.isUserAdmin() || userSession.isKeyAdmin()) {
+			if (userSession.isUserAdmin()) {
 				permissionList = daoManager.getXXModuleDef().getAllModuleNames();
 			} else {
 				permissionList = daoManager.getXXModuleDef().findAccessibleModulesByUserId(userSession.getUserId(), xUser.getId());
