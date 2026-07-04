@@ -1795,6 +1795,8 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 				case CREATE_MATERIALIZED_VIEW:
 					if(hiveObj.getType() == HivePrivilegeObjectType.TABLE_OR_VIEW) {
 						accessType = isInput ? HiveAccessType.SELECT : HiveAccessType.CREATE;
+					} else if (hiveObj.getType() == HivePrivilegeObjectType.FUNCTION) {
+						accessType = HiveAccessType.SELECT;
 					}
 				break;
 				case ALTERVIEW_AS:
