@@ -591,15 +591,17 @@ public class RangerPathResourceMatcher extends RangerDefaultResourceMatcher {
 			if (LOG.isDebugEnabled()) {
 				LOG.debug("==> RecursiveWildcardResourceMatcher.isMatch(resourceValue=" + resourceValue + ", evalContext=" + evalContext + ")");
 			}
-			String expandedValue;
+			String   expandedValue;
+			String[] pathElements;
 			if (getNeedsDynamicEval()) {
 				expandedValue = getExpandedValue(evalContext);
-				wildcardPathElements = StringUtils.split(expandedValue, pathSeparatorChar);
+				pathElements  = StringUtils.split(expandedValue, pathSeparatorChar);
 			} else {
 				expandedValue = value;
+				pathElements  = wildcardPathElements;
 			}
 
-			boolean ret = function.apply(resourceValue, expandedValue, pathSeparatorChar, ioCase, wildcardPathElements);
+			boolean ret = function.apply(resourceValue, expandedValue, pathSeparatorChar, ioCase, pathElements);
 
 			if (LOG.isDebugEnabled()) {
 				LOG.debug("<== RecursiveWildcardResourceMatcher.isMatch(resourceValue=" + resourceValue + ", expandedValue=" + expandedValue + ") : result:[" + ret + "]");
