@@ -16,6 +16,7 @@
  */
 package org.apache.ranger.biz;
 
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -701,4 +702,61 @@ public class TestRangerBizUtil {
                 Assert.assertTrue(rangerBizUtil.checkUserAccessible(vXUser));
         }
 
+	@Test
+	public void testFailUnauthenticatedDownload_blocksWhenNoSessionAndFlagFalse() {
+		RangerContextHolder.setSecurityContext(null);
+		Assert.assertThrows(Exception.class, () -> rangerBizUtil.failUnauthenticatedDownloadIfNotAllowed());
+	}
+
+	@Test
+	public void testFailUnauthenticatedDownload_allowsWhenSessionPresent() {
+		try {
+			rangerBizUtil.failUnauthenticatedDownloadIfNotAllowed();
+		} catch (Exception e) {
+			Assert.fail("Expected no exception, but got: " + e.getMessage());
+		}
+	}
+
+	@Test
+	public void testFailUnauthenticatedDownload_allowsWhenFlagTrue() throws Exception {
+		RangerContextHolder.setSecurityContext(null);
+		setField("allowUnauthenticatedDownloadAccessInSecureEnvironment", true);
+		try {
+			rangerBizUtil.failUnauthenticatedDownloadIfNotAllowed();
+		} catch (Exception e) {
+			Assert.fail("Expected no exception, but got: " + e.getMessage());
+		}
+	}
+
+	@Test
+	public void testFailUnauthenticated_blocksWhenNoSessionAndFlagFalse() {
+		RangerContextHolder.setSecurityContext(null);
+		Assert.assertThrows(Exception.class, () -> rangerBizUtil.failUnauthenticatedIfNotAllowed());
+	}
+
+	@Test
+	public void testFailUnauthenticated_allowsWhenSessionPresent() {
+		try {
+			rangerBizUtil.failUnauthenticatedIfNotAllowed();
+		} catch (Exception e) {
+			Assert.fail("Expected no exception, but got: " + e.getMessage());
+		}
+	}
+
+	@Test
+	public void testFailUnauthenticated_allowsWhenFlagTrue() throws Exception {
+		RangerContextHolder.setSecurityContext(null);
+		setField("allowUnauthenticatedAccessInSecureEnvironment", true);
+		try {
+			rangerBizUtil.failUnauthenticatedIfNotAllowed();
+		} catch (Exception e) {
+			Assert.fail("Expected no exception, but got: " + e.getMessage());
+		}
+	}
+
+	private void setField(String name, Object value) throws Exception {
+		Field f = RangerBizUtil.class.getDeclaredField(name);
+		f.setAccessible(true);
+		f.set(rangerBizUtil, value);
+	}
 }
