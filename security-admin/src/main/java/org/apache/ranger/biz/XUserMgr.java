@@ -496,18 +496,16 @@ public class XUserMgr extends XUserMgrBase {
     public VXGroup getXGroup(Long id) {
         UserSessionBase userSession = ContextUtil.getCurrentUserSession();
 
-        if (userSession != null && userSession.getLoginId() != null) {
+        if (userSession != null && userSession.isSingleRoleUserSession()) {
             VXUser loggedInVXUser = xUserService.getXUserByUserName(userSession.getLoginId());
 
             if (loggedInVXUser != null) {
-                if (loggedInVXUser.getUserRoleList().size() == 1 && loggedInVXUser.getUserRoleList().contains(RangerConstants.ROLE_USER)) {
-                    List<Long> listGroupId = daoManager.getXXGroupUser().findGroupIdListByUserId(loggedInVXUser.getId());
+                List<Long> listGroupId = daoManager.getXXGroupUser().findGroupIdListByUserId(loggedInVXUser.getId());
 
-                    if (!listGroupId.contains(id)) {
-                        logger.info(MSG_DATA_ACCESS_DENY);
+                if (!listGroupId.contains(id)) {
+                    logger.info(MSG_DATA_ACCESS_DENY);
 
-                        throw restErrorUtil.create403RESTException("Logged-In user is not allowed to access requested group data.");
-                    }
+                    throw restErrorUtil.create403RESTException("Logged-In user is not allowed to access requested group data.");
                 }
             }
         }
@@ -790,7 +788,7 @@ public class XUserMgr extends XUserMgrBase {
             //In case of user we need to fetch only its associated groups.
             UserSessionBase userSession = ContextUtil.getCurrentUserSession();
 
-            if (userSession != null && userSession.getUserRoleList().size() == 1 && userSession.getUserRoleList().contains(RangerConstants.ROLE_USER) && userSession.getLoginId() != null) {
+            if (userSession != null && userSession.isSingleRoleUserSession() && userSession.getLoginId() != null) {
                 loggedInVXUser = xUserService.getXUserByUserName(userSession.getLoginId());
 
                 if (loggedInVXUser != null) {
@@ -1653,6 +1651,29 @@ public class XUserMgr extends XUserMgrBase {
 
         xaBizUtil.blockAuditorRoleUser();
 
+        if (vXGroupUser == null) {
+            throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST, "Groupuser not found", true);
+        }
+
+        if (vXGroupUser.getId() != null && daoManager.getXXGroupUser().getById(vXGroupUser.getId()) == null) {
+            throw restErrorUtil.createRESTException("Group-User mapping not found with ID: " + vXGroupUser.getId(),
+                    MessageEnums.DATA_NOT_FOUND);
+        }
+
+        XXGroup xGroup = daoManager.getXXGroup().findByGroupName(vXGroupUser.getName());
+        if (xGroup == null) {
+            throw restErrorUtil.createRESTException("Group not found: " + vXGroupUser.getName(),
+                    MessageEnums.DATA_NOT_FOUND);
+        }
+
+        XXUser xUser = daoManager.getXXUser().getById(vXGroupUser.getUserId());
+        if (xUser == null) {
+            throw restErrorUtil.createRESTException("User not found with ID: " + vXGroupUser.getUserId(),
+                    MessageEnums.DATA_NOT_FOUND);
+        }
+
+        vXGroupUser.setParentGroupId(xGroup.getId());
+
         return super.updateXGroupUser(vXGroupUser);
     }
 
@@ -1861,30 +1882,20 @@ public class XUserMgr extends XUserMgrBase {
         return vXGroupList;
     }
 
-    public Set<String> getGroupsForUser(String userName) {
-        Set<String> ret = new HashSet<>();
-
+    /**
+     * Returns group names for the given user from the Ranger user store.
+     *
+     * @param userName user login id
+     * @return group names from {@code x_group_users}
+     */
+    public Set<String> getGroupsForUser(final String userName) {
         try {
-            VXUser user = getXUserByUserName(userName);
-
-            if (user != null) {
-                VXGroupList groups = getXUserGroups(user.getId());
-
-                if (groups != null && !CollectionUtils.isEmpty(groups.getList())) {
-                    for (VXGroup group : groups.getList()) {
-                        ret.add(group.getName());
-                    }
-                } else {
-                    logger.debug("getGroupsForUser('{}'): no groups found for user", userName);
-                }
-            } else {
-                logger.debug("getGroupsForUser('{}'): user not found", userName);
-            }
+            return daoManager.getXXGroupUser().findGroupNamesByUserName(userName);
         } catch (Exception excp) {
             logger.error("getGroupsForUser('{}') failed", userName, excp);
-        }
 
-        return ret;
+            return new HashSet<>();
+        }
     }
 
     public VXUserList getXGroupUsers(SearchCriteria searchCriteria) {
@@ -2596,6 +2607,10 @@ public class XUserMgr extends XUserMgrBase {
     public boolean hasAccessToModule(String moduleName) {
         UserSessionBase userSession = ContextUtil.getCurrentUserSession();
 
+        if (userSession != null && userSession.isSuperUser()) {
+            return true;
+        }
+
         if (userSession != null && userSession.getLoginId() != null) {
             VXUser vxUser = xUserService.getXUserByUserName(userSession.getLoginId());
 
@@ -3276,6 +3291,10 @@ public class XUserMgr extends XUserMgrBase {
 
     private boolean hasAccessToGetUserInfo(VXUser requestedVXUser) {
         UserSessionBase userSession = ContextUtil.getCurrentUserSession();
+
+        if (userSession != null && userSession.isSuperUser()) {
+            return true;
+        }
 
         if (userSession != null && userSession.getLoginId() != null) {
             VXUser loggedInVXUser = xUserService.getXUserByUserName(userSession.getLoginId());

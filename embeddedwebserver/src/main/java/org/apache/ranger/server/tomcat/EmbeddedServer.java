@@ -28,6 +28,7 @@ import org.apache.catalina.valves.ErrorReportValve;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.security.SecureClientLogin;
 import org.apache.ranger.credentialapi.CredentialReader;
+import org.apache.tomcat.util.net.SSLHostConfig;
 
 import javax.net.ssl.KeyManager;
 import javax.net.ssl.KeyManagerFactory;
@@ -58,10 +59,12 @@ public class EmbeddedServer {
 
     public  static final String RANGER_KEYSTORE_FILE_TYPE_DEFAULT   = KeyStore.getDefaultType();
     public  static final String RANGER_TRUSTSTORE_FILE_TYPE_DEFAULT = KeyStore.getDefaultType();
-    public  static final String RANGER_SSL_CONTEXT_ALGO_TYPE        = "TLSv1.2";
+    public  static final String RANGER_SSL_CONTEXT_ALGO_TYPE        = "TLS";
     public  static final String RANGER_SSL_KEYMANAGER_ALGO_TYPE     = KeyManagerFactory.getDefaultAlgorithm();
     public  static final String RANGER_SSL_TRUSTMANAGER_ALGO_TYPE   = TrustManagerFactory.getDefaultAlgorithm();
     private static final String DEFAULT_NAME_RULE                   = "DEFAULT";
+    private static final String DEFAULT_ENABLED_PROTOCOLS           = "TLSv1.2";
+    private static final String DEFAULT_SSL_PROTOCOL                = "TLS";
     private static final String DEFAULT_WEBAPPS_ROOT_FOLDER         = "webapps";
     private static final String AUTH_TYPE_KERBEROS                  = "kerberos";
     private static final String AUTHENTICATION_TYPE                 = "hadoop.security.authentication";
@@ -69,8 +72,10 @@ public class EmbeddedServer {
     private static final String AUDIT_SOURCE_TYPE                   = "ranger.audit.source.type";
     private static final String AUDIT_SOURCE_SOLR                   = "solr";
     private static final String AUDIT_SOURCE_ES                     = "elasticsearch";
+    private static final String AUDIT_SOURCE_OPENSEARCH             = "opensearch";
     private static final String SOLR_BOOTSTRAP_ENABLED              = "ranger.audit.solr.bootstrap.enabled";
     private static final String ES_BOOTSTRAP_ENABLED                = "ranger.audit.elasticsearch.bootstrap.enabled";
+    private static final String OS_BOOTSTRAP_ENABLED                = "ranger.audit.opensearch.bootstrap.enabled";
     private static final String ADMIN_USER_KEYTAB                   = "ranger.admin.kerberos.keytab";
     private static final String ADMIN_NAME_RULES                    = "hadoop.security.auth_to_local";
     private static final String ADMIN_SERVER_NAME                   = "rangeradmin";
@@ -158,7 +163,7 @@ public class EmbeddedServer {
             ssl.setSecure(true);
             ssl.setScheme("https");
             ssl.setAttribute("SSLEnabled", "true");
-            ssl.setAttribute("sslProtocol", EmbeddedServerUtil.getConfig("ranger.service.https.attrib.ssl.protocol", "TLSv1.2"));
+            ssl.setAttribute("sslProtocol", EmbeddedServerUtil.getConfig("ranger.service.https.attrib.ssl.protocol", DEFAULT_SSL_PROTOCOL));
             ssl.setAttribute("keystoreType", EmbeddedServerUtil.getConfig("ranger.keystore.file.type", RANGER_KEYSTORE_FILE_TYPE_DEFAULT));
             ssl.setAttribute("truststoreType", EmbeddedServerUtil.getConfig("ranger.truststore.file.type", RANGER_TRUSTSTORE_FILE_TYPE_DEFAULT));
 
@@ -186,8 +191,7 @@ public class EmbeddedServer {
             ssl.setAttribute("keystorePass", keystorePass);
             ssl.setAttribute("keystoreFile", getKeystoreFile());
 
-            String defaultEnabledProtocols = "TLSv1.2";
-            String enabledProtocols        = EmbeddedServerUtil.getConfig("ranger.service.https.attrib.ssl.enabled.protocols", defaultEnabledProtocols);
+            String enabledProtocols        = EmbeddedServerUtil.getConfig("ranger.service.https.attrib.ssl.enabled.protocols", DEFAULT_ENABLED_PROTOCOLS);
 
             ssl.setAttribute("sslEnabledProtocols", enabledProtocols);
 
@@ -195,6 +199,14 @@ public class EmbeddedServer {
 
             if (StringUtils.isNotBlank(ciphers)) {
                 ssl.setAttribute("ciphers", ciphers);
+                SSLHostConfig[] configs = ssl.findSslHostConfigs();
+                if (configs != null) {
+                    for (SSLHostConfig hostConfig : configs) {
+                        if (hostConfig != null) {
+                            hostConfig.setCipherSuites(ciphers);
+                        }
+                    }
+                }
             }
 
             server.getService().addConnector(ssl);
@@ -439,6 +451,18 @@ public class EmbeddedServer {
                             esSchemaSetup.start();
                         } catch (Exception e) {
                             LOG.severe("Error while setting elasticsearch " + e);
+                        }
+                    }
+                } else if (AUDIT_SOURCE_OPENSEARCH.equalsIgnoreCase(auditSourceType)) {
+                    boolean osBootstrapEnabled = Boolean.parseBoolean(EmbeddedServerUtil.getConfig(OS_BOOTSTRAP_ENABLED, "true"));
+
+                    if (osBootstrapEnabled) {
+                        try {
+                            OpenSearchIndexBootStrapper osSchemaSetup = new OpenSearchIndexBootStrapper();
+
+                            osSchemaSetup.start();
+                        } catch (Exception e) {
+                            LOG.severe("Error while setting opensearch " + e);
                         }
                     }
                 }

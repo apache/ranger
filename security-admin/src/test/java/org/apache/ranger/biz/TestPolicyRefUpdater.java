@@ -202,7 +202,7 @@ public class TestPolicyRefUpdater {
 
         org.apache.ranger.db.XXPolicyDao policyDao = mock(org.apache.ranger.db.XXPolicyDao.class);
         when(daoMgr.getXXPolicy()).thenReturn(policyDao);
-        when(policyDao.getById(xPolicy.getId())).thenReturn(xPolicy);
+        when(policyDao.getCountById(xPolicy.getId())).thenReturn(1L);
 
         XXUserDao userDao = mock(XXUserDao.class);
         when(daoMgr.getXXUser()).thenReturn(userDao);
@@ -323,11 +323,6 @@ public class TestPolicyRefUpdater {
         xPolicy.setId(10L);
         xPolicy.setService(100L);
 
-        // FIX: Mock policy DAO hierarchy to satisfy doesPolicyExist(xPolicy) checks
-        org.apache.ranger.db.XXPolicyDao policyDao = mock(org.apache.ranger.db.XXPolicyDao.class);
-        when(daoMgr.getXXPolicy()).thenReturn(policyDao);
-        when(policyDao.getById(xPolicy.getId())).thenReturn(xPolicy);
-
         // Mock audit population to be identity
         Mockito.lenient().when(rangerAuditFields.populateAuditFields(Mockito.any(), Mockito.any()))
             .thenAnswer(inv -> inv.getArgument(0));
@@ -355,9 +350,9 @@ public class TestPolicyRefUpdater {
         }
         assertNotNull(userAssociatorClass);
         Constructor<?> userCtor = userAssociatorClass.getDeclaredConstructor(
-                PolicyRefUpdater.class, String.class, Long.class, XXPolicy.class);
+                PolicyRefUpdater.class, String.class, Long.class, XXPolicy.class, boolean.class);
         userCtor.setAccessible(true);
-        Object associatorUser = userCtor.newInstance(updater, "uNew", null, xPolicy);
+        Object associatorUser = userCtor.newInstance(updater, "uNew", null, xPolicy, true);
         Method runUser = userAssociatorClass.getDeclaredMethod("run");
         runUser.setAccessible(true);
         runUser.invoke(associatorUser);
@@ -384,9 +379,9 @@ public class TestPolicyRefUpdater {
         }
         assertNotNull(groupAssociatorClass);
         Constructor<?> groupCtor = groupAssociatorClass.getDeclaredConstructor(
-                PolicyRefUpdater.class, String.class, Long.class, XXPolicy.class);
+                PolicyRefUpdater.class, String.class, Long.class, XXPolicy.class, boolean.class);
         groupCtor.setAccessible(true);
-        Object associatorGroup = groupCtor.newInstance(updater, "gNew", null, xPolicy);
+        Object associatorGroup = groupCtor.newInstance(updater, "gNew", null, xPolicy, true);
         Method runGroup = groupAssociatorClass.getDeclaredMethod("run");
         runGroup.setAccessible(true);
         runGroup.invoke(associatorGroup);
@@ -400,7 +395,7 @@ public class TestPolicyRefUpdater {
         when(roleDao.findByRoleName("rNew")).thenReturn(null);
         RangerRole createdRole = new RangerRole("rNew", null, null, null, null);
         createdRole.setId(33L);
-        when(roleStore.createRole(Mockito.any(RangerRole.class), Mockito.eq(false))).thenReturn(createdRole);
+        when(roleStore.createRole(Mockito.any(RangerRole.class), Mockito.eq(false), Mockito.eq(false))).thenReturn(createdRole);
         XXPolicyRefRoleDao polRoleDao = mock(XXPolicyRefRoleDao.class);
         when(daoMgr.getXXPolicyRefRole()).thenReturn(polRoleDao);
 
@@ -413,9 +408,9 @@ public class TestPolicyRefUpdater {
         }
         assertNotNull(roleAssociatorClass);
         Constructor<?> roleCtor = roleAssociatorClass.getDeclaredConstructor(
-                PolicyRefUpdater.class, String.class, Long.class, XXPolicy.class);
+                PolicyRefUpdater.class, String.class, Long.class, XXPolicy.class, boolean.class);
         roleCtor.setAccessible(true);
-        Object associatorRole = roleCtor.newInstance(updater, "rNew", null, xPolicy);
+        Object associatorRole = roleCtor.newInstance(updater, "rNew", null, xPolicy, true);
         Method runRole = roleAssociatorClass.getDeclaredMethod("run");
         runRole.setAccessible(true);
         runRole.invoke(associatorRole);

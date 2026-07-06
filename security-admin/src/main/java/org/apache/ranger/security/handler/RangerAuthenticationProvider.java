@@ -686,7 +686,7 @@ public class RangerAuthenticationProvider implements AuthenticationProvider {
 
                 authentication = authenticator.authenticate(finalAuthentication);
 
-                return authentication;
+                return getAuthenticationWithGrantedAuthority(authentication);
             } else {
                 if (authentication != null && !authentication.isAuthenticated()) {
                     throw new BadCredentialsException("Bad credentials");

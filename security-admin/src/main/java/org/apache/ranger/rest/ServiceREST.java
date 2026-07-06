@@ -196,6 +196,7 @@ public class ServiceREST {
     public static final String PURGE_RECORD_TYPE_LOGIN_LOGS         = "login_records";
     public static final String PURGE_RECORD_TYPE_TRX_LOGS           = "trx_records";
     public static final String PURGE_RECORD_TYPE_POLICY_EXPORT_LOGS = "policy_export_logs";
+    public static final String ERR_VALIDATE_CONFIG_ADMIN_ONLY       = "Only system administrators or key administrators can validate service configs";
 
     private final RangerAdminConfig config                              = RangerAdminConfig.getInstance();
     private final int               maxPolicyNameLength                 = config.getInt("ranger.policyname.maxlength", 255);
@@ -848,14 +849,9 @@ public class ServiceREST {
             if (ret != null) {
                 UserSessionBase userSession = ContextUtil.getCurrentUserSession();
 
-                if (userSession != null && userSession.getLoginId() != null) {
-                    VXUser loggedInVXUser = xUserService.getXUserByUserName(userSession.getLoginId());
-
-                    if (loggedInVXUser != null) {
-                        if (loggedInVXUser.getUserRoleList().size() == 1 && loggedInVXUser.getUserRoleList().contains(RangerConstants.ROLE_USER)) {
-                            hideCriticalServiceDetailsForRoleUser(ret);
-                        }
-                    }
+                // Hide sensitive fields for plain ROLE_USER; not config super-users.
+                if (userSession != null && userSession.isSingleRoleUserSession()) {
+                    hideCriticalServiceDetailsForRoleUser(ret);
                 }
             }
         } catch (WebApplicationException excp) {
@@ -897,14 +893,9 @@ public class ServiceREST {
             if (ret != null) {
                 UserSessionBase userSession = ContextUtil.getCurrentUserSession();
 
-                if (userSession != null && userSession.getLoginId() != null) {
-                    VXUser loggedInVXUser = xUserService.getXUserByUserName(userSession.getLoginId());
-
-                    if (loggedInVXUser != null) {
-                        if (loggedInVXUser.getUserRoleList().size() == 1 && loggedInVXUser.getUserRoleList().contains(RangerConstants.ROLE_USER)) {
-                            hideCriticalServiceDetailsForRoleUser(ret);
-                        }
-                    }
+                // Hide sensitive fields for plain ROLE_USER; not config super-users.
+                if (userSession != null && userSession.isSingleRoleUserSession()) {
+                    hideCriticalServiceDetailsForRoleUser(ret);
                 }
             }
         } catch (WebApplicationException excp) {
@@ -947,23 +938,18 @@ public class ServiceREST {
             if (paginatedSvcs != null && !paginatedSvcs.getList().isEmpty()) {
                 UserSessionBase userSession = ContextUtil.getCurrentUserSession();
 
-                if (userSession != null && userSession.getLoginId() != null) {
-                    VXUser loggedInVXUser = xUserService.getXUserByUserName(userSession.getLoginId());
+                // Hide sensitive fields for plain ROLE_USER; not config super-users.
+                if (userSession != null && userSession.isSingleRoleUserSession()) {
+                    List<RangerService> updateServiceList = new ArrayList<>();
 
-                    if (loggedInVXUser != null) {
-                        if (loggedInVXUser.getUserRoleList().size() == 1 && loggedInVXUser.getUserRoleList().contains(RangerConstants.ROLE_USER)) {
-                            List<RangerService> updateServiceList = new ArrayList<>();
-
-                            for (RangerService rangerService : paginatedSvcs.getList()) {
-                                if (rangerService != null) {
-                                    updateServiceList.add(hideCriticalServiceDetailsForRoleUser(rangerService));
-                                }
-                            }
-
-                            if (!updateServiceList.isEmpty()) {
-                                paginatedSvcs.setList(updateServiceList);
-                            }
+                    for (RangerService rangerService : paginatedSvcs.getList()) {
+                        if (rangerService != null) {
+                            updateServiceList.add(hideCriticalServiceDetailsForRoleUser(rangerService));
                         }
+                    }
+
+                    if (!updateServiceList.isEmpty()) {
+                        paginatedSvcs.setList(updateServiceList);
                     }
                 }
             }
@@ -1093,6 +1079,16 @@ public class ServiceREST {
         VXResponse       ret;
         RangerPerfTracer perf = null;
 
+        if (!bizUtil.isAdmin()) {
+            if (!bizUtil.isKeyAdmin()) {
+                LOG.warn("Unauthorized validateConfig attempt by user: {}", bizUtil.getCurrentUserLoginId());
+                throw restErrorUtil.createRESTException(HttpServletResponse.SC_FORBIDDEN, ERR_VALIDATE_CONFIG_ADMIN_ONLY, true);
+            }
+            XXServiceDef serviceDef = daoManager.getXXServiceDef().findByName(service.getType());
+            if (serviceDef == null || !EmbeddedServiceDefsUtil.KMS_IMPL_CLASS_NAME.equals(serviceDef.getImplclassname())) {
+                throw restErrorUtil.createRESTException(HttpServletResponse.SC_FORBIDDEN, ERR_VALIDATE_CONFIG_ADMIN_ONLY, true);
+            }
+        }
         try {
             if (RangerPerfTracer.isPerfTraceEnabled(PERF_LOG)) {
                 perf = RangerPerfTracer.getPerfTracer(PERF_LOG, "ServiceREST.validateConfig(serviceName=" + service.getName() + ")");
@@ -3245,6 +3241,7 @@ public class ServiceREST {
             isAdmin    = bizUtil.isAdmin();
             isKeyAdmin = bizUtil.isKeyAdmin();
         } else {
+            // Includes config super-user privileges, not just DB portal roles.
             Collection<String> userRoles = userMgrGrantor.getRolesByLoginId(grantor);
 
             userName   = grantor;

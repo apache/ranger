@@ -23,7 +23,6 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOCase;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.ranger.authorization.hadoop.config.RangerAdminConfig;
 import org.apache.ranger.common.AppConstants;
 import org.apache.ranger.common.ContextUtil;
@@ -33,6 +32,7 @@ import org.apache.ranger.common.PropertiesUtil;
 import org.apache.ranger.common.RESTErrorUtil;
 import org.apache.ranger.common.RangerCommonEnums;
 import org.apache.ranger.common.RangerConstants;
+import org.apache.ranger.common.RangerSuperUserConfig;
 import org.apache.ranger.common.StringUtil;
 import org.apache.ranger.common.UserSessionBase;
 import org.apache.ranger.db.RangerDaoManager;
@@ -86,6 +86,7 @@ public class RangerBizUtil {
     public static final  String  AUDIT_STORE_RDBMS          = "DB";
     public static final  String  AUDIT_STORE_SOLR           = "solr";
     public static final  String  AUDIT_STORE_ELASTIC_SEARCH = "elasticSearch";
+    public static final  String  AUDIT_STORE_OPENSEARCH     = "opensearch";
     public static final  String  AUDIT_STORE_CLOUD_WATCH    = "cloudwatch";
     public static final  boolean BATCH_CLEAR_ENABLED        = PropertiesUtil.getBooleanProperty("ranger.jpa.jdbc.batch-clear.enable", true);
     public static final  int     POLICY_BATCH_SIZE          = PropertiesUtil.getIntProperty("ranger.jpa.jdbc.batch-clear.size", 10);
@@ -109,6 +110,10 @@ public class RangerBizUtil {
 
     @Autowired
     UserMgr userMgr;
+
+    /** Used for config super-user group lookup in {@link #isUserRangerAdmin(String)}. */
+    @Autowired
+    XUserMgr xUserMgr;
 
     @Autowired
     XUserService xUserService;
@@ -546,22 +551,16 @@ public class RangerBizUtil {
     }
 
     public void failUnauthenticatedIfNotAllowed() throws Exception {
-        if (UserGroupInformation.isSecurityEnabled()) {
-            UserSessionBase currentUserSession = ContextUtil.getCurrentUserSession();
-
-            if (currentUserSession == null && !allowUnauthenticatedAccessInSecureEnvironment) {
-                throw new Exception("Unauthenticated access not allowed");
-            }
+        UserSessionBase currentUserSession = ContextUtil.getCurrentUserSession();
+        if (currentUserSession == null && !allowUnauthenticatedAccessInSecureEnvironment) {
+            throw new Exception("Unauthenticated access not allowed");
         }
     }
 
     public void failUnauthenticatedDownloadIfNotAllowed() throws Exception {
-        if (UserGroupInformation.isSecurityEnabled()) {
-            UserSessionBase currentUserSession = ContextUtil.getCurrentUserSession();
-
-            if (currentUserSession == null && !allowUnauthenticatedDownloadAccessInSecureEnvironment) {
-                throw new Exception("Unauthenticated access not allowed");
-            }
+        UserSessionBase currentUserSession = ContextUtil.getCurrentUserSession();
+        if (currentUserSession == null && !allowUnauthenticatedDownloadAccessInSecureEnvironment) {
+            throw new Exception("Unauthenticated access not allowed");
         }
     }
 
@@ -1040,19 +1039,26 @@ public class RangerBizUtil {
             throw restErrorUtil.createRESTException("UserSession cannot be null, only KeyAdmin can create/update/delete " + objType, MessageEnums.OPER_NO_PERMISSION);
         }
 
-        if (session.isKeyAdmin() && !EmbeddedServiceDefsUtil.KMS_IMPL_CLASS_NAME.equals(implClassName)) {
-            throw restErrorUtil.createRESTException("KeyAdmin can create/update/delete only KMS " + objType, MessageEnums.OPER_NO_PERMISSION);
-        }
+        if (!session.isSuperUser()) {
+            boolean isKmsServiceType = EmbeddedServiceDefsUtil.KMS_IMPL_CLASS_NAME.equals(implClassName);
 
-        // TODO: As of now we are allowing SYS_ADMIN to create/update/read/delete all the
-        // services including KMS
+            if (session.isKeyAdmin() && !isKmsServiceType) {
+                throw restErrorUtil.createRESTException("KeyAdmin can create/update/delete only KMS " + objType, MessageEnums.OPER_NO_PERMISSION);
+            }
 
-        if ("Service-Def".equalsIgnoreCase(objType) && session.isUserAdmin() && EmbeddedServiceDefsUtil.KMS_IMPL_CLASS_NAME.equals(implClassName)) {
-            throw restErrorUtil.createRESTException("System Admin cannot create/update/delete KMS " + objType, MessageEnums.OPER_NO_PERMISSION);
+            if (session.isUserAdmin() && isKmsServiceType && "Service-Def".equalsIgnoreCase(objType)) {
+                throw restErrorUtil.createRESTException("System Admin cannot create/update/delete KMS " + objType, MessageEnums.OPER_NO_PERMISSION);
+            }
         }
     }
 
     public boolean checkUserAccessible(VXUser vXUser) {
+        // Config super-user (ranger.admin.super.users/groups) bypasses the
+        // mutual admin/key-admin visibility restrictions below.
+        if (isSuperUser()) {
+            return true;
+        }
+
         boolean            isAccessible = true;
         Collection<String> roleList     = userMgr.getRolesByLoginId(vXUser.getName());
 
@@ -1117,7 +1123,38 @@ public class RangerBizUtil {
         return isUserInConfigParameter(rangerService, ServiceREST.Allowed_User_List_For_Grant_Revoke, userName);
     }
 
+    /**
+     * True when {@code username} is a full Ranger admin: DB sys/admin role,
+     * config super-user ({@code ranger.admin.super.users/groups}), or the
+     * current session is a Ranger admin ({@link UserSessionBase#isUserAdmin()}).
+     */
     public boolean isUserRangerAdmin(String username) {
+        if (StringUtils.isBlank(username)) {
+            return false;
+        }
+
+        UserSessionBase userSession = ContextUtil.getCurrentUserSession();
+
+        // Ranger admin on current session (DB sys admin or config super-user).
+        if (userSession != null && username.equalsIgnoreCase(userSession.getLoginId()) && userSession.isUserAdmin()) {
+            return true;
+        }
+
+        // Config super-user when no session context (e.g. grantor checks).
+        final boolean configSuperUser;
+
+        if (RangerSuperUserConfig.isSuperUser(username)) {
+            configSuperUser = true;
+        } else if (RangerSuperUserConfig.isSuperGroupsConfigured() && xUserMgr != null) {
+            configSuperUser = RangerSuperUserConfig.isSuperUser(username, xUserMgr.getGroupsForUser(username));
+        } else {
+            configSuperUser = false;
+        }
+
+        if (configSuperUser) {
+            return true;
+        }
+
         boolean isAdmin = false;
 
         try {
@@ -1131,6 +1168,16 @@ public class RangerBizUtil {
         }
 
         return isAdmin;
+    }
+
+    /**
+     * True when the current session is a config super-user per
+     * {@code ranger.admin.super.users} / {@code ranger.admin.super.groups}.
+     */
+    public boolean isSuperUser() {
+        UserSessionBase currentUserSession = ContextUtil.getCurrentUserSession();
+
+        return currentUserSession != null && currentUserSession.isSuperUser();
     }
 
     public boolean isUserServiceAdmin(RangerService rangerService, String userName) {

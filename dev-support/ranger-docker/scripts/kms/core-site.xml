@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <property>
+        <name>hadoop.security.authentication</name>
+        <value>kerberos</value>
+    </property>
+    <property>
+        <name>hadoop.security.auth_to_local</name>
+        <value>RULE:[2:$1/$2@$0](rangeradmin/ranger\.rangernw@EXAMPLE\.COM)s/.*/ranger/
+RULE:[2:$1/$2@$0](rangertagsync/ranger-tagsync\.rangernw@EXAMPLE\.COM)s/.*/rangertagsync/
+RULE:[2:$1/$2$0](rangerusersync/ranger-usersync\.rangernw@EXAMPLE\.COM)s/.*/rangerusersync/
+RULE:[2:$1/$2$0](rangerkms/ranger-kms\.rangernw@EXAMPLE\.COM)s/.*/keyadmin/
+DEFAULT</value>
+        <description>
+            Rules used to resolve Kerberos principal names.
+        </description>
+    </property>
+</configuration>

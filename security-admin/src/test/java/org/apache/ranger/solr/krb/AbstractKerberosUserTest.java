@@ -142,6 +142,29 @@ public class AbstractKerberosUserTest {
         verify(ctx, times(1)).login();
     }
 
+    @Test
+    public void checkTGTAndRelogin_keytabUserSkipsLogoutWhenLoggedIn() throws Exception {
+        Subject subject = new Subject();
+        KerberosTicket tgt = mock(KerberosTicket.class);
+        when(tgt.getServer()).thenReturn(new KerberosPrincipal("krbtgt/EXAMPLE.COM@EXAMPLE.COM"));
+        Date start = new Date(System.currentTimeMillis() - 60 * 60_000);
+        Date end   = new Date(System.currentTimeMillis() + 60_000);
+        when(tgt.getStartTime()).thenReturn(start);
+        when(tgt.getEndTime()).thenReturn(end);
+        subject.getPrivateCredentials().add(tgt);
+
+        LoginContext     ctx  = mock(LoginContext.class);
+        KeytabKerberosUser user = new KeytabKerberosUser("user@EXAMPLE.COM", subject, ctx);
+
+        user.login();
+        Mockito.reset(ctx);
+
+        boolean relogin = user.checkTGTAndRelogin();
+        assertTrue(relogin);
+        verify(ctx, never()).logout();
+        verify(ctx, times(1)).login();
+    }
+
     private static class TestKerberosUser extends AbstractKerberosUser {
         private final String       principal;
         private final LoginContext ctx;
@@ -160,6 +183,17 @@ public class AbstractKerberosUserTest {
         @Override
         protected LoginContext createLoginContext(Subject subject) throws LoginException {
             return ctx;
+        }
+    }
+
+    private static class KeytabKerberosUser extends TestKerberosUser {
+        KeytabKerberosUser(String principal, Subject subject, LoginContext ctx) {
+            super(principal, subject, ctx);
+        }
+
+        @Override
+        protected boolean useKeytabRelogin() {
+            return true;
         }
     }
 }

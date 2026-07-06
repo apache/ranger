@@ -19,10 +19,6 @@
 
 package org.apache.ranger.tagsync.source.atlasrest;
 
-import org.apache.atlas.AtlasClientV2;
-import org.apache.atlas.AtlasServiceException;
-import org.apache.atlas.exception.AtlasBaseException;
-import org.apache.atlas.model.SearchFilter;
 import org.apache.atlas.model.TimeBoundary;
 import org.apache.atlas.model.discovery.AtlasSearchResult;
 import org.apache.atlas.model.discovery.SearchParameters;
@@ -39,7 +35,6 @@ import org.apache.atlas.type.AtlasTypeRegistry;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.ranger.authorization.utils.JsonUtils;
 import org.apache.ranger.plugin.model.RangerValiditySchedule;
 import org.apache.ranger.plugin.util.ServiceTags;
@@ -77,7 +72,7 @@ public class AtlasRESTTagSource extends AbstractTagSource implements Runnable {
     });
 
     private long     sleepTimeBetweenCycleInMillis;
-    private String[] restUrls;
+    private AtlasRESTHttpClient atlasRestClient;
     private boolean  isKerberized;
     private String[] userNamePassword;
     private int      entitiesBatchSize = TagSyncConfig.DEFAULT_TAGSYNC_ATLASREST_SOURCE_ENTITIES_BATCH_SIZE;
@@ -142,12 +137,11 @@ public class AtlasRESTTagSource extends AbstractTagSource implements Runnable {
         LOG.debug("kerberized={}", isKerberized);
 
         if (StringUtils.isNotEmpty(restEndpoint)) {
-            this.restUrls = restEndpoint.split(",");
-
-            for (int i = 0; i < restUrls.length; i++) {
-                if (!restUrls[i].endsWith("/")) {
-                    restUrls[i] += "/";
-                }
+            try {
+                atlasRestClient = new AtlasRESTHttpClient(restEndpoint, sslConfigFile, TagSyncConfig.getInstance(), userNamePassword, isKerberized);
+            } catch (RuntimeException exception) {
+                LOG.error("Failed to initialize Atlas REST client", exception);
+                ret = false;
             }
         } else {
             LOG.info("AtlasEndpoint not specified, Initial download of Atlas-entities cannot be done.");
@@ -233,97 +227,107 @@ public class AtlasRESTTagSource extends AbstractTagSource implements Runnable {
 
         List<RangerAtlasEntityWithTags> ret = new ArrayList<>();
 
-        AtlasClientV2 atlasClient = null;
-        try {
-            atlasClient = getAtlasClient();
-        } catch (IOException exception) {
-            LOG.error("Failed to get Atlas client.", exception);
+        if (atlasRestClient == null) {
+            return ret;
         }
 
-        if (atlasClient != null) {
-            SearchParameters searchParams = new SearchParameters();
+        SearchParameters searchParams = new SearchParameters();
 
-            searchParams.setExcludeDeletedEntities(true);
-            searchParams.setClassification("*");
-            //searchParams.setIncludeSubClassifications(true);
-            //searchParams.setIncludeSubTypes(true);
-            searchParams.setIncludeClassificationAttributes(true);
-            searchParams.setLimit(entitiesBatchSize);
+        searchParams.setExcludeDeletedEntities(true);
+        searchParams.setClassification("*");
+        searchParams.setIncludeClassificationAttributes(true);
+        searchParams.setLimit(entitiesBatchSize);
 
-            boolean isMoreData;
-            int     nextStartIndex = 0;
+        boolean isMoreData;
+        int     nextStartIndex = 0;
 
-            do {
-                AtlasTypeRegistry                            typeRegistry  = new AtlasTypeRegistry();
-                AtlasTypeRegistry.AtlasTransientTypeRegistry tty           = null;
-                AtlasSearchResult                            searchResult  = null;
-                boolean                                      commitUpdates = false;
+        do {
+            AtlasTypeRegistry                            typeRegistry  = new AtlasTypeRegistry();
+            AtlasTypeRegistry.AtlasTransientTypeRegistry tty           = null;
+            AtlasSearchResult                            searchResult  = null;
+            boolean                                      commitUpdates = false;
 
-                searchParams.setOffset(nextStartIndex);
-                isMoreData = false;
+            searchParams.setOffset(nextStartIndex);
 
-                try {
-                    searchResult = atlasClient.facetedSearch(searchParams);
-                    AtlasTypesDef typesDef = atlasClient.getAllTypeDefs(new SearchFilter());
-                    tty = typeRegistry.lockTypeRegistryForUpdate();
-                    tty.addTypes(typesDef);
-                    commitUpdates = true;
-                } catch (AtlasServiceException | AtlasBaseException excp) {
-                    LOG.error("failed to download tags from Atlas", excp);
-                    ret = null;
-                } catch (Exception unexpectedException) {
-                    LOG.error("Failed to download tags from Atlas due to unexpected exception", unexpectedException);
-                    ret = null;
-                } finally {
-                    if (tty != null) {
-                        typeRegistry.releaseTypeRegistryForUpdate(tty, commitUpdates);
-                    }
+            isMoreData = false;
+
+            try {
+                searchResult = atlasRestClient.facetedSearch(searchParams);
+
+                AtlasTypesDef typesDef = atlasRestClient.getAllTypeDefs();
+
+                tty = typeRegistry.lockTypeRegistryForUpdate();
+
+                tty.addTypes(typesDef);
+
+                commitUpdates = true;
+            } catch (IOException excp) {
+                LOG.error("failed to download tags from Atlas", excp);
+
+                ret = null;
+
+                break;
+            } catch (Exception unexpectedException) {
+                LOG.error("Failed to download tags from Atlas due to unexpected exception", unexpectedException);
+
+                ret = null;
+
+                break;
+            } finally {
+                if (tty != null) {
+                    typeRegistry.releaseTypeRegistryForUpdate(tty, commitUpdates);
+                }
+            }
+
+            if (commitUpdates && searchResult != null) {
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug(AtlasType.toJson(searchResult));
                 }
 
-                if (commitUpdates && searchResult != null) {
-                    LOG.debug(AtlasType.toJson(searchResult));
+                List<AtlasEntityHeader> entityHeaders = searchResult.getEntities();
 
-                    List<AtlasEntityHeader> entityHeaders = searchResult.getEntities();
+                if (CollectionUtils.isNotEmpty(entityHeaders)) {
+                    nextStartIndex += entityHeaders.size();
+                    isMoreData     = true;
 
-                    if (CollectionUtils.isNotEmpty(entityHeaders)) {
-                        nextStartIndex += entityHeaders.size();
-                        isMoreData = true;
+                    for (AtlasEntityHeader header : entityHeaders) {
+                        if (!header.getStatus().equals(AtlasEntity.Status.ACTIVE)) {
+                            LOG.debug("Skipping entity because it is not ACTIVE, header:[{}]", header);
 
-                        for (AtlasEntityHeader header : entityHeaders) {
-                            if (!header.getStatus().equals(AtlasEntity.Status.ACTIVE)) {
-                                LOG.debug("Skipping entity because it is not ACTIVE, header:[{}]", header);
-                                continue;
+                            continue;
+                        }
+
+                        String typeName = header.getTypeName();
+
+                        if (!AtlasResourceMapperUtil.isEntityTypeHandled(typeName)) {
+                            LOG.debug("Not fetching Atlas entities of type:[{}]", typeName);
+
+                            continue;
+                        }
+
+                        List<EntityNotificationWrapper.RangerAtlasClassification> allTagsForEntity = new ArrayList<>();
+
+                        for (AtlasClassification classification : header.getClassifications()) {
+                            List<EntityNotificationWrapper.RangerAtlasClassification> tags = resolveTag(typeRegistry, classification);
+
+                            if (tags != null) {
+                                allTagsForEntity.addAll(tags);
                             }
+                        }
 
-                            String typeName = header.getTypeName();
-                            if (!AtlasResourceMapperUtil.isEntityTypeHandled(typeName)) {
-                                LOG.debug("Not fetching Atlas entities of type:[{}]", typeName);
-                                continue;
-                            }
+                        if (CollectionUtils.isNotEmpty(allTagsForEntity)) {
+                            RangerAtlasEntity         entity         = new RangerAtlasEntity(typeName, header.getGuid(), header.getAttributes());
+                            RangerAtlasEntityWithTags entityWithTags = new RangerAtlasEntityWithTags(entity, allTagsForEntity, typeRegistry);
 
-                            List<EntityNotificationWrapper.RangerAtlasClassification> allTagsForEntity = new ArrayList<>();
-
-                            for (AtlasClassification classification : header.getClassifications()) {
-                                List<EntityNotificationWrapper.RangerAtlasClassification> tags = resolveTag(typeRegistry, classification);
-                                if (tags != null) {
-                                    allTagsForEntity.addAll(tags);
-                                }
-                            }
-
-                            if (CollectionUtils.isNotEmpty(allTagsForEntity)) {
-                                RangerAtlasEntity         entity         = new RangerAtlasEntity(typeName, header.getGuid(), header.getAttributes());
-                                RangerAtlasEntityWithTags entityWithTags = new RangerAtlasEntityWithTags(entity, allTagsForEntity, typeRegistry);
-
-                                ret.add(entityWithTags);
-                            }
+                            ret.add(entityWithTags);
                         }
                     }
                 }
             }
-            while (isMoreData);
         }
+        while (isMoreData);
 
-        LOG.debug("<== getAtlasActiveEntities()");
+        LOG.debug("<== getAtlasActiveEntities(), count={}", ret == null ? 0 : ret.size());
 
         return ret;
     }
@@ -402,22 +406,6 @@ public class AtlasRESTTagSource extends AbstractTagSource implements Runnable {
         } catch (Exception exception) {
             LOG.error("Error in resolving tags for type:[{}]", typeName, exception);
         }
-        return ret;
-    }
-
-    private AtlasClientV2 getAtlasClient() throws IOException {
-        final AtlasClientV2 ret;
-
-        if (isKerberized) {
-            UserGroupInformation ugi = UserGroupInformation.getLoginUser();
-
-            ugi.checkTGTAndReloginFromKeytab();
-
-            ret = new AtlasClientV2(ugi, ugi.getShortUserName(), restUrls);
-        } else {
-            ret = new AtlasClientV2(restUrls, userNamePassword);
-        }
-
         return ret;
     }
 }

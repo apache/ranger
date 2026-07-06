@@ -185,19 +185,61 @@
     <property>
         <name>ranger.audit.ingestor.service.dev_hdfs.allowed.users</name>
         <value>hdfs</value>
-        <description>Comma-separated list of allowed users that can send audits for dev_hdfs service</description>
+        <description>Allowed users for dev_hdfs (Policy Manager service name; from policy.download.auth.users)</description>
+    </property>
+
+    <property>
+        <name>ranger.audit.ingestor.service.dev_yarn.allowed.users</name>
+        <value>yarn</value>
+        <description>Allowed users for dev_yarn (YARN RM/NM)</description>
     </property>
 
     <property>
         <name>ranger.audit.ingestor.service.dev_hive.allowed.users</name>
         <value>hive</value>
-        <description>Comma-separated list of allowed users that can send audits for dev_hive service.</description>
+        <description>Allowed users for dev_hive (HiveServer2 + Metastore)</description>
     </property>
 
     <property>
         <name>ranger.audit.ingestor.service.dev_hbase.allowed.users</name>
         <value>hbase</value>
-        <description>Comma-separated list of allowed users that can send audits for dev_hbase service.</description>
+        <description>Allowed users for dev_hbase (HBase Master + RegionServer)</description>
+    </property>
+
+    <property>
+        <name>ranger.audit.ingestor.service.dev_kafka.allowed.users</name>
+        <value>kafka</value>
+        <description>Allowed users for dev_kafka</description>
+    </property>
+
+    <property>
+        <name>ranger.audit.ingestor.service.dev_knox.allowed.users</name>
+        <value>knox</value>
+        <description>Allowed users for dev_knox</description>
+    </property>
+
+    <property>
+        <name>ranger.audit.ingestor.service.dev_kms.allowed.users</name>
+        <value>rangerkms</value>
+        <description>Allowed users for dev_kms</description>
+    </property>
+
+    <property>
+        <name>ranger.audit.ingestor.service.dev_trino.allowed.users</name>
+        <value>trino</value>
+        <description>Allowed users for dev_trino</description>
+    </property>
+
+    <property>
+        <name>ranger.audit.ingestor.service.dev_ozone.allowed.users</name>
+        <value>om</value>
+        <description>Allowed users for dev_ozone (Ozone Manager; Ranger plugin runs on OM only)</description>
+    </property>
+
+    <property>
+        <name>ranger.audit.ingestor.service.dev_solr.allowed.users</name>
+        <value>solr</value>
+        <description>Allowed users for dev_solr (Solr plugin)</description>
     </property>
 
     <!-- AUTH_TO_LOCAL RULES FOR KERBEROS PRINCIPAL MAPPING -->
@@ -210,20 +252,22 @@
                RULE:[1:$1@$0](.*@.*)s/@.*//
                DEFAULT
         </value>
-        <description>
+        <description><![CDATA[
             Kerberos auth_to_local rules for mapping authenticated principals to service names.
-            Uses Hadoop KerberosName syntax to convert full Kerberos principals to short usernames.
+            Uses Hadoop KerberosName syntax to convert full Kerberos principals to short usernames
+            checked against ranger.audit.ingestor.service.<repo>.allowed.users (Policy Manager
+            policy.download.auth.users).
 
             IMPORTANT: These rules only apply to Kerberos/SPNEGO authentication. JWT and basic auth
             usernames are already in short form and pass through unchanged.
 
             Default rules provided:
-            - RULE:[2:$1/$2@$0]([ndj]n/.*@.*|hdfs/.*@.*)s/.*/hdfs/     # nn,dn,jn,hdfs/* -> hdfs
-            - RULE:[2:$1/$2@$0]([rn]m/.*@.*|yarn/.*@.*)s/.*/yarn/      # rm,nm,yarn/* -> yarn
+            - RULE:[2:$1/$2@$0]([ndj]n/.*@.*|hdfs/.*@.*)s/.*/hdfs/     # nn,dn,jn,hdfs/* -> hdfs (dev_hdfs)
+            - RULE:[2:$1/$2@$0]([rn]m/.*@.*|yarn/.*@.*)s/.*/yarn/      # rm,nm,yarn/* -> yarn (dev_yarn)
             - RULE:[2:$1/$2@$0](jhs/.*@.*)s/.*/mapred/                 # jhs/* -> mapred
             - RULE:[1:$1@$0](.*@.*)s/@.*//                             # user@REALM -> user
             - DEFAULT
-        </description>
+        ]]></description>
     </property>
 
 
@@ -374,7 +418,75 @@
     <property>
         <name>ranger.audit.ingestor.kafka.request.timeout.ms</name>
         <value>60000</value>
+        <description>Kafka producer and AdminClient request timeout (ms)</description>
     </property>
+
+    <!-- KAFKA PRODUCER PERFORMANCE (AuditProducer → ProducerConfig) -->
+    <property>
+        <name>ranger.audit.ingestor.kafka.producer.batch.size</name>
+        <value>131072</value>
+        <description>Kafka batch.size in bytes. Default 128 KiB (65536–262144 for high volume).</description>
+    </property>
+
+    <property>
+        <name>ranger.audit.ingestor.kafka.producer.linger.ms</name>
+        <value>20</value>
+        <description>Wait up to this many ms to coalesce records into larger batches (10–50 typical).</description>
+    </property>
+
+    <property>
+        <name>ranger.audit.ingestor.kafka.producer.buffer.memory</name>
+        <value>134217728</value>
+        <description>Producer buffer memory in bytes. Default 128 MiB.</description>
+    </property>
+
+    <property>
+        <name>ranger.audit.ingestor.kafka.producer.compression.type</name>
+        <value>lz4</value>
+        <description>Compression for audit JSON (lz4 recommended: low CPU, good ratio).</description>
+    </property>
+
+    <property>
+        <name>ranger.audit.ingestor.kafka.producer.delivery.timeout.ms</name>
+        <value>120000</value>
+        <description>Upper bound on producer delivery attempts including retries (ms).</description>
+    </property>
+
+    <property>
+        <name>ranger.audit.ingestor.kafka.producer.max.request.size</name>
+        <value>1048576</value>
+        <description>Max size of a produce request; must be less than broker message.max.bytes.</description>
+    </property>
+
+    <property>
+        <name>ranger.audit.ingestor.kafka.producer.max.block.ms</name>
+        <value>60000</value>
+        <description>Max time producer blocks when buffer is full (backpressure).</description>
+    </property>
+
+    <property>
+        <name>ranger.audit.ingestor.kafka.producer.batch.send.timeout.ms</name>
+        <value>30000</value>
+        <description>Application timeout waiting for REST batch send callbacks (ms).</description>
+    </property>
+
+    <!-- Optional topic configs at create time (leave unset for broker defaults; enable for production RF>=3) -->
+    <!--
+    <property>
+        <name>ranger.audit.ingestor.kafka.topic.retention.ms</name>
+        <value>604800000</value>
+        <description>7-day Kafka retention for ranger_audits (replay buffer, not long-term archive)</description>
+    </property>
+    <property>
+        <name>ranger.audit.ingestor.kafka.topic.compression.type</name>
+        <value>lz4</value>
+    </property>
+    <property>
+        <name>ranger.audit.ingestor.kafka.topic.min.insync.replicas</name>
+        <value>2</value>
+        <description>Use only when replication.factor is 3+</description>
+    </property>
+    -->
 
     <property>
         <name>ranger.audit.ingestor.kafka.connections.max.idle.ms</name>

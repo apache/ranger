@@ -162,7 +162,7 @@ public class TestUnixAuthenticationService {
             SSLServerSocketFactory sf           = mock(SSLServerSocketFactory.class);
             SSLServerSocket        secureSocket = mock(SSLServerSocket.class);
 
-            when(SSLContext.getInstance("TLSv1.2")).thenReturn(sslContext);
+            when(SSLContext.getInstance("TLS")).thenReturn(sslContext);
             when(sslContext.getServerSocketFactory()).thenReturn(sf);
             when(sf.createServerSocket(anyInt())).thenReturn(secureSocket);
             when(secureSocket.getEnabledProtocols()).thenReturn(new String[] {"TLSv1.2"});
@@ -239,7 +239,7 @@ public class TestUnixAuthenticationService {
             SSLServerSocketFactory sf           = mock(SSLServerSocketFactory.class);
             SSLServerSocket        secureSocket = mock(SSLServerSocket.class);
 
-            when(SSLContext.getInstance("TLSv1.2")).thenReturn(sslContext);
+            when(SSLContext.getInstance("TLS")).thenReturn(sslContext);
             when(sslContext.getServerSocketFactory()).thenReturn(sf);
             when(sf.createServerSocket(anyInt())).thenReturn(secureSocket);
             when(secureSocket.getEnabledProtocols()).thenReturn(new String[] {"TLSv1.2"});
@@ -287,7 +287,7 @@ public class TestUnixAuthenticationService {
             SSLServerSocketFactory sf           = mock(SSLServerSocketFactory.class);
             SSLServerSocket        secureSocket = mock(SSLServerSocket.class);
 
-            when(SSLContext.getInstance("TLSv1.2")).thenReturn(sslContext);
+            when(SSLContext.getInstance("TLS")).thenReturn(sslContext);
             when(sslContext.getServerSocketFactory()).thenReturn(sf);
             when(sf.createServerSocket(anyInt())).thenReturn(secureSocket);
             when(secureSocket.getEnabledProtocols()).thenReturn(new String[] {"TLSv1.2"});
@@ -324,7 +324,7 @@ public class TestUnixAuthenticationService {
             SSLServerSocket        secureSocket = mock(SSLServerSocket.class);
             Socket                 client       = mock(Socket.class);
 
-            when(SSLContext.getInstance("TLSv1.2")).thenReturn(sslContext);
+            when(SSLContext.getInstance("TLS")).thenReturn(sslContext);
             when(sslContext.getServerSocketFactory()).thenReturn(sf);
             when(sf.createServerSocket(anyInt())).thenReturn(secureSocket);
             when(secureSocket.getEnabledProtocols()).thenReturn(new String[] {"TLSV1.2"});

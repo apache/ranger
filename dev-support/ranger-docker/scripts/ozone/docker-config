@@ -58,6 +58,10 @@ OZONE-SITE.XML_hdds.container.ratis.datastream.enabled=true
 OZONE_CONF_DIR=/etc/hadoop
 OZONE_LOG_DIR=/var/log/hadoop
 
+# GitHub Actions ubuntu-24.04 (kernel 6.12+) cgroup layout breaks JDK 17 container
+# metrics and can NPE during Ratis JMX init; disable container support for CI smoke tests.
+OZONE_OPTS=-XX:-UseContainerSupport
+
 no_proxy=om,scm,s3g,recon,kdc,localhost,127.0.0.1
 
 # Explicitly enable filesystem snapshot feature for this Docker compose cluster

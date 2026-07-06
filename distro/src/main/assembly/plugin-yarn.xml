@@ -43,8 +43,6 @@
       <includes>
         <include>org.apache.ranger:ranger-audit-core</include>
         <include>org.apache.ranger:ranger-audit-dest-auditserver</include>
-        <include>org.apache.ranger:ranger-audit-dest-hdfs</include>
-        <include>org.apache.ranger:ranger-audit-dest-solr</include>
         <include>org.apache.ranger:ranger-authz-api</include>
         <include>org.apache.ranger:ranger-common-utils</include>
         <include>org.apache.ranger:ranger-plugins-cred</include>
@@ -66,6 +64,7 @@
           <include>com.fasterxml.jackson.jaxrs:jackson-jaxrs-base:jar:${fasterxml.jackson.version}</include>
           <include>com.fasterxml.jackson.jaxrs:jackson-jaxrs-json-provider:jar:${fasterxml.jackson.version}</include>
           <include>com.fasterxml.jackson.module:jackson-module-jaxb-annotations:jar:${fasterxml.jackson.version}</include>
+          <include>org.slf4j:slf4j-api:jar:${slf4j-api.version}</include>
           <include>commons-collections:commons-collections</include>
           <include>io.airlift:aircompressor:jar:${aircompressor.version}</include>
           <include>jakarta.ws.rs:jakarta.ws.rs-api</include>

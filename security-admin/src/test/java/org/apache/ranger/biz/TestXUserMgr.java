@@ -132,6 +132,7 @@ import javax.ws.rs.WebApplicationException;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -1316,33 +1317,54 @@ public class TestXUserMgr {
     @Test
     public void test36getGroupsForUser() {
         setupUser();
-        VXUser  vxUser   = vxUser();
-        VXGroup vxGroup  = vxGroup();
-        String  userName = userLoginID;
-        Mockito.when(xUserService.getXUserByUserName(userName)).thenReturn(vxUser);
-        VXGroupUserList vxGroupUserList = vxGroupUserList();
-        Mockito.when(xGroupUserService.searchXGroupUsers(Mockito.any())).thenReturn(vxGroupUserList);
-        Mockito.when(xGroupService.readResource(userId)).thenReturn(vxGroup);
-        XXModuleDefDao modDef = Mockito.mock(XXModuleDefDao.class);
-        Mockito.when(daoManager.getXXModuleDef()).thenReturn(modDef);
-        List<String> lstModule = new ArrayList<>();
-        lstModule.add(RangerConstants.MODULE_USER_GROUPS);
-        lstModule.add(RangerConstants.MODULE_RESOURCE_BASED_POLICIES);
-        Mockito.when(modDef.findAccessibleModulesByUserId(Mockito.anyLong(), Mockito.anyLong())).thenReturn(lstModule);
+        String userName = userLoginID;
+
+        XXGroupUserDao xxGroupUserDao = Mockito.mock(XXGroupUserDao.class);
+        Mockito.when(daoManager.getXXGroupUser()).thenReturn(xxGroupUserDao);
+        Mockito.when(xxGroupUserDao.findGroupNamesByUserName(userName))
+                .thenReturn(new HashSet<>(Collections.singletonList("test-group")));
+
         Set<String> list = xUserMgr.getGroupsForUser(userName);
+
         Assertions.assertNotNull(list);
-        Mockito.verify(xUserService, Mockito.atLeast(2)).getXUserByUserName(userName);
-        Mockito.verify(modDef).findAccessibleModulesByUserId(Mockito.anyLong(), Mockito.anyLong());
-        Mockito.when(xUserService.getXUserByUserName(userName)).thenReturn(null);
+        Assertions.assertEquals(1, list.size());
+        Assertions.assertTrue(list.contains("test-group"));
+        Mockito.verify(xxGroupUserDao).findGroupNamesByUserName(userName);
+
+        Mockito.when(xxGroupUserDao.findGroupNamesByUserName(userName))
+                .thenReturn(new HashSet<>());
         list = xUserMgr.getGroupsForUser(userName);
         Assertions.assertTrue(list.isEmpty());
-        Mockito.verify(xUserService, Mockito.atLeast(2)).getXUserByUserName(userName);
-        Mockito.verify(modDef).findAccessibleModulesByUserId(Mockito.anyLong(), Mockito.anyLong());
-        Mockito.when(xUserService.getXUserByUserName(userName)).thenReturn(null);
+
+        Mockito.when(xxGroupUserDao.findGroupNamesByUserName(userName))
+                .thenThrow(new RuntimeException("dao failure"));
         list = xUserMgr.getGroupsForUser(userName);
         Assertions.assertTrue(list.isEmpty());
-        Mockito.verify(xUserService, Mockito.atLeast(2)).getXUserByUserName(userName);
-        Mockito.verify(modDef).findAccessibleModulesByUserId(Mockito.anyLong(), Mockito.anyLong());
+    }
+
+    @Test
+    public void testGetGroupsForUserFromDao() {
+        setupUser();
+        String userName = userLoginID;
+
+        XXGroupUserDao xxGroupUserDao = Mockito.mock(XXGroupUserDao.class);
+
+        Mockito.when(daoManager.getXXGroupUser()).thenReturn(xxGroupUserDao);
+        Mockito.when(xxGroupUserDao.findGroupNamesByUserName(userName))
+                .thenReturn(new HashSet<>(Collections.singletonList("ldap-admins")));
+
+        Set<String> groups = xUserMgr.getGroupsForUser(userName);
+
+        Assertions.assertEquals(1, groups.size());
+        Assertions.assertTrue(groups.contains("ldap-admins"));
+        Mockito.verify(xxGroupUserDao).findGroupNamesByUserName(userName);
+
+        Mockito.when(xxGroupUserDao.findGroupNamesByUserName(userName))
+                .thenReturn(new HashSet<>());
+
+        groups = xUserMgr.getGroupsForUser(userName);
+
+        Assertions.assertTrue(groups.isEmpty());
     }
 
     @Test
@@ -2028,14 +2050,47 @@ public class TestXUserMgr {
     @Test
     public void test55updateXGroupUser() {
         setup();
-        VXUser vxUser = vxUser();
-        vxUser.setUserSource(RangerCommonEnums.USER_EXTERNAL);
+
         VXGroupUser vxGroupUser = vxGroupUser();
+
+        // Mock GroupUser
+        XXGroupUserDao xxGroupUserDao = Mockito.mock(XXGroupUserDao.class);
+        XXGroupUser xxGroupUser = new XXGroupUser();
+
+        Mockito.when(daoManager.getXXGroupUser()).thenReturn(xxGroupUserDao);
+        Mockito.when(xxGroupUserDao.getById(vxGroupUser.getId())).thenReturn(xxGroupUser);
+
+        // Mock Group
+        XXGroupDao xxGroupDao = Mockito.mock(XXGroupDao.class);
+        XXGroup xxGroup = new XXGroup();
+        xxGroup.setId(1L);
+
+        Mockito.when(daoManager.getXXGroup()).thenReturn(xxGroupDao);
+        Mockito.when(xxGroupDao.findByGroupName(vxGroupUser.getName())).thenReturn(xxGroup);
+
+        // Mock User
+        XXUserDao xxUserDao = Mockito.mock(XXUserDao.class);
+        XXUser xxUser = new XXUser();
+
+        Mockito.when(daoManager.getXXUser()).thenReturn(xxUserDao);
+        Mockito.when(xxUserDao.getById(vxGroupUser.getUserId())).thenReturn(xxUser);
+
+        // Mock update
         Mockito.when(xGroupUserService.updateResource(Mockito.any())).thenReturn(vxGroupUser);
-        VXGroupUser dbvxUser = xUserMgr.updateXGroupUser(vxGroupUser);
-        Assertions.assertNotNull(dbvxUser);
-        Assertions.assertEquals(dbvxUser.getId(), vxGroupUser.getId());
-        Assertions.assertEquals(dbvxUser.getName(), vxGroupUser.getName());
+
+        VXGroupUser result = xUserMgr.updateXGroupUser(vxGroupUser);
+
+        Assertions.assertNotNull(result);
+        Assertions.assertEquals(vxGroupUser.getId(), result.getId());
+        Assertions.assertEquals(vxGroupUser.getName(), result.getName());
+
+        // addition of parent group id
+        Assertions.assertEquals(1L, result.getParentGroupId());
+
+        Mockito.verify(xxGroupUserDao).getById(vxGroupUser.getId());
+        Mockito.verify(xxGroupDao).findByGroupName(vxGroupUser.getName());
+        Mockito.verify(xxUserDao).getById(vxGroupUser.getUserId());
+
         Mockito.verify(xGroupUserService).updateResource(Mockito.any());
     }
 
@@ -2478,24 +2533,14 @@ public class TestXUserMgr {
     }
 
     @Test
-    public void test82updateXgroupUserForGroupUpdate() {
+    public void test82updateXGroupUser_nullVXGroupUser() {
         setup();
-        XXGroupUserDao    xxGroupUserDao  = Mockito.mock(XXGroupUserDao.class);
-        VXGroup           vXGroup         = vxGroup();
-        List<XXGroupUser> xXGroupUserList = new ArrayList<>();
-        VXGroupUser       vxGroupUser     = vxGroupUser();
-        XXGroupUser       xXGroupUser     = new XXGroupUser();
-        xXGroupUser.setId(vxGroupUser.getId());
-        xXGroupUser.setName(vxGroupUser.getName());
-        xXGroupUser.setParentGroupId(vxGroupUser.getParentGroupId());
-        xXGroupUser.setUserId(vxGroupUser.getUserId());
-        xXGroupUserList.add(xXGroupUser);
-        Mockito.when(daoManager.getXXGroupUser()).thenReturn(xxGroupUserDao);
-        Mockito.when(xxGroupUserDao.findByGroupId(vXGroup.getId())).thenReturn(xXGroupUserList);
-        Mockito.when(xGroupUserService.populateViewBean(xXGroupUser)).thenReturn(vxGroupUser);
-        xUserMgr.updateXgroupUserForGroupUpdate(vXGroup);
-        Mockito.verify(daoManager).getXXGroupUser();
-        Mockito.verify(xxGroupUserDao).findByGroupId(vXGroup.getId());
+
+        Mockito.when(restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST, "Groupuser not found", true)).thenThrow(new WebApplicationException());
+
+        Assertions.assertThrows(WebApplicationException.class, () -> {
+            xUserMgr.updateXGroupUser(null);
+        });
     }
 
     @Test
@@ -3251,6 +3296,9 @@ public class TestXUserMgr {
         xXPortalUser.setLoginId(userLoginID);
         xXPortalUser.setId(userId);
         currentUserSession.setXXPortalUser(xXPortalUser);
+        List<String> sessionRoles = new ArrayList<>();
+        sessionRoles.add(RangerConstants.ROLE_USER);
+        currentUserSession.setUserRoleList(sessionRoles);
         List<String> permissionList = new ArrayList<>();
         permissionList.add(RangerConstants.MODULE_USER_GROUPS);
 
@@ -4454,6 +4502,79 @@ public class TestXUserMgr {
 
         assertThrows(WebApplicationException.class, () -> {
             xUserMgr.getXUser(userId);
+        });
+    }
+
+    @Test
+    public void test133updateXGroupUser_groupUserMappingNotFound() {
+        setup();
+
+        VXGroupUser vxGroupUser = vxGroupUser();
+
+        XXGroupUserDao xxGroupUserDao = Mockito.mock(XXGroupUserDao.class);
+
+        Mockito.when(daoManager.getXXGroupUser()).thenReturn(xxGroupUserDao);
+        Mockito.when(xxGroupUserDao.getById(vxGroupUser.getId())).thenReturn(null);
+
+        Mockito.when(restErrorUtil.createRESTException(Mockito.contains("Group-User mapping not found"), Mockito.eq(MessageEnums.DATA_NOT_FOUND))).thenThrow(new WebApplicationException());
+
+        Assertions.assertThrows(WebApplicationException.class, () -> {
+            xUserMgr.updateXGroupUser(vxGroupUser);
+        });
+    }
+
+    @Test
+    public void test134updateXGroupUser_groupNotFound() {
+        setup();
+
+        VXGroupUser vxGroupUser = vxGroupUser();
+
+        XXGroupUserDao xxGroupUserDao = Mockito.mock(XXGroupUserDao.class);
+        XXGroupUser xxGroupUser = new XXGroupUser();
+
+        Mockito.when(daoManager.getXXGroupUser()).thenReturn(xxGroupUserDao);
+        Mockito.when(xxGroupUserDao.getById(vxGroupUser.getId())).thenReturn(xxGroupUser);
+
+        XXGroupDao xxGroupDao = Mockito.mock(XXGroupDao.class);
+
+        Mockito.when(daoManager.getXXGroup()).thenReturn(xxGroupDao);
+        Mockito.when(xxGroupDao.findByGroupName(vxGroupUser.getName())).thenReturn(null);
+
+        Mockito.when(restErrorUtil.createRESTException(Mockito.contains("Group not found"), Mockito.eq(MessageEnums.DATA_NOT_FOUND))).thenThrow(new WebApplicationException());
+
+        Assertions.assertThrows(WebApplicationException.class, () -> {
+            xUserMgr.updateXGroupUser(vxGroupUser);
+        });
+    }
+
+    @Test
+    public void test135updateXGroupUser_userNotFound() {
+        setup();
+
+        VXGroupUser vxGroupUser = vxGroupUser();
+
+        XXGroupUserDao xxGroupUserDao = Mockito.mock(XXGroupUserDao.class);
+        XXGroupUser xxGroupUser = new XXGroupUser();
+
+        Mockito.when(daoManager.getXXGroupUser()).thenReturn(xxGroupUserDao);
+        Mockito.when(xxGroupUserDao.getById(vxGroupUser.getId())).thenReturn(xxGroupUser);
+
+        XXGroupDao xxGroupDao = Mockito.mock(XXGroupDao.class);
+        XXGroup xxGroup = new XXGroup();
+        xxGroup.setId(1L);
+
+        Mockito.when(daoManager.getXXGroup()).thenReturn(xxGroupDao);
+        Mockito.when(xxGroupDao.findByGroupName(vxGroupUser.getName())).thenReturn(xxGroup);
+
+        XXUserDao xxUserDao = Mockito.mock(XXUserDao.class);
+
+        Mockito.when(daoManager.getXXUser()).thenReturn(xxUserDao);
+        Mockito.when(xxUserDao.getById(vxGroupUser.getUserId())).thenReturn(null);
+
+        Mockito.when(restErrorUtil.createRESTException(Mockito.contains("User not found"), Mockito.eq(MessageEnums.DATA_NOT_FOUND))).thenThrow(new WebApplicationException());
+
+        Assertions.assertThrows(WebApplicationException.class, () -> {
+            xUserMgr.updateXGroupUser(vxGroupUser);
         });
     }
 

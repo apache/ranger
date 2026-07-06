@@ -37,6 +37,12 @@
         </dependency>
         <dependency>
             <groupId>org.apache.ranger</groupId>
+            <artifactId>audit-dispatcher-opensearch</artifactId>
+            <version>${project.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.ranger</groupId>
             <artifactId>audit-dispatcher-solr</artifactId>
             <version>${project.version}</version>
             <scope>provided</scope>
@@ -79,6 +85,12 @@
         </dependency>
         <dependency>
             <groupId>org.apache.ranger</groupId>
+            <artifactId>ranger-audit-dest-auditserver</artifactId>
+            <version>${project.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.ranger</groupId>
             <artifactId>ranger-audit-dest-cloudwatch</artifactId>
             <version>${project.version}</version>
             <scope>provided</scope>
@@ -104,6 +116,12 @@
         <dependency>
             <groupId>org.apache.ranger</groupId>
             <artifactId>ranger-audit-dest-log4j</artifactId>
+            <version>${project.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.ranger</groupId>
+            <artifactId>ranger-audit-dest-os</artifactId>
             <version>${project.version}</version>
             <scope>provided</scope>
         </dependency>

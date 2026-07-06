@@ -62,6 +62,38 @@ public class AuditServerConstants {
     public static final String PROP_BUFFER_PARTITIONS                        = "kafka.topic.partitions.buffer";
     public static final String PROP_REPLICATION_FACTOR                       = "kafka.replication.factor";
 
+    // Kafka producer tuning (ranger.audit.ingestor.kafka.producer.*)
+    public static final String PROP_KAFKA_PRODUCER_PREFIX                    = "kafka.producer.";
+    public static final String PROP_PRODUCER_BATCH_SIZE                        = "batch.size";
+    public static final String PROP_PRODUCER_LINGER_MS                         = "linger.ms";
+    public static final String PROP_PRODUCER_BUFFER_MEMORY                     = "buffer.memory";
+    public static final String PROP_PRODUCER_COMPRESSION_TYPE                  = "compression.type";
+    public static final String PROP_PRODUCER_DELIVERY_TIMEOUT_MS               = "delivery.timeout.ms";
+    public static final String PROP_PRODUCER_MAX_REQUEST_SIZE                  = "max.request.size";
+    public static final String PROP_PRODUCER_MAX_BLOCK_MS                      = "max.block.ms";
+    public static final String PROP_PRODUCER_BATCH_SEND_TIMEOUT_MS             = "batch.send.timeout.ms";
+
+    // Optional topic-level configs applied at topic create (Kafka Admin)
+    public static final String PROP_TOPIC_RETENTION_MS                         = "kafka.topic.retention.ms";
+    public static final String PROP_TOPIC_COMPRESSION_TYPE                     = "kafka.topic.compression.type";
+    public static final String PROP_TOPIC_MIN_INSYNC_REPLICAS                  = "kafka.topic.min.insync.replicas";
+
+    // Kafka producer defaults (high-volume audit JSON; idempotent + acks=all)
+    public static final int    DEFAULT_PRODUCER_BATCH_SIZE                    = 131072;    // 128 KiB
+    public static final int    DEFAULT_PRODUCER_LINGER_MS                      = 20;
+    public static final long   DEFAULT_PRODUCER_BUFFER_MEMORY                  = 134217728L; // 128 MiB
+    public static final String DEFAULT_PRODUCER_COMPRESSION_TYPE               = "lz4";
+    public static final int    DEFAULT_PRODUCER_DELIVERY_TIMEOUT_MS            = 120000;
+    public static final int    DEFAULT_PRODUCER_MAX_REQUEST_SIZE                 = 1048576;   // 1 MiB
+    public static final int    DEFAULT_PRODUCER_MAX_BLOCK_MS                     = 60000;
+    public static final int    DEFAULT_PRODUCER_BATCH_SEND_TIMEOUT_MS          = 30000;
+    public static final int    DEFAULT_PRODUCER_REQUEST_TIMEOUT_MS             = 60000;
+
+    // Optional topic defaults when properties are set (production guidance; RF must allow min ISR)
+    public static final String DEFAULT_TOPIC_RETENTION_MS                      = "604800000"; // 7 days
+    public static final String DEFAULT_TOPIC_COMPRESSION_TYPE                    = "lz4";
+    public static final String DEFAULT_TOPIC_MIN_INSYNC_REPLICAS                 = "2";
+
     // Kafka Topic defaults
     public static final String DEFAULT_TOPIC                                 = "ranger_audits";
     public static final String DEFAULT_SASL_MECHANISM                        = "PLAIN";
@@ -93,7 +125,7 @@ public class AuditServerConstants {
      AUDIT-SERVER DISPATCHER Configuration
      **************************************/
     // kafka configuration for the audit-server dispatcher
-    public static final String DEFAULT_PARTITION_ASSIGNMENT_STRATEGY         = "org.apache.kafka.clients.consumer.RangeAssignor";
+    public static final String DEFAULT_PARTITION_ASSIGNMENT_STRATEGY         = "org.apache.kafka.clients.consumer.CooperativeStickyAssignor";
     public static final String PROP_DISPATCHER_PREFIX                        = "ranger.audit.dispatcher";
     public static final String PROP_DISPATCHER_THREAD_COUNT                  = "thread.count";
     public static final String PROP_DISPATCHER_OFFSET_COMMIT_STRATEGY        = "offset.commit.strategy";

@@ -57,12 +57,13 @@ import folderIcon from "Images/folder-grey.png";
 
 export const LoginUser = (role) => {
   const userProfile = getUserProfile();
-  const currentUserRoles = userProfile?.userRoleList[0];
-  if (!currentUserRoles && currentUserRoles == "") {
+  const roles = userProfile?.userRoleList;
+
+  if (!roles || roles.length === 0) {
     return false;
   }
 
-  return currentUserRoles == role;
+  return roles.includes(role);
 };
 
 export const isSystemAdmin = () => {

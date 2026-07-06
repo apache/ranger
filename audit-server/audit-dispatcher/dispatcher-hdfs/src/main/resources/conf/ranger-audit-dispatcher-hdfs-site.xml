@@ -90,6 +90,28 @@
         <description>Maximum records per poll</description>
     </property>
 
+    <property>
+        <name>ranger.audit.dispatcher.partition.assignment.strategy</name>
+        <value>org.apache.kafka.clients.consumer.CooperativeStickyAssignor</value>
+        <description>Cooperative sticky assignor for K8s pod churn (Kafka 3.9+).</description>
+    </property>
+
+    <property>
+        <name>ranger.audit.dispatcher.session.timeout.ms</name>
+        <value>60000</value>
+    </property>
+
+    <property>
+        <name>ranger.audit.dispatcher.heartbeat.interval.ms</name>
+        <value>10000</value>
+    </property>
+
+    <property>
+        <name>ranger.audit.dispatcher.max.poll.interval.ms</name>
+        <value>300000</value>
+        <description>Increase (e.g. 600000) if HDFS per-record writes exceed default 5 min window.</description>
+    </property>
+
     <!-- Dispatcher Class (ONLY HDFS) -->
     <property>
         <name>ranger.audit.dispatcher.class</name>

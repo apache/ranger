@@ -41,6 +41,12 @@
       "policyItems":[
         { "accesses": [ { "type": "read" } ], "roles": [ "role1" ] }
       ]
+    },
+    { "id": 103, "name": "key: vol1/buck1/key1 - write", "isEnabled": true, "isAuditEnabled": true,
+      "resources": { "volume": { "values": [ "vol1" ] }, "bucket": { "values": [ "buck1" ] }, "key": { "values": [ "key1" ] } },
+      "policyItems":[
+        { "accesses": [ { "type": "write" } ], "roles": [ "role1" ] }
+      ]
     }
   ]
 }
