@@ -177,7 +177,7 @@ public class ServiceREST {
 	public static final String PURGE_RECORD_TYPE_LOGIN_LOGS         = "login_records";
 	public static final String PURGE_RECORD_TYPE_TRX_LOGS           = "trx_records";
 	public static final String PURGE_RECORD_TYPE_POLICY_EXPORT_LOGS = "policy_export_logs";
-	public static final String ERR_VALIDATE_CONFIG_ADMIN_ONLY       = "Only system administrators can validate service configs";
+	public static final String ERR_VALIDATE_CONFIG_ADMIN_ONLY       = "Only system administrators or key administrators can validate service configs";
 
 	@Autowired
 	RESTErrorUtil restErrorUtil;
@@ -1143,8 +1143,14 @@ public class ServiceREST {
 		RangerPerfTracer perf = null;
 
 		if (!bizUtil.isAdmin()) {
-			LOG.warn("Unauthorized validateConfig attempt by user: {}", bizUtil.getCurrentUserLoginId());
-			throw restErrorUtil.createRESTException(HttpServletResponse.SC_FORBIDDEN, ERR_VALIDATE_CONFIG_ADMIN_ONLY, true);
+			if (!bizUtil.isKeyAdmin()) {
+				LOG.warn("Unauthorized validateConfig attempt by user: {}", bizUtil.getCurrentUserLoginId());
+				throw restErrorUtil.createRESTException(HttpServletResponse.SC_FORBIDDEN, ERR_VALIDATE_CONFIG_ADMIN_ONLY, true);
+			}
+			XXServiceDef serviceDef = daoManager.getXXServiceDef().findByName(service.getType());
+			if (serviceDef == null || !EmbeddedServiceDefsUtil.KMS_IMPL_CLASS_NAME.equals(serviceDef.getImplclassname())) {
+				throw restErrorUtil.createRESTException(HttpServletResponse.SC_FORBIDDEN, ERR_VALIDATE_CONFIG_ADMIN_ONLY, true);
+			}
 		}
 		try {
 			if (RangerPerfTracer.isPerfTraceEnabled(PERF_LOG)) {
