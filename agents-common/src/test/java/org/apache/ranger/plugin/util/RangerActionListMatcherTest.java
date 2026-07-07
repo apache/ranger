@@ -166,14 +166,25 @@ class RangerActionListMatcherTest {
     }
 
     @Test
-    void testBlankRequestActionBypassesRestriction() {
+    void testBlankRequestActionDoesNotMatchWhenActionsSpecified() {
         final RangerActionListMatcher matcher = new RangerActionListMatcher(
                 Arrays.asList("PutObject"));
 
-        // When no action is provided, action restrictions are not enforced
-        assertTrue(matcher.isMatch(null));
-        assertTrue(matcher.isMatch(""));
-        assertTrue(matcher.isMatch("   "));
+        // When action restrictions exist, missing action is not a match
+        assertFalse(matcher.isMatch(null));
+        assertFalse(matcher.isMatch(""));
+        assertFalse(matcher.isMatch("   "));
+    }
+
+    @Test
+    void testBlankRequestActionStillMatchesWhenNoActionsSpecified() {
+        final RangerActionListMatcher matcherNull = new RangerActionListMatcher(null);
+        assertTrue(matcherNull.isMatch(null));
+        assertTrue(matcherNull.isMatch(""));
+
+        final RangerActionListMatcher matcherEmpty = new RangerActionListMatcher(Collections.emptyList());
+        assertTrue(matcherEmpty.isMatch(null));
+        assertTrue(matcherEmpty.isMatch("   "));
     }
 
     @Test
@@ -183,6 +194,17 @@ class RangerActionListMatcherTest {
 
         assertTrue(matcher.isMatch("PutObject"));
         assertFalse(matcher.isMatch("GetObject"));
+    }
+
+    @Test
+    void testAllBlankActionsMatchAll() {
+        final RangerActionListMatcher matcher = new RangerActionListMatcher(
+                Arrays.asList("", "  ", "   "));
+
+        assertTrue(matcher.isMatch("PutObject"));
+        assertTrue(matcher.isMatch("GetObject"));
+        assertTrue(matcher.isMatch(null));
+        assertTrue(matcher.isMatch("   "));
     }
 
     @Test
