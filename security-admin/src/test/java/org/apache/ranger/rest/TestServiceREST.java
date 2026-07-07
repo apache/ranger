@@ -2803,4 +2803,25 @@ public class TestServiceREST {
 		Assert.assertEquals(dbRangerPolicy.getId(), rangerPolicy.getId());
 		Assert.assertEquals(dbRangerPolicy.getName(), rangerPolicy.getName());
 	}
+	@Test
+	public void test155DownloadBlockedWhenUnauthenticatedAndFlagFalse() throws Exception {
+		HttpServletRequest request = Mockito.mock(HttpServletRequest.class);
+		RangerContextHolder.setSecurityContext(null);                       // no session; flag=false (mock default)
+		Mockito.doCallRealMethod().when(bizUtil).failUnauthenticatedDownloadIfNotAllowed();
+		Mockito.when(restErrorUtil.createRESTException(Mockito.anyInt(), Mockito.anyString(), Mockito.anyBoolean()))
+				.thenReturn(new WebApplicationException());
+		Assert.assertThrows(WebApplicationException.class, () -> serviceREST.getServicePoliciesIfUpdated("HDFS_1",
+				1L, 0L, "1", "", "", false, capabilityVector, request));
+	}
+
+	@Test
+	public void test156GrantBlockedWhenUnauthenticatedAndFlagFalse() throws Exception {
+		HttpServletRequest request = Mockito.mock(HttpServletRequest.class);
+		GrantRevokeRequest grantRequest = createValidGrantRevokeRequest();
+		Mockito.when(serviceUtil.isValidateHttpsAuthentication("HDFS_1", request)).thenReturn(true); // enter the guarded block
+		Mockito.doCallRealMethod().when(bizUtil).failUnauthenticatedIfNotAllowed();
+		RangerContextHolder.setSecurityContext(null);
+		Mockito.when(restErrorUtil.createRESTException(Mockito.anyString())).thenReturn(new WebApplicationException());
+		Assert.assertThrows(WebApplicationException.class, () -> serviceREST.grantAccess("HDFS_1", grantRequest, request));
+	}
 }
