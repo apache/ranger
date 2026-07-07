@@ -78,9 +78,24 @@
 					<include>org.apache.solr:solr-solrj:jar:${solr.version}</include>
 					<include>org.codehaus.woodstox:stax2-api</include>
 					<include>org.eclipse.jetty:jetty-client:jar:${jetty-client.version}</include>
-					<include>org.glassfish.jersey.ext:jersey-entity-filtering:jar:${jersey-client.version}</include>
-					<include>org.glassfish.jersey.media:jersey-media-json-jackson:jar:${jersey-client.version}</include>
 				</includes>
+                <excludes>
+					<exclude>com.fasterxml.jackson.core:*</exclude>
+					<exclude>com.fasterxml.jackson.jaxrs:*</exclude>
+					<exclude>com.fasterxml.jackson.module:*</exclude>
+					<exclude>com.fasterxml.jackson.dataformat:*</exclude>
+					<exclude>org.apache.kafka:kafka-clients</exclude>
+					<exclude>org.glassfish.jersey.core:*</exclude>
+					<exclude>org.glassfish.jersey.ext:*</exclude>
+					<exclude>org.glassfish.jersey.inject:*</exclude>
+					<exclude>org.glassfish.jersey.media:*</exclude>
+					<exclude>org.glassfish.hk2:*</exclude>
+					<exclude>javax.ws.rs:javax.ws.rs-api</exclude>
+					<exclude>jakarta.ws.rs:jakarta.ws.rs-api</exclude>
+					<exclude>org.slf4j:*</exclude>
+					<exclude>org.apache.logging.log4j:*</exclude>
+					<exclude>ch.qos.reload4j:*</exclude>
+				</excludes>
 			</binaries>
 		</moduleSet>
 
