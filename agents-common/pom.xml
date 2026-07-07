@@ -182,6 +182,7 @@
             <groupId>org.graalvm.js</groupId>
             <artifactId>js</artifactId>
             <version>${graalvm.version}</version>
+            <type>pom</type>
         </dependency>
         <dependency>
             <groupId>org.graalvm.js</groupId>
