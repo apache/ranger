@@ -70,7 +70,7 @@ export const usePruneStaleConditions = ({
     const newItems = [...items];
 
     newItems.forEach((item, index) => {
-      if (!item.conditions) {
+      if (!item?.conditions) {
         return;
       }
 
