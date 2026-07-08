@@ -22,4 +22,5 @@
 <suppressions>
   <suppress files="[\\/]generated-sources[\\/]" checks="[a-zA-Z0-9]*"/>
   <suppress files="[\\/]surefire-reports[\\/]" checks="[a-zA-Z0-9]*"/>
+  <suppress files="PatchForOzoneServiceDefPolicyConditionUpdate_J10065" checks="TypeName"/>
 </suppressions>

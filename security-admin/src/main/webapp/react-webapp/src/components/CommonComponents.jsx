@@ -492,6 +492,10 @@ export const scrollToError = (selector) => {
 };
 
 export const selectInputCustomStyles = {
+  multiValue: (base) => ({
+    ...base,
+    maxWidth: "100%"
+  }),
   option: (base) => ({
     ...base,
     textOverflow: "unset",
@@ -510,6 +514,28 @@ export const selectInputCustomStyles = {
     whiteSpace: "break-spaces",
     wordBreak: "break-all"
   })
+};
+
+/** Multi-value select styles that wrap chips (e.g. action-matches in permission rows). */
+export const selectInputWrappingCustomStyles = {
+  ...selectInputCustomStyles,
+  control: (base) => ({
+    ...base,
+    flexWrap: "wrap"
+  }),
+  valueContainer: (base) => ({
+    ...base,
+    flexWrap: "wrap"
+  })
+};
+
+export const trimInputValue = (e, input) => {
+  const value = e.target.value;
+  const trimmed = value.trim();
+  if (value !== trimmed) {
+    input.onChange(trimmed);
+  }
+  input.onBlur(e);
 };
 
 export const selectInputCustomErrorStyles = {

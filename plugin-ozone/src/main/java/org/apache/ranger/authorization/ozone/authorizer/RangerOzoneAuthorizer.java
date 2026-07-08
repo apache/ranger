@@ -150,7 +150,6 @@ public class RangerOzoneAuthorizer implements IAccessAuthorizer {
 			LOG.error("Unsupported access type. operation=" + operation + ", resource=" + resource);
 			return returnValue;
 		}
-		String action = accessType;
 		String clusterName = plugin.getClusterName();
 
 		RangerAccessRequestImpl rangerRequest = new RangerAccessRequestImpl();
@@ -165,7 +164,7 @@ public class RangerOzoneAuthorizer implements IAccessAuthorizer {
 
 		rangerRequest.setResource(rangerResource);
 		rangerRequest.setAccessType(accessType);
-		rangerRequest.setAction(action);
+		rangerRequest.setAction(context.getS3Action());
 		rangerRequest.setRequestData(resource);
 		rangerRequest.setClusterName(clusterName);
 
@@ -301,6 +300,11 @@ public class RangerOzoneAuthorizer implements IAccessAuthorizer {
 
         if (ozoneGrant.getPermissions() != null) {
             ret.setPermissions(ozoneGrant.getPermissions().stream().map(RangerOzoneAuthorizer::toRangerPermission).filter(Objects::nonNull).collect(Collectors.toSet()));
+        }
+
+        final Set<String> s3Actions = ozoneGrant.getS3Actions();
+        if (s3Actions != null && !s3Actions.isEmpty()) {
+            ret.setActions(s3Actions);
         }
 
         LOG.debug("toRangerGrant(ozoneGrant={}): ret={}", ozoneGrant, ret);

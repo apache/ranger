@@ -112,14 +112,20 @@ public class RangerInlinePolicy implements java.io.Serializable {
         private Set<String> principals;  // example: [ "u:user1, "g:group1", "r:role1" ]; if empty, means public grant
         private Set<String> resources;   // example: [ "key:vol1/bucket1/db1/tbl1/*", "key:vol1/bucket1/db1/tbl2/*" ]; if empty, means all resources
         private Set<String> permissions; // example: [ "read", "write" ]; if empty, means no permission
+        private Set<String> actions;     // optional: [ "GetObject", "Put*", "*" ]; if empty or null, means all actions
 
         public Grant() {
         }
 
         public Grant(Set<String> principals, Set<String> resources, Set<String> permissions) {
+            this(principals, resources, permissions, null);
+        }
+
+        public Grant(Set<String> principals, Set<String> resources, Set<String> permissions, Set<String> actions) {
             this.principals  = principals;
             this.resources   = resources;
             this.permissions = permissions;
+            this.actions     = actions;
         }
 
         public Set<String> getPrincipals() {
@@ -146,6 +152,14 @@ public class RangerInlinePolicy implements java.io.Serializable {
             this.permissions = permissions;
         }
 
+        public Set<String> getActions() {
+            return actions;
+        }
+
+        public void setActions(Set<String> actions) {
+            this.actions = actions;
+        }
+
         @Override
         public boolean equals(Object o) {
             if (this == o) {
@@ -158,12 +172,13 @@ public class RangerInlinePolicy implements java.io.Serializable {
 
             return Objects.equals(principals, that.principals) &&
                     Objects.equals(resources, that.resources) &&
-                    Objects.equals(permissions, that.permissions);
+                    Objects.equals(permissions, that.permissions) &&
+                    Objects.equals(actions, that.actions);
         }
 
         @Override
         public int hashCode() {
-            return Objects.hash(principals, resources, permissions);
+            return Objects.hash(principals, resources, permissions, actions);
         }
 
         @Override
@@ -172,6 +187,7 @@ public class RangerInlinePolicy implements java.io.Serializable {
                     "principals=" + principals +
                     ", resources=" + resources +
                     ", permissions=" + permissions +
+                    ", actions=" + actions +
                     '}';
         }
     }
