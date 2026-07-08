@@ -15,7 +15,8 @@ services:
     volumes:
       - ./dist/keytabs/ranger-kms:/etc/keytabs
       - ./scripts/kdc/krb5.conf:/etc/krb5.conf
-      - ./scripts/hadoop/core-site.xml:/home/ranger/scripts/core-site.xml:ro
+      - ./scripts/kms/core-site.xml:/home/ranger/scripts/core-site.xml:ro
+      - ./scripts/kms/kms-site.xml:/home/ranger/scripts/kms-site.xml:ro
       - ./dist/version:/home/ranger/dist/version:ro
       - ./scripts/kms/ranger-kms-install-${RANGER_DB_TYPE}.properties:/opt/ranger/kms/install.properties
     stdin_open: true

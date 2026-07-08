@@ -79,6 +79,7 @@ function create_keytabs() {
   create_principal_and_keytab rangerusersync ranger-usersync
 
   create_principal_and_keytab rangerkms ranger-kms
+  create_principal_and_keytab HTTP      ranger-kms
 
   create_principal_and_keytab HTTP      ranger-pdp
   create_principal_and_keytab rangerpdp ranger-pdp

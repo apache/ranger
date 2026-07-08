@@ -188,6 +188,7 @@
                     <include>com.squareup.okhttp:okhttp</include>
                     <!-- ranger common metrics module-->
                             <include>org.apache.ranger:ranger-metrics</include>
+                            <include>org.apache.ranger:ranger-common-utils</include>
                         </includes>
                     </dependencySet>
                 </dependencySets>
@@ -260,6 +261,7 @@
             <useAllReactorProjects>true</useAllReactorProjects>
             <includes>
                 <include>org.apache.ranger:ranger-util</include>
+                <include>org.apache.ranger:ranger-common-utils</include>
                 <include>org.apache.ranger:ranger-kms-plugin-shim</include>
                 <include>org.apache.ranger:ranger-plugin-classloader</include>
                 <include>org.apache.ranger:credentialbuilder</include>
