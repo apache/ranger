@@ -49,6 +49,7 @@ import {
   policyConditionUpdatedJSON,
   capitalizeFirstLetter
 } from "Utils/XAUtils";
+import { isPerRowCondition } from "Utils/policyConditionUtils";
 import XATableLayout from "Components/XATableLayout";
 import moment from "moment-timezone";
 import { getServiceDef } from "Utils/appState";
@@ -1340,6 +1341,9 @@ const DatashareDetailLayout = () => {
                             </div>
                             {values.conditions !== undefined &&
                               Object.keys(values.conditions).map((keyName) => {
+                                if (isPerRowCondition(keyName)) {
+                                  return null;
+                                }
                                 if (
                                   values.conditions[keyName] != "" &&
                                   values.conditions[keyName] != null

@@ -68,6 +68,8 @@ import java.util.Set;
 public class RangerSolrAuthorizer extends SearchComponent implements AuthorizationPlugin {
     private static final Logger logger = LoggerFactory.getLogger(RangerSolrAuthorizer.class);
 
+    private static final String PLUGIN_NOT_INITIALIZED_MSG = "Access denied: authorizer is not initialized.";
+
     private static volatile RangerBasePlugin solrPlugin;
 
     private final List<FieldToAttributeMapping> fieldAttributeMappings = new LinkedList<>();
@@ -100,18 +102,26 @@ public class RangerSolrAuthorizer extends SearchComponent implements Authorizati
     public void close() {
         logger.info("close() called");
 
+        RangerBasePlugin plugin = solrPlugin;
+
+        if (plugin == null) {
+            return;
+        }
+
         try {
-            solrPlugin.cleanup();
+            plugin.cleanup();
 
             /* Solr shutdown is not graceful so that JVM shutdown hooks
              * are not always invoked and the audit store are not flushed. So
              * we are forcing a cleanup here.
              */
-            if (solrPlugin.getAuditProviderFactory() != null) {
-                solrPlugin.getAuditProviderFactory().shutdown();
+            if (plugin.getAuditProviderFactory() != null) {
+                plugin.getAuditProviderFactory().shutdown();
             }
         } catch (Throwable t) {
             logger.error("Error cleaning up Ranger plugin. Ignoring error", t);
+        } finally {
+            solrPlugin = null;
         }
     }
 
@@ -124,6 +134,15 @@ public class RangerSolrAuthorizer extends SearchComponent implements Authorizati
      */
     @Override
     public AuthorizationResponse authorize(AuthorizationContext context) {
+        RangerBasePlugin solrPlugin = getPlugin();
+
+        if (solrPlugin == null) {
+            MiscUtil.logErrorMessageByInterval(logger, PLUGIN_NOT_INITIALIZED_MSG);
+            AuthorizationResponse resp = new AuthorizationResponse(503);
+            resp.setMessage(PLUGIN_NOT_INITIALIZED_MSG);
+            return resp;
+        }
+
         boolean isDenied = false;
 
         try {
@@ -308,49 +327,7 @@ public class RangerSolrAuthorizer extends SearchComponent implements Authorizati
     @Override
     public void init(Map<String, Object> initInfo) {
         logger.info("init()");
-
-        try {
-            RangerBasePlugin me = solrPlugin;
-
-            if (me == null) {
-                synchronized (RangerSolrAuthorizer.class) {
-                    me = solrPlugin;
-
-                    logger.info("RangerSolrAuthorizer(): init called");
-
-                    if (me == null) {
-                        authToJAASFile();
-
-                        logger.info("Creating RangerSolrPlugin");
-
-                        me = new RangerBasePlugin("solr", "solr");
-
-                        logger.info("Calling solrPlugin.init()");
-
-                        me.init();
-                        me.setResultProcessor(new RangerSolrAuditHandler(me.getConfig()));
-
-                        solrPlugin = me;
-                    }
-                }
-            }
-
-            useProxyIP    = solrPlugin.getConfig().getBoolean(RangerSolrConstants.PROP_USE_PROXY_IP, useProxyIP);
-            proxyIPHeader = solrPlugin.getConfig().get(RangerSolrConstants.PROP_PROXY_IP_HEADER, proxyIPHeader);
-
-            // First get from the -D property
-            solrAppName = System.getProperty("solr.kerberos.jaas.appname", solrAppName);
-
-            // Override if required from Ranger properties
-            solrAppName = solrPlugin.getConfig().get(RangerSolrConstants.PROP_SOLR_APP_NAME, solrAppName);
-
-            logger.info("init(): useProxyIP={}", useProxyIP);
-            logger.info("init(): proxyIPHeader={}", proxyIPHeader);
-            logger.info("init(): solrAppName={}", solrAppName);
-            logger.info("init(): KerberosName.rules={}", MiscUtil.getKerberosNamesRules());
-        } catch (Throwable t) {
-            logger.error("Error creating and initializing RangerBasePlugin()", t);
-        }
+        getPlugin();
     }
 
     @Override
@@ -528,6 +505,43 @@ public class RangerSolrAuthorizer extends SearchComponent implements Authorizati
     @Override
     public String getDescription() {
         return "Handle Query Document Authorization";
+    }
+
+    private RangerBasePlugin getPlugin() {
+        RangerBasePlugin ret = solrPlugin;
+
+        if (ret == null) {
+            synchronized (RangerSolrAuthorizer.class) {
+                ret = solrPlugin;
+
+                if (ret == null) {
+                    try {
+                        initializeSolrPlugin();
+
+                        ret = solrPlugin;
+                    } catch (Throwable t) {
+                        logger.error("Error creating and initializing RangerBasePlugin()", t);
+                    }
+                }
+            }
+        }
+
+        return ret;
+    }
+
+    private void initializeSolrPlugin() {
+        authToJAASFile();
+
+        RangerBasePlugin plugin = new RangerBasePlugin("solr", "solr");
+
+        plugin.init();
+        plugin.setResultProcessor(new RangerSolrAuditHandler(plugin.getConfig()));
+
+        useProxyIP    = plugin.getConfig().getBoolean(RangerSolrConstants.PROP_USE_PROXY_IP, useProxyIP);
+        proxyIPHeader = plugin.getConfig().get(RangerSolrConstants.PROP_PROXY_IP_HEADER, proxyIPHeader);
+        solrAppName   = plugin.getConfig().get(RangerSolrConstants.PROP_SOLR_APP_NAME, System.getProperty("solr.kerberos.jaas.appname", solrAppName));
+
+        solrPlugin = plugin;
     }
 
     private void authToJAASFile() {

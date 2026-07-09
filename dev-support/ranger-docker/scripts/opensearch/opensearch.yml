@@ -48,3 +48,6 @@ http.cors.allow-headers: "X-Requested-With, Content-Type, Content-Length, Author
 # See opensearch-jaas.conf for Kerberos principal and keytab settings
 # JVM is configured with: -Djava.security.auth.login.config and -Djava.security.krb5.conf
 
+# Wire-compatible with ES 7 REST client used by Ranger Admin
+compatibility.override_main_response_version: true
+
