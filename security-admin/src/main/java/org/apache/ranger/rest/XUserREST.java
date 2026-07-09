@@ -61,7 +61,6 @@ import org.apache.ranger.common.UserSessionBase;
 import org.apache.ranger.common.annotation.RangerAnnotationClassName;
 import org.apache.ranger.common.annotation.RangerAnnotationJSMgrName;
 import org.apache.ranger.db.RangerDaoManager;
-import org.apache.ranger.entity.XXGroup;
 import org.apache.ranger.entity.XXService;
 import org.apache.ranger.entity.XXServiceDef;
 import org.apache.ranger.plugin.model.RangerPluginInfo;
@@ -835,24 +834,8 @@ public class XUserREST {
 	public VXGroup getXGroupByGroupName(@Context HttpServletRequest request,
 			@PathParam("groupName") String groupName) {
 		VXGroup vXGroup = xGroupService.getGroupByGroupName(groupName);
-		UserSessionBase userSession = ContextUtil.getCurrentUserSession();
-		if (userSession != null && userSession.getLoginId() != null && userSession.isSingleRoleUserSession()) {
-			VXUser loggedInVXUser = xUserService.getXUserByUserName(userSession.getLoginId());
-			boolean isMatch = false;
-			if (loggedInVXUser != null && vXGroup != null) {
-				List<XXGroup> userGroups = xGroupService.getGroupsByUserId(loggedInVXUser.getId());
-				for (XXGroup xXGroup: userGroups) {
-					if (xXGroup != null && StringUtils.equals(xXGroup.getName(), vXGroup.getName())) {
-						isMatch = true;
-						break;
-					}
-				}
-			}
-			if (!isMatch) {
-				vXGroup = null;
-			}
-		}
-		return vXGroup;
+		Long id = vXGroup.getId();
+		return xUserMgr.getXGroup(id);
 	}
 
 	@DELETE
