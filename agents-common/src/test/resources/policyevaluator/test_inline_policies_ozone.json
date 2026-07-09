@@ -295,7 +295,7 @@
       },
       "result": { "isAudited": true, "isAllowed": true, "policyId": -1 }
     },
-    { "name": "ALLOW 'write s3v/iceberg/key2;' for user=svc-etl; no action in request bypasses action restriction",
+    { "name": "DENY 'write s3v/iceberg/key2;' for user=svc-etl; no action in request does not satisfy action restriction",
       "request": {
         "resource": { "elements": { "volume": "s3v", "bucket": "iceberg", "key": "key2" } }, "user": "svc-etl", "accessType": "write",
         "inlinePolicy": { "grantor":  "r:data-all-access", "mode": "INLINE",
@@ -304,7 +304,7 @@
           ]
         }
       },
-      "result": { "isAudited": true, "isAllowed": true, "policyId": -1 }
+      "result": { "isAudited": true, "isAllowed": false, "policyId": -1 }
     },
     { "name": "ALLOW 'read s3v/iceberg/key2;' for user=svc-etl; action=GetObject matches second entry in multi-action grant",
       "request": {

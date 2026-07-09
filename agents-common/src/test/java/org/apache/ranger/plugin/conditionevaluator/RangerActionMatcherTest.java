@@ -55,12 +55,12 @@ class RangerActionMatcherTest {
     }
 
     @Test
-    void testNoRequestActionDoesNotEnforce() {
+    void testNoRequestActionDoesNotMatchWhenActionsSpecified() {
         final RangerActionMatcher matcher = createMatcher(new String[] {"PutObject"});
 
-        assertTrue(matcher.isMatched(createRequest(null)));
-        assertTrue(matcher.isMatched(createRequest("")));
-        assertTrue(matcher.isMatched(createRequest("   ")));
+        assertFalse(matcher.isMatched(createRequest(null)));
+        assertFalse(matcher.isMatched(createRequest("")));
+        assertFalse(matcher.isMatched(createRequest("   ")));
     }
 
     @Test

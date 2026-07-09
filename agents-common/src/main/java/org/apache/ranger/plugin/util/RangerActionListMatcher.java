@@ -68,6 +68,10 @@ public class RangerActionListMatcher {
                     exactActions.add(action.toLowerCase(Locale.ROOT));
                 }
             }
+
+            if (!allowAny && exactActions.isEmpty() && tempPrefixList.isEmpty()) {
+                allowAny = true;
+            }
         }
 
         this.allowAnyAction = allowAny;
@@ -95,28 +99,27 @@ public class RangerActionListMatcher {
     }
 
     public boolean isMatch(String requestAction) {
-        boolean ret = allowAnyAction;
+        if (allowAnyAction) {
+            return true;
+        }
 
-        if (!ret) {
-            // if action is not available, don't enforce action restrictions
-            if (StringUtils.isBlank(requestAction)) {
-                ret = true;
-            } else {
-                final String actionLower = requestAction.toLowerCase(Locale.ROOT);
+        // Action restrictions exist; missing request action is not a match.
+        if (StringUtils.isBlank(requestAction)) {
+            return false;
+        }
 
-                if (exactActions.contains(actionLower)) {
-                    ret = true;
-                } else {
-                    for (String prefix : prefixActions) {
-                        if (actionLower.startsWith(prefix)) {
-                            ret = true;
-                            break;
-                        }
-                    }
-                }
+        final String actionLower = requestAction.toLowerCase(Locale.ROOT);
+
+        if (exactActions.contains(actionLower)) {
+            return true;
+        }
+
+        for (String prefix : prefixActions) {
+            if (actionLower.startsWith(prefix)) {
+                return true;
             }
         }
 
-        return ret;
+        return false;
     }
 }
