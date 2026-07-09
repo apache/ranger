@@ -28,17 +28,11 @@ try:
     import apache_ranger.model as ranger_model_package
 
     from apache_ranger.client.ranger_client     import API, HttpMethod, HTTPStatus, RangerClient
-    from apache_ranger.client.ranger_gds_client import RangerGdsClient
     from apache_ranger.client.ranger_pdp_client import RangerPDPClient
     from apache_ranger.model.ranger_authz       import (
         RangerAccessContext, RangerAccessInfo, RangerAuthzRequest, RangerAuthzResult,
         RangerPermissionResult, RangerResourceInfo, RangerResultInfo, RangerUserInfo,
     )
-    from apache_ranger.model.ranger_gds         import (
-        DatasetSummary, GdsPermission, GdsShareStatus, RangerDataset,
-        RangerGdsMaskInfo, RangerGdsObjectACL,
-    )
-    from apache_ranger.model.ranger_principal import PrincipalType
 except ModuleNotFoundError:  # requests not installed
     exit()  # skipping unit tests
 
@@ -107,86 +101,6 @@ class TestRangerClient(unittest.TestCase):
     def test_url_invalid_format(self):
         with self.assertRaises(TypeError):
             API("{}test{}path{}", HttpMethod.GET, HTTPStatus.OK).format_path({'1', '2'})
-
-
-class TestGDSClient(unittest.TestCase):
-    def test_package_export(self):
-        self.assertIs(ranger_client_package.RangerGdsClient, RangerGdsClient)
-        self.assertIn("RangerGdsClient", ranger_client_package.__all__)
-
-    def test_dataset_type_coercion(self):
-        dataset = RangerDataset({
-            "name": "sales",
-            "acl": {
-                "public": {
-                    "users": {
-                        "alice": "VIEW",
-                    },
-                    "groups": {
-                        "analytics": "POLICY_ADMIN",
-                    },
-                },
-            },
-        })
-
-        dataset.type_coerce_attrs()
-
-        acl = dataset.acl["public"]
-        self.assertIsInstance(acl, RangerGdsObjectACL)
-        self.assertEqual(GdsPermission.VIEW, acl.users["alice"])
-        self.assertEqual(GdsPermission.POLICY_ADMIN, acl.groups["analytics"])
-
-    def test_dataset_summary_type_coercion(self):
-        summary = DatasetSummary({
-            "name":                "sales",
-            "permissionForCaller": "VIEW",
-            "principalsCount": {
-                "USER":  2,
-                "GROUP": 1,
-            },
-            "dataShares": [{
-                "name":        "sales-share",
-                "shareStatus": "ACTIVE",
-            }],
-        })
-
-        summary.type_coerce_attrs()
-
-        self.assertEqual(GdsPermission.VIEW, summary.permissionForCaller)
-        self.assertEqual(2, summary.principalsCount[PrincipalType.USER])
-        self.assertEqual(GdsShareStatus.ACTIVE, summary.dataShares[0].shareStatus)
-
-    def test_mask_info_type_coercion(self):
-        mask_info = RangerGdsMaskInfo({
-            "values":   ["email"],
-            "maskInfo": {
-                "dataMaskType": "MASK_HASH",
-                "valueExpr":    "hash(email)",
-            },
-        })
-
-        mask_info.type_coerce_attrs()
-
-        self.assertEqual(["email"], mask_info.values)
-        self.assertEqual("MASK_HASH", mask_info.maskInfo.dataMaskType)
-
-    def test_find_datasets_calls_expected_api(self):
-        ranger_client                               = Mock()
-        ranger_client.client_http.call_api.return_value = {
-            "list": [{
-                "id":   1,
-                "name": "sales",
-            }],
-        }
-
-        result                                      = RangerGdsClient(ranger_client).find_datasets({"name": "sales"})
-
-        ranger_client.client_http.call_api.assert_called_once_with(
-            RangerGdsClient.FIND_DATASETS,
-            {"name": "sales"},
-        )
-        self.assertEqual(1, len(result.list))
-        self.assertIsInstance(result.list[0], RangerDataset)
 
 
 class TestPDPClient(unittest.TestCase):

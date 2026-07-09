@@ -71,7 +71,7 @@ Run from `intg/`:
 PYTHONPATH=src/main/python python -B src/test/python/test_ranger_client.py
 ```
 
-Split tests **by client** — one `unittest.TestCase` per area (`TestRangerClient`, `TestGDSClient`, `TestPDPClient`).
+Split tests **by client** — one `unittest.TestCase` per area (`TestRangerClient`, `TestPDPClient`).
 
 Fixtures: shared data as **class-level constants** (`URL`, `AUTH`, `AUTHZ_REQUEST`); single-use data inline in the test method.
 
@@ -79,10 +79,10 @@ Assertions and mocking:
 
 - Prefer `assertRaises`, `assertIsNone`, `assertIsInstance` over bare `try/except`.
 - Assert **current** client behavior — not obsolete error text or exceptions.
-- Mock at the boundary: `Session` for Admin HTTP, `client_http.call_api` for GDS/PDP.
+- Mock at the boundary: `Session` for Admin HTTP, `client_http.call_api` for PDP.
 - Only add tests for real coercion, exports, or API wiring.
 
 ## References
 
 - `intg/src/main/python/README.md` — published API surface and quickstarts
-- `ranger-examples/sample-client/src/main/python/` — Admin, GDS, PDP, KMS usage examples
+- `ranger-examples/sample-client/src/main/python/` — Admin, PDP, KMS usage examples

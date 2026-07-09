@@ -21,7 +21,7 @@ under the License.
 
 `apache-ranger` is the official Python client package for Apache Ranger.
 It provides typed helpers for Ranger Admin, user/group management, KMS,
-Governed Data Sharing (GDS), and Policy Decision Point (PDP) APIs.
+and Policy Decision Point (PDP) APIs.
 
 ## Requirements
 
@@ -54,8 +54,6 @@ python -m pip show apache-ranger
   roles, security zones, plugin information, and policy delta maintenance.
 - `RangerUserMgmtClient`: user, group, and user-group management APIs.
 - `RangerKMSClient`: Ranger KMS key management APIs.
-- `RangerGdsClient`: Governed Data Sharing APIs for datasets, projects,
-  datashares, shared resources, and GDS policies.
 - `RangerPDPClient`: PDP authorization APIs for single authorization, batch
   authorization, and effective resource permissions.
 
@@ -97,19 +95,6 @@ from apache_ranger.client.ranger_kms_client import RangerKMSClient
 kms = RangerKMSClient("http://localhost:9292", HadoopSimpleAuth("keyadmin"))
 
 print(kms.kms_status())
-```
-
-### Governed Data Sharing
-
-```python
-from apache_ranger.client.ranger_client import RangerClient
-from apache_ranger.client.ranger_gds_client import RangerGdsClient
-
-ranger = RangerClient("http://localhost:6080", ("admin", "rangerR0cks!"))
-gds = RangerGdsClient(ranger)
-
-datasets = gds.find_datasets()
-print(f"{len(datasets.list)} datasets found")
 ```
 
 ### Policy Decision Point
@@ -193,8 +178,8 @@ returns `403 FORBIDDEN`.
 ## Examples and Code References
 
 The quick starts above cover the basics. For day-to-day API usage — creating
-services and policies, managing users, calling KMS or PDP, or working with GDS
-— use the runnable samples and client sources below.
+services and policies, managing users, or calling KMS or PDP — use the runnable
+samples and client sources below.
 
 ### Running sample scripts
 
@@ -224,7 +209,6 @@ of each sample before running it against your environment.
 | User and group management                           | [`user_mgmt.py`](https://github.com/apache/ranger/blob/master/ranger-examples/sample-client/src/main/python/user_mgmt.py) | List/create/delete users and groups, group-user mappings                              |
 | Ranger KMS                                          | [`sample_kms_client.py`](https://github.com/apache/ranger/blob/master/ranger-examples/sample-client/src/main/python/sample_kms_client.py) | Key lifecycle, encrypt/decrypt/reencrypt, metadata and status                         |
 | PDP AuthZ                                           | [`sample_pdp_client.py`](https://github.com/apache/ranger/blob/master/ranger-examples/sample-client/src/main/python/sample_pdp_client.py) | Authz/MultiAuthz calls to PDP Server                                                  |
-| Governed Data Sharing (GDS)                         | [`sample_gds_client.py`](https://github.com/apache/ranger/blob/master/ranger-examples/sample-client/src/main/python/sample_gds_client.py) | Projects, datasets, datashares, shared resources, GDS policies                        |
 | Security zones (v2)                                 | [`security_zone_v2.py`](https://github.com/apache/ranger/blob/master/ranger-examples/sample-client/src/main/python/security_zone_v2.py) | Create/update security zones and zone resources                                       |
 
 All samples live under
@@ -240,7 +224,6 @@ Each public client is implemented under
 | `RangerClient` | [`ranger_client.py`](https://github.com/apache/ranger/blob/master/intg/src/main/python/apache_ranger/client/ranger_client.py) | `service/public/v2/api` |
 | `RangerUserMgmtClient` | [`ranger_user_mgmt_client.py`](https://github.com/apache/ranger/blob/master/intg/src/main/python/apache_ranger/client/ranger_user_mgmt_client.py) | user/group APIs on Ranger Admin |
 | `RangerKMSClient` | [`ranger_kms_client.py`](https://github.com/apache/ranger/blob/master/intg/src/main/python/apache_ranger/client/ranger_kms_client.py) | KMS REST APIs |
-| `RangerGdsClient` | [`ranger_gds_client.py`](https://github.com/apache/ranger/blob/master/intg/src/main/python/apache_ranger/client/ranger_gds_client.py) | GDS APIs on Ranger Admin |
 | `RangerPDPClient` | [`ranger_pdp_client.py`](https://github.com/apache/ranger/blob/master/intg/src/main/python/apache_ranger/client/ranger_pdp_client.py) | `/authz/v1` |
 
 Request and response models are under
@@ -249,7 +232,7 @@ Request and response models are under
 ### Unit tests
 
 [`intg/src/test/python/test_ranger_client.py`](https://github.com/apache/ranger/blob/master/intg/src/test/python/test_ranger_client.py)
-contains mocked examples for Admin, GDS, and PDP client wiring. Run from
+contains mocked examples for Admin and PDP client wiring. Run from
 `intg/`:
 
 ```bash
@@ -272,8 +255,6 @@ PYTHONPATH=src/main/python python -B src/test/python/test_ranger_client.py
 ## Release 0.0.13 Highlights
 
 - Python 3.13+ support.
-- New GDS client coverage for datasets, projects, datashares, shared resources,
-  and GDS policy APIs.
 - New PDP client coverage for Ranger authorization APIs.
 - New authorization request and response models.
 - User/group management, KMS, Ranger Admin, and model updates.
