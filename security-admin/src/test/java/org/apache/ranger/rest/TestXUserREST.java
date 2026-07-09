@@ -1027,18 +1027,15 @@ public class TestXUserREST {
 	}
 	@Test
 	public void test63getXGroupByGroupName() {
-		HttpServletRequest request = Mockito.mock(HttpServletRequest.class);
-		
 		VXGroup compareTestVXGroup=createVXGroup();
-		
 		Mockito.when(xGroupService.getGroupByGroupName(compareTestVXGroup.getName())).thenReturn(compareTestVXGroup);
-		
-		VXGroup retVxGroup= xUserRest.getXGroupByGroupName(request,compareTestVXGroup.getName());
-		
+		Mockito.when(xUserMgr.getXGroup(compareTestVXGroup.getId())).thenReturn(compareTestVXGroup);
+		VXGroup retVxGroup = xUserRest.getXGroupByGroupName(request, compareTestVXGroup.getName());
 		assertNotNull(retVxGroup);
-		assertEquals(compareTestVXGroup.getClass(),compareTestVXGroup.getClass());
-		assertEquals(compareTestVXGroup.getId(),compareTestVXGroup.getId());
+		assertEquals(compareTestVXGroup.getId(), retVxGroup.getId());
+		assertEquals(compareTestVXGroup.getName(), retVxGroup.getName());
 		Mockito.verify(xGroupService).getGroupByGroupName(compareTestVXGroup.getName());
+		Mockito.verify(xUserMgr).getXGroup(compareTestVXGroup.getId());
 	}
 	@Test
 	public void test64deleteXUserByUserName() {
