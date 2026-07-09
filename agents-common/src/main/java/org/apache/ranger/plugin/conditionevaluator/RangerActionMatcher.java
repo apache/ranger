@@ -26,7 +26,7 @@ import org.slf4j.LoggerFactory;
 public class RangerActionMatcher extends RangerAbstractConditionEvaluator {
     private static final Logger LOG = LoggerFactory.getLogger(RangerActionMatcher.class);
 
-    private RangerActionListMatcher actionMatcher = new RangerActionListMatcher(null);
+    private RangerActionListMatcher actionMatcher;
 
     @Override
     public void init() {
@@ -43,7 +43,9 @@ public class RangerActionMatcher extends RangerAbstractConditionEvaluator {
     public boolean isMatched(final RangerAccessRequest request) {
         LOG.debug("==> RangerActionMatcher.isMatched({})", request);
 
-        final boolean ret = actionMatcher.isMatch(request != null ? request.getAction() : null);
+        final RangerActionListMatcher matcher = actionMatcher;
+        final String                  action  = request != null ? request.getAction() : null;
+        final boolean                 ret     = matcher == null || matcher.isMatch(action);
 
         LOG.debug("<== RangerActionMatcher.isMatched({}): {}", request, ret);
 

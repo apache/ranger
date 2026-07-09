@@ -262,7 +262,7 @@ public class TestRangerOzoneAuthorizer {
         assertFalse(ozoneAuthorizer.checkAccess(key1, ctxWriteGetObject),
                 "session-policy should deny write on key1 when S3 action is GetObject (not in grant)");
 
-        // No S3 action specified should bypass action restriction (allow through)
+        // No S3 action specified should be denied when the grant has S3-action restrictions
         RequestContext ctxWriteNoAction = reqCtxBuilder
                 .setAclRights(IAccessAuthorizer.ACLType.WRITE)
                 .setRecursiveAccessCheck(false)
@@ -270,7 +270,7 @@ public class TestRangerOzoneAuthorizer {
                 .setS3Action(null)
                 .build();
 
-        assertTrue(ozoneAuthorizer.checkAccess(key1, ctxWriteNoAction),
-                "session-policy should allow write on key1 when no S3 action is specified (bypass)");
+        assertFalse(ozoneAuthorizer.checkAccess(key1, ctxWriteNoAction),
+                "session-policy should deny write on key1 when no S3 action is specified and grant has S3 actions");
     }
 }
