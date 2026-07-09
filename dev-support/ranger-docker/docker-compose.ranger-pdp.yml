@@ -48,8 +48,6 @@ services:
     depends_on:
       ranger:
         condition: service_started
-      ranger-solr:
-        condition: service_started
     environment:
       - PDP_VERSION
       - KERBEROS_ENABLED
