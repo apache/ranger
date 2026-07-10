@@ -1,0 +1,47 @@
+{
+  "volume": {
+    "ListAllMyBuckets": ["read", "list"],
+    "CreateBucket": ["read"],
+    "DeleteBucket": ["read"],
+    "GetBucketAcl": ["read"],
+    "ListBucket": ["read"],
+    "ListBucketMultipartUploads": ["read"],
+    "PutBucketAcl": ["read"],
+    "AbortMultipartUpload": ["read"],
+    "DeleteObject": ["read"],
+    "DeleteObjectTagging": ["read"],
+    "GetObject": ["read"],
+    "GetObjectTagging": ["read"],
+    "ListMultipartUploadParts": ["read"],
+    "PutObject": ["read"],
+    "PutObjectTagging": ["read"]
+  },
+  "bucket": {
+    "ListBucket": ["read", "list"],
+    "ListBucketMultipartUploads": ["read", "list"],
+    "CreateBucket": ["create"],
+    "DeleteBucket": ["delete"],
+    "GetBucketAcl": ["read", "read_acl"],
+    "PutBucketAcl": ["read", "read_acl", "write_acl"],
+    "AbortMultipartUpload": ["read"],
+    "DeleteObject": ["read"],
+    "DeleteObjectTagging": ["read"],
+    "GetObject": ["read"],
+    "GetObjectTagging": ["read"],
+    "ListMultipartUploadParts": ["read"],
+    "PutObject": ["read"],
+    "PutObjectTagging": ["read"]
+  },
+  "key": {
+    "GetObject": ["read"],
+    "GetObjectTagging": ["read"],
+    "ListBucket": ["read"],
+    "PutObject": ["create", "write"],
+    "PutObjectTagging": ["write"],
+    "DeleteObjectTagging": ["write"],
+    "AbortMultipartUpload": ["write"],
+    "DeleteObject": ["delete"],
+    "ListMultipartUploadParts": ["read"]
+  },
+  "role": {}
+}
