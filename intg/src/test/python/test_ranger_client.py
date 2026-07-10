@@ -18,14 +18,23 @@
 
 import unittest
 
-from unittest.mock                      import patch
+from unittest.mock import Mock, patch
+
 from apache_ranger.exceptions           import RangerServiceException
 from apache_ranger.model.ranger_service import RangerService
 
 try:
-    from apache_ranger.client.ranger_client import API, HttpMethod, HTTPStatus, RangerClient
-except ModuleNotFoundError: # requests not installed
-    exit() # skipping unit tests
+    import apache_ranger.client as ranger_client_package
+    import apache_ranger.model as ranger_model_package
+
+    from apache_ranger.client.ranger_client     import API, HttpMethod, HTTPStatus, RangerClient
+    from apache_ranger.client.ranger_pdp_client import RangerPDPClient
+    from apache_ranger.model.ranger_authz       import (
+        RangerAccessContext, RangerAccessInfo, RangerAuthzRequest, RangerAuthzResult,
+        RangerPermissionResult, RangerResourceInfo, RangerResultInfo, RangerUserInfo,
+    )
+except ModuleNotFoundError:  # requests not installed
+    exit()  # skipping unit tests
 
 
 class MockResponse:
@@ -33,7 +42,6 @@ class MockResponse:
         self.status_code = status_code
         self.response    = response
         self.content     = content
-        return
 
     def json(self):
         return self.response
@@ -49,67 +57,118 @@ class TestRangerClient(unittest.TestCase):
     @patch('apache_ranger.client.ranger_client.Session')
     def test_get_service_unavailable(self, mock_session):
         mock_session.return_value.get.return_value = MockResponse(HTTPStatus.SERVICE_UNAVAILABLE)
-        result                                     = RangerClient(TestRangerClient.URL, TestRangerClient.AUTH).find_services()
+        result                                     = RangerClient(self.URL, self.AUTH).find_services()
 
-        self.assertTrue(result is None)
-
+        self.assertIsNone(result)
 
     @patch('apache_ranger.client.ranger_client.Session')
     def test_get_success(self, mock_session):
-        response                                   = [ RangerService() ]
-        mock_session.return_value.get.return_value = MockResponse(HTTPStatus.OK, response=response, content='Success')
-        result                                     = RangerClient(TestRangerClient.URL, TestRangerClient.AUTH).find_services()
+        response                                   = [RangerService()]
+        mock_session.return_value.get.return_value = MockResponse(
+            HTTPStatus.OK, response=response, content='Success')
+        result                                     = RangerClient(self.URL, self.AUTH).find_services()
 
         self.assertEqual(response, result)
-
 
     @patch('apache_ranger.client.ranger_client.Session')
     @patch('apache_ranger.client.ranger_client.Response')
     def test_get_unexpected_status_code(self, mock_response, mock_session):
-        content                                    = 'Internal Server Error'
-        mock_response.text                         = content
-        mock_response.content                      = content
-        mock_response.status_code                  = HTTPStatus.INTERNAL_SERVER_ERROR
+        content = 'Internal Server Error'
+        mock_response.text        = content
+        mock_response.content     = content
+        mock_response.status_code = HTTPStatus.INTERNAL_SERVER_ERROR
         mock_session.return_value.get.return_value = mock_response
 
-        try:
-            RangerClient(TestRangerClient.URL, TestRangerClient.AUTH).find_services()
-        except RangerServiceException as e:
-            self.assertTrue(HTTPStatus.INTERNAL_SERVER_ERROR, e.statusCode)
+        with self.assertRaises(RangerServiceException) as context:
+            RangerClient(self.URL, self.AUTH).find_services()
 
+        self.assertEqual(HTTPStatus.INTERNAL_SERVER_ERROR, context.exception.statusCode)
 
     @patch('apache_ranger.client.ranger_client.RangerClient.FIND_SERVICES')
     def test_unexpected_http_method(self, mock_api):
-        mock_api.method.return_value = "PATCH"
-        mock_api.url                 = TestRangerClient.URL
-        mock_api.path                = RangerClient.URI_SERVICE
+        mock_api.method = "PATCH"
+        mock_api.path   = RangerClient.URI_SERVICE
 
-        try:
-            RangerClient(TestRangerClient.URL, TestRangerClient.AUTH).find_services()
-        except RangerServiceException as e:
-            self.assertTrue('Unsupported HTTP Method' in repr(e))
+        result = RangerClient(self.URL, self.AUTH).find_services()
 
+        self.assertIsNone(result)
 
     def test_url_missing_format(self):
-        params = {'arg1': 1, 'arg2': 2}
-
-        try:
-            API("{arg1}test{arg2}path{arg3}", HttpMethod.GET, HTTPStatus.OK).format_path(params)
-
-            self.fail("Supposed to fail")
-        except KeyError as e:
-            self.assertTrue('KeyError' in repr(e))
-
+        with self.assertRaises(KeyError):
+            API("{arg1}test{arg2}path{arg3}", HttpMethod.GET, HTTPStatus.OK).format_path(
+                {'arg1': 1, 'arg2': 2})
 
     def test_url_invalid_format(self):
-        params = {'1', '2'}
+        with self.assertRaises(TypeError):
+            API("{}test{}path{}", HttpMethod.GET, HTTPStatus.OK).format_path({'1', '2'})
 
-        try:
-            API("{}test{}path{}", HttpMethod.GET, HTTPStatus.OK).format_path(params)
 
-            self.fail("Supposed to fail")
-        except TypeError as e:
-            self.assertTrue('TypeError' in repr(e))
+class TestPDPClient(unittest.TestCase):
+    PDP_URL       = "http://localhost:6500"
+    AUTHZ_REQUEST = {
+        "requestId": "req-1",
+        "user":      {"name": "alice", "groups": ["analytics"]},
+        "access":    {"resource": {"name": "table:default/sales", "subResources": ["column:id"]}, "permissions": ["select"]},
+        "context":   {"serviceType": "hive", "serviceName": "dev_hive"},
+    }
+    AUTHZ_RESULT  = {
+        "requestId":   "req-1",
+        "decision":    RangerAuthzResult.DECISION_ALLOW,
+        "permissions": {"select": {
+            "access":       {"decision": RangerAuthzResult.DECISION_ALLOW, "policy": {"id": 7, "version": 3}},
+            "subResources": {"column:id": {"access": {"decision": RangerAuthzResult.DECISION_DENY}}},
+        }},
+    }
+
+    def test_package_export(self):
+        self.assertIs(ranger_client_package.RangerPDPClient, RangerPDPClient)
+        self.assertIn("RangerPDPClient", ranger_client_package.__all__)
+
+    def test_authz_model_exports(self):
+        self.assertIs(ranger_model_package.RangerAuthzRequest, RangerAuthzRequest)
+        self.assertIs(ranger_model_package.RangerAuthzResult, RangerAuthzResult)
+        self.assertIn("RangerAuthzRequest", ranger_model_package.__all__)
+        self.assertIn("RangerResourcePermissions", ranger_model_package.__all__)
+
+    def test_authz_request_type_coercion(self):
+        request = RangerAuthzRequest(self.AUTHZ_REQUEST)
+        request.type_coerce_attrs()
+
+        self.assertIsInstance(request.user, RangerUserInfo)
+        self.assertIsInstance(request.access, RangerAccessInfo)
+        self.assertIsInstance(request.access.resource, RangerResourceInfo)
+        self.assertIsInstance(request.context, RangerAccessContext)
+        self.assertEqual("alice", request.user.name)
+        self.assertEqual(["select"], request.access.permissions)
+
+    def test_authz_result_type_coercion(self):
+        result = RangerAuthzResult(self.AUTHZ_RESULT)
+        result.type_coerce_attrs()
+
+        permission = result.permissions["select"]
+        self.assertIsInstance(permission, RangerPermissionResult)
+        self.assertEqual(7, permission.access.policy.id)
+        self.assertIsInstance(permission.subResources["column:id"], RangerResultInfo)
+
+    def test_authorize_calls_expected_api(self):
+        client                      = RangerPDPClient(self.PDP_URL, auth=None)
+        client.client_http.call_api = Mock(return_value={
+            "requestId": "req-1",
+            "decision":  RangerAuthzResult.DECISION_ALLOW,
+        })
+
+        result                      = client.authorize(self.AUTHZ_REQUEST)
+
+        client.client_http.call_api.assert_called_once()
+        api                         = client.client_http.call_api.call_args.args[0]
+
+        self.assertEqual(RangerPDPClient.URI_AUTHORIZE, api.path)
+        self.assertEqual(HttpMethod.POST, api.method)
+        self.assertIsInstance(
+            client.client_http.call_api.call_args.kwargs["request_data"],
+            RangerAuthzRequest,
+        )
+        self.assertIsInstance(result, RangerAuthzResult)
 
 
 if __name__ == '__main__':

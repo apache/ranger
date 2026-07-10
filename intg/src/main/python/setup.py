@@ -19,25 +19,27 @@
 from setuptools import setup, find_packages
 
 # External dependencies
-requirements = ['requests>=2.24','strenum>=0.4.15']
+requirements = ['requests>=2.34.2', 'strenum>=0.4.15']
 
 long_description = ''
-with open("README.md", "r") as fh:
+with open("README.md", "r", encoding="utf-8") as fh:
     long_description = fh.read()
 
 setup(
     name="apache-ranger",
-    version="0.0.12",
+    version="0.0.13",
     author="Apache Ranger",
     author_email="dev@ranger.apache.org",
     description="Apache Ranger Python client",
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/apache/ranger/tree/master/intg/src/main/python",
-    license='Apache LICENSE 2.0',
+    license="Apache-2.0",
+    license_files=("LICENSE",),
     classifiers=[
-        "Programming Language :: Python :: 2.7",
-        "License :: OSI Approved :: Apache Software License",
+        "Programming Language :: Python :: 3",
+        "Programming Language :: Python :: 3 :: Only",
+        "Programming Language :: Python :: 3.13",
         "Operating System :: OS Independent",
     ],
     packages=find_packages(),
@@ -45,5 +47,5 @@ setup(
     include_package_data=True,
     zip_safe=False,
     keywords='ranger client, apache ranger',
-    python_requires='>=2.7',
+    python_requires='>=3.13',
 )
