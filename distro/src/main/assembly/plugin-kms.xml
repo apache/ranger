@@ -89,6 +89,21 @@
           <include>org.glassfish.jersey.inject:jersey-hk2</include>
           <include>org.glassfish.jersey.media:jersey-media-json-jackson</include>
           <include>org.noggit:noggit:jar:${noggit.version}</include>
+          <!-- GraalJS 25.x runtime (js is now a POM, not a JAR) -->
+          <include>org.graalvm.js:js-language:jar:${graalvm.version}</include>
+          <include>org.graalvm.js:js-scriptengine:jar:${graalvm.version}</include>
+          <include>org.graalvm.polyglot:polyglot:jar:${graalvm.version}</include>
+          <include>org.graalvm.regex:regex:jar:${graalvm.version}</include>
+          <include>org.graalvm.truffle:truffle-api:jar:${graalvm.version}</include>
+          <include>org.graalvm.truffle:truffle-runtime:jar:${graalvm.version}</include>
+          <include>org.graalvm.truffle:truffle-compiler:jar:${graalvm.version}</include>
+          <include>org.graalvm.sdk:jniutils:jar:${graalvm.version}</include>
+          <include>org.graalvm.sdk:collections:jar:${graalvm.version}</include>
+          <include>org.graalvm.sdk:nativeimage:jar:${graalvm.version}</include>
+          <include>org.graalvm.sdk:word:jar:${graalvm.version}</include>
+          <include>org.graalvm.shadowed:icu4j:jar:${graalvm.version}</include>
+          <include>org.graalvm.shadowed:xz:jar:${graalvm.version}</include>
+
         </includes>
       </binaries>
     </moduleSet>
