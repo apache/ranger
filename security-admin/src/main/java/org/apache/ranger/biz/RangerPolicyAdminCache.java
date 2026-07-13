@@ -193,11 +193,13 @@ public class RangerPolicyAdminCache {
     }
 
     private RangerPolicyAdmin addPolicyAdmin(ServicePolicies policies, RangerRoles roles, RangerPolicyEngineOptions options) {
-        RangerServiceDef    serviceDef          = policies.getServiceDef();
-        String              serviceType         = (serviceDef != null) ? serviceDef.getName() : "";
-        RangerPluginContext rangerPluginContext = new RangerPluginContext(new RangerPluginConfig(serviceType, null, "ranger-admin", null, null, options));
+        synchronized (policies) {
+            RangerServiceDef    serviceDef          = policies.getServiceDef();
+            String              serviceType         = (serviceDef != null) ? serviceDef.getName() : "";
+            RangerPluginContext rangerPluginContext = new RangerPluginContext(new RangerPluginConfig(serviceType, null, "ranger-admin", null, null, options));
 
-        return new RangerPolicyAdminImpl(policies, rangerPluginContext, roles);
+            return new RangerPolicyAdminImpl(policies, rangerPluginContext, roles);
+        }
     }
 
     static class RangerPolicyAdminWrapper {
