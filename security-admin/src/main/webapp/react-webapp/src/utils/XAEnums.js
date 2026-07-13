@@ -490,7 +490,13 @@ export const AuthType = {
     label: "Trusted Proxy",
     rbkey: "xa.enum.AuthType.AUTH_TYPE_TRUSTED_PROXY",
     tt: "lbl.AuthType_AUTH_TYPE_TRUSTED_PROXY"
-  }
+  },
+  AUTH_TYPE_SAML: {
+      value: 5,
+      label: "SAML",
+      rbkey: "xa.enum.AuthType.AUTH_TYPE_SAML",
+      tt: "lbl.AuthType_AUTH_TYPE_SAML"
+    }
 };
 
 export const ActivationStatus = {

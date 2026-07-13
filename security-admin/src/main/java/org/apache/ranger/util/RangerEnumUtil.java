@@ -1958,6 +1958,14 @@ public class RangerEnumUtil {
         vElement.setEnumName(vEnum.getEnumName());
 
         vEnum.getElementList().add(vElement);
+        vElement = new VEnumElement();
+        vElement.setElementName("AUTH_TYPE_SAML");
+        vElement.setElementValue(5);
+        vElement.setElementLabel("SAML");
+        vElement.setRbKey("xa.enum.AuthType.AUTH_TYPE_SAML");
+        vElement.setEnumName(vEnum.getEnumName());
+
+        vEnum.getElementList().add(vElement);
 
         ///////////////////////////////////
         // XResponse::ResponseStatus
