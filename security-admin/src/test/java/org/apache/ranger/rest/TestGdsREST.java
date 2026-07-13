@@ -75,6 +75,7 @@ import java.util.UUID;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
@@ -1361,7 +1362,7 @@ public class TestGdsREST {
     }
 
     @Test
-    public void testGetSecureServiceGdsInfoIfUpdated() throws Exception {
+    public void testGetSecureServiceGdsInfoIfUpdated_AdminAllowed() throws Exception {
         String serviceName = "testService";
         Long lastKnownVersion = 1L;
         Long lastActivationTime = 0L;
@@ -1372,28 +1373,136 @@ public class TestGdsREST {
         ServiceGdsInfo expected = new ServiceGdsInfo();
         expected.setGdsVersion(2L);
 
-        doNothing().when(bizUtil).failUnauthenticatedDownloadIfNotAllowed();
-        when(serviceUtil.isValidateHttpsAuthentication(serviceName, request)).thenReturn(true);
+        when(serviceUtil.isValidService(serviceName, request)).thenReturn(true);
+        when(bizUtil.isAdmin()).thenReturn(true);
         when(gdsStore.getGdsInfoIfUpdated(serviceName, lastKnownVersion)).thenReturn(expected);
-
-        ServiceGdsInfo result = gdsREST.getSecureServiceGdsInfoIfUpdated(serviceName, lastKnownVersion,
-                lastActivationTime, pluginId, clusterName, pluginCapabilities, request);
+        ServiceGdsInfo result = gdsREST.getSecureServiceGdsInfoIfUpdated(serviceName, lastKnownVersion, lastActivationTime,
+                pluginId, clusterName, pluginCapabilities, request);
 
         assertNotNull(result);
         assertEquals(expected.getGdsVersion(), result.getGdsVersion());
         verify(gdsStore).getGdsInfoIfUpdated(serviceName, lastKnownVersion);
+        verify(serviceDBStore, Mockito.never()).getServiceByName(anyString());
+    }
+
+    @Test
+    public void testGetSecureServiceGdsInfoIfUpdated_NonAdminAllowedViaDownloadList() throws Exception {
+        String        serviceName      = serviceHive;
+        Long          lastKnownVersion = 1L;
+        RangerService rangerService    = new RangerService();
+        rangerService.setId(1L);
+        rangerService.setName(serviceName);
+
+        ServiceGdsInfo expected = new ServiceGdsInfo();
+        expected.setGdsVersion(3L);
+
+        when(serviceUtil.isValidService(serviceName, request)).thenReturn(true);
+        when(bizUtil.isAdmin()).thenReturn(false);
+        when(serviceDBStore.getServiceByName(serviceName)).thenReturn(rangerService);
+        when(bizUtil.isUserAllowed(rangerService, ServiceREST.Allowed_User_List_For_Download)).thenReturn(true);
+        when(gdsStore.getGdsInfoIfUpdated(serviceName, lastKnownVersion)).thenReturn(expected);
+
+        ServiceGdsInfo result = gdsREST.getSecureServiceGdsInfoIfUpdated(serviceName, lastKnownVersion, 0L, "p1", "c1", "caps", request);
+
+        assertNotNull(result);
+        assertEquals(expected.getGdsVersion(), result.getGdsVersion());
+        verify(bizUtil).isUserAllowed(rangerService, ServiceREST.Allowed_User_List_For_Download);
+        verify(bizUtil, Mockito.never()).isUserAllowed(rangerService, ServiceREST.Allowed_User_List_For_Grant_Revoke);
+    }
+
+    @Test
+    public void testGetSecureServiceGdsInfoIfUpdated_NonAdminAllowedViaGrantRevokeList() throws Exception {
+        String        serviceName      = serviceHive;
+        Long          lastKnownVersion = 1L;
+        RangerService rangerService    = new RangerService();
+        rangerService.setId(2L);
+        rangerService.setName(serviceName);
+
+        ServiceGdsInfo expected = new ServiceGdsInfo();
+        expected.setGdsVersion(4L);
+
+        when(serviceUtil.isValidService(serviceName, request)).thenReturn(true);
+        when(bizUtil.isAdmin()).thenReturn(false);
+        when(serviceDBStore.getServiceByName(serviceName)).thenReturn(rangerService);
+        when(bizUtil.isUserAllowed(rangerService, ServiceREST.Allowed_User_List_For_Download)).thenReturn(false);
+        when(bizUtil.isUserAllowed(rangerService, ServiceREST.Allowed_User_List_For_Grant_Revoke)).thenReturn(true);
+        when(gdsStore.getGdsInfoIfUpdated(serviceName, lastKnownVersion)).thenReturn(expected);
+
+        ServiceGdsInfo result = gdsREST.getSecureServiceGdsInfoIfUpdated(serviceName, lastKnownVersion,
+                0L, "p1", "c1", "caps", request);
+
+        assertNotNull(result);
+        assertEquals(expected.getGdsVersion(), result.getGdsVersion());
+        verify(bizUtil).isUserAllowed(rangerService, ServiceREST.Allowed_User_List_For_Download);
+        verify(bizUtil).isUserAllowed(rangerService, ServiceREST.Allowed_User_List_For_Grant_Revoke);
+    }
+
+    @Test
+    public void testGetSecureServiceGdsInfoIfUpdated_NonAdminForbidden() throws Exception {
+        String        serviceName      = serviceHive;
+        Long          lastKnownVersion = 1L;
+        RangerService rangerService    = new RangerService();
+        rangerService.setId(3L);
+        rangerService.setName(serviceName);
+
+        when(serviceUtil.isValidService(serviceName, request)).thenReturn(true);
+        when(bizUtil.isAdmin()).thenReturn(false);
+        when(serviceDBStore.getServiceByName(serviceName)).thenReturn(rangerService);
+        when(bizUtil.isUserAllowed(rangerService, ServiceREST.Allowed_User_List_For_Download)).thenReturn(false);
+        when(bizUtil.isUserAllowed(rangerService, ServiceREST.Allowed_User_List_For_Grant_Revoke)).thenReturn(false);
+        doNothing().when(assetMgr).createPluginInfo(anyString(), anyString(), any(HttpServletRequest.class),
+                anyInt(), any(), any(), anyLong(), anyInt(), anyString(), anyString());
+        when(restErrorUtil.createRESTException(eq(HttpServletResponse.SC_FORBIDDEN), anyString(), eq(true)))
+                .thenThrow(new WebApplicationException());
+        assertThrows(WebApplicationException.class, () -> gdsREST.getSecureServiceGdsInfoIfUpdated(serviceName, lastKnownVersion,
+                0L, "p1", "c1", "caps", request));
+        verify(gdsStore, Mockito.never()).getGdsInfoIfUpdated(anyString(), anyLong());
+    }
+
+    @Test
+    public void testGetSecureServiceGdsInfoIfUpdated_ServiceNotFoundForbidden() throws Exception {
+        String serviceName      = "missingSvc";
+        Long   lastKnownVersion = 1L;
+
+        when(serviceUtil.isValidService(serviceName, request)).thenReturn(true);
+        when(bizUtil.isAdmin()).thenReturn(false);
+        when(serviceDBStore.getServiceByName(serviceName)).thenReturn(null);
+        doNothing().when(assetMgr).createPluginInfo(anyString(), anyString(), any(HttpServletRequest.class),
+                anyInt(), any(), any(), anyLong(), anyInt(), anyString(), anyString());
+        when(restErrorUtil.createRESTException(eq(HttpServletResponse.SC_FORBIDDEN), anyString(), eq(true)))
+                .thenThrow(new WebApplicationException());
+        assertThrows(WebApplicationException.class, () ->
+                gdsREST.getSecureServiceGdsInfoIfUpdated(serviceName, lastKnownVersion, 0L, "p1", "c1", "caps", request));
+        verify(gdsStore, Mockito.never()).getGdsInfoIfUpdated(anyString(), anyLong());
+    }
+
+    @Test
+    public void testGetSecureServiceGdsInfoIfUpdated_InvalidServiceReturnsNull() throws Exception {
+        String serviceName      = "invalidSvc";
+        Long   lastKnownVersion = 1L;
+
+        when(serviceUtil.isValidService(serviceName, request)).thenReturn(false);
+        doNothing().when(assetMgr).createPluginInfo(anyString(), anyString(), any(HttpServletRequest.class),
+                anyInt(), any(), any(), anyLong(), anyInt(), anyString(), anyString());
+
+        ServiceGdsInfo result = gdsREST.getSecureServiceGdsInfoIfUpdated(serviceName, lastKnownVersion,
+                0L, "p1", "c1", "caps", request);
+
+        assertEquals(null, result);
+        verify(bizUtil, Mockito.never()).isAdmin();
+        verify(gdsStore, Mockito.never()).getGdsInfoIfUpdated(anyString(), anyLong());
     }
 
     @Test
     public void testGetSecureServiceGdsInfoIfUpdatedGenericException() throws Exception {
-        String serviceName = "svc";
-        Long lastKnownVersion = 1L;
-        String pluginId = "p1";
-        String clusterName = "c1";
-        String pluginCapabilities = "caps";
+        String        serviceName      = "svc";
+        Long          lastKnownVersion = 1L;
+        RangerService rangerService    = new RangerService();
+        rangerService.setId(4L);
+        rangerService.setName(serviceName);
 
-        doNothing().when(bizUtil).failUnauthenticatedDownloadIfNotAllowed();
-        when(serviceUtil.isValidateHttpsAuthentication(serviceName, request)).thenReturn(true);
+        when(serviceUtil.isValidService(serviceName, request)).thenReturn(true);
+        when(bizUtil.isAdmin()).thenReturn(true);
         when(gdsStore.getGdsInfoIfUpdated(serviceName, lastKnownVersion)).thenThrow(new RuntimeException("err"));
         doNothing().when(assetMgr).createPluginInfo(
                 Mockito.anyString(),
@@ -1409,7 +1518,7 @@ public class TestGdsREST {
         when(restErrorUtil.createRESTException(Mockito.anyInt(), Mockito.anyString(), Mockito.anyBoolean())).thenThrow(new WebApplicationException());
 
         assertThrows(WebApplicationException.class,
-                () -> gdsREST.getSecureServiceGdsInfoIfUpdated(serviceName, lastKnownVersion, 0L, pluginId, clusterName, pluginCapabilities, request));
+                () -> gdsREST.getSecureServiceGdsInfoIfUpdated(serviceName, lastKnownVersion, 0L, "p1", "c1", "caps", request));
     }
 
     @Test
@@ -2327,16 +2436,16 @@ public class TestGdsREST {
         doNothing().when(assetMgr).createPluginInfo(anyString(), anyString(), any(HttpServletRequest.class), anyInt(), any(), any(), anyLong(), anyInt(), anyString(), anyString());
 
         ServiceGdsInfo result = gdsREST.getServiceGdsInfoIfUpdated(serviceName, lastKnownVersion, 0L, "p1", "c1", "caps", request);
-        assertEquals(null, result);
+        assertNull(result);
     }
 
     @Test
     public void testGetSecureServiceGdsInfoIfUpdated_NotModified() throws Exception {
         String serviceName = "svc-secure-nomod";
-        Long lastKnownVersion = 7L;
+        Long   lastKnownVersion = 7L;
 
-        doNothing().when(bizUtil).failUnauthenticatedDownloadIfNotAllowed();
-        when(serviceUtil.isValidateHttpsAuthentication(serviceName, request)).thenReturn(true);
+        when(serviceUtil.isValidService(serviceName, request)).thenReturn(true);
+        when(bizUtil.isAdmin()).thenReturn(true);
         when(gdsStore.getGdsInfoIfUpdated(serviceName, lastKnownVersion)).thenReturn(null);
         doNothing().when(assetMgr).createPluginInfo(anyString(), anyString(), any(HttpServletRequest.class), anyInt(), any(), any(), anyLong(), anyInt(), anyString(), anyString());
         when(restErrorUtil.createRESTException(eq(HttpServletResponse.SC_NOT_MODIFIED), anyString(), eq(false))).thenThrow(new WebApplicationException());

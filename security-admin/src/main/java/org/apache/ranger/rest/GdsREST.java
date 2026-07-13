@@ -1787,21 +1787,37 @@ public class GdsREST {
         int            httpCode          = HttpServletResponse.SC_OK;
         Long           downloadedVersion = null;
         String         logMsg            = null;
+        boolean        isAllowed         = false;
 
         try {
-            bizUtil.failUnauthenticatedDownloadIfNotAllowed();
-
-            boolean isValid = serviceUtil.isValidateHttpsAuthentication(serviceName, request);
+            boolean isValid = serviceUtil.isValidService(serviceName, request);
 
             if (isValid) {
-                ret = gdsStore.getGdsInfoIfUpdated(serviceName, lastKnownVersion);
-
-                if (ret == null) {
-                    downloadedVersion = lastKnownVersion;
-                    httpCode          = HttpServletResponse.SC_NOT_MODIFIED;
-                    logMsg            = "No change since last update";
+                if (bizUtil.isAdmin()) {
+                    isAllowed = true;
                 } else {
-                    downloadedVersion = ret.getGdsVersion();
+                    RangerService rangerService = serviceDBStore.getServiceByName(serviceName);
+                    if (rangerService != null) {
+                        isAllowed = bizUtil.isUserAllowed(rangerService, ServiceREST.Allowed_User_List_For_Download);
+                        if (!isAllowed) {
+                            isAllowed = bizUtil.isUserAllowed(rangerService, ServiceREST.Allowed_User_List_For_Grant_Revoke);
+                        }
+                    }
+                }
+                if (isAllowed) {
+                    ret = gdsStore.getGdsInfoIfUpdated(serviceName, lastKnownVersion);
+                    if (ret == null) {
+                        downloadedVersion = lastKnownVersion;
+                        httpCode          = HttpServletResponse.SC_NOT_MODIFIED;
+                        logMsg            = "No change since last update";
+                    } else {
+                        downloadedVersion = ret.getGdsVersion();
+                    }
+                } else {
+                    LOG.error("GdsREST.getSecureServiceGdsInfoIfUpdated(serviceName={}) failed as User doesn't have permission to download GDS data", serviceName);
+
+                    httpCode = HttpServletResponse.SC_FORBIDDEN;
+                    logMsg   = "User doesn't have permission to download GDS data";
                 }
             }
         } catch (WebApplicationException webException) {
