@@ -21,6 +21,7 @@ package org.apache.ranger.ldapusersync.process;
 
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.hadoop.security.SecureClientLogin;
 import org.apache.hadoop.thirdparty.com.google.common.collect.HashBasedTable;
 import org.apache.hadoop.thirdparty.com.google.common.collect.Table;
 import org.apache.ranger.ugsyncutil.model.LdapSyncSourceInfo;
@@ -49,7 +50,11 @@ import javax.naming.ldap.PagedResultsResponseControl;
 import javax.naming.ldap.Rdn;
 import javax.naming.ldap.StartTlsRequest;
 import javax.naming.ldap.StartTlsResponse;
+import javax.security.auth.Subject;
 
+import java.io.IOException;
+import java.net.UnknownHostException;
+import java.security.PrivilegedAction;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
@@ -70,6 +75,7 @@ public class LdapUserGroupBuilder implements UserGroupSource {
     private static final String DATE_FORMAT          = "yyyyMMddHHmmss";
     private static final String MEMBER_OF_ATTR       = "memberof=";
     private static final String GROUP_NAME_ATTRIBUTE = "cn=";
+    public static        String localHostname        = "unknown";
     private static final int    PAGE_SIZE            = 500;
 
     /* for AD uSNChanged */
@@ -98,6 +104,9 @@ public class LdapUserGroupBuilder implements UserGroupSource {
     private String         ldapBindDn;
     private String         ldapBindPassword;
     private String         ldapAuthenticationMechanism;
+    private String         principal;
+    private String         keytab;
+    private String         nameRules;
     private String         ldapReferral;
     private String         searchBase;
     private String         userNameAttribute;
@@ -280,7 +289,7 @@ public class LdapUserGroupBuilder implements UserGroupSource {
         }
     }
 
-    private void createLdapContext() throws Throwable {
+    private void initializeLdapContext() throws Throwable {
         Properties env = new Properties();
 
         env.put(Context.INITIAL_CONTEXT_FACTORY, "com.sun.jndi.ldap.LdapCtxFactory");
@@ -318,7 +327,16 @@ public class LdapUserGroupBuilder implements UserGroupSource {
             }
         }
 
-        ldapContext = new InitialLdapContext(env, null);
+        env.put(Context.SECURITY_AUTHENTICATION, ldapAuthenticationMechanism);
+        env.put(Context.SECURITY_PRINCIPAL, ldapBindDn);
+        env.put(Context.SECURITY_CREDENTIALS, ldapBindPassword);
+        env.put(Context.REFERRAL, ldapReferral);
+
+        try {
+            ldapContext = new InitialLdapContext(env, null);
+        } catch (NamingException e) {
+            throw e;
+        }
 
         if (!ldapUrl.startsWith("ldaps")) {
             if (config.isStartTlsEnabled()) {
@@ -333,11 +351,22 @@ public class LdapUserGroupBuilder implements UserGroupSource {
                 LOG.info("Starting TLS session...");
             }
         }
+    }
 
-        ldapContext.addToEnvironment(Context.SECURITY_PRINCIPAL, ldapBindDn);
-        ldapContext.addToEnvironment(Context.SECURITY_CREDENTIALS, ldapBindPassword);
-        ldapContext.addToEnvironment(Context.SECURITY_AUTHENTICATION, ldapAuthenticationMechanism);
-        ldapContext.addToEnvironment(Context.REFERRAL, ldapReferral);
+    private void createLdapContext() throws Throwable {
+        if (ldapAuthenticationMechanism.equalsIgnoreCase("GSSAPI")) {
+            Subject sub = SecureClientLogin.loginUserFromKeytab(principal, keytab, nameRules);
+            Subject.doAs(sub, (PrivilegedAction<Void>) () -> {
+                try {
+                    initializeLdapContext();
+                } catch (Throwable e) {
+                    LOG.error("Failed to create LDAP context: ", e);
+                }
+                return null;
+            });
+        } else {
+            initializeLdapContext();
+        }
     }
 
     private void setConfig() throws Throwable {
@@ -351,6 +380,13 @@ public class LdapUserGroupBuilder implements UserGroupSource {
         ldapBindDn                  = config.getLdapBindDn();
         ldapBindPassword            = config.getLdapBindPassword();
         ldapAuthenticationMechanism = config.getLdapAuthenticationMechanism();
+        try {
+            principal = SecureClientLogin.getPrincipal(config.getProperty(UgsyncCommonConstants.PRINCIPAL, ""), localHostname);
+        } catch (IOException ignored) {
+            // do nothing
+        }
+        keytab                      = config.getProperty(UgsyncCommonConstants.KEYTAB, "");
+        nameRules                   = config.getProperty(UgsyncCommonConstants.NAME_RULE, "DEFAULT");
         ldapReferral                = config.getContextReferral();
         searchBase                  = config.getSearchBase();
         userSearchBase              = config.getUserSearchBase().split(";");
@@ -649,28 +685,7 @@ public class LdapUserGroupBuilder implements UserGroupSource {
                             }
                         }
 
-                        // Examine the paged results control response
-                        Control[] controls = ldapContext.getResponseControls();
-
-                        if (controls != null) {
-                            for (Control control : controls) {
-                                if (control instanceof PagedResultsResponseControl) {
-                                    PagedResultsResponseControl prrc = (PagedResultsResponseControl) control;
-
-                                    total = prrc.getResultSize();
-
-                                    if (total != 0) {
-                                        LOG.debug("END-OF-PAGE total : {}", total);
-                                    } else {
-                                        LOG.debug("END-OF-PAGE total : unknown");
-                                    }
-
-                                    cookie = prrc.getCookie();
-                                }
-                            }
-                        } else {
-                            LOG.debug("No controls were sent from the server");
-                        }
+                        cookie = handlePagedResults();
 
                         // Re-activate paged results
                         if (pagedResultsEnabled) {
@@ -708,6 +723,7 @@ public class LdapUserGroupBuilder implements UserGroupSource {
         NamingEnumeration<SearchResult> groupSearchResultEnum     = null;
         DateFormat                      dateFormat                = new SimpleDateFormat(DATE_FORMAT);
         long                            highestdeltaSyncGroupTime = deltaSyncGroupTime;
+        Map<String, Set<String>>        largeGroups               = new HashMap<>();
 
         try {
             createLdapContext();
@@ -741,15 +757,16 @@ public class LdapUserGroupBuilder implements UserGroupSource {
 
             LOG.info("extendedAllGroupsSearchFilter = {}", extendedAllGroupsSearchFilter);
 
-            for (String s : groupSearchBase) {
+            for (int ou = 0; ou < groupSearchBase.length; ou++) {
                 byte[] cookie  = null;
                 int    counter = 0;
 
+                Set<String> largeGroupNames = new HashSet<>();
                 try {
                     int paged = 0;
 
                     do {
-                        groupSearchResultEnum = ldapContext.search(s, extendedAllGroupsSearchFilter, groupSearchControls);
+                        groupSearchResultEnum = ldapContext.search(groupSearchBase[ou], extendedAllGroupsSearchFilter, groupSearchControls);
 
                         while (groupSearchResultEnum.hasMore()) {
                             final SearchResult groupEntry = groupSearchResultEnum.next();
@@ -823,71 +840,22 @@ public class LdapUserGroupBuilder implements UserGroupSource {
                             int       userCount       = 0;
 
                             if (groupMemberAttr == null || groupMemberAttr.size() <= 0) {
-                                try {
-                                    LOG.info("No members available for {}", gName);
-                                } catch (Exception e) {
-                                    throw new RuntimeException(e);
+                                if (config.isLargeGroupSyncEnabled()) {
+                                    groupMemberAttr = attributes.get("member;range=0-1499");
                                 }
-
-                                sourceGroupUsers.put(groupFullName, new HashSet<>());
-                                continue;
-                            }
-
-                            NamingEnumeration<?> userEnum = groupMemberAttr.getAll();
-
-                            while (userEnum.hasMore()) {
-                                String originalUserFullName = (String) userEnum.next();
-
-                                if (originalUserFullName == null || originalUserFullName.trim().isEmpty()) {
+                                if (groupMemberAttr == null || groupMemberAttr.size() <= 0) {
+                                    LOG.info("No members available for {}", gName);
                                     sourceGroupUsers.put(groupFullName, new HashSet<>());
                                     continue;
+                                } else {
+                                    largeGroupNames.add(gName);
                                 }
-
-                                userCount++;
-
-                                if (!userSearchEnabled) {
-                                    Map<String, String> userAttrMap = new HashMap<>();
-                                    String              userName    = getShortName(originalUserFullName);
-
-                                    userAttrMap.put(UgsyncCommonConstants.ORIGINAL_NAME, userName);
-                                    userAttrMap.put(UgsyncCommonConstants.FULL_NAME, originalUserFullName);
-                                    userAttrMap.put(UgsyncCommonConstants.SYNC_SOURCE, currentSyncSource);
-                                    userAttrMap.put(UgsyncCommonConstants.LDAP_URL, config.getLdapUrl());
-
-                                    sourceUsers.put(originalUserFullName, userAttrMap);
-
-                                    LOG.debug("As usersearch is disabled, adding user {} from group member attribute for group {}", userName, gName);
-                                }
-
-                                groupUserTable.put(groupFullName, originalUserFullName, originalUserFullName);
                             }
 
+                            userCount = processGroupMembers(groupMemberAttr, groupFullName);
                             LOG.info("No. of members in the group {} = {}", gName, userCount);
                         }
-
-                        // Examine the paged results control response
-                        Control[] controls = ldapContext.getResponseControls();
-
-                        if (controls != null) {
-                            for (Control control : controls) {
-                                if (control instanceof PagedResultsResponseControl) {
-                                    PagedResultsResponseControl prrc = (PagedResultsResponseControl) control;
-
-                                    total = prrc.getResultSize();
-
-                                    if (total != 0) {
-                                        LOG.debug("END-OF-PAGE total: {}", total);
-                                    } else {
-                                        LOG.debug("END-OF-PAGE total: unknown");
-                                    }
-
-                                    cookie = prrc.getCookie();
-                                }
-                            }
-                        } else {
-                            LOG.debug("No controls were sent from the server");
-                        }
-
+                        cookie = handlePagedResults();
                         // Re-activate paged results
                         if (pagedResultsEnabled) {
                             LOG.debug("Fetched paged results round: {}", ++paged);
@@ -901,6 +869,10 @@ public class LdapUserGroupBuilder implements UserGroupSource {
                     LOG.error("LdapUserGroupBuilder.getGroups() failed with exception: ", t);
                     LOG.info("LdapUserGroupBuilder.getGroups() group count: {}", counter);
                 }
+                if (config.isLargeGroupSyncEnabled() && !largeGroupNames.isEmpty()) {
+                    LOG.info("Large groups found: {}", largeGroupNames);
+                    largeGroups.put(groupSearchBase[ou], largeGroupNames);
+                }
             }
         } finally {
             if (groupSearchResultEnum != null) {
@@ -908,6 +880,10 @@ public class LdapUserGroupBuilder implements UserGroupSource {
             }
 
             closeLdapContext();
+            if (config.isLargeGroupSyncEnabled() && MapUtils.isNotEmpty(largeGroups)) {
+                LOG.info("Large groups found: {}", largeGroups);
+                getRemainingGroupMembers(largeGroups);
+            }
         }
 
         if (groupHierarchyLevels > 0) {
@@ -1056,59 +1032,10 @@ public class LdapUserGroupBuilder implements UserGroupSource {
                             }
 
                             sourceGroups.put(groupFullName, groupAttrMap);
-
-                            NamingEnumeration<?> userEnum = groupMemberAttr.getAll();
-
-                            while (userEnum.hasMore()) {
-                                String originalUserFullName = (String) userEnum.next();
-
-                                if (originalUserFullName == null || originalUserFullName.trim().isEmpty()) {
-                                    continue;
-                                }
-
-                                userCount++;
-
-                                if (!userSearchEnabled && !sourceGroups.containsKey(originalUserFullName)) {
-                                    Map<String, String> userAttrMap = new HashMap<>();
-                                    String              userName    = getShortName(originalUserFullName);
-
-                                    userAttrMap.put(UgsyncCommonConstants.ORIGINAL_NAME, userName);
-                                    userAttrMap.put(UgsyncCommonConstants.FULL_NAME, originalUserFullName);
-                                    userAttrMap.put(UgsyncCommonConstants.SYNC_SOURCE, currentSyncSource);
-                                    userAttrMap.put(UgsyncCommonConstants.LDAP_URL, config.getLdapUrl());
-
-                                    sourceUsers.put(originalUserFullName, userAttrMap);
-                                }
-
-                                groupUserTable.put(groupFullName, originalUserFullName, originalUserFullName);
-                            }
-
+                            userCount = processGroupMembers(groupMemberAttr, groupFullName);
                             LOG.info("No. of members in the group {} = {}", gName, userCount);
                         }
-
-                        // Examine the paged results control response
-                        Control[] controls = ldapContext.getResponseControls();
-
-                        if (controls != null) {
-                            for (Control control : controls) {
-                                if (control instanceof PagedResultsResponseControl) {
-                                    PagedResultsResponseControl prrc = (PagedResultsResponseControl) control;
-
-                                    total = prrc.getResultSize();
-
-                                    if (total != 0) {
-                                        LOG.debug("END-OF-PAGE total : {}", total);
-                                    } else {
-                                        LOG.debug("END-OF-PAGE total : unknown");
-                                    }
-
-                                    cookie = prrc.getCookie();
-                                }
-                            }
-                        } else {
-                            LOG.debug("No controls were sent from the server");
-                        }
-
+                        cookie = handlePagedResults();
                         // Re-activate paged results
                         if (pagedResultsEnabled) {
                             ldapContext.setRequestControls(new Control[] {new PagedResultsControl(pagedResultsSize, cookie, Control.CRITICAL)});
@@ -1149,7 +1076,7 @@ public class LdapUserGroupBuilder implements UserGroupSource {
             } catch (ClassCastException e) {
                 LOG.error("{} type is not set properly {}", attrName, e.getMessage());
             }
-        } else if (attrType.equals("String")) {
+        } else if (attrType.equalsIgnoreCase("String")) {
             userAttrMap.put(attrName, (String) attr.get());
         } else {
             LOG.warn("Attribute Type {} not supported for {}", attrType, attrName);
@@ -1206,6 +1133,160 @@ public class LdapUserGroupBuilder implements UserGroupSource {
         LOG.info("longName: {}, userName: {}", longName, shortName);
 
         return shortName;
+    }
+
+    private byte[] handlePagedResults() throws Throwable {
+        Control[] controls = ldapContext.getResponseControls();
+
+        if (controls != null) {
+            for (int i = 0; i < controls.length; i++) {
+                if (controls[i] instanceof PagedResultsResponseControl) {
+                    PagedResultsResponseControl prrc = (PagedResultsResponseControl) controls[i];
+                    LOG.debug("END-OF-PAGE total: {}", prrc.getResultSize());
+                    return prrc.getCookie();
+                }
+            }
+        } else {
+            LOG.debug("No controls were sent from the server");
+        }
+        return null;
+    }
+
+    private int processGroupMembers(Attribute groupMemberAttr, String groupFullName) throws Throwable {
+        NamingEnumeration<?> userEnum  = groupMemberAttr.getAll();
+        int                  userCount = 0;
+        while (userEnum.hasMore()) {
+            String originalUserFullName = (String) userEnum.next();
+
+            if (originalUserFullName == null || originalUserFullName.trim().isEmpty()) {
+                sourceGroupUsers.put(groupFullName, new HashSet<>());
+                continue;
+            }
+
+            userCount++;
+
+            if (!userSearchEnabled) {
+                Map<String, String> userAttrMap = new HashMap<>();
+                String              userName    = getShortName(originalUserFullName);
+
+                userAttrMap.put(UgsyncCommonConstants.ORIGINAL_NAME, userName);
+                userAttrMap.put(UgsyncCommonConstants.FULL_NAME, originalUserFullName);
+                userAttrMap.put(UgsyncCommonConstants.SYNC_SOURCE, currentSyncSource);
+                userAttrMap.put(UgsyncCommonConstants.LDAP_URL, config.getLdapUrl());
+
+                sourceUsers.put(originalUserFullName, userAttrMap);
+
+                LOG.debug("As usersearch is disabled, adding user {} from group member attribute for group {}", userName, groupFullName);
+            }
+
+            groupUserTable.put(groupFullName, originalUserFullName, originalUserFullName);
+        }
+        return userCount;
+    }
+
+    private void getRemainingGroupMembers(Map<String, Set<String>> largeGroups) throws Throwable {
+        NamingEnumeration<SearchResult> groupSearchResultEnum = null;
+
+        try {
+            createLdapContext();
+
+            int counter = 0;
+
+            // Loop through each OU
+            for (String ou : largeGroups.keySet()) {
+                Set<String> groupNames = largeGroups.get(ou);
+
+                // Process each group individually
+                for (String groupName : groupNames) {
+                    LOG.info("Processing large group: {}", groupName);
+
+                    // Build filter for THIS group only
+                    String groupFilter = "(&(objectclass=" + groupObjectClass + ")";
+
+                    // Add custom filter if present
+                    if (groupSearchFilter != null && !groupSearchFilter.trim().isEmpty()) {
+                        String customFilter = groupSearchFilter.trim();
+                        if (!customFilter.startsWith("(")) {
+                            customFilter = "(" + customFilter + ")";
+                        }
+                        groupFilter += customFilter;
+                    }
+
+                    // Add the specific group name
+                    groupFilter += "(CN=" + groupName + "))";
+
+                    LOG.info("Group filter for {}: {}", groupName, groupFilter);
+
+                    try {
+                        int     rangeStep = 1500;
+                        int     start     = 1500;
+                        boolean lastRange = false;
+
+                        // Loop until we get all members for THIS group
+                        while (!lastRange) {
+                            // Build the range attribute name
+                            String   rangeAttr  = "member;range=" + start + "-" + (start + rangeStep - 1);
+                            String[] attributes = {rangeAttr};
+
+                            LOG.info("Fetching range for {}: {}", groupName, rangeAttr);
+
+                            // Prepare search controls
+                            SearchControls controls = new SearchControls();
+                            controls.setSearchScope(SearchControls.SUBTREE_SCOPE);
+                            controls.setReturningAttributes(attributes);
+
+                            // Search for this specific group
+                            groupSearchResultEnum = ldapContext.search(ou, groupFilter, controls);
+
+                            while (groupSearchResultEnum.hasMore()) {
+                                final SearchResult result        = groupSearchResultEnum.next();
+                                Attributes         attrs         = result.getAttributes();
+                                String             groupFullName = result.getNameInNamespace();
+
+                                LOG.info("Processing range for group: {}", groupFullName);
+
+                                NamingEnumeration<? extends Attribute> attrEnum = attrs.getAll();
+
+                                while (attrEnum.hasMore()) {
+                                    Attribute attr   = attrEnum.next();
+                                    String    attrID = attr.getID();
+
+                                    LOG.info("Attribute ID: {}", attrID);
+
+                                    // Check if this is the last range for THIS group
+                                    if (attrID.endsWith("*")) {
+                                        lastRange = true;
+                                        LOG.info("Last range reached for group: {}", groupName);
+                                    }
+
+                                    int userCount = processGroupMembers(attr, groupFullName);
+                                    LOG.info("No. of members in the group {} for range {} = {}", groupFullName, rangeAttr, userCount);
+                                }
+
+                                counter++;
+                            }
+
+                            // Move to next range
+                            start += rangeStep;
+                        }
+
+                        LOG.info("Completed processing group: {} with total iterations: {}", groupName, counter);
+                    } catch (Exception e) {
+                        LOG.error("Error processing group {}: {}", groupName, e.getMessage(), e);
+                    }
+                }
+            }
+
+            LOG.info("Completed processing all large groups");
+        } catch (Throwable t) {
+            LOG.error("LdapUserGroupBuilder.getRemainingGroupMembers() failed with exception:", t);
+            throw t;
+        } finally {
+            if (groupSearchResultEnum != null) {
+                groupSearchResultEnum.close();
+            }
+            closeLdapContext();
+        }
     }
 
     private String getFirstRDN(String name) {
@@ -1333,30 +1414,7 @@ public class LdapUserGroupBuilder implements UserGroupSource {
                                 }
                             }
                         }
-
-                        // Examine the paged results control response
-                        Control[] controls = ldapContext.getResponseControls();
-
-                        if (controls != null) {
-                            for (Control control : controls) {
-                                if (control instanceof PagedResultsResponseControl) {
-                                    PagedResultsResponseControl prrc = (PagedResultsResponseControl) control;
-
-                                    total = prrc.getResultSize();
-
-                                    if (total != 0) {
-                                        LOG.debug("END-OF-PAGE total : {}", total);
-                                    } else {
-                                        LOG.debug("END-OF-PAGE total : unknown");
-                                    }
-
-                                    cookie = prrc.getCookie();
-                                }
-                            }
-                        } else {
-                            LOG.debug("No controls were sent from the server");
-                        }
-
+                        cookie = handlePagedResults();
                         // Re-activate paged results
                         if (pagedResultsEnabled) {
                             LOG.debug("Fetched paged results round: {}", ++paged);
@@ -1383,5 +1441,13 @@ public class LdapUserGroupBuilder implements UserGroupSource {
         LOG.debug("computedSearchFilter = {}", computedSearchFilter);
 
         return computedSearchFilter;
+    }
+
+    static {
+        try {
+            localHostname = java.net.InetAddress.getLocalHost().getCanonicalHostName();
+        } catch (UnknownHostException e) {
+            localHostname = "unknown";
+        }
     }
 }

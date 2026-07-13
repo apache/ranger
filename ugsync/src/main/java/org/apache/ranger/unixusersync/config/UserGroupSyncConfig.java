@@ -137,6 +137,8 @@ public class UserGroupSyncConfig {
     private static final int     DEFAULT_LGSYNC_GROUP_HIERARCHY_LEVELS                              = 0;
     private static final int     DEFAULT_LGSYNC_PAGED_RESULTS_SIZE                                  = 500;
     private static final boolean DEFAULT_LGSYNC_LDAP_DELTASYNC_ENABLED                              = false;
+    private static final String  LGSYNC_LDAP_LARGEGROUPSYNC_ENABLED                                 = "ranger.usersync.ldap.largegroupsync";
+    private static final boolean DEFAULT_LGSYNC_LDAP_LARGEGROUPSYNC_ENABLED                         = false;
     private static final boolean DEFAULT_LGSYNC_LDAP_STARTTLS_ENABLED                               = false;
     private static final boolean DEFAULT_LGSYNC_PAGED_RESULTS_ENABLED                               = true;
     private static final boolean DEFAULT_LGSYNC_GROUP_SEARCH_ENABLED                                = true;
@@ -1387,6 +1389,19 @@ public class UserGroupSyncConfig {
         }
 
         return isSyncSourceValidationEnabled;
+    }
+
+    public boolean isLargeGroupSyncEnabled() {
+        boolean largeGroupSyncEnabled;
+        String  val = prop.getProperty(LGSYNC_LDAP_LARGEGROUPSYNC_ENABLED);
+
+        if (val == null || val.trim().isEmpty()) {
+            largeGroupSyncEnabled = DEFAULT_LGSYNC_LDAP_LARGEGROUPSYNC_ENABLED;
+        } else {
+            largeGroupSyncEnabled = Boolean.valueOf(val);
+        }
+
+        return largeGroupSyncEnabled;
     }
 
     private void init() {

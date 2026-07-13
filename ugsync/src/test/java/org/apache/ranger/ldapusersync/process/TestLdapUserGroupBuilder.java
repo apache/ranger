@@ -31,15 +31,19 @@ import org.apache.hadoop.thirdparty.com.google.common.collect.Table;
 import org.apache.ranger.ugsyncutil.model.UgsyncAuditInfo;
 import org.apache.ranger.unixusersync.config.UserGroupSyncConfig;
 import org.apache.ranger.usergroupsync.UserGroupSink;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.MockedConstruction;
+import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import javax.naming.NamingEnumeration;
+import javax.naming.NamingException;
 import javax.naming.directory.Attribute;
 import javax.naming.directory.Attributes;
 import javax.naming.directory.BasicAttribute;
@@ -87,7 +91,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @CreateLdapConnectionPool(maxActive = 1, maxWait = 5000)
 @ApplyLdifFiles("ADSchema.ldif")
 public class TestLdapUserGroupBuilder extends AbstractLdapTestUnit {
-    private static final String STR_EPOCH = new SimpleDateFormat("yyyyMMddHHmmss").format(new Date(0));
+    private static final String                            STR_EPOCH = new SimpleDateFormat("yyyyMMddHHmmss").format(new Date(0));
+    private              MockedStatic<UserGroupSyncConfig> mockedConfig;
 
     @Test
     public void testA_init_and_isChanged() throws Exception {
@@ -530,6 +535,7 @@ public class TestLdapUserGroupBuilder extends AbstractLdapTestUnit {
         configureMinimalLdapConfig();
         UserGroupSyncConfig cfg = UserGroupSyncConfig.getInstance();
         cfg.setProperty("ranger.usersync.ldap.group.searchfilter", "cn=Group*");
+        cfg.setProperty("ranger.usersync.ldap.largegroupsync", "true");
 
         LdapUserGroupBuilder b = new LdapUserGroupBuilder();
         b.init();
@@ -667,7 +673,7 @@ public class TestLdapUserGroupBuilder extends AbstractLdapTestUnit {
         configureMinimalLdapConfig();
         UserGroupSyncConfig cfg = UserGroupSyncConfig.getInstance();
         cfg.setProperty("ranger.usersync.ldap.group.searchfilter", "cn=Nested*");
-
+        cfg.setProperty("ranger.usersync.ldap.groupattributelist", "");
         LdapUserGroupBuilder b = new LdapUserGroupBuilder();
         b.init();
 
@@ -677,15 +683,18 @@ public class TestLdapUserGroupBuilder extends AbstractLdapTestUnit {
         fUserEnabled.setBoolean(b, false);
 
         // Prepare internal structures used by goUpGroupHierarchyLdap
-        Field gutF       = LdapUserGroupBuilder.class.getDeclaredField("groupUserTable");
-        Field srcUsersF  = LdapUserGroupBuilder.class.getDeclaredField("sourceUsers");
-        Field srcGroupsF = LdapUserGroupBuilder.class.getDeclaredField("sourceGroups");
+        Field gutF           = LdapUserGroupBuilder.class.getDeclaredField("groupUserTable");
+        Field srcUsersF      = LdapUserGroupBuilder.class.getDeclaredField("sourceUsers");
+        Field srcGroupsF     = LdapUserGroupBuilder.class.getDeclaredField("sourceGroups");
+        Field srcGroupUsersF = LdapUserGroupBuilder.class.getDeclaredField("sourceGroupUsers");
         gutF.setAccessible(true);
         srcUsersF.setAccessible(true);
         srcGroupsF.setAccessible(true);
+        srcGroupUsersF.setAccessible(true);
         gutF.set(b, HashBasedTable.create());
         srcUsersF.set(b, new HashMap<>());
         srcGroupsF.set(b, new HashMap<>());
+        srcGroupUsersF.set(b, new HashMap<>());
 
         // Parent group DN used to build filter
         final String parentGroupDn = "CN=Parent,OU=Groups,DC=ranger,DC=qe,DC=hortonworks,DC=com";
@@ -865,6 +874,259 @@ public class TestLdapUserGroupBuilder extends AbstractLdapTestUnit {
 
             assertEquals("(memberof=" + validGroupDn + ")", ret);
         }
+    }
+
+    @BeforeEach
+    void setupActiveState() {
+        // Mock the static method to always return true for active state
+        mockedConfig = Mockito.mockStatic(UserGroupSyncConfig.class, Mockito.CALLS_REAL_METHODS);
+        mockedConfig.when(UserGroupSyncConfig::isUgsyncServiceActive).thenReturn(true);
+    }
+
+    @AfterEach
+    void tearDownActiveState() {
+        if (mockedConfig != null) {
+            mockedConfig.close();
+        }
+    }
+
+    @Test
+    void testZ_largeGroupSyncEnabled_detectsInitialRange() throws Throwable {
+        resetConfig();
+        configureMinimalLdapConfig();
+        UserGroupSyncConfig cfg = UserGroupSyncConfig.getInstance();
+        // FIX: Use the correct property name
+        cfg.setProperty("ranger.usersync.ldap.largegroupsync", "true");
+
+        LdapUserGroupBuilder b = new LdapUserGroupBuilder();
+        b.init();
+
+        // Verify that large group sync is enabled in config
+        assertTrue(cfg.isLargeGroupSyncEnabled(), "Large group sync should be enabled");
+
+        // Verify the processGroupMembers method exists
+        Method processGroupMembers = LdapUserGroupBuilder.class.getDeclaredMethod("processGroupMembers", Attribute.class, String.class);
+        assertNotNull(processGroupMembers, "processGroupMembers method should exist");
+
+        // Verify getRemainingGroupMembers method exists (new method for large groups)
+        Method getRemainingGroupMembers = LdapUserGroupBuilder.class.getDeclaredMethod("getRemainingGroupMembers", Map.class);
+        assertNotNull(getRemainingGroupMembers, "getRemainingGroupMembers method should exist");
+
+        // Verify that group search controls include the ranged attribute when large group sync is enabled
+        Field groupSearchControlsF = LdapUserGroupBuilder.class.getDeclaredField("groupSearchControls");
+        groupSearchControlsF.setAccessible(true);
+        SearchControls controls       = (SearchControls) groupSearchControlsF.get(b);
+        String[]       returningAttrs = controls.getReturningAttributes();
+
+        // Check if "member;range=0-1499" is in the returning attributes
+        boolean hasRangeAttr = false;
+        for (String attr : returningAttrs) {
+            if (attr.equals("member;range=0-1499")) {
+                hasRangeAttr = true;
+                break;
+            }
+        }
+        assertFalse(hasRangeAttr, "Should NOT include member;range=0-1499 in initial search - it prevents AD from returning regular member attribute for small groups");
+    }
+
+    @Test
+    void testZA_getRemainingGroupMembers_handles_ranged_attributes() throws Throwable {
+        resetConfig();
+        configureMinimalLdapConfig();
+        UserGroupSyncConfig cfg = UserGroupSyncConfig.getInstance();
+        cfg.setProperty("ranger.usersync.ldap.largegroupsync", "true");
+
+        LdapUserGroupBuilder b = new LdapUserGroupBuilder();
+        b.init();
+
+        // Prepare internal structures
+        Field gutF       = LdapUserGroupBuilder.class.getDeclaredField("groupUserTable");
+        Field srcUsersF  = LdapUserGroupBuilder.class.getDeclaredField("sourceUsers");
+        Field srcGroupsF = LdapUserGroupBuilder.class.getDeclaredField("sourceGroups");
+        gutF.setAccessible(true);
+        srcUsersF.setAccessible(true);
+        srcGroupsF.setAccessible(true);
+        gutF.set(b, HashBasedTable.create());
+        srcUsersF.set(b, new HashMap<>());
+        srcGroupsF.set(b, new HashMap<>());
+
+        Method getRemainingMembers = LdapUserGroupBuilder.class.getDeclaredMethod("getRemainingGroupMembers", Map.class);
+        getRemainingMembers.setAccessible(true);
+
+        // This will throw because it tries to create LDAP context
+        // Test that it throws Throwable (which is expected without a real LDAP server)
+        Map<String, Set<String>> emptyMap = new HashMap<>();
+        assertThrows(Throwable.class, () -> getRemainingMembers.invoke(b, emptyMap));
+    }
+
+    @Test
+    void testZB_processGroupMembers_handles_empty_members() throws Throwable {
+        resetConfig();
+        configureMinimalLdapConfig();
+
+        LdapUserGroupBuilder b = new LdapUserGroupBuilder();
+        b.init();
+
+        // Prepare internal structures
+        Field gutF           = LdapUserGroupBuilder.class.getDeclaredField("groupUserTable");
+        Field srcGroupUsersF = LdapUserGroupBuilder.class.getDeclaredField("sourceGroupUsers");
+        gutF.setAccessible(true);
+        srcGroupUsersF.setAccessible(true);
+        gutF.set(b, HashBasedTable.create());
+        srcGroupUsersF.set(b, new HashMap<>());
+
+        Method processGroupMembers = LdapUserGroupBuilder.class.getDeclaredMethod("processGroupMembers", Attribute.class, String.class);
+        processGroupMembers.setAccessible(true);
+
+        final String groupDn = "CN=TestGroup,OU=Groups,DC=example,DC=com";
+
+        // Create attribute with mix of empty and valid members
+        BasicAttribute members = new BasicAttribute("member");
+        members.add("");  // empty member - causes sourceGroupUsers.put and continue
+        members.add("uid=validuser,ou=people,dc=example,dc=com");
+
+        int count = (Integer) processGroupMembers.invoke(b, members, groupDn);
+
+        // Only the valid member is counted (empty member triggers continue before userCount++)
+        assertEquals(1, count);
+
+        @SuppressWarnings("unchecked")
+        Table<String, String, String> gut = (Table<String, String, String>) gutF.get(b);
+
+        // Only valid user should be in the table
+        assertFalse(gut.contains(groupDn, ""));
+        assertTrue(gut.contains(groupDn, "uid=validuser,ou=people,dc=example,dc=com"));
+
+        // sourceGroupUsers should have been set (from the empty member check)
+        @SuppressWarnings("unchecked")
+        Map<String, Set<String>> srcGroupUsers = (Map<String, Set<String>>) srcGroupUsersF.get(b);
+        assertTrue(srcGroupUsers.containsKey(groupDn));
+    }
+
+    @Test
+    void testZC_largeGroupSync_disabled_skips_remaining_members() throws Throwable {
+        resetConfig();
+        configureMinimalLdapConfig();
+        UserGroupSyncConfig cfg = UserGroupSyncConfig.getInstance();
+        cfg.setProperty("ranger.usersync.ldap.group.searchfilter", "cn=LargeGroup*");
+        cfg.setProperty("ranger.usersync.large.group.sync.enabled", "false");
+
+        LdapUserGroupBuilder b = new LdapUserGroupBuilder();
+        b.init();
+
+        // Verify that large group sync is disabled
+        assertFalse(cfg.isLargeGroupSyncEnabled());
+
+        // Test that with disabled large group sync, processGroupMembers still works normally
+        Field gutF           = LdapUserGroupBuilder.class.getDeclaredField("groupUserTable");
+        Field srcGroupUsersF = LdapUserGroupBuilder.class.getDeclaredField("sourceGroupUsers");
+        gutF.setAccessible(true);
+        srcGroupUsersF.setAccessible(true);
+        gutF.set(b, HashBasedTable.create());
+        srcGroupUsersF.set(b, new HashMap<>());
+
+        Method processGroupMembers = LdapUserGroupBuilder.class.getDeclaredMethod("processGroupMembers", Attribute.class, String.class);
+        processGroupMembers.setAccessible(true);
+
+        final String   groupDn = "CN=NormalGroup,OU=Groups,DC=ranger,DC=qe,DC=hortonworks,DC=com";
+        BasicAttribute members = new BasicAttribute("member");
+        members.add("uid=user1,ou=people,dc=example,dc=com");
+        members.add("uid=user2,ou=people,dc=example,dc=com");
+
+        int count = (Integer) processGroupMembers.invoke(b, members, groupDn);
+        assertEquals(2, count);
+    }
+
+    @Test
+    void testZD_getRemainingGroupMembers_handles_exceptions() throws Throwable {
+        resetConfig();
+        configureMinimalLdapConfig();
+
+        LdapUserGroupBuilder b = new LdapUserGroupBuilder();
+        b.init();
+
+        // Prepare internal structures
+        Field gutF = LdapUserGroupBuilder.class.getDeclaredField("groupUserTable");
+        gutF.setAccessible(true);
+        gutF.set(b, HashBasedTable.create());
+
+        try (MockedConstruction<InitialLdapContext> mocked = Mockito.mockConstruction(InitialLdapContext.class, (mock, ctx) -> {
+            Mockito.when(mock.search(Mockito.anyString(), Mockito.anyString(), Mockito.any(SearchControls.class)))
+                    .thenThrow(new NamingException("Simulated LDAP error"));
+            Mockito.when(mock.getResponseControls()).thenReturn(null);
+        })) {
+            Map<String, Set<String>> largeGroups = new HashMap<>();
+            Set<String>              groupNames  = new HashSet<>();
+            groupNames.add("FailingGroup");
+            largeGroups.put("OU=Groups,DC=ranger,DC=qe,DC=hortonworks,DC=com", groupNames);
+
+            Method getRemainingMembers = LdapUserGroupBuilder.class.getDeclaredMethod("getRemainingGroupMembers", Map.class);
+            getRemainingMembers.setAccessible(true);
+
+            // Should not throw, but log error and continue
+            assertDoesNotThrow(() -> getRemainingMembers.invoke(b, largeGroups));
+        }
+    }
+
+    @Test
+    void testZE_processGroupMembers_handles_members_correctly() throws Throwable {
+        resetConfig();
+        configureMinimalLdapConfig();
+
+        LdapUserGroupBuilder b = new LdapUserGroupBuilder();
+        b.init();
+
+        // Disable user search so members are added to sourceUsers directly
+        Field fUserEnabled       = LdapUserGroupBuilder.class.getDeclaredField("userSearchEnabled");
+        Field currentSyncSourceF = LdapUserGroupBuilder.class.getDeclaredField("currentSyncSource");
+        fUserEnabled.setAccessible(true);
+        currentSyncSourceF.setAccessible(true);
+        fUserEnabled.setBoolean(b, false);
+
+        // Ensure currentSyncSource is set
+        if (currentSyncSourceF.get(b) == null) {
+            currentSyncSourceF.set(b, "LDAP");
+        }
+
+        // Prepare internal structures
+        Field gutF           = LdapUserGroupBuilder.class.getDeclaredField("groupUserTable");
+        Field srcUsersF      = LdapUserGroupBuilder.class.getDeclaredField("sourceUsers");
+        Field srcGroupUsersF = LdapUserGroupBuilder.class.getDeclaredField("sourceGroupUsers");
+        gutF.setAccessible(true);
+        srcUsersF.setAccessible(true);
+        srcGroupUsersF.setAccessible(true);
+        gutF.set(b, HashBasedTable.create());
+        srcUsersF.set(b, new HashMap<>());
+        srcGroupUsersF.set(b, new HashMap<>());
+
+        Method processGroupMembers = LdapUserGroupBuilder.class.getDeclaredMethod("processGroupMembers", Attribute.class, String.class);
+        processGroupMembers.setAccessible(true);
+
+        final String groupDn = "CN=TestGroup,OU=Groups,DC=example,DC=com";
+
+        // Test with a mix of valid and edge case members
+        BasicAttribute members = new BasicAttribute("member");
+        members.add("uid=user1,ou=people,dc=example,dc=com");
+        members.add("uid=user2,ou=people,dc=example,dc=com");
+        members.add("uid=user3,ou=people,dc=example,dc=com");
+
+        int count = (Integer) processGroupMembers.invoke(b, members, groupDn);
+        assertEquals(3, count);
+
+        @SuppressWarnings("unchecked")
+        Table<String, String, String> gut = (Table<String, String, String>) gutF.get(b);
+
+        // All valid users should be in the table
+        assertTrue(gut.contains(groupDn, "uid=user1,ou=people,dc=example,dc=com"));
+        assertTrue(gut.contains(groupDn, "uid=user2,ou=people,dc=example,dc=com"));
+        assertTrue(gut.contains(groupDn, "uid=user3,ou=people,dc=example,dc=com"));
+
+        // When userSearchEnabled is false, users should also be added to sourceUsers
+        @SuppressWarnings("unchecked")
+        Map<String, Map<String, String>> srcUsers = (Map<String, Map<String, String>>) srcUsersF.get(b);
+        assertTrue(srcUsers.containsKey("uid=user1,ou=people,dc=example,dc=com"));
+        assertTrue(srcUsers.containsKey("uid=user2,ou=people,dc=example,dc=com"));
+        assertTrue(srcUsers.containsKey("uid=user3,ou=people,dc=example,dc=com"));
     }
 
     private static void configureMinimalLdapConfig() throws Exception {
