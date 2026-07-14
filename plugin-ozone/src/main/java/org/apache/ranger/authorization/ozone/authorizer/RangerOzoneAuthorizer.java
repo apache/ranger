@@ -41,6 +41,7 @@ import org.apache.ranger.plugin.policyengine.RangerAccessResult;
 import org.apache.ranger.plugin.service.RangerBasePlugin;
 import org.apache.ranger.plugin.util.JsonUtilsV2;
 import org.apache.ranger.plugin.util.RangerPerfTracer;
+import org.apache.ranger.plugin.util.ServiceDefUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -168,7 +169,11 @@ public class RangerOzoneAuthorizer implements IAccessAuthorizer {
         rangerResource.setOwnerUser(context.getOwnerName());
         rangerRequest.setResource(rangerResource);
         rangerRequest.setAccessType(accessType);
-        rangerRequest.setAction(context.getS3Action());
+        if (isOzoneActionPolicyEnabled(plugin)) {
+            rangerRequest.setAction(context.getS3Action());
+        } else {
+            rangerRequest.setAction(accessType);
+        }
         rangerRequest.setRequestData(resource);
         rangerRequest.setClusterName(clusterName);
 
@@ -313,9 +318,11 @@ public class RangerOzoneAuthorizer implements IAccessAuthorizer {
             ret.setPermissions(ozoneGrant.getPermissions().stream().map(RangerOzoneAuthorizer::toRangerPermission).filter(Objects::nonNull).collect(Collectors.toSet()));
         }
 
-        final Set<String> s3Actions = ozoneGrant.getS3Actions();
-        if (s3Actions != null && !s3Actions.isEmpty()) {
-            ret.setActions(s3Actions);
+        if (isOzoneActionPolicyEnabled(plugin)) {
+            final Set<String> s3Actions = ozoneGrant.getS3Actions();
+            if (s3Actions != null && !s3Actions.isEmpty()) {
+                ret.setActions(s3Actions);
+            }
         }
 
         LOG.debug("toRangerGrant(ozoneGrant={}): ret={}", ozoneGrant, ret);
@@ -383,5 +390,9 @@ public class RangerOzoneAuthorizer implements IAccessAuthorizer {
         }
 
         return null;
+    }
+
+    private static boolean isOzoneActionPolicyEnabled(RangerBasePlugin plugin) {
+        return plugin != null && ServiceDefUtil.getOption_enableOzoneActionPolicy(plugin.getServiceDef());
     }
 }

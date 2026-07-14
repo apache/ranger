@@ -47,7 +47,9 @@ import org.apache.ranger.entity.XXResourceDef;
 import org.apache.ranger.entity.XXServiceConfigDef;
 import org.apache.ranger.entity.XXServiceDef;
 import org.apache.ranger.entity.XXServiceDefWithAssignedId;
+import org.apache.ranger.authorization.hadoop.config.RangerAdminConfig;
 import org.apache.ranger.plugin.model.RangerServiceDef;
+import org.apache.ranger.plugin.store.EmbeddedServiceDefsUtil;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerAccessTypeDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerContextEnricherDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerEnumDef;
@@ -71,9 +73,12 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import static org.apache.ranger.service.RangerServiceDefService.PROP_ENABLE_IMPLICIT_CONDITION_EXPRESSION;
+import static org.apache.ranger.service.RangerServiceDefService.PROP_ENABLE_OZONE_ACTION_POLICY;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -783,6 +788,38 @@ public class TestRangerServiceDefService {
     }
 
     @Test
+    public void testOzoneActionPolicyOptionDisabled() {
+        RangerAdminConfig.getInstance().set(PROP_ENABLE_OZONE_ACTION_POLICY, Boolean.FALSE.toString());
+
+        try {
+            RangerServiceDef serviceDef = buildOzoneServiceDefWithActionMatches();
+
+            serviceDefService.applyOzoneActionPolicyHiddenOption(serviceDef);
+
+            assertEquals("false", serviceDef.getOptions().get(RangerServiceDef.OPTION_ENABLE_OZONE_ACTION_POLICY));
+            assertFalse(hasActionMatchesCondition(serviceDef));
+        } finally {
+            RangerAdminConfig.getInstance().unset(PROP_ENABLE_OZONE_ACTION_POLICY);
+        }
+    }
+
+    @Test
+    public void testOzoneActionPolicyOptionEnabled() {
+        RangerAdminConfig.getInstance().set(PROP_ENABLE_OZONE_ACTION_POLICY, Boolean.TRUE.toString());
+
+        try {
+            RangerServiceDef serviceDef = buildOzoneServiceDefWithActionMatches();
+
+            serviceDefService.applyOzoneActionPolicyHiddenOption(serviceDef);
+
+            assertEquals("true", serviceDef.getOptions().get(RangerServiceDef.OPTION_ENABLE_OZONE_ACTION_POLICY));
+            assertTrue(hasActionMatchesCondition(serviceDef));
+        } finally {
+            RangerAdminConfig.getInstance().unset(PROP_ENABLE_OZONE_ACTION_POLICY);
+        }
+    }
+
+    @Test
     public void testMapViewToEntityBean_intOverload_executes() throws Exception {
         Method method = RangerServiceDefWithAssignedIdService.class.getDeclaredMethod("mapViewToEntityBean", RangerServiceDef.class, XXServiceDefWithAssignedId.class, int.class);
         method.setAccessible(true);
@@ -830,6 +867,39 @@ public class TestRangerServiceDefService {
         } catch (Exception e) {
             // Ignore the exception
         }
+    }
+
+    private boolean hasActionMatchesCondition(RangerServiceDef serviceDef) {
+        if (serviceDef.getPolicyConditions() == null) {
+            return false;
+        }
+
+        for (RangerPolicyConditionDef conditionDef : serviceDef.getPolicyConditions()) {
+            if (StringUtils.equals(conditionDef.getName(), "action-matches")) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private RangerServiceDef buildOzoneServiceDefWithActionMatches() {
+        RangerPolicyConditionDef ipRange = new RangerPolicyConditionDef();
+        ipRange.setName("ip-range");
+
+        RangerPolicyConditionDef actionMatches = new RangerPolicyConditionDef();
+        actionMatches.setName("action-matches");
+
+        List<RangerPolicyConditionDef> policyConditions = new ArrayList<>();
+        policyConditions.add(ipRange);
+        policyConditions.add(actionMatches);
+
+        RangerServiceDef serviceDef = new RangerServiceDef();
+        serviceDef.setName(EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_OZONE_NAME);
+        serviceDef.setOptions(new HashMap<>());
+        serviceDef.setPolicyConditions(policyConditions);
+
+        return serviceDef;
     }
 
     private RangerServiceDef rangerServiceDef() {

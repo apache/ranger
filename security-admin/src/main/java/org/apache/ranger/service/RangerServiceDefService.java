@@ -21,17 +21,24 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.ranger.authorization.hadoop.config.RangerAdminConfig;
 import org.apache.ranger.entity.XXServiceDef;
 import org.apache.ranger.plugin.model.RangerServiceDef;
+import org.apache.ranger.plugin.model.RangerServiceDef.RangerPolicyConditionDef;
 import org.apache.ranger.plugin.store.EmbeddedServiceDefsUtil;
+import org.apache.ranger.plugin.util.ServiceDefUtil;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 @Service
 @Scope("singleton")
 public class RangerServiceDefService extends RangerServiceDefServiceBase<XXServiceDef, RangerServiceDef> {
+    public static final String PROP_ENABLE_OZONE_ACTION_POLICY = "ranger.servicedef.enableOzoneActionPolicy";
+
+    private static final String POLICY_CONDITION_ACTION_MATCHES = "action-matches";
+
     private final RangerAdminConfig config;
 
     public RangerServiceDefService() {
@@ -100,5 +107,51 @@ public class RangerServiceDefService extends RangerServiceDefServiceBase<XXServi
         }
 
         return ret;
+    }
+
+    @Override
+    protected RangerServiceDef populateViewBean(XXServiceDef xServiceDef) {
+        final RangerServiceDef ret = super.populateViewBean(xServiceDef);
+
+        applyOzoneActionPolicyHiddenOption(ret);
+
+        return ret;
+    }
+
+    void applyOzoneActionPolicyHiddenOption(RangerServiceDef serviceDef) {
+        if (serviceDef == null) {
+            return;
+        }
+
+        Map<String, String> serviceDefOptions = serviceDef.getOptions();
+
+        if (serviceDefOptions == null) {
+            serviceDefOptions = new HashMap<>();
+            serviceDef.setOptions(serviceDefOptions);
+        }
+
+        if (serviceDefOptions.get(RangerServiceDef.OPTION_ENABLE_OZONE_ACTION_POLICY) == null) {
+            boolean enableOzoneActionPolicy = config.getBoolean(PROP_ENABLE_OZONE_ACTION_POLICY, false);
+
+            serviceDefOptions.put(RangerServiceDef.OPTION_ENABLE_OZONE_ACTION_POLICY, Boolean.toString(enableOzoneActionPolicy));
+            serviceDef.setOptions(serviceDefOptions);
+        }
+
+        if (!ServiceDefUtil.getOption_enableOzoneActionPolicy(serviceDef, config) &&
+                StringUtils.equalsIgnoreCase(serviceDef.getName(), EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_OZONE_NAME)) {
+            List<RangerPolicyConditionDef> policyConditions = serviceDef.getPolicyConditions();
+
+            if (policyConditions != null && !policyConditions.isEmpty()) {
+                List<RangerPolicyConditionDef> filteredPolicyConditions = new ArrayList<>();
+
+                for (RangerPolicyConditionDef policyConditionDef : policyConditions) {
+                    if (!StringUtils.equals(policyConditionDef.getName(), POLICY_CONDITION_ACTION_MATCHES)) {
+                        filteredPolicyConditions.add(policyConditionDef);
+                    }
+                }
+
+                serviceDef.setPolicyConditions(filteredPolicyConditions);
+            }
+        }
     }
 }
