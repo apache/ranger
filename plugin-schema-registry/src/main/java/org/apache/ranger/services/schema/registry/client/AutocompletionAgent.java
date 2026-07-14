@@ -31,20 +31,16 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
- * The class that is used to get needed information for auto completion feature.
+ * The class that is used to get needed information for auto-completion feature.
  */
 public class AutocompletionAgent {
     private static final Logger LOG = LoggerFactory.getLogger(AutocompletionAgent.class);
 
-    private ISchemaRegistryClient client;
-    private String serviceName;
-
-    private static final String errMessage = "You can still save the repository and start creating "
-            + "policies, but you would not be able to use autocomplete for "
-            + "resource names. Check server logs for more info.";
-
+    private static final String errMessage = "You can still save the repository and start creating policies, but you would not be able to use autocomplete for resource names. Check server logs for more info.";
     private static final String successMsg = "ConnectionTest Successful";
 
+    private final ISchemaRegistryClient client;
+    private final String                serviceName;
 
     public AutocompletionAgent(String serviceName, Map<String, String> configs) {
         this(serviceName, new DefaultSchemaRegistryClient(configs));
@@ -52,33 +48,32 @@ public class AutocompletionAgent {
 
     public AutocompletionAgent(String serviceName, ISchemaRegistryClient client) {
         this.serviceName = serviceName;
-        this.client = client;
+        this.client      = client;
     }
 
     public HashMap<String, Object> connectionTest() {
-        HashMap<String, Object> responseData = new HashMap<String, Object>();
+        HashMap<String, Object> responseData = new HashMap<>();
 
         try {
             client.checkConnection();
-            // If it doesn't throw exception, then assume the instance is
-            // reachable
-            BaseClient.generateResponseDataMap(true, successMsg,
-                    successMsg, null, null, responseData);
-            if(LOG.isDebugEnabled()) {
-                LOG.debug("ConnectionTest Successful.");
-            }
+
+            // If it doesn't throw exception, then assume the instance is reachable
+            BaseClient.generateResponseDataMap(true, successMsg, successMsg, null, null, responseData);
+
+            LOG.debug("ConnectionTest Successful");
         } catch (Exception e) {
-            LOG.error("Error connecting to SchemaRegistry. schemaRegistryClient=" + this, e);
-            BaseClient.generateResponseDataMap(false, errMessage,
-                    errMessage, null, null, responseData);
+            LOG.error("Error connecting to SchemaRegistry. schemaRegistryClient={}", this, e);
+
+            BaseClient.generateResponseDataMap(false, errMessage, errMessage, null, null, responseData);
         }
 
         return responseData;
     }
 
     public List<String> getSchemaGroupList(String lookupGroupName, List<String> groupList) {
-        List<String> res = groupList;
+        List<String>       res          = groupList;
         Collection<String> schemaGroups = client.getSchemaGroups();
+
         schemaGroups.forEach(gName -> {
             if (!res.contains(gName) && gName.contains(lookupGroupName)) {
                 res.add(gName);
@@ -88,12 +83,10 @@ public class AutocompletionAgent {
         return res;
     }
 
-    public List<String> getSchemaMetadataList(String lookupSchemaMetadataName,
-                                              List<String> schemaGroupList,
-                                              List<String> schemaMetadataList) {
-        List<String> res = schemaMetadataList;
-
+    public List<String> getSchemaMetadataList(String lookupSchemaMetadataName, List<String> schemaGroupList, List<String> schemaMetadataList) {
+        List<String>       res     = schemaMetadataList;
         Collection<String> schemas = client.getSchemaNames(schemaGroupList);
+
         schemas.forEach(sName -> {
             if (!res.contains(sName) && sName.contains(lookupSchemaMetadataName)) {
                 res.add(sName);
@@ -103,14 +96,10 @@ public class AutocompletionAgent {
         return res;
     }
 
-    public List<String> getBranchList(String lookupBranchName,
-                                      List<String> groupList,
-                                      List<String> schemaList,
-                                      List<String> branchList) {
-        List<String> res = branchList;
-        List<String> expandedSchemaList = schemaList.stream().flatMap(
-                schemaName -> expandSchemaMetadataNameRegex(groupList, schemaName).stream())
-                .collect(Collectors.toList());
+    public List<String> getBranchList(String lookupBranchName, List<String> groupList, List<String> schemaList, List<String> branchList) {
+        List<String> res                = branchList;
+        List<String> expandedSchemaList = schemaList.stream().flatMap(schemaName -> expandSchemaMetadataNameRegex(groupList, schemaName).stream()).collect(Collectors.toList());
+
         expandedSchemaList.forEach(schemaMetadataName -> {
             Collection<String> branches = client.getSchemaBranches(schemaMetadataName);
             branches.forEach(bName -> {
@@ -123,12 +112,19 @@ public class AutocompletionAgent {
         return res;
     }
 
-    List<String> expandSchemaMetadataNameRegex(List<String> schemaGroupList, String lookupSchemaMetadataName) {
-        List<String> res = new ArrayList<>();
+    @Override
+    public String toString() {
+        return "AutocompletionAgent [serviceName=" + serviceName + "]";
+    }
 
+    List<String> expandSchemaMetadataNameRegex(List<String> schemaGroupList, String lookupSchemaMetadataName) {
+        validatePattern(lookupSchemaMetadataName, "schema metadata pattern");
+        String safePattern = convertWildcardToRegex(lookupSchemaMetadataName);
+        List<String>       res     = new ArrayList<>();
         Collection<String> schemas = client.getSchemaNames(schemaGroupList);
+
         schemas.forEach(sName -> {
-            if (sName.matches(lookupSchemaMetadataName)) {
+            if (sName.matches(safePattern)) {
                 res.add(sName);
             }
         });
@@ -136,9 +132,49 @@ public class AutocompletionAgent {
         return res;
     }
 
-    @Override
-    public String toString() {
-        return "AutocompletionAgent [serviceName=" + serviceName + "]";
+    private void validatePattern(String pattern, String patternType) {
+        if (pattern == null || pattern.isEmpty()) {
+            return;
+        }
+        if (!pattern.matches("^[a-zA-Z0-9*?\\[\\]\\-\\$%\\{\\}\\=\\/\\._]+$")) {
+            String msgDesc = "Invalid " + patternType + ": [" + pattern + "]. Only alphanumeric characters along with ( ., _, -, *, ?, [], {}, %, $, = / ) are allowed.";
+            LOG.error(msgDesc);
+            throw new IllegalArgumentException(msgDesc);
+        }
     }
 
+    protected String convertWildcardToRegex(String wildcard) {
+        if (wildcard == null || wildcard.isEmpty()) {
+            return ".*";
+        }
+        StringBuilder regex = new StringBuilder("^");
+        for (int i = 0; i < wildcard.length(); i++) {
+            char c = wildcard.charAt(i);
+            switch (c) {
+                case '*':
+                    regex.append(".*");
+                    break;
+                case '?':
+                    regex.append(".");
+                    break;
+                case '.':
+                case '\\':
+                case '^':
+                case '$':
+                case '|':
+                    regex.append('\\').append(c);
+                    break;
+                case '{':
+                case '}':
+                case '[':
+                case ']':
+                    regex.append('\\').append(c);
+                    break;
+                default:
+                    regex.append(c);
+            }
+        }
+        regex.append('$');
+        return regex.toString();
+    }
 }
