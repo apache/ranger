@@ -20,6 +20,7 @@ package org.apache.ranger.patch;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.ranger.biz.ServiceDBStore;
 import org.apache.ranger.common.JSONUtil;
+import org.apache.ranger.common.PropertiesUtil;
 import org.apache.ranger.common.RangerValidatorFactory;
 import org.apache.ranger.db.RangerDaoManager;
 import org.apache.ranger.entity.XXServiceDef;
@@ -39,6 +40,8 @@ import java.util.Map;
 @Component
 public class PatchForOzoneServiceDefPolicyConditionUpdate_J10065 extends BaseLoader {
     private static final Logger logger = LoggerFactory.getLogger(PatchForOzoneServiceDefPolicyConditionUpdate_J10065.class);
+
+    private static final String PROP_OZONE_ACTION_POLICY_ENABLED = "ranger.ozone.action.policy.enabled";
 
     @Autowired
     RangerDaoManager daoMgr;
@@ -85,6 +88,10 @@ public class PatchForOzoneServiceDefPolicyConditionUpdate_J10065 extends BaseLoa
     public void execLoad() {
         logger.info("==> PatchForOzoneServiceDefPolicyConditionUpdate_J10065.execLoad()");
         try {
+            if (!PropertiesUtil.getBooleanProperty(PROP_OZONE_ACTION_POLICY_ENABLED, false)) {
+                logger.info("{}=false; skipping ozone service-def policy condition update", PROP_OZONE_ACTION_POLICY_ENABLED);
+                return;
+            }
             updateOzoneServiceDef();
         } catch (Exception e) {
             logger.error("Error while applying PatchForOzoneServiceDefPolicyConditionUpdate_J10065", e);

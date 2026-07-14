@@ -71,6 +71,8 @@ public class RangerOzoneAuthorizer implements IAccessAuthorizer {
 
 	private static final String S3_VOLUME_NAME = "s3Vol";
 
+	private static final String PROP_ACTION_POLICY_ENABLED = "action.policy.enabled";
+
 	private static final Logger PERF_OZONEAUTH_REQUEST_LOG = RangerPerfTracer.getPerfLogger("ozoneauth.request");
 
     private static final Logger LOG = LoggerFactory.getLogger(RangerOzoneAuthorizer.class);
@@ -164,7 +166,11 @@ public class RangerOzoneAuthorizer implements IAccessAuthorizer {
 
 		rangerRequest.setResource(rangerResource);
 		rangerRequest.setAccessType(accessType);
-		rangerRequest.setAction(context.getS3Action());
+		if (isActionPolicyEnabled(plugin)) {
+			rangerRequest.setAction(context.getS3Action());
+		} else {
+			rangerRequest.setAction(accessType);
+		}
 		rangerRequest.setRequestData(resource);
 		rangerRequest.setClusterName(clusterName);
 
@@ -374,5 +380,13 @@ public class RangerOzoneAuthorizer implements IAccessAuthorizer {
 
         return null;
     }
+
+	private static boolean isActionPolicyEnabled(final RangerBasePlugin plugin) {
+		if (plugin == null || plugin.getConfig() == null) {
+			return false;
+		}
+
+		return plugin.getConfig().getBoolean(plugin.getConfig().getPropertyPrefix() + "." + PROP_ACTION_POLICY_ENABLED, false);
+	}
 }
 

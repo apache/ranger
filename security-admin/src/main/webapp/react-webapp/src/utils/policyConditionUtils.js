@@ -40,6 +40,27 @@
  */
 
 import { actionRequirementsRegistry } from "./actionRequirements/registry";
+import { getUserProfile } from "Utils/appState";
+
+/**
+ * True when Ozone action-matches policy conditions are enabled in Ranger Admin.
+ * Controlled by ranger.ozone.action.policy.enabled (exposed via user profile configProperties).
+ */
+export const isOzoneActionPolicyEnabled = () =>
+  getUserProfile()?.configProperties?.ozoneActionPolicyEnabled === "true";
+
+/**
+ * Filters policy condition definitions for the current feature-flag state.
+ */
+export const filterPolicyConditionsForFeatureFlags = (policyConditions) => {
+  if (!Array.isArray(policyConditions)) {
+    return policyConditions;
+  }
+  if (isOzoneActionPolicyEnabled()) {
+    return policyConditions;
+  }
+  return policyConditions.filter((c) => c?.name !== "action-matches");
+};
 
 /**
  * Sorts action options for the dropdown, placing wildcard patterns first
@@ -182,7 +203,8 @@ export const getSelectedAccessTypesForRow = (formValues, attrName, index) => {
  * and to scope prune/apply logic. ip-range and _expression still render in the
  * per-row Editable popover (CustomCondition) and are evaluated on the policy item.
  */
-export const isPerRowCondition = (name) => name === "action-matches";
+export const isPerRowCondition = (name) =>
+  name === "action-matches" && isOzoneActionPolicyEnabled();
 
 /**
  * Safely parses a condition definition uiHint JSON string.

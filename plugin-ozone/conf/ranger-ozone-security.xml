@@ -80,4 +80,13 @@
 			RangerRestClient read Timeout in Milli Seconds
 		</description>
 	</property>
+
+	<property>
+		<name>ranger.plugin.ozone.action.policy.enabled</name>
+		<value>false</value>
+		<description>
+			When true, the Ozone authorizer supplies S3 actions on access requests
+			for action-matches policy condition evaluation.
+		</description>
+	</property>
 </configuration>

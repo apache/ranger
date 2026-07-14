@@ -45,7 +45,7 @@ import {
   policyConditionUpdatedJSON
 } from "Utils/XAUtils";
 import { selectInputCustomStyles } from "Components/CommonComponents";
-import { getSelectedLeafResourceTypes, getSelectedAccessTypesForRow, buildActionReqsMapFromConditionDef, getCleanConditions } from "Utils/policyConditionUtils";
+import { getSelectedLeafResourceTypes, getSelectedAccessTypesForRow, buildActionReqsMapFromConditionDef, getCleanConditions, filterPolicyConditionsForFeatureFlags } from "Utils/policyConditionUtils";
 import { usePruneStaleConditions } from "../../hooks/usePruneStaleConditions";
 
 const noneOptions = {
@@ -145,7 +145,9 @@ export default function PolicyPermissionItem(props) {
   }, [serviceCompDetails, resourceSelectionSignature]);
 
   const conditionDefVal = useMemo(
-    () => policyConditionUpdatedJSON(serviceCompDetails.policyConditions),
+    () => policyConditionUpdatedJSON(
+      filterPolicyConditionsForFeatureFlags(serviceCompDetails.policyConditions)
+    ),
     [serviceCompDetails.policyConditions]
   );
 
