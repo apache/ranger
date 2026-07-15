@@ -200,6 +200,7 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 
                 case TABLE_OR_VIEW:
                 case COLUMN:
+                case PARTITION:
                     try {
                         objName = hiveObj.getDbname() + "." + hiveObj.getObjectName();
                         if (StringUtils.isBlank(owner) && objOwners != null) {
@@ -1681,6 +1682,7 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
             case PARTITION:
             case INDEX:
                 ret = new RangerHiveResource(objectType, hiveObj.getDbname(), hiveObj.getObjectName());
+                setOwnerUser(ret, hiveObj, getMetaStoreClient(), objOwners);
                 break;
 
             case COLUMN:
