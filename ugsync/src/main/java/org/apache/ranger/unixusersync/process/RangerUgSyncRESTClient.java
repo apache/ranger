@@ -22,12 +22,12 @@ package org.apache.ranger.unixusersync.process;
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.KeyManager;
 import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLSession;
 import javax.net.ssl.TrustManager;
 
 import com.fasterxml.jackson.jaxrs.json.JacksonJsonProvider;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.security.SecureClientLogin;
+import org.apache.ranger.plugin.util.RangerDefaultHostnameVerifier;
 import org.apache.ranger.plugin.util.RangerRESTClient;
 import org.apache.ranger.unixusersync.config.UserGroupSyncConfig;
 
@@ -61,11 +61,7 @@ public class RangerUgSyncRESTClient extends RangerRESTClient {
 			ClientConfig config = new DefaultClientConfig();
 
 			config.getClasses().add(JacksonJsonProvider.class); // to handle List<> unmarshalling
-			HostnameVerifier hv = new HostnameVerifier() {
-				public boolean verify(String urlHostName, SSLSession session) {
-					return session.getPeerHost().equals(urlHostName);
-				}
-			};
+			HostnameVerifier hv = new RangerDefaultHostnameVerifier();
 			config.getProperties().put(HTTPSProperties.PROPERTY_HTTPS_PROPERTIES, new HTTPSProperties(hv, sslContext));
 
 			setClient(Client.create(config));

@@ -35,7 +35,6 @@ import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.KeyManager;
 import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLSession;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
 
@@ -73,13 +72,7 @@ public class RangerSslHelper {
 	private String mTrustStoreFile;
 	private String mTrustStoreType;
 
-	final static HostnameVerifier _Hv = new HostnameVerifier() {
-		
-		@Override
-		public boolean verify(String urlHostName, SSLSession session) {
-			return session.getPeerHost().equals(urlHostName);
-		}
-	};
+	final static HostnameVerifier _Hv = new RangerDefaultHostnameVerifier();
 	
 	final String mSslConfigFileName;
 
