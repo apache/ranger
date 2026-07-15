@@ -96,7 +96,8 @@ import static org.mockito.Mockito.verify;
 @ExtendWith(MockitoExtension.class)
 @TestMethodOrder(MethodOrderer.MethodName.class)
 public class TestRangerServiceDefService {
-    private static final Long Id = 8L;
+    private static final Long   Id                                = 8L;
+    private static final String OPTION_ENABLE_OZONE_ACTION_POLICY = "enableOzoneActionPolicy";
     @InjectMocks
     RangerServiceDefService               serviceDefService;
     @Mock
@@ -795,7 +796,7 @@ public class TestRangerServiceDefService {
 
             serviceDefService.applyOzoneActionPolicyHiddenOption(serviceDef);
 
-            assertEquals("false", serviceDef.getOptions().get(RangerServiceDef.OPTION_ENABLE_OZONE_ACTION_POLICY));
+            assertEquals("false", serviceDef.getOptions().get(OPTION_ENABLE_OZONE_ACTION_POLICY));
             assertFalse(hasActionMatchesCondition(serviceDef));
         } finally {
             RangerAdminConfig.getInstance().unset(PROP_ENABLE_OZONE_ACTION_POLICY);
@@ -811,7 +812,7 @@ public class TestRangerServiceDefService {
 
             serviceDefService.applyOzoneActionPolicyHiddenOption(serviceDef);
 
-            assertEquals("true", serviceDef.getOptions().get(RangerServiceDef.OPTION_ENABLE_OZONE_ACTION_POLICY));
+            assertEquals("true", serviceDef.getOptions().get(OPTION_ENABLE_OZONE_ACTION_POLICY));
             assertTrue(hasActionMatchesCondition(serviceDef));
         } finally {
             RangerAdminConfig.getInstance().unset(PROP_ENABLE_OZONE_ACTION_POLICY);

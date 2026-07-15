@@ -37,7 +37,8 @@ import java.util.Map;
 public class RangerServiceDefService extends RangerServiceDefServiceBase<XXServiceDef, RangerServiceDef> {
     public static final String PROP_ENABLE_OZONE_ACTION_POLICY = "ranger.servicedef.enableOzoneActionPolicy";
 
-    private static final String POLICY_CONDITION_ACTION_MATCHES = "action-matches";
+    private static final String OPTION_ENABLE_OZONE_ACTION_POLICY = "enableOzoneActionPolicy";
+    private static final String POLICY_CONDITION_ACTION_MATCHES   = "action-matches";
 
     private final RangerAdminConfig config;
 
@@ -130,15 +131,17 @@ public class RangerServiceDefService extends RangerServiceDefServiceBase<XXServi
             serviceDef.setOptions(serviceDefOptions);
         }
 
-        if (serviceDefOptions.get(RangerServiceDef.OPTION_ENABLE_OZONE_ACTION_POLICY) == null) {
+        if (serviceDefOptions.get(OPTION_ENABLE_OZONE_ACTION_POLICY) == null) {
             boolean enableOzoneActionPolicy = config.getBoolean(PROP_ENABLE_OZONE_ACTION_POLICY, false);
 
-            serviceDefOptions.put(RangerServiceDef.OPTION_ENABLE_OZONE_ACTION_POLICY, Boolean.toString(enableOzoneActionPolicy));
+            serviceDefOptions.put(OPTION_ENABLE_OZONE_ACTION_POLICY, Boolean.toString(enableOzoneActionPolicy));
             serviceDef.setOptions(serviceDefOptions);
         }
 
-        if (!ServiceDefUtil.getOption_enableOzoneActionPolicy(serviceDef, config) &&
-                StringUtils.equalsIgnoreCase(serviceDef.getName(), EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_OZONE_NAME)) {
+        boolean defaultValue = config.getBoolean(PROP_ENABLE_OZONE_ACTION_POLICY, false);
+        boolean enabled      = ServiceDefUtil.getBooleanValue(serviceDefOptions, OPTION_ENABLE_OZONE_ACTION_POLICY, defaultValue);
+
+        if (!enabled && StringUtils.equalsIgnoreCase(serviceDef.getName(), EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_OZONE_NAME)) {
             List<RangerPolicyConditionDef> policyConditions = serviceDef.getPolicyConditions();
 
             if (policyConditions != null && !policyConditions.isEmpty()) {

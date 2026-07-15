@@ -75,6 +75,8 @@ public class RangerOzoneAuthorizer implements IAccessAuthorizer {
 
     private static final String S3_VOLUME_NAME = "s3Vol";
 
+    private static final String OPTION_ENABLE_OZONE_ACTION_POLICY = "enableOzoneActionPolicy";
+
     private static volatile RangerBasePlugin rangerPlugin;
 
     public RangerOzoneAuthorizer() {
@@ -394,7 +396,12 @@ public class RangerOzoneAuthorizer implements IAccessAuthorizer {
     }
 
     private static boolean isOzoneActionPolicyEnabled(final RangerBasePlugin plugin) {
-        return plugin != null && ServiceDefUtil.getOption_enableOzoneActionPolicy(plugin.getServiceDef());
+        return plugin != null
+                && plugin.getServiceDef() != null
+                && ServiceDefUtil.getBooleanValue(
+                plugin.getServiceDef().getOptions(),
+                OPTION_ENABLE_OZONE_ACTION_POLICY,
+                false);
     }
 
     /**
