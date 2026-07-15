@@ -19,8 +19,8 @@ package org.apache.ranger.patch;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.ranger.biz.ServiceDBStore;
+import org.apache.ranger.authorization.hadoop.config.RangerAdminConfig;
 import org.apache.ranger.common.JSONUtil;
-import org.apache.ranger.common.PropertiesUtil;
 import org.apache.ranger.common.RangerValidatorFactory;
 import org.apache.ranger.db.RangerDaoManager;
 import org.apache.ranger.entity.XXServiceDef;
@@ -34,14 +34,15 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
 @Component
 public class PatchForOzoneServiceDefPolicyConditionUpdate_J10065 extends BaseLoader {
     private static final Logger logger = LoggerFactory.getLogger(PatchForOzoneServiceDefPolicyConditionUpdate_J10065.class);
-
-    private static final String PROP_OZONE_ACTION_POLICY_ENABLED = "ranger.ozone.action.policy.enabled";
+    private static final String PROP_ENABLE_OZONE_ACTION_POLICY  = "ranger.servicedef.enableOzoneActionPolicy";
+    private static final String POLICY_CONDITION_ACTION_MATCHES  = "action-matches";
 
     @Autowired
     RangerDaoManager daoMgr;
@@ -88,10 +89,6 @@ public class PatchForOzoneServiceDefPolicyConditionUpdate_J10065 extends BaseLoa
     public void execLoad() {
         logger.info("==> PatchForOzoneServiceDefPolicyConditionUpdate_J10065.execLoad()");
         try {
-            if (!PropertiesUtil.getBooleanProperty(PROP_OZONE_ACTION_POLICY_ENABLED, false)) {
-                logger.info("{}=false; skipping ozone service-def policy condition update", PROP_OZONE_ACTION_POLICY_ENABLED);
-                return;
-            }
             updateOzoneServiceDef();
         } catch (Exception e) {
             logger.error("Error while applying PatchForOzoneServiceDefPolicyConditionUpdate_J10065", e);
@@ -138,7 +135,21 @@ public class PatchForOzoneServiceDefPolicyConditionUpdate_J10065 extends BaseLoa
                 return;
             }
 
-            dbOzoneServiceDef.setPolicyConditions(embeddedPolicyConditions);
+            final boolean enableOzoneActionPolicy = RangerAdminConfig.getInstance().getBoolean(PROP_ENABLE_OZONE_ACTION_POLICY, false);
+            final List<RangerServiceDef.RangerPolicyConditionDef> updatedPolicyConditions;
+
+            if (enableOzoneActionPolicy) {
+                updatedPolicyConditions = new ArrayList<>(embeddedPolicyConditions);
+            } else {
+                updatedPolicyConditions = new ArrayList<>();
+                for (RangerServiceDef.RangerPolicyConditionDef policyConditionDef : embeddedPolicyConditions) {
+                    if (!StringUtils.equals(policyConditionDef.getName(), POLICY_CONDITION_ACTION_MATCHES)) {
+                        updatedPolicyConditions.add(policyConditionDef);
+                    }
+                }
+            }
+
+            dbOzoneServiceDef.setPolicyConditions(updatedPolicyConditions);
 
             final RangerServiceDefValidator validator = validatorFactory.getServiceDefValidator(svcStore);
 

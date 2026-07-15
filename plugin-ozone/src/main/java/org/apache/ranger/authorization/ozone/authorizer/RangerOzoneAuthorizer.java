@@ -41,6 +41,7 @@ import org.apache.ranger.plugin.policyengine.RangerAccessResult;
 import org.apache.ranger.plugin.service.RangerBasePlugin;
 import org.apache.ranger.plugin.util.JsonUtilsV2;
 import org.apache.ranger.plugin.util.RangerPerfTracer;
+import org.apache.ranger.plugin.util.ServiceDefUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -70,8 +71,6 @@ public class RangerOzoneAuthorizer implements IAccessAuthorizer {
 	public static final String KEY_RESOURCE_ROLE   = "role";
 
 	private static final String S3_VOLUME_NAME = "s3Vol";
-
-	private static final String PROP_ACTION_POLICY_ENABLED = "action.policy.enabled";
 
 	private static final Logger PERF_OZONEAUTH_REQUEST_LOG = RangerPerfTracer.getPerfLogger("ozoneauth.request");
 
@@ -166,7 +165,7 @@ public class RangerOzoneAuthorizer implements IAccessAuthorizer {
 
 		rangerRequest.setResource(rangerResource);
 		rangerRequest.setAccessType(accessType);
-		if (isActionPolicyEnabled(plugin)) {
+		if (isOzoneActionPolicyEnabled(plugin)) {
 			rangerRequest.setAction(context.getS3Action());
 		} else {
 			rangerRequest.setAction(accessType);
@@ -308,9 +307,11 @@ public class RangerOzoneAuthorizer implements IAccessAuthorizer {
             ret.setPermissions(ozoneGrant.getPermissions().stream().map(RangerOzoneAuthorizer::toRangerPermission).filter(Objects::nonNull).collect(Collectors.toSet()));
         }
 
-        final Set<String> s3Actions = ozoneGrant.getS3Actions();
-        if (s3Actions != null && !s3Actions.isEmpty()) {
-            ret.setActions(s3Actions);
+        if (isOzoneActionPolicyEnabled(plugin)) {
+            final Set<String> s3Actions = ozoneGrant.getS3Actions();
+            if (s3Actions != null && !s3Actions.isEmpty()) {
+                ret.setActions(s3Actions);
+            }
         }
 
         LOG.debug("toRangerGrant(ozoneGrant={}): ret={}", ozoneGrant, ret);
@@ -381,12 +382,8 @@ public class RangerOzoneAuthorizer implements IAccessAuthorizer {
         return null;
     }
 
-	private static boolean isActionPolicyEnabled(final RangerBasePlugin plugin) {
-		if (plugin == null || plugin.getConfig() == null) {
-			return false;
-		}
-
-		return plugin.getConfig().getBoolean(plugin.getConfig().getPropertyPrefix() + "." + PROP_ACTION_POLICY_ENABLED, false);
+	private static boolean isOzoneActionPolicyEnabled(final RangerBasePlugin plugin) {
+		return plugin != null && ServiceDefUtil.getOption_enableOzoneActionPolicy(plugin.getServiceDef());
 	}
 }
 

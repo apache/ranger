@@ -19,7 +19,9 @@ package org.apache.ranger.service;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.ranger.common.ContextUtil;
@@ -31,6 +33,7 @@ import org.apache.ranger.db.*;
 
 import org.apache.ranger.entity.*;
 
+import org.apache.ranger.authorization.hadoop.config.RangerAdminConfig;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerAccessTypeDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerContextEnricherDef;
@@ -38,6 +41,7 @@ import org.apache.ranger.plugin.model.RangerServiceDef.RangerEnumDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerPolicyConditionDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerResourceDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerServiceConfigDef;
+import org.apache.ranger.plugin.store.EmbeddedServiceDefsUtil;
 import org.apache.ranger.plugin.util.ServiceDefUtil;
 import org.apache.ranger.security.context.RangerContextHolder;
 import org.apache.ranger.security.context.RangerSecurityContext;
@@ -54,6 +58,7 @@ import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnitRunner;
 
 import static org.apache.ranger.service.RangerServiceDefService.PROP_ENABLE_IMPLICIT_CONDITION_EXPRESSION;
+import static org.apache.ranger.service.RangerServiceDefService.PROP_ENABLE_OZONE_ACTION_POLICY;
 
 @RunWith(MockitoJUnitRunner.class)
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
@@ -802,5 +807,70 @@ public class TestRangerServiceDefService {
 		} finally {
 			PropertiesUtil.getPropertiesMap().remove(PROP_ENABLE_IMPLICIT_CONDITION_EXPRESSION);
 		}
+	}
+
+	@Test
+	public void testOzoneActionPolicyOptionDisabled() {
+		RangerAdminConfig.getInstance().set(PROP_ENABLE_OZONE_ACTION_POLICY, Boolean.FALSE.toString());
+
+		try {
+			RangerServiceDef serviceDef = buildOzoneServiceDefWithActionMatches();
+
+			serviceDefService.applyOzoneActionPolicyHiddenOption(serviceDef);
+
+			Assert.assertEquals("false", serviceDef.getOptions().get(RangerServiceDef.OPTION_ENABLE_OZONE_ACTION_POLICY));
+			Assert.assertFalse(hasActionMatchesCondition(serviceDef));
+		} finally {
+			RangerAdminConfig.getInstance().unset(PROP_ENABLE_OZONE_ACTION_POLICY);
+		}
+	}
+
+	@Test
+	public void testOzoneActionPolicyOptionEnabled() {
+		RangerAdminConfig.getInstance().set(PROP_ENABLE_OZONE_ACTION_POLICY, Boolean.TRUE.toString());
+
+		try {
+			RangerServiceDef serviceDef = buildOzoneServiceDefWithActionMatches();
+
+			serviceDefService.applyOzoneActionPolicyHiddenOption(serviceDef);
+
+			Assert.assertEquals("true", serviceDef.getOptions().get(RangerServiceDef.OPTION_ENABLE_OZONE_ACTION_POLICY));
+			Assert.assertTrue(hasActionMatchesCondition(serviceDef));
+		} finally {
+			RangerAdminConfig.getInstance().unset(PROP_ENABLE_OZONE_ACTION_POLICY);
+		}
+	}
+
+	private boolean hasActionMatchesCondition(RangerServiceDef serviceDef) {
+		if (serviceDef.getPolicyConditions() == null) {
+			return false;
+		}
+
+		for (RangerPolicyConditionDef conditionDef : serviceDef.getPolicyConditions()) {
+			if (StringUtils.equals(conditionDef.getName(), "action-matches")) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	private RangerServiceDef buildOzoneServiceDefWithActionMatches() {
+		RangerPolicyConditionDef ipRange = new RangerPolicyConditionDef();
+		ipRange.setName("ip-range");
+
+		RangerPolicyConditionDef actionMatches = new RangerPolicyConditionDef();
+		actionMatches.setName("action-matches");
+
+		List<RangerPolicyConditionDef> policyConditions = new ArrayList<>();
+		policyConditions.add(ipRange);
+		policyConditions.add(actionMatches);
+
+		RangerServiceDef serviceDef = new RangerServiceDef();
+		serviceDef.setName(EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_OZONE_NAME);
+		serviceDef.setOptions(new HashMap<String, String>());
+		serviceDef.setPolicyConditions(policyConditions);
+
+		return serviceDef;
 	}
 }

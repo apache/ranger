@@ -1493,7 +1493,7 @@ export const requestDataTitle = (serviceType) => {
 //Policy condition evaluation
 
 export const policyConditionUpdatedJSON = (policyCond) => {
-  let newPolicyConditionJSON = [...policyCond];
+  let newPolicyConditionJSON = [...(Array.isArray(policyCond) ? policyCond : [])];
   newPolicyConditionJSON.filter(function (key) {
     if (!key?.uiHint || key?.uiHint == "") {
       if (
