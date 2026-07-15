@@ -32,6 +32,7 @@ import org.apache.ranger.audit.provider.MiscUtil;
 import org.apache.ranger.authorization.utils.StringUtil;
 import org.apache.ranger.plugin.util.GrantRevokeRequest;
 import org.apache.ranger.plugin.util.RangerCommonConstants;
+import org.apache.ranger.plugin.util.RangerDefaultHostnameVerifier;
 import org.apache.ranger.plugin.util.RangerJersey2ClientBuilder;
 import org.apache.ranger.plugin.util.RangerPluginCapability;
 import org.apache.ranger.plugin.util.RangerRESTUtils;
@@ -413,7 +414,7 @@ public class RangerAdminJersey2RESTClient extends AbstractRangerAdminClient {
             }
 
             if (hv == null) {
-                hv = (urlHostName, session) -> session.getPeerHost().equals(urlHostName);
+                hv = new RangerDefaultHostnameVerifier();
             }
 
             // Use RangerJersey2ClientBuilder instead of unsafe ClientBuilder patterns to prevent MOXy usage
