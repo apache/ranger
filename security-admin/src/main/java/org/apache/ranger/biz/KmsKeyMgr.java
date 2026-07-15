@@ -114,6 +114,7 @@ public class KmsKeyMgr {
             providers = getKMSURL(repoName);
         } catch (Exception e) {
             logger.error("getKey({}) failed", repoName, e);
+            throw restErrorUtil.createRESTException("Provider '" + repoName + "' not found or invalid: " + e.getMessage(), MessageEnums.DATA_NOT_FOUND);
         }
 
         List<VXKmsKey> vXKeys       = new ArrayList<>();
@@ -242,6 +243,7 @@ public class KmsKeyMgr {
             providers = getKMSURL(provider);
         } catch (Exception e) {
             logger.error("rolloverKey({}, {}) failed", provider, vXKey.getName(), e);
+            throw restErrorUtil.createRESTException("Provider '" + provider + "' not found or invalid: " + e.getMessage(), MessageEnums.DATA_NOT_FOUND);
         }
 
         VXKmsKey ret        = null;
@@ -310,6 +312,7 @@ public class KmsKeyMgr {
             providers = getKMSURL(provider);
         } catch (Exception e) {
             logger.error("deleteKey({}, {}) failed", provider, name, e);
+            throw restErrorUtil.createRESTException("Provider '" + provider + "' not found or invalid: " + e.getMessage(), MessageEnums.DATA_NOT_FOUND);
         }
 
         boolean isKerberos = false;
@@ -371,6 +374,7 @@ public class KmsKeyMgr {
             providers = getKMSURL(provider);
         } catch (Exception e) {
             logger.error("createKey({}, {}) failed", provider, vXKey.getName(), e);
+            throw restErrorUtil.createRESTException("Provider '" + provider + "' not found or invalid: " + e.getMessage(), MessageEnums.DATA_NOT_FOUND);
         }
 
         VXKmsKey ret        = null;
@@ -439,6 +443,7 @@ public class KmsKeyMgr {
             providers = getKMSURL(provider);
         } catch (Exception e) {
             logger.error("getKey({}, {}) failed", provider, name, e);
+            throw restErrorUtil.createRESTException("Provider '" + provider + "' not found or invalid: " + e.getMessage(), MessageEnums.DATA_NOT_FOUND);
         }
 
         boolean isKerberos = false;
