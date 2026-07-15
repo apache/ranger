@@ -21,6 +21,7 @@ package org.apache.ranger.unixusersync.process;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.security.SecureClientLogin;
+import org.apache.ranger.plugin.util.RangerDefaultHostnameVerifier;
 import org.apache.ranger.plugin.util.RangerJersey2ClientBuilder;
 import org.apache.ranger.plugin.util.RangerRESTClient;
 import org.apache.ranger.unixusersync.config.UserGroupSyncConfig;
@@ -30,7 +31,6 @@ import org.glassfish.jersey.client.ClientProperties;
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.KeyManager;
 import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLSession;
 import javax.net.ssl.TrustManager;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.core.HttpHeaders;
@@ -56,12 +56,7 @@ public class RangerUgSyncRESTClient extends RangerRESTClient {
             TrustManager[] tmList     = getTrustManagers(ugTrustStoreFile, ugTrustStoreFilepwd);
             SSLContext     sslContext = getSSLContext(kmList, tmList);
 
-            HostnameVerifier hv = new HostnameVerifier() {
-                @Override
-                public boolean verify(String urlHostName, SSLSession session) {
-                    return session.getPeerHost().equals(urlHostName);
-                }
-            };
+            HostnameVerifier hv = new RangerDefaultHostnameVerifier();
 
             ClientConfig config = new ClientConfig();
             RangerJersey2ClientBuilder.applyAntiMoxyConfiguration(config);

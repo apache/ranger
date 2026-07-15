@@ -36,7 +36,6 @@ import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.KeyManager;
 import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLSession;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
 import javax.ws.rs.ProcessingException;
@@ -616,11 +615,7 @@ public class RangerRESTClient {
                 KeyManager[]     kmList     = getKeyManagers();
                 TrustManager[]   tmList     = getTrustManagers();
                 SSLContext       sslContext = getSSLContext(kmList, tmList);
-                HostnameVerifier hv = new HostnameVerifier() {
-                    public boolean verify(String urlHostName, SSLSession session) {
-                        return session.getPeerHost().equals(urlHostName);
-                    }
-                };
+                HostnameVerifier hv = new RangerDefaultHostnameVerifier();
 
                 // Use RangerJersey2ClientBuilder instead of unsafe ClientBuilder.newBuilder() to prevent MOXy usage
                 clientBuilder = RangerJersey2ClientBuilder.newBuilder()
