@@ -78,7 +78,10 @@ public class KMSMDCFilter implements Filter {
             HttpServletRequest  req  = (HttpServletRequest) request;
             HttpServletResponse resp = (HttpServletResponse) response;
 
+            logger.debug("==> KMSMDCFilter:doFilter() path = {}", path);
+
             if (path.startsWith(RANGER_KMS_REST_API_PATH)) {
+                logger.debug("==> KMSMDCFilter: calling chain.doFilter() for path = {}", path);
                 chain.doFilter(request, resp);
             } else {
                 DATA_TL.remove();
