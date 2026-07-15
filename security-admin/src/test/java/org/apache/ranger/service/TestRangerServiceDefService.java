@@ -17,6 +17,7 @@
 package org.apache.ranger.service;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.ranger.authorization.hadoop.config.RangerAdminConfig;
 import org.apache.ranger.biz.RangerBizUtil;
 import org.apache.ranger.common.ContextUtil;
 import org.apache.ranger.common.PropertiesUtil;
@@ -47,15 +48,14 @@ import org.apache.ranger.entity.XXResourceDef;
 import org.apache.ranger.entity.XXServiceConfigDef;
 import org.apache.ranger.entity.XXServiceDef;
 import org.apache.ranger.entity.XXServiceDefWithAssignedId;
-import org.apache.ranger.authorization.hadoop.config.RangerAdminConfig;
 import org.apache.ranger.plugin.model.RangerServiceDef;
-import org.apache.ranger.plugin.store.EmbeddedServiceDefsUtil;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerAccessTypeDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerContextEnricherDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerEnumDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerPolicyConditionDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerResourceDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerServiceConfigDef;
+import org.apache.ranger.plugin.store.EmbeddedServiceDefsUtil;
 import org.apache.ranger.plugin.util.ServiceDefUtil;
 import org.apache.ranger.security.context.RangerContextHolder;
 import org.apache.ranger.security.context.RangerSecurityContext;
@@ -75,7 +75,6 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import static org.apache.ranger.service.RangerServiceDefService.PROP_ENABLE_IMPLICIT_CONDITION_EXPRESSION;
 import static org.apache.ranger.service.RangerServiceDefService.PROP_ENABLE_OZONE_ACTION_POLICY;
@@ -769,7 +768,7 @@ public class TestRangerServiceDefService {
         v.setRbKeyLabel("rbl");
         v.setRbKeyDescription("rbd");
         v.setIsEnabled(Boolean.TRUE);
-        v.setOptions(new java.util.HashMap<>());
+        v.setOptions(new HashMap<>());
 
         try {
             method.invoke(rangerServiceDefWithAssignedIdService, v, xxServiceDefWithAssignedId, 1);
