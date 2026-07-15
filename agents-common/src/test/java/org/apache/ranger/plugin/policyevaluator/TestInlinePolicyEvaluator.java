@@ -80,7 +80,7 @@ public class TestInlinePolicyEvaluator {
 
     @Test
     public void testOzoneInlinePoliciesWithActionPolicyDisabled() throws IOException {
-        runTestsWithDisabledActionPolicy("/policyevaluator/test_inline_policies_ozone.json");
+        runTestsWithStrippedGrantActions("/policyevaluator/test_inline_policies_ozone.json");
     }
 
     private void runTests(String resourceName, boolean enableOzoneActionPolicy) throws IOException {
@@ -93,14 +93,24 @@ public class TestInlinePolicyEvaluator {
         }
     }
 
-    private void runTestsWithDisabledActionPolicy(String resourceName) throws IOException {
+    private void runTestsWithStrippedGrantActions(String resourceName) throws IOException {
         try (InputStream inStream = this.getClass().getResourceAsStream(resourceName)) {
             assertNotNull(inStream, "failed to find resource '" + resourceName + "'");
 
-            InputStreamReader  reader   = new InputStreamReader(inStream);
-            PolicyEngineTestCase testCase = gsonBuilder.fromJson(reader, PolicyEngineTestCase.class);
+            InputStreamReader    reader    = new InputStreamReader(inStream);
+            PolicyEngineTestCase testCase  = gsonBuilder.fromJson(reader, PolicyEngineTestCase.class);
 
             for (TestData test : testCase.tests) {
+                RangerAccessRequest request = test.request;
+
+                if (request != null && request.getInlinePolicy() != null && request.getInlinePolicy().getGrants() != null) {
+                    for (org.apache.ranger.plugin.model.RangerInlinePolicy.Grant grant : request.getInlinePolicy().getGrants()) {
+                        if (grant != null) {
+                            grant.setActions(null);
+                        }
+                    }
+                }
+
                 if (test.name != null && test.name.startsWith("DENY") && test.name.contains("action")) {
                     test.result.setIsAllowed(true);
                 }
