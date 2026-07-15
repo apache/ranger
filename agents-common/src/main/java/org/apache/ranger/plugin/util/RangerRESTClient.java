@@ -42,7 +42,6 @@ import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.KeyManager;
 import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLSession;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
 import javax.ws.rs.core.Cookie;
@@ -262,11 +261,7 @@ public class RangerRESTClient {
 
 			config.getClasses().add(JacksonJsonProvider.class); // to handle List<> unmarshalling
 
-			HostnameVerifier hv = new HostnameVerifier() {
-				public boolean verify(String urlHostName, SSLSession session) {
-					return session.getPeerHost().equals(urlHostName);
-				}
-			};
+			HostnameVerifier hv = new RangerDefaultHostnameVerifier();
 
 			config.getProperties().put(HTTPSProperties.PROPERTY_HTTPS_PROPERTIES, new HTTPSProperties(hv, sslContext));
 

@@ -33,7 +33,6 @@ import java.util.Set;
 
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLSession;
 import javax.ws.rs.ProcessingException;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
@@ -409,11 +408,7 @@ public class RangerAdminJersey2RESTClient extends AbstractRangerAdminClient {
 				_sslContext = sslHelper.createContext();
 			}
 			if (_hv == null) {
-				_hv = new HostnameVerifier() {
-					public boolean verify(String urlHostName, SSLSession session) {
-						return session.getPeerHost().equals(urlHostName);
-					}
-				};
+				_hv = new RangerDefaultHostnameVerifier();
 			}				
 			_client = ClientBuilder.newBuilder()
 					.sslContext(_sslContext)
