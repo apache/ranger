@@ -511,7 +511,7 @@ export default function AddUpdatePolicyForm() {
         data.conditions = {};
         for (let val of policyData.conditions) {
           let conditionObj = find(
-            policyConditionUpdatedJSON(serviceCompData?.policyConditions),
+            policyConditionUpdatedJSON(serviceCompData?.policyConditions || []),
             function (m) {
               if (m.name == val.type) {
                 return m;
@@ -519,7 +519,10 @@ export default function AddUpdatePolicyForm() {
             }
           );
 
-          if (!isEmpty(conditionObj.uiHint)) {
+          // Service-def conditions can be feature-flagged off (e.g. ozone action-matches).
+          // If the policy still contains such a condition, skip it here to avoid crashing
+          // the form initialization (page would otherwise hang on the loader).
+          if (conditionObj?.uiHint && !isEmpty(conditionObj.uiHint)) {
             data.conditions[val?.type] = JSON.parse(conditionObj.uiHint)
               .isMultiValue
               ? val?.values
@@ -701,7 +704,7 @@ export default function AddUpdatePolicyForm() {
 
         for (let data of val.conditions) {
           let conditionObj = find(
-            policyConditionUpdatedJSON(serviceData?.policyConditions),
+            policyConditionUpdatedJSON(serviceData?.policyConditions || []),
             function (m) {
               if (m.name == data.type) {
                 return m;
@@ -709,7 +712,10 @@ export default function AddUpdatePolicyForm() {
             }
           );
 
-          if (!isEmpty(conditionObj.uiHint)) {
+          // Service-def conditions can be feature-flagged off (e.g. ozone action-matches).
+          // If the policy still contains such a condition, skip it here to avoid crashing
+          // the form initialization (page would otherwise hang on the loader).
+          if (conditionObj?.uiHint && !isEmpty(conditionObj.uiHint)) {
             obj.conditions[data?.type] = JSON.parse(conditionObj.uiHint)
               .isMultiValue
               ? data?.values.map((m) => {

@@ -268,7 +268,7 @@ function AccessGrantForm({
 
         for (let data of val.conditions) {
           let conditionObj = find(
-            policyConditionUpdatedJSON(serviceCompDetails?.policyConditions),
+            policyConditionUpdatedJSON(serviceCompDetails?.policyConditions || []),
             function (m) {
               if (m.name == data.type) {
                 return m;
@@ -276,7 +276,9 @@ function AccessGrantForm({
             }
           );
 
-          if (!isEmpty(conditionObj.uiHint)) {
+          // Service-def conditions can be feature-flagged off (e.g. ozone action-matches).
+          // If the policy still contains such a condition, skip it here to avoid crashing.
+          if (conditionObj?.uiHint && !isEmpty(conditionObj.uiHint)) {
             obj.conditions[data?.type] = JSON.parse(conditionObj.uiHint)
               .isMultiValue
               ? data?.values.map((m) => {
