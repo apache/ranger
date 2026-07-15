@@ -190,7 +190,8 @@ public class RangerOzoneAuthorizer implements IAccessAuthorizer {
 
 		try {
 			if (StringUtils.isNotBlank(context.getSessionPolicy())) {
-				rangerRequest.setInlinePolicy(JsonUtilsV2.jsonToObj(context.getSessionPolicy(), RangerInlinePolicy.class));
+				RangerInlinePolicy inlinePolicy = JsonUtilsV2.jsonToObj(context.getSessionPolicy(), RangerInlinePolicy.class);
+				rangerRequest.setInlinePolicy(sanitizeInlinePolicyForActionFlag(inlinePolicy, plugin));
 			}
 
 			RangerAccessResult result = plugin
@@ -384,6 +385,24 @@ public class RangerOzoneAuthorizer implements IAccessAuthorizer {
 
 	private static boolean isOzoneActionPolicyEnabled(final RangerBasePlugin plugin) {
 		return plugin != null && ServiceDefUtil.getOption_enableOzoneActionPolicy(plugin.getServiceDef());
+	}
+
+	/**
+	 * When action-policy is disabled, strip grant actions so generic inline evaluation
+	 * does not enforce S3 actions (same effect as omitting actions in {@link #toRangerGrant}).
+	 */
+	static RangerInlinePolicy sanitizeInlinePolicyForActionFlag(RangerInlinePolicy policy, RangerBasePlugin plugin) {
+		if (policy == null || isOzoneActionPolicyEnabled(plugin) || policy.getGrants() == null) {
+			return policy;
+		}
+
+		for (RangerInlinePolicy.Grant grant : policy.getGrants()) {
+			if (grant != null) {
+				grant.setActions(null);
+			}
+		}
+
+		return policy;
 	}
 }
 

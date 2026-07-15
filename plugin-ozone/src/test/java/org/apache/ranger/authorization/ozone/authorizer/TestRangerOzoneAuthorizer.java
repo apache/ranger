@@ -335,6 +335,42 @@ public class TestRangerOzoneAuthorizer {
         }
     }
 
+    @Test
+    public void testLegacySessionPolicyActionsStrippedWhenFlagDisabled() throws Exception {
+        // Simulate a session policy issued when action-policy was enabled (actions embedded in JSON).
+        Set<OzoneGrant>   grants  = Collections.singleton(grantWriteWithS3Actions);
+        AssumeRoleRequest request = new AssumeRoleRequest(hostname, ipAddress, user1, role1, grants);
+
+        String legacySessionPolicy = ozoneAuthorizer.generateAssumeRoleSessionPolicy(request);
+
+        RangerInlinePolicy legacyPolicy = JsonUtilsV2.jsonToObj(legacySessionPolicy, RangerInlinePolicy.class);
+        RangerInlinePolicy.Grant legacyGrant = legacyPolicy.getGrants().iterator().next();
+
+        assertNotNull(legacyGrant.getActions(),
+                "legacy session policy should contain S3 actions as if created with flag enabled");
+
+        final String previous = setOzoneActionPolicyDisabled();
+
+        try {
+            RangerInlinePolicy sanitized = RangerOzoneAuthorizer.sanitizeInlinePolicyForActionFlag(legacyPolicy, testPlugin);
+
+            assertNull(sanitized.getGrants().iterator().next().getActions(),
+                    "sanitizeInlinePolicyForActionFlag should strip grant actions when flag is disabled");
+
+            RequestContext ctxWriteGetObject = reqCtxBuilder
+                    .setAclRights(IAccessAuthorizer.ACLType.WRITE)
+                    .setRecursiveAccessCheck(false)
+                    .setSessionPolicy(legacySessionPolicy)
+                    .setS3Action("GetObject")
+                    .build();
+
+            assertTrue(ozoneAuthorizer.checkAccess(key1, ctxWriteGetObject),
+                    "legacy session-policy with embedded S3 actions should allow write when flag is disabled");
+        } finally {
+            restoreOzoneActionPolicyEnabled(previous);
+        }
+    }
+
     private static void setOzoneActionPolicyEnabled(RangerBasePlugin plugin) {
         if (plugin == null || plugin.getServiceDef() == null) {
             return;

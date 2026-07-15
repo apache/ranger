@@ -34,7 +34,6 @@ import org.apache.ranger.plugin.policyresourcematcher.RangerDefaultPolicyResourc
 import org.apache.ranger.plugin.policyresourcematcher.RangerPolicyResourceMatcher;
 import org.apache.ranger.plugin.util.RangerAccessRequestUtil;
 import org.apache.ranger.plugin.util.RangerActionListMatcher;
-import org.apache.ranger.plugin.util.ServiceDefUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -53,13 +52,11 @@ public class RangerInlinePolicyEvaluator {
     private final RangerInlinePolicy   policy;
     private final RangerPolicyEngine   policyEngine;
     private final List<GrantEvaluator> grants;
-    private final boolean              enableOzoneActionPolicy;
 
     public RangerInlinePolicyEvaluator(RangerInlinePolicy policy, RangerPolicyEngine policyEngine) {
-        this.policy                  = policy;
-        this.policyEngine            = policyEngine;
-        this.grants                  = toGrantEvaluators(policy);
-        this.enableOzoneActionPolicy = isOzoneActionPolicyEnabled(policyEngine);
+        this.policy       = policy;
+        this.policyEngine = policyEngine;
+        this.grants       = toGrantEvaluators(policy);
 
         LOG.debug("RangerInlinePolicyEvaluator(policy={})", policy);
     }
@@ -245,10 +242,6 @@ public class RangerInlinePolicyEvaluator {
         }
 
         private boolean isActionMatch(RangerAccessRequest request) {
-            if (!enableOzoneActionPolicy) {
-                return true;
-            }
-
             boolean ret = actionMatcher.isMatch(request != null ? request.getAction() : null);
 
             LOG.debug("isActionMatch(grant={}, request={}): ret={}", grant, request, ret);
@@ -321,9 +314,5 @@ public class RangerInlinePolicyEvaluator {
         public RangerInlinePolicy getInlinePolicy() {
             return null;
         }
-    }
-
-    private static boolean isOzoneActionPolicyEnabled(RangerPolicyEngine policyEngine) {
-        return policyEngine != null && ServiceDefUtil.getOption_enableOzoneActionPolicy(policyEngine.getServiceDef());
     }
 }
