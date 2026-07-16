@@ -37,9 +37,11 @@ import java.util.Arrays;
 import java.util.Collections;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -52,6 +54,10 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 @TestMethodOrder(MethodOrderer.MethodName.class)
 public class TestPasswordValidator {
+    private static LoginAttemptTracker permissiveTracker() {
+        return new LoginAttemptTracker(1000, 60_000, 30_000);
+    }
+
     @Test
     public void test00_staticGettersAndSetters() {
         PasswordValidator.setValidatorProgram("/tmp/prog");
@@ -72,10 +78,10 @@ public class TestPasswordValidator {
         ByteArrayOutputStream out    = new ByteArrayOutputStream();
         Socket                socket = buildSocket("LOGIN: alice secret", out);
 
-        new PasswordValidator(socket).run();
+        new PasswordValidator(socket, permissiveTracker()).run();
 
         String response = out.toString(StandardCharsets.UTF_8.name()).trim();
-        assertEquals("FAILED: Unable to validate credentials.", response);
+        assertEquals("FAILED: Authentication failed.", response);
         verify(socket, times(1)).close();
     }
 
@@ -98,10 +104,10 @@ public class TestPasswordValidator {
             runtimeStatic.when(Runtime::getRuntime).thenReturn(rt);
             when(rt.exec("/bin/validator")).thenReturn(process);
 
-            new PasswordValidator(socket).run();
+            new PasswordValidator(socket, permissiveTracker()).run();
         }
 
-        String response = out.toString(StandardCharsets.UTF_8.name()).trim();
+        String response = out.toString(StandardCharsets.UTF_8).trim();
         assertEquals("OK ROLE_ADMIN", response);
         verify(process, times(1)).destroy();
         verify(socket, times(1)).close();
@@ -126,7 +132,7 @@ public class TestPasswordValidator {
             runtimeStatic.when(Runtime::getRuntime).thenReturn(rt);
             when(rt.exec("/bin/validator")).thenReturn(process);
 
-            new PasswordValidator(socket).run();
+            new PasswordValidator(socket, permissiveTracker()).run();
         }
 
         String response = out.toString(StandardCharsets.UTF_8.name()).trim();
@@ -149,10 +155,11 @@ public class TestPasswordValidator {
             runtimeStatic.when(Runtime::getRuntime).thenReturn(rt);
             when(rt.exec("/bin/validator")).thenThrow(new IOException("boom"));
 
-            new PasswordValidator(socket).run();
+            new PasswordValidator(socket, permissiveTracker()).run();
         }
 
-        // Output may not be flushed in catch path; verify socket is closed indicating catch executed
+        String response = out.toString(StandardCharsets.UTF_8).trim();
+        assertEquals("FAILED: Authentication failed.", response);
         verify(socket, times(1)).close();
     }
 
@@ -166,10 +173,87 @@ public class TestPasswordValidator {
         Socket                socket = buildSocket("LOGIN: alice secret", out);
         doThrow(new IOException("close failure")).when(socket).close();
 
-        new PasswordValidator(socket).run();
+        new PasswordValidator(socket, permissiveTracker()).run();
 
         // No exception should be thrown even if close() fails; nothing to assert besides method completed
         verify(socket, times(1)).close();
+    }
+
+    @Test
+    public void test06_blockedIpSkipsValidatorAndReturnsLockedOutResponse() throws Exception {
+        PasswordValidator.setValidatorProgram("/bin/validator");
+        PasswordValidator.setAdminUserList(null);
+        PasswordValidator.setAdminRoleNames(null);
+
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        Socket socket = buildSocket("LOGIN: alice secret", out);
+        LoginAttemptTracker tracker = mock(LoginAttemptTracker.class);
+        when(tracker.isBlocked(anyString())).thenReturn(true);
+        new PasswordValidator(socket, tracker).run();
+        String response = out.toString(StandardCharsets.UTF_8).trim();
+        assertEquals("FAILED: Too many attempts. Try again later.", response);
+        verify(socket, times(1)).close();
+    }
+
+    @Test
+    public void test07_failedValidatorResponseRecordsFailureOnTracker() throws Exception {
+        PasswordValidator.setValidatorProgram("/bin/validator");
+        PasswordValidator.setAdminUserList(null);
+        PasswordValidator.setAdminRoleNames(null);
+
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        Socket socket = buildSocket("LOGIN: alice secret", out);
+
+        Process process = mock(Process.class);
+        ByteArrayInputStream processStdout = new ByteArrayInputStream("FAILED: Password did not match.".getBytes(StandardCharsets.UTF_8));
+        when(process.getInputStream()).thenReturn(processStdout);
+        when(process.getOutputStream()).thenReturn(new ByteArrayOutputStream());
+
+        LoginAttemptTracker tracker = mock(LoginAttemptTracker.class);
+        when(tracker.isBlocked(anyString())).thenReturn(false);
+
+        try (MockedStatic<Runtime> runtimeStatic = mockStatic(Runtime.class)) {
+            Runtime rt = mock(Runtime.class);
+            runtimeStatic.when(Runtime::getRuntime).thenReturn(rt);
+            when(rt.exec("/bin/validator")).thenReturn(process);
+            new PasswordValidator(socket, tracker).run();
+        }
+
+        String response = out.toString(StandardCharsets.UTF_8).trim();
+        assertEquals("FAILED: Authentication failed.", response);
+        verify(tracker, times(1)).recordFailure(anyString());
+        verify(tracker, never()).recordSuccess(anyString());
+    }
+
+    @Test
+    public void test08_okValidatorResponseRecordsSuccessOnTracker() throws Exception {
+        PasswordValidator.setValidatorProgram("/bin/validator");
+        PasswordValidator.setAdminUserList(null);
+        PasswordValidator.setAdminRoleNames(null);
+
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        Socket socket = buildSocket("LOGIN: alice secret", out);
+
+        Process process = mock(Process.class);
+        ByteArrayInputStream processStdout = new ByteArrayInputStream("OK".getBytes(StandardCharsets.UTF_8));
+        when(process.getInputStream()).thenReturn(processStdout);
+        when(process.getOutputStream()).thenReturn(new ByteArrayOutputStream());
+
+        LoginAttemptTracker tracker = mock(LoginAttemptTracker.class);
+        when(tracker.isBlocked(anyString())).thenReturn(false);
+
+        try (MockedStatic<Runtime> runtimeStatic = mockStatic(Runtime.class)) {
+            Runtime rt = mock(Runtime.class);
+            runtimeStatic.when(Runtime::getRuntime).thenReturn(rt);
+            when(rt.exec("/bin/validator")).thenReturn(process);
+
+            new PasswordValidator(socket, tracker).run();
+        }
+
+        String response = out.toString(StandardCharsets.UTF_8).trim();
+        assertEquals("OK", response);
+        verify(tracker, times(1)).recordSuccess(anyString());
+        verify(tracker, never()).recordFailure(anyString());
     }
 
     private Socket buildSocket(String requestLine, ByteArrayOutputStream responseOut) throws IOException {
