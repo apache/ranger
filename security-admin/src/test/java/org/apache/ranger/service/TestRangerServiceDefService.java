@@ -64,6 +64,7 @@ import static org.apache.ranger.service.RangerServiceDefService.PROP_ENABLE_OZON
 public class TestRangerServiceDefService {
 
 	private static Long Id = 8L;
+	private static final String OPTION_ENABLE_OZONE_ACTION_POLICY = "enableOzoneActionPolicy";
 
 	@InjectMocks
 	RangerServiceDefService serviceDefService = new RangerServiceDefService();
@@ -817,7 +818,7 @@ public class TestRangerServiceDefService {
 
 			serviceDefService.applyOzoneActionPolicyHiddenOption(serviceDef);
 
-			Assert.assertEquals("false", serviceDef.getOptions().get(RangerServiceDef.OPTION_ENABLE_OZONE_ACTION_POLICY));
+			Assert.assertEquals("false", serviceDef.getOptions().get(OPTION_ENABLE_OZONE_ACTION_POLICY));
 			Assert.assertFalse(hasActionMatchesCondition(serviceDef));
 		} finally {
 			RangerAdminConfig.getInstance().unset(PROP_ENABLE_OZONE_ACTION_POLICY);
@@ -833,7 +834,7 @@ public class TestRangerServiceDefService {
 
 			serviceDefService.applyOzoneActionPolicyHiddenOption(serviceDef);
 
-			Assert.assertEquals("true", serviceDef.getOptions().get(RangerServiceDef.OPTION_ENABLE_OZONE_ACTION_POLICY));
+			Assert.assertEquals("true", serviceDef.getOptions().get(OPTION_ENABLE_OZONE_ACTION_POLICY));
 			Assert.assertTrue(hasActionMatchesCondition(serviceDef));
 		} finally {
 			RangerAdminConfig.getInstance().unset(PROP_ENABLE_OZONE_ACTION_POLICY);

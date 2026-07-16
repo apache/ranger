@@ -29,7 +29,6 @@ import org.apache.hadoop.ozone.security.acl.RequestContext;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.ranger.authorization.hadoop.config.RangerPluginConfig;
 import org.apache.ranger.plugin.model.RangerInlinePolicy;
-import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.service.RangerBasePlugin;
 import org.apache.ranger.plugin.util.JsonUtilsV2;
 import org.junit.jupiter.api.BeforeAll;
@@ -56,6 +55,7 @@ public class TestRangerOzoneAuthorizer {
     private static final String RANGER_APP_ID       = "om";
     private static final String OZONE_SERVICE_ID    = "om";
     private static final String OWNER_NAME          = "ozone";
+    private static final String OPTION_ENABLE_OZONE_ACTION_POLICY = "enableOzoneActionPolicy";
 
     private static RangerOzoneAuthorizer ozoneAuthorizer;
     private static RangerBasePlugin      testPlugin;
@@ -383,22 +383,22 @@ public class TestRangerOzoneAuthorizer {
             plugin.getServiceDef().setOptions(options);
         }
 
-        options.put(RangerServiceDef.OPTION_ENABLE_OZONE_ACTION_POLICY, Boolean.toString(true));
+        options.put(OPTION_ENABLE_OZONE_ACTION_POLICY, Boolean.toString(true));
     }
 
     private static String setOzoneActionPolicyDisabled() {
         Map<String, String> options = testPlugin.getServiceDef().getOptions();
 
-        return options.put(RangerServiceDef.OPTION_ENABLE_OZONE_ACTION_POLICY, Boolean.toString(false));
+        return options.put(OPTION_ENABLE_OZONE_ACTION_POLICY, Boolean.toString(false));
     }
 
     private static void restoreOzoneActionPolicyEnabled(String previous) {
         Map<String, String> options = testPlugin.getServiceDef().getOptions();
 
         if (previous == null) {
-            options.remove(RangerServiceDef.OPTION_ENABLE_OZONE_ACTION_POLICY);
+            options.remove(OPTION_ENABLE_OZONE_ACTION_POLICY);
         } else {
-            options.put(RangerServiceDef.OPTION_ENABLE_OZONE_ACTION_POLICY, previous);
+            options.put(OPTION_ENABLE_OZONE_ACTION_POLICY, previous);
         }
     }
 }

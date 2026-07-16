@@ -50,9 +50,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.lang.reflect.Type;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -75,63 +73,22 @@ public class TestInlinePolicyEvaluator {
 
     @Test
     public void testOzoneInlinePolicies() throws IOException {
-        runTests("/policyevaluator/test_inline_policies_ozone.json", true);
+        runTests("/policyevaluator/test_inline_policies_ozone.json");
     }
 
-    @Test
-    public void testOzoneInlinePoliciesWithActionPolicyDisabled() throws IOException {
-        runTestsWithStrippedGrantActions("/policyevaluator/test_inline_policies_ozone.json");
-    }
-
-    private void runTests(String resourceName, boolean enableOzoneActionPolicy) throws IOException {
+    private void runTests(String resourceName) throws IOException {
         try (InputStream inStream = this.getClass().getResourceAsStream(resourceName)) {
             assertNotNull("failed to find resource '" + resourceName + "'", inStream);
 
             InputStreamReader reader = new InputStreamReader(inStream);
 
-            runTestCase(gsonBuilder.fromJson(reader, PolicyEngineTestCase.class), enableOzoneActionPolicy);
+            runTestCase(gsonBuilder.fromJson(reader, PolicyEngineTestCase.class));
         }
     }
 
-    private void runTestsWithStrippedGrantActions(String resourceName) throws IOException {
-        try (InputStream inStream = this.getClass().getResourceAsStream(resourceName)) {
-            assertNotNull("failed to find resource '" + resourceName + "'", inStream);
-
-            InputStreamReader    reader    = new InputStreamReader(inStream);
-            PolicyEngineTestCase testCase  = gsonBuilder.fromJson(reader, PolicyEngineTestCase.class);
-
-            for (TestData test : testCase.tests) {
-                RangerAccessRequest request = test.request;
-
-                if (request != null && request.getInlinePolicy() != null && request.getInlinePolicy().getGrants() != null) {
-                    for (org.apache.ranger.plugin.model.RangerInlinePolicy.Grant grant : request.getInlinePolicy().getGrants()) {
-                        if (grant != null) {
-                            grant.setActions(null);
-                        }
-                    }
-                }
-
-                if (test.name != null && test.name.startsWith("DENY") && test.name.contains("action")) {
-                    test.result.setIsAllowed(true);
-                }
-            }
-
-            runTestCase(testCase, false);
-        }
-    }
-
-    private void runTestCase(PolicyEngineTestCase testCase, boolean enableOzoneActionPolicy) {
+    private void runTestCase(PolicyEngineTestCase testCase) {
         ServicePolicies  servicePolicies = testCase.servicePolicies;
         RangerServiceDef serviceDef      = servicePolicies.getServiceDef();
-
-        Map<String, String> options = serviceDef.getOptions();
-
-        if (options == null) {
-            options = new HashMap<>();
-            serviceDef.setOptions(options);
-        }
-
-        options.put(RangerServiceDef.OPTION_ENABLE_OZONE_ACTION_POLICY, Boolean.toString(enableOzoneActionPolicy));
 
         ServiceDefUtil.normalize(serviceDef);
 
