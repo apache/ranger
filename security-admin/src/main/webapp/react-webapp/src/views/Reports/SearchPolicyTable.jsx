@@ -28,12 +28,16 @@ import {
   Row,
   Table
 } from "react-bootstrap";
-import { isEmpty, find } from "lodash";
+import { isEmpty, find, keyBy } from "lodash";
 import { MoreLess } from "Components/CommonComponents";
 import XATableLayout from "Components/XATableLayout";
 import { fetchApi } from "Utils/fetchAPI";
-import { Loader } from "../../components/CommonComponents";
-import { isAuditor, isKMSAuditor } from "../../utils/XAUtils";
+import { Loader } from "Components/CommonComponents";
+import {
+  isAuditor,
+  isKMSAuditor,
+  getPolicyConditionDisplayLbl
+} from "Utils/XAUtils";
 
 function SearchPolicyTable(props) {
   const [searchPoliciesData, setSearchPolicies] = useState([]);
@@ -329,14 +333,29 @@ function PolicyConditionData(props) {
               <td className="text-center">
                 {!isEmpty(items.conditions)
                   ? items.conditions.map((obj, index) => {
+                      const policyMap = keyBy(
+                        props.serviceDef.policyConditions,
+                        "name"
+                      );
+
+                      const conditionObj = policyMap[obj.type];
+
+                      if (isEmpty(conditionObj)) {
+                        return null;
+                      }
+
+                      const label = conditionObj?.label
+                        ? getPolicyConditionDisplayLbl(conditionObj.label)
+                        : "";
+
+                      const values = (obj.values || []).join(", ");
+
                       return (
-                        <h6 className="d-inline me-1" key={index}>
-                          <Badge
-                            bg="info"
-                            className="d-inline me-1"
-                            key={obj.values}
-                          >{`${obj.type}: ${obj.values.join(", ")}`}</Badge>
-                        </h6>
+                        <Badge
+                          bg="info"
+                          className="me-1 line-clamp line-clamp-3 text-start"
+                          key={`${obj.type}-${index}`}
+                        >{`${label}: ${values}`}</Badge>
                       );
                     })
                   : "--"}
