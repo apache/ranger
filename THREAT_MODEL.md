@@ -22,8 +22,8 @@ limitations under the License.
 - **Repository:** https://github.com/apache/ranger
 - **Version/commit modeled against:** `master` branch as of 2026-06-03 (no specific release tag; this v0 predates maintainer review).
 - **Threat-model authors:** Drafted by the ASF Security team as a v0 pre-flight artifact for an automated agentic security scan; **reviewed by the Apache Ranger PMC (Abhishek Kumar, `@kumaab`) on 2026-06-12**, who answered every §14 question — those answers are folded into §1–§13 below.
-- **Date:** 2026-06-03 (v0); 2026-06-12 (v1, PMC-reviewed).
-- **Status:** v1 — PMC-reviewed. All §14 questions were answered by the Ranger PMC on 2026-06-12 and folded in; the claims they confirm are promoted to *(maintainer)*. Abhishek Kumar (PMC) volunteered to own ongoing revision (§14 Q20).
+- **Date:** 2026-06-03 (v0); 2026-06-12 (v1, PMC-reviewed); 2026-07-14 (v1.1).
+- **Status:** v1.1 — PMC-reviewed (see §11a). Abhishek Kumar (PMC) volunteered to own ongoing revision (§14 Q20).
 
 **Version binding.** Once ratified, this model is intended to be versioned alongside Ranger and tagged with releases. A report against Ranger version *N* should be triaged against the model as it stood at *N*, not at HEAD. This v0 carries no such binding yet.
 
@@ -34,7 +34,7 @@ limitations under the License.
 - *(maintainer)* — stated by a Ranger maintainer in response to this process. As of 2026-06-12 the PMC has answered all 20 §14 questions (see §14); the load-bearing claims they confirmed are tagged *(maintainer, 2026-06-12)*.
 - *(inferred)* — reasoned from code/repo structure, absence of a feature, or general domain knowledge. Remaining *(inferred)* tags are claims the PMC has not yet individually ratified beyond the §14 answers.
 
-**Confidence:** PMC-reviewed v1 — all 20 §14 questions answered by the maintainer on 2026-06-12 and folded into §1–§13. A handful of items (e.g. the "no resource guarantee" line, §8 #6) were explicitly deferred by the PMC for later ratification.
+**Confidence:** PMC-reviewed v1.1 — all 20 §14 questions answered by the maintainer on 2026-06-12 and folded into §1–§13. A handful of items (e.g. the "no resource guarantee" line, §8 #6) were explicitly deferred by the PMC for later ratification.
 
 **What Apache Ranger is.** Apache Ranger is "a framework to enable, monitor and manage comprehensive data security across 20+ data processing services" *(documented — ranger.apache.org)*. It provides centralized & fine-grained authorization, audit, and key management for data services (Trino, Polaris, Ozone, HDFS, Hive, HBase, Kafka, NiFi, Knox, Kudu, YARN, Solr, Atlas and others). The administrator defines access-control policies in a central web application (Ranger Admin); lightweight per-service Java plugins, deployed inside each data service's own process, pull those policies and enforce authorization decisions locally on every access request. In threat-model terms Ranger is a **distributed Policy Decision / Policy Enforcement system**: the policy decision authority lives with the admin server (which authors and distributes policy), but the actual *enforcement* (the PEP) runs as plugin code co-located inside the data service it guards *(documented — FAQ: plugins "run as part of the same process as the namenode (HDFS), Hive2Server(Hive), HBase server (Hbase)")*.
 
@@ -265,6 +265,7 @@ Provisional candidates *(inferred)*:
 - "Plugin serves stale policy when Admin is down" — documented availability behavior (§8 #2, FAQ), not a bug.
 - "HTTP listener on 6080 / plaintext by default" flagged by a config scanner — plaintext is the supported default (§5a, §9), so this is `BY-DESIGN` / operator-hardening, not a code vulnerability *(maintainer, 2026-06-12 — §14 Q2)*.
 - **Resource-name canonicalization mismatch** between the host service and the policy engine — a **shared responsibility** with the host service, not a Ranger-only defect *(maintainer, 2026-06-12 — §14 Q17)*.
+- **Any authenticated user (including `ROLE_USER` without module/tab permissions) can look up any user, group, or role name in the Ranger UI** via lookup REST endpoints (`GET /service/xusers/lookup/users`, `/lookup/groups`, `/lookup/principals`, `GET /service/roles/lookup/roles/names`). By design for UI typeahead in policy and service forms; returns names only, not full profiles. Disposition: `KNOWN-NON-FINDING` *(maintainer, 2026-07-14)*.
 
 **Correction (do NOT wave off):** a "default/seeded admin password" finding is **not** a non-finding — the installer mandates a complexity-checked password on fresh install, so a seeded/default password is not a supported posture (§5a) *(maintainer, 2026-06-12 — §14 Q3/Q18)*.
 
