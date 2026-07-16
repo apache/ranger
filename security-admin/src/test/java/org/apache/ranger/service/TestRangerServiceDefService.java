@@ -57,14 +57,14 @@ import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnitRunner;
 
 import static org.apache.ranger.service.RangerServiceDefService.PROP_ENABLE_IMPLICIT_CONDITION_EXPRESSION;
-import static org.apache.ranger.service.RangerServiceDefService.PROP_ENABLE_OZONE_ACTION_POLICY;
+import static org.apache.ranger.service.RangerServiceDefService.PROP_ENABLE_ACTION_MATCHER_IN_POLICIES_CONDITION;
 
 @RunWith(MockitoJUnitRunner.class)
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class TestRangerServiceDefService {
 
 	private static Long Id = 8L;
-	private static final String OPTION_ENABLE_OZONE_ACTION_POLICY = "enableOzoneActionPolicy";
+	private static final String OPTION_ENABLE_ACTION_MATCHER_IN_POLICIES_CONDITION = RangerServiceDef.OPTION_ENABLE_ACTION_MATCHER_IN_POLICIES_CONDITION;
 
 	@InjectMocks
 	RangerServiceDefService serviceDefService = new RangerServiceDefService();
@@ -811,33 +811,50 @@ public class TestRangerServiceDefService {
 
 	@Test
 	public void testOzoneActionPolicyOptionDisabled() {
-		RangerAdminConfig.getInstance().set(PROP_ENABLE_OZONE_ACTION_POLICY, Boolean.FALSE.toString());
+		RangerAdminConfig.getInstance().set(PROP_ENABLE_ACTION_MATCHER_IN_POLICIES_CONDITION, Boolean.FALSE.toString());
 
 		try {
 			RangerServiceDef serviceDef = buildOzoneServiceDefWithActionMatches();
 
-			serviceDefService.applyOzoneActionPolicyHiddenOption(serviceDef);
+			serviceDefService.applyActionMatcherInPoliciesConditionHiddenOption(serviceDef);
 
-			Assert.assertEquals("false", serviceDef.getOptions().get(OPTION_ENABLE_OZONE_ACTION_POLICY));
+			Assert.assertEquals("false", serviceDef.getOptions().get(OPTION_ENABLE_ACTION_MATCHER_IN_POLICIES_CONDITION));
 			Assert.assertFalse(hasActionMatchesCondition(serviceDef));
 		} finally {
-			RangerAdminConfig.getInstance().unset(PROP_ENABLE_OZONE_ACTION_POLICY);
+			RangerAdminConfig.getInstance().unset(PROP_ENABLE_ACTION_MATCHER_IN_POLICIES_CONDITION);
 		}
 	}
 
 	@Test
 	public void testOzoneActionPolicyOptionEnabled() {
-		RangerAdminConfig.getInstance().set(PROP_ENABLE_OZONE_ACTION_POLICY, Boolean.TRUE.toString());
+		RangerAdminConfig.getInstance().set(PROP_ENABLE_ACTION_MATCHER_IN_POLICIES_CONDITION, Boolean.TRUE.toString());
 
 		try {
 			RangerServiceDef serviceDef = buildOzoneServiceDefWithActionMatches();
 
-			serviceDefService.applyOzoneActionPolicyHiddenOption(serviceDef);
+			serviceDefService.applyActionMatcherInPoliciesConditionHiddenOption(serviceDef);
 
-			Assert.assertEquals("true", serviceDef.getOptions().get(OPTION_ENABLE_OZONE_ACTION_POLICY));
+			Assert.assertEquals("true", serviceDef.getOptions().get(OPTION_ENABLE_ACTION_MATCHER_IN_POLICIES_CONDITION));
 			Assert.assertTrue(hasActionMatchesCondition(serviceDef));
 		} finally {
-			RangerAdminConfig.getInstance().unset(PROP_ENABLE_OZONE_ACTION_POLICY);
+			RangerAdminConfig.getInstance().unset(PROP_ENABLE_ACTION_MATCHER_IN_POLICIES_CONDITION);
+		}
+	}
+
+	@Test
+	public void testNonOzoneServiceDefActionMatcherOptionAlwaysFalse() {
+		RangerAdminConfig.getInstance().set(PROP_ENABLE_ACTION_MATCHER_IN_POLICIES_CONDITION, Boolean.TRUE.toString());
+
+		try {
+			RangerServiceDef serviceDef = new RangerServiceDef();
+			serviceDef.setName(EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_HDFS_NAME);
+			serviceDef.setOptions(new HashMap<String, String>());
+
+			serviceDefService.applyActionMatcherInPoliciesConditionHiddenOption(serviceDef);
+
+			Assert.assertEquals("false", serviceDef.getOptions().get(OPTION_ENABLE_ACTION_MATCHER_IN_POLICIES_CONDITION));
+		} finally {
+			RangerAdminConfig.getInstance().unset(PROP_ENABLE_ACTION_MATCHER_IN_POLICIES_CONDITION);
 		}
 	}
 

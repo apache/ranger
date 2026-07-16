@@ -36,10 +36,9 @@ import org.springframework.stereotype.Service;
 @Service
 @Scope("singleton")
 public class RangerServiceDefService extends RangerServiceDefServiceBase<XXServiceDef, RangerServiceDef> {
-	public static final String PROP_ENABLE_OZONE_ACTION_POLICY = "ranger.servicedef.enableOzoneActionPolicy";
+	public static final String PROP_ENABLE_ACTION_MATCHER_IN_POLICIES_CONDITION = "ranger.servicedef.ozone.enableActionMatcherInPoliciesCondition";
 
-	private static final String OPTION_ENABLE_OZONE_ACTION_POLICY = "enableOzoneActionPolicy";
-	private static final String POLICY_CONDITION_ACTION_MATCHES   = "action-matches";
+	private static final String POLICY_CONDITION_ACTION_MATCHES = "action-matches";
 
 	private final RangerAdminConfig config;
 
@@ -96,12 +95,12 @@ public class RangerServiceDefService extends RangerServiceDefServiceBase<XXServi
 	protected RangerServiceDef populateViewBean(XXServiceDef xServiceDef) {
 		RangerServiceDef ret = super.populateViewBean(xServiceDef);
 
-		applyOzoneActionPolicyHiddenOption(ret);
+		applyActionMatcherInPoliciesConditionHiddenOption(ret);
 
 		return ret;
 	}
 
-	void applyOzoneActionPolicyHiddenOption(RangerServiceDef serviceDef) {
+	void applyActionMatcherInPoliciesConditionHiddenOption(RangerServiceDef serviceDef) {
 		if (serviceDef == null) {
 			return;
 		}
@@ -113,16 +112,23 @@ public class RangerServiceDefService extends RangerServiceDefServiceBase<XXServi
 			serviceDef.setOptions(serviceDefOptions);
 		}
 
-		if (serviceDefOptions.get(OPTION_ENABLE_OZONE_ACTION_POLICY) == null) {
-			boolean enableOzoneActionPolicy = config.getBoolean(PROP_ENABLE_OZONE_ACTION_POLICY, false);
-			serviceDefOptions.put(OPTION_ENABLE_OZONE_ACTION_POLICY, Boolean.toString(enableOzoneActionPolicy));
+		if (!StringUtils.equalsIgnoreCase(serviceDef.getName(), EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_OZONE_NAME)) {
+			serviceDefOptions.put(RangerServiceDef.OPTION_ENABLE_ACTION_MATCHER_IN_POLICIES_CONDITION, Boolean.FALSE.toString());
+			serviceDef.setOptions(serviceDefOptions);
+
+			return;
+		}
+
+		if (serviceDefOptions.get(RangerServiceDef.OPTION_ENABLE_ACTION_MATCHER_IN_POLICIES_CONDITION) == null) {
+			boolean enabled = config.getBoolean(PROP_ENABLE_ACTION_MATCHER_IN_POLICIES_CONDITION, false);
+			serviceDefOptions.put(RangerServiceDef.OPTION_ENABLE_ACTION_MATCHER_IN_POLICIES_CONDITION, Boolean.toString(enabled));
 			serviceDef.setOptions(serviceDefOptions);
 		}
 
-		boolean defaultValue = config.getBoolean(PROP_ENABLE_OZONE_ACTION_POLICY, false);
-		boolean enabled      = ServiceDefUtil.getBooleanValue(serviceDefOptions, OPTION_ENABLE_OZONE_ACTION_POLICY, defaultValue);
+		boolean defaultValue = config.getBoolean(PROP_ENABLE_ACTION_MATCHER_IN_POLICIES_CONDITION, false);
+		boolean enabled      = ServiceDefUtil.getBooleanValue(serviceDefOptions, RangerServiceDef.OPTION_ENABLE_ACTION_MATCHER_IN_POLICIES_CONDITION, defaultValue);
 
-		if (!enabled && StringUtils.equalsIgnoreCase(serviceDef.getName(), EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_OZONE_NAME)) {
+		if (!enabled) {
 			List<RangerPolicyConditionDef> policyConditions = serviceDef.getPolicyConditions();
 
 			if (policyConditions != null && !policyConditions.isEmpty()) {

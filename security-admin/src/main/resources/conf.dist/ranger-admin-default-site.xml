@@ -153,11 +153,11 @@
 		<value>true</value>
 	</property>
 	<property>
-		<name>ranger.servicedef.enableOzoneActionPolicy</name>
+		<name>ranger.servicedef.ozone.enableActionMatcherInPoliciesCondition</name>
 		<value>false</value>
 		<description>
-			When true, enables Ozone action-matches policy conditions in the Admin UI
-			and applies S3 action-based evaluation in the Ozone authorizer.
+			When true, enables Ozone action-matches (RangerActionMatcher) policy conditions
+			in the Admin UI and applies S3 action-based evaluation in the Ozone authorizer.
 		</description>
 	</property>
 	<property>
