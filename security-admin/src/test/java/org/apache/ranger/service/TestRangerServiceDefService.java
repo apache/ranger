@@ -77,7 +77,7 @@ import java.util.HashMap;
 import java.util.List;
 
 import static org.apache.ranger.service.RangerServiceDefService.PROP_ENABLE_IMPLICIT_CONDITION_EXPRESSION;
-import static org.apache.ranger.service.RangerServiceDefService.PROP_ENABLE_OZONE_ACTION_POLICY;
+import static org.apache.ranger.service.RangerServiceDefService.PROP_ENABLE_ACTION_MATCHER_IN_POLICIES_CONDITION;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -97,7 +97,7 @@ import static org.mockito.Mockito.verify;
 @TestMethodOrder(MethodOrderer.MethodName.class)
 public class TestRangerServiceDefService {
     private static final Long   Id                                = 8L;
-    private static final String OPTION_ENABLE_OZONE_ACTION_POLICY = "enableOzoneActionPolicy";
+    private static final String OPTION_ENABLE_ACTION_MATCHER_IN_POLICIES_CONDITION = RangerServiceDef.OPTION_ENABLE_ACTION_MATCHER_IN_POLICIES_CONDITION;
     @InjectMocks
     RangerServiceDefService               serviceDefService;
     @Mock
@@ -789,33 +789,50 @@ public class TestRangerServiceDefService {
 
     @Test
     public void testOzoneActionPolicyOptionDisabled() {
-        RangerAdminConfig.getInstance().set(PROP_ENABLE_OZONE_ACTION_POLICY, Boolean.FALSE.toString());
+        RangerAdminConfig.getInstance().set(PROP_ENABLE_ACTION_MATCHER_IN_POLICIES_CONDITION, Boolean.FALSE.toString());
 
         try {
             RangerServiceDef serviceDef = buildOzoneServiceDefWithActionMatches();
 
-            serviceDefService.applyOzoneActionPolicyHiddenOption(serviceDef);
+            serviceDefService.applyActionMatcherInPoliciesConditionHiddenOption(serviceDef);
 
-            assertEquals("false", serviceDef.getOptions().get(OPTION_ENABLE_OZONE_ACTION_POLICY));
+            assertEquals("false", serviceDef.getOptions().get(OPTION_ENABLE_ACTION_MATCHER_IN_POLICIES_CONDITION));
             assertFalse(hasActionMatchesCondition(serviceDef));
         } finally {
-            RangerAdminConfig.getInstance().unset(PROP_ENABLE_OZONE_ACTION_POLICY);
+            RangerAdminConfig.getInstance().unset(PROP_ENABLE_ACTION_MATCHER_IN_POLICIES_CONDITION);
         }
     }
 
     @Test
     public void testOzoneActionPolicyOptionEnabled() {
-        RangerAdminConfig.getInstance().set(PROP_ENABLE_OZONE_ACTION_POLICY, Boolean.TRUE.toString());
+        RangerAdminConfig.getInstance().set(PROP_ENABLE_ACTION_MATCHER_IN_POLICIES_CONDITION, Boolean.TRUE.toString());
 
         try {
             RangerServiceDef serviceDef = buildOzoneServiceDefWithActionMatches();
 
-            serviceDefService.applyOzoneActionPolicyHiddenOption(serviceDef);
+            serviceDefService.applyActionMatcherInPoliciesConditionHiddenOption(serviceDef);
 
-            assertEquals("true", serviceDef.getOptions().get(OPTION_ENABLE_OZONE_ACTION_POLICY));
+            assertEquals("true", serviceDef.getOptions().get(OPTION_ENABLE_ACTION_MATCHER_IN_POLICIES_CONDITION));
             assertTrue(hasActionMatchesCondition(serviceDef));
         } finally {
-            RangerAdminConfig.getInstance().unset(PROP_ENABLE_OZONE_ACTION_POLICY);
+            RangerAdminConfig.getInstance().unset(PROP_ENABLE_ACTION_MATCHER_IN_POLICIES_CONDITION);
+        }
+    }
+
+    @Test
+    public void testNonOzoneServiceDefActionMatcherOptionAlwaysFalse() {
+        RangerAdminConfig.getInstance().set(PROP_ENABLE_ACTION_MATCHER_IN_POLICIES_CONDITION, Boolean.TRUE.toString());
+
+        try {
+            RangerServiceDef serviceDef = new RangerServiceDef();
+            serviceDef.setName(EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_HDFS_NAME);
+            serviceDef.setOptions(new HashMap<>());
+
+            serviceDefService.applyActionMatcherInPoliciesConditionHiddenOption(serviceDef);
+
+            assertEquals("false", serviceDef.getOptions().get(OPTION_ENABLE_ACTION_MATCHER_IN_POLICIES_CONDITION));
+        } finally {
+            RangerAdminConfig.getInstance().unset(PROP_ENABLE_ACTION_MATCHER_IN_POLICIES_CONDITION);
         }
     }
 

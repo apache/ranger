@@ -28,6 +28,7 @@ import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.model.validation.RangerServiceDefValidator;
 import org.apache.ranger.plugin.model.validation.RangerValidator.Action;
 import org.apache.ranger.plugin.store.EmbeddedServiceDefsUtil;
+import org.apache.ranger.service.RangerServiceDefService;
 import org.apache.ranger.util.CLIUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -41,8 +42,7 @@ import java.util.Map;
 @Component
 public class PatchForOzoneServiceDefPolicyConditionUpdate_J10065 extends BaseLoader {
     private static final Logger logger = LoggerFactory.getLogger(PatchForOzoneServiceDefPolicyConditionUpdate_J10065.class);
-    private static final String PROP_ENABLE_OZONE_ACTION_POLICY  = "ranger.servicedef.enableOzoneActionPolicy";
-    private static final String POLICY_CONDITION_ACTION_MATCHES  = "action-matches";
+    private static final String POLICY_CONDITION_ACTION_MATCHES = "action-matches";
 
     @Autowired
     RangerDaoManager daoMgr;
@@ -135,10 +135,10 @@ public class PatchForOzoneServiceDefPolicyConditionUpdate_J10065 extends BaseLoa
                 return;
             }
 
-            final boolean enableOzoneActionPolicy = RangerAdminConfig.getInstance().getBoolean(PROP_ENABLE_OZONE_ACTION_POLICY, false);
+            final boolean enableActionMatcherInPoliciesCondition = RangerAdminConfig.getInstance().getBoolean(RangerServiceDefService.PROP_ENABLE_ACTION_MATCHER_IN_POLICIES_CONDITION, false);
             final List<RangerServiceDef.RangerPolicyConditionDef> updatedPolicyConditions;
 
-            if (enableOzoneActionPolicy) {
+            if (enableActionMatcherInPoliciesCondition) {
                 updatedPolicyConditions = new ArrayList<>(embeddedPolicyConditions);
             } else {
                 updatedPolicyConditions = new ArrayList<>();

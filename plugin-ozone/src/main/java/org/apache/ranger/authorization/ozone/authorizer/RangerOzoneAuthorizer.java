@@ -35,6 +35,7 @@ import org.apache.ranger.authz.util.RangerResourceNameParser;
 import org.apache.ranger.plugin.audit.RangerDefaultAuditHandler;
 import org.apache.ranger.plugin.model.RangerInlinePolicy;
 import org.apache.ranger.plugin.model.RangerPrincipal;
+import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequestImpl;
 import org.apache.ranger.plugin.policyengine.RangerAccessResourceImpl;
 import org.apache.ranger.plugin.policyengine.RangerAccessResult;
@@ -74,8 +75,6 @@ public class RangerOzoneAuthorizer implements IAccessAuthorizer {
     public static final String KEY_RESOURCE_ROLE   = "role";
 
     private static final String S3_VOLUME_NAME = "s3Vol";
-
-    private static final String OPTION_ENABLE_OZONE_ACTION_POLICY = "enableOzoneActionPolicy";
 
     private static volatile RangerBasePlugin rangerPlugin;
 
@@ -400,7 +399,7 @@ public class RangerOzoneAuthorizer implements IAccessAuthorizer {
                 && plugin.getServiceDef() != null
                 && ServiceDefUtil.getBooleanValue(
                 plugin.getServiceDef().getOptions(),
-                OPTION_ENABLE_OZONE_ACTION_POLICY,
+                RangerServiceDef.OPTION_ENABLE_ACTION_MATCHER_IN_POLICIES_CONDITION,
                 false);
     }
 
