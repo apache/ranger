@@ -30,6 +30,7 @@ public class UgsyncAuditInfo {
     private LdapSyncSourceInfo ldapSyncSourceInfo;
     private UnixSyncSourceInfo unixSyncSourceInfo;
     private FileSyncSourceInfo fileSyncSourceInfo;
+    private EntraIdSyncSourceInfo entraIdSyncSourceInfo;
 
     public Long getNoOfNewUsers() {
         return noOfNewUsers;
@@ -95,6 +96,14 @@ public class UgsyncAuditInfo {
         this.fileSyncSourceInfo = fileSyncSourceInfo;
     }
 
+    public EntraIdSyncSourceInfo getEntraIdSyncSourceInfo() {
+        return entraIdSyncSourceInfo;
+    }
+
+    public void setEntraIdSyncSourceInfo(EntraIdSyncSourceInfo entraIdSyncSourceInfo) {
+        this.entraIdSyncSourceInfo = entraIdSyncSourceInfo;
+    }
+
     public String getUserName() {
         return userName;
     }
@@ -127,6 +136,7 @@ public class UgsyncAuditInfo {
         sb.append(", ldapSyncSourceInfo= ").append(ldapSyncSourceInfo);
         sb.append(", unixSyncSourceInfo= ").append(unixSyncSourceInfo);
         sb.append(", fileSyncSourceInfo= ").append(fileSyncSourceInfo);
+        sb.append(", entraIdSyncSourceInfo= ").append(entraIdSyncSourceInfo);
         sb.append("]");
         return sb;
     }
