@@ -76,8 +76,8 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 
-import static org.apache.ranger.service.RangerServiceDefService.PROP_ENABLE_IMPLICIT_CONDITION_EXPRESSION;
 import static org.apache.ranger.service.RangerServiceDefService.PROP_ENABLE_ACTION_MATCHER_IN_POLICIES_CONDITION;
+import static org.apache.ranger.service.RangerServiceDefService.PROP_ENABLE_IMPLICIT_CONDITION_EXPRESSION;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -97,7 +97,7 @@ import static org.mockito.Mockito.verify;
 @TestMethodOrder(MethodOrderer.MethodName.class)
 public class TestRangerServiceDefService {
     private static final Long   Id                                = 8L;
-    private static final String OPTION_ENABLE_ACTION_MATCHER_IN_POLICIES_CONDITION = RangerServiceDef.OPTION_ENABLE_ACTION_MATCHER_IN_POLICIES_CONDITION;
+    private static final String OPTION_ENABLE_ACTION_MATCHER_IN_POLICIES_CONDITION = RangerServiceDefService.OPTION_ENABLE_ACTION_MATCHER_IN_POLICIES_CONDITION;
     @InjectMocks
     RangerServiceDefService               serviceDefService;
     @Mock

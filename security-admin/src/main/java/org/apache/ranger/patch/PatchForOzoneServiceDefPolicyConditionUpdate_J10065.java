@@ -36,6 +36,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -150,6 +151,20 @@ public class PatchForOzoneServiceDefPolicyConditionUpdate_J10065 extends BaseLoa
             }
 
             dbOzoneServiceDef.setPolicyConditions(updatedPolicyConditions);
+
+            if (serviceDefOptionsPreUpdate == null
+                    || !serviceDefOptionsPreUpdate.containsKey(RangerServiceDefService.OPTION_ENABLE_ACTION_MATCHER_IN_POLICIES_CONDITION)) {
+                Map<String, String> serviceDefOptions = dbOzoneServiceDef.getOptions();
+
+                if (serviceDefOptions == null) {
+                    serviceDefOptions = new HashMap<>();
+                    dbOzoneServiceDef.setOptions(serviceDefOptions);
+                }
+
+                serviceDefOptions.put(
+                        RangerServiceDefService.OPTION_ENABLE_ACTION_MATCHER_IN_POLICIES_CONDITION,
+                        Boolean.toString(enableActionMatcherInPoliciesCondition));
+            }
 
             final RangerServiceDefValidator validator = validatorFactory.getServiceDefValidator(svcStore);
 

@@ -36,6 +36,7 @@ import java.util.Map;
 @Scope("singleton")
 public class RangerServiceDefService extends RangerServiceDefServiceBase<XXServiceDef, RangerServiceDef> {
     public static final String PROP_ENABLE_ACTION_MATCHER_IN_POLICIES_CONDITION = "ranger.servicedef.ozone.enableActionMatcherInPoliciesCondition";
+    public static final String OPTION_ENABLE_ACTION_MATCHER_IN_POLICIES_CONDITION = "enableActionMatcherInPoliciesCondition";
 
     private static final String POLICY_CONDITION_ACTION_MATCHES = "action-matches";
 
@@ -131,21 +132,21 @@ public class RangerServiceDefService extends RangerServiceDefServiceBase<XXServi
         }
 
         if (!StringUtils.equalsIgnoreCase(serviceDef.getName(), EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_OZONE_NAME)) {
-            serviceDefOptions.put(RangerServiceDef.OPTION_ENABLE_ACTION_MATCHER_IN_POLICIES_CONDITION, Boolean.FALSE.toString());
+            serviceDefOptions.put(OPTION_ENABLE_ACTION_MATCHER_IN_POLICIES_CONDITION, Boolean.FALSE.toString());
             serviceDef.setOptions(serviceDefOptions);
 
             return;
         }
 
-        if (serviceDefOptions.get(RangerServiceDef.OPTION_ENABLE_ACTION_MATCHER_IN_POLICIES_CONDITION) == null) {
+        if (serviceDefOptions.get(OPTION_ENABLE_ACTION_MATCHER_IN_POLICIES_CONDITION) == null) {
             boolean enabled = config.getBoolean(PROP_ENABLE_ACTION_MATCHER_IN_POLICIES_CONDITION, false);
 
-            serviceDefOptions.put(RangerServiceDef.OPTION_ENABLE_ACTION_MATCHER_IN_POLICIES_CONDITION, Boolean.toString(enabled));
+            serviceDefOptions.put(OPTION_ENABLE_ACTION_MATCHER_IN_POLICIES_CONDITION, Boolean.toString(enabled));
             serviceDef.setOptions(serviceDefOptions);
         }
 
         boolean defaultValue = config.getBoolean(PROP_ENABLE_ACTION_MATCHER_IN_POLICIES_CONDITION, false);
-        boolean enabled      = ServiceDefUtil.getBooleanValue(serviceDefOptions, RangerServiceDef.OPTION_ENABLE_ACTION_MATCHER_IN_POLICIES_CONDITION, defaultValue);
+        boolean enabled      = ServiceDefUtil.getBooleanValue(serviceDefOptions, OPTION_ENABLE_ACTION_MATCHER_IN_POLICIES_CONDITION, defaultValue);
 
         if (!enabled) {
             List<RangerPolicyConditionDef> policyConditions = serviceDef.getPolicyConditions();
