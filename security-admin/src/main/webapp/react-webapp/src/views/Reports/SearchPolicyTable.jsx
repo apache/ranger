@@ -28,7 +28,7 @@ import {
   Row,
   Table
 } from "react-bootstrap";
-import { isEmpty, find } from "lodash";
+import { isEmpty, find, keyBy } from "lodash";
 import { MoreLess } from "Components/CommonComponents";
 import XATableLayout from "Components/XATableLayout";
 import { fetchApi } from "Utils/fetchAPI";
@@ -338,17 +338,29 @@ function PolicyConditionData(props) {
               <td>
                 {!isEmpty(items.conditions)
                   ? items.conditions.map((obj, index) => {
-                      let conditionObj = props.serviceDef.policyConditions.find(
-                        (condition) => condition.name === obj.type
+                      const policyMap = keyBy(
+                        props.serviceDef.policyConditions,
+                        "name"
                       );
+
+                      const conditionObj = policyMap[obj.type];
+
+                      if (isEmpty(conditionObj)) {
+                        return null;
+                      }
+
+                      const label = conditionObj?.label
+                        ? getPolicyConditionDisplayLbl(conditionObj.label)
+                        : "";
+
+                      const values = (obj.values || []).join(", ");
+
                       return (
                         <Badge
                           bg="info"
                           className="me-1 line-clamp line-clamp-3 text-start"
-                          key={index}
-                        >{`${getPolicyConditionDisplayLbl(
-                          conditionObj.label
-                        )}: ${obj.values.join(", ")}`}</Badge>
+                          key={`${obj.type}-${index}`}
+                        >{`${label}: ${values}`}</Badge>
                       );
                     })
                   : "--"}
