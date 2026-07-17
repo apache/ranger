@@ -842,6 +842,48 @@ public class TestRangerServiceDefService {
 	}
 
 	@Test
+	public void testOzoneActionPolicyConfigTrueOverridesStoredFalseOption() {
+		RangerAdminConfig.getInstance().set(PROP_ENABLE_ACTION_MATCHER_IN_POLICIES_CONDITION, Boolean.TRUE.toString());
+
+		try {
+			RangerServiceDef serviceDef = buildOzoneServiceDefWithActionMatches();
+			serviceDef.getOptions().put(OPTION_ENABLE_ACTION_MATCHER_IN_POLICIES_CONDITION, Boolean.FALSE.toString());
+
+			serviceDefService.applyActionMatcherInPoliciesConditionHiddenOption(serviceDef);
+
+			Assert.assertEquals("true", serviceDef.getOptions().get(OPTION_ENABLE_ACTION_MATCHER_IN_POLICIES_CONDITION));
+			Assert.assertTrue(hasActionMatchesCondition(serviceDef));
+		} finally {
+			RangerAdminConfig.getInstance().unset(PROP_ENABLE_ACTION_MATCHER_IN_POLICIES_CONDITION);
+		}
+	}
+
+	@Test
+	public void testOzoneActionPolicyConfigTrueRestoresMissingActionMatchesCondition() {
+		RangerAdminConfig.getInstance().set(PROP_ENABLE_ACTION_MATCHER_IN_POLICIES_CONDITION, Boolean.TRUE.toString());
+
+		try {
+			RangerPolicyConditionDef ipRange = new RangerPolicyConditionDef();
+			ipRange.setName("ip-range");
+
+			List<RangerPolicyConditionDef> policyConditions = new ArrayList<>();
+			policyConditions.add(ipRange);
+
+			RangerServiceDef serviceDef = new RangerServiceDef();
+			serviceDef.setName(EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_OZONE_NAME);
+			serviceDef.setOptions(new HashMap<String, String>());
+			serviceDef.setPolicyConditions(policyConditions);
+
+			serviceDefService.applyActionMatcherInPoliciesConditionHiddenOption(serviceDef);
+
+			Assert.assertEquals("true", serviceDef.getOptions().get(OPTION_ENABLE_ACTION_MATCHER_IN_POLICIES_CONDITION));
+			Assert.assertTrue(hasActionMatchesCondition(serviceDef));
+		} finally {
+			RangerAdminConfig.getInstance().unset(PROP_ENABLE_ACTION_MATCHER_IN_POLICIES_CONDITION);
+		}
+	}
+
+	@Test
 	public void testNonOzoneServiceDefActionMatcherOptionAlwaysFalse() {
 		RangerAdminConfig.getInstance().set(PROP_ENABLE_ACTION_MATCHER_IN_POLICIES_CONDITION, Boolean.TRUE.toString());
 
