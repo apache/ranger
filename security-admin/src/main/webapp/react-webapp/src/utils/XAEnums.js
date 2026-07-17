@@ -550,7 +550,7 @@ export const RegexValidation = {
         characters.
         <br />
         2. Allowed special character ,._-+/@= and space. <br />
-        3. Name length should be greater than one."
+        3. Name length should be greater than one.
       </>
     ),
     regexforNameValidationMessage:
@@ -562,7 +562,7 @@ export const RegexValidation = {
         <br />
         2. Allowed special character ._-@ and space.
         <br />
-        3. Name length should be greater than one."
+        3. Name length should be greater than one.
       </>
     )
   },
@@ -894,3 +894,8 @@ export const additionalServiceConfigs = [
     type: "user"
   }
 ];
+export const policyConditionDisplayLabel = {
+  "Accessed after expiry_date (yes/no)?": "Accessed after expiry date",
+  "Enter boolean expression": "Boolean expression",
+  "IP Address Range": "IP Address Range"
+};
