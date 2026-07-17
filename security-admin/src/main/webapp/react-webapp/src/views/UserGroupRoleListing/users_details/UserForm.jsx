@@ -24,7 +24,8 @@ import {
   BlockUi,
   scrollToError,
   selectInputCustomStyles,
-  trimInputValue
+  trimInputValue,
+  ConfirmationClearIndicator
 } from "Components/CommonComponents";
 import AsyncSelect from "react-select/async";
 import Select from "react-select";
@@ -244,6 +245,10 @@ function UserForm(props) {
         styles={selectInputCustomStyles}
         tabSelectsValue={false}
         placeholder="Select Groups"
+        clearConfirmMessage="Groups"
+        components={{
+          ClearIndicator: ConfirmationClearIndicator
+        }}
       />
     );
   };
