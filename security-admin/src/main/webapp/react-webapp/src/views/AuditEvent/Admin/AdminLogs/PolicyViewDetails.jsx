@@ -24,7 +24,11 @@ import { RangerPolicyType, DefStatus } from "Utils/XAEnums";
 import dateFormat from "dateformat";
 import { toast } from "react-toastify";
 import { cloneDeep, find, isEmpty, map, sortBy } from "lodash";
-import { getResourcesDefVal, serverError } from "Utils/XAUtils";
+import {
+  getResourcesDefVal,
+  serverError,
+  getPolicyConditionDisplayLbl
+} from "Utils/XAUtils";
 import { ModalLoader } from "Components/CommonComponents";
 import { getServiceDef } from "Utils/appState";
 
@@ -463,9 +467,9 @@ export function PolicyViewDetails(props) {
                                     bg="info"
                                     className="d-inline me-1"
                                     key={obj.values}
-                                  >{`${conditionObj.label}: ${obj.values.join(
-                                    ", "
-                                  )}`}</Badge>
+                                  >{`${getPolicyConditionDisplayLbl(
+                                    conditionObj.label
+                                  )}: ${obj.values.join(", ")}`}</Badge>
                                 </h6>
                               );
                             })
@@ -548,7 +552,9 @@ export function PolicyViewDetails(props) {
     const getConditionLabel = (label) => {
       let filterLabel = find(serviceDef.policyConditions, { name: label });
 
-      return filterLabel && filterLabel?.label ? filterLabel.label : "";
+      return filterLabel && filterLabel?.label
+        ? getPolicyConditionDisplayLbl(filterLabel.label)
+        : "";
     };
     return (
       !isEmpty(conditions) && (
@@ -783,14 +789,14 @@ export function PolicyViewDetails(props) {
         )}
       {policyType == RangerPolicyType.RANGER_ROW_FILTER_POLICY_TYPE.value && (
         <>
-          <p className="form-header">Row Level Conditions :</p>
+          <p className="form-header">Row Level Rules :</p>
           <div className="overflow-auto">
             <Table bordered size="sm" className="table-audit-filter-ready-only">
               {getFilterPolicy(
                 rowFilterPolicyItems,
                 serviceDef,
                 serviceType,
-                `No policy items of "Row Level Conditions" are present`
+                `No policy items of "Row Level Rules" are present`
               )}
             </Table>
           </div>
@@ -798,7 +804,7 @@ export function PolicyViewDetails(props) {
       )}
       {policyType == RangerPolicyType.RANGER_MASKING_POLICY_TYPE.value && (
         <>
-          <p className="form-header">Masking Conditions :</p>
+          <p className="form-header">Masking Rules :</p>
           <div className="overflow-auto">
             <Table bordered size="sm" className="table-audit-filter-ready-only">
               {getFilterPolicy(

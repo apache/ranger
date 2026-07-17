@@ -42,10 +42,17 @@ import {
   dragEnter,
   drop,
   dragOver,
-  policyConditionUpdatedJSON
+  policyConditionUpdatedJSON,
+  getPolicyConditionDisplayLbl
 } from "Utils/XAUtils";
 import { selectInputCustomStyles } from "Components/CommonComponents";
-import { getSelectedLeafResourceTypes, getSelectedAccessTypesForRow, buildActionReqsMapFromConditionDef, getCleanConditions } from "Utils/policyConditionUtils";
+import PolicyConditionsComp from "./PolicyConditionsComp";
+import {
+  getSelectedLeafResourceTypes,
+  getSelectedAccessTypesForRow,
+  buildActionReqsMapFromConditionDef,
+  getCleanConditions
+} from "Utils/policyConditionUtils";
 import { usePruneStaleConditions } from "../../hooks/usePruneStaleConditions";
 
 const noneOptions = {
@@ -74,6 +81,7 @@ export default function PolicyPermissionItem(props) {
   const [roleLoading, setRoleLoading] = useState(false);
   const [groupLoading, setGroupLoading] = useState(false);
   const [userLoading, setUserLoading] = useState(false);
+  const [activeConditionRow, setActiveConditionRow] = useState(null);
 
   const permList = ["Select Roles", "Select Groups", "Select Users"];
 
@@ -133,7 +141,9 @@ export default function PolicyPermissionItem(props) {
     return `${sel.name ?? ""}:${sel.value ?? ""}`;
   };
 
-  const resourceSelectionSignature = Array.isArray(formValues?.additionalResources)
+  const resourceSelectionSignature = Array.isArray(
+    formValues?.additionalResources
+  )
     ? formValues.additionalResources
         .map((b) =>
           grpResourcesKeys
@@ -368,6 +378,48 @@ export default function PolicyPermissionItem(props) {
     });
   };
 
+  const policyConditionDisplayValue = (value) => {
+    const selectVal = value;
+    let ipRangVal, uiHintVal;
+    if (selectVal) {
+      return Object.keys(selectVal).map((property) => {
+        let conditionObj = find(
+          serviceCompDetails.policyConditions,
+          function (m) {
+            if (m.name == property) {
+              return m;
+            }
+          }
+        );
+        if (conditionObj?.uiHint && conditionObj?.uiHint != "") {
+          uiHintVal = JSON.parse(conditionObj.uiHint);
+        }
+        if (isArray(selectVal[property])) {
+          ipRangVal = (selectVal[property] || [])
+            .map((m) =>
+              typeof m === "object" && m?.value != null ? m.value : m
+            )
+            .join(", ");
+        }
+        return (
+          <h6 key={property}>
+            <div
+              className={`${
+                uiHintVal?.isMultiline
+                  ? "editable-label rule-condition-wrapper"
+                  : "badge bg-dark rule-condition-wrapper"
+              }`}
+            >
+              {`${getPolicyConditionDisplayLbl(conditionObj.label)}: ${
+                isArray(selectVal[property]) ? ipRangVal : selectVal[property]
+              }`}
+            </div>
+          </h6>
+        );
+      });
+    }
+  };
+
   return (
     <div>
       <Col sm="12">
@@ -501,7 +553,6 @@ export default function PolicyPermissionItem(props) {
                             serviceCompDetails?.policyConditions?.length >
                               0 && (
                               <td key={colName} className="align-middle">
-                                {/* Per-row conditions: Editable + actionFilterContext for action-matches */}
                                 <Field
                                   className="form-control"
                                   name={`${name}.conditions`}
@@ -511,29 +562,85 @@ export default function PolicyPermissionItem(props) {
                                       index
                                     )
                                   }
-                                  render={({ input }) => (
-                                    <div className="table-editable permission-item">
-                                      <Editable
-                                        {...input}
-                                        type="custom"
-                                        conditionDefVal={conditionDefVal}
-                                        servicedefName={serviceCompDetails?.name}
-                                        actionFilterContext={{
-                                          selectedAccessTypes:
-                                            getSelectedAccessTypesForRow(formValues, attrName, index),
-                                          leafResourceTypes,
-                                          accessTypeDefs:
-                                            serviceCompDetails?.accessTypes
-                                        }}
-                                        selectProps={{
-                                          isMulti: true,
-                                          // Portal menus to body (see Editable CONDITION_POPOVER_SELECT_PROPS)
-                                          // so a long Action list with ALL permission does not jump the page.
-                                        }}
-                                        popOverheader="Rule Conditions"
-                                      />
-                                    </div>
-                                  )}
+                                  render={({ input }) => {
+                                    const showConditionsModal =
+                                      activeConditionRow === name;
+                                    const hasValue =
+                                      Object.keys(
+                                        getCleanConditions(input?.value || {})
+                                      ).length !== 0;
+                                    return (
+                                      <>
+                                        {showConditionsModal && (
+                                          <PolicyConditionsComp
+                                            policyConditionDetails={
+                                              conditionDefVal
+                                            }
+                                            inputVal={input}
+                                            showModal={true}
+                                            handleCloseModal={() =>
+                                              setActiveConditionRow(null)
+                                            }
+                                            modalHeader="Rule Conditions"
+                                            scope="policyItem"
+                                            servicedefName={
+                                              serviceCompDetails?.name
+                                            }
+                                            actionReqsMap={actionReqsMap}
+
+                                            actionFilterContext={{
+                                              selectedAccessTypes:
+                                                getSelectedAccessTypesForRow(
+                                                  formValues,
+                                                  attrName,
+                                                  index
+                                                ),
+                                              leafResourceTypes,
+                                              accessTypeDefs:
+                                                serviceCompDetails?.accessTypes
+                                            }}
+                                          />
+                                      )}
+                                        <div className="table-editable">
+                                          {hasValue ? (
+                                            <h6>
+                                              {ruleConditionDisplayValue(
+                                                input.value
+                                              )}
+                                              <Button
+                                                className="mg-10 mx-auto d-block btn-mini"
+                                                variant="outline-dark"
+                                                size="sm"
+                                                type="button"
+                                                onClick={() =>
+                                                  setActiveConditionRow(name)
+                                                }
+                                              >
+                                                <i className="fa-fw fa fa-pencil"></i>
+                                              </Button>
+                                            </h6>
+                                          ) : (
+                                            <div className="text-center">
+                                              <span className="editable-add-text">
+                                                Add Conditions
+                                              </span>
+                                              <Button
+                                                className="mg-10 mx-auto d-block btn-mini"
+                                                variant="outline-dark"
+                                                size="sm"
+                                                type="button"
+                                                onClick={() =>
+                                                  setActiveConditionRow(name)
+                                                }
+                                              >
+                                                <i className="fa-fw fa fa-plus"></i>
+                                              </Button>
+                                            </div>
+                                          )}
+                                        </div>
+                                      </>
+                                    );
+                                  }}
                                 />
                               </td>
                             )

@@ -733,6 +733,7 @@ function AccessGrantForm({
                               inputVal={input}
                               showModal={showModal}
                               handleCloseModal={policyConditionState}
+                              modalHeader="Policy Conditions"
                             />
                           )}
                         />

@@ -33,7 +33,11 @@ import { MoreLess } from "Components/CommonComponents";
 import XATableLayout from "Components/XATableLayout";
 import { fetchApi } from "Utils/fetchAPI";
 import { Loader } from "Components/CommonComponents";
-import { isAuditor, isKMSAuditor } from "Utils/XAUtils";
+import {
+  isAuditor,
+  isKMSAuditor,
+  getPolicyConditionDisplayLbl
+} from "Utils/XAUtils";
 
 function SearchPolicyTable(props) {
   const [searchPoliciesData, setSearchPolicies] = useState([]);
@@ -329,13 +333,18 @@ function PolicyConditionData(props) {
               <td className="text-center">
                 {!isEmpty(items.conditions)
                   ? items.conditions.map((obj, index) => {
+                      let conditionObj = props.serviceDef.policyConditions.find(
+                        (condition) => condition.name === obj.type
+                      );
                       return (
                         <h6 className="d-inline me-1" key={index}>
                           <Badge
                             bg="info"
                             className="d-inline me-1"
                             key={obj.values}
-                          >{`${obj.type}: ${obj.values.join(", ")}`}</Badge>
+                          >{`${getPolicyConditionDisplayLbl(
+                            conditionObj.label
+                          )}: ${obj.values.join(", ")}`}</Badge>
                         </h6>
                       );
                     })
