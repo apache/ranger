@@ -1593,7 +1593,11 @@ export default function AddUpdatePolicyForm() {
                     {isMultiResources && (
                       <>
                         <fieldset>
-                          <p className="formHeader">Resources :</p>
+                          <p className="formHeader">
+                            {serviceCompDetails.name == "tag"
+                              ? "Tags :"
+                              : "Resources :"}
+                          </p>
                         </fieldset>
                         <>
                           <FieldArray name="additionalResources">
@@ -1660,7 +1664,7 @@ export default function AddUpdatePolicyForm() {
                           <Accordion defaultActiveKey="0">
                             <>
                               <p className="formHeader">
-                                Allow Conditions:{" "}
+                                Allow Rules:{" "}
                                 <CustomToggle eventKey="0"></CustomToggle>
                               </p>
                               <Accordion.Collapse eventKey="0">
@@ -1688,7 +1692,7 @@ export default function AddUpdatePolicyForm() {
                                       <fieldset>
                                         <p className="wrap-header search-header">
                                           <i className="fa-fw fa fa-exclamation-triangle fa-fw fa fa-1 text-color-red"></i>
-                                          Exclude from Allow Conditions:
+                                          Exclude from Allow Rules:
                                         </p>
                                       </fieldset>
                                       <div className="wrap">
@@ -1754,7 +1758,7 @@ export default function AddUpdatePolicyForm() {
                                 <Accordion defaultActiveKey="0">
                                   <>
                                     <p className="formHeader">
-                                      Deny Conditions:
+                                      Deny Rules:
                                       <CustomToggle eventKey="0"></CustomToggle>
                                     </p>
                                     <Accordion.Collapse eventKey="0">
@@ -1780,7 +1784,7 @@ export default function AddUpdatePolicyForm() {
                                         <fieldset>
                                           <p className="wrap-header search-header">
                                             <i className="fa-fw fa fa-exclamation-triangle fa-fw fa fa-1 text-color-red"></i>
-                                            Exclude from Deny Conditions:
+                                            Exclude from Deny Rules:
                                           </p>
                                         </fieldset>
                                         <div className="wrap">
@@ -1815,7 +1819,7 @@ export default function AddUpdatePolicyForm() {
                         <Accordion defaultActiveKey="0">
                           <>
                             <p className="formHeader">
-                              Mask Conditions:
+                              Mask Rules:
                               <CustomToggle eventKey="0"></CustomToggle>
                             </p>
                             <Accordion.Collapse eventKey="0">
@@ -1847,7 +1851,7 @@ export default function AddUpdatePolicyForm() {
                           <Accordion defaultActiveKey="0">
                             <>
                               <p className="wrap-header search-header">
-                                Row Filter Conditions:
+                                Row Filter Rules:
                                 <CustomToggle eventKey="0"></CustomToggle>
                               </p>
                               <Accordion.Collapse eventKey="0">
