@@ -43,8 +43,7 @@ import java.util.Map;
 @Component
 public class PatchForOzoneServiceDefPolicyConditionUpdate_J10065 extends BaseLoader {
     private static final Logger logger = LoggerFactory.getLogger(PatchForOzoneServiceDefPolicyConditionUpdate_J10065.class);
-    private static final String POLICY_CONDITION_ACTION_MATCHES              = "action-matches";
-    private static final String LEGACY_OPTION_ENABLE_OZONE_ACTION_POLICY     = "enableOzoneActionPolicy";
+    private static final String POLICY_CONDITION_ACTION_MATCHES = "action-matches";
 
     @Autowired
     RangerDaoManager daoMgr;
@@ -181,7 +180,6 @@ public class PatchForOzoneServiceDefPolicyConditionUpdate_J10065 extends BaseLoa
             }
         }
 
-        options.remove(LEGACY_OPTION_ENABLE_OZONE_ACTION_POLICY);
         options.put(RangerServiceDef.OPTION_ENABLE_ACTION_MATCHER_IN_POLICIES_CONDITION, Boolean.toString(enableActionMatcherInPoliciesCondition));
 
         persistDefOptionsIfChanged(xXServiceDefObj, options, previousJson);
