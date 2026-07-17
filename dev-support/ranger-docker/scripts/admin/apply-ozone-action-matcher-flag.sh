@@ -24,35 +24,29 @@ if [ "${FLAG_VALUE}" != "true" ] && [ "${FLAG_VALUE}" != "false" ]; then
   FLAG_VALUE=false
 fi
 
-ADMIN_SITE="${RANGER_HOME}/admin/ews/webapp/WEB-INF/classes/conf/ranger-admin-site.xml"
+ADMIN_DIR="${RANGER_HOME}/admin"
+UPDATE_PROP="${ADMIN_DIR}/update_property.py"
+CONF_DIR="${ADMIN_DIR}/ews/webapp/WEB-INF/classes/conf"
+CONF_DIST="${ADMIN_DIR}/ews/webapp/WEB-INF/classes/conf.dist"
 
-if [ ! -f "${ADMIN_SITE}" ]; then
-  echo "WARN: ${ADMIN_SITE} not found; skipping ozone action-matcher flag"
+if [ ! -f "${UPDATE_PROP}" ]; then
+  echo "WARN: ${UPDATE_PROP} not found; skipping ozone action-matcher flag"
   exit 0
 fi
 
-python3 - "${ADMIN_SITE}" "${PROP_NAME}" "${FLAG_VALUE}" <<'PY'
-import sys
-from xml.etree import ElementTree as ET
+updated=false
+for site_file in \
+  "${CONF_DIR}/ranger-admin-site.xml" \
+  "${CONF_DIR}/ranger-admin-default-site.xml" \
+  "${CONF_DIST}/ranger-admin-default-site.xml"; do
+  if [ -f "${site_file}" ] && grep -q "<name>${PROP_NAME}</name>" "${site_file}"; then
+    if python3 "${UPDATE_PROP}" "${PROP_NAME}" "${FLAG_VALUE}" "${site_file}"; then
+      echo "Updated ${PROP_NAME}=${FLAG_VALUE} in ${site_file}"
+      updated=true
+    fi
+  fi
+done
 
-site_path, prop_name, prop_value = sys.argv[1:4]
-tree = ET.parse(site_path)
-root = tree.getroot()
-
-for prop in root.findall('property'):
-    name_el = prop.find('name')
-    if name_el is not None and name_el.text and name_el.text.strip() == prop_name:
-        value_el = prop.find('value')
-        if value_el is None:
-            value_el = ET.SubElement(prop, 'value')
-        value_el.text = prop_value
-        tree.write(site_path, encoding='unicode', xml_declaration=False)
-        print(f"Updated {prop_name}={prop_value} in {site_path}")
-        sys.exit(0)
-
-prop = ET.SubElement(root, 'property')
-ET.SubElement(prop, 'name').text = prop_name
-ET.SubElement(prop, 'value').text = prop_value
-tree.write(site_path, encoding='unicode', xml_declaration=False)
-print(f"Added {prop_name}={prop_value} to {site_path}")
-PY
+if [ "${updated}" != "true" ]; then
+  echo "WARN: no ranger admin site XML found; skipping ozone action-matcher flag"
+fi
