@@ -280,7 +280,7 @@ function SearchPolicyTable(props) {
             </Accordion.Body>
           </Accordion.Item>
         </Accordion>
-        <Modal show={showModal} onHide={hidePolicyConditionModal} size="lg">
+        <Modal show={showModal} onHide={hidePolicyConditionModal} size="xl">
           <Modal.Header closeButton>
             <Modal.Title>Policy Condition Details</Modal.Title>
           </Modal.Header>
@@ -330,22 +330,20 @@ function PolicyConditionData(props) {
               )}
             </td>
             {!isEmpty(props?.serviceDef?.policyConditions) && (
-              <td className="text-center">
+              <td>
                 {!isEmpty(items.conditions)
                   ? items.conditions.map((obj, index) => {
                       let conditionObj = props.serviceDef.policyConditions.find(
                         (condition) => condition.name === obj.type
                       );
                       return (
-                        <h6 className="d-inline me-1" key={index}>
-                          <Badge
-                            bg="info"
-                            className="d-inline me-1"
-                            key={obj.values}
-                          >{`${getPolicyConditionDisplayLbl(
-                            conditionObj.label
-                          )}: ${obj.values.join(", ")}`}</Badge>
-                        </h6>
+                        <Badge
+                          bg="info"
+                          className="me-1 line-clamp line-clamp-3 text-start"
+                          key={index}
+                        >{`${getPolicyConditionDisplayLbl(
+                          conditionObj.label
+                        )}: ${obj.values.join(", ")}`}</Badge>
                       );
                     })
                   : "--"}
@@ -358,6 +356,15 @@ function PolicyConditionData(props) {
                 <div className="text-center">--</div>
               )}
             </td>
+            {props?.serviceDef?.name != "tag" && (
+              <td className="text-center">
+                <input
+                  type="checkbox"
+                  checked={items.delegateAdmin === false ? false : true}
+                  disabled="disabled"
+                />
+              </td>
+            )}
           </tr>
         );
       });
@@ -366,7 +373,7 @@ function PolicyConditionData(props) {
         <tr key="no-data">
           <td
             className="text-center"
-            colSpan={!isEmpty(props?.serviceDef?.policyConditions) ? "5" : "4"}
+            colSpan={!isEmpty(props?.serviceDef?.policyConditions) ? "6" : "5"}
           >
             <span className="text-muted">&quot;No data to show!!&quot;</span>
           </td>
@@ -406,17 +413,20 @@ function PolicyConditionData(props) {
               )}
             </td>
             {!isEmpty(props?.serviceDef?.policyConditions) && (
-              <td className="text-center">
+              <td>
                 {!isEmpty(items.conditions)
                   ? items.conditions.map((obj, index) => {
+                      let conditionObj = props.serviceDef.policyConditions.find(
+                        (condition) => condition.name === obj.type
+                      );
                       return (
-                        <h6 className="d-inline me-1" key={index}>
-                          <Badge
-                            bg="info"
-                            className="d-inline me-1"
-                            key={obj.values}
-                          >{`${obj.type}: ${obj.values.join(", ")}`}</Badge>
-                        </h6>
+                        <Badge
+                          bg="info"
+                          className="me-1 line-clamp line-clamp-3 text-start"
+                          key={index}
+                        >{`${getPolicyConditionDisplayLbl(
+                          conditionObj.label
+                        )}: ${obj.values.join(", ")}`}</Badge>
                       );
                     })
                   : "--"}
@@ -487,6 +497,26 @@ function PolicyConditionData(props) {
                 <div className="text-center">--</div>
               )}
             </td>
+            {!isEmpty(props?.serviceDef?.policyConditions) && (
+              <td>
+                {!isEmpty(items.conditions)
+                  ? items.conditions.map((obj, index) => {
+                      let conditionObj = props.serviceDef.policyConditions.find(
+                        (condition) => condition.name === obj.type
+                      );
+                      return (
+                        <Badge
+                          bg="info"
+                          className="me-1 line-clamp line-clamp-3 text-start"
+                          key={index}
+                        >{`${getPolicyConditionDisplayLbl(
+                          conditionObj.label
+                        )}: ${obj.values.join(", ")}`}</Badge>
+                      );
+                    })
+                  : "--"}
+              </td>
+            )}
             <td>
               {!isEmpty(access) ? (
                 <MoreLess data={access} />
@@ -540,6 +570,7 @@ function PolicyConditionData(props) {
                     <th className="text-center text-nowrap">Rule Conditions</th>
                   )}
                   <th>Accesses</th>
+                  {props?.serviceDef?.name != "tag" && <th>Delegate Admin</th>}
                 </tr>
               </thead>
               <tbody>{getPolicyData(props.policyData.policyItems)}</tbody>
@@ -566,6 +597,9 @@ function PolicyConditionData(props) {
                         </th>
                       )}
                       <th>Accesses</th>
+                      {props?.serviceDef?.name != "tag" && (
+                        <th>Delegate Admin</th>
+                      )}
                     </tr>
                   </thead>
                   <tbody>
@@ -591,6 +625,9 @@ function PolicyConditionData(props) {
                         </th>
                       )}
                       <th>Accesses</th>
+                      {props?.serviceDef?.name != "tag" && (
+                        <th>Delegate Admin</th>
+                      )}
                     </tr>
                   </thead>
                   <tbody>
@@ -616,6 +653,9 @@ function PolicyConditionData(props) {
                         </th>
                       )}
                       <th>Accesses</th>
+                      {props?.serviceDef?.name != "tag" && (
+                        <th>Delegate Admin</th>
+                      )}
                     </tr>
                   </thead>
                   <tbody>
@@ -671,6 +711,9 @@ function PolicyConditionData(props) {
                   <th>Roles</th>
                   <th>Groups</th>
                   <th>Users</th>
+                  {!isEmpty(props?.serviceDef?.policyConditions) && (
+                    <th className="text-center text-nowrap">Rule Conditions</th>
+                  )}
                   <th>Accesses</th>
                   <th>Row Level Filter</th>
                 </tr>

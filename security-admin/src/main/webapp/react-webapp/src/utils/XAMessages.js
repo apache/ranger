@@ -50,10 +50,16 @@ export const RegexMessage = {
         </p>
       </>
     ),
-    policyConditionInfoIcon:
-      "1. Boolean expression Examples :\
-                      country_code == 'USA', time_range >= 900 time_range <= 1800 etc.\
-                      2. Dragging bottom-right corner of condition editor(Textarea) can resizable",
+    policyConditionInfoIcon:(
+      <>
+        <span className="mb-0" style={{ fontSize: "small" }}>
+          1. Boolean expression Examples:
+          <br />
+            country_code == 'USA', time_range &gt;= 900 time_range &lt;= 1800 etc.
+          <br />
+          2. The condition editor (textarea) can be resized by dragging its bottom-right corner.
+        </span>
+      </>),
     firstNameValidationMsg: (
       <>
         <p className="pd-10 mb-0" style={{ fontSize: "small" }}>

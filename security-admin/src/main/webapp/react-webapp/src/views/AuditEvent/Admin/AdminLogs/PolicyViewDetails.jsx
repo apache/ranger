@@ -454,7 +454,7 @@ export function PolicyViewDetails(props) {
                     {!isEmpty(
                       filterServiceDef && filterServiceDef.policyConditions
                     ) && (
-                      <td className="text-center">
+                      <td>
                         {!isEmpty(items.conditions)
                           ? items.conditions.map((obj, index) => {
                               let conditionObj =
@@ -462,15 +462,13 @@ export function PolicyViewDetails(props) {
                                   return e.name == obj.type;
                                 });
                               return (
-                                <h6 className="d-inline me-1" key={index}>
-                                  <Badge
-                                    bg="info"
-                                    className="d-inline me-1"
-                                    key={obj.values}
-                                  >{`${getPolicyConditionDisplayLbl(
-                                    conditionObj.label
-                                  )}: ${obj.values.join(", ")}`}</Badge>
-                                </h6>
+                                <Badge
+                                  bg="info"
+                                  className="me-1 line-clamp line-clamp-3 text-start"
+                                  key={obj.values}
+                                >{`${getPolicyConditionDisplayLbl(
+                                  conditionObj.label
+                                )}: ${obj.values.join(", ")}`}</Badge>
                               );
                             })
                           : "--"}
@@ -565,8 +563,12 @@ export function PolicyViewDetails(props) {
               <tbody>
                 {conditions.map((obj) => (
                   <tr key={obj.type} colSpan="2">
-                    <td width="40%">{getConditionLabel(obj.type)}</td>
-                    <td width="60% text-truncate">{obj.values.join(", ")}</td>
+                    <td width="30%">{getConditionLabel(obj.type)}</td>
+                    <td width="70%">
+                      <span className="line-clamp line-clamp-5 text-start">
+                        {obj.values.join(", ")}
+                      </span>
+                    </td>
                   </tr>
                 ))}
               </tbody>

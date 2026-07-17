@@ -379,7 +379,7 @@ export default function PolicyConditionsComp(props) {
                                               : "form-control"
                                           }
                                           as="textarea"
-                                          rows={3}
+                                          rows={12}
                                           onBlur={(e) =>
                                             trimInputValue(e, input)
                                           }
