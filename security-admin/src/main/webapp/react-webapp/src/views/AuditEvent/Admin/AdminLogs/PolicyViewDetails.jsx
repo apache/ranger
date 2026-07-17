@@ -23,7 +23,16 @@ import { Table, Badge, Row, Col } from "react-bootstrap";
 import { RangerPolicyType, DefStatus } from "Utils/XAEnums";
 import dateFormat from "dateformat";
 import { toast } from "react-toastify";
-import { cloneDeep, find, isEmpty, map, sortBy } from "lodash";
+import {
+  cloneDeep,
+  find,
+  filter,
+  has,
+  keyBy,
+  isEmpty,
+  map,
+  sortBy
+} from "lodash";
 import {
   getResourcesDefVal,
   serverError,
@@ -354,6 +363,41 @@ export function PolicyViewDetails(props) {
     );
   };
 
+  const getPolicyItemConditions = (items, filterServiceDef) => {
+    const conditions = items?.conditions || [];
+    const policyConditions = filterServiceDef?.policyConditions || [];
+
+    if (isEmpty(conditions) || isEmpty(policyConditions)) {
+      return "--";
+    }
+
+    const policyMap = keyBy(policyConditions, "name");
+
+    const matchingConditions = filter(conditions, (obj) =>
+      has(policyMap, obj.type)
+    );
+
+    if (isEmpty(matchingConditions)) {
+      return "--";
+    }
+
+    return map(matchingConditions, (obj, index) => {
+      const conditionObj = policyMap[obj.type];
+      const label = getPolicyConditionDisplayLbl(conditionObj?.label);
+      const values = (obj.values || []).join(", ");
+
+      return (
+        <Badge
+          bg="info"
+          className="me-1 line-clamp line-clamp-3 text-start"
+          key={`${obj.type}-${index}`}
+        >
+          {`${label}: ${values}`}
+        </Badge>
+      );
+    });
+  };
+
   const getFilterPolicy = (
     policyItemsVal,
     serviceDef,
@@ -456,23 +500,7 @@ export function PolicyViewDetails(props) {
                       filterServiceDef && filterServiceDef.policyConditions
                     ) && (
                       <td>
-                        {!isEmpty(items.conditions)
-                          ? items.conditions.map((obj, index) => {
-                              let conditionObj =
-                                filterServiceDef.policyConditions.find((e) => {
-                                  return e.name == obj.type;
-                                });
-                              return (
-                                <Badge
-                                  bg="info"
-                                  className="me-1 line-clamp line-clamp-3 text-start"
-                                  key={obj.values}
-                                >{`${getPolicyConditionDisplayLbl(
-                                  conditionObj.label
-                                )}: ${obj.values.join(", ")}`}</Badge>
-                              );
-                            })
-                          : "--"}
+                        {getPolicyItemConditions(items, filterServiceDef)}
                       </td>
                     )}
 
@@ -553,9 +581,9 @@ export function PolicyViewDetails(props) {
 
   const getPolicyConditions = (conditions, serviceDef) => {
     const getConditionLabel = (label) => {
-      let filterLabel = find(serviceDef.policyConditions, { name: label });
+      const filterLabel = find(serviceDef.policyConditions, { name: label });
 
-      return filterLabel && filterLabel?.label
+      return filterLabel?.label
         ? getPolicyConditionDisplayLbl(filterLabel.label)
         : "";
     };
@@ -571,7 +599,7 @@ export function PolicyViewDetails(props) {
                     <td width="30%">{getConditionLabel(obj.type)}</td>
                     <td width="70%">
                       <span className="line-clamp line-clamp-5 text-start">
-                        {obj.values.join(", ")}
+                        {(obj.values || []).join(", ")}
                       </span>
                     </td>
                   </tr>
