@@ -609,6 +609,7 @@ function AccessGrantForm({
                                                       isMulti: true
                                                     }}
                                                     isGDS={true}
+                                                    popOverheader="Policy Conditions"
                                                   />
                                                 </div>
                                               )}

@@ -78,7 +78,7 @@ export default function PolicyPermissionItem(props) {
   const permList = ["Select Roles", "Select Groups", "Select Users"];
 
   if (serviceCompDetails?.policyConditions?.length > 0) {
-    permList.push("Policy Conditions");
+    permList.push("Rule Conditions");
   }
   permList.push("Permissions");
   if (
@@ -102,7 +102,14 @@ export default function PolicyPermissionItem(props) {
 
   const tableHeader = () => {
     return permList.map((data) => {
-      return <th key={data}>{data}</th>;
+      return (
+        <th
+          key={data}
+          style={data === "Delegate Admin" ? { width: "100px" } : {}}
+        >
+          {data}
+        </th>
+      );
     });
   };
 
@@ -295,10 +302,10 @@ export default function PolicyPermissionItem(props) {
       if ((users || grps || roles) && !accTypes) {
         if (delegateAdmin !== undefined && delegateAdmin === false) {
           error =
-            "Please select permision item for selected users/groups/roles";
+            "Please select permission item for selected users/groups/roles";
         } else if (delegateAdmin == undefined) {
           error =
-            "Please select permision item for selected users/groups/roles";
+            "Please select permission item for selected users/groups/roles";
         }
       }
       if (accTypes && !users && !grps && !roles) {
@@ -322,7 +329,7 @@ export default function PolicyPermissionItem(props) {
           !roles
         ) {
           error =
-            "Please select user/group/role for the entered policy condition";
+            "Please select user/group/role for the entered Rule Condition";
         }
       }
       return error;
@@ -333,7 +340,6 @@ export default function PolicyPermissionItem(props) {
     ...selectInputCustomStyles,
     control: (base) => ({
       ...base,
-      width: 200,
       whiteSpace: "nowrap"
     })
   };
@@ -365,7 +371,7 @@ export default function PolicyPermissionItem(props) {
   return (
     <div>
       <Col sm="12">
-        <div className="table-responsive">
+        <div className="table-fixed">
           <Table
             bordered
             className="policy-permission-table"
@@ -374,7 +380,7 @@ export default function PolicyPermissionItem(props) {
             <thead className="thead-light">
               <tr>
                 {tableHeader()}
-                <th></th>
+                <th width="64px"></th>
               </tr>
             </thead>
             <tbody className="drag-drop-wrap">
@@ -398,7 +404,7 @@ export default function PolicyPermissionItem(props) {
                                 className="form-control"
                                 name={`${name}.roles`}
                                 render={({ input }) => (
-                                  <div className="d-flex">
+                                  <div className="permission-item">
                                     <AsyncSelect
                                       {...input}
                                       menuPortalTarget={document.body}
@@ -431,7 +437,7 @@ export default function PolicyPermissionItem(props) {
                                 className="form-control"
                                 name={`${name}.groups`}
                                 render={({ input }) => (
-                                  <div>
+                                  <div className="permission-item">
                                     <AsyncSelect
                                       {...input}
                                       menuPortalTarget={document.body}
@@ -464,7 +470,7 @@ export default function PolicyPermissionItem(props) {
                                 className="form-control"
                                 name={`${name}.users`}
                                 render={({ input }) => (
-                                  <div>
+                                  <div className="permission-item">
                                     <AsyncSelect
                                       {...input}
                                       menuPortalTarget={document.body}
@@ -490,7 +496,7 @@ export default function PolicyPermissionItem(props) {
                             </td>
                           );
                         }
-                        if (colName == "Policy Conditions") {
+                        if (colName == "Rule Conditions") {
                           return (
                             serviceCompDetails?.policyConditions?.length >
                               0 && (
@@ -506,10 +512,9 @@ export default function PolicyPermissionItem(props) {
                                     )
                                   }
                                   render={({ input }) => (
-                                    <div className="table-editable">
+                                    <div className="table-editable permission-item">
                                       <Editable
                                         {...input}
-                                        placement="auto"
                                         type="custom"
                                         conditionDefVal={conditionDefVal}
                                         servicedefName={serviceCompDetails?.name}
@@ -525,6 +530,7 @@ export default function PolicyPermissionItem(props) {
                                           // Portal menus to body (see Editable CONDITION_POPOVER_SELECT_PROPS)
                                           // so a long Action list with ALL permission does not jump the page.
                                         }}
+                                        popOverheader="Rule Conditions"
                                       />
                                     </div>
                                   )}
@@ -603,6 +609,7 @@ export default function PolicyPermissionItem(props) {
                                           options={accessTypeOptions}
                                           showSelectAll={true}
                                           selectAllLabel="Select All"
+                                          popOverheader="Add/Edit Permissions"
                                         />
                                       </div>
                                     );
@@ -638,6 +645,7 @@ export default function PolicyPermissionItem(props) {
                                             fields?.value[index]?.accesses
                                               ?.tableList
                                           }
+                                          popOverheader="Select Masking Option"
                                         />
                                         {fields?.value[index]?.dataMaskInfo
                                           ?.label == "Custom" && (
@@ -705,6 +713,7 @@ export default function PolicyPermissionItem(props) {
                                         options={getMaskingAccessTypeOptions()}
                                         showSelectAll={false}
                                         selectAllLabel="Select All"
+                                        popOverheader="Select Masking Option"
                                       />
                                       {fields?.value[index]?.dataMaskInfo
                                         ?.label == "Custom" && (
@@ -749,6 +758,7 @@ export default function PolicyPermissionItem(props) {
                                       {...input}
                                       placement="auto"
                                       type="input"
+                                      popOverheader="Enter Filter Expression"
                                     />
                                     {meta.touched && meta.error && (
                                       <span>{meta.error}</span>
@@ -767,6 +777,7 @@ export default function PolicyPermissionItem(props) {
                             <td
                               key={`${name}-${index}`}
                               className="text-center align-middle"
+                              width="64px"
                             >
                               <div key={`${name}-${index}`}>
                                 <Field
@@ -794,7 +805,7 @@ export default function PolicyPermissionItem(props) {
                         }
                         return <td key={colName}>{colName}</td>;
                       })}
-                      <td className="align-middle">
+                      <td className="align-middle" width="64px">
                         <Button
                           variant="danger"
                           size="sm"

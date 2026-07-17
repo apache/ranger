@@ -515,7 +515,7 @@ function PolicyConditionData(props) {
     <React.Fragment>
       {props.policyData.policyType == 0 && (
         <>
-          <p className="form-header">Allow Conditions</p>
+          <p className="form-header">Allow Rules</p>
           <div className="overflow-x-auto">
             <Table
               bordered
@@ -528,9 +528,7 @@ function PolicyConditionData(props) {
                   <th>Groups</th>
                   <th>Users</th>
                   {!isEmpty(props?.serviceDef?.policyConditions) && (
-                    <th className="text-center text-nowrap">
-                      Policy Conditions
-                    </th>
+                    <th className="text-center text-nowrap">Rule Conditions</th>
                   )}
                   <th>Accesses</th>
                 </tr>
@@ -541,7 +539,7 @@ function PolicyConditionData(props) {
           {props.serviceDef?.options?.enableDenyAndExceptionsInPolicies ==
             "true" && (
             <>
-              <p className="form-header">Allow Exclude</p>
+              <p className="form-header">Allow Exclude Rules</p>
               <div className="overflow-x-auto">
                 <Table
                   bordered
@@ -555,7 +553,7 @@ function PolicyConditionData(props) {
                       <th>Users</th>
                       {!isEmpty(props?.serviceDef?.policyConditions) && (
                         <th className="text-center text-nowrap">
-                          Policy Conditions
+                          Rule Conditions
                         </th>
                       )}
                       <th>Accesses</th>
@@ -566,7 +564,7 @@ function PolicyConditionData(props) {
                   </tbody>
                 </Table>
               </div>
-              <p className="form-header">Deny Conditions</p>
+              <p className="form-header">Deny Rules</p>
               <div className="overflow-x-auto">
                 <Table
                   bordered
@@ -580,7 +578,7 @@ function PolicyConditionData(props) {
                       <th>Users</th>
                       {!isEmpty(props?.serviceDef?.policyConditions) && (
                         <th className="text-center text-nowrap">
-                          Policy Conditions
+                          Rule Conditions
                         </th>
                       )}
                       <th>Accesses</th>
@@ -591,7 +589,7 @@ function PolicyConditionData(props) {
                   </tbody>
                 </Table>
               </div>
-              <p className="form-header">Deny Exclude</p>
+              <p className="form-header">Deny Exclude Rules</p>
               <div className="overflow-x-auto">
                 <Table
                   bordered
@@ -605,7 +603,7 @@ function PolicyConditionData(props) {
                       <th>Users</th>
                       {!isEmpty(props?.serviceDef?.policyConditions) && (
                         <th className="text-center text-nowrap">
-                          Policy Conditions
+                          Rule Conditions
                         </th>
                       )}
                       <th>Accesses</th>
@@ -623,7 +621,7 @@ function PolicyConditionData(props) {
 
       {props.policyData.policyType == 1 && (
         <>
-          <p className="form-header ">Masking Conditions</p>
+          <p className="form-header ">Mask Rules</p>
           <div className="overflow-x-auto">
             <Table
               bordered
@@ -636,9 +634,7 @@ function PolicyConditionData(props) {
                   <th>Groups</th>
                   <th>Users</th>
                   {!isEmpty(props?.serviceDef?.policyConditions) && (
-                    <th className="text-center text-nowrap">
-                      Policy Conditions
-                    </th>
+                    <th className="text-center text-nowrap">Rule Conditions</th>
                   )}
                   <th>Accesses</th>
                   <th>Masking Condition</th>
@@ -654,7 +650,7 @@ function PolicyConditionData(props) {
 
       {props.policyData.policyType == 2 && (
         <>
-          <p className="form-header">Row Level Conditions</p>
+          <p className="form-header">Row Filter Rules</p>
           <div className="overflow-x-auto">
             <Table
               bordered
