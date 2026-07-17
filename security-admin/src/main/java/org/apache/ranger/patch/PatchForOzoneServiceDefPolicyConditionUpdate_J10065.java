@@ -92,7 +92,6 @@ public class PatchForOzoneServiceDefPolicyConditionUpdate_J10065 extends BaseLoa
         logger.info("==> PatchForOzoneServiceDefPolicyConditionUpdate_J10065.execLoad()");
         try {
             updateOzoneServiceDef();
-            cleanupActionMatcherOptionFromNonOzoneServiceDefs();
         } catch (Exception e) {
             logger.error("Error while applying PatchForOzoneServiceDefPolicyConditionUpdate_J10065", e);
             throw new RuntimeException("PatchForOzoneServiceDefPolicyConditionUpdate_J10065 failed", e);
@@ -186,34 +185,6 @@ public class PatchForOzoneServiceDefPolicyConditionUpdate_J10065 extends BaseLoa
         options.put(RangerServiceDef.OPTION_ENABLE_ACTION_MATCHER_IN_POLICIES_CONDITION, Boolean.toString(enableActionMatcherInPoliciesCondition));
 
         persistDefOptionsIfChanged(xXServiceDefObj, options, previousJson);
-    }
-
-    private void cleanupActionMatcherOptionFromNonOzoneServiceDefs() {
-        final List<XXServiceDef> allServiceDefs = daoMgr.getXXServiceDef().getAll();
-
-        if (allServiceDefs == null || allServiceDefs.isEmpty()) {
-            return;
-        }
-
-        for (XXServiceDef xServiceDef : allServiceDefs) {
-            if (StringUtils.equalsIgnoreCase(xServiceDef.getName(), EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_OZONE_NAME)) {
-                continue;
-            }
-
-            try {
-                final String        previousJson = xServiceDef.getDefOptions();
-                Map<String, String> options      = parseDefOptions(previousJson);
-                boolean             changed      = options.remove(LEGACY_OPTION_ENABLE_OZONE_ACTION_POLICY) != null;
-
-                changed |= options.remove(RangerServiceDef.OPTION_ENABLE_ACTION_MATCHER_IN_POLICIES_CONDITION) != null;
-
-                if (changed) {
-                    persistDefOptionsIfChanged(xServiceDef, options, previousJson);
-                }
-            } catch (Exception e) {
-                logger.warn("Failed to clean action-matcher option from service-def {}", xServiceDef.getName(), e);
-            }
-        }
     }
 
     private Map<String, String> parseDefOptions(String jsonStr) throws Exception {
