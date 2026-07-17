@@ -33,7 +33,8 @@ import {
   difference,
   map,
   every,
-  cloneDeep
+  cloneDeep,
+  sortBy
 } from "lodash";
 import { RangerPolicyType } from "Utils/XAEnums";
 import { getServiceDef } from "Utils/appState";
@@ -269,7 +270,7 @@ export default function TagBasePermissionItem(props) {
   };
 
   const tagAccessTypeDisplayVal = (val) => {
-    return val.map((m, index) => {
+    return sortBy(val, "serviceName").map((m, index) => {
       return (
         <h6 className="d-inline me-1 mb-1" key={index}>
           <Badge bg="info">{m.serviceName.toUpperCase()}</Badge>
