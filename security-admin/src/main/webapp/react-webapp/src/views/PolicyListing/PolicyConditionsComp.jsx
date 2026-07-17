@@ -17,12 +17,12 @@
  * under the License.
  */
 
-import React from "react";
+import React, { useMemo } from "react";
 import { Col, Form as FormB, Row, Modal, Button } from "react-bootstrap";
 import { Form, Field } from "react-final-form";
 import Select from "react-select";
 import CreatableSelect from "react-select/creatable";
-import { find, isEmpty } from "lodash";
+import { find, isArray, isEmpty } from "lodash";
 import { InfoIcon } from "Utils/XAUtils";
 import { RegexMessage } from "Utils/XAMessages";
 import {
@@ -32,18 +32,117 @@ import {
 import {
   isPerRowCondition,
   getCleanConditions,
-  parseConditionUiHint
+  parseConditionUiHint,
+  sortPolicyConditions,
+  buildActionReqsMapFromConditionDef,
+  getAllowedActionMatchesForCondition
 } from "Utils/policyConditionUtils";
 const esprima = require("esprima");
+const POLICY_SCOPE = "policy";
+const POLICY_ITEM_SCOPE = "policyItem";
+
+const toSelectValue = (val) => {
+  if (!isArray(val) || isEmpty(val)) {
+    return [];
+  }
+  return val
+    .map((m) => {
+      if (typeof m === "object" && m?.value) {
+        const value = String(m.value).trim();
+        return value ? { label: m.label || value, value } : null;
+      }
+      if (typeof m === "string") {
+        const trimmed = m.trim();
+        return trimmed ? { label: trimmed, value: trimmed } : null;
+      }
+      return null;
+    })
+    .filter(Boolean);
+};
+
+const pruneActionMatchesOnSubmit = ({
+  conditions,
+  conditionDefVal,
+  actionFilterContext,
+  actionReqsMap,
+  servicedefName
+}) => {
+  const pruned = { ...conditions };
+
+  for (const conditionName in pruned) {
+    if (!isPerRowCondition(conditionName)) {
+      continue;
+    }
+
+    const conditionDef = find(conditionDefVal, { name: conditionName });
+    const uiHintAttb = parseConditionUiHint(conditionDef?.uiHint);
+    const current = pruned[conditionName];
+
+    if (
+      !uiHintAttb?.isMultiValue ||
+      !Array.isArray(uiHintAttb?.options) ||
+      !Array.isArray(current) ||
+      current.length === 0 ||
+      !actionFilterContext?.selectedAccessTypes?.length
+    ) {
+      continue;
+    }
+
+    const { prunedSelection } = getAllowedActionMatchesForCondition({
+      conditionName,
+      actionFilterContext,
+      actionReqsMap,
+      servicedefName,
+      uiHintAttb,
+      currentSelection: toSelectValue(current)
+    });
+
+    if (prunedSelection?.length > 0) {
+      pruned[conditionName] = prunedSelection.map((o) => o.value);
+    } else {
+      delete pruned[conditionName];
+    }
+  }
+
+  return pruned;
+};
 
 export default function PolicyConditionsComp(props) {
-  const { policyConditionDetails, inputVal, showModal, handleCloseModal } =
-    props;
+  const {
+    policyConditionDetails,
+    inputVal,
+    showModal,
+    handleCloseModal,
+    modalHeader,
+    scope = POLICY_SCOPE,
+    servicedefName,
+    actionFilterContext,
+    actionReqsMap: actionReqsMapProp
+  } = props;
 
-  // Policy-level modal only; action-matches is edited on each permission row (Editable).
-  const filteredPolicyConditionDetails = Array.isArray(policyConditionDetails)
-    ? policyConditionDetails.filter((c) => !isPerRowCondition(c?.name))
-    : policyConditionDetails;
+  const isPolicyItemScope = scope === POLICY_ITEM_SCOPE;
+
+  const conditionDefVal = useMemo(
+    () =>
+      Array.isArray(policyConditionDetails) ? policyConditionDetails : [],
+    [policyConditionDetails]
+  );
+
+  const actionReqsMap = useMemo(
+    () =>
+      actionReqsMapProp ?? buildActionReqsMapFromConditionDef(conditionDefVal),
+    [actionReqsMapProp, conditionDefVal]
+  );
+
+  const filteredPolicyConditionDetails = useMemo(() => {
+    if (!Array.isArray(policyConditionDetails)) {
+      return policyConditionDetails;
+    }
+    const filtered = isPolicyItemScope
+      ? policyConditionDetails
+      : policyConditionDetails.filter((c) => !isPerRowCondition(c?.name));
+    return sortPolicyConditions(filtered);
+  }, [policyConditionDetails, isPolicyItemScope]);
 
   const accessedOpt = [
     { value: "yes", label: "Yes" },
@@ -52,12 +151,24 @@ export default function PolicyConditionsComp(props) {
 
   const handleSubmit = (values) => {
     if (values?.conditions) {
-      const newConditions = getCleanConditions(values.conditions);
-      for (let val in newConditions) {
-        if (isPerRowCondition(val)) {
-          delete newConditions[val];
+      let newConditions = getCleanConditions(values.conditions);
+
+      if (isPolicyItemScope) {
+        newConditions = pruneActionMatchesOnSubmit({
+          conditions: newConditions,
+          conditionDefVal,
+          actionFilterContext,
+          actionReqsMap,
+          servicedefName
+        });
+      } else {
+        for (const val in newConditions) {
+          if (isPerRowCondition(val)) {
+            delete newConditions[val];
+          }
         }
       }
+
       inputVal.onChange(newConditions);
     } else {
       inputVal.onChange(values?.conditions);
@@ -70,20 +181,19 @@ export default function PolicyConditionsComp(props) {
   };
 
   const formInitialData = () => {
-    var conditions = {};
-    if (inputVal && inputVal.value) {
-      for (let val in inputVal.value) {
+    const conditions = {};
+    if (inputVal?.value) {
+      for (const val in inputVal.value) {
         conditions[val] = inputVal.value[val];
       }
     }
-    let formData = { conditions };
-    return formData;
+    return { conditions };
   };
 
   const accessedVal = (val) => {
     let value = null;
     if (val) {
-      let opObj = find(accessedOpt, { value: val });
+      const opObj = find(accessedOpt, { value: val });
       if (opObj) {
         value = opObj;
       }
@@ -98,24 +208,14 @@ export default function PolicyConditionsComp(props) {
   };
 
   const handleChange = (val, input) => {
-    let value = [];
-    if (val) {
-      value = val.map((m) => m.value);
+    if (!val || val.length === 0) {
+      input.onChange(undefined);
+      return;
     }
-    input.onChange(value);
+    input.onChange(val.map((m) => m.value));
   };
 
-  const ipRangeVal = (val) => {
-    let value = [];
-    if (!isEmpty(val)) {
-      // Trim existing values when displaying
-      value = val.map((m) => ({
-        label: m.trim(),
-        value: m.trim()
-      }));
-    }
-    return value;
-  };
+  const ipRangeVal = (val) => toSelectValue(val);
 
   const validater = (values) => {
     let errors = "";
@@ -129,6 +229,75 @@ export default function PolicyConditionsComp(props) {
     return errors;
   };
 
+  const renderMultiValueField = (m, uiHintAttb) => {
+    const isActionMatches =
+      isPolicyItemScope &&
+      isPerRowCondition(m.name) &&
+      Array.isArray(uiHintAttb?.options);
+    if (isActionMatches) {
+      return (
+        <Field
+          className="form-control"
+          name={`conditions.${m.name}`}
+          render={({ input }) => {
+            const { dropdownOptions, prunedSelection } =
+              getAllowedActionMatchesForCondition({
+                conditionName: m.name,
+                actionFilterContext,
+                actionReqsMap,
+                servicedefName,
+                uiHintAttb,
+                currentSelection: toSelectValue(input.value)
+              });
+            const displayedValue =
+              prunedSelection?.length > 0 ? prunedSelection : null;
+            return (
+              <Select
+                isMulti
+                isClearable
+                placeholder=""
+                options={dropdownOptions || []}
+                value={displayedValue}
+                onChange={(e) => handleChange(e, input)}
+                styles={selectInputCustomStyles}
+              />
+            );
+          }}
+        />
+      );
+    }
+
+    return (
+      <Field
+        className="form-control"
+        name={`conditions.${m.name}`}
+        render={({ input }) => (
+          <CreatableSelect
+            {...input}
+            isMulti
+            isClearable
+            placeholder=""
+            width="500px"
+            value={ipRangeVal(input.value)}
+            onChange={(e) => handleChange(e, input)}
+            styles={selectInputCustomStyles}
+            formatCreateLabel={(inputValue) =>
+              `Create "${inputValue.trim()}"`
+            }
+            onCreateOption={(inputValue) => {
+              const trimmedValue = inputValue.trim();
+              if (trimmedValue) {
+                const currentValues = input.value || [];
+                const newValues = [...currentValues, trimmedValue];
+                input.onChange(newValues);
+              }
+            }}
+          />
+        )}
+      />
+    );
+  };
+
   return (
     <>
       <Modal
@@ -140,11 +309,11 @@ export default function PolicyConditionsComp(props) {
       >
         <Form
           onSubmit={handleSubmit}
-          initialValues={formInitialData}
+          initialValues={formInitialData()}
           render={({ handleSubmit }) => (
             <form onSubmit={handleSubmit}>
               <Modal.Header closeButton>
-                <Modal.Title>Policy Condition</Modal.Title>
+                <Modal.Title>{modalHeader}</Modal.Title>
               </Modal.Header>
               <Modal.Body>
                 {filteredPolicyConditionDetails?.length > 0 &&
@@ -156,7 +325,6 @@ export default function PolicyConditionsComp(props) {
                           <div key={m.name}>
                             <FormB.Group className="mb-3">
                               <b>{m.label}:</b>
-
                               <Field
                                 className="form-control"
                                 name={`conditions.${m.name}`}
@@ -235,53 +403,19 @@ export default function PolicyConditionsComp(props) {
                           <div key={m.name}>
                             <FormB.Group className="mb-3">
                               <b>{m.label}:</b>
-
-                              <Field
-                                className="form-control"
-                                name={`conditions.${m.name}`}
-                                render={({ input }) => (
-                                  <CreatableSelect
-                                    {...input}
-                                    isMulti
-                                    isClearable
-                                    placeholder=""
-                                    width="500px"
-                                    value={ipRangeVal(input.value)}
-                                    onChange={(e) => handleChange(e, input)}
-                                    styles={selectInputCustomStyles}
-                                    formatCreateLabel={(inputValue) =>
-                                      `Create "${inputValue.trim()}"`
-                                    }
-                                    onCreateOption={(inputValue) => {
-                                      const trimmedValue = inputValue.trim();
-                                      if (trimmedValue) {
-                                        const newOption = {
-                                          label: trimmedValue,
-                                          value: trimmedValue
-                                        };
-                                        const currentValues = input.value || [];
-                                        const newValues = [
-                                          ...currentValues,
-                                          trimmedValue
-                                        ];
-                                        input.onChange(newValues);
-                                      }
-                                    }}
-                                  />
-                                )}
-                              />
+                              {renderMultiValueField(m, uiHintAttb)}
                             </FormB.Group>
                           </div>
                         );
                       }
                     }
+                    return null;
                   })}
               </Modal.Body>
               <Modal.Footer>
                 <Button variant="secondary" size="sm" onClick={handleClose}>
                   Close
                 </Button>
-
                 <Button title="Save" size="sm" type="submit">
                   Save
                 </Button>
