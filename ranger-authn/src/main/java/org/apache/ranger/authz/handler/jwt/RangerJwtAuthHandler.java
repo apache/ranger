@@ -40,9 +40,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.net.URL;
-import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.text.ParseException;
 import java.util.Arrays;
 import java.util.Date;
@@ -130,7 +127,7 @@ public abstract class RangerJwtAuthHandler implements RangerAuthHandler {
                         }
                         return userName;
                     } else {
-                        LOG.warn("JWT validation failed ({})", safeJwtLogContext(jwtToken, serializedJWT));
+                        LOG.warn("JWT validation failed ({})", safeJwtLogContext(jwtToken));
                     }
                 } catch (ParseException pe) {
                     LOG.warn("RangerJwtAuthHandler.authenticate(): Unable to parse the JWT token", pe);
@@ -313,14 +310,12 @@ public abstract class RangerJwtAuthHandler implements RangerAuthHandler {
 
     /**
      * Build non-sensitive JWT metadata for operational logs.
-     * Never log the raw bearer token; a one-way hash is included for
-     * correlation across log lines.
+     * Never log the raw bearer token.
      *
      * @param jwtToken parsed JWT used to extract claim metadata
-     * @param serializedJwt original bearer string, hashed for correlation only
      * @return safe diagnostic string for log output
      */
-    protected String safeJwtLogContext(final SignedJWT jwtToken, final String serializedJwt) {
+    protected String safeJwtLogContext(final SignedJWT jwtToken) {
         try {
             JWTClaimsSet claims = jwtToken.getJWTClaimsSet();
             JWSHeader header = jwtToken.getHeader();
@@ -328,23 +323,9 @@ public abstract class RangerJwtAuthHandler implements RangerAuthHandler {
             List<String> tokenAudiences = claims.getAudience();
             String audience = tokenAudiences == null || tokenAudiences.isEmpty() ? null : StringUtils.join(tokenAudiences, ",");
 
-            return String.format("subject=%s, audience=%s, issuer=%s, keyId=%s, jwtId=%s, tokenHash=%s", claims.getSubject(), audience, claims.getIssuer(), keyId, claims.getJWTID(), sha256Hex(serializedJwt));
+            return String.format("subject=%s, audience=%s, issuer=%s, keyId=%s, jwtId=%s", claims.getSubject(), audience, claims.getIssuer(), keyId, claims.getJWTID());
         } catch (ParseException pe) {
             return "claims_unparseable";
-        }
-    }
-
-    private static String sha256Hex(final String value) {
-        try {
-            MessageDigest digest = MessageDigest.getInstance("SHA-256");
-            byte[] hash = digest.digest(value.getBytes(StandardCharsets.UTF_8));
-            StringBuilder sb = new StringBuilder(hash.length * 2);
-            for (byte b : hash) {
-                sb.append(String.format("%02x", b));
-            }
-            return sb.toString();
-        } catch (NoSuchAlgorithmException e) {
-            return "unavailable";
         }
     }
 

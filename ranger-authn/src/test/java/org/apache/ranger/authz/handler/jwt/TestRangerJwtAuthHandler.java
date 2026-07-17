@@ -57,8 +57,8 @@ public class TestRangerJwtAuthHandler {
             return validateAudiences(jwt);
         }
 
-        String callSafeJwtLogContext(SignedJWT jwt, String serializedJwt) {
-            return safeJwtLogContext(jwt, serializedJwt);
+        String callSafeJwtLogContext(SignedJWT jwt) {
+            return safeJwtLogContext(jwt);
         }
     }
 
@@ -135,7 +135,7 @@ public class TestRangerJwtAuthHandler {
         String signature = "abcd";
         String serialized = header + "." + payload + "." + signature;
 
-        String context = handler.callSafeJwtLogContext(SignedJWT.parse(serialized), serialized);
+        String context = handler.callSafeJwtLogContext(SignedJWT.parse(serialized));
 
         assertNotNull(context);
         assertTrue(context.contains("subject=f015_replay_user"));
@@ -143,7 +143,7 @@ public class TestRangerJwtAuthHandler {
         assertTrue(context.contains("issuer=test-issuer"));
         assertTrue(context.contains("keyId=kid-abc"));
         assertTrue(context.contains("jwtId=jti-123"));
-        assertTrue(context.contains("tokenHash="));
+        assertFalse(context.contains("tokenHash="));
         assertFalse(context.contains(serialized));
         assertFalse(context.contains(header));
         assertFalse(context.contains(payload));
