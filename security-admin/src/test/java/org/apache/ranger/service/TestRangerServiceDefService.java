@@ -837,6 +837,66 @@ public class TestRangerServiceDefService {
     }
 
     @Test
+    public void testOzoneActionPolicyConfigTrueOverridesStoredFalseOption() {
+        RangerAdminConfig.getInstance().set(PROP_ENABLE_ACTION_MATCHER_IN_POLICIES_CONDITION, Boolean.TRUE.toString());
+
+        try {
+            RangerServiceDef serviceDef = buildOzoneServiceDefWithActionMatches();
+            serviceDef.getOptions().put(OPTION_ENABLE_ACTION_MATCHER_IN_POLICIES_CONDITION, Boolean.FALSE.toString());
+
+            serviceDefService.applyActionMatcherInPoliciesConditionHiddenOption(serviceDef);
+
+            assertEquals("true", serviceDef.getOptions().get(OPTION_ENABLE_ACTION_MATCHER_IN_POLICIES_CONDITION));
+            assertTrue(hasActionMatchesCondition(serviceDef));
+        } finally {
+            RangerAdminConfig.getInstance().unset(PROP_ENABLE_ACTION_MATCHER_IN_POLICIES_CONDITION);
+        }
+    }
+
+    @Test
+    public void testOzoneActionPolicyConfigTrueRestoresMissingActionMatchesCondition() {
+        RangerAdminConfig.getInstance().set(PROP_ENABLE_ACTION_MATCHER_IN_POLICIES_CONDITION, Boolean.TRUE.toString());
+
+        try {
+            RangerPolicyConditionDef ipRange = new RangerPolicyConditionDef();
+            ipRange.setName("ip-range");
+
+            List<RangerPolicyConditionDef> policyConditions = new ArrayList<>();
+            policyConditions.add(ipRange);
+
+            RangerServiceDef serviceDef = new RangerServiceDef();
+            serviceDef.setName(EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_OZONE_NAME);
+            serviceDef.setOptions(new HashMap<>());
+            serviceDef.setPolicyConditions(policyConditions);
+
+            serviceDefService.applyActionMatcherInPoliciesConditionHiddenOption(serviceDef);
+
+            assertEquals("true", serviceDef.getOptions().get(OPTION_ENABLE_ACTION_MATCHER_IN_POLICIES_CONDITION));
+            assertTrue(hasActionMatchesCondition(serviceDef));
+        } finally {
+            RangerAdminConfig.getInstance().unset(PROP_ENABLE_ACTION_MATCHER_IN_POLICIES_CONDITION);
+        }
+    }
+
+    @Test
+    public void testOzoneActionPolicyLegacyOptionRemovedWhenConfigFalse() {
+        RangerAdminConfig.getInstance().set(PROP_ENABLE_ACTION_MATCHER_IN_POLICIES_CONDITION, Boolean.FALSE.toString());
+
+        try {
+            RangerServiceDef serviceDef = buildOzoneServiceDefWithActionMatches();
+            serviceDef.getOptions().put("enableOzoneActionPolicy", Boolean.TRUE.toString());
+
+            serviceDefService.applyActionMatcherInPoliciesConditionHiddenOption(serviceDef);
+
+            assertEquals("false", serviceDef.getOptions().get(OPTION_ENABLE_ACTION_MATCHER_IN_POLICIES_CONDITION));
+            assertFalse(serviceDef.getOptions().containsKey("enableOzoneActionPolicy"));
+            assertFalse(hasActionMatchesCondition(serviceDef));
+        } finally {
+            RangerAdminConfig.getInstance().unset(PROP_ENABLE_ACTION_MATCHER_IN_POLICIES_CONDITION);
+        }
+    }
+
+    @Test
     public void testMapViewToEntityBean_intOverload_executes() throws Exception {
         Method method = RangerServiceDefWithAssignedIdService.class.getDeclaredMethod("mapViewToEntityBean", RangerServiceDef.class, XXServiceDefWithAssignedId.class, int.class);
         method.setAccessible(true);
