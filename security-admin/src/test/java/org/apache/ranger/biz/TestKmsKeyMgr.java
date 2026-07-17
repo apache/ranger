@@ -272,7 +272,7 @@ public class TestKmsKeyMgr {
     }
 
     @Test
-    public void testSearchKeys_ExceptionHandling() throws Exception {
+    public void testSearchKeys_ProviderNotFound() throws Exception {
         try (MockedStatic<ContextUtil> contextUtilMock = Mockito.mockStatic(ContextUtil.class);
                 MockedStatic<StringUtil> stringUtilMock = Mockito.mockStatic(StringUtil.class);
                 MockedStatic<PropertiesUtil> propertiesUtilMock = Mockito.mockStatic(PropertiesUtil.class)) {
@@ -282,11 +282,15 @@ public class TestKmsKeyMgr {
 
             Mockito.when(svcStore.getServiceByName(TEST_REPO_NAME)).thenThrow(new RuntimeException("Service not found"));
 
-            VXKmsKeyList result = kmsKeyMgr.searchKeys(request, TEST_REPO_NAME);
+            Exception mockException = new RuntimeException("Provider 'testKmsRepo' not found or invalid: Service not found");
+            Mockito.when(restErrorUtil.createRESTException(
+                    Mockito.contains("Provider 'testKmsRepo' not found or invalid"),
+                    Mockito.eq(MessageEnums.DATA_NOT_FOUND)
+            )).thenThrow(mockException);
 
-            Assertions.assertNotNull(result);
-            Assertions.assertNotNull(result.getVXKeys());
-            Assertions.assertTrue(result.getVXKeys().isEmpty());
+            Assertions.assertThrows(Exception.class, () -> {
+                kmsKeyMgr.searchKeys(request, TEST_REPO_NAME);
+            });
         }
     }
 
@@ -549,23 +553,6 @@ public class TestKmsKeyMgr {
                     kmsKeyMgr.getKey(TEST_REPO_NAME, TEST_KEY_NAME);
                 });
             }
-        }
-    }
-
-    @Test
-    public void testGetKey_ReturnsNull() throws Exception {
-        try (MockedStatic<ContextUtil> contextUtilMock = Mockito.mockStatic(ContextUtil.class);
-                MockedStatic<StringUtil> stringUtilMock = Mockito.mockStatic(StringUtil.class);
-                MockedStatic<PropertiesUtil> propertiesUtilMock = Mockito.mockStatic(PropertiesUtil.class)) {
-            contextUtilMock.when(ContextUtil::getCurrentUserLoginId).thenReturn(TEST_USERNAME);
-            stringUtilMock.when(() -> StringUtil.getUTFEncodedString(TEST_USERNAME)).thenReturn(TEST_USERNAME);
-            propertiesUtilMock.when(() -> PropertiesUtil.getProperty("hadoop.security.authentication", "simple")).thenReturn("simple");
-
-            Mockito.when(svcStore.getServiceByName(TEST_REPO_NAME)).thenThrow(new RuntimeException("Service not found"));
-
-            VXKmsKey result = kmsKeyMgr.getKey(TEST_REPO_NAME, TEST_KEY_NAME);
-
-            Assertions.assertNull(result);
         }
     }
 
@@ -1013,15 +1000,6 @@ public class TestKmsKeyMgr {
     }
 
     @Test
-    public void testSearchKeys_NullRequest() throws Exception {
-        VXKmsKeyList result = kmsKeyMgr.searchKeys(null, TEST_REPO_NAME);
-
-        Assertions.assertNotNull(result);
-        Assertions.assertNotNull(result.getVXKeys());
-        Assertions.assertTrue(result.getVXKeys().isEmpty());
-    }
-
-    @Test
     public void testSearchKeys_EmptyKeyList() throws Exception {
         RangerService rangerService = createMockRangerService();
         String jsonResponse = "[]";  // Empty array
@@ -1071,7 +1049,7 @@ public class TestKmsKeyMgr {
     }
 
     @Test
-    public void testRolloverKey_NullProviders() throws Exception {
+    public void testRolloverKey_ProviderNotFound() throws Exception {
         VXKmsKey inputKey = createMockVXKmsKey();
 
         try (MockedStatic<ContextUtil> contextUtilMock = Mockito.mockStatic(ContextUtil.class);
@@ -1081,17 +1059,24 @@ public class TestKmsKeyMgr {
             stringUtilMock.when(() -> StringUtil.getUTFEncodedString(TEST_USERNAME)).thenReturn(TEST_USERNAME);
             propertiesUtilMock.when(() -> PropertiesUtil.getProperty("hadoop.security.authentication", "simple")).thenReturn("simple");
 
-            Mockito.when(svcStore.getServiceByName(TEST_REPO_NAME)).thenReturn(null);
+            Mockito.when(svcStore.getServiceByName(TEST_REPO_NAME)).thenThrow(new RuntimeException("Service not found"));
 
-            VXKmsKey result = kmsKeyMgr.rolloverKey(TEST_REPO_NAME, inputKey);
+            Exception mockException = new RuntimeException("Provider 'testKmsRepo' not found or invalid: Service not found");
+            Mockito.when(restErrorUtil.createRESTException(
+                    Mockito.contains("Provider 'testKmsRepo' not found or invalid"),
+                    Mockito.eq(MessageEnums.DATA_NOT_FOUND)
+            )).thenThrow(mockException);
 
-            Assertions.assertNull(result);
+            Assertions.assertThrows(Exception.class, () -> {
+                kmsKeyMgr.rolloverKey(TEST_REPO_NAME, inputKey);
+            });
+
             Mockito.verify(rangerBizUtil).blockAuditorRoleUser();
         }
     }
 
     @Test
-    public void testCreateKey_NullProviders() throws Exception {
+    public void testCreateKey_ProviderNotFound() throws Exception {
         VXKmsKey inputKey = createMockVXKmsKey();
 
         try (MockedStatic<ContextUtil> contextUtilMock = Mockito.mockStatic(ContextUtil.class);
@@ -1101,17 +1086,24 @@ public class TestKmsKeyMgr {
             stringUtilMock.when(() -> StringUtil.getUTFEncodedString(TEST_USERNAME)).thenReturn(TEST_USERNAME);
             propertiesUtilMock.when(() -> PropertiesUtil.getProperty("hadoop.security.authentication", "simple")).thenReturn("simple");
 
-            Mockito.when(svcStore.getServiceByName(TEST_REPO_NAME)).thenReturn(null);
+            Mockito.when(svcStore.getServiceByName(TEST_REPO_NAME)).thenThrow(new RuntimeException("Service not found"));
 
-            VXKmsKey result = kmsKeyMgr.createKey(TEST_REPO_NAME, inputKey);
+            Exception mockException = new RuntimeException("Provider 'testKmsRepo' not found or invalid: Service not found");
+            Mockito.when(restErrorUtil.createRESTException(
+                    Mockito.contains("Provider 'testKmsRepo' not found or invalid"),
+                    Mockito.eq(MessageEnums.DATA_NOT_FOUND)
+            )).thenThrow(mockException);
 
-            Assertions.assertNull(result);
+            Assertions.assertThrows(Exception.class, () -> {
+                kmsKeyMgr.createKey(TEST_REPO_NAME, inputKey);
+            });
+
             Mockito.verify(rangerBizUtil).blockAuditorRoleUser();
         }
     }
 
     @Test
-    public void testDeleteKey_NullProviders() throws Exception {
+    public void testDeleteKey_ProviderNotFound() throws Exception {
         try (MockedStatic<ContextUtil> contextUtilMock = Mockito.mockStatic(ContextUtil.class);
                 MockedStatic<StringUtil> stringUtilMock = Mockito.mockStatic(StringUtil.class);
                 MockedStatic<PropertiesUtil> propertiesUtilMock = Mockito.mockStatic(PropertiesUtil.class)) {
@@ -1119,9 +1111,15 @@ public class TestKmsKeyMgr {
             stringUtilMock.when(() -> StringUtil.getUTFEncodedString(TEST_USERNAME)).thenReturn(TEST_USERNAME);
             propertiesUtilMock.when(() -> PropertiesUtil.getProperty("hadoop.security.authentication", "simple")).thenReturn("simple");
 
-            Mockito.when(svcStore.getServiceByName(TEST_REPO_NAME)).thenReturn(null);
+            Mockito.when(svcStore.getServiceByName(TEST_REPO_NAME)).thenThrow(new RuntimeException("Service not found"));
 
-            Assertions.assertDoesNotThrow(() -> {
+            Exception mockException = new RuntimeException("Provider 'testKmsRepo' not found or invalid: Service not found");
+            Mockito.when(restErrorUtil.createRESTException(
+                    Mockito.contains("Provider 'testKmsRepo' not found or invalid"),
+                    Mockito.eq(MessageEnums.DATA_NOT_FOUND)
+            )).thenThrow(mockException);
+
+            Assertions.assertThrows(Exception.class, () -> {
                 kmsKeyMgr.deleteKey(TEST_REPO_NAME, TEST_KEY_NAME);
             });
 
@@ -1130,7 +1128,7 @@ public class TestKmsKeyMgr {
     }
 
     @Test
-    public void testGetKey_NullProviders() throws Exception {
+    public void testGetKey_ProviderNotFound() throws Exception {
         try (MockedStatic<ContextUtil> contextUtilMock = Mockito.mockStatic(ContextUtil.class);
                 MockedStatic<StringUtil> stringUtilMock = Mockito.mockStatic(StringUtil.class);
                 MockedStatic<PropertiesUtil> propertiesUtilMock = Mockito.mockStatic(PropertiesUtil.class)) {
@@ -1138,11 +1136,17 @@ public class TestKmsKeyMgr {
             stringUtilMock.when(() -> StringUtil.getUTFEncodedString(TEST_USERNAME)).thenReturn(TEST_USERNAME);
             propertiesUtilMock.when(() -> PropertiesUtil.getProperty("hadoop.security.authentication", "simple")).thenReturn("simple");
 
-            Mockito.when(svcStore.getServiceByName(TEST_REPO_NAME)).thenReturn(null);
+            Mockito.when(svcStore.getServiceByName(TEST_REPO_NAME)).thenThrow(new RuntimeException("Service not found"));
 
-            VXKmsKey result = kmsKeyMgr.getKey(TEST_REPO_NAME, TEST_KEY_NAME);
+            Exception mockException = new RuntimeException("Provider 'testKmsRepo' not found or invalid: Service not found");
+            Mockito.when(restErrorUtil.createRESTException(
+                    Mockito.contains("Provider 'testKmsRepo' not found or invalid"),
+                    Mockito.eq(MessageEnums.DATA_NOT_FOUND)
+            )).thenThrow(mockException);
 
-            Assertions.assertNull(result);
+            Assertions.assertThrows(Exception.class, () -> {
+                kmsKeyMgr.getKey(TEST_REPO_NAME, TEST_KEY_NAME);
+            });
         }
     }
 

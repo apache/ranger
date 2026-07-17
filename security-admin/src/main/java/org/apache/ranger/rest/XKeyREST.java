@@ -225,6 +225,13 @@ public class XKeyREST {
     private void handleError(Exception e) {
         String message = e.getMessage();
 
+        if (e instanceof WebApplicationException) {
+            WebApplicationException wae = (WebApplicationException) e;
+            if (wae.getResponse() != null && wae.getResponse().hasEntity()) {
+                throw wae;
+            }
+        }
+
         if (e instanceof ClientErrorException || e instanceof ServerErrorException || e instanceof WebApplicationException) {
             logger.error(e.getMessage());
 
