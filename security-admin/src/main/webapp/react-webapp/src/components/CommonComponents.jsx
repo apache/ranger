@@ -95,12 +95,12 @@ export class MoreLess extends Component {
     return (
       <>
         <div className={this.state.show ? "show-less" : "show-more"}>
-          {this?.state?.data?.map((key) => {
+          {this?.state?.data?.map((key, index) => {
             return (
               <Badge
                 bg="info"
                 title={key}
-                key={key}
+                key={index}
                 className="m-1 text-truncate more-less-width"
               >
                 {key}

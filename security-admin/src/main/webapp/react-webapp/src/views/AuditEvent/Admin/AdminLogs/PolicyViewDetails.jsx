@@ -27,7 +27,8 @@ import { cloneDeep, find, isEmpty, map, sortBy } from "lodash";
 import {
   getResourcesDefVal,
   serverError,
-  getPolicyConditionDisplayLbl
+  getPolicyConditionDisplayLbl,
+  getPolicyPermissionItemDisplayLbl
 } from "Utils/XAUtils";
 import { ModalLoader } from "Components/CommonComponents";
 import { getServiceDef } from "Utils/appState";
@@ -478,14 +479,18 @@ export function PolicyViewDetails(props) {
                     {!isEmpty(items.accesses) ? (
                       <td className="text-center d-flex flex-wrap policyview-permission-wrap">
                         {" "}
-                        {items.accesses.map((obj, index) => (
+                        {getPolicyPermissionItemDisplayLbl(
+                          filterServiceDef,
+                          policyType,
+                          items.accesses
+                        ).map((obj, index) => (
                           <h6 className="d-inline me-1" key={index}>
                             <Badge
                               bg="info"
                               className="d-inline me-1"
-                              key={obj.type}
+                              key={obj.label}
                             >
-                              {obj.type}
+                              {obj.label}
                             </Badge>
                           </h6>
                         ))}
