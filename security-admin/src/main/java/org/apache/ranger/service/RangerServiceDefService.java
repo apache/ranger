@@ -37,8 +37,7 @@ public class RangerServiceDefService extends RangerServiceDefServiceBase<XXServi
     public static final String PROP_ENABLE_ACTION_MATCHER_IN_POLICIES_CONDITION = "ranger.servicedef.ozone.enableActionMatcherInPoliciesCondition";
     public static final String OPTION_ENABLE_ACTION_MATCHER_IN_POLICIES_CONDITION = "enableActionMatcherInPoliciesCondition";
 
-    private static final String LEGACY_OPTION_ENABLE_OZONE_ACTION_POLICY = "enableOzoneActionPolicy";
-    private static final String POLICY_CONDITION_ACTION_MATCHES          = "action-matches";
+    private static final String POLICY_CONDITION_ACTION_MATCHES = "action-matches";
 
     private final RangerAdminConfig config;
 
@@ -139,8 +138,6 @@ public class RangerServiceDefService extends RangerServiceDefServiceBase<XXServi
         }
 
         // Admin site config is authoritative at runtime; stale def_options must not override it.
-        serviceDefOptions.remove(LEGACY_OPTION_ENABLE_OZONE_ACTION_POLICY);
-
         boolean enabled = config.getBoolean(PROP_ENABLE_ACTION_MATCHER_IN_POLICIES_CONDITION, false);
 
         serviceDefOptions.put(OPTION_ENABLE_ACTION_MATCHER_IN_POLICIES_CONDITION, Boolean.toString(enabled));
