@@ -94,9 +94,22 @@ docker compose -f docker-compose.ranger.yml -f docker-compose.ranger-hadoop.yml 
 docker compose -f docker-compose.ranger.yml -f docker-compose.ranger-hadoop.yml -f docker-compose.ranger-hbase.yml up -d
 ~~~
 #### Bring up ozone containers
+
+Set `RANGER_OZONE_ENABLE_ACTION_MATCHER=true` in `.env` **before the first Ranger Admin setup**
+so Java patch `J10065` persists `enableActionMatcherInPoliciesCondition` on the ozone service-def.
+After the DB is initialized, changing the flag requires an admin restart; re-run `J10065` or refresh
+the ozone service-def if `policyConditions` must be updated.
+
 ~~~
 ./scripts/ozone/ozone-plugin-docker-setup.sh
 docker compose -f docker-compose.ranger.yml -f docker-compose.ranger-ozone.yml up -d
+~~~
+
+Verify (after login):
+
+~~~
+curl -s -u admin:rangerR0cks! http://localhost:6080/service/plugins/definitions/name/ozone \
+  | python3 -c "import json,sys; d=json.load(sys.stdin); print('options', d.get('options')); print('conditions', [c['name'] for c in d.get('policyConditions',[])])"
 ~~~
 #### Bring up trino container (requires docker build with jdk 11):
 ~~~

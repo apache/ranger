@@ -23,6 +23,9 @@ else
   SETUP_RANGER=false
 fi
 
+# Apply before setup so J10065 reads the correct admin config on fresh install.
+${RANGER_SCRIPTS}/apply-ozone-action-matcher-flag.sh
+
 if [ "${SETUP_RANGER}" == "true" ]
 then
   if [ "${KERBEROS_ENABLED}" == "true" ]
@@ -46,6 +49,8 @@ then
     echo "Ranger Admin Setup Script didn't complete proper execution."
   fi
 fi
+
+${RANGER_SCRIPTS}/apply-ozone-action-matcher-flag.sh
 
 cd ${RANGER_HOME}/admin && ./ews/ranger-admin-services.sh start
 

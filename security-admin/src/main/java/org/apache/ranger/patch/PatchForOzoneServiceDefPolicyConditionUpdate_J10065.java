@@ -152,20 +152,6 @@ public class PatchForOzoneServiceDefPolicyConditionUpdate_J10065 extends BaseLoa
 
             dbOzoneServiceDef.setPolicyConditions(updatedPolicyConditions);
 
-            if (serviceDefOptionsPreUpdate == null
-                    || !serviceDefOptionsPreUpdate.containsKey(RangerServiceDefService.OPTION_ENABLE_ACTION_MATCHER_IN_POLICIES_CONDITION)) {
-                Map<String, String> serviceDefOptions = dbOzoneServiceDef.getOptions();
-
-                if (serviceDefOptions == null) {
-                    serviceDefOptions = new HashMap<>();
-                    dbOzoneServiceDef.setOptions(serviceDefOptions);
-                }
-
-                serviceDefOptions.put(
-                        RangerServiceDefService.OPTION_ENABLE_ACTION_MATCHER_IN_POLICIES_CONDITION,
-                        Boolean.toString(enableActionMatcherInPoliciesCondition));
-            }
-
             final RangerServiceDefValidator validator = validatorFactory.getServiceDefValidator(svcStore);
 
             validator.validate(dbOzoneServiceDef, Action.UPDATE);
@@ -194,7 +180,7 @@ public class PatchForOzoneServiceDefPolicyConditionUpdate_J10065 extends BaseLoa
             }
         }
 
-        options.put(RangerServiceDef.OPTION_ENABLE_ACTION_MATCHER_IN_POLICIES_CONDITION, Boolean.toString(enableActionMatcherInPoliciesCondition));
+        options.put(RangerServiceDefService.OPTION_ENABLE_ACTION_MATCHER_IN_POLICIES_CONDITION, Boolean.toString(enableActionMatcherInPoliciesCondition));
 
         persistDefOptionsIfChanged(xXServiceDefObj, options, previousJson);
     }

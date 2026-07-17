@@ -86,7 +86,8 @@ public class TestPatchForOzoneServiceDefPolicyConditionUpdate_J10065 {
     private static PatchForOzoneServiceDefPolicyConditionUpdate_J10065 buildPatch(
             RangerDaoManager daoMgr,
             ServiceDBStore svcStore,
-            RangerServiceDef dbServiceDef) throws Exception {
+            RangerServiceDef dbServiceDef,
+            XXServiceDefDao xxServiceDefDao) throws Exception {
         final PatchForOzoneServiceDefPolicyConditionUpdate_J10065 patch =
                 new PatchForOzoneServiceDefPolicyConditionUpdate_J10065();
 
@@ -103,8 +104,19 @@ public class TestPatchForOzoneServiceDefPolicyConditionUpdate_J10065 {
 
         Mockito.when(svcStore.getServiceDefByName(Mockito.anyString())).thenReturn(dbServiceDef);
         Mockito.when(svcStore.updateServiceDef(Mockito.any(RangerServiceDef.class))).thenReturn(dbServiceDef);
+        Mockito.doAnswer(invocation -> invocation.getArgument(0)).when(xxServiceDefDao).update(Mockito.any(XXServiceDef.class));
 
         return patch;
+    }
+
+    private static String getOptionFromDefOptions(String defOptionsJson, String optionKey) throws Exception {
+        if (defOptionsJson == null) {
+            return null;
+        }
+
+        final Map<String, String> options = new JSONUtil().jsonToMap(defOptionsJson);
+
+        return options == null ? null : options.get(optionKey);
     }
 
     @Test
@@ -147,21 +159,21 @@ public class TestPatchForOzoneServiceDefPolicyConditionUpdate_J10065 {
             final ServiceDBStore svcStore = Mockito.mock(ServiceDBStore.class);
             final RangerServiceDef dbServiceDef = new RangerServiceDef();
             final PatchForOzoneServiceDefPolicyConditionUpdate_J10065 patch =
-                    buildPatch(daoMgr, svcStore, dbServiceDef);
+                    buildPatch(daoMgr, svcStore, dbServiceDef, xxServiceDefDao);
 
-            final Method updateMethod =
-                    PatchForOzoneServiceDefPolicyConditionUpdate_J10065.class.getDeclaredMethod("updateOzoneServiceDef");
-            updateMethod.setAccessible(true);
-            updateMethod.invoke(patch);
+            invokeUpdateOzoneServiceDef(patch);
 
-            final ArgumentCaptor<RangerServiceDef> captor = ArgumentCaptor.forClass(RangerServiceDef.class);
-            Mockito.verify(svcStore).updateServiceDef(captor.capture());
+            final ArgumentCaptor<RangerServiceDef> serviceDefCaptor = ArgumentCaptor.forClass(RangerServiceDef.class);
+            Mockito.verify(svcStore).updateServiceDef(serviceDefCaptor.capture());
+            Assertions.assertFalse(hasActionMatchesCondition(serviceDefCaptor.getValue()));
 
-            final RangerServiceDef updated = captor.getValue();
+            final ArgumentCaptor<XXServiceDef> xxCaptor = ArgumentCaptor.forClass(XXServiceDef.class);
+            Mockito.verify(xxServiceDefDao).update(xxCaptor.capture());
             Assertions.assertEquals(
                     Boolean.FALSE.toString(),
-                    updated.getOptions().get(RangerServiceDefService.OPTION_ENABLE_ACTION_MATCHER_IN_POLICIES_CONDITION));
-            Assertions.assertFalse(hasActionMatchesCondition(updated));
+                    getOptionFromDefOptions(
+                            xxCaptor.getValue().getDefOptions(),
+                            RangerServiceDefService.OPTION_ENABLE_ACTION_MATCHER_IN_POLICIES_CONDITION));
         } finally {
             RangerAdminConfig.getInstance().unset(PROP_ENABLE_ACTION_MATCHER_IN_POLICIES_CONDITION);
         }
@@ -187,28 +199,28 @@ public class TestPatchForOzoneServiceDefPolicyConditionUpdate_J10065 {
             final ServiceDBStore svcStore = Mockito.mock(ServiceDBStore.class);
             final RangerServiceDef dbServiceDef = new RangerServiceDef();
             final PatchForOzoneServiceDefPolicyConditionUpdate_J10065 patch =
-                    buildPatch(daoMgr, svcStore, dbServiceDef);
+                    buildPatch(daoMgr, svcStore, dbServiceDef, xxServiceDefDao);
 
-            final Method updateMethod =
-                    PatchForOzoneServiceDefPolicyConditionUpdate_J10065.class.getDeclaredMethod("updateOzoneServiceDef");
-            updateMethod.setAccessible(true);
-            updateMethod.invoke(patch);
+            invokeUpdateOzoneServiceDef(patch);
 
-            final ArgumentCaptor<RangerServiceDef> captor = ArgumentCaptor.forClass(RangerServiceDef.class);
-            Mockito.verify(svcStore).updateServiceDef(captor.capture());
+            final ArgumentCaptor<RangerServiceDef> serviceDefCaptor = ArgumentCaptor.forClass(RangerServiceDef.class);
+            Mockito.verify(svcStore).updateServiceDef(serviceDefCaptor.capture());
+            Assertions.assertTrue(hasActionMatchesCondition(serviceDefCaptor.getValue()));
 
-            final RangerServiceDef updated = captor.getValue();
+            final ArgumentCaptor<XXServiceDef> xxCaptor = ArgumentCaptor.forClass(XXServiceDef.class);
+            Mockito.verify(xxServiceDefDao).update(xxCaptor.capture());
             Assertions.assertEquals(
                     Boolean.TRUE.toString(),
-                    updated.getOptions().get(RangerServiceDefService.OPTION_ENABLE_ACTION_MATCHER_IN_POLICIES_CONDITION));
-            Assertions.assertTrue(hasActionMatchesCondition(updated));
+                    getOptionFromDefOptions(
+                            xxCaptor.getValue().getDefOptions(),
+                            RangerServiceDefService.OPTION_ENABLE_ACTION_MATCHER_IN_POLICIES_CONDITION));
         } finally {
             RangerAdminConfig.getInstance().unset(PROP_ENABLE_ACTION_MATCHER_IN_POLICIES_CONDITION);
         }
     }
 
     @Test
-    public void testPreservesExistingEnableActionMatcherInPoliciesConditionWhenAlreadyInDb() throws Exception {
+    public void testSyncsDefOptionsFromAdminConfigWhenExistingValueDiffersInDb() throws Exception {
         RangerAdminConfig.getInstance().set(PROP_ENABLE_ACTION_MATCHER_IN_POLICIES_CONDITION, Boolean.FALSE.toString());
 
         try (MockedStatic<EmbeddedServiceDefsUtil> utilMock = Mockito.mockStatic(EmbeddedServiceDefsUtil.class)) {
@@ -229,22 +241,18 @@ public class TestPatchForOzoneServiceDefPolicyConditionUpdate_J10065 {
 
             final ServiceDBStore svcStore = Mockito.mock(ServiceDBStore.class);
             final RangerServiceDef dbServiceDef = new RangerServiceDef();
-            dbServiceDef.setOptions(new HashMap<>(preUpdateOptions));
             final PatchForOzoneServiceDefPolicyConditionUpdate_J10065 patch =
-                    buildPatch(daoMgr, svcStore, dbServiceDef);
+                    buildPatch(daoMgr, svcStore, dbServiceDef, xxServiceDefDao);
 
-            final Method updateMethod =
-                    PatchForOzoneServiceDefPolicyConditionUpdate_J10065.class.getDeclaredMethod("updateOzoneServiceDef");
-            updateMethod.setAccessible(true);
-            updateMethod.invoke(patch);
+            invokeUpdateOzoneServiceDef(patch);
 
-            final ArgumentCaptor<RangerServiceDef> captor = ArgumentCaptor.forClass(RangerServiceDef.class);
-            Mockito.verify(svcStore).updateServiceDef(captor.capture());
-
-            final RangerServiceDef updated = captor.getValue();
+            final ArgumentCaptor<XXServiceDef> xxCaptor = ArgumentCaptor.forClass(XXServiceDef.class);
+            Mockito.verify(xxServiceDefDao).update(xxCaptor.capture());
             Assertions.assertEquals(
-                    Boolean.TRUE.toString(),
-                    updated.getOptions().get(RangerServiceDefService.OPTION_ENABLE_ACTION_MATCHER_IN_POLICIES_CONDITION));
+                    Boolean.FALSE.toString(),
+                    getOptionFromDefOptions(
+                            xxCaptor.getValue().getDefOptions(),
+                            RangerServiceDefService.OPTION_ENABLE_ACTION_MATCHER_IN_POLICIES_CONDITION));
         } finally {
             RangerAdminConfig.getInstance().unset(PROP_ENABLE_ACTION_MATCHER_IN_POLICIES_CONDITION);
         }
@@ -262,13 +270,17 @@ public class TestPatchForOzoneServiceDefPolicyConditionUpdate_J10065 {
             final ServiceDBStore svcStore = Mockito.mock(ServiceDBStore.class);
             setIfPresent(patch, "svcStore", svcStore);
 
-            final Method updateMethod =
-                    PatchForOzoneServiceDefPolicyConditionUpdate_J10065.class.getDeclaredMethod("updateOzoneServiceDef");
-            updateMethod.setAccessible(true);
-            updateMethod.invoke(patch);
+            invokeUpdateOzoneServiceDef(patch);
 
             Mockito.verify(svcStore, Mockito.never()).updateServiceDef(Mockito.any());
         }
+    }
+
+    private static void invokeUpdateOzoneServiceDef(PatchForOzoneServiceDefPolicyConditionUpdate_J10065 patch) throws Exception {
+        final Method updateMethod =
+                PatchForOzoneServiceDefPolicyConditionUpdate_J10065.class.getDeclaredMethod("updateOzoneServiceDef");
+        updateMethod.setAccessible(true);
+        updateMethod.invoke(patch);
     }
 
     private static boolean hasActionMatchesCondition(RangerServiceDef serviceDef) {
