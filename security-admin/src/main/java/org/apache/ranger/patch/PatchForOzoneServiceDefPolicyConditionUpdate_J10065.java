@@ -18,8 +18,8 @@
 package org.apache.ranger.patch;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.ranger.biz.ServiceDBStore;
 import org.apache.ranger.authorization.hadoop.config.RangerAdminConfig;
+import org.apache.ranger.biz.ServiceDBStore;
 import org.apache.ranger.common.JSONUtil;
 import org.apache.ranger.common.RangerValidatorFactory;
 import org.apache.ranger.db.RangerDaoManager;
