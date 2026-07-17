@@ -36,13 +36,15 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 @Component
 public class PatchForOzoneServiceDefPolicyConditionUpdate_J10065 extends BaseLoader {
     private static final Logger logger = LoggerFactory.getLogger(PatchForOzoneServiceDefPolicyConditionUpdate_J10065.class);
-    private static final String POLICY_CONDITION_ACTION_MATCHES = "action-matches";
+    private static final String POLICY_CONDITION_ACTION_MATCHES              = "action-matches";
+    private static final String LEGACY_OPTION_ENABLE_OZONE_ACTION_POLICY     = "enableOzoneActionPolicy";
 
     @Autowired
     RangerDaoManager daoMgr;
@@ -90,6 +92,7 @@ public class PatchForOzoneServiceDefPolicyConditionUpdate_J10065 extends BaseLoa
         logger.info("==> PatchForOzoneServiceDefPolicyConditionUpdate_J10065.execLoad()");
         try {
             updateOzoneServiceDef();
+            cleanupActionMatcherOptionFromNonOzoneServiceDefs();
         } catch (Exception e) {
             logger.error("Error while applying PatchForOzoneServiceDefPolicyConditionUpdate_J10065", e);
             throw new RuntimeException("PatchForOzoneServiceDefPolicyConditionUpdate_J10065 failed", e);
@@ -160,26 +163,77 @@ public class PatchForOzoneServiceDefPolicyConditionUpdate_J10065 extends BaseLoa
             xXServiceDefObj = daoMgr.getXXServiceDef().findByName(ozoneServiceDefName);
 
             if (xXServiceDefObj != null) {
-                final String              jsonStrPostUpdate           = xXServiceDefObj.getDefOptions();
-                Map<String, String>       serviceDefOptionsPostUpdate = null;
-
-                if (StringUtils.isNotEmpty(jsonStrPostUpdate)) {
-                    serviceDefOptionsPostUpdate = jsonUtil.jsonToMap(jsonStrPostUpdate);
-                }
-
-                if (serviceDefOptionsPostUpdate != null && serviceDefOptionsPostUpdate.containsKey(RangerServiceDef.OPTION_ENABLE_DENY_AND_EXCEPTIONS_IN_POLICIES)) {
-                    if (serviceDefOptionsPreUpdate == null || !serviceDefOptionsPreUpdate.containsKey(RangerServiceDef.OPTION_ENABLE_DENY_AND_EXCEPTIONS_IN_POLICIES)) {
-                        serviceDefOptionsPostUpdate.remove(RangerServiceDef.OPTION_ENABLE_DENY_AND_EXCEPTIONS_IN_POLICIES);
-
-                        xXServiceDefObj.setDefOptions(jsonUtil.readMapToString(serviceDefOptionsPostUpdate));
-
-                        daoMgr.getXXServiceDef().update(xXServiceDefObj);
-                    }
-                }
+                updateOzoneServiceDefOptions(xXServiceDefObj, serviceDefOptionsPreUpdate, enableActionMatcherInPoliciesCondition);
             }
         } catch (Exception e) {
             logger.error("Error while updating ozone service-def policy conditions", e);
             throw new RuntimeException("Failed to update ozone service-def policy conditions", e);
+        }
+    }
+
+    private void updateOzoneServiceDefOptions(XXServiceDef xXServiceDefObj, Map<String, String> serviceDefOptionsPreUpdate,
+            boolean enableActionMatcherInPoliciesCondition) throws Exception {
+        final String        previousJson = xXServiceDefObj.getDefOptions();
+        Map<String, String> options      = parseDefOptions(previousJson);
+
+        if (options.containsKey(RangerServiceDef.OPTION_ENABLE_DENY_AND_EXCEPTIONS_IN_POLICIES)) {
+            if (serviceDefOptionsPreUpdate == null || !serviceDefOptionsPreUpdate.containsKey(RangerServiceDef.OPTION_ENABLE_DENY_AND_EXCEPTIONS_IN_POLICIES)) {
+                options.remove(RangerServiceDef.OPTION_ENABLE_DENY_AND_EXCEPTIONS_IN_POLICIES);
+            }
+        }
+
+        options.remove(LEGACY_OPTION_ENABLE_OZONE_ACTION_POLICY);
+        options.put(RangerServiceDef.OPTION_ENABLE_ACTION_MATCHER_IN_POLICIES_CONDITION, Boolean.toString(enableActionMatcherInPoliciesCondition));
+
+        persistDefOptionsIfChanged(xXServiceDefObj, options, previousJson);
+    }
+
+    private void cleanupActionMatcherOptionFromNonOzoneServiceDefs() {
+        final List<XXServiceDef> allServiceDefs = daoMgr.getXXServiceDef().getAll();
+
+        if (allServiceDefs == null || allServiceDefs.isEmpty()) {
+            return;
+        }
+
+        for (XXServiceDef xServiceDef : allServiceDefs) {
+            if (StringUtils.equalsIgnoreCase(xServiceDef.getName(), EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_OZONE_NAME)) {
+                continue;
+            }
+
+            try {
+                final String        previousJson = xServiceDef.getDefOptions();
+                Map<String, String> options      = parseDefOptions(previousJson);
+                boolean             changed      = options.remove(LEGACY_OPTION_ENABLE_OZONE_ACTION_POLICY) != null;
+
+                changed |= options.remove(RangerServiceDef.OPTION_ENABLE_ACTION_MATCHER_IN_POLICIES_CONDITION) != null;
+
+                if (changed) {
+                    persistDefOptionsIfChanged(xServiceDef, options, previousJson);
+                }
+            } catch (Exception e) {
+                logger.warn("Failed to clean action-matcher option from service-def {}", xServiceDef.getName(), e);
+            }
+        }
+    }
+
+    private Map<String, String> parseDefOptions(String jsonStr) throws Exception {
+        if (StringUtils.isNotEmpty(jsonStr)) {
+            Map<String, String> options = jsonUtil.jsonToMap(jsonStr);
+
+            if (options != null) {
+                return options;
+            }
+        }
+
+        return new HashMap<>();
+    }
+
+    private void persistDefOptionsIfChanged(XXServiceDef xServiceDef, Map<String, String> options, String previousJson) throws Exception {
+        String newJson = jsonUtil.readMapToString(options);
+
+        if (!StringUtils.equals(previousJson, newJson)) {
+            xServiceDef.setDefOptions(newJson);
+            daoMgr.getXXServiceDef().update(xServiceDef);
         }
     }
 }
