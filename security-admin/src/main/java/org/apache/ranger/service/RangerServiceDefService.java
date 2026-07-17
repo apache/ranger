@@ -123,18 +123,17 @@ public class RangerServiceDefService extends RangerServiceDefServiceBase<XXServi
             return;
         }
 
+        final boolean isOzoneServiceDef = StringUtils.equalsIgnoreCase(serviceDef.getName(), EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_OZONE_NAME);
+
+        if (!isOzoneServiceDef) {
+            return;
+        }
+
         Map<String, String> serviceDefOptions = serviceDef.getOptions();
 
         if (serviceDefOptions == null) {
             serviceDefOptions = new HashMap<>();
             serviceDef.setOptions(serviceDefOptions);
-        }
-
-        if (!StringUtils.equalsIgnoreCase(serviceDef.getName(), EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_OZONE_NAME)) {
-            serviceDefOptions.put(OPTION_ENABLE_ACTION_MATCHER_IN_POLICIES_CONDITION, Boolean.FALSE.toString());
-            serviceDef.setOptions(serviceDefOptions);
-
-            return;
         }
 
         // Admin site config is authoritative at runtime; stale def_options must not override it.
