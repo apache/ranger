@@ -593,7 +593,7 @@ export default function AddUpdatePolicyForm() {
                 type: conditionKey,
                 values: isArray(conditionValue)
                   ? conditionValue.map((m) => {
-                      return m.value;
+                      return m;
                     })
                   : [conditionValue]
               });
@@ -712,9 +712,7 @@ export default function AddUpdatePolicyForm() {
           if (!isEmpty(conditionObj.uiHint)) {
             obj.conditions[data?.type] = JSON.parse(conditionObj.uiHint)
               .isMultiValue
-              ? data?.values.map((m) => {
-                  return { value: m.trim(), label: m.trim() };
-                })
+              ? data?.values
               : data?.values.toString().trim();
           }
         }
@@ -1510,6 +1508,7 @@ export default function AddUpdatePolicyForm() {
                                             handleCloseModal={
                                               policyConditionState
                                             }
+                                            modalHeader="Policy Conditions"
                                           />
                                         )}
                                       />

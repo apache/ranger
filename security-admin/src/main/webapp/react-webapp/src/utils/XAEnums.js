@@ -986,3 +986,8 @@ export const additionalServiceConfigs = [
     type: "user"
   }
 ];
+export const policyConditionDisplayLabel = {
+  "Accessed after expiry_date (yes/no)?": "Accessed after expiry date",
+  "Enter boolean expression": "Boolean expression",
+  "IP Address Range": "IP Address Range"
+};
