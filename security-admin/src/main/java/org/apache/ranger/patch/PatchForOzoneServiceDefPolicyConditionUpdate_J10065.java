@@ -18,7 +18,6 @@
 package org.apache.ranger.patch;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.ranger.authorization.hadoop.config.RangerAdminConfig;
 import org.apache.ranger.biz.ServiceDBStore;
 import org.apache.ranger.common.JSONUtil;
 import org.apache.ranger.common.RangerValidatorFactory;
@@ -28,22 +27,18 @@ import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.model.validation.RangerServiceDefValidator;
 import org.apache.ranger.plugin.model.validation.RangerValidator.Action;
 import org.apache.ranger.plugin.store.EmbeddedServiceDefsUtil;
-import org.apache.ranger.service.RangerServiceDefService;
 import org.apache.ranger.util.CLIUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 @Component
 public class PatchForOzoneServiceDefPolicyConditionUpdate_J10065 extends BaseLoader {
     private static final Logger logger = LoggerFactory.getLogger(PatchForOzoneServiceDefPolicyConditionUpdate_J10065.class);
-    private static final String POLICY_CONDITION_ACTION_MATCHES = "action-matches";
 
     @Autowired
     RangerDaoManager daoMgr;
@@ -136,21 +131,7 @@ public class PatchForOzoneServiceDefPolicyConditionUpdate_J10065 extends BaseLoa
                 return;
             }
 
-            final boolean enableActionMatcherInPoliciesCondition = RangerAdminConfig.getInstance().getBoolean(RangerServiceDefService.PROP_ENABLE_ACTION_MATCHER_IN_POLICIES_CONDITION, false);
-            final List<RangerServiceDef.RangerPolicyConditionDef> updatedPolicyConditions;
-
-            if (enableActionMatcherInPoliciesCondition) {
-                updatedPolicyConditions = new ArrayList<>(embeddedPolicyConditions);
-            } else {
-                updatedPolicyConditions = new ArrayList<>();
-                for (RangerServiceDef.RangerPolicyConditionDef policyConditionDef : embeddedPolicyConditions) {
-                    if (!StringUtils.equals(policyConditionDef.getName(), POLICY_CONDITION_ACTION_MATCHES)) {
-                        updatedPolicyConditions.add(policyConditionDef);
-                    }
-                }
-            }
-
-            dbOzoneServiceDef.setPolicyConditions(updatedPolicyConditions);
+            dbOzoneServiceDef.setPolicyConditions(embeddedPolicyConditions);
 
             final RangerServiceDefValidator validator = validatorFactory.getServiceDefValidator(svcStore);
 
@@ -161,48 +142,26 @@ public class PatchForOzoneServiceDefPolicyConditionUpdate_J10065 extends BaseLoa
             xXServiceDefObj = daoMgr.getXXServiceDef().findByName(ozoneServiceDefName);
 
             if (xXServiceDefObj != null) {
-                updateOzoneServiceDefOptions(xXServiceDefObj, serviceDefOptionsPreUpdate, enableActionMatcherInPoliciesCondition);
+                final String              jsonStrPostUpdate           = xXServiceDefObj.getDefOptions();
+                Map<String, String>       serviceDefOptionsPostUpdate = null;
+
+                if (StringUtils.isNotEmpty(jsonStrPostUpdate)) {
+                    serviceDefOptionsPostUpdate = jsonUtil.jsonToMap(jsonStrPostUpdate);
+                }
+
+                if (serviceDefOptionsPostUpdate != null && serviceDefOptionsPostUpdate.containsKey(RangerServiceDef.OPTION_ENABLE_DENY_AND_EXCEPTIONS_IN_POLICIES)) {
+                    if (serviceDefOptionsPreUpdate == null || !serviceDefOptionsPreUpdate.containsKey(RangerServiceDef.OPTION_ENABLE_DENY_AND_EXCEPTIONS_IN_POLICIES)) {
+                        serviceDefOptionsPostUpdate.remove(RangerServiceDef.OPTION_ENABLE_DENY_AND_EXCEPTIONS_IN_POLICIES);
+
+                        xXServiceDefObj.setDefOptions(jsonUtil.readMapToString(serviceDefOptionsPostUpdate));
+
+                        daoMgr.getXXServiceDef().update(xXServiceDefObj);
+                    }
+                }
             }
         } catch (Exception e) {
             logger.error("Error while updating ozone service-def policy conditions", e);
             throw new RuntimeException("Failed to update ozone service-def policy conditions", e);
-        }
-    }
-
-    private void updateOzoneServiceDefOptions(XXServiceDef xXServiceDefObj, Map<String, String> serviceDefOptionsPreUpdate,
-            boolean enableActionMatcherInPoliciesCondition) throws Exception {
-        final String        previousJson = xXServiceDefObj.getDefOptions();
-        Map<String, String> options      = parseDefOptions(previousJson);
-
-        if (options.containsKey(RangerServiceDef.OPTION_ENABLE_DENY_AND_EXCEPTIONS_IN_POLICIES)) {
-            if (serviceDefOptionsPreUpdate == null || !serviceDefOptionsPreUpdate.containsKey(RangerServiceDef.OPTION_ENABLE_DENY_AND_EXCEPTIONS_IN_POLICIES)) {
-                options.remove(RangerServiceDef.OPTION_ENABLE_DENY_AND_EXCEPTIONS_IN_POLICIES);
-            }
-        }
-
-        options.put(RangerServiceDefService.OPTION_ENABLE_ACTION_MATCHER_IN_POLICIES_CONDITION, Boolean.toString(enableActionMatcherInPoliciesCondition));
-
-        persistDefOptionsIfChanged(xXServiceDefObj, options, previousJson);
-    }
-
-    private Map<String, String> parseDefOptions(String jsonStr) throws Exception {
-        if (StringUtils.isNotEmpty(jsonStr)) {
-            Map<String, String> options = jsonUtil.jsonToMap(jsonStr);
-
-            if (options != null) {
-                return options;
-            }
-        }
-
-        return new HashMap<>();
-    }
-
-    private void persistDefOptionsIfChanged(XXServiceDef xServiceDef, Map<String, String> options, String previousJson) throws Exception {
-        String newJson = jsonUtil.readMapToString(options);
-
-        if (!StringUtils.equals(previousJson, newJson)) {
-            xServiceDef.setDefOptions(newJson);
-            daoMgr.getXXServiceDef().update(xServiceDef);
         }
     }
 }

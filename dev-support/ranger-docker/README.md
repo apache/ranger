@@ -95,10 +95,10 @@ docker compose -f docker-compose.ranger.yml -f docker-compose.ranger-hadoop.yml 
 ~~~
 #### Bring up ozone containers
 
-Set `RANGER_OZONE_ENABLE_ACTION_MATCHER=true` in `.env` **before the first Ranger Admin setup**
-so Java patch `J10065` persists `enableActionMatcherInPoliciesCondition` on the ozone service-def.
-After the DB is initialized, changing the flag requires an admin restart; re-run `J10065` or refresh
-the ozone service-def if `policyConditions` must be updated.
+Set `RANGER_OZONE_ENABLE_ACTION_MATCHER=true` in `.env` **before starting Ranger Admin** so
+`ranger.servicedef.ozone.enableActionMatcherInPoliciesCondition` is enabled in admin site config.
+After the DB is initialized, changing the flag requires an admin restart; `RangerServiceDefService`
+applies the flag at runtime when serving the ozone service-def.
 
 ~~~
 ./scripts/ozone/ozone-plugin-docker-setup.sh
