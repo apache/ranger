@@ -99,7 +99,8 @@ Set `RANGER_OZONE_ENABLE_ACTION_MATCHER=true` in `.env` **before starting Ranger
 `ranger.servicedef.ozone.enableActionMatcherInPoliciesCondition` is enabled in admin site config.
 After the DB is initialized, changing the flag requires an admin restart; `RangerServiceDefService`
 applies the flag at runtime when serving the ozone service-def.
-
+Use `docker compose -f docker-compose.ranger.yml -f docker-compose.ranger-ozone.yml up -d --build --force-recreate ranger`
+to ensure the flag update takes effect.
 ~~~
 ./scripts/ozone/ozone-plugin-docker-setup.sh
 docker compose -f docker-compose.ranger.yml -f docker-compose.ranger-ozone.yml up -d
