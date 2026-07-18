@@ -34,7 +34,7 @@ import java.util.Map;
 @Service
 @Scope("singleton")
 public class RangerServiceDefService extends RangerServiceDefServiceBase<XXServiceDef, RangerServiceDef> {
-    public static final String PROP_ENABLE_ACTION_MATCHER_IN_POLICIES_CONDITION = "ranger.servicedef.ozone.enableActionMatcherInPoliciesCondition";
+    public static final String PROP_ENABLE_ACTION_MATCHER_IN_POLICIES_CONDITION_FOR_OZONE = "ranger.servicedef.ozone.enableActionMatcherInPoliciesCondition";
     public static final String OPTION_ENABLE_ACTION_MATCHER_IN_POLICIES_CONDITION = "enableActionMatcherInPoliciesCondition";
 
     private static final String POLICY_CONDITION_ACTION_MATCHES = "action-matches";
@@ -137,7 +137,7 @@ public class RangerServiceDefService extends RangerServiceDefServiceBase<XXServi
         }
 
         // Admin site config is authoritative at runtime; stale def_options must not override it.
-        boolean enabled = config.getBoolean(PROP_ENABLE_ACTION_MATCHER_IN_POLICIES_CONDITION, false);
+        boolean enabled = config.getBoolean(PROP_ENABLE_ACTION_MATCHER_IN_POLICIES_CONDITION_FOR_OZONE, false);
 
         serviceDefOptions.put(OPTION_ENABLE_ACTION_MATCHER_IN_POLICIES_CONDITION, Boolean.toString(enabled));
         serviceDef.setOptions(serviceDefOptions);
