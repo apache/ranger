@@ -323,6 +323,7 @@ public class RangerOzoneAuthorizer implements IAccessAuthorizer {
 
         if (isOzoneActionPolicyEnabled(plugin)) {
             final Set<String> s3Actions = ozoneGrant.getS3Actions();
+
             if (s3Actions != null && !s3Actions.isEmpty()) {
                 ret.setActions(s3Actions);
             }
@@ -398,10 +399,7 @@ public class RangerOzoneAuthorizer implements IAccessAuthorizer {
     private static boolean isOzoneActionPolicyEnabled(final RangerBasePlugin plugin) {
         return plugin != null
                 && plugin.getServiceDef() != null
-                && ServiceDefUtil.getBooleanValue(
-                plugin.getServiceDef().getOptions(),
-                OPTION_ENABLE_ACTION_MATCHER_IN_POLICIES_CONDITION,
-                false);
+                && ServiceDefUtil.getBooleanValue(plugin.getServiceDef().getOptions(), OPTION_ENABLE_ACTION_MATCHER_IN_POLICIES_CONDITION, false);
     }
 
     /**
@@ -409,13 +407,11 @@ public class RangerOzoneAuthorizer implements IAccessAuthorizer {
      * does not enforce S3 actions (same effect as omitting actions in {@link #toRangerGrant}).
      */
     static RangerInlinePolicy sanitizeInlinePolicyForActionFlag(RangerInlinePolicy policy, RangerBasePlugin plugin) {
-        if (policy == null || isOzoneActionPolicyEnabled(plugin) || policy.getGrants() == null) {
-            return policy;
-        }
-
-        for (RangerInlinePolicy.Grant grant : policy.getGrants()) {
-            if (grant != null) {
-                grant.setActions(null);
+        if (policy != null && policy.getGrants() != null && !isOzoneActionPolicyEnabled(plugin)) {
+            for (RangerInlinePolicy.Grant grant : policy.getGrants()) {
+                if (grant != null) {
+                    grant.setActions(null);
+                }
             }
         }
 
