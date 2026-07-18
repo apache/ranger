@@ -276,8 +276,8 @@ function AccessGrantForm({
             }
           );
 
-          // Service-def conditions can be feature-flagged off (e.g. ozone action-matches).
-          // If the policy still contains such a condition, skip it here to avoid crashing.
+          // Ignore policy conditions that are not defined in the service-def.
+          // Without this guard, form initialization can fail and crash the page.
           if (conditionObj?.uiHint && !isEmpty(conditionObj.uiHint)) {
             obj.conditions[data?.type] = JSON.parse(conditionObj.uiHint)
               .isMultiValue

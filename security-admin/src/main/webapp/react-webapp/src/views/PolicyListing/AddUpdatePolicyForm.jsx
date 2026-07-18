@@ -519,9 +519,8 @@ export default function AddUpdatePolicyForm() {
             }
           );
 
-          // Service-def conditions can be feature-flagged off (e.g. ozone action-matches).
-          // If the policy still contains such a condition, skip it here to avoid crashing
-          // the form initialization (page would otherwise hang on the loader).
+          // Ignore policy conditions that are not defined in the service-def.
+          // Without this guard, form initialization can fail and leave the page on the loader.
           if (conditionObj?.uiHint && !isEmpty(conditionObj.uiHint)) {
             data.conditions[val?.type] = JSON.parse(conditionObj.uiHint)
               .isMultiValue
@@ -712,9 +711,8 @@ export default function AddUpdatePolicyForm() {
             }
           );
 
-          // Service-def conditions can be feature-flagged off (e.g. ozone action-matches).
-          // If the policy still contains such a condition, skip it here to avoid crashing
-          // the form initialization (page would otherwise hang on the loader).
+          // Ignore policy conditions that are not defined in the service-def.
+          // Without this guard, form initialization can fail and leave the page on the loader.
           if (conditionObj?.uiHint && !isEmpty(conditionObj.uiHint)) {
             obj.conditions[data?.type] = JSON.parse(conditionObj.uiHint)
               .isMultiValue
