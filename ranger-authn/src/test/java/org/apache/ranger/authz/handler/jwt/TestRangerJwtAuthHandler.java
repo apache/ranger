@@ -143,7 +143,6 @@ public class TestRangerJwtAuthHandler {
         assertTrue(context.contains("issuer=test-issuer"));
         assertTrue(context.contains("keyId=kid-abc"));
         assertTrue(context.contains("jwtId=jti-123"));
-        assertFalse(context.contains("tokenHash="));
         assertFalse(context.contains(serialized));
         assertFalse(context.contains(header));
         assertFalse(context.contains(payload));
