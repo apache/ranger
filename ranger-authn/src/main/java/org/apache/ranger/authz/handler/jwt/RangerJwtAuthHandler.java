@@ -18,6 +18,27 @@
  */
 package org.apache.ranger.authz.handler.jwt;
 
+import com.nimbusds.jose.JOSEException;
+import com.nimbusds.jose.JWSHeader;
+import com.nimbusds.jose.JWSObject;
+import com.nimbusds.jose.JWSVerifier;
+import com.nimbusds.jose.crypto.RSASSAVerifier;
+import com.nimbusds.jose.jwk.RSAKey;
+import com.nimbusds.jose.jwk.source.JWKSource;
+import com.nimbusds.jose.jwk.source.RemoteJWKSet;
+import com.nimbusds.jose.proc.BadJOSEException;
+import com.nimbusds.jose.proc.JWSKeySelector;
+import com.nimbusds.jose.proc.JWSVerificationKeySelector;
+import com.nimbusds.jose.proc.SecurityContext;
+import com.nimbusds.jose.util.X509CertUtils;
+import com.nimbusds.jwt.JWTClaimsSet;
+import com.nimbusds.jwt.SignedJWT;
+import com.nimbusds.jwt.proc.ConfigurableJWTProcessor;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.ranger.authz.handler.RangerAuthHandler;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.net.URL;
 import java.text.ParseException;
 import java.util.Arrays;
@@ -25,41 +46,25 @@ import java.util.Date;
 import java.util.List;
 import java.util.Properties;
 
-import org.apache.commons.lang3.StringUtils;
-import org.apache.hadoop.security.authentication.server.AuthenticationToken;
-import org.apache.hadoop.security.authentication.util.CertificateUtil;
-import org.apache.ranger.authz.handler.RangerAuthHandler;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.nimbusds.jose.JOSEException;
-import com.nimbusds.jose.JWSHeader;
-import com.nimbusds.jose.JWSObject;
-import com.nimbusds.jose.JWSVerifier;
-import com.nimbusds.jose.crypto.RSASSAVerifier;
-import com.nimbusds.jose.jwk.source.JWKSource;
-import com.nimbusds.jose.jwk.source.RemoteJWKSet;
-import com.nimbusds.jose.proc.BadJOSEException;
-import com.nimbusds.jose.proc.JWSKeySelector;
-import com.nimbusds.jose.proc.JWSVerificationKeySelector;
-import com.nimbusds.jose.proc.SecurityContext;
-import com.nimbusds.jwt.JWTClaimsSet;
-import com.nimbusds.jwt.SignedJWT;
-import com.nimbusds.jwt.proc.ConfigurableJWTProcessor;
-
 public abstract class RangerJwtAuthHandler implements RangerAuthHandler {
     private static final Logger LOG = LoggerFactory.getLogger(RangerJwtAuthHandler.class);
 
-    private JWSVerifier        verifier            = null;
-    private String             jwksProviderUrl     = null;
-    public static final String TYPE                = "ranger-jwt";        // Constant that identifies the authentication mechanism.
-    public static final String KEY_PROVIDER_URL    = "jwks.provider-url"; // JWKS provider URL
-    public static final String KEY_JWT_PUBLIC_KEY  = "jwt.public-key";    // JWT token provider public key
-    public static final String KEY_JWT_AUDIENCES   = "jwt.audiences";
-    public static final String JWT_AUTHZ_PREFIX    = "Bearer ";
+    public static final String      TYPE                = "ranger-jwt";        // Constant that identifies the authentication mechanism.
+    public static final String      KEY_PROVIDER_URL    = "jwks.provider-url"; // JWKS provider URL
+    public static final String      KEY_JWT_PUBLIC_KEY  = "jwt.public-key";    // JWT token provider public key
+    public static final String      KEY_JWT_AUDIENCES   = "jwt.audiences";
+    public static final String      KEY_JWT_ISS         = "jwt.issuer";
+    public static final String      JWT_AUTHZ_PREFIX    = "Bearer ";
 
-    protected List<String>               audiences = null;
-    protected JWKSource<SecurityContext> keySource = null;
+    protected List<String>               audiences;
+    protected String                     issuer;
+    protected JWKSource<SecurityContext> keySource;
+    private   JWSVerifier                 verifier;
+    private   String               jwksProviderUrl;
+
+    public static boolean shouldProceedAuth(final String authHeader) {
+        return (StringUtils.isNotBlank(authHeader) && authHeader.startsWith(JWT_AUTHZ_PREFIX));
+    }
 
     @Override
     public void initialize(final Properties config) throws Exception {
@@ -70,7 +75,7 @@ public abstract class RangerJwtAuthHandler implements RangerAuthHandler {
         // mandatory configurations
         jwksProviderUrl = config.getProperty(KEY_PROVIDER_URL);
         if (!StringUtils.isBlank(jwksProviderUrl)) {
-	    keySource = new RemoteJWKSet<>(new URL(jwksProviderUrl));
+            keySource = new RemoteJWKSet<>(new URL(jwksProviderUrl));
         }
 
         // optional configurations
@@ -78,10 +83,10 @@ public abstract class RangerJwtAuthHandler implements RangerAuthHandler {
 
         // setup JWT provider public key if configured
         if (StringUtils.isNotBlank(pemPublicKey)) {
-            verifier = new RSASSAVerifier(CertificateUtil.parseRSAPublicKey(pemPublicKey));
+            verifier = new RSASSAVerifier(RSAKey.parse(X509CertUtils.parse(pemPublicKey)));
         } else if (StringUtils.isBlank(jwksProviderUrl)) {
-	    throw new Exception("RangerJwtAuthHandler: Mandatory configs ('jwks.provider-url' & 'jwt.public-key') are missing, must provide atleast one.");
-	}
+            throw new Exception("RangerJwtAuthHandler: Mandatory configs ('jwks.provider-url' & 'jwt.public-key') are missing, must provide atleast one.");
+        }
 
         // setup audiences if configured
         String audiencesStr = config.getProperty(KEY_JWT_AUDIENCES);
@@ -89,17 +94,24 @@ public abstract class RangerJwtAuthHandler implements RangerAuthHandler {
             audiences = Arrays.asList(audiencesStr.split(","));
         }
 
+        // setup issuer if configured
+        String issuerStr = config.getProperty(KEY_JWT_ISS);
+        if (StringUtils.isNotBlank(issuerStr)) {
+            issuer = issuerStr.trim();
+        }
+
         if (LOG.isDebugEnabled()) {
             LOG.debug("<<<=== RangerJwtAuthHandler.initialize()");
         }
     }
 
-    protected AuthenticationToken authenticate(final String jwtAuthHeader) {
+    public abstract ConfigurableJWTProcessor<SecurityContext> getJwtProcessor(JWSKeySelector<SecurityContext> keySelector);
+
+    protected String authenticate(final String jwtAuthHeader) {
         if (LOG.isDebugEnabled()) {
             LOG.debug("===>>> RangerJwtAuthHandler.authenticate()");
         }
 
-        AuthenticationToken token = null;
         if (shouldProceedAuth(jwtAuthHeader)) {
             String serializedJWT = getJWT(jwtAuthHeader);
 
@@ -113,7 +125,7 @@ public abstract class RangerJwtAuthHandler implements RangerAuthHandler {
                         if (LOG.isDebugEnabled()) {
                             LOG.debug("RangerJwtAuthHandler.authenticate(): Issuing AuthenticationToken for user: [{}]", userName);
                         }
-                        token = new AuthenticationToken(userName, userName, TYPE);
+                        return userName;
                     } else {
                         LOG.warn("JWT validation failed ({})", safeJwtLogContext(jwtToken));
                     }
@@ -129,7 +141,7 @@ public abstract class RangerJwtAuthHandler implements RangerAuthHandler {
             LOG.debug("<<<=== RangerJwtAuthHandler.authenticate()");
         }
 
-        return token;
+        return null;
     }
 
     protected String getJWT(final String jwtAuthHeader) {
@@ -139,6 +151,7 @@ public abstract class RangerJwtAuthHandler implements RangerAuthHandler {
         if (StringUtils.isNotBlank(jwtAuthHeader) && jwtAuthHeader.startsWith(JWT_AUTHZ_PREFIX)) {
             serializedJWT = jwtAuthHeader.substring(JWT_AUTHZ_PREFIX.length());
         }
+
         return serializedJWT;
     }
 
@@ -155,20 +168,25 @@ public abstract class RangerJwtAuthHandler implements RangerAuthHandler {
         boolean expValid = validateExpiration(jwtToken);
         boolean sigValid = false;
         boolean audValid = false;
+        boolean issValid = false;
 
         if (expValid) {
             sigValid = validateSignature(jwtToken);
 
             if (sigValid) {
                 audValid = validateAudiences(jwtToken);
+
+                if (audValid) {
+                    issValid = validateIssuer(jwtToken);
+                }
             }
         }
 
         if (LOG.isDebugEnabled()) {
-            LOG.debug("expValid={}, sigValid={}, audValid={}", expValid, sigValid, audValid);
+            LOG.debug("expValid={}, sigValid={}, audValid={}, issValid={}", expValid, sigValid, audValid, issValid);
         }
 
-        return sigValid && audValid && expValid;
+        return sigValid && audValid && expValid && issValid;
     }
 
     /**
@@ -227,8 +245,6 @@ public abstract class RangerJwtAuthHandler implements RangerAuthHandler {
         return valid;
     }
 
-    public abstract ConfigurableJWTProcessor<SecurityContext> getJwtProcessor(final JWSKeySelector<SecurityContext> keySelector);
-
     /**
      * Validate whether any of the accepted audience claims is present in the issued
      * token claims list for audience. Override this method in subclasses in order
@@ -241,8 +257,7 @@ public abstract class RangerJwtAuthHandler implements RangerAuthHandler {
         boolean valid = false;
         try {
             List<String> tokenAudienceList = jwtToken.getJWTClaimsSet().getAudience();
-            // if there were no expected audiences configured then just
-            // consider any audience acceptable
+            // if there were no expected audiences configured then just consider any audience acceptable
             if (audiences == null) {
                 valid = true;
             } else {
@@ -261,6 +276,31 @@ public abstract class RangerJwtAuthHandler implements RangerAuthHandler {
                 if (!valid) {
                     LOG.warn("JWT audience validation failed.");
                 }
+            }
+        } catch (ParseException pe) {
+            LOG.warn("Unable to parse the JWT token.", pe);
+        }
+        return valid;
+    }
+
+    /**
+     * Validate whether issuer present in token matches configured issuer
+     * Override this method in subclasses in order
+     * to customize the issuer validation behavior.
+     *
+     * @param jwtToken the JWT token from which the JWT issuer will be obtained
+     * @return true if an expected issuer is present, otherwise false
+     */
+    protected boolean validateIssuer(final SignedJWT jwtToken) {
+        boolean valid = false;
+        try {
+            String tokenIssuer = jwtToken.getJWTClaimsSet().getIssuer();
+            // accept if no issuer was configured or the present issuer matches the configured issuer
+            if (StringUtils.isBlank(issuer) || issuer.equals(tokenIssuer)) {
+                valid = true;
+                LOG.debug("JWT token issuer has been successfully validated.");
+            } else {
+                LOG.warn("JWT issuer validation failed.");
             }
         } catch (ParseException pe) {
             LOG.warn("Unable to parse the JWT token.", pe);
@@ -290,8 +330,8 @@ public abstract class RangerJwtAuthHandler implements RangerAuthHandler {
     }
 
     /**
-     * Validate that the expiration time of the JWT token has not been violated. If
-     * it has then throw an AuthenticationException. Override this method in
+     * Validate that the expiration time of the JWT has not been violated. If
+     * it has, then throw an AuthenticationException. Override this method in
      * subclasses in order to customize the expiration validation behavior.
      *
      * @param jwtToken the token that contains the expiration date to validate
@@ -314,9 +354,5 @@ public abstract class RangerJwtAuthHandler implements RangerAuthHandler {
         }
 
         return valid;
-    }
-
-    public static boolean shouldProceedAuth(final String authHeader) {
-        return (StringUtils.isNotBlank(authHeader) && authHeader.startsWith(JWT_AUTHZ_PREFIX));
     }
 }
