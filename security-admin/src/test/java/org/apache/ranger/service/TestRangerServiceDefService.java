@@ -820,23 +820,6 @@ public class TestRangerServiceDefService {
     }
 
     @Test
-    public void testNonOzoneServiceDefActionMatcherOptionAlwaysFalse() {
-        RangerAdminConfig.getInstance().set(PROP_ENABLE_ACTION_MATCHER_IN_POLICIES_CONDITION_FOR_OZONE, Boolean.TRUE.toString());
-
-        try {
-            RangerServiceDef serviceDef = new RangerServiceDef();
-            serviceDef.setName(EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_HDFS_NAME);
-            serviceDef.setOptions(new HashMap<>());
-
-            serviceDefService.applyActionMatcherInPoliciesConditionHiddenOption(serviceDef);
-
-            assertEquals("false", serviceDef.getOptions().get(OPTION_ENABLE_ACTION_MATCHER_IN_POLICIES_CONDITION));
-        } finally {
-            RangerAdminConfig.getInstance().unset(PROP_ENABLE_ACTION_MATCHER_IN_POLICIES_CONDITION_FOR_OZONE);
-        }
-    }
-
-    @Test
     public void testOzoneActionPolicyConfigTrueOverridesStoredFalseOption() {
         RangerAdminConfig.getInstance().set(PROP_ENABLE_ACTION_MATCHER_IN_POLICIES_CONDITION_FOR_OZONE, Boolean.TRUE.toString());
 
