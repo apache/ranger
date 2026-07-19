@@ -139,7 +139,7 @@ const MyDatasetListing = () => {
             url: "gds/dataset/summary",
             params: params
           });
-          datasetList = resp.data.list;
+          datasetList = resp.data.list || [];
           totalCount = resp.data.totalCount;
         } catch (error) {
           serverError(error);

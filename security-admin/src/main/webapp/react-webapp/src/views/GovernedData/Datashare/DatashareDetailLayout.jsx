@@ -49,7 +49,6 @@ import {
   policyConditionUpdatedJSON,
   capitalizeFirstLetter
 } from "Utils/XAUtils";
-import { isPerRowCondition } from "Utils/policyConditionUtils";
 import XATableLayout from "Components/XATableLayout";
 import moment from "moment-timezone";
 import { getServiceDef } from "Utils/appState";
@@ -1243,24 +1242,18 @@ const DatashareDetailLayout = () => {
                           <div className="gds-tab-content gds-content-border px-3">
                             <div className="gds-inline-field-grp">
                               <div className="wrapper">
-                                <div
-                                  className="gds-left-inline-field"
-                                  height="30px"
-                                >
+                                <div className="gds-left-inline-field">
                                   <span className="gds-label-color">ID</span>
                                 </div>
-                                <div line-height="30px">{datashareInfo.id}</div>
+                                <div>{datashareInfo.id}</div>
                               </div>
                               <div className="wrapper">
-                                <div
-                                  className="gds-left-inline-field pl-1 fnt-14"
-                                  height="30px"
-                                >
+                                <div className="gds-left-inline-field pl-1 fnt-14">
                                   <span className="gds-label-color">
                                     Date Updated
                                   </span>
                                 </div>
-                                <div className="fnt-14" line-height="30px">
+                                <div className="fnt-14">
                                   {dateFormat(
                                     datashareInfo?.updateTime,
                                     "mm/dd/yyyy hh:MM:ss TT"
@@ -1269,15 +1262,12 @@ const DatashareDetailLayout = () => {
                               </div>
 
                               <div className="wrapper">
-                                <div
-                                  className="gds-left-inline-field pl-1 fnt-14"
-                                  line-height="30px"
-                                >
+                                <div className="gds-left-inline-field pl-1 fnt-14">
                                   <span className="gds-label-color">
                                     Date Created
                                   </span>
                                 </div>
-                                <div className="fnt-14" line-height="30px">
+                                <div className="fnt-14">
                                   {dateFormat(
                                     datashareInfo?.createTime,
                                     "mm/dd/yyyy hh:MM:ss TT"
@@ -1341,21 +1331,10 @@ const DatashareDetailLayout = () => {
                             </div>
                             {values.conditions !== undefined &&
                               Object.keys(values.conditions).map((keyName) => {
-                                if (isPerRowCondition(keyName)) {
-                                  return null;
-                                }
                                 if (
                                   values.conditions[keyName] != "" &&
                                   values.conditions[keyName] != null
                                 ) {
-                                  let conditionObj = find(
-                                    DSpolicyConditions,
-                                    function (m) {
-                                      if (m.name == keyName) {
-                                        return m;
-                                      }
-                                    }
-                                  );
                                   return (
                                     <div className="pt-3">
                                       {isObject(values.conditions[keyName]) ? (
@@ -1716,11 +1695,11 @@ const DatashareDetailLayout = () => {
                 <Modal show={confirmDeleteModal.showPopup} onHide={toggleClose}>
                   <Modal.Header closeButton>
                     <span className="text-word-break">
-                      Are you sure you want to delete shared resource &nbsp;"
+                      Are you sure you want to delete shared resource &nbsp;
                       <b>
                         {confirmDeleteModal?.sharedResourceDetails?.shareName}
                       </b>
-                      " ?
+                      ?
                     </span>
                   </Modal.Header>
                   <Modal.Footer>
@@ -1752,20 +1731,20 @@ const DatashareDetailLayout = () => {
                     <div className="p-1">
                       <div className="gds-inline-field-grp">
                         <div className="wrapper">
-                          <div className="gds-left-inline-field" height="30px">
+                          <div className="gds-left-inline-field">
                             Boolean Expression :
                           </div>
-                          <div line-height="30px">
+                          <div>
                             {conditionModalData?.conditionExpr != undefined
                               ? conditionModalData.conditionExpr
                               : ""}
                           </div>
                         </div>
                         <div className="wrapper">
-                          <div className="gds-left-inline-field" height="30px">
+                          <div className="gds-left-inline-field">
                             Access Type :
                           </div>
-                          <div line-height="30px">
+                          <div>
                             {conditionModalData?.accessTypes != undefined
                               ? conditionModalData.accessTypes.toString()
                               : ""}
@@ -1773,13 +1752,10 @@ const DatashareDetailLayout = () => {
                         </div>
                         {false && (
                           <div className="wrapper">
-                            <div
-                              className="gds-left-inline-field"
-                              height="30px"
-                            >
+                            <div className="gds-left-inline-field">
                               Row Filter :
                             </div>
-                            <div line-height="30px">
+                            <div>
                               {conditionModalData?.rowFilter != undefined
                                 ? conditionModalData.rowFilter.filterExpr
                                 : ""}
@@ -1854,8 +1830,8 @@ const DatashareDetailLayout = () => {
                 <Modal show={showDeleteDatashareModal} onHide={toggleClose}>
                   <Modal.Header closeButton>
                     <span className="text-word-break">
-                      Are you sure you want to delete datashare&nbsp;"
-                      <b>{datashareInfo?.name}</b>" ?
+                      Are you sure you want to delete datashare&nbsp;
+                      <b>{datashareInfo?.name}</b> ?
                     </span>
                   </Modal.Header>
                   <Modal.Footer>
