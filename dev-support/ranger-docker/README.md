@@ -95,12 +95,44 @@ docker compose -f docker-compose.ranger.yml -f docker-compose.ranger-hadoop.yml 
 ~~~
 #### Bring up ozone containers
 
-Set `RANGER_OZONE_ENABLE_ACTION_MATCHER=true` in `.env` **before starting Ranger Admin** so
-`ranger.servicedef.ozone.enableActionMatcherInPoliciesCondition` is enabled in admin site config.
-After the DB is initialized, changing the flag requires an admin restart; `RangerServiceDefService`
-applies the flag at runtime when serving the ozone service-def.
-Use `docker compose -f docker-compose.ranger.yml -f docker-compose.ranger-ozone.yml up -d --build --force-recreate ranger`
-to ensure the flag update takes effect.
+##### Ozone action-matcher feature flag
+
+The flag is controlled at runtime by
+`ranger.servicedef.ozone.enableActionMatcherInPoliciesCondition` in
+`ranger-admin-site.xml`. Docker maps it from
+`FF_ENAB_OZONE_ACTION_MATCHES_CONDITION` in
+`scripts/admin/ranger-admin-install-*.properties` during Admin setup.
+
+**Prerequisite:** the admin distribution must include an uncommented property
+entry in `conf.dist/ranger-admin-site.xml`. Rebuild dist before building the
+Admin image:
+
+~~~
+docker compose -f docker-compose.ranger-build.yml build
+docker compose -f docker-compose.ranger-build.yml up
+~~~
+
+**First-time setup:** set `FF_ENAB_OZONE_ACTION_MATCHES_CONDITION=true` in
+`scripts/admin/ranger-admin-install-<db>.properties`, then bring up services.
+
+**Changing the flag later** (choose one):
+
+1. Edit `FF_ENAB_OZONE_ACTION_MATCHES_CONDITION` in
+   `scripts/admin/ranger-admin-install-<db>.properties` and recreate Admin so
+   setup runs again:
+   ~~~
+   docker compose -f docker-compose.ranger.yml -f docker-compose.ranger-ozone.yml \
+     up -d --build --force-recreate ranger
+   ~~~
+   Works even if the DB already exists; setup re-runs on a fresh container.
+
+2. Edit the live value in the container's
+   `ranger-admin-site.xml` and restart Admin.
+
+`install.properties` is not re-read on restart alone — only when setup runs.
+`RangerServiceDefService` applies the site.xml value when serving the ozone
+service-def.
+
 ~~~
 ./scripts/ozone/ozone-plugin-docker-setup.sh
 docker compose -f docker-compose.ranger.yml -f docker-compose.ranger-ozone.yml up -d

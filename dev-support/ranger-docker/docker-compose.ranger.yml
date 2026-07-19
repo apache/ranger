@@ -38,7 +38,6 @@ services:
       - RANGER_DB_TYPE
       - KERBEROS_ENABLED
       - DEBUG_ADMIN=${DEBUG_ADMIN:-false}
-      - RANGER_OZONE_ENABLE_ACTION_MATCHER=${RANGER_OZONE_ENABLE_ACTION_MATCHER:-false}
       - JAVA_OPTS
     command:
       - /home/ranger/scripts/ranger.sh

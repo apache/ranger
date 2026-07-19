@@ -506,4 +506,8 @@
 		<name>xasecure.audit.jaas.Client.option.principal</name>
 		<value></value>
 	</property>
+    <property>
+        <name>ranger.servicedef.ozone.enableActionMatcherInPoliciesCondition</name>
+        <value>false</value>
+    </property>
 </configuration>
