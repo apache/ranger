@@ -19,6 +19,7 @@
 package org.apache.ranger.authz.handler.jwt;
 
 import com.nimbusds.jose.JOSEException;
+import com.nimbusds.jose.JWSHeader;
 import com.nimbusds.jose.JWSObject;
 import com.nimbusds.jose.JWSVerifier;
 import com.nimbusds.jose.crypto.RSASSAVerifier;
@@ -30,6 +31,7 @@ import com.nimbusds.jose.proc.JWSKeySelector;
 import com.nimbusds.jose.proc.JWSVerificationKeySelector;
 import com.nimbusds.jose.proc.SecurityContext;
 import com.nimbusds.jose.util.X509CertUtils;
+import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
 import com.nimbusds.jwt.proc.ConfigurableJWTProcessor;
 import org.apache.commons.lang3.StringUtils;
@@ -125,7 +127,7 @@ public abstract class RangerJwtAuthHandler implements RangerAuthHandler {
                         }
                         return userName;
                     } else {
-                        LOG.warn("RangerJwtAuthHandler.authenticate(): Validation failed for JWT token: [{}] ", jwtToken.serialize());
+                        LOG.warn("JWT validation failed ({})", safeJwtLogContext(jwtToken));
                     }
                 } catch (ParseException pe) {
                     LOG.warn("RangerJwtAuthHandler.authenticate(): Unable to parse the JWT token", pe);
@@ -260,13 +262,15 @@ public abstract class RangerJwtAuthHandler implements RangerAuthHandler {
                 valid = true;
             } else {
                 // if any of the configured audiences is found then consider it acceptable
-                for (String aud : tokenAudienceList) {
-                    if (audiences.contains(aud)) {
-                        if (LOG.isDebugEnabled()) {
-                            LOG.debug("JWT token audience has been successfully validated.");
+                if (tokenAudienceList != null) {
+                    for (String aud : tokenAudienceList) {
+                        if (audiences.contains(aud)) {
+                            if (LOG.isDebugEnabled()) {
+                                LOG.debug("JWT token audience has been successfully validated.");
+                            }
+                            valid = true;
+                            break;
                         }
-                        valid = true;
-                        break;
                     }
                 }
                 if (!valid) {
@@ -302,6 +306,27 @@ public abstract class RangerJwtAuthHandler implements RangerAuthHandler {
             LOG.warn("Unable to parse the JWT token.", pe);
         }
         return valid;
+    }
+
+    /**
+     * Build non-sensitive JWT metadata for operational logs.
+     * Never log the raw bearer token.
+     *
+     * @param jwtToken parsed JWT used to extract claim metadata
+     * @return safe diagnostic string for log output
+     */
+    protected String safeJwtLogContext(final SignedJWT jwtToken) {
+        try {
+            JWTClaimsSet claims = jwtToken.getJWTClaimsSet();
+            JWSHeader header = jwtToken.getHeader();
+            String keyId = header != null ? header.getKeyID() : null;
+            List<String> tokenAudiences = claims.getAudience();
+            String audience = tokenAudiences == null || tokenAudiences.isEmpty() ? null : StringUtils.join(tokenAudiences, ",");
+
+            return String.format("subject=%s, audience=%s, issuer=%s, keyId=%s, jwtId=%s", claims.getSubject(), audience, claims.getIssuer(), keyId, claims.getJWTID());
+        } catch (ParseException pe) {
+            return "claims_unparseable";
+        }
     }
 
     /**
