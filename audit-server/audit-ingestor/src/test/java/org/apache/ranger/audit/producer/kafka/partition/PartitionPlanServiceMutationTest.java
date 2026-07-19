@@ -19,16 +19,18 @@ package org.apache.ranger.audit.producer.kafka.partition;
 
 import org.apache.ranger.audit.producer.kafka.partition.exception.PartitionPlanConflictException;
 import org.apache.ranger.audit.producer.kafka.partition.exception.PartitionPlanException;
-import org.apache.ranger.audit.producer.kafka.partition.model.OnboardPlugin;
+import org.apache.ranger.audit.producer.kafka.partition.model.OnboardService;
 import org.apache.ranger.audit.producer.kafka.partition.model.PartitionPlan;
+import org.apache.ranger.audit.producer.kafka.partition.model.PartitionPlanReplacement;
+import org.apache.ranger.audit.producer.kafka.partition.model.PluginPartitionAssignment;
+import org.apache.ranger.audit.producer.kafka.partition.model.PluginScale;
+import org.apache.ranger.audit.producer.kafka.partition.model.PromotePlugin;
 import org.apache.ranger.audit.producer.kafka.partition.model.ServiceAllowlistEntry;
-import org.apache.ranger.audit.producer.kafka.partition.model.UpdatePlugin;
 import org.apache.ranger.audit.server.AuditServerConstants;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -36,7 +38,6 @@ import java.util.Properties;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertIterableEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -57,59 +58,46 @@ public class PartitionPlanServiceMutationTest {
     }
 
     @Test
-    public void testOnboardPluginPublishesNextVersion() throws Exception {
+    public void testPromotePluginPublishesNextVersion() throws Exception {
         MutableRegistry registry = new MutableRegistry(initialPlan);
         PartitionPlanService service = service(registry, new NoOpAuditTopicPartitionGrower());
 
-        PartitionPlan result = service.onboardPlugin(new OnboardPlugin("trino", 3, 1, trinoServices()), "ops");
+        PartitionPlan result = service.promotePlugin(new PromotePlugin("trino", 3, 1), "ops");
 
         assertEquals(2, result.getVersion());
         assertEquals(2, registry.getPlan().getVersion());
         assertIterableEquals(List.of(6, 7, 8), result.getPlugins().get("trino").getPartitions());
-        assertEquals("trino", result.getServices().get("dev_trino").getPluginId());
         assertEquals(1, registry.getWriteCount());
         assertEquals(result, PartitionPlanHolder.getInstance().getPlan());
     }
 
     @Test
-    public void testOnboardPluginWithMultipleServices() throws Exception {
+    public void testMergePlanAddsNewPluginOnly() throws Exception {
         MutableRegistry registry = new MutableRegistry(initialPlan);
         PartitionPlanService service = service(registry, new NoOpAuditTopicPartitionGrower());
-        Map<String, ServiceAllowlistEntry> services = new LinkedHashMap<>();
-        services.put("dev_hive", ServiceAllowlistEntry.ofUsers("hive"));
-        services.put("dev_hive2", ServiceAllowlistEntry.ofUsers("hive2"));
+        PartitionPlanReplacement request = new PartitionPlanReplacement(
+                1,
+                null,
+                Map.of("trino", PluginPartitionAssignment.of(6, 7, 8)),
+                null,
+                null,
+                null);
 
-        PartitionPlan result = service.onboardPlugin(new OnboardPlugin("trino", 3, 1, services), "ops");
+        PartitionPlan result = service.mergePartitionPlan(request, "ops");
 
         assertEquals(2, result.getVersion());
-        assertEquals("trino", result.getServices().get("dev_hive").getPluginId());
-        assertEquals("trino", result.getServices().get("dev_hive2").getPluginId());
+        assertIterableEquals(List.of(0, 1, 2), result.getPlugins().get("hdfs").getPartitions());
+        assertIterableEquals(List.of(3, 4, 5), result.getPlugins().get("hiveServer2").getPartitions());
+        assertIterableEquals(List.of(6, 7, 8), result.getPlugins().get("trino").getPartitions());
+        assertIterableEquals(List.of(9, 10, 11, 12, 13, 14), result.getBuffer().getPartitions());
     }
 
     @Test
-    public void testUpdatePluginAddsAndRemovesServices() throws Exception {
-        MutableRegistry registry = new MutableRegistry(initialPlan);
-        PartitionPlanService service = service(registry, new NoOpAuditTopicPartitionGrower());
-        Map<String, ServiceAllowlistEntry> services = new LinkedHashMap<>();
-        services.put("dev_hive", ServiceAllowlistEntry.ofUsers("hive"));
-        services.put("dev_hive2", ServiceAllowlistEntry.ofUsers("hive2"));
-        PartitionPlan onboarded = service.onboardPlugin(new OnboardPlugin("trino", 3, 1, services), "ops");
-
-        UpdatePlugin update = new UpdatePlugin(onboarded.getVersion(), null, Map.of("dev_hive3", ServiceAllowlistEntry.ofUsers("hive3")), null, List.of("dev_hive2"));
-        PartitionPlan updated = service.updatePlugin("trino", update, "ops");
-
-        assertEquals(3, updated.getVersion());
-        assertTrue(updated.getServices().containsKey("dev_hive"));
-        assertTrue(updated.getServices().containsKey("dev_hive3"));
-        assertFalse(updated.getServices().containsKey("dev_hive2"));
-    }
-
-    @Test
-    public void testUpdatePluginScalesViaAdditionalPartitions() throws Exception {
+    public void testScalePluginAppendsTailPartitionsViaDedicatedEndpoint() throws Exception {
         MutableRegistry registry = new MutableRegistry(initialPlan);
         PartitionPlanService service = service(registry, new NoOpAuditTopicPartitionGrower());
 
-        PartitionPlan result = service.updatePlugin("hiveServer2", new UpdatePlugin(1, 2, null, null, null), "ops");
+        PartitionPlan result = service.scalePlugin("hiveServer2", new PluginScale(2, 1), "ops");
 
         assertEquals(2, result.getVersion());
         assertEquals(17, result.getTopicPartitionCount());
@@ -117,59 +105,119 @@ public class PartitionPlanServiceMutationTest {
     }
 
     @Test
-    public void testOnboardPluginRejectsEmptyServicesMap() {
+    public void testScalePluginViaPatchPluginScales() throws Exception {
         MutableRegistry registry = new MutableRegistry(initialPlan);
         PartitionPlanService service = service(registry, new NoOpAuditTopicPartitionGrower());
+        PartitionPlanReplacement request = new PartitionPlanReplacement(1, null, null, null, null, Map.of("hiveServer2", 2));
 
-        PartitionPlanException error = assertThrows(PartitionPlanException.class,
-                () -> service.onboardPlugin(new OnboardPlugin("trino", 3, 1, Collections.emptyMap()), "ops"));
+        PartitionPlan result = service.mergePartitionPlan(request, "ops");
 
-        assertTrue(error.getMessage().contains("services are required"));
+        assertEquals(2, result.getVersion());
+        assertEquals(17, result.getTopicPartitionCount());
+        assertIterableEquals(List.of(3, 4, 5, 15, 16), result.getPlugins().get("hiveServer2").getPartitions());
     }
 
     @Test
-    public void testOnboardPluginRejectsMissingServices() {
-        MutableRegistry registry = new MutableRegistry(initialPlan);
+    public void testEnsurePluginOnboardedPromotesUnknownPlugin() throws Exception {
+        PartitionPlan bufferOnlyPlan = PartitionPlanBootstrap.createInitialPlan(
+                PartitionPlanBootstrapConfig.create(TOPIC, new String[0], 3, 9));
+        MutableRegistry registry = new MutableRegistry(bufferOnlyPlan);
         PartitionPlanService service = service(registry, new NoOpAuditTopicPartitionGrower());
 
-        PartitionPlanException error = assertThrows(PartitionPlanException.class,
-                () -> service.onboardPlugin(new OnboardPlugin("trino", 3, 1), "ops"));
+        service.ensurePluginOnboarded("dev_hdfs", "hdfs", "hdfs");
 
-        assertTrue(error.getMessage().contains("services are required"));
+        PartitionPlan result = PartitionPlanHolder.getInstance().getPlan();
+        assertEquals(2, result.getVersion());
+        assertTrue(result.getPlugins().containsKey("hdfs"));
+        assertIterableEquals(List.of("hdfs"), result.getServices().get("dev_hdfs").getAllowedUsers());
     }
 
     @Test
-    public void testOnboardPluginRejectsBlankPluginId() {
+    public void testMergePlanRejectsExistingPluginDelta() {
+        MutableRegistry registry = new MutableRegistry(initialPlan);
+        PartitionPlanService service = service(registry, new NoOpAuditTopicPartitionGrower());
+        PartitionPlanReplacement request = new PartitionPlanReplacement(
+                1,
+                null,
+                Map.of("hiveServer2", PluginPartitionAssignment.of(3, 4, 5, 15, 16)),
+                null,
+                null,
+                null);
+
+        PartitionPlanException error = assertThrows(PartitionPlanException.class,
+                () -> service.mergePartitionPlan(request, "ops"));
+
+        assertTrue(error.getMessage().contains("different partition assignment"));
+    }
+
+    @Test
+    public void testMergePlanCanAddServices() throws Exception {
+        MutableRegistry registry = new MutableRegistry(initialPlan);
+        PartitionPlanService service = service(registry, new NoOpAuditTopicPartitionGrower());
+        Map<String, ServiceAllowlistEntry> services = new LinkedHashMap<>();
+        services.put("dev_new_hive", ServiceAllowlistEntry.ofUsers("hive"));
+        PartitionPlanReplacement request = new PartitionPlanReplacement(1, null, null, null, services, null);
+
+        PartitionPlan result = service.mergePartitionPlan(request, "ops");
+
+        assertEquals(2, result.getVersion());
+        assertIterableEquals(List.of("hive"), result.getServices().get("dev_new_hive").getAllowedUsers());
+    }
+
+    @Test
+    public void testPromotePluginRejectsBlankPluginId() {
         MutableRegistry registry = new MutableRegistry(initialPlan);
         PartitionPlanService service = service(registry, new NoOpAuditTopicPartitionGrower());
 
         PartitionPlanException error = assertThrows(PartitionPlanException.class,
-                () -> service.onboardPlugin(new OnboardPlugin("  ", 3, 1), "ops"));
+                () -> service.promotePlugin(new PromotePlugin("  ", 3, 1), "ops"));
 
         assertTrue(error.getMessage().contains("pluginId"));
     }
 
     @Test
-    public void testUpdatePluginRejectsInvalidAdditionalPartitions() {
+    public void testScalePluginRejectsInvalidAdditionalPartitions() {
         MutableRegistry registry = new MutableRegistry(initialPlan);
         PartitionPlanService service = service(registry, new NoOpAuditTopicPartitionGrower());
 
         PartitionPlanException error = assertThrows(PartitionPlanException.class,
-                () -> service.updatePlugin("hiveServer2", new UpdatePlugin(1, 0, null, null, null), "ops"));
+                () -> service.scalePlugin("hiveServer2", new PluginScale(0, 1), "ops"));
 
         assertTrue(error.getMessage().contains("additionalPartitions"));
     }
 
     @Test
-    public void testOnboardPluginRejectsServiceWithoutAllowedUsers() {
+    public void testOnboardServiceRejectsMissingAllowedUsers() {
         MutableRegistry registry = new MutableRegistry(initialPlan);
         PartitionPlanService service = service(registry, new NoOpAuditTopicPartitionGrower());
-        Map<String, ServiceAllowlistEntry> services = Map.of("dev_trino", ServiceAllowlistEntry.ofUsers(List.of()));
 
         PartitionPlanException error = assertThrows(PartitionPlanException.class,
-                () -> service.onboardPlugin(new OnboardPlugin("trino", 3, 1, services), "ops"));
+                () -> service.onboardService(new OnboardService("dev_trino", "trino", 3, List.of(), 1), "ops"));
 
         assertTrue(error.getMessage().contains("allowedUsers"));
+    }
+
+    @Test
+    public void testOnboardRepoPromotesPluginAndUpsertsAllowlist() throws Exception {
+        MutableRegistry registry = new MutableRegistry(initialPlan);
+        PartitionPlanService service = service(registry, new NoOpAuditTopicPartitionGrower());
+
+        PartitionPlan result = service.onboardService(new OnboardService("dev_trino", "trino", 3, List.of("trino"), 1), "ops");
+
+        assertEquals(2, result.getVersion());
+        assertIterableEquals(List.of(6, 7, 8), result.getPlugins().get("trino").getPartitions());
+        assertIterableEquals(List.of("trino"), result.getServices().get("dev_trino").getAllowedUsers());
+    }
+
+    @Test
+    public void testPromoteWithAllowlistUpsertsServices() throws Exception {
+        MutableRegistry registry = new MutableRegistry(initialPlan);
+        PartitionPlanService service = service(registry, new NoOpAuditTopicPartitionGrower());
+
+        PartitionPlan result = service.promotePlugin(new PromotePlugin("trino", 3, 1, "dev_trino", List.of("trino")), "ops");
+
+        assertEquals(2, result.getVersion());
+        assertIterableEquals(List.of("trino"), result.getServices().get("dev_trino").getAllowedUsers());
     }
 
     @Test
@@ -178,7 +226,7 @@ public class PartitionPlanServiceMutationTest {
         PartitionPlanService service = service(registry, new NoOpAuditTopicPartitionGrower());
 
         PartitionPlanConflictException conflict = assertThrows(PartitionPlanConflictException.class,
-                () -> service.onboardPlugin(new OnboardPlugin("trino", 3, 99, trinoServices()), "ops"));
+                () -> service.promotePlugin(new PromotePlugin("trino", 3, 99), "ops"));
 
         assertEquals(initialPlan, conflict.getCurrentPlan());
         assertEquals(0, registry.getWriteCount());
@@ -201,7 +249,7 @@ public class PartitionPlanServiceMutationTest {
         PartitionPlanService service = service(registry, new NoOpAuditTopicPartitionGrower());
 
         PartitionPlanConflictException conflict = assertThrows(PartitionPlanConflictException.class,
-                () -> service.onboardPlugin(new OnboardPlugin("trino", 3, 1, trinoServices()), "ops"));
+                () -> service.promotePlugin(new PromotePlugin("trino", 3, 1), "ops"));
 
         assertEquals(peerPlan, conflict.getCurrentPlan());
         assertEquals(0, registry.getWriteCount());
@@ -213,7 +261,7 @@ public class PartitionPlanServiceMutationTest {
         PartitionPlanService service = service(registry, new FailingAuditTopicPartitionGrower());
 
         PartitionPlanException error = assertThrows(PartitionPlanException.class,
-                () -> service.onboardPlugin(new OnboardPlugin("trino", 12, 1, trinoServices()), "ops"));
+                () -> service.promotePlugin(new PromotePlugin("trino", 12, 1), "ops"));
 
         assertTrue(error.getMessage().contains("grow audit topic"));
         assertEquals(0, registry.getWriteCount());
@@ -223,14 +271,13 @@ public class PartitionPlanServiceMutationTest {
     public void testDuplicateOnboardReturnsCurrentPlanWithoutWrite() throws Exception {
         MutableRegistry registry = new MutableRegistry(initialPlan);
         PartitionPlanService service = service(registry, new NoOpAuditTopicPartitionGrower());
-        Map<String, ServiceAllowlistEntry> services = Map.of("dev_trino", ServiceAllowlistEntry.ofUsers("trino"));
-        OnboardPlugin request = new OnboardPlugin("trino", 3, 1, services);
+        OnboardService request = new OnboardService("dev_trino", "trino", 3, List.of("trino"), 1);
 
-        PartitionPlan first = service.onboardPlugin(request, "ops");
+        PartitionPlan first = service.onboardService(request, "ops");
         assertEquals(1, registry.getWriteCount());
 
-        OnboardPlugin retry = new OnboardPlugin("trino", 3, first.getVersion(), services);
-        PartitionPlan second = service.onboardPlugin(retry, "ops");
+        OnboardService retry = new OnboardService("dev_trino", "trino", 3, List.of("trino"), first.getVersion());
+        PartitionPlan second = service.onboardService(retry, "ops");
 
         assertEquals(first, second);
         assertEquals(2, second.getVersion());
@@ -238,22 +285,77 @@ public class PartitionPlanServiceMutationTest {
     }
 
     @Test
-    public void testUpdatePluginStillAppendsOnRepeatScale() throws Exception {
+    public void testDuplicatePromoteReturnsCurrentPlanWithoutWrite() throws Exception {
+        MutableRegistry registry = new MutableRegistry(initialPlan);
+        PartitionPlanService service = service(registry, new NoOpAuditTopicPartitionGrower());
+        PromotePlugin request = new PromotePlugin("trino", 3, 1);
+
+        PartitionPlan first = service.promotePlugin(request, "ops");
+        assertEquals(1, registry.getWriteCount());
+
+        PromotePlugin retry = new PromotePlugin("trino", 3, first.getVersion());
+        PartitionPlan second = service.promotePlugin(retry, "ops");
+
+        assertEquals(first, second);
+        assertEquals(2, second.getVersion());
+        assertEquals(1, registry.getWriteCount());
+    }
+
+    @Test
+    public void testPromoteConflictWhenPartitionCountDiffers() {
+        MutableRegistry registry = new MutableRegistry(initialPlan);
+        PartitionPlanService service = service(registry, new NoOpAuditTopicPartitionGrower());
+        service.promotePlugin(new PromotePlugin("trino", 3, 1), "ops");
+
+        PartitionPlanException error = assertThrows(PartitionPlanException.class,
+                () -> service.promotePlugin(new PromotePlugin("trino", 5, 2), "ops"));
+
+        assertTrue(error.getMessage().contains("requested 5"));
+        assertEquals(1, registry.getWriteCount());
+    }
+
+    @Test
+    public void testMergePlanNoOpWhenServicesUnchanged() throws Exception {
+        MutableRegistry registry = new MutableRegistry(initialPlan);
+        PartitionPlanService service = service(registry, new NoOpAuditTopicPartitionGrower());
+        Map<String, ServiceAllowlistEntry> services = new LinkedHashMap<>();
+        services.put("dev_hive", ServiceAllowlistEntry.ofUsers("hive"));
+        service.mergePartitionPlan(new PartitionPlanReplacement(1, null, null, null, services, null), "ops");
+        assertEquals(1, registry.getWriteCount());
+
+        PartitionPlan result = service.mergePartitionPlan(new PartitionPlanReplacement(2, null, null, null, services, null), "ops");
+
+        assertEquals(2, result.getVersion());
+        assertEquals(1, registry.getWriteCount());
+    }
+
+    @Test
+    public void testMergePlanStillAppliesWhenServicesChange() throws Exception {
+        MutableRegistry registry = new MutableRegistry(initialPlan);
+        PartitionPlanService service = service(registry, new NoOpAuditTopicPartitionGrower());
+        Map<String, ServiceAllowlistEntry> services = new LinkedHashMap<>();
+        services.put("dev_new_hive", ServiceAllowlistEntry.ofUsers("hive"));
+        PartitionPlanReplacement request = new PartitionPlanReplacement(1, null, null, null, services, null);
+
+        PartitionPlan result = service.mergePartitionPlan(request, "ops");
+
+        assertEquals(2, result.getVersion());
+        assertEquals(1, registry.getWriteCount());
+    }
+
+    @Test
+    public void testScalePluginStillAppendsOnRepeat() throws Exception {
         MutableRegistry registry = new MutableRegistry(initialPlan);
         PartitionPlanService service = service(registry, new NoOpAuditTopicPartitionGrower());
 
-        service.updatePlugin("hiveServer2", new UpdatePlugin(1, 2, null, null, null), "ops");
+        service.scalePlugin("hiveServer2", new PluginScale(2, 1), "ops");
         assertEquals(1, registry.getWriteCount());
 
-        PartitionPlan second = service.updatePlugin("hiveServer2", new UpdatePlugin(2, 2, null, null, null), "ops");
+        PartitionPlan second = service.scalePlugin("hiveServer2", new PluginScale(2, 2), "ops");
 
         assertEquals(3, second.getVersion());
         assertEquals(2, registry.getWriteCount());
         assertIterableEquals(List.of(3, 4, 5, 15, 16, 17, 18), second.getPlugins().get("hiveServer2").getPartitions());
-    }
-
-    private static Map<String, ServiceAllowlistEntry> trinoServices() {
-        return Map.of("dev_trino", ServiceAllowlistEntry.ofUsers("trino"));
     }
 
     private static PartitionPlanService service(MutableRegistry registry, KafkaAuditTopicPartitionGrower topicGrower) {

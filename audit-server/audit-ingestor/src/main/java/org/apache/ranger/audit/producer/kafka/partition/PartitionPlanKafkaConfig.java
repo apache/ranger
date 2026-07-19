@@ -26,11 +26,8 @@ import org.apache.ranger.audit.provider.MiscUtil;
 import org.apache.ranger.audit.server.AuditServerConstants;
 import org.apache.ranger.audit.utils.AuditMessageQueueUtils;
 
-import java.util.Collections;
-import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Properties;
-import java.util.Set;
 
 /** Kafka client settings for the partition-plan registry topic. */
 public class PartitionPlanKafkaConfig {
@@ -47,40 +44,17 @@ public class PartitionPlanKafkaConfig {
         return MiscUtil.getBooleanProperty(props, propPrefix + "." + AuditServerConstants.PROP_PARTITION_PLAN_DYNAMIC_ENABLED, false);
     }
 
-    /** Resolves short usernames allowed to call partition-plan admin REST (empty = any authenticated principal). */
-    public static Set<String> resolvePartitionPlanAdminUsers(Properties props, String propPrefix) {
-        Set<String>             ret       = Collections.emptySet();
-        String                  configured = MiscUtil.getStringProperty(props, propPrefix + "." + AuditServerConstants.PROP_PARTITION_PLAN_ALLOWED_USERS, "");
-
-        if (configured != null && !configured.isBlank()) {
-            Set<String> users = new LinkedHashSet<>();
-
-            for (String user : configured.split(",")) {
-                if (user != null && !user.isBlank()) {
-                    users.add(user.trim());
-                }
-            }
-            ret = users;
-        }
-
-        return ret;
-    }
-
     /** Returns whether the Kafka producer partitioner should use the in-memory dynamic plan. */
     public static boolean isDynamicPartitionPlanEnabled(Map<String, ?> configs, String ingestorPropPrefix) {
-        boolean     ret = false;
-        String      key = ingestorPropPrefix + "." + AuditServerConstants.PROP_PARTITION_PLAN_DYNAMIC_ENABLED;
-        Object      val = configs.get(key);
-
-        if (val != null) {
-            if (val instanceof Boolean) {
-                ret = (Boolean) val;
-            } else {
-                ret = Boolean.parseBoolean(val.toString());
-            }
+        String key = ingestorPropPrefix + "." + AuditServerConstants.PROP_PARTITION_PLAN_DYNAMIC_ENABLED;
+        Object val = configs.get(key);
+        if (val == null) {
+            return false;
         }
-
-        return ret;
+        if (val instanceof Boolean) {
+            return (Boolean) val;
+        }
+        return Boolean.parseBoolean(val.toString());
     }
 
     /** Resolves how often each ingestor pod reloads the plan from Kafka. */

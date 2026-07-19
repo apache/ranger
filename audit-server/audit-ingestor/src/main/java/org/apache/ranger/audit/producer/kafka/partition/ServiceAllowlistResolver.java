@@ -47,24 +47,16 @@ public class ServiceAllowlistResolver {
      * @param holder partition-plan registry; per-repo {@code services[serviceName].allowedUsers}
      */
     public static boolean isAllowedServiceUser(String serviceName, String userName, boolean dynamicPartitionPlanEnabled, PartitionPlanHolder holder, Map<String, Set<String>> staticAllowedUsersByService) {
-        boolean ret = false;
-
-        if (!StringUtils.isBlank(serviceName) && !StringUtils.isBlank(userName)) {
-            if (dynamicPartitionPlanEnabled && holder != null) {
-                Set<String> registryUsers = holder.getAllowedUsersForService(serviceName);
-
-                if (registryUsers != null) {
-                    ret = registryUsers.contains(userName);
-                } else {
-                    Set<String> allowedUsers = staticAllowedUsersByService != null ? staticAllowedUsersByService.get(serviceName) : null;
-                    ret = allowedUsers != null && allowedUsers.contains(userName);
-                }
-            } else {
-                Set<String> allowedUsers = staticAllowedUsersByService != null ? staticAllowedUsersByService.get(serviceName) : null;
-                ret = allowedUsers != null && allowedUsers.contains(userName);
+        if (StringUtils.isBlank(serviceName) || StringUtils.isBlank(userName)) {
+            return false;
+        }
+        if (dynamicPartitionPlanEnabled && holder != null) {
+            Set<String> registryUsers = holder.getAllowedUsersForService(serviceName);
+            if (registryUsers != null) {
+                return registryUsers.contains(userName);
             }
         }
-
-        return ret;
+        Set<String> allowedUsers = staticAllowedUsersByService != null ? staticAllowedUsersByService.get(serviceName) : null;
+        return allowedUsers != null && allowedUsers.contains(userName);
     }
 }

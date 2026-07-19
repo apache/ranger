@@ -22,77 +22,61 @@ package org.apache.ranger.audit.producer.kafka.partition;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.ranger.audit.producer.kafka.partition.constants.PartitionPlanConstants;
 import org.apache.ranger.audit.producer.kafka.partition.exception.PartitionPlanException;
-import org.apache.ranger.audit.producer.kafka.partition.model.OnboardPlugin;
-import org.apache.ranger.audit.producer.kafka.partition.model.ServiceAllowlistEntry;
-import org.apache.ranger.audit.producer.kafka.partition.model.UpdatePlugin;
+import org.apache.ranger.audit.producer.kafka.partition.model.OnboardService;
+import org.apache.ranger.audit.producer.kafka.partition.model.PartitionPlanReplacement;
+import org.apache.ranger.audit.producer.kafka.partition.model.PluginScale;
+import org.apache.ranger.audit.producer.kafka.partition.model.PromotePlugin;
 
 import java.util.List;
-import java.util.Map;
 
 /** Validates partition-plan REST mutation request bodies before registry writes. */
 public class PartitionPlanRequestValidator {
     private PartitionPlanRequestValidator() {
     }
 
-    public static void validateOnboardPlugin(OnboardPlugin onboardPluginRequest) {
-        if (onboardPluginRequest == null) {
-            throw new PartitionPlanException("Onboard plugin request is required");
+    public static void validatePatchRequest(PartitionPlanReplacement partitionPlanUpdate) {
+        if (partitionPlanUpdate == null) {
+            throw new PartitionPlanException("Partition plan patch request is required");
         }
-        validateNonBlankPluginId(onboardPluginRequest.getPluginId());
-        validatePositiveCount(onboardPluginRequest.getPartitionCount(), "partitionCount");
-        validateExpectedVersion(onboardPluginRequest.getExpectedVersion());
-        validateRequiredServiceEntries(onboardPluginRequest.getServices());
+        validateExpectedVersion(partitionPlanUpdate.getExpectedVersion());
+        if (!partitionPlanUpdate.hasMergeDelta()) {
+            throw new PartitionPlanException(
+                    "At least one of topicPartitionCount, plugins, buffer, services, or pluginScales must be provided");
+        }
     }
 
-    public static void validateUpdatePlugin(String pluginId, UpdatePlugin updatePluginRequest) {
-        if (updatePluginRequest == null) {
-            throw new PartitionPlanException("Update plugin request is required");
+    public static void validatePromotePlugin(PromotePlugin promotePluginRequest) {
+        if (promotePluginRequest == null) {
+            throw new PartitionPlanException("Promote plugin request is required");
+        }
+        validateNonBlankPluginId(promotePluginRequest.getPluginId());
+        validatePositiveCount(promotePluginRequest.getPartitionCount(), "partitionCount");
+        validateExpectedVersion(promotePluginRequest.getExpectedVersion());
+        if (StringUtils.isNotBlank(promotePluginRequest.getRepo())
+                && (promotePluginRequest.getAllowedUsers() == null
+                || promotePluginRequest.getAllowedUsers().isEmpty())) {
+            throw new PartitionPlanException("allowedUsers are required when repo is specified");
+        }
+    }
+
+    public static void validateScalePlugin(String pluginId, PluginScale scalePlugin) {
+        if (scalePlugin == null) {
+            throw new PartitionPlanException("Plugin scale request is required");
         }
         validateNonBlankPluginId(pluginId);
-        validateExpectedVersion(updatePluginRequest.getExpectedVersion());
-        if (!updatePluginRequest.hasMutationDelta()) {
-            throw new PartitionPlanException("At least one of additionalPartitions, addServices, updateServices, or removeServices must be provided");
-        }
-        Integer additionalPartitions = updatePluginRequest.getAdditionalPartitions();
-        if (additionalPartitions != null && additionalPartitions < 1) {
-            throw new PartitionPlanException("additionalPartitions must be >= 1");
-        }
-        validateOptionalServiceEntries(updatePluginRequest.getAddServices());
-        validateOptionalServiceEntries(updatePluginRequest.getUpdateServices());
-        validateRemoveServiceNames(updatePluginRequest.getRemoveServices());
+        validatePositiveCount(scalePlugin.getAdditionalPartitions(), "additionalPartitions");
+        validateExpectedVersion(scalePlugin.getExpectedVersion());
     }
 
-    private static void validateRequiredServiceEntries(Map<String, ServiceAllowlistEntry> services) {
-        if (services == null || services.isEmpty()) {
-            throw new PartitionPlanException("services are required");
+    public static void validateOnboardService(OnboardService onboardServiceRequest) {
+        if (onboardServiceRequest == null) {
+            throw new PartitionPlanException("Onboard service request is required");
         }
-        validateServiceEntries(services);
-    }
-
-    private static void validateOptionalServiceEntries(Map<String, ServiceAllowlistEntry> services) {
-        if (services == null || services.isEmpty()) {
-            return;
-        }
-        validateServiceEntries(services);
-    }
-
-    private static void validateServiceEntries(Map<String, ServiceAllowlistEntry> services) {
-        for (Map.Entry<String, ServiceAllowlistEntry> entry : services.entrySet()) {
-            validateNonBlankServiceName(entry.getKey());
-            if (entry.getValue() == null) {
-                throw new PartitionPlanException("Service allowlist entry is required for '" + entry.getKey() + "'");
-            }
-            validateNonEmptyAllowedUsers(entry.getValue().getAllowedUsers());
-        }
-    }
-
-    private static void validateRemoveServiceNames(List<String> removeServices) {
-        if (removeServices == null || removeServices.isEmpty()) {
-            return;
-        }
-        for (String serviceName : removeServices) {
-            validateNonBlankServiceName(serviceName);
-        }
+        validateNonBlankServiceName(onboardServiceRequest.getServiceName());
+        validateNonBlankPluginId(onboardServiceRequest.getPluginId());
+        validatePositiveCount(onboardServiceRequest.getPartitionCount(), "partitionCount");
+        validateNonEmptyAllowedUsers(onboardServiceRequest.getAllowedUsers());
+        validateExpectedVersion(onboardServiceRequest.getExpectedVersion());
     }
 
     private static void validateExpectedVersion(int expectedVersion) {
@@ -123,17 +107,13 @@ public class PartitionPlanRequestValidator {
         if (allowedUsers == null || allowedUsers.isEmpty()) {
             throw new PartitionPlanException("allowedUsers are required");
         }
-
         boolean hasNonBlankUser = false;
-
         for (String allowedUserShortName : allowedUsers) {
             if (StringUtils.isNotBlank(allowedUserShortName)) {
                 hasNonBlankUser = true;
-
                 break;
             }
         }
-
         if (!hasNonBlankUser) {
             throw new PartitionPlanException("allowedUsers must contain at least one non-blank username");
         }

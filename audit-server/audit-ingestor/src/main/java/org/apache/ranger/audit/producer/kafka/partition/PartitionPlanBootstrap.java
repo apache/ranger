@@ -100,12 +100,21 @@ public class PartitionPlanBootstrap {
         }
 
         registry.writePlan(auditTopic, localPlan);
-        plan = registry.readPlan(auditTopic);
-        if (plan == null) {
-            LOG.error("Mandatory read-back failed after publishing initial bootstrap plan for audit topic '{}'", auditTopic);
-            throw new PartitionPlanException("Mandatory read-back failed after publishing bootstrap plan for audit topic '" + auditTopic + "'");
+        long readBackDeadlineMs = System.currentTimeMillis() + 30_000L;
+        while (System.currentTimeMillis() < readBackDeadlineMs) {
+            plan = registry.readPlan(auditTopic);
+            if (plan != null) {
+                LOG.info("Bootstrap partition plan version {} published and read back for audit topic '{}'", plan.getVersion(), auditTopic);
+                return plan;
+            }
+            try {
+                Thread.sleep(500L);
+            } catch (InterruptedException ie) {
+                Thread.currentThread().interrupt();
+                break;
+            }
         }
-        LOG.info("Bootstrap partition plan version {} published and read back for audit topic '{}'", plan.getVersion(), auditTopic);
-        return plan;
+        LOG.error("Mandatory read-back failed after publishing initial bootstrap plan for audit topic '{}'", auditTopic);
+        throw new PartitionPlanException("Mandatory read-back failed after publishing bootstrap plan for audit topic '" + auditTopic + "'");
     }
 }

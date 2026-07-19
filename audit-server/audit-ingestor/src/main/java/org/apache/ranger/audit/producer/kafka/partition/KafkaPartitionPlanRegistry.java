@@ -104,15 +104,26 @@ public class KafkaPartitionPlanRegistry implements PartitionPlanRegistry {
         consumer.seekToBeginning(Collections.singletonList(partition));
 
         PartitionPlan latest = null;
-        ConsumerRecords<String, String> records;
-        do {
-            records = consumer.poll(Duration.ofMillis(consumerPollTimeoutMs));
+        long deadlineMs = System.currentTimeMillis() + Math.max(consumerPollTimeoutMs * 20L, 10_000L);
+
+        while (System.currentTimeMillis() < deadlineMs) {
+            ConsumerRecords<String, String> records = consumer.poll(Duration.ofMillis(consumerPollTimeoutMs));
             for (ConsumerRecord<String, String> record : records) {
                 if (auditTopicKey.equals(record.key())) {
                     latest = PartitionPlan.fromJson(record.value());
                 }
             }
-        } while (!records.isEmpty());
+            if (records.isEmpty()) {
+                long endOffset = consumer.endOffsets(Collections.singletonList(partition)).get(partition);
+                long position  = consumer.position(partition);
+                if (position >= endOffset) {
+                    if (latest != null) {
+                        break;
+                    }
+                    // Producer write may not be visible at log end yet (mandatory read-back path).
+                }
+            }
+        }
         return latest;
     }
 

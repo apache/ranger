@@ -28,6 +28,7 @@ import org.apache.ranger.audit.producer.kafka.partition.PartitionPlanValidator;
 import org.apache.ranger.audit.producer.kafka.partition.exception.PartitionPlanException;
 import org.apache.ranger.audit.provider.MiscUtil;
 
+import java.io.Serializable;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -35,7 +36,7 @@ import java.util.Objects;
 
 @JsonAutoDetect(getterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE, fieldVisibility = Visibility.ANY)
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class PartitionPlan implements java.io.Serializable {
+public class PartitionPlan implements Serializable {
     private final String topic;
     private final int version;
     private final int topicPartitionCount;

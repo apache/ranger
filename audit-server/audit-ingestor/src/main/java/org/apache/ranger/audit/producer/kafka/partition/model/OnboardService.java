@@ -27,35 +27,28 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.io.Serializable;
 import java.util.Collections;
-import java.util.LinkedHashMap;
-import java.util.Map;
+import java.util.List;
 
-/** Request body for POST /api/audit/partition-plan/plugins. {@code services} is required (non-empty) at validation. */
 @JsonAutoDetect(getterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE, fieldVisibility = Visibility.ANY)
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class OnboardPlugin implements Serializable {
+public class OnboardService implements Serializable {
+    private final String serviceName;
     private final String pluginId;
     private final int partitionCount;
+    private final List<String> allowedUsers;
     private final int expectedVersion;
-    private final Map<String, ServiceAllowlistEntry> services;
 
     @JsonCreator
-    public OnboardPlugin(@JsonProperty("pluginId") String pluginId, @JsonProperty("partitionCount") int partitionCount, @JsonProperty("expectedVersion") int expectedVersion, @JsonProperty("services") Map<String, ServiceAllowlistEntry> services) {
-        this.pluginId        = pluginId;
-        this.partitionCount  = partitionCount;
-        this.expectedVersion = expectedVersion;
-        this.services        = copyServices(services);
+    public OnboardService(@JsonProperty("serviceName") String serviceName, @JsonProperty("pluginId") String pluginId, @JsonProperty("partitionCount") int partitionCount, @JsonProperty("allowedUsers") List<String> allowedUsers, @JsonProperty("expectedVersion") int expectedVersion) {
+        this.serviceName             = serviceName;
+        this.pluginId         = pluginId;
+        this.partitionCount   = partitionCount;
+        this.allowedUsers     = allowedUsers == null ? Collections.emptyList() : List.copyOf(allowedUsers);
+        this.expectedVersion  = expectedVersion;
     }
 
-    public OnboardPlugin(String pluginId, int partitionCount, int expectedVersion) {
-        this(pluginId, partitionCount, expectedVersion, null);
-    }
-
-    private static Map<String, ServiceAllowlistEntry> copyServices(Map<String, ServiceAllowlistEntry> services) {
-        if (services == null || services.isEmpty()) {
-            return Collections.emptyMap();
-        }
-        return Collections.unmodifiableMap(new LinkedHashMap<>(services));
+    public String getServiceName() {
+        return serviceName;
     }
 
     public String getPluginId() {
@@ -66,11 +59,11 @@ public class OnboardPlugin implements Serializable {
         return partitionCount;
     }
 
-    public int getExpectedVersion() {
-        return expectedVersion;
+    public List<String> getAllowedUsers() {
+        return allowedUsers;
     }
 
-    public Map<String, ServiceAllowlistEntry> getServices() {
-        return services;
+    public int getExpectedVersion() {
+        return expectedVersion;
     }
 }
