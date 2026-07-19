@@ -26,6 +26,7 @@ import org.apache.ranger.audit.producer.kafka.partition.exception.PartitionPlanE
 import org.apache.ranger.audit.producer.kafka.partition.model.OnboardService;
 import org.apache.ranger.audit.producer.kafka.partition.model.PartitionPlan;
 import org.apache.ranger.audit.producer.kafka.partition.model.PartitionPlanReplacement;
+import org.apache.ranger.audit.producer.kafka.partition.model.ServiceAllowlistEntry;
 import org.apache.ranger.audit.provider.MiscUtil;
 import org.apache.ranger.audit.server.AuditServerConfig;
 import org.apache.ranger.audit.server.AuditServerConstants;
@@ -78,20 +79,17 @@ public class PartitionPlanService {
     }
 
     /**
-     * After Kerberos and service allowlist checks pass on {@code POST /access}, promote unknown plugins
-     * from the buffer and upsert the repo allowlist without a separate onboard REST call.
+     * Before allowlist enforcement on {@code POST /access}: promote unknown {@code appId} plugins from the
+     * buffer and register missing {@code serviceName} repos with the authenticated user's short name.
      */
     public void ensurePluginOnboarded(String serviceName, String pluginId, String authenticatedUser) {
         if (!isDynamicPartitionPlanEnabled() || StringUtils.isAnyBlank(serviceName, pluginId, authenticatedUser)) {
             return;
         }
-        PartitionPlan plan = holder.getPlan();
-        if (plan != null && plan.getPlugins().containsKey(pluginId)) {
-            return;
-        }
         synchronized (AUTO_ONBOARD_LOCK) {
-            plan = holder.getPlan();
+            PartitionPlan plan = holder.getPlan();
             if (plan != null && plan.getPlugins().containsKey(pluginId)) {
+                autoRegisterServiceAllowlist(serviceName, authenticatedUser);
                 return;
             }
             int partitionCount = resolveDefaultPartitionCountForPlugin(pluginId);
@@ -111,6 +109,7 @@ public class PartitionPlanService {
                     PartitionPlan currentPlan = conflict.getCurrentPlan();
                     if (currentPlan != null && currentPlan.getPlugins().containsKey(pluginId)) {
                         holder.install(currentPlan, currentPlan.getTopicPartitionCount());
+                        autoRegisterServiceAllowlist(serviceName, authenticatedUser);
                         return;
                     }
                     plan = holder.getPlan();
@@ -131,6 +130,44 @@ public class PartitionPlanService {
                 }
             }
         }
+    }
+
+    /** Adds {@code services[serviceName]} when the plugin is already promoted but this repo is new. */
+    private void autoRegisterServiceAllowlist(String serviceName, String authenticatedUser) {
+        PartitionPlan plan = holder.getPlan();
+        if (!isServiceRepoMissing(plan, serviceName)) {
+            return;
+        }
+        String updatedBy = "auto-onboard:" + authenticatedUser;
+        Map<String, ServiceAllowlistEntry> services = Map.of(serviceName, ServiceAllowlistEntry.ofUsers(authenticatedUser));
+        for (int attempt = 1; attempt <= AUTO_ONBOARD_MAX_ATTEMPTS; attempt++) {
+            plan = holder.getPlan();
+            if (!isServiceRepoMissing(plan, serviceName)) {
+                return;
+            }
+            int expectedVersion = plan != null ? plan.getVersion() : PartitionPlanConstants.INITIAL_PLAN_VERSION;
+            try {
+                mergePartitionPlan(new PartitionPlanReplacement(expectedVersion, null, null, null, services, null), updatedBy);
+                LOG.info("Auto-registered service repo '{}' for user '{}'", serviceName, authenticatedUser);
+                return;
+            } catch (PartitionPlanConflictException conflict) {
+                PartitionPlan currentPlan = conflict.getCurrentPlan();
+                if (currentPlan != null) {
+                    holder.install(currentPlan, currentPlan.getTopicPartitionCount());
+                    if (!isServiceRepoMissing(currentPlan, serviceName)) {
+                        return;
+                    }
+                }
+                if (attempt == AUTO_ONBOARD_MAX_ATTEMPTS) {
+                    LOG.warn("Auto-register conflict for service '{}' after {} attempts", serviceName, AUTO_ONBOARD_MAX_ATTEMPTS, conflict);
+                    return;
+                }
+            }
+        }
+    }
+
+    private static boolean isServiceRepoMissing(PartitionPlan plan, String serviceName) {
+        return plan == null || plan.getServices() == null || !plan.getServices().containsKey(serviceName);
     }
 
     /** Merges a partial plan delta via REST PATCH with optimistic locking. */

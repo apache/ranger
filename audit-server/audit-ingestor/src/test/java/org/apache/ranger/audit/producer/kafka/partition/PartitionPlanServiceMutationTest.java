@@ -119,6 +119,23 @@ public class PartitionPlanServiceMutationTest {
     }
 
     @Test
+    public void testEnsurePluginOnboardedRegistersAdditionalRepoWhenPluginExists() throws Exception {
+        MutableRegistry registry = new MutableRegistry(initialPlan);
+        PartitionPlanService service = service(registry, new NoOpAuditTopicPartitionGrower());
+        service.onboardService(new OnboardService("dev_trino", "trino", 3, List.of("trino"), 1), "ops");
+        assertEquals(1, registry.getWriteCount());
+
+        service.ensurePluginOnboarded("dev_trino2", "trino", "trino_analyst");
+
+        PartitionPlan result = PartitionPlanHolder.getInstance().getPlan();
+        assertEquals(3, result.getVersion());
+        assertEquals(2, registry.getWriteCount());
+        assertTrue(result.getPlugins().containsKey("trino"));
+        assertIterableEquals(List.of("trino"), result.getServices().get("dev_trino").getAllowedUsers());
+        assertIterableEquals(List.of("trino_analyst"), result.getServices().get("dev_trino2").getAllowedUsers());
+    }
+
+    @Test
     public void testMergePlanRejectsExistingPluginDelta() {
         MutableRegistry registry = new MutableRegistry(initialPlan);
         PartitionPlanService service = service(registry, new NoOpAuditTopicPartitionGrower());

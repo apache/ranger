@@ -200,48 +200,49 @@ public class AuditREST {
             ret = Response.status(Response.Status.UNAUTHORIZED)
                     .entity(buildErrorResponse("Authentication required to send audit events"))
                     .build();
-        } else if (!isAllowedServiceUser(serviceName, authenticatedUser)) {
-            LOG.error("Unauthorized user: user={} is authorized report audit logs for service={}. Rejecting audit request.", authenticatedUser, serviceName);
-
-            ret = Response.status(Response.Status.FORBIDDEN)
-                    .entity(buildErrorResponse("User is not authorized to send audit events"))
-                    .build();
         } else {
             try {
-                if (StringUtils.isNotBlank(appId)) {
+                if (partitionPlanService.isDynamicPartitionPlanEnabled() && StringUtils.isNotBlank(appId)) {
                     partitionPlanService.ensurePluginOnboarded(serviceName, appId, authenticatedUser);
                 }
+                if (!isAllowedServiceUser(serviceName, authenticatedUser)) {
+                    LOG.error("Unauthorized user: user={} is authorized report audit logs for service={}. Rejecting audit request.", authenticatedUser, serviceName);
 
-                LOG.debug("Processing {} audit events from service: {}, appId: {}", accessAudits.size(), serviceName, appId);
-
-                boolean success = auditDestinationMgr.logBatch(accessAudits, appId);
-
-                if (success) {
-                    Map<String, Object> response = new HashMap<>();
-
-                    response.put("total", accessAudits.size());
-                    response.put("timestamp", System.currentTimeMillis());
-                    response.put("serviceName", serviceName);
-
-                    if (StringUtils.isNotEmpty(appId)) {
-                        response.put("appId", appId);
-                    }
-
-                    if (StringUtils.isNotEmpty(authenticatedUser)) {
-                        response.put("authenticatedUser", authenticatedUser);
-                    }
-
-                    String jsonString = buildResponse(response);
-
-                    ret = Response.status(Response.Status.OK)
-                            .entity(jsonString)
+                    ret = Response.status(Response.Status.FORBIDDEN)
+                            .entity(buildErrorResponse("User is not authorized to send audit events"))
                             .build();
                 } else {
-                    LOG.warn("Batch processing failed for {} events from serviceName: {}, appId: {}. Events spooled to recovery.", accessAudits.size(), serviceName, appId);
+                    LOG.debug("Processing {} audit events from service: {}, appId: {}", accessAudits.size(), serviceName, appId);
 
-                    ret = Response.status(Response.Status.ACCEPTED)
-                            .entity(buildErrorResponse("Batch processing failed. Events have been queued for retry."))
-                            .build();
+                    boolean success = auditDestinationMgr.logBatch(accessAudits, appId);
+
+                    if (success) {
+                        Map<String, Object> response = new HashMap<>();
+
+                        response.put("total", accessAudits.size());
+                        response.put("timestamp", System.currentTimeMillis());
+                        response.put("serviceName", serviceName);
+
+                        if (StringUtils.isNotEmpty(appId)) {
+                            response.put("appId", appId);
+                        }
+
+                        if (StringUtils.isNotEmpty(authenticatedUser)) {
+                            response.put("authenticatedUser", authenticatedUser);
+                        }
+
+                        String jsonString = buildResponse(response);
+
+                        ret = Response.status(Response.Status.OK)
+                                .entity(jsonString)
+                                .build();
+                    } else {
+                        LOG.warn("Batch processing failed for {} events from serviceName: {}, appId: {}. Events spooled to recovery.", accessAudits.size(), serviceName, appId);
+
+                        ret = Response.status(Response.Status.ACCEPTED)
+                                .entity(buildErrorResponse("Batch processing failed. Events have been queued for retry."))
+                                .build();
+                    }
                 }
             } catch (Exception e) {
                 LOG.error("Error processing access audits batch from serviceName: {}, appId: {}", serviceName, appId, e);
