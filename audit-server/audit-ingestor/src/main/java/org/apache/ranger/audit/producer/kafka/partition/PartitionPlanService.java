@@ -26,7 +26,6 @@ import org.apache.ranger.audit.producer.kafka.partition.exception.PartitionPlanE
 import org.apache.ranger.audit.producer.kafka.partition.model.OnboardService;
 import org.apache.ranger.audit.producer.kafka.partition.model.PartitionPlan;
 import org.apache.ranger.audit.producer.kafka.partition.model.PartitionPlanReplacement;
-import org.apache.ranger.audit.producer.kafka.partition.model.PluginScale;
 import org.apache.ranger.audit.provider.MiscUtil;
 import org.apache.ranger.audit.server.AuditServerConfig;
 import org.apache.ranger.audit.server.AuditServerConstants;
@@ -151,8 +150,8 @@ public class PartitionPlanService {
             }
             if (partitionPlanUpdate.hasPluginScalesDelta()) {
                 for (Map.Entry<String, Integer> scaleEntry : partitionPlanUpdate.getPluginScales().entrySet()) {
-                    PartitionPlanRequestValidator.validateScalePlugin(scaleEntry.getKey(),
-                            new PluginScale(scaleEntry.getValue(), partitionPlanUpdate.getExpectedVersion()));
+                    PartitionPlanRequestValidator.validatePluginScale(scaleEntry.getKey(), scaleEntry.getValue(),
+                            partitionPlanUpdate.getExpectedVersion());
                     nextPlan = PartitionPlanAllocator.scalePlugin(nextPlan, scaleEntry.getKey(), scaleEntry.getValue(), updatedBy);
                 }
             }

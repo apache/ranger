@@ -24,7 +24,6 @@ import org.apache.ranger.audit.producer.kafka.partition.constants.PartitionPlanC
 import org.apache.ranger.audit.producer.kafka.partition.exception.PartitionPlanException;
 import org.apache.ranger.audit.producer.kafka.partition.model.OnboardService;
 import org.apache.ranger.audit.producer.kafka.partition.model.PartitionPlanReplacement;
-import org.apache.ranger.audit.producer.kafka.partition.model.PluginScale;
 
 import java.util.List;
 
@@ -44,13 +43,10 @@ public class PartitionPlanRequestValidator {
         }
     }
 
-    public static void validateScalePlugin(String pluginId, PluginScale scalePlugin) {
-        if (scalePlugin == null) {
-            throw new PartitionPlanException("Plugin scale request is required");
-        }
+    public static void validatePluginScale(String pluginId, int additionalPartitions, int expectedVersion) {
         validateNonBlankPluginId(pluginId);
-        validatePositiveCount(scalePlugin.getAdditionalPartitions(), "additionalPartitions");
-        validateExpectedVersion(scalePlugin.getExpectedVersion());
+        validatePositiveCount(additionalPartitions, "additionalPartitions");
+        validateExpectedVersion(expectedVersion);
     }
 
     public static void validateOnboardService(OnboardService onboardServiceRequest) {

@@ -155,4 +155,15 @@ public class AuthToLocalRuleCatalog {
     private static String joinRuleLines(List<String> ruleLines) {
         return String.join("\n", ruleLines);
     }
+
+    /** One primary {@code auth_to_local} catalog rule and its mapped Kerberos short name. */
+    static final class PrimaryCatalogRule {
+        final String ruleLine;
+        final String mappedShortName;
+
+        PrimaryCatalogRule(String ruleLine, String mappedShortName) {
+            this.ruleLine        = ruleLine;
+            this.mappedShortName = mappedShortName;
+        }
+    }
 }
