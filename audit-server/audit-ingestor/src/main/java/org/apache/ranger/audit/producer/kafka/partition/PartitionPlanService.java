@@ -27,7 +27,6 @@ import org.apache.ranger.audit.producer.kafka.partition.model.OnboardService;
 import org.apache.ranger.audit.producer.kafka.partition.model.PartitionPlan;
 import org.apache.ranger.audit.producer.kafka.partition.model.PartitionPlanReplacement;
 import org.apache.ranger.audit.producer.kafka.partition.model.PluginScale;
-import org.apache.ranger.audit.producer.kafka.partition.model.PromotePlugin;
 import org.apache.ranger.audit.provider.MiscUtil;
 import org.apache.ranger.audit.server.AuditServerConfig;
 import org.apache.ranger.audit.server.AuditServerConstants;
@@ -168,26 +167,6 @@ public class PartitionPlanService {
         }
     }
 
-    /** Promotes a plugin from the buffer to dedicated partitions. */
-    public PartitionPlan promotePlugin(PromotePlugin promotePluginRequest, String updatedBy) {
-        PartitionPlanRequestValidator.validatePromotePlugin(promotePluginRequest);
-        requireDynamicEnabled();
-        String auditTopic = resolveAuditTopicName();
-        try (PartitionPlanRegistry registry = registryFactory.open(configProps, INGESTOR_PROP_PREFIX)) {
-            PartitionPlan currentPlan = requirePlan(registry, auditTopic);
-            requireExpectedVersion(currentPlan, promotePluginRequest.getExpectedVersion());
-            if (PartitionPlanAllocator.isPromoteAlreadyApplied(currentPlan, promotePluginRequest.getPluginId(), promotePluginRequest.getPartitionCount(), promotePluginRequest.getRepo(), promotePluginRequest.getAllowedUsers())) {
-                return returnCurrentPlanNoOp(currentPlan);
-            }
-            PartitionPlan nextPlan = PartitionPlanAllocator.promotePlugin(currentPlan, promotePluginRequest.getPluginId(), promotePluginRequest.getPartitionCount(), updatedBy, promotePluginRequest.getRepo(), promotePluginRequest.getAllowedUsers());
-            return publishMutation(registry, auditTopic, promotePluginRequest.getExpectedVersion(), currentPlan, nextPlan);
-        } catch (PartitionPlanException e) {
-            throw e;
-        } catch (Exception e) {
-            throw new PartitionPlanException("Failed to update partition plan for audit topic '" + auditTopic + "'", e);
-        }
-    }
-
     /** Onboards a service repo: upsert allowlist and promote plugin partitions in one plan version. */
     public PartitionPlan onboardService(OnboardService onboardServiceRequest, String updatedBy) {
         PartitionPlanRequestValidator.validateOnboardService(onboardServiceRequest);
@@ -205,22 +184,6 @@ public class PartitionPlanService {
             throw e;
         } catch (Exception e) {
             throw new PartitionPlanException("Failed to onboard repo in partition plan for audit topic '" + auditTopic + "'", e);
-        }
-    }
-
-    /** Appends tail partitions to a plugin already present in the plan. */
-    public PartitionPlan scalePlugin(String pluginId, PluginScale scalePlugin, String updatedBy) {
-        PartitionPlanRequestValidator.validateScalePlugin(pluginId, scalePlugin);
-        requireDynamicEnabled();
-        String auditTopic = resolveAuditTopicName();
-        try (PartitionPlanRegistry registry = registryFactory.open(configProps, INGESTOR_PROP_PREFIX)) {
-            PartitionPlan currentPlan = requirePlan(registry, auditTopic);
-            PartitionPlan nextPlan = PartitionPlanAllocator.scalePlugin(currentPlan, pluginId, scalePlugin.getAdditionalPartitions(), updatedBy);
-            return publishMutation(registry, auditTopic, scalePlugin.getExpectedVersion(), currentPlan, nextPlan);
-        } catch (PartitionPlanException e) {
-            throw e;
-        } catch (Exception e) {
-            throw new PartitionPlanException("Failed to update partition plan for audit topic '" + auditTopic + "'", e);
         }
     }
 

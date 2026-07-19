@@ -184,7 +184,7 @@
 
     <property>
         <name>ranger.audit.ingestor.service.dev_hdfs.allowed.users</name>
-        <value>hdfs,nn</value>
+        <value>hdfs</value>
         <description>Allowed users for dev_hdfs (Policy Manager service name; from policy.download.auth.users)</description>
     </property>
 
@@ -240,7 +240,6 @@
         <name>ranger.audit.ingestor.service.dev_solr.allowed.users</name>
         <value>solr</value>
         <description>Allowed users for dev_solr (Solr plugin)</description>
-
     </property>
 
     <!-- AUTH_TO_LOCAL RULES FOR KERBEROS PRINCIPAL MAPPING -->

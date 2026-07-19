@@ -23,7 +23,6 @@ import org.apache.ranger.audit.producer.kafka.partition.model.PartitionPlan;
 import org.apache.ranger.audit.producer.kafka.partition.model.PartitionPlanReplacement;
 import org.apache.ranger.audit.producer.kafka.partition.model.PluginPartitionAssignment;
 import org.apache.ranger.audit.producer.kafka.partition.model.PluginScale;
-import org.apache.ranger.audit.producer.kafka.partition.model.PromotePlugin;
 import org.apache.ranger.audit.producer.kafka.partition.model.ServiceAllowlistEntry;
 import org.junit.jupiter.api.Test;
 
@@ -139,9 +138,10 @@ public class PartitionPlanReplacementTest {
     }
 
     @Test
-    public void testRequestValidatorRejectsBlankPromotePluginId() {
+    public void testRequestValidatorRejectsBlankOnboardPluginId() {
         assertThrows(PartitionPlanException.class,
-                () -> PartitionPlanRequestValidator.validatePromotePlugin(new PromotePlugin("", 2, 1)));
+                () -> PartitionPlanRequestValidator.validateOnboardService(
+                        new OnboardService("dev_trino", "", 2, List.of("trino"), 1)));
     }
 
     @Test

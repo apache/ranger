@@ -25,7 +25,6 @@ import org.apache.ranger.audit.producer.kafka.partition.exception.PartitionPlanE
 import org.apache.ranger.audit.producer.kafka.partition.model.OnboardService;
 import org.apache.ranger.audit.producer.kafka.partition.model.PartitionPlanReplacement;
 import org.apache.ranger.audit.producer.kafka.partition.model.PluginScale;
-import org.apache.ranger.audit.producer.kafka.partition.model.PromotePlugin;
 
 import java.util.List;
 
@@ -42,20 +41,6 @@ public class PartitionPlanRequestValidator {
         if (!partitionPlanUpdate.hasMergeDelta()) {
             throw new PartitionPlanException(
                     "At least one of topicPartitionCount, plugins, buffer, services, or pluginScales must be provided");
-        }
-    }
-
-    public static void validatePromotePlugin(PromotePlugin promotePluginRequest) {
-        if (promotePluginRequest == null) {
-            throw new PartitionPlanException("Promote plugin request is required");
-        }
-        validateNonBlankPluginId(promotePluginRequest.getPluginId());
-        validatePositiveCount(promotePluginRequest.getPartitionCount(), "partitionCount");
-        validateExpectedVersion(promotePluginRequest.getExpectedVersion());
-        if (StringUtils.isNotBlank(promotePluginRequest.getRepo())
-                && (promotePluginRequest.getAllowedUsers() == null
-                || promotePluginRequest.getAllowedUsers().isEmpty())) {
-            throw new PartitionPlanException("allowedUsers are required when repo is specified");
         }
     }
 
