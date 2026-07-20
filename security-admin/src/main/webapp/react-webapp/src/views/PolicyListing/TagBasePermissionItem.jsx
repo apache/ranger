@@ -17,7 +17,7 @@
  * under the License.
  */
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Form as FormB, Modal, Button, Table, Badge } from "react-bootstrap";
 import { Form, Field } from "react-final-form";
 import Select from "react-select";
@@ -40,17 +40,22 @@ import { RangerPolicyType } from "Utils/XAEnums";
 import { getServiceDef } from "Utils/appState";
 import { selectInputCustomStyles } from "Components/CommonComponents";
 
-export default function TagBasePermissionItem(props) {
+export default function TagBasePermissionItem({
+  options,
+  inputVal,
+  formValues,
+  dataMaskIndex,
+  serviceCompDetails,
+  attrName,
+  showModal,
+  handleCloseModal
+}) {
   const serviceDefs = cloneDeep(getServiceDef());
-  const {
-    options,
-    inputVal,
-    formValues,
-    serviceCompDetails,
-    dataMaskIndex,
-    attrName
-  } = props;
-  const [showTagPermissionItem, tagPermissionItem] = useState(false);
+  const [localShowModal, setLocalShowModal] = useState(showModal);
+
+  useEffect(() => {
+    setLocalShowModal(showModal);
+  }, [showModal]);
 
   const msgStyles = {
     background: "white",
@@ -112,7 +117,10 @@ export default function TagBasePermissionItem(props) {
   };
 
   const handleClose = () => {
-    tagPermissionItem(false);
+    setLocalShowModal(false);
+    if (handleCloseModal) {
+      handleCloseModal();
+    }
   };
 
   const serviceOnChange = (e, input, values, push, remove) => {
@@ -281,56 +289,61 @@ export default function TagBasePermissionItem(props) {
 
   return (
     <>
-      <div
-        className="editable"
-        onClick={() => {
-          tagPermissionItem(true);
-        }}
-      >
-        {inputVal?.value?.tableList?.length > 0 ? (
-          <div className="text-center">
-            <div className="editable-edit-text">
-              {tagAccessTypeDisplayVal(inputVal?.value?.tableList)}
-            </div>
+      {/* Only show editable div if not opening modal directly */}
+      {!showModal && (
+        <div
+          className="editable"
+          onClick={() => {
+            setLocalShowModal(true);
+          }}
+        >
+          {inputVal?.value?.tableList?.length > 0 ? (
+            <div className="text-center">
+              <div className="editable-edit-text">
+                {tagAccessTypeDisplayVal(inputVal?.value?.tableList)}
+              </div>
 
-            <Button
-              className="mg-10 mx-auto d-block btn-mini"
-              size="sm"
-              variant="outline-dark"
-              onClick={(e) => {
-                e.stopPropagation();
-                tagPermissionItem(true);
-              }}
-            >
-              <i className="fa-fw fa fa-pencil"></i>
-            </Button>
-          </div>
-        ) : (
-          <div className="text-center">
-            <span className="editable-add-text">Add Permissions</span>
-            <div>
               <Button
-                size="sm"
                 className="mg-10 mx-auto d-block btn-mini"
+                size="sm"
                 variant="outline-dark"
                 onClick={(e) => {
                   e.stopPropagation();
-                  tagPermissionItem(true);
+                  setLocalShowModal(true);
                 }}
               >
-                <i className="fa-fw fa fa-plus"></i>
+                <i className="fa-fw fa fa-pencil"></i>
               </Button>
             </div>
-          </div>
-        )}
-      </div>
+          ) : (
+            <div className="text-center">
+              <span className="editable-add-text">Add Permissions</span>
+              <div>
+                <Button
+                  size="sm"
+                  className="mg-10 mx-auto d-block btn-mini"
+                  variant="outline-dark"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setLocalShowModal(true);
+                  }}
+                >
+                  <i className="fa-fw fa fa-plus"></i>
+                </Button>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
 
       <Modal
-        show={showTagPermissionItem}
+        show={localShowModal}
         onHide={handleClose}
         size="lg"
         aria-labelledby="contained-modal-title-vcenter"
         centered
+        backdrop="static"
+        keyboard={false}
       >
         <Form
           onSubmit={handleSubmit}
@@ -416,29 +429,27 @@ export default function TagBasePermissionItem(props) {
                         fields.map((name, index) => (
                           <tr className="bg-white" key={index}>
                             <td className="align-middle td-padding-modal">
-                              <h6>
-                                <FormB.Group className="d-inline">
-                                  <FormB.Check
-                                    inline
-                                    key={fields.value[
-                                      index
-                                    ].serviceName.toUpperCase()}
-                                    checked={isAllChecked(
-                                      fields.value[index],
-                                      tagServicePerms[
-                                        fields.value[index].serviceName
-                                      ]
-                                    )}
-                                    type="checkbox"
-                                    label={fields.value[
-                                      index
-                                    ].serviceName.toUpperCase()}
-                                    onChange={(e) =>
-                                      handleSelectAllChange(e, index, fields)
-                                    }
-                                  />
-                                </FormB.Group>
-                              </h6>
+                              <FormB.Group className="d-inline">
+                                <FormB.Check
+                                  inline
+                                  key={fields.value[
+                                    index
+                                  ].serviceName.toUpperCase()}
+                                  checked={isAllChecked(
+                                    fields.value[index],
+                                    tagServicePerms[
+                                      fields.value[index].serviceName
+                                    ]
+                                  )}
+                                  type="checkbox"
+                                  label={fields.value[
+                                    index
+                                  ].serviceName.toUpperCase()}
+                                  onChange={(e) =>
+                                    handleSelectAllChange(e, index, fields)
+                                  }
+                                />
+                              </FormB.Group>
                             </td>
                             <td className="align-middle">
                               <Field
@@ -449,7 +460,10 @@ export default function TagBasePermissionItem(props) {
                                     {tagServicePerms[
                                       fields.value[index].serviceName
                                     ].map((obj) => (
-                                      <h6 className="d-inline" key={obj.value}>
+                                      <span
+                                        className="d-inline"
+                                        key={obj.value}
+                                      >
                                         <FormB.Group
                                           className="d-inline"
                                           controlId={obj.value}
@@ -467,7 +481,7 @@ export default function TagBasePermissionItem(props) {
                                             }
                                           />
                                         </FormB.Group>
-                                      </h6>
+                                      </span>
                                     ))}
                                   </div>
                                 )}

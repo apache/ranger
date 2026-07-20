@@ -814,7 +814,7 @@ function PolicyListing(props) {
     policySearchInfoMsg = union(ServerAttrName, serverRsrcAttrName);
 
     return (
-      <div className="policy-search-info">
+      <div className="font-13">
         <p className="m-0">
           Wildcard searches ( for example using * or ? ) are not currently
           supported.

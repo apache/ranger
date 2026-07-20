@@ -85,8 +85,10 @@ export default function ResourceComp(props) {
 
   const RenderValidateField = ({ name }) =>
     (formValues && formValues[name]?.mandatory && (
-      <span className={!isGds ? "" : "top-0"}>*</span>
-    )) || <span>&nbsp;</span>;
+      <span className={!isGds ? "required-mark" : "top-0 required-mark"}>
+        *
+      </span>
+    )) || <span className="required-mark"></span>;
 
   const renderResourceSelect = (levelKey, index) => {
     let renderLabel = false;
@@ -175,11 +177,11 @@ export default function ResourceComp(props) {
     return (
       <FormB.Group
         as={Row}
-        className="mb-3"
+        className="mb-4 align-items-start"
         controlId={`Resource-${levelKey}`}
         key={`Resource-${levelKey}`}
       >
-        <Col sm={3}>
+        <Col className="column-1-fixed">
           <Field
             defaultValue={!policyId && getResourceLabelOp(levelKey, index)[0]}
             name={
@@ -191,14 +193,14 @@ export default function ResourceComp(props) {
               formValues[resourceKey] ? (
                 renderResourceSelect(levelKey, index) ? (
                   <span className="float-end fnt-14">
-                    <FormB.Label className="position-relative pe-2">
+                    <FormB.Label className="position-relative">
                       {getResourceLabelOp(levelKey, index)[0]["label"]}
                       <RenderValidateField name={`resourceName-${levelKey}`} />
                     </FormB.Label>
                   </span>
                 ) : (
                   <div className="resource-drop-down">
-                    <span className="w-75">
+                    <span className="w-100">
                       <Select
                         {...input}
                         options={getResourceLabelOp(levelKey, index)}
@@ -222,7 +224,7 @@ export default function ResourceComp(props) {
 
         {formValues[`resourceName-${levelKey}`] && (
           <>
-            <Col sm={!isGds ? 5 : 9}>
+            <Col className="mw-50">
               <ResourceSelectComp
                 levelKey={levelKey}
                 formValues={formValues}
@@ -236,10 +238,10 @@ export default function ResourceComp(props) {
         )}
 
         {formValues[`resourceName-${levelKey}`] && !isGds && (
-          <Col sm={4}>
+          <Col className="column-3-fixed">
             <Row>
               {formValues[`resourceName-${levelKey}`]["excludesSupported"] && (
-                <Col sm={5}>
+                <Col className="resource-toggle-switch">
                   <Field
                     className="form-control"
                     name={
@@ -255,7 +257,7 @@ export default function ResourceComp(props) {
                         onstyle="primary"
                         offlabel="Exclude"
                         offstyle="outline-secondary"
-                        style="w-100"
+                        width={100}
                         size="xs"
                         key={`isExcludesSupport-${levelKey}`}
                       />
@@ -264,9 +266,9 @@ export default function ResourceComp(props) {
                 </Col>
               )}
               {formValues[`resourceName-${levelKey}`]["recursiveSupported"] && (
-                <Col sm={5} className="toggle-switch">
+                <Col className="resource-toggle-switch">
                   <Field
-                    className="form-control"
+                    className="form-control resource-toggle-switch"
                     name={
                       isMultiResources
                         ? `${name}.isRecursiveSupport-${levelKey}`
