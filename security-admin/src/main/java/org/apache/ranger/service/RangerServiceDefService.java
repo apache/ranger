@@ -21,17 +21,24 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.ranger.authorization.hadoop.config.RangerAdminConfig;
 import org.apache.ranger.entity.XXServiceDef;
 import org.apache.ranger.plugin.model.RangerServiceDef;
+import org.apache.ranger.plugin.model.RangerServiceDef.RangerPolicyConditionDef;
 import org.apache.ranger.plugin.store.EmbeddedServiceDefsUtil;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 @Service
 @Scope("singleton")
 public class RangerServiceDefService extends RangerServiceDefServiceBase<XXServiceDef, RangerServiceDef> {
+    public static final String PROP_ENABLE_ACTION_MATCHER_IN_POLICIES_CONDITION_FOR_OZONE = "ranger.servicedef.ozone.enableActionMatcherInPoliciesCondition";
+    public static final String OPTION_ENABLE_ACTION_MATCHER_IN_POLICIES_CONDITION = "enableActionMatcherInPoliciesCondition";
+
+    private static final String POLICY_CONDITION_ACTION_MATCHES = "action-matches";
+
     private final RangerAdminConfig config;
 
     public RangerServiceDefService() {
@@ -100,5 +107,110 @@ public class RangerServiceDefService extends RangerServiceDefServiceBase<XXServi
         }
 
         return ret;
+    }
+
+    @Override
+    protected RangerServiceDef populateViewBean(XXServiceDef xServiceDef) {
+        final RangerServiceDef ret = super.populateViewBean(xServiceDef);
+
+        applyActionMatcherInPoliciesConditionHiddenOption(ret);
+
+        return ret;
+    }
+
+    void applyActionMatcherInPoliciesConditionHiddenOption(RangerServiceDef serviceDef) {
+        if (serviceDef == null) {
+            return;
+        }
+
+        final boolean isOzoneServiceDef = StringUtils.equalsIgnoreCase(serviceDef.getName(), EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_OZONE_NAME);
+
+        if (!isOzoneServiceDef) {
+            return;
+        }
+
+        Map<String, String> serviceDefOptions = serviceDef.getOptions();
+
+        if (serviceDefOptions == null) {
+            serviceDefOptions = new HashMap<>();
+            serviceDef.setOptions(serviceDefOptions);
+        }
+
+        // Admin site config is authoritative at runtime; stale def_options must not override it.
+        boolean enabled = config.getBoolean(PROP_ENABLE_ACTION_MATCHER_IN_POLICIES_CONDITION_FOR_OZONE, false);
+
+        serviceDefOptions.put(OPTION_ENABLE_ACTION_MATCHER_IN_POLICIES_CONDITION, Boolean.toString(enabled));
+        serviceDef.setOptions(serviceDefOptions);
+
+        if (enabled) {
+            ensureActionMatchesPolicyCondition(serviceDef);
+        } else {
+            removeActionMatchesPolicyCondition(serviceDef);
+        }
+    }
+
+    private void ensureActionMatchesPolicyCondition(RangerServiceDef serviceDef) {
+        if (hasActionMatchesPolicyCondition(serviceDef)) {
+            return;
+        }
+
+        try {
+            final RangerServiceDef embeddedOzoneServiceDef = EmbeddedServiceDefsUtil.instance().getEmbeddedServiceDef(EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_OZONE_NAME);
+
+            if (embeddedOzoneServiceDef == null || embeddedOzoneServiceDef.getPolicyConditions() == null) {
+                return;
+            }
+
+            for (RangerPolicyConditionDef embeddedPolicyConditionDef : embeddedOzoneServiceDef.getPolicyConditions()) {
+                if (StringUtils.equals(embeddedPolicyConditionDef.getName(), POLICY_CONDITION_ACTION_MATCHES)) {
+                    List<RangerPolicyConditionDef> policyConditions = serviceDef.getPolicyConditions();
+
+                    if (policyConditions == null) {
+                        policyConditions = new ArrayList<>();
+                        serviceDef.setPolicyConditions(policyConditions);
+                    }
+
+                    policyConditions.add(embeddedPolicyConditionDef);
+
+                    return;
+                }
+            }
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to restore ozone action-matches policy condition", e);
+        }
+    }
+
+    private void removeActionMatchesPolicyCondition(RangerServiceDef serviceDef) {
+        List<RangerPolicyConditionDef> policyConditions = serviceDef.getPolicyConditions();
+
+        if (policyConditions == null || policyConditions.isEmpty()) {
+            return;
+        }
+
+        List<RangerPolicyConditionDef> filteredPolicyConditions = new ArrayList<>();
+
+        for (RangerPolicyConditionDef policyConditionDef : policyConditions) {
+            if (!StringUtils.equals(policyConditionDef.getName(), POLICY_CONDITION_ACTION_MATCHES)) {
+                filteredPolicyConditions.add(policyConditionDef);
+            }
+        }
+
+        serviceDef.setPolicyConditions(filteredPolicyConditions);
+    }
+
+    private static boolean hasActionMatchesPolicyCondition(RangerServiceDef serviceDef) {
+        List<RangerPolicyConditionDef> policyConditions = serviceDef.getPolicyConditions();
+
+        if (policyConditions == null || policyConditions.isEmpty()) {
+            return false;
+        }
+
+        for (RangerPolicyConditionDef policyConditionDef : policyConditions) {
+            if (StringUtils.equals(policyConditionDef.getName(), POLICY_CONDITION_ACTION_MATCHES)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

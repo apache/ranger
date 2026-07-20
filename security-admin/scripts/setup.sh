@@ -175,6 +175,7 @@ cred_keystore_filename=$(eval echo "$(get_prop 'cred_keystore_filename' $PROPFIL
 sso_enabled=$(get_prop 'sso_enabled' $PROPFILE)
 sso_providerurl=$(get_prop 'sso_providerurl' $PROPFILE)
 sso_publickey=$(get_prop 'sso_publickey' $PROPFILE)
+FF_ENABLE_OZONE_ACTION_MATCHES_CONDITION=$(get_prop_or_default 'FF_ENABLE_OZONE_ACTION_MATCHES_CONDITION' $PROPFILE 'false')
 RANGER_ADMIN_LOG_DIR=$(eval echo "$(get_prop 'RANGER_ADMIN_LOG_DIR' $PROPFILE)")
 RANGER_ADMIN_LOGBACK_CONF_FILE=$(eval echo "$(get_prop 'RANGER_ADMIN_LOGBACK_CONF_FILE' $PROPFILE)")
 RANGER_PID_DIR_PATH=$(eval echo "$(get_prop 'RANGER_PID_DIR_PATH' $PROPFILE)")
@@ -1090,6 +1091,16 @@ update_properties() {
                 updatePropertyToFilePy $propertyName "${newPropertyValue}" $to_file_ranger
 
 	fi
+
+	ff_enable_ozone_action_matches_condition=$(echo "${FF_ENABLE_OZONE_ACTION_MATCHES_CONDITION}" | tr '[:upper:]' '[:lower:]')
+	if [ "${ff_enable_ozone_action_matches_condition}" != "true" ]
+	then
+		ff_enable_ozone_action_matches_condition=false
+	fi
+	propertyName=ranger.servicedef.ozone.enableActionMatcherInPoliciesCondition
+	newPropertyValue="${ff_enable_ozone_action_matches_condition}"
+	updatePropertyToFilePy $propertyName "${newPropertyValue}" $to_file_ranger
+
 	if [ "${javax_net_ssl_keyStore}" != "" ]  && [ "${javax_net_ssl_keyStorePassword}" != "" ]
 	then
 		javax_net_ssl_keyStoreAlias=keyStoreAlias
