@@ -153,6 +153,14 @@
 		<value>true</value>
 	</property>
 	<property>
+		<name>ranger.servicedef.ozone.enableActionMatcherInPoliciesCondition</name>
+		<value>false</value>
+		<description>
+			When true, enables Ozone action-matches (RangerActionMatcher) policy conditions
+			in the Admin UI and applies S3 action-based evaluation in the Ozone authorizer.
+		</description>
+	</property>
+	<property>
 		<name>ranger.xuser.createdByUserId</name>
 		<value>1</value>
 	</property>
@@ -322,7 +330,7 @@
 
 	<property>
 		<name>ranger.service.https.attrib.ssl.protocol</name>
-		<value>TLSv1.2</value>
+		<value>TLS</value>
 	</property>
 
 	<property>
@@ -514,6 +522,34 @@
 	</property>
 	<property>
 		<name>ranger.audit.elasticsearch.bootstrap.enabled</name>
+		<value>true</value>
+	</property>
+	<property>
+		<name>ranger.audit.opensearch.urls</name>
+		<value></value>
+	</property>
+	<property>
+		<name>ranger.audit.opensearch.protocol</name>
+		<value>http</value>
+	</property>
+	<property>
+		<name>ranger.audit.opensearch.port</name>
+		<value>9200</value>
+	</property>
+	<property>
+		<name>ranger.audit.opensearch.user</name>
+		<value></value>
+	</property>
+	<property>
+		<name>ranger.audit.opensearch.password</name>
+		<value></value>
+	</property>
+	<property>
+		<name>ranger.audit.opensearch.index</name>
+		<value>ranger_audits</value>
+	</property>
+	<property>
+		<name>ranger.audit.opensearch.bootstrap.enabled</name>
 		<value>true</value>
 	</property>
 	<property>

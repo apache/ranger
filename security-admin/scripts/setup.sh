@@ -102,6 +102,16 @@ audit_elasticsearch_user=$(get_prop 'audit_elasticsearch_user' $PROPFILE)
 audit_elasticsearch_password=$(get_prop 'audit_elasticsearch_password' $PROPFILE)
 audit_elasticsearch_index=$(get_prop 'audit_elasticsearch_index' $PROPFILE)
 audit_elasticsearch_bootstrap_enabled=$(get_prop 'audit_elasticsearch_bootstrap_enabled' $PROPFILE)
+audit_opensearch_urls=$(get_prop 'audit_opensearch_urls' $PROPFILE)
+audit_opensearch_protocol=$(get_prop 'audit_opensearch_protocol' $PROPFILE)
+audit_opensearch_port=$(get_prop 'audit_opensearch_port' $PROPFILE)
+audit_opensearch_user=$(get_prop 'audit_opensearch_user' $PROPFILE)
+audit_opensearch_password=$(get_prop 'audit_opensearch_password' $PROPFILE)
+audit_opensearch_index=$(get_prop 'audit_opensearch_index' $PROPFILE)
+audit_opensearch_bootstrap_enabled=$(get_prop 'audit_opensearch_bootstrap_enabled' $PROPFILE)
+audit_opensearch_authentication_type=$(get_prop_or_default 'audit_opensearch_authentication_type' $PROPFILE '')
+audit_opensearch_kerberos_principal=$(get_prop_or_default 'audit_opensearch_kerberos_principal' $PROPFILE '')
+audit_opensearch_kerberos_keytab=$(get_prop_or_default 'audit_opensearch_kerberos_keytab' $PROPFILE '')
 audit_solr_urls=$(get_prop 'audit_solr_urls' $PROPFILE)
 audit_solr_user=$(get_prop_or_default 'audit_solr_user' $PROPFILE '')
 audit_solr_password=$(get_prop_or_default 'audit_solr_password' $PROPFILE '')
@@ -165,6 +175,7 @@ cred_keystore_filename=$(eval echo "$(get_prop 'cred_keystore_filename' $PROPFIL
 sso_enabled=$(get_prop 'sso_enabled' $PROPFILE)
 sso_providerurl=$(get_prop 'sso_providerurl' $PROPFILE)
 sso_publickey=$(get_prop 'sso_publickey' $PROPFILE)
+FF_ENABLE_OZONE_ACTION_MATCHES_CONDITION=$(get_prop_or_default 'FF_ENABLE_OZONE_ACTION_MATCHES_CONDITION' $PROPFILE 'false')
 RANGER_ADMIN_LOG_DIR=$(eval echo "$(get_prop 'RANGER_ADMIN_LOG_DIR' $PROPFILE)")
 RANGER_ADMIN_LOGBACK_CONF_FILE=$(eval echo "$(get_prop 'RANGER_ADMIN_LOGBACK_CONF_FILE' $PROPFILE)")
 RANGER_PID_DIR_PATH=$(eval echo "$(get_prop 'RANGER_PID_DIR_PATH' $PROPFILE)")
@@ -302,6 +313,16 @@ init_variables(){
 		fi
 		if [ "${audit_elasticsearch_port}" == "" ] ;then
 			log "[I] Please provide valid port for 'elasticsearch' audit store!"
+			exit 1
+		fi
+	fi
+	if [ "${audit_store}" == "opensearch" ] ;then
+		if [ "${audit_opensearch_urls}" == "" ] ;then
+			log "[I] Please provide valid URL for 'opensearch' audit store!"
+			exit 1
+		fi
+		if [ "${audit_opensearch_port}" == "" ] ;then
+			log "[I] Please provide valid port for 'opensearch' audit store!"
 			exit 1
 		fi
 	fi
@@ -857,6 +878,50 @@ update_properties() {
 
 	fi
 
+	if [ "${audit_store}" == "opensearch" ]
+	then
+		propertyName=ranger.audit.opensearch.urls
+		newPropertyValue=${audit_opensearch_urls}
+		updatePropertyToFilePy $propertyName "${newPropertyValue}" $to_file_ranger
+
+		propertyName=ranger.audit.opensearch.protocol
+		newPropertyValue=${audit_opensearch_protocol}
+		updatePropertyToFilePy $propertyName "${newPropertyValue}" $to_file_ranger
+
+		propertyName=ranger.audit.opensearch.port
+		newPropertyValue=${audit_opensearch_port}
+		updatePropertyToFilePy $propertyName "${newPropertyValue}" $to_file_ranger
+
+		propertyName=ranger.audit.opensearch.user
+		newPropertyValue=${audit_opensearch_user}
+		updatePropertyToFilePy $propertyName "${newPropertyValue}" $to_file_ranger
+
+		propertyName=ranger.audit.opensearch.password
+		newPropertyValue=${audit_opensearch_password}
+		updatePropertyToFilePy $propertyName "${newPropertyValue}" $to_file_ranger
+
+		propertyName=ranger.audit.opensearch.index
+		newPropertyValue=${audit_opensearch_index}
+		updatePropertyToFilePy $propertyName "${newPropertyValue}" $to_file_ranger
+
+		propertyName=ranger.audit.opensearch.authentication.type
+		newPropertyValue=${audit_opensearch_authentication_type}
+		updatePropertyToFilePy $propertyName "${newPropertyValue}" $to_file_ranger
+
+		propertyName=ranger.audit.opensearch.kerberos.principal
+		newPropertyValue=${audit_opensearch_kerberos_principal}
+		updatePropertyToFilePy $propertyName "${newPropertyValue}" $to_file_ranger
+
+		propertyName=ranger.audit.opensearch.kerberos.keytab
+		newPropertyValue=${audit_opensearch_kerberos_keytab}
+		updatePropertyToFilePy $propertyName "${newPropertyValue}" $to_file_ranger
+
+		propertyName=ranger.audit.opensearch.bootstrap.enabled
+		newPropertyValue=${audit_opensearch_bootstrap_enabled}
+		updatePropertyToFilePy $propertyName "${newPropertyValue}" $to_file_ranger
+
+	fi
+
 	if [ "${audit_store}" == "cloudwatch" ]
 	then
 		propertyName=ranger.audit.amazon_cloudwatch.region
@@ -1026,6 +1091,16 @@ update_properties() {
                 updatePropertyToFilePy $propertyName "${newPropertyValue}" $to_file_ranger
 
 	fi
+
+	ff_enable_ozone_action_matches_condition=$(echo "${FF_ENABLE_OZONE_ACTION_MATCHES_CONDITION}" | tr '[:upper:]' '[:lower:]')
+	if [ "${ff_enable_ozone_action_matches_condition}" != "true" ]
+	then
+		ff_enable_ozone_action_matches_condition=false
+	fi
+	propertyName=ranger.servicedef.ozone.enableActionMatcherInPoliciesCondition
+	newPropertyValue="${ff_enable_ozone_action_matches_condition}"
+	updatePropertyToFilePy $propertyName "${newPropertyValue}" $to_file_ranger
+
 	if [ "${javax_net_ssl_keyStore}" != "" ]  && [ "${javax_net_ssl_keyStorePassword}" != "" ]
 	then
 		javax_net_ssl_keyStoreAlias=keyStoreAlias

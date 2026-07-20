@@ -37,7 +37,9 @@ import org.junit.jupiter.api.Test;
 import java.net.InetAddress;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -53,8 +55,10 @@ public class TestRangerOzoneAuthorizer {
     private static final String RANGER_APP_ID       = "om";
     private static final String OZONE_SERVICE_ID    = "om";
     private static final String OWNER_NAME          = "ozone";
+    private static final String OPTION_ENABLE_ACTION_MATCHER_IN_POLICIES_CONDITION = "enableActionMatcherInPoliciesCondition";
 
     private static RangerOzoneAuthorizer ozoneAuthorizer;
+    private static RangerBasePlugin    testPlugin;
 
     private final String               hostname  = "localhost";
     private final InetAddress          ipAddress = InetAddress.getLoopbackAddress();
@@ -85,7 +89,9 @@ public class TestRangerOzoneAuthorizer {
 
         // loads policies from om_dev_ozone.json, by EmbeddedResourcePolicySource configured in ranger-ozone-security.xml
         plugin.init();
+        setOzoneActionPolicyEnabled(plugin);
 
+        testPlugin      = plugin;
         ozoneAuthorizer = new RangerOzoneAuthorizer(plugin);
 
         assertNotNull(ozoneAuthorizer);
@@ -272,5 +278,130 @@ public class TestRangerOzoneAuthorizer {
 
         assertFalse(ozoneAuthorizer.checkAccess(key1, ctxWriteNoAction),
                 "session-policy should deny write on key1 when no S3 action is specified and grant has S3 actions");
+    }
+
+    @Test
+    public void testAssumeRoleWithS3ActionsNotPropagatedWhenFlagDisabled() throws Exception {
+        final String previous = setOzoneActionPolicyDisabled();
+
+        try {
+            final Set<OzoneGrant>   grants  = Collections.singleton(grantWriteWithS3Actions);
+            final AssumeRoleRequest request = new AssumeRoleRequest(hostname, ipAddress, user1, role1, grants);
+
+            final String sessionPolicy = ozoneAuthorizer.generateAssumeRoleSessionPolicy(request);
+
+            assertNotNull(sessionPolicy);
+
+            final RangerInlinePolicy inlinePolicy = JsonUtilsV2.jsonToObj(sessionPolicy, RangerInlinePolicy.class);
+            final RangerInlinePolicy.Grant grant  = inlinePolicy.getGrants().iterator().next();
+
+            assertNull(grant.getActions(), "S3 actions should not be propagated when ozone action policy is disabled");
+        } finally {
+            restoreOzoneActionPolicyEnabled(previous);
+        }
+    }
+
+    @Test
+    public void testCheckAccessIgnoresS3ActionWhenFlagDisabled() throws Exception {
+        final String previous = setOzoneActionPolicyDisabled();
+
+        try {
+            final Set<OzoneGrant>   grants  = Collections.singleton(grantWriteWithS3Actions);
+            final AssumeRoleRequest request = new AssumeRoleRequest(hostname, ipAddress, user1, role1, grants);
+
+            final String sessionPolicy = ozoneAuthorizer.generateAssumeRoleSessionPolicy(request);
+
+            assertNotNull(sessionPolicy);
+
+            final RequestContext ctxWriteGetObject = reqCtxBuilder
+                    .setAclRights(IAccessAuthorizer.ACLType.WRITE)
+                    .setRecursiveAccessCheck(false)
+                    .setSessionPolicy(sessionPolicy)
+                    .setS3Action("GetObject")
+                    .build();
+
+            assertTrue(ozoneAuthorizer.checkAccess(key1, ctxWriteGetObject),
+                    "session-policy should allow write when S3 action enforcement is disabled");
+
+            final RequestContext ctxWriteNoAction = reqCtxBuilder
+                    .setAclRights(IAccessAuthorizer.ACLType.WRITE)
+                    .setRecursiveAccessCheck(false)
+                    .setSessionPolicy(sessionPolicy)
+                    .setS3Action(null)
+                    .build();
+
+            assertTrue(ozoneAuthorizer.checkAccess(key1, ctxWriteNoAction),
+                    "session-policy should allow write when S3 action enforcement is disabled");
+        } finally {
+            restoreOzoneActionPolicyEnabled(previous);
+        }
+    }
+
+    @Test
+    public void testLegacySessionPolicyActionsStrippedWhenFlagDisabled() throws Exception {
+        // Simulate a session policy issued when action-policy was enabled (actions embedded in JSON).
+        Set<OzoneGrant>   grants  = Collections.singleton(grantWriteWithS3Actions);
+        AssumeRoleRequest request = new AssumeRoleRequest(hostname, ipAddress, user1, role1, grants);
+
+        String legacySessionPolicy = ozoneAuthorizer.generateAssumeRoleSessionPolicy(request);
+
+        RangerInlinePolicy legacyPolicy = JsonUtilsV2.jsonToObj(legacySessionPolicy, RangerInlinePolicy.class);
+        RangerInlinePolicy.Grant legacyGrant = legacyPolicy.getGrants().iterator().next();
+
+        assertNotNull(legacyGrant.getActions(),
+                "legacy session policy should contain S3 actions as if created with flag enabled");
+
+        final String previous = setOzoneActionPolicyDisabled();
+
+        try {
+            RangerInlinePolicy sanitized = RangerOzoneAuthorizer.sanitizeInlinePolicyForActionFlag(legacyPolicy, testPlugin);
+
+            assertNull(sanitized.getGrants().iterator().next().getActions(),
+                    "sanitizeInlinePolicyForActionFlag should strip grant actions when flag is disabled");
+
+            RequestContext ctxWriteGetObject = reqCtxBuilder
+                    .setAclRights(IAccessAuthorizer.ACLType.WRITE)
+                    .setRecursiveAccessCheck(false)
+                    .setSessionPolicy(legacySessionPolicy)
+                    .setS3Action("GetObject")
+                    .build();
+
+            assertTrue(ozoneAuthorizer.checkAccess(key1, ctxWriteGetObject),
+                    "legacy session-policy with embedded S3 actions should allow write when flag is disabled");
+        } finally {
+            restoreOzoneActionPolicyEnabled(previous);
+        }
+    }
+
+    private static void setOzoneActionPolicyEnabled(RangerBasePlugin plugin) {
+        if (plugin == null || plugin.getServiceDef() == null) {
+            return;
+        }
+
+        Map<String, String> options = plugin.getServiceDef().getOptions();
+
+        if (options == null) {
+            options = new HashMap<>();
+            plugin.getServiceDef().setOptions(options);
+        }
+
+        options.put(OPTION_ENABLE_ACTION_MATCHER_IN_POLICIES_CONDITION, Boolean.toString(true));
+    }
+
+    private static String setOzoneActionPolicyDisabled() {
+        final Map<String, String> options = testPlugin.getServiceDef().getOptions();
+        final String previous = options.put(OPTION_ENABLE_ACTION_MATCHER_IN_POLICIES_CONDITION, Boolean.toString(false));
+
+        return previous;
+    }
+
+    private static void restoreOzoneActionPolicyEnabled(String previous) {
+        final Map<String, String> options = testPlugin.getServiceDef().getOptions();
+
+        if (previous == null) {
+            options.remove(OPTION_ENABLE_ACTION_MATCHER_IN_POLICIES_CONDITION);
+        } else {
+            options.put(OPTION_ENABLE_ACTION_MATCHER_IN_POLICIES_CONDITION, previous);
+        }
     }
 }
