@@ -167,11 +167,12 @@ export default function ResourceSelectComp(props) {
 
   return (
     <Field
-      key={formValues[`resourceName-${levelKey}`].name}
+      key={isMultiResources ? `${name}-value-${levelKey}` : `value-${levelKey}`}
       className="form-control"
       name={
         isMultiResources ? `${name}.value-${levelKey}` : `value-${levelKey}`
       }
+      initialValue={formValues?.[`value-${levelKey}`] || []}
       validate={
         formValues &&
         formValues[`resourceName-${levelKey}`]?.mandatory &&

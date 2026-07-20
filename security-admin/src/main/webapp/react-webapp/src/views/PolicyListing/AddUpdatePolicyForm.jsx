@@ -174,32 +174,6 @@ export default function AddUpdatePolicyForm() {
     setShowDelete(false);
   };
 
-  const isDirtyFieldCheck = (dirtyFields, modified, values, initialValues) => {
-    let modifiedVal = false;
-    if (!isEmpty(dirtyFields)) {
-      for (let dirtyFieldVal in dirtyFields) {
-        modifiedVal = modified?.[dirtyFieldVal];
-        if (
-          values?.validitySchedules ||
-          modified?.validitySchedules ||
-          values?.conditions ||
-          modified?.conditions ||
-          modifiedVal == true
-        ) {
-          modifiedVal = true;
-          break;
-        }
-      }
-    }
-    if (
-      !isEqual(values?.validitySchedules, initialValues?.validitySchedules) ||
-      !isEqual(values?.conditions, initialValues?.conditions)
-    ) {
-      modifiedVal = true;
-    }
-    return modifiedVal;
-  };
-
   const fetchUsersData = async (inputValue) => {
     let params = { name: inputValue || "", isVisible: 1 };
     let op = [];
@@ -1051,21 +1025,13 @@ export default function AddUpdatePolicyForm() {
               form: {
                 mutators: { push: addPolicyItem }
               },
-              dirtyFields,
-              modified,
-              initialValues
+              initialValues,
+              pristine
             }) => (
               <>
                 <PromptDialog
                   isDirtyField={
-                    dirty == true || !isEqual(initialValues, values)
-                      ? isDirtyFieldCheck(
-                          dirtyFields,
-                          modified,
-                          values,
-                          initialValues
-                        )
-                      : false
+                    dirty && !isEqual(values, initialValues) && !pristine
                   }
                   isUnblock={preventUnBlock}
                 />
@@ -1536,6 +1502,8 @@ export default function AddUpdatePolicyForm() {
                                     </Button>
                                   </Col>
                                 )}
+                                {fields.length > 1 &&
+                                  index < fields.length - 1 && <hr />}
                               </Row>
                             ))
                           }
