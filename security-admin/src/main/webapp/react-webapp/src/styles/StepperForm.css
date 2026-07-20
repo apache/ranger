@@ -1,0 +1,241 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+.stepper-form-container {
+  background: #fff;
+  border-radius: 4px;
+}
+
+/* Stepper Header Styles */
+.stepper-header {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+.stepper-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  position: relative;
+}
+
+.stepper-number {
+  width: 44px;
+  height: 44px;
+  border-radius: 4px;
+  background: #c4c4c4;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 16px;
+  transition: all 0.3s ease;
+}
+
+.stepper-item.active .stepper-number {
+  background: #0b7fad;
+}
+
+.stepper-item.completed .stepper-number {
+  background: #6c757d;
+}
+
+.stepper-item.clickable {
+  cursor: pointer;
+}
+
+.stepper-item.clickable:hover .stepper-number {
+  background: #0b7fad;
+  opacity: 0.8;
+}
+
+.stepper-item.clickable:hover .stepper-title {
+  color: #0b7fad;
+}
+
+
+.stepper-content {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.stepper-title {
+  color: #333;
+}
+
+.stepper-title h6 {
+  line-height: 22px;
+}
+
+.stepper-item.active .stepper-title {
+  color: #0b7fad;
+}
+
+.stepper-subtitle {
+  color: #6c757d;
+  line-height: 18px;
+}
+
+.stepper-arrow {
+  font-size: 24px;
+  color: #c4c4c4;
+  margin: 0 32px;
+  transition: color 0.3s ease;
+}
+
+.stepper-arrow.completed {
+  color: #6c757d;
+}
+
+/* Body and Footer */
+.stepper-body {
+  padding: 8px 0;
+  background: #fff;
+  margin-bottom: 20px;
+}
+
+.stepper-instruction-text {
+  font-size: 15px;
+  color: #6c757d;
+  margin-bottom: 32px;
+}
+
+.stepper-footer {
+  display: flex;
+  justify-content: space-between;
+}
+
+.stepper-footer .btn {
+  min-width: 100px;
+  padding: 0.5rem 1rem;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .stepper-header {
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .stepper-arrow {
+    transform: rotate(90deg);
+    margin: 10px 0;
+  }
+
+  .stepper-item {
+    width: 100%;
+  }
+}
+
+.w-33 {
+  width: 33.33% !important;
+}
+
+.btn-link {
+  text-decoration: none;
+}
+
+.accordion-button :not(.collapsed) {
+  border-radius: 0.375rem;
+}
+
+:not(.collapsed) .policy-permission-items-accordion .accordion-header button,
+:not(.collapsed)
+  .policy-permission-items-accordion
+  .accordion-header
+  button:focus
+  :not(.collapsed)
+  .policy-permission-items-accordion
+  .accordion-header
+  button:active {
+  border-bottom-left-radius: 0 !important;
+  border-bottom-right-radius: 0 !important;
+  padding: 1rem !important;
+}
+
+.policy-permission-items-accordion .accordion-header button.collapsed {
+  padding: 1rem !important;
+  border-radius: 0.375rem !important;
+}
+
+.policy-permission-items-accordion .accordion-item {
+  margin-bottom: 1rem;
+  border: 1px solid #dde2e6 !important;
+  border-radius: 0.375rem;
+}
+
+.labels-select-input [class$="placeholder"] {
+  color: #5f5f5f;
+}
+
+.labels-select-input [class$="ValueContainer"] {
+  padding-left: 12px;
+  padding-right: 12px;
+}
+
+.form-select {
+  font-size: 0.875rem;
+}
+
+.permissions-checkboxes {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr 1fr;
+  row-gap: 0.5rem;
+  column-gap: 2rem;
+  flex-wrap: wrap;
+}
+
+.required-mark {
+  display: inline-block;
+  width: 10px;
+  color: red;
+  text-align: right;
+}
+
+.policy-permission-items-accordion .accordion-button:not(.collapsed) {
+  background: #f3f8f9 !important;
+  color: #333333;
+}
+
+.policy-permission-items-accordion .accordion-button.collapsed {
+  background: #f3f8f9 !important;
+  color: #333333;
+}
+
+@media (max-width: 1366px) {
+  .permissions-checkboxes {
+    grid-template-columns: 1fr 1fr 1fr;
+  }
+}
+
+.policy-form-toggle-switch .switch-handle{
+ border-radius: 4px !important;
+}
+.policy-form-toggle-switch .switch-on:hover{
+background-color: #0b7fad !important;
+color:#ffffff !important;
+}
+
+.policy-form-toggle-switch .switch-off:hover{
+  background-color: white !important;
+  color: #0b7fad  !important;
+}

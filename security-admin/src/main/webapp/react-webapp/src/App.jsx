@@ -40,99 +40,109 @@ const HomeComp = lazy(() => import("Views/Home"));
 const ServiceFormComp = lazy(() => import("Views/ServiceManager/ServiceForm"));
 const UserProfileComp = lazy(() => import("Views/UserProfile"));
 const ZoneListingComp = lazy(() => import("Views/SecurityZone/ZoneListing"));
-const SecurityZoneFormComp = lazy(() =>
-  import("Views/SecurityZone/SecurityZoneForm")
+const SecurityZoneFormComp = lazy(
+  () => import("Views/SecurityZone/SecurityZoneForm")
 );
-const UserGroupRoleListing = lazy(() =>
-  import("Views/UserGroupRoleListing/UserGroupRoleListing")
+const UserGroupRoleListing = lazy(
+  () => import("Views/UserGroupRoleListing/UserGroupRoleListing")
 );
-const UserListingComp = lazy(() =>
-  import("Views/UserGroupRoleListing/users_details/UserListing")
+const UserListingComp = lazy(
+  () => import("Views/UserGroupRoleListing/users_details/UserListing")
 );
-const GroupListingComp = lazy(() =>
-  import("Views/UserGroupRoleListing/groups_details/GroupListing")
+const GroupListingComp = lazy(
+  () => import("Views/UserGroupRoleListing/groups_details/GroupListing")
 );
-const RoleListingComp = lazy(() =>
-  import("Views/UserGroupRoleListing/role_details/RoleListing")
+const RoleListingComp = lazy(
+  () => import("Views/UserGroupRoleListing/role_details/RoleListing")
 );
-const UserForm = lazy(() =>
-  import("Views/UserGroupRoleListing/users_details/AddUserView")
+const UserForm = lazy(
+  () => import("Views/UserGroupRoleListing/users_details/AddUserView")
 );
-const EditUserView = lazy(() =>
-  import("Views/UserGroupRoleListing/users_details/EditUserView")
+const EditUserView = lazy(
+  () => import("Views/UserGroupRoleListing/users_details/EditUserView")
 );
-const GroupForm = lazy(() =>
-  import("Views/UserGroupRoleListing/groups_details/GroupForm")
+const GroupForm = lazy(
+  () => import("Views/UserGroupRoleListing/groups_details/GroupForm")
 );
-const RoleForm = lazy(() =>
-  import("Views/UserGroupRoleListing/role_details/RoleForm")
+const RoleForm = lazy(
+  () => import("Views/UserGroupRoleListing/role_details/RoleForm")
 );
 const Permissions = lazy(() => import("Views/PermissionsModule/Permissions"));
-const EditPermissionComp = lazy(() =>
-  import("Views/PermissionsModule/EditPermission")
+const EditPermissionComp = lazy(
+  () => import("Views/PermissionsModule/EditPermission")
 );
 const AuditLayout = lazy(() => import("Views/AuditEvent/AuditLayout"));
 const AccessLogs = lazy(() => import("Views/AuditEvent/Access/AccessLogs"));
 const AdminLogs = lazy(() => import("Views/AuditEvent/Admin/AdminLogs"));
-const LoginSessionsLogs = lazy(() =>
-  import("Views/AuditEvent/LoginSessions/LoginSessionsLogs")
+const LoginSessionsLogs = lazy(
+  () => import("Views/AuditEvent/LoginSessions/LoginSessionsLogs")
 );
 const PluginsLogs = lazy(() => import("Views/AuditEvent/Plugins/PluginsLogs"));
-const PluginStatusLogs = lazy(() =>
-  import("Views/AuditEvent/PluginStatus/PluginStatusLogs")
+const PluginStatusLogs = lazy(
+  () => import("Views/AuditEvent/PluginStatus/PluginStatusLogs")
 );
-const UserSyncLogs = lazy(() =>
-  import("Views/AuditEvent/UserSync/UserSyncLogs")
+const UserSyncLogs = lazy(
+  () => import("Views/AuditEvent/UserSync/UserSyncLogs")
 );
-const PolicyListingTabView = lazy(() =>
-  import("Views/PolicyListing/PolicyListingTabView")
+const PolicyListingTabView = lazy(
+  () => import("Views/PolicyListing/PolicyListingTabView")
 );
-const AddUpdatePolicyForm = lazy(() =>
-  import("Views/PolicyListing/AddUpdatePolicyForm")
+const AddUpdatePolicyForm = lazy(
+  () => import("Views/PolicyListing/AddUpdatePolicyForm")
 );
 const EncryptionComp = lazy(() => import("Views/Encryption/KeyManager"));
 const KeyCreateComp = lazy(() => import("Views/Encryption/KeyCreate"));
-const AccessLogDetailComp = lazy(() =>
-  import("Views/AuditEvent/Access/AccessLogDetail")
+const AccessLogDetailComp = lazy(
+  () => import("Views/AuditEvent/Access/AccessLogDetail")
 );
-const UserAccessLayoutComp = lazy(() =>
-  import("Views/Reports/UserAccessLayout")
+const UserAccessLayoutComp = lazy(
+  () => import("Views/Reports/UserAccessLayout")
 );
-const MyDatasetListingComp = lazy(() =>
-  import("Views/GovernedData/Dataset/MyDatasetListing")
+const MyDatasetListingComp = lazy(
+  () => import("Views/GovernedData/Dataset/MyDatasetListing")
 );
-const CreateDatasetComp = lazy(() =>
-  import("Views/GovernedData/Dataset/AddDatasetView")
+const CreateDatasetComp = lazy(
+  () => import("Views/GovernedData/Dataset/AddDatasetView")
 );
-const DatasetDetailLayoutComp = lazy(() =>
-  import("Views/GovernedData/Dataset/DatasetDetailLayout")
+const DatasetDetailLayoutComp = lazy(
+  () => import("Views/GovernedData/Dataset/DatasetDetailLayout")
 );
-const DatasetDetailFullViewComp = lazy(() =>
-  import("Views/GovernedData/Dataset/DatasetDetailFullView")
+const DatasetDetailFullViewComp = lazy(
+  () => import("Views/GovernedData/Dataset/DatasetDetailFullView")
 );
-const AccessGrantFormComp = lazy(() =>
-  import("Views/GovernedData/Dataset/AccessGrantForm")
+const AccessGrantFormComp = lazy(
+  () => import("Views/GovernedData/Dataset/AccessGrantForm")
 );
-const MyDatashareListingComp = lazy(() =>
-  import("Views/GovernedData/Datashare/MyDatashareListing")
+const MyDatashareListingComp = lazy(
+  () => import("Views/GovernedData/Datashare/MyDatashareListing")
 );
-const CreateDatashareComp = lazy(() =>
-  import("Views/GovernedData/Datashare/AddDatashareView")
+const CreateDatashareComp = lazy(
+  () => import("Views/GovernedData/Datashare/AddDatashareView")
 );
-const DatashareDetailLayoutComp = lazy(() =>
-  import("Views/GovernedData/Datashare/DatashareDetailLayout")
+const DatashareDetailLayoutComp = lazy(
+  () => import("Views/GovernedData/Datashare/DatashareDetailLayout")
 );
-const DatashareDetailFullView = lazy(() =>
-  import("Views/GovernedData/Datashare/DatashareDetailFullView")
+const DatashareDetailFullView = lazy(
+  () => import("Views/GovernedData/Datashare/DatashareDetailFullView")
 );
-const DatashareAddSharedResourceComp = lazy(() =>
-  import("Views/GovernedData/Datashare/AddSharedResourceComp")
+const DatashareAddSharedResourceComp = lazy(
+  () => import("Views/GovernedData/Datashare/AddSharedResourceComp")
 );
-const GDSRequestListingComp = lazy(() =>
-  import("Views/GovernedData/Request/RequestListing")
+const GDSRequestListingComp = lazy(
+  () => import("Views/GovernedData/Request/RequestListing")
 );
-const GDSRequestDetailComp = lazy(() =>
-  import("Views/GovernedData/Request/RequestDetailView")
+const GDSRequestDetailComp = lazy(
+  () => import("Views/GovernedData/Request/RequestDetailView")
+);
+const CreatePolicyComp = lazy(
+  () => import("Views/PolicyListing/NewPolicyForm/CreateNewPolicyForm")
+);
+const EditPolicyComp = lazy(
+  () =>
+    import("Views/PolicyListing/NewPolicyForm/EditNewPolicyForm/EditPolicyForm")
+);
+const PolicyFormContextComp = lazy(
+  () => import("Views/PolicyListing/PolicyFormContext")
 );
 
 export default class App extends Component {
@@ -193,8 +203,8 @@ export default class App extends Component {
     let serviceDefUrl = hasAccessToTab("Resource Based Policies")
       ? "plugins/definitions"
       : hasAccessToTab("Tag Based Policies") && isUser()
-      ? "plugins/definitions/name/tag"
-      : "plugins/definitions";
+        ? "plugins/definitions/name/tag"
+        : "plugins/definitions";
 
     try {
       getServiceDefData = await fetchApi({
@@ -265,6 +275,10 @@ export default class App extends Component {
                       path="tag"
                       element={<HomeComp isTagView={true} key="tagHomeComp" />}
                     />
+                    <Route
+                      path="create-policy"
+                      element={<CreatePolicyComp />}
+                    />
                   </Route>
                   <Route
                     path="/reports/userAccess"
@@ -292,17 +306,27 @@ export default class App extends Component {
                           element={<PolicyListingTabView />}
                         />
                         {/* POLICY CREATE */}
-                        <Route path="create">
+                        <Route
+                          path="create"
+                          element={<PolicyFormContextComp />}
+                        >
                           <Route
                             path=":policyType"
                             element={<AddUpdatePolicyForm />}
                           />
                         </Route>
                         {/* POLICY EDIT */}
-                        <Route path=":policyId">
+                        <Route
+                          path=":policyId"
+                          element={<PolicyFormContextComp />}
+                        >
                           <Route
                             path="edit"
                             element={<AddUpdatePolicyForm />}
+                          />
+                          <Route
+                            path="new-policy-form-edit"
+                            element={<EditPolicyComp />}
                           />
                         </Route>
                       </Route>

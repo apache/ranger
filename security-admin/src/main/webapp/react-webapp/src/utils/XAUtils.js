@@ -18,7 +18,7 @@
  */
 
 import React, { useState } from "react";
-import { getUserProfile } from "Utils/appState";
+import { getUserProfile, getServiceDef } from "Utils/appState";
 import {
   UserRoles,
   PathAssociateWithModule,
@@ -43,6 +43,9 @@ import {
   some,
   has,
   sortBy,
+  cloneDeep,
+  toUpper,
+  groupBy,
   isArray
 } from "lodash";
 import { matchRoutes } from "react-router-dom";
@@ -168,6 +171,10 @@ export const hasAccessToPath = (pathName) => {
   moduleNames.push("localLogin");
   if (isSystemAdmin() || isAuditor()) {
     moduleNames.push("Permission");
+  }
+  if (isSystemAdmin() || isKeyAdmin() || isUser()) {
+    moduleNames.push("CreateNewPolicyForm");
+    moduleNames.push("EditNewPolicyForm");
   }
   let allRouter = [],
     returnFlag = true;
@@ -1605,6 +1612,208 @@ export const safeJsonParse = (value, fallback) => {
   }
 };
 
+// Common function to get service definition type
+export const getServiceDefType = () => {
+  const { allServiceDefs } = cloneDeep(getServiceDef());
+  let serviceDefType = [];
+
+  serviceDefType = sortBy(
+    map(allServiceDefs, function (serviceDef) {
+      return {
+        label: toUpper(serviceDef.displayName),
+        value: serviceDef.name
+      };
+    }),
+    ["label"] // Sorts by the 'label' property in ascending order
+  );
+
+  return serviceDefType;
+};
+
+// Common function to get service names by service type
+export const getServiceNameByServiceType = async (serviceType) => {
+  let serviceNames = [];
+  let params = { serviceType: serviceType };
+  try {
+    const response = await fetchApi({
+      url: "public/v2/api/service-headers",
+      params: params
+    });
+    serviceNames =
+      sortBy(
+        map(response?.data, function ({ name, displayName, id }) {
+          return { label: displayName, value: name, serviceId: id };
+        }),
+        "label"
+      ) || [];
+  } catch (error) {
+    console.error(
+      `Error occurred while fetching Services names by service type or CSRF headers! ${error}`
+    );
+  }
+  return serviceNames;
+};
+
+// Common function to get zone names by service ID
+export const getZoneNameByServiceID = async (
+  serviceID,
+  selectedServiceComponentDef
+) => {
+  let zoneNames = [];
+  let params = {
+    isTagService: selectedServiceComponentDef?.name == "tag" ? true : false
+  };
+  try {
+    const response = await fetchApi({
+      url: `public/v2/api/zones/zone-headers/for-service/${serviceID}`,
+      params: params
+    });
+    zoneNames =
+      sortBy(
+        map(response?.data, function ({ name, id }) {
+          return { label: name, value: name, zoneId: id };
+        }),
+        "label"
+      ) || [];
+  } catch (error) {
+    console.error(
+      `Error occurred while fetching Zone names by service ID or CSRF headers! ${error}`
+    );
+  }
+  return zoneNames;
+};
+
+//Common function for select box colour change on error
+export const getSelectBoxErrorStyles = (meta) => ({
+  control: (provided) => ({
+    ...provided,
+    borderColor: meta.touched && meta.error ? "#dc3545" : provided.borderColor,
+    boxShadow:
+      meta.touched && meta.error
+        ? "0 0 0 0.2rem rgba(220,53,69,.25)"
+        : provided.boxShadow
+  })
+});
+
+//Common function to get AccessType base on resources
+export const getResourceLevelKeysSorted = (serviceCompDetails) => {
+  if (!serviceCompDetails) {
+    return [];
+  }
+  const { resources = [] } = serviceCompDetails;
+  const grpResources = groupBy(resources, "level");
+  const grpResourcesKeys = [];
+  for (const resourceKey in grpResources) {
+    grpResourcesKeys.push(+resourceKey);
+  }
+  grpResourcesKeys.sort();
+  return grpResourcesKeys;
+};
+
+export const getAccessTypesByResource = (formValues, serviceCompDetails) => {
+  if (!formValues || !serviceCompDetails) {
+    return [];
+  }
+  const grpResourcesKeys = getResourceLevelKeysSorted(serviceCompDetails);
+  const accessTypeNoneOption = {
+    label: "None",
+    value: "none"
+  };
+  let srcOp = [],
+    multiplePermissionItem = [];
+  if (
+    RangerPolicyType.RANGER_MASKING_POLICY_TYPE.value == formValues.policyType
+  ) {
+    srcOp = serviceCompDetails.dataMaskDef?.accessTypes || [];
+  } else if (
+    RangerPolicyType.RANGER_ROW_FILTER_POLICY_TYPE.value ==
+    formValues.policyType
+  ) {
+    srcOp = serviceCompDetails.rowFilterDef?.accessTypes || [];
+  } else {
+    srcOp = serviceCompDetails.accessTypes;
+  }
+
+  map(formValues.additionalResources, (resourceObj) => {
+    for (let i = grpResourcesKeys.length - 1; i >= 0; i--) {
+      let selectedResource = `resourceName-${grpResourcesKeys[i]}`;
+      if (
+        resourceObj[selectedResource] &&
+        resourceObj[selectedResource].value !== accessTypeNoneOption.value
+      ) {
+        if (resourceObj[selectedResource].accessTypeRestrictions?.length > 0) {
+          let op = [];
+          for (const name of resourceObj[selectedResource]
+            .accessTypeRestrictions) {
+            let typeOp = find(srcOp, { name });
+            if (typeOp) {
+              op.push(typeOp);
+            }
+          }
+          multiplePermissionItem = [...multiplePermissionItem, ...op];
+        } else {
+          multiplePermissionItem = [...srcOp];
+        }
+        break;
+      }
+    }
+  });
+  srcOp = [...new Set(multiplePermissionItem)];
+  return sortBy(
+    srcOp.map(({ label, name: value }) => ({ label, value })),
+    [(o) => o.label.toLowerCase()]
+  );
+};
+
+export const prunePolicyItemAccessesToAllowedTypes = (
+  form,
+  selectedServiceComponentDef
+) => {
+  const formValues = form.getState().values;
+
+  const isNotAccessPolicy =
+    formValues?.policyType !== RangerPolicyType.RANGER_ACCESS_POLICY_TYPE.value;
+
+  const isTagService = selectedServiceComponentDef.name === "tag";
+
+  if (isNotAccessPolicy || isTagService) {
+    return;
+  }
+
+  const options = getAccessTypesByResource(
+    formValues,
+    selectedServiceComponentDef
+  );
+  const allowedSet = new Set(
+    (options || []).map((o) => o && o.value).filter(Boolean)
+  );
+
+  const pruneAccessArrays = (attrName) => {
+    const arr = formValues?.[attrName];
+    if (!Array.isArray(arr)) {
+      return;
+    }
+    for (let i = 0; i < arr.length; i++) {
+      const item = arr[i];
+      if (!item || !Array.isArray(item.accesses)) {
+        continue;
+      }
+
+      const selectedAccesses = item.accesses.filter((a) => {
+        return a.type && allowedSet.has(a.type);
+      });
+      form.change(`${attrName}[${i}].accesses`, selectedAccesses);
+    }
+  };
+
+  pruneAccessArrays("policyItems");
+  pruneAccessArrays("allowExceptions");
+  if (formValues?.isDenyAllElse !== true) {
+    pruneAccessArrays("denyPolicyItems");
+    pruneAccessArrays("denyExceptions");
+  }
+};
+
 //CommonFunction to get display label for policy permission item
 export const getPolicyPermissionItemDisplayLbl = (
   serviceDef,
@@ -1630,8 +1839,8 @@ export const getPolicyPermissionItemDisplayLbl = (
     if (accessType.length == accessTypeDefVal.length) {
       return sortBy(accessTypeDefVal, "label");
     } else {
-      const accessTypeDisplayLblObj = filter(accessTypeDefVal, (item) =>
-        includes(accesTypeKeys, { type: item.name })
+      const accessTypeDisplayLblObj = filter(accessTypeDefVal, (obj) =>
+        includes(accesTypeKeys, obj.name)
       );
       return sortBy(accessTypeDisplayLblObj, "label");
     }

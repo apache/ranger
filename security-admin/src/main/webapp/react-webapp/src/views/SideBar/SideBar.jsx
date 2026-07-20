@@ -29,6 +29,7 @@ import zoneIcon from "Images/sidebar/zone.svg";
 import settingsIcon from "Images/sidebar/settings.svg";
 import accountIcon from "Images/sidebar/account.svg";
 import gdsIcon from "Images/sidebar/governed-data.svg";
+import plus from "Images/sidebar/plus.svg";
 import { fetchApi } from "Utils/fetchAPI";
 import { getServiceDef, getUserProfile } from "Utils/appState";
 import {
@@ -37,7 +38,8 @@ import {
   isKeyAdmin,
   isSystemAdmin,
   isKMSAuditor,
-  getLandingPageURl
+  getLandingPageURl,
+  isUser
 } from "Utils/XAUtils";
 import { cloneDeep, filter, sortBy } from "lodash";
 import { PathAssociateWithModule } from "Utils/XAEnums";
@@ -234,6 +236,24 @@ export const SideBar = () => {
         </div>
 
         <ul className="list-unstyled components">
+          {(hasAccessToTab("Resource Based Policies") ||
+            hasAccessToTab("Tag Based Policies")) &&
+            (isUser() || isKeyAdmin() || isSystemAdmin()) && (
+              <li>
+                <NavLink
+                  to="/policymanager/create-policy"
+                  className={activeClass("CreateNewPolicyForm")}
+                  onClick={() => {
+                    setActive(null);
+                    setDrawer(false);
+                    setAccountDrawer(false);
+                  }}
+                >
+                  <img src={plus} />
+                  <span>Create New Policy</span>
+                </NavLink>
+              </li>
+            )}
           {hasAccessToTab("Resource Based Policies") && (
             <li
               className={

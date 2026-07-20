@@ -36,7 +36,6 @@ import {
   groupBy,
   find,
   isEmpty,
-  pick,
   isArray,
   isEqual,
   forIn,
@@ -45,8 +44,7 @@ import {
   map,
   isUndefined,
   forEach,
-  reject,
-  cloneDeep
+  reject
 } from "lodash";
 import { toast } from "react-toastify";
 import {
@@ -60,14 +58,18 @@ import { fetchApi } from "Utils/fetchAPI";
 import { RangerPolicyType, getEnumElementByValue } from "Utils/XAEnums";
 import ResourceComp from "../Resources/ResourceComp";
 import PolicyPermissionItem from "../PolicyListing/PolicyPermissionItem";
-import { useParams, useNavigate, useLocation } from "react-router-dom";
+import {
+  useParams,
+  useNavigate,
+  useLocation,
+  useOutletContext
+} from "react-router-dom";
 import PolicyValidityPeriodComp from "./PolicyValidityPeriodComp";
 import PolicyConditionsComp from "./PolicyConditionsComp";
 import { isPerRowCondition } from "Utils/policyConditionUtils";
 import moment from "moment";
 import {
   InfoIcon,
-  commonBreadcrumb,
   isPolicyExpired,
   getResourcesDefVal,
   getAllTimeZoneList,
@@ -79,7 +81,6 @@ import { useAccordionButton } from "react-bootstrap/AccordionButton";
 import AccordionContext from "react-bootstrap/AccordionContext";
 import usePrompt from "Hooks/usePrompt";
 import { RegexMessage } from "Utils/XAMessages";
-import { getServiceDef } from "Utils/appState";
 import { FieldArray } from "react-final-form-arrays";
 
 const noneOptions = {
@@ -129,10 +130,13 @@ export default function AddUpdatePolicyForm() {
   let { serviceId, policyType, policyId } = useParams();
   const navigate = useNavigate();
   const { state } = useLocation();
-  const serviceDefs = cloneDeep(getServiceDef());
+
+  // Get data from PolicyFormContext
+  const contextData = useOutletContext();
+  const { serviceDetails, serviceCompDetails, policyData } = contextData;
+
   const [policyState, dispatch] = useReducer(reducer, initialState);
-  const { loader, serviceDetails, serviceCompDetails, policyData, formData } =
-    policyState;
+  const { loader, formData } = policyState;
   const [defaultPolicyLabelOptions, setDefaultPolicyLabelOptions] = useState(
     []
   );
@@ -147,8 +151,20 @@ export default function AddUpdatePolicyForm() {
     useState(false);
 
   useEffect(() => {
-    fetchInitialData();
-  }, [serviceId, policyType, policyId]);
+    if (serviceCompDetails) {
+      const generatedFormData = generateFormData(
+        policyData,
+        serviceCompDetails
+      );
+      dispatch({
+        type: "SET_DATA",
+        serviceDetails,
+        serviceCompDetails,
+        policyData,
+        formData: generatedFormData
+      });
+    }
+  }, [serviceDetails, serviceCompDetails, policyData]);
 
   const showDeleteModal = () => {
     setShowDelete(true);
@@ -229,66 +245,6 @@ export default function AddUpdatePolicyForm() {
       label: obj.value,
       value: obj.value
     }));
-  };
-
-  const fetchInitialData = async () => {
-    let serviceData = await fetchServiceDetails();
-
-    let serviceCompData = serviceDefs?.allServiceDefs?.find((serviceDef) => {
-      return serviceDef.name == serviceData.type;
-    });
-    if (serviceCompData) {
-      let serviceDefPolicyType = 0;
-      if (
-        serviceCompData?.dataMaskDef &&
-        Object.keys(serviceCompData.dataMaskDef).length != 0
-      )
-        serviceDefPolicyType++;
-      if (
-        serviceCompData?.rowFilterDef &&
-        Object.keys(serviceCompData.rowFilterDef).length != 0
-      )
-        serviceDefPolicyType++;
-      if (+policyType > serviceDefPolicyType) navigate("/pageNotFound");
-    }
-    let policyData = null;
-    if (policyId) {
-      policyData = await fetchPolicyData();
-    }
-
-    dispatch({
-      type: "SET_DATA",
-      serviceDetails: serviceData,
-      serviceCompDetails: serviceCompData,
-      policyData: policyData || null,
-      formData: generateFormData(policyData, serviceCompData)
-    });
-  };
-
-  const fetchServiceDetails = async () => {
-    let data = null;
-    try {
-      const resp = await fetchApi({
-        url: `plugins/services/${serviceId}`
-      });
-      data = resp.data || null;
-    } catch (error) {
-      console.error(`Error occurred while fetching policy details ! ${error}`);
-    }
-    return data;
-  };
-
-  const fetchPolicyData = async () => {
-    let data = null;
-    try {
-      const resp = await fetchApi({
-        url: `plugins/policies/${policyId}`
-      });
-      data = resp.data || null;
-    } catch (error) {
-      console.error(`Error occurred while fetching service details ! ${error}`);
-    }
-    return data;
   };
 
   const fetchPolicyLabel = async (inputValue) => {
@@ -997,13 +953,14 @@ export default function AddUpdatePolicyForm() {
     navigate(`/service/${serviceId}/policies/${polType}`);
   };
 
-  const CustomToggle = ({ children, eventKey, callback }) => {
+  const CustomToggle = ({ eventKey, callback }) => {
     const currentEventKey = useContext(AccordionContext);
 
     const decoratedOnClick = useAccordionButton(
       eventKey,
       () => callback && callback(eventKey)
     );
+
     const isCurrentEventKey = currentEventKey?.activeEventKey === eventKey;
 
     return (
@@ -1062,772 +1019,551 @@ export default function AddUpdatePolicyForm() {
     }
   };
 
-  const policyBreadcrumb = () => {
-    let policyDetails = {};
-    policyDetails["serviceId"] = serviceId;
-    policyDetails["policyType"] = policyId
-      ? policyData?.policyType
-      : policyType;
-    policyDetails["serviceName"] = serviceDetails?.displayName;
-    policyDetails["selectedZone"] = JSON.parse(
-      localStorage.getItem("zoneDetails")
-    );
-    if (serviceCompDetails?.name === "tag") {
-      if (policyDetails?.selectedZone) {
-        return commonBreadcrumb(
-          [
-            "TagBasedServiceManager",
-            "ManagePolicies",
-            policyId ? "PolicyEdit" : "PolicyCreate"
-          ],
-          policyDetails
-        );
-      } else {
-        return commonBreadcrumb(
-          [
-            "TagBasedServiceManager",
-            "ManagePolicies",
-            policyId ? "PolicyEdit" : "PolicyCreate"
-          ],
-          pick(policyDetails, ["serviceId", "policyType", "serviceName"])
-        );
-      }
-    } else {
-      if (policyDetails?.selectedZone) {
-        return commonBreadcrumb(
-          [
-            "ServiceManager",
-            "ManagePolicies",
-            policyId ? "PolicyEdit" : "PolicyCreate"
-          ],
-          policyDetails
-        );
-      } else {
-        return commonBreadcrumb(
-          [
-            "ServiceManager",
-            "ManagePolicies",
-            policyId ? "PolicyEdit" : "PolicyCreate"
-          ],
-          pick(policyDetails, ["serviceId", "policyType", "serviceName"])
-        );
-      }
-    }
-  };
-
   return (
     <>
       {loader ? (
         <Loader />
       ) : (
-        <div>
-          <div className="header-wraper">
-            <h3 className="wrap-header bold">{`${
-              policyId ? "Edit" : "Create"
-            } Policy`}</h3>
-            {policyBreadcrumb()}
-          </div>
+        <div className="wrap">
+          <Form
+            onSubmit={handleSubmit}
+            mutators={{
+              ...arrayMutators
+            }}
+            initialValues={formData}
+            validate={(values) => {
+              const errors = {};
+              if (!values.policyName) {
+                errors.policyName = {
+                  required: true,
+                  text: "Required"
+                };
+              }
 
-          <div className="wrap">
-            <Form
-              onSubmit={handleSubmit}
-              mutators={{
-                ...arrayMutators
-              }}
-              initialValues={formData}
-              validate={(values) => {
-                const errors = {};
-                if (!values.policyName) {
-                  errors.policyName = {
-                    required: true,
-                    text: "Required"
-                  };
-                }
-
-                return errors;
-              }}
-              render={({
-                handleSubmit,
-                values,
-                invalid,
-                errors,
-                dirty,
-                form: {
-                  mutators: { push: addPolicyItem }
-                },
-                dirtyFields,
-                modified,
-                initialValues
-              }) => (
-                <>
-                  <PromptDialog
-                    isDirtyField={
-                      dirty == true || !isEqual(initialValues, values)
-                        ? isDirtyFieldCheck(
-                            dirtyFields,
-                            modified,
-                            values,
-                            initialValues
-                          )
-                        : false
+              return errors;
+            }}
+            render={({
+              handleSubmit,
+              values,
+              invalid,
+              errors,
+              dirty,
+              form: {
+                mutators: { push: addPolicyItem }
+              },
+              dirtyFields,
+              modified,
+              initialValues
+            }) => (
+              <>
+                <PromptDialog
+                  isDirtyField={
+                    dirty == true || !isEqual(initialValues, values)
+                      ? isDirtyFieldCheck(
+                          dirtyFields,
+                          modified,
+                          values,
+                          initialValues
+                        )
+                      : false
+                  }
+                  isUnblock={preventUnBlock}
+                />
+                <form
+                  onSubmit={(event) => {
+                    if (invalid) {
+                      forIn(errors, function (value, key) {
+                        if (
+                          has(errors, "policyName") ||
+                          resourceErrorCheck(errors, values)
+                        ) {
+                          let selector =
+                            document.getElementById("isError") ||
+                            document.getElementById(key) ||
+                            document.querySelector(`input[name=${key}]`) ||
+                            document.querySelector(`input[id=${key}]`) ||
+                            document.querySelector(
+                              `span[className="invalid-field"]`
+                            );
+                          scrollToError(selector);
+                        } else {
+                          getValidatePolicyItems(errors?.[key]);
+                        }
+                      });
                     }
-                    isUnblock={preventUnBlock}
-                  />
-                  <form
-                    onSubmit={(event) => {
-                      if (invalid) {
-                        forIn(errors, function (value, key) {
-                          if (
-                            has(errors, "policyName") ||
-                            resourceErrorCheck(errors, values)
-                          ) {
-                            let selector =
-                              document.getElementById("isError") ||
-                              document.getElementById(key) ||
-                              document.querySelector(`input[name=${key}]`) ||
-                              document.querySelector(`input[id=${key}]`) ||
-                              document.querySelector(
-                                `span[className="invalid-field"]`
-                              );
-                            scrollToError(selector);
-                          } else {
-                            getValidatePolicyItems(errors?.[key]);
-                          }
-                        });
-                      }
-                      handleSubmit(event);
-                    }}
-                  >
-                    {(values.policyType ==
-                      RangerPolicyType.RANGER_MASKING_POLICY_TYPE.value ||
-                      values.policyType ==
-                        RangerPolicyType.RANGER_ROW_FILTER_POLICY_TYPE.value) &&
-                      show && (
-                        <Alert
-                          variant="warning"
-                          onClose={() => setShow(false)}
-                          dismissible
-                          data-js="policyInfoAlert"
-                          data-cy="policyInfoAlert"
-                        >
-                          <i className="fa-fw fa fa-info-circle d-inline text-dark"></i>
-                          {policyInfo(
-                            values.policyType,
-                            serviceCompDetails.name
+                    handleSubmit(event);
+                  }}
+                >
+                  {(values.policyType ==
+                    RangerPolicyType.RANGER_MASKING_POLICY_TYPE.value ||
+                    values.policyType ==
+                      RangerPolicyType.RANGER_ROW_FILTER_POLICY_TYPE.value) &&
+                    show && (
+                      <Alert
+                        variant="warning"
+                        onClose={() => setShow(false)}
+                        dismissible
+                        data-js="policyInfoAlert"
+                        data-cy="policyInfoAlert"
+                      >
+                        <i className="fa-fw fa fa-info-circle d-inline text-dark"></i>
+                        {policyInfo(values.policyType, serviceCompDetails.name)}
+                      </Alert>
+                    )}
+                  {policyId &&
+                    !isEmpty(policyData.validitySchedules) &&
+                    isPolicyExpired(policyData) &&
+                    showPolicyExpire && (
+                      <Alert
+                        variant="danger"
+                        onClose={() => setShowPolicyExpire(false)}
+                        dismissible
+                      >
+                        <i className="fa fa-clock-o fa-fw  fa-lg time-clock"></i>
+                        <p className="pd-l-6 d-inline"> Policy Expired</p>
+                      </Alert>
+                    )}
+                  <fieldset>
+                    <p className="formHeader">Policy Details : </p>
+                  </fieldset>
+                  <Row className="user-role-grp-form">
+                    <Col md={8}>
+                      <FormB.Group as={Row} className="mb-3">
+                        <Field
+                          className="form-control"
+                          name="policyType"
+                          render={({ input }) => (
+                            <>
+                              <FormB.Label column sm={3}>
+                                <span className="float-end fnt-14">
+                                  Policy Type
+                                </span>
+                              </FormB.Label>
+                              <Col sm={5}>
+                                <h6 className="d-inline me-1">
+                                  <Badge
+                                    bg="primary"
+                                    style={{ verticalAlign: "sub" }}
+                                  >
+                                    {
+                                      getEnumElementByValue(
+                                        RangerPolicyType,
+                                        +input.value
+                                      )?.label
+                                    }
+                                  </Badge>
+                                </h6>
+                              </Col>
+                            </>
                           )}
-                        </Alert>
-                      )}
-                    {policyId &&
-                      !isEmpty(policyData.validitySchedules) &&
-                      isPolicyExpired(policyData) &&
-                      showPolicyExpire && (
-                        <Alert
-                          variant="danger"
-                          onClose={() => setShowPolicyExpire(false)}
-                          dismissible
-                        >
-                          <i className="fa fa-clock-o fa-fw  fa-lg time-clock"></i>
-                          <p className="pd-l-6 d-inline"> Policy Expired</p>
-                        </Alert>
-                      )}
-                    <fieldset>
-                      <p className="formHeader">Policy Details : </p>
-                    </fieldset>
-                    <Row className="user-role-grp-form">
-                      <Col md={8}>
+                        />
+                      </FormB.Group>
+                      {policyId && (
                         <FormB.Group as={Row} className="mb-3">
-                          <Field
-                            className="form-control"
-                            name="policyType"
-                            render={({ input }) => (
+                          <FormB.Label column sm={3}>
+                            <span className="float-end fnt-14">Policy ID*</span>
+                          </FormB.Label>
+                          <Col sm={5}>
+                            <h6 className="d-inline me-1">
+                              <span style={{ verticalAlign: "sub" }}>
+                                <Badge bg="primary">{policyData.id}</Badge>
+                              </span>
+                            </h6>
+                          </Col>
+                        </FormB.Group>
+                      )}
+                      <FormB.Group as={Row} className="mb-3">
+                        <Field
+                          className="form-control"
+                          name="policyName"
+                          render={({ input, meta }) => (
+                            <>
+                              <FormB.Label column sm={3}>
+                                <span className="float-end fnt-14">
+                                  Policy Name*
+                                </span>
+                              </FormB.Label>
                               <>
-                                <FormB.Label column sm={3}>
-                                  <span className="float-end fnt-14">
-                                    Policy Type
-                                  </span>
-                                </FormB.Label>
-                                <Col sm={5}>
-                                  <h6 className="d-inline me-1">
-                                    <Badge
-                                      bg="primary"
-                                      style={{ verticalAlign: "sub" }}
-                                    >
-                                      {
-                                        getEnumElementByValue(
-                                          RangerPolicyType,
-                                          +input.value
-                                        )?.label
-                                      }
-                                    </Badge>
-                                  </h6>
+                                <Col sm={5} className={"position-relative"}>
+                                  <FormB.Control
+                                    {...input}
+                                    placeholder="Policy Name"
+                                    id={
+                                      meta.error && meta.touched
+                                        ? "isError"
+                                        : "name"
+                                    }
+                                    className={
+                                      meta.error && meta.touched
+                                        ? "form-control border-danger"
+                                        : "form-control"
+                                    }
+                                    data-cy="policyName"
+                                    onBlur={(e) => trimInputValue(e, input)}
+                                  />
+                                  <InfoIcon
+                                    css="input-box-info-icon"
+                                    position="right"
+                                    message={
+                                      <p
+                                        className="pd-10"
+                                        style={{ fontSize: "small" }}
+                                      >
+                                        {
+                                          RegexMessage.MESSAGE
+                                            .policyNameInfoIconMessage
+                                        }
+                                      </p>
+                                    }
+                                  />
+                                  {meta.touched && meta.error && (
+                                    <span className="invalid-field">
+                                      {meta.error.text}
+                                    </span>
+                                  )}
                                 </Col>
                               </>
-                            )}
-                          />
-                        </FormB.Group>
-                        {policyId && (
+                            </>
+                          )}
+                        />
+                        <Col sm={4}>
+                          <Row>
+                            <Col sm={5}>
+                              <Field
+                                className="form-control"
+                                name="isEnabled"
+                                render={({ input }) => (
+                                  <BootstrapSwitchButton
+                                    {...input}
+                                    className="abcd"
+                                    checked={!(input.value === false)}
+                                    onlabel="Enabled"
+                                    onstyle="primary"
+                                    offlabel="Disabled"
+                                    offstyle="outline-secondary"
+                                    style="w-100"
+                                    size="xs"
+                                    key="isEnabled"
+                                  />
+                                )}
+                              />
+                            </Col>
+                            <Col sm={5}>
+                              <Field
+                                className="form-control"
+                                name="policyPriority"
+                                render={({ input }) => (
+                                  <BootstrapSwitchButton
+                                    {...input}
+                                    checked={input.value}
+                                    onlabel="Override"
+                                    onstyle="primary"
+                                    offlabel="Normal"
+                                    offstyle="outline-secondary"
+                                    style="w-100"
+                                    size="xs"
+                                    key="policyPriority"
+                                  />
+                                )}
+                              />
+                            </Col>
+                          </Row>
+                        </Col>
+                      </FormB.Group>
+                      <Field
+                        className="form-control"
+                        name="policyLabel"
+                        render={({ input }) => (
                           <FormB.Group as={Row} className="mb-3">
                             <FormB.Label column sm={3}>
                               <span className="float-end fnt-14">
-                                Policy ID*
+                                Policy Label
                               </span>
                             </FormB.Label>
                             <Col sm={5}>
-                              <h6 className="d-inline me-1">
-                                <span style={{ verticalAlign: "sub" }}>
-                                  <Badge bg="primary">{policyData.id}</Badge>
-                                </span>
-                              </h6>
+                              <AsyncCreatableSelect
+                                {...input}
+                                isMulti
+                                loadOptions={fetchPolicyLabel}
+                                onFocus={() => {
+                                  onFocusPolicyLabel();
+                                }}
+                                defaultOptions={defaultPolicyLabelOptions}
+                                styles={selectInputCustomStyles}
+                                // Add this prop to trim the visual "Create" label
+                                formatCreateLabel={(inputValue) =>
+                                  `Create "${inputValue.trim()}"`
+                                }
+                                // Add this prop to trim the value when a tag is created
+                                onCreateOption={(inputValue) => {
+                                  const policyLabelVal = inputValue.trim();
+                                  if (policyLabelVal) {
+                                    input.onChange([
+                                      ...input.value,
+                                      {
+                                        label: policyLabelVal,
+                                        value: policyLabelVal
+                                      }
+                                    ]);
+                                  }
+                                }}
+                                tabSelectsValue={false}
+                                placeholder="Add Policy Labels"
+                              />
                             </Col>
                           </FormB.Group>
                         )}
-                        <FormB.Group as={Row} className="mb-3">
-                          <Field
-                            className="form-control"
-                            name="policyName"
-                            render={({ input, meta }) => (
-                              <>
-                                <FormB.Label column sm={3}>
-                                  <span className="float-end fnt-14">
-                                    Policy Name*
-                                  </span>
-                                </FormB.Label>
-                                <>
-                                  <Col sm={5} className={"position-relative"}>
-                                    <FormB.Control
-                                      {...input}
-                                      placeholder="Policy Name"
-                                      id={
-                                        meta.error && meta.touched
-                                          ? "isError"
-                                          : "name"
-                                      }
-                                      className={
-                                        meta.error && meta.touched
-                                          ? "form-control border-danger"
-                                          : "form-control"
-                                      }
-                                      data-cy="policyName"
-                                      onBlur={(e) => trimInputValue(e, input)}
-                                    />
-                                    <InfoIcon
-                                      css="input-box-info-icon"
-                                      position="right"
-                                      message={
-                                        <p
-                                          className="pd-10"
-                                          style={{ fontSize: "small" }}
-                                        >
-                                          {
-                                            RegexMessage.MESSAGE
-                                              .policyNameInfoIconMessage
-                                          }
-                                        </p>
-                                      }
-                                    />
-                                    {meta.touched && meta.error && (
-                                      <span className="invalid-field">
-                                        {meta.error.text}
-                                      </span>
-                                    )}
-                                  </Col>
-                                </>
-                              </>
-                            )}
-                          />
-                          <Col sm={4}>
-                            <Row>
-                              <Col sm={5}>
-                                <Field
-                                  className="form-control"
-                                  name="isEnabled"
-                                  render={({ input }) => (
-                                    <BootstrapSwitchButton
-                                      {...input}
-                                      className="abcd"
-                                      checked={!(input.value === false)}
-                                      onlabel="Enabled"
-                                      onstyle="primary"
-                                      offlabel="Disabled"
-                                      offstyle="outline-secondary"
-                                      style="w-100"
-                                      size="xs"
-                                      key="isEnabled"
-                                    />
-                                  )}
-                                />
-                              </Col>
-                              <Col sm={5}>
-                                <Field
-                                  className="form-control"
-                                  name="policyPriority"
-                                  render={({ input }) => (
-                                    <BootstrapSwitchButton
-                                      {...input}
-                                      checked={input.value}
-                                      onlabel="Override"
-                                      onstyle="primary"
-                                      offlabel="Normal"
-                                      offstyle="outline-secondary"
-                                      style="w-100"
-                                      size="xs"
-                                      key="policyPriority"
-                                    />
-                                  )}
-                                />
-                              </Col>
-                            </Row>
-                          </Col>
-                        </FormB.Group>
-                        <Field
-                          className="form-control"
-                          name="policyLabel"
-                          render={({ input }) => (
-                            <FormB.Group as={Row} className="mb-3">
-                              <FormB.Label column sm={3}>
-                                <span className="float-end fnt-14">
-                                  Policy Label
-                                </span>
-                              </FormB.Label>
-                              <Col sm={5}>
-                                <AsyncCreatableSelect
+                      />
+                      {!isMultiResources && (
+                        <ResourceComp
+                          serviceDetails={serviceDetails}
+                          serviceCompDetails={serviceCompDetails}
+                          formValues={values}
+                          policyType={
+                            policyId ? policyData.policyType : policyType
+                          }
+                          policyId={policyId}
+                        />
+                      )}
+                      <Field
+                        className="form-control"
+                        name="description"
+                        render={({ input }) => (
+                          <FormB.Group as={Row} className="mb-3">
+                            <FormB.Label column sm={3}>
+                              <span className="float-end fnt-14">
+                                Description
+                              </span>
+                            </FormB.Label>
+                            <Col sm={5}>
+                              <FormB.Control
+                                {...input}
+                                as="textarea"
+                                rows={3}
+                                data-cy="description"
+                                onBlur={(e) => trimInputValue(e, input)}
+                              />
+                            </Col>
+                          </FormB.Group>
+                        )}
+                      />
+                      <Field
+                        className="form-control"
+                        name="isAuditEnabled"
+                        render={({ input }) => (
+                          <FormB.Group as={Row} className="mb-3">
+                            <FormB.Label column sm={3}>
+                              <span className="float-end fnt-14">
+                                Audit Logging*
+                              </span>
+                            </FormB.Label>
+                            <Col sm={5}>
+                              <span style={{ verticalAlign: "sub" }}>
+                                <BootstrapSwitchButton
                                   {...input}
-                                  isMulti
-                                  loadOptions={fetchPolicyLabel}
-                                  onFocus={() => {
-                                    onFocusPolicyLabel();
-                                  }}
-                                  defaultOptions={defaultPolicyLabelOptions}
-                                  styles={selectInputCustomStyles}
-                                  // Add this prop to trim the visual "Create" label
-                                  formatCreateLabel={(inputValue) =>
-                                    `Create "${inputValue.trim()}"`
-                                  }
-                                  // Add this prop to trim the value when a tag is created
-                                  onCreateOption={(inputValue) => {
-                                    const policyLabelVal = inputValue.trim();
-                                    if (policyLabelVal) {
-                                      input.onChange([
-                                        ...input.value,
-                                        {
-                                          label: policyLabelVal,
-                                          value: policyLabelVal
-                                        }
-                                      ]);
-                                    }
-                                  }}
-                                  tabSelectsValue={false}
-                                  placeholder="Add Policy Labels"
+                                  checked={!(input.value === false)}
+                                  onlabel="Yes"
+                                  onstyle="primary"
+                                  offlabel="No"
+                                  offstyle="outline-secondary"
+                                  size="xs"
+                                  key="isAuditEnabled"
                                 />
-                              </Col>
-                            </FormB.Group>
-                          )}
-                        />
-                        {!isMultiResources && (
-                          <ResourceComp
-                            serviceDetails={serviceDetails}
-                            serviceCompDetails={serviceCompDetails}
-                            formValues={values}
-                            policyType={
-                              policyId ? policyData.policyType : policyType
-                            }
-                            policyId={policyId}
-                          />
+                              </span>
+                            </Col>
+                          </FormB.Group>
                         )}
-                        <Field
-                          className="form-control"
-                          name="description"
-                          render={({ input }) => (
-                            <FormB.Group as={Row} className="mb-3">
-                              <FormB.Label column sm={3}>
-                                <span className="float-end fnt-14">
-                                  Description
-                                </span>
-                              </FormB.Label>
-                              <Col sm={5}>
-                                <FormB.Control
-                                  {...input}
-                                  as="textarea"
-                                  rows={3}
-                                  data-cy="description"
-                                  onBlur={(e) => trimInputValue(e, input)}
-                                />
-                              </Col>
-                            </FormB.Group>
-                          )}
+                      />
+                    </Col>
+                    {/* -------------------------------------------------------------- */}
+                    <Col md={4}>
+                      <div className="mb-4">
+                        <PolicyValidityPeriodComp
+                          addPolicyItem={addPolicyItem}
                         />
-                        <Field
-                          className="form-control"
-                          name="isAuditEnabled"
-                          render={({ input }) => (
-                            <FormB.Group as={Row} className="mb-3">
-                              <FormB.Label column sm={3}>
-                                <span className="float-end fnt-14">
-                                  Audit Logging*
-                                </span>
-                              </FormB.Label>
-                              <Col sm={5}>
-                                <span style={{ verticalAlign: "sub" }}>
-                                  <BootstrapSwitchButton
-                                    {...input}
-                                    checked={!(input.value === false)}
-                                    onlabel="Yes"
-                                    onstyle="primary"
-                                    offlabel="No"
-                                    offstyle="outline-secondary"
-                                    size="xs"
-                                    key="isAuditEnabled"
-                                  />
-                                </span>
-                              </Col>
-                            </FormB.Group>
-                          )}
-                        />
-                      </Col>
-                      {/* -------------------------------------------------------------- */}
-                      <Col md={4}>
-                        <div className="mb-4">
-                          <PolicyValidityPeriodComp
-                            addPolicyItem={addPolicyItem}
-                          />
-                        </div>
-                        <br />
-                        {serviceCompDetails?.policyConditions?.length > 0 && (
-                          <div className="table-responsive">
-                            <table className="table table-bordered condition-group-table">
-                              <thead>
-                                <tr>
-                                  <th colSpan="2">
-                                    Policy Conditions :
-                                    {showModal && (
-                                      <Field
-                                        className="form-control"
-                                        name="conditions"
-                                        render={({ input }) => (
-                                          <PolicyConditionsComp
-                                            policyConditionDetails={policyConditionUpdatedJSON(
-                                              serviceCompDetails.policyConditions
-                                            )}
-                                            inputVal={input}
-                                            showModal={showModal}
-                                            handleCloseModal={
-                                              policyConditionState
-                                            }
-                                            modalHeader="Policy Conditions"
-                                          />
-                                        )}
-                                      />
-                                    )}
-                                    <Button
-                                      className="float-end btn btn-mini"
-                                      onClick={() => {
-                                        policyConditionState(true);
-                                      }}
-                                      data-js="customPolicyConditions"
-                                      data-cy="customPolicyConditions"
-                                    >
-                                      <i className="fa-fw fa fa-plus"></i>
-                                    </Button>
-                                  </th>
-                                </tr>
-                              </thead>
-                              <tbody data-id="conditionData">
-                                <>
-                                  {values?.conditions &&
-                                  !isEmpty(values.conditions) ? (
-                                    Object.keys(values.conditions).map(
-                                      (keyName) => {
-                                        if (isPerRowCondition(keyName)) {
-                                          return null;
-                                        }
-                                        if (
-                                          values.conditions[keyName] != "" &&
-                                          values.conditions[keyName] != null
-                                        ) {
-                                          let conditionObj = find(
-                                            serviceCompDetails?.policyConditions,
-                                            function (m) {
-                                              if (m.name == keyName) {
-                                                return m;
-                                              }
-                                            }
-                                          );
-                                          return (
-                                            <tr key={keyName}>
-                                              <td>
-                                                <span>
-                                                  {getPolicyConditionDisplayLbl(
-                                                    conditionObj.label
-                                                  )}
-                                                </span>
-                                              </td>
-                                              <td>
-                                                {isArray(
-                                                  values?.conditions[keyName]
-                                                ) ? (
-                                                  <span className="line-clamp line-clamp-3">
-                                                    {values.conditions[
-                                                      keyName
-                                                    ].join(", ")}
-                                                  </span>
-                                                ) : (
-                                                  <span className="line-clamp line-clamp-3">
-                                                    {values.conditions[keyName]}
-                                                  </span>
-                                                )}
-                                              </td>
-                                            </tr>
-                                          );
-                                        }
-                                      }
-                                    )
-                                  ) : (
-                                    <tr>
-                                      <td>
-                                        <center className="text-muted">
-                                          No Conditions
-                                        </center>
-                                      </td>
-                                    </tr>
-                                  )}
-                                </>
-                              </tbody>
-                            </table>
-                          </div>
-                        )}
-                      </Col>
-                    </Row>
-                    {/* --------------------- Multiple Resources ---------------------------- */}
-                    {isMultiResources && (
-                      <>
-                        <fieldset>
-                          <p className="formHeader">
-                            {serviceCompDetails.name == "tag"
-                              ? "Tags :"
-                              : "Resources :"}
-                          </p>
-                        </fieldset>
-                        <>
-                          <FieldArray name="additionalResources">
-                            {({ fields }) =>
-                              fields.map((name, index) => (
-                                <Row
-                                  className="resource-block"
-                                  key={`${name}-${index}`}
-                                >
-                                  <Col md={8}>
-                                    <ResourceComp
-                                      serviceDetails={serviceDetails}
-                                      serviceCompDetails={serviceCompDetails}
-                                      formValues={
-                                        values.additionalResources[index]
-                                      }
-                                      policyType={
-                                        policyId
-                                          ? policyData.policyType
-                                          : policyType
-                                      }
-                                      name={name}
-                                      isMultiResources={isMultiResources}
-                                    />
-                                  </Col>
-                                  {values.additionalResources.length > 1 && (
-                                    <Col md={4}>
-                                      <Button
-                                        variant="danger"
-                                        size="sm"
-                                        title="Remove"
-                                        onClick={() => fields.remove(index)}
-                                        data-action="delete"
-                                        data-cy="delete"
-                                      >
-                                        <i className="fa-fw fa fa-remove"></i>
-                                      </Button>
-                                    </Col>
-                                  )}
-                                </Row>
-                              ))
-                            }
-                          </FieldArray>
-                          <div className="wrap">
-                            <Button
-                              type="button"
-                              className="btn-mini"
-                              onClick={() =>
-                                addPolicyItem("additionalResources", {})
-                              }
-                              data-action="addTime"
-                              data-cy="addTime"
-                            >
-                              <i className="fa-fw fa fa-plus"></i> Add Resource
-                            </Button>
-                          </div>
-                        </>
-                      </>
-                    )}
-                    {/*----------------------- Policy Item --------------------------- */}
-                    {values.policyType == 0 ? (
-                      <div>
-                        <div>
-                          <Accordion defaultActiveKey="0">
-                            <>
-                              <p className="formHeader">
-                                Allow Rules:{" "}
-                                <CustomToggle eventKey="0"></CustomToggle>
-                              </p>
-                              <Accordion.Collapse eventKey="0">
-                                <>
-                                  <div className="wrap">
-                                    <PolicyPermissionItem
-                                      serviceDetails={serviceDetails}
-                                      serviceCompDetails={serviceCompDetails}
-                                      formValues={values}
-                                      addPolicyItem={addPolicyItem}
-                                      attrName="policyItems"
-                                      fetchUsersData={fetchUsersData}
-                                      fetchGroupsData={fetchGroupsData}
-                                      fetchRolesData={fetchRolesData}
-                                      changePolicyItemPermissions={
-                                        changePolicyItemPermissions
-                                      }
-                                      isMultiResources={isMultiResources}
-                                    />
-                                  </div>
-                                  {serviceCompDetails?.options
-                                    ?.enableDenyAndExceptionsInPolicies ==
-                                    "true" && (
-                                    <>
-                                      <fieldset>
-                                        <p className="wrap-header search-header">
-                                          <i className="fa-fw fa fa-exclamation-triangle fa-fw fa fa-1 text-color-red"></i>
-                                          Exclude from Allow Rules:
-                                        </p>
-                                      </fieldset>
-                                      <div className="wrap">
-                                        <PolicyPermissionItem
-                                          serviceDetails={serviceDetails}
-                                          serviceCompDetails={
-                                            serviceCompDetails
-                                          }
-                                          formValues={values}
-                                          addPolicyItem={addPolicyItem}
-                                          attrName="allowExceptions"
-                                          fetchUsersData={fetchUsersData}
-                                          fetchGroupsData={fetchGroupsData}
-                                          fetchRolesData={fetchRolesData}
-                                          changePolicyItemPermissions={
-                                            changePolicyItemPermissions
-                                          }
-                                          isMultiResources={isMultiResources}
-                                        />
-                                      </div>
-                                    </>
-                                  )}
-                                </>
-                              </Accordion.Collapse>
-                            </>
-                          </Accordion>
-                        </div>
-                        {serviceCompDetails?.options
-                          ?.enableDenyAndExceptionsInPolicies == "true" && (
-                          <>
-                            <Field
-                              className="form-control"
-                              name="isDenyAllElse"
-                              render={({ input }) => (
-                                <FormB.Group
-                                  as={Row}
-                                  className="mb-3"
-                                  controlId="isDenyAllElse"
-                                >
-                                  <FormB.Label column sm={2}>
-                                    Deny All Other Accesses: *
-                                  </FormB.Label>
-                                  <Col sm={1}>
-                                    <span style={{ verticalAlign: "sub" }}>
-                                      <BootstrapSwitchButton
-                                        {...input}
-                                        checked={input.value}
-                                        onlabel="True"
-                                        onstyle="primary"
-                                        offlabel="False"
-                                        offstyle="outline-secondary"
-                                        size="xs"
-                                        style="w-100"
-                                        key="isDenyAllElse"
-                                      />
-                                    </span>
-                                  </Col>
-                                </FormB.Group>
-                              )}
-                            />
-                            <Condition when="isDenyAllElse" is={false}>
-                              <div>
-                                <Accordion defaultActiveKey="0">
-                                  <>
-                                    <p className="formHeader">
-                                      Deny Rules:
-                                      <CustomToggle eventKey="0"></CustomToggle>
-                                    </p>
-                                    <Accordion.Collapse eventKey="0">
-                                      <>
-                                        <div className="wrap">
-                                          <PolicyPermissionItem
-                                            serviceDetails={serviceDetails}
-                                            serviceCompDetails={
-                                              serviceCompDetails
-                                            }
-                                            formValues={values}
-                                            addPolicyItem={addPolicyItem}
-                                            attrName="denyPolicyItems"
-                                            fetchUsersData={fetchUsersData}
-                                            fetchGroupsData={fetchGroupsData}
-                                            fetchRolesData={fetchRolesData}
-                                            changePolicyItemPermissions={
-                                              changePolicyItemPermissions
-                                            }
-                                            isMultiResources={isMultiResources}
-                                          />
-                                        </div>
-                                        <fieldset>
-                                          <p className="wrap-header search-header">
-                                            <i className="fa-fw fa fa-exclamation-triangle fa-fw fa fa-1 text-color-red"></i>
-                                            Exclude from Deny Rules:
-                                          </p>
-                                        </fieldset>
-                                        <div className="wrap">
-                                          <PolicyPermissionItem
-                                            serviceDetails={serviceDetails}
-                                            serviceCompDetails={
-                                              serviceCompDetails
-                                            }
-                                            formValues={values}
-                                            addPolicyItem={addPolicyItem}
-                                            attrName="denyExceptions"
-                                            fetchUsersData={fetchUsersData}
-                                            fetchGroupsData={fetchGroupsData}
-                                            fetchRolesData={fetchRolesData}
-                                            changePolicyItemPermissions={
-                                              changePolicyItemPermissions
-                                            }
-                                            isMultiResources={isMultiResources}
-                                          />
-                                        </div>
-                                      </>
-                                    </Accordion.Collapse>
-                                  </>
-                                </Accordion>
-                              </div>
-                            </Condition>
-                          </>
-                        )}
                       </div>
-                    ) : values.policyType == 1 ? (
+                      <br />
+                      {serviceCompDetails?.policyConditions?.length > 0 && (
+                        <div className="table-responsive">
+                          <table className="table table-bordered condition-group-table">
+                            <thead>
+                              <tr>
+                                <th colSpan="2">
+                                  Policy Conditions :
+                                  {showModal && (
+                                    <Field
+                                      className="form-control"
+                                      name="conditions"
+                                      render={({ input }) => (
+                                        <PolicyConditionsComp
+                                          policyConditionDetails={policyConditionUpdatedJSON(
+                                            serviceCompDetails.policyConditions
+                                          )}
+                                          inputVal={input}
+                                          showModal={showModal}
+                                          handleCloseModal={
+                                            policyConditionState
+                                          }
+                                          modalHeader="Policy Conditions"
+                                        />
+                                      )}
+                                    />
+                                  )}
+                                  <Button
+                                    className="float-end btn btn-mini"
+                                    onClick={() => {
+                                      policyConditionState(true);
+                                    }}
+                                    data-js="customPolicyConditions"
+                                    data-cy="customPolicyConditions"
+                                  >
+                                    <i className="fa-fw fa fa-plus"></i>
+                                  </Button>
+                                </th>
+                              </tr>
+                            </thead>
+                            <tbody data-id="conditionData">
+                              <>
+                                {values?.conditions &&
+                                !isEmpty(values.conditions) ? (
+                                  Object.keys(values.conditions).map(
+                                    (keyName) => {
+                                      if (isPerRowCondition(keyName)) {
+                                        return null;
+                                      }
+                                      if (
+                                        values.conditions[keyName] != "" &&
+                                        values.conditions[keyName] != null
+                                      ) {
+                                        let conditionObj = find(
+                                          serviceCompDetails?.policyConditions,
+                                          function (m) {
+                                            if (m.name == keyName) {
+                                              return m;
+                                            }
+                                          }
+                                        );
+                                        return (
+                                          <tr key={keyName}>
+                                            <td>
+                                              <span>
+                                                {getPolicyConditionDisplayLbl(
+                                                  conditionObj.label
+                                                )}
+                                              </span>
+                                            </td>
+                                            <td>
+                                              {isArray(
+                                                values?.conditions[keyName]
+                                              ) ? (
+                                                <span className="line-clamp line-clamp-3">
+                                                  {values.conditions[
+                                                    keyName
+                                                  ].join(", ")}
+                                                </span>
+                                              ) : (
+                                                <span className="line-clamp line-clamp-3">
+                                                  {values.conditions[keyName]}
+                                                </span>
+                                              )}
+                                            </td>
+                                          </tr>
+                                        );
+                                      }
+                                    }
+                                  )
+                                ) : (
+                                  <tr>
+                                    <td>
+                                      <center className="text-muted">
+                                        No Conditions
+                                      </center>
+                                    </td>
+                                  </tr>
+                                )}
+                              </>
+                            </tbody>
+                          </table>
+                        </div>
+                      )}
+                    </Col>
+                  </Row>
+                  {/* --------------------- Multiple Resources ---------------------------- */}
+                  {isMultiResources && (
+                    <>
+                      <fieldset>
+                        <p className="formHeader">
+                          {serviceCompDetails.name == "tag"
+                            ? "Tags :"
+                            : "Resources :"}
+                        </p>
+                      </fieldset>
+                      <>
+                        <FieldArray name="additionalResources">
+                          {({ fields }) =>
+                            fields.map((name, index) => (
+                              <Row
+                                className="resource-block"
+                                key={`${name}-${index}`}
+                              >
+                                <Col md={8}>
+                                  <ResourceComp
+                                    serviceDetails={serviceDetails}
+                                    serviceCompDetails={serviceCompDetails}
+                                    formValues={
+                                      values.additionalResources[index]
+                                    }
+                                    policyType={
+                                      policyId
+                                        ? policyData.policyType
+                                        : policyType
+                                    }
+                                    name={name}
+                                    isMultiResources={isMultiResources}
+                                  />
+                                </Col>
+                                {values.additionalResources.length > 1 && (
+                                  <Col md={4}>
+                                    <Button
+                                      variant="danger"
+                                      size="sm"
+                                      title="Remove"
+                                      onClick={() => fields.remove(index)}
+                                      data-action="delete"
+                                      data-cy="delete"
+                                    >
+                                      <i className="fa-fw fa fa-remove"></i>
+                                    </Button>
+                                  </Col>
+                                )}
+                              </Row>
+                            ))
+                          }
+                        </FieldArray>
+                        <div className="wrap">
+                          <Button
+                            type="button"
+                            className="btn-mini"
+                            onClick={() =>
+                              addPolicyItem("additionalResources", {})
+                            }
+                            data-action="addTime"
+                            data-cy="addTime"
+                          >
+                            <i className="fa-fw fa fa-plus"></i> Add Resource
+                          </Button>
+                        </div>
+                      </>
+                    </>
+                  )}
+                  {/*----------------------- Policy Item --------------------------- */}
+                  {values.policyType == 0 ? (
+                    <div>
                       <div>
                         <Accordion defaultActiveKey="0">
                           <>
                             <p className="formHeader">
-                              Mask Rules:
+                              Allow Rules:{" "}
                               <CustomToggle eventKey="0"></CustomToggle>
                             </p>
                             <Accordion.Collapse eventKey="0">
@@ -1838,7 +1574,192 @@ export default function AddUpdatePolicyForm() {
                                     serviceCompDetails={serviceCompDetails}
                                     formValues={values}
                                     addPolicyItem={addPolicyItem}
-                                    attrName="dataMaskPolicyItems"
+                                    attrName="policyItems"
+                                    fetchUsersData={fetchUsersData}
+                                    fetchGroupsData={fetchGroupsData}
+                                    fetchRolesData={fetchRolesData}
+                                    changePolicyItemPermissions={
+                                      changePolicyItemPermissions
+                                    }
+                                    isMultiResources={isMultiResources}
+                                  />
+                                </div>
+                                {serviceCompDetails?.options
+                                  ?.enableDenyAndExceptionsInPolicies ==
+                                  "true" && (
+                                  <>
+                                    <fieldset>
+                                      <p className="wrap-header search-header">
+                                        <i className="fa-fw fa fa-exclamation-triangle fa-fw fa fa-1 text-color-red"></i>
+                                        Exclude from Allow Rules:
+                                      </p>
+                                    </fieldset>
+                                    <div className="wrap">
+                                      <PolicyPermissionItem
+                                        serviceDetails={serviceDetails}
+                                        serviceCompDetails={serviceCompDetails}
+                                        formValues={values}
+                                        addPolicyItem={addPolicyItem}
+                                        attrName="allowExceptions"
+                                        fetchUsersData={fetchUsersData}
+                                        fetchGroupsData={fetchGroupsData}
+                                        fetchRolesData={fetchRolesData}
+                                        changePolicyItemPermissions={
+                                          changePolicyItemPermissions
+                                        }
+                                        isMultiResources={isMultiResources}
+                                      />
+                                    </div>
+                                  </>
+                                )}
+                              </>
+                            </Accordion.Collapse>
+                          </>
+                        </Accordion>
+                      </div>
+                      {serviceCompDetails?.options
+                        ?.enableDenyAndExceptionsInPolicies == "true" && (
+                        <>
+                          <Field
+                            className="form-control"
+                            name="isDenyAllElse"
+                            render={({ input }) => (
+                              <FormB.Group
+                                as={Row}
+                                className="mb-3"
+                                controlId="isDenyAllElse"
+                              >
+                                <FormB.Label column sm={2}>
+                                  Deny All Other Accesses: *
+                                </FormB.Label>
+                                <Col sm={1}>
+                                  <span style={{ verticalAlign: "sub" }}>
+                                    <BootstrapSwitchButton
+                                      {...input}
+                                      checked={input.value}
+                                      onlabel="True"
+                                      onstyle="primary"
+                                      offlabel="False"
+                                      offstyle="outline-secondary"
+                                      size="xs"
+                                      style="w-100"
+                                      key="isDenyAllElse"
+                                    />
+                                  </span>
+                                </Col>
+                              </FormB.Group>
+                            )}
+                          />
+                          <Condition when="isDenyAllElse" is={false}>
+                            <div>
+                              <Accordion defaultActiveKey="0">
+                                <>
+                                  <p className="formHeader">
+                                    Deny Rules:
+                                    <CustomToggle eventKey="0"></CustomToggle>
+                                  </p>
+                                  <Accordion.Collapse eventKey="0">
+                                    <>
+                                      <div className="wrap">
+                                        <PolicyPermissionItem
+                                          serviceDetails={serviceDetails}
+                                          serviceCompDetails={
+                                            serviceCompDetails
+                                          }
+                                          formValues={values}
+                                          addPolicyItem={addPolicyItem}
+                                          attrName="denyPolicyItems"
+                                          fetchUsersData={fetchUsersData}
+                                          fetchGroupsData={fetchGroupsData}
+                                          fetchRolesData={fetchRolesData}
+                                          changePolicyItemPermissions={
+                                            changePolicyItemPermissions
+                                          }
+                                          isMultiResources={isMultiResources}
+                                        />
+                                      </div>
+                                      <fieldset>
+                                        <p className="wrap-header search-header">
+                                          <i className="fa-fw fa fa-exclamation-triangle fa-fw fa fa-1 text-color-red"></i>
+                                          Exclude from Deny Rules:
+                                        </p>
+                                      </fieldset>
+                                      <div className="wrap">
+                                        <PolicyPermissionItem
+                                          serviceDetails={serviceDetails}
+                                          serviceCompDetails={
+                                            serviceCompDetails
+                                          }
+                                          formValues={values}
+                                          addPolicyItem={addPolicyItem}
+                                          attrName="denyExceptions"
+                                          fetchUsersData={fetchUsersData}
+                                          fetchGroupsData={fetchGroupsData}
+                                          fetchRolesData={fetchRolesData}
+                                          changePolicyItemPermissions={
+                                            changePolicyItemPermissions
+                                          }
+                                          isMultiResources={isMultiResources}
+                                        />
+                                      </div>
+                                    </>
+                                  </Accordion.Collapse>
+                                </>
+                              </Accordion>
+                            </div>
+                          </Condition>
+                        </>
+                      )}
+                    </div>
+                  ) : values.policyType == 1 ? (
+                    <div>
+                      <Accordion defaultActiveKey="0">
+                        <>
+                          <p className="formHeader">
+                            Mask Rules:
+                            <CustomToggle eventKey="0"></CustomToggle>
+                          </p>
+                          <Accordion.Collapse eventKey="0">
+                            <>
+                              <div className="wrap">
+                                <PolicyPermissionItem
+                                  serviceDetails={serviceDetails}
+                                  serviceCompDetails={serviceCompDetails}
+                                  formValues={values}
+                                  addPolicyItem={addPolicyItem}
+                                  attrName="dataMaskPolicyItems"
+                                  fetchUsersData={fetchUsersData}
+                                  fetchGroupsData={fetchGroupsData}
+                                  fetchRolesData={fetchRolesData}
+                                  changePolicyItemPermissions={
+                                    changePolicyItemPermissions
+                                  }
+                                  isMultiResources={isMultiResources}
+                                />
+                              </div>
+                            </>
+                          </Accordion.Collapse>
+                        </>
+                      </Accordion>
+                    </div>
+                  ) : (
+                    <div>
+                      <div>
+                        <Accordion defaultActiveKey="0">
+                          <>
+                            <p className="wrap-header search-header">
+                              Row Filter Rules:
+                              <CustomToggle eventKey="0"></CustomToggle>
+                            </p>
+                            <Accordion.Collapse eventKey="0">
+                              <>
+                                <div className="wrap">
+                                  <PolicyPermissionItem
+                                    serviceDetails={serviceDetails}
+                                    serviceCompDetails={serviceCompDetails}
+                                    formValues={values}
+                                    addPolicyItem={addPolicyItem}
+                                    attrName="rowFilterPolicyItems"
                                     fetchUsersData={fetchUsersData}
                                     fetchGroupsData={fetchGroupsData}
                                     fetchRolesData={fetchRolesData}
@@ -1853,142 +1774,107 @@ export default function AddUpdatePolicyForm() {
                           </>
                         </Accordion>
                       </div>
-                    ) : (
-                      <div>
-                        <div>
-                          <Accordion defaultActiveKey="0">
-                            <>
-                              <p className="wrap-header search-header">
-                                Row Filter Rules:
-                                <CustomToggle eventKey="0"></CustomToggle>
-                              </p>
-                              <Accordion.Collapse eventKey="0">
-                                <>
-                                  <div className="wrap">
-                                    <PolicyPermissionItem
-                                      serviceDetails={serviceDetails}
-                                      serviceCompDetails={serviceCompDetails}
-                                      formValues={values}
-                                      addPolicyItem={addPolicyItem}
-                                      attrName="rowFilterPolicyItems"
-                                      fetchUsersData={fetchUsersData}
-                                      fetchGroupsData={fetchGroupsData}
-                                      fetchRolesData={fetchRolesData}
-                                      changePolicyItemPermissions={
-                                        changePolicyItemPermissions
-                                      }
-                                      isMultiResources={isMultiResources}
-                                    />
-                                  </div>
-                                </>
-                              </Accordion.Collapse>
-                            </>
-                          </Accordion>
-                        </div>
-                      </div>
-                    )}
-                    <div className="row form-actions">
-                      <div className="col-md-9 offset-md-3">
+                    </div>
+                  )}
+                  <div className="row form-actions">
+                    <div className="col-md-9 offset-md-3">
+                      <Button
+                        onClick={(event) => {
+                          if (invalid) {
+                            forIn(errors, function (value, key) {
+                              if (
+                                has(errors, "policyName") ||
+                                resourceErrorCheck(errors, values)
+                              ) {
+                                let selector =
+                                  document?.getElementById("isError") ||
+                                  document?.getElementById(key) ||
+                                  document?.querySelector(
+                                    `input[name=${key}]`
+                                  ) ||
+                                  document?.querySelector(`input[id=${key}]`) ||
+                                  document?.querySelector(
+                                    `span[className="invalid-field"]`
+                                  );
+                                scrollToError(selector);
+                              } else {
+                                getValidatePolicyItems(errors?.[key]);
+                              }
+                            });
+                          }
+                          handleSubmit(event);
+                        }}
+                        variant="primary"
+                        size="sm"
+                        data-id="save"
+                        data-cy="save"
+                      >
+                        Save
+                      </Button>
+                      <Button
+                        variant="secondary"
+                        type="button"
+                        size="sm"
+                        onClick={() => {
+                          closeForm();
+                        }}
+                        data-id="cancel"
+                        data-cy="cancel"
+                      >
+                        Cancel
+                      </Button>
+
+                      {policyId !== undefined && (
                         <Button
-                          onClick={(event) => {
-                            if (invalid) {
-                              forIn(errors, function (value, key) {
-                                if (
-                                  has(errors, "policyName") ||
-                                  resourceErrorCheck(errors, values)
-                                ) {
-                                  let selector =
-                                    document?.getElementById("isError") ||
-                                    document?.getElementById(key) ||
-                                    document?.querySelector(
-                                      `input[name=${key}]`
-                                    ) ||
-                                    document?.querySelector(
-                                      `input[id=${key}]`
-                                    ) ||
-                                    document?.querySelector(
-                                      `span[className="invalid-field"]`
-                                    );
-                                  scrollToError(selector);
-                                } else {
-                                  getValidatePolicyItems(errors?.[key]);
-                                }
-                              });
-                            }
-                            handleSubmit(event);
-                          }}
-                          variant="primary"
-                          size="sm"
-                          data-id="save"
-                          data-cy="save"
-                        >
-                          Save
-                        </Button>
-                        <Button
-                          variant="secondary"
+                          variant="danger"
                           type="button"
+                          className="btn-sm"
                           size="sm"
                           onClick={() => {
-                            closeForm();
+                            showDeleteModal();
                           }}
-                          data-id="cancel"
-                          data-cy="cancel"
                         >
-                          Cancel
+                          Delete
                         </Button>
-
-                        {policyId !== undefined && (
-                          <Button
-                            variant="danger"
-                            type="button"
-                            className="btn-sm"
-                            size="sm"
-                            onClick={() => {
-                              showDeleteModal();
-                            }}
-                          >
-                            Delete
-                          </Button>
-                        )}
-                      </div>
-                      {policyId !== undefined && (
-                        <Modal show={showDelete} onHide={hideDeleteModal}>
-                          <Modal.Header closeButton>
-                            <span className="text-word-break">
-                              Are you sure want to delete policy&nbsp;&quot;
-                              <b>{`${values?.policyName}`}</b>&quot; ?
-                            </span>
-                          </Modal.Header>
-
-                          <Modal.Footer>
-                            <Button
-                              variant="secondary"
-                              size="sm"
-                              title="Cancel"
-                              onClick={hideDeleteModal}
-                            >
-                              Cancel
-                            </Button>
-                            <Button
-                              variant="primary"
-                              size="sm"
-                              title="Yes"
-                              onClick={() =>
-                                handleDeleteClick(policyId, serviceId)
-                              }
-                            >
-                              Yes
-                            </Button>
-                          </Modal.Footer>
-                        </Modal>
                       )}
                     </div>
-                  </form>
-                </>
-              )}
-            />
-            <BlockUi isUiBlock={blockUI} />
-          </div>
+                    {policyId !== undefined && (
+                      <Modal show={showDelete} onHide={hideDeleteModal}>
+                        <Modal.Header closeButton>
+                          <span className="text-word-break">
+                            Are you sure want to delete policy&nbsp;&quot;
+                            <b>{`${values?.policyName}`}</b>&quot; ?
+                          </span>
+                        </Modal.Header>
+
+                        <Modal.Footer>
+                          <Button
+                            variant="secondary"
+                            size="sm"
+                            title="Cancel"
+                            onClick={hideDeleteModal}
+                          >
+                            Cancel
+                          </Button>
+                          <Button
+                            variant="primary"
+                            size="sm"
+                            title="Yes"
+                            onClick={() =>
+                              handleDeleteClick(policyId, serviceId)
+                            }
+                          >
+                            Yes
+                          </Button>
+                        </Modal.Footer>
+                      </Modal>
+                    )}
+                  </div>
+                </form>
+              </>
+            )}
+          />
+          <BlockUi isUiBlock={blockUI} />
         </div>
       )}
     </>
