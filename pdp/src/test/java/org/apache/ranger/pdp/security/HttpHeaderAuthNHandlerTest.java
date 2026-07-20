@@ -26,6 +26,9 @@ import javax.servlet.http.HttpServletRequest;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Proxy;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Properties;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -63,12 +66,93 @@ public class HttpHeaderAuthNHandlerTest {
         assertEquals("bob", result.getUserName());
     }
 
+    @Test
+    void testAuthenticate_usesSpiffeHeaderWhenUsernameAbsent() {
+        HttpHeaderAuthNHandler handler = new HttpHeaderAuthNHandler();
+        Properties             config  = new Properties();
+
+        config.setProperty(RangerPdpConstants.PROP_AUTHN_HEADER_USERNAME, "X-Authenticated-User");
+        config.setProperty(RangerPdpConstants.PROP_AUTHN_HEADER_SPIFFE, "x-awc-source-workload-id");
+
+        handler.init(config);
+
+        HttpServletRequest     request = requestWithHeader("x-awc-source-workload-id", "spiffe://my-cluster/ns/service-namespace/sa/service-sa");
+        PdpAuthNHandler.Result result  = handler.authenticate(request, null);
+
+        assertEquals(PdpAuthNHandler.Result.Status.AUTHENTICATED, result.getStatus());
+        assertEquals("service-sa", result.getUserName());
+        assertEquals(HttpHeaderAuthNHandler.AUTH_TYPE_SPIFFE, result.getAuthType());
+    }
+
+    @Test
+    void testAuthenticate_usernameTakesPrecedenceOverSpiffe() {
+        HttpHeaderAuthNHandler handler = new HttpHeaderAuthNHandler();
+        Properties             config  = new Properties();
+
+        config.setProperty(RangerPdpConstants.PROP_AUTHN_HEADER_USERNAME, "X-Authenticated-User");
+        config.setProperty(RangerPdpConstants.PROP_AUTHN_HEADER_SPIFFE, "x-awc-source-workload-id");
+
+        handler.init(config);
+
+        Map<String, String> headers = new HashMap<>();
+
+        headers.put("X-Authenticated-User", "bob");
+        headers.put("x-awc-source-workload-id", "spiffe://my-cluster/ns/service-namespace/sa/service-sa");
+
+        PdpAuthNHandler.Result result = handler.authenticate(requestWithHeaders(headers), null);
+
+        assertEquals(PdpAuthNHandler.Result.Status.AUTHENTICATED, result.getStatus());
+        assertEquals("bob", result.getUserName());
+        assertEquals(HttpHeaderAuthNHandler.AUTH_TYPE, result.getAuthType());
+    }
+
+    @Test
+    void testAuthenticate_multipleSpiffeHeadersUsesFirstValid() {
+        HttpHeaderAuthNHandler handler = new HttpHeaderAuthNHandler();
+        Properties             config  = new Properties();
+
+        config.setProperty(RangerPdpConstants.PROP_AUTHN_HEADER_SPIFFE, "x-awc-source-workload-id, x-awc-upstream-workload-id");
+
+        handler.init(config);
+
+        Map<String, String> headers = new HashMap<>();
+
+        headers.put("x-awc-source-workload-id", "not-a-spiffe-id");
+        headers.put("x-awc-upstream-workload-id", "spiffe://my-cluster/ns/service-namespace/sa/service-sa");
+
+        PdpAuthNHandler.Result result = handler.authenticate(requestWithHeaders(headers), null);
+
+        assertEquals(PdpAuthNHandler.Result.Status.AUTHENTICATED, result.getStatus());
+        assertEquals("service-sa", result.getUserName());
+        assertEquals(HttpHeaderAuthNHandler.AUTH_TYPE_SPIFFE, result.getAuthType());
+    }
+
+    @Test
+    void testAuthenticate_malformedSpiffeHeaderSkips() {
+        HttpHeaderAuthNHandler handler = new HttpHeaderAuthNHandler();
+        Properties             config  = new Properties();
+
+        config.setProperty(RangerPdpConstants.PROP_AUTHN_HEADER_SPIFFE, "x-awc-source-workload-id");
+
+        handler.init(config);
+
+        HttpServletRequest     request = requestWithHeader("x-awc-source-workload-id", "not-a-spiffe-id");
+        PdpAuthNHandler.Result result  = handler.authenticate(request, null);
+
+        assertEquals(PdpAuthNHandler.Result.Status.SKIP, result.getStatus());
+        assertNull(result.getUserName());
+    }
+
     private static HttpServletRequest requestWithHeader(String expectedHeader, String headerValue) {
+        return requestWithHeaders(Collections.singletonMap(expectedHeader, headerValue));
+    }
+
+    private static HttpServletRequest requestWithHeaders(Map<String, String> headers) {
         InvocationHandler invocationHandler = (proxy, method, args) -> {
             String methodName = method.getName();
 
             if ("getHeader".equals(methodName)) {
-                return expectedHeader.equals(args[0]) ? headerValue : null;
+                return headers.get(args[0]);
             } else if ("getHeaders".equals(methodName) || "getHeaderNames".equals(methodName)) {
                 return java.util.Collections.emptyEnumeration();
             } else if ("getMethod".equals(methodName)) {
