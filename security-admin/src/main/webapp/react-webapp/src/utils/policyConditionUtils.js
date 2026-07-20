@@ -170,7 +170,10 @@ export const getSelectedAccessTypesForRow = (formValues, attrName, index) => {
     return [];
   }
   return accesses
-    .map((a) => (typeof a?.value === "string" ? a.value.trim() : ""))
+    .map((a) => {
+      const raw = a?.value ?? a?.type;
+      return typeof raw === "string" ? raw.trim() : "";
+    })
     .filter((v) => v.length > 0);
 };
 
@@ -240,15 +243,19 @@ export const sortPolicyConditions = (conditions) => {
  * @param {object} formValues - Form state (may contain additionalResources for multi-resource policies).
  * @returns {Set<string>} Set of leaf resource type names currently in use.
  */
-export const getSelectedLeafResourceTypes = (serviceCompDetails, formValues) => {
+export const getSelectedLeafResourceTypes = (
+  serviceCompDetails,
+  formValues
+) => {
   const result = new Set();
   const resources = serviceCompDetails?.resources;
   if (!Array.isArray(resources) || resources.length === 0) {
     return result;
   }
 
-  const levels = [...new Set(resources.map((r) => r?.level).filter(Number.isFinite))]
-    .sort((a, b) => a - b);
+  const levels = [
+    ...new Set(resources.map((r) => r?.level).filter(Number.isFinite))
+  ].sort((a, b) => a - b);
 
   const blocks = Array.isArray(formValues?.additionalResources)
     ? formValues.additionalResources
@@ -581,7 +588,34 @@ const getActionMatchesOptions = ({
 };
 
 /**
- * Returns a new object with any null or empty string values removed.
+ * Returns true when a condition value should be treated as unset (removed from state).
+ */
+const isEmptyConditionValue = (value) => {
+  if (value == null || value === "") {
+    return true;
+  }
+  if (!Array.isArray(value)) {
+    return false;
+  }
+  if (value.length === 0) {
+    return true;
+  }
+  return value.every((item) => {
+    if (item == null || item === "") {
+      return true;
+    }
+    if (typeof item === "object" && item?.value != null) {
+      return String(item.value).trim().length === 0;
+    }
+    if (typeof item === "string") {
+      return item.trim().length === 0;
+    }
+    return false;
+  });
+};
+
+/**
+ * Returns a new object with null, empty string, and empty multi-value entries removed.
  * Useful to prevent React state mutation and to get accurate keys count.
  */
 export const getCleanConditions = (conditions) => {
@@ -590,7 +624,7 @@ export const getCleanConditions = (conditions) => {
   }
   const cleaned = { ...conditions };
   for (const key in cleaned) {
-    if (cleaned[key] == null || cleaned[key] === "") {
+    if (isEmptyConditionValue(cleaned[key])) {
       delete cleaned[key];
     }
   }

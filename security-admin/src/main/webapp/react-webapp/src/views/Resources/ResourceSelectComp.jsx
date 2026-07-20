@@ -222,8 +222,12 @@ export default function ResourceSelectComp(props) {
               if (trimmedValue) {
                 const newOption = { label: trimmedValue, value: trimmedValue };
                 const currentValue = input.value || [];
-                const newValue = isArray(currentValue)
-                  ? [...currentValue, newOption]
+                const newValue = supportMultipleVal(
+                  formValues[`resourceName-${levelKey}`]
+                )
+                  ? isArray(currentValue)
+                    ? [...currentValue, newOption]
+                    : [newOption]
                   : [newOption];
                 input.onChange(newValue);
               }

@@ -598,7 +598,7 @@ export const RegexValidation = {
         characters.
         <br />
         2. Allowed special character ,._-+/@= and space. <br />
-        3. Name length should be greater than one."
+        3. Name length should be greater than one.
       </>
     ),
     regexForNameValidationMessage:
@@ -610,7 +610,7 @@ export const RegexValidation = {
         <br />
         2. Allowed special character ._-@ and space.
         <br />
-        3. Name length should be greater than one."
+        3. Name length should be greater than one.
       </>
     )
   },
@@ -692,7 +692,11 @@ export const PathAssociateWithModule = {
   PageNotFound: ["/pageNotFound"],
   localLogin: ["/locallogin"],
   slashPath: ["/"],
-  Forbidden: ["/forbidden"]
+  Forbidden: ["/forbidden"],
+  CreateNewPolicyForm: ["/policymanager/create-policy"],
+  EditNewPolicyForm: [
+    "/service/:serviceId/policies/:policyId/new-policy-form-edit"
+  ]
 };
 
 /* Access */
@@ -701,13 +705,13 @@ export const DefStatus = {
   RecursiveStatus: {
     STATUS_RECURSIVE: {
       value: true,
-      label: "recursive",
+      label: "Recursive",
       rbkey: "xa.enum.RecursiveStatus.RECURSIVE",
       tt: "lbl.RecursiveStatus_RECURSIVE"
     },
     STATUS_NONRECURSIVE: {
       value: false,
-      label: "nonrecursive",
+      label: "Non-recursive",
       rbkey: "xa.enum.RecursiveStatus.NONRECURSIVE",
       tt: "lbl.RecursiveStatus_NONRECURSIVE"
     }
