@@ -179,18 +179,24 @@ export default function ResourceComp(props) {
         as={Row}
         className="mb-4 align-items-start"
         controlId={`Resource-${levelKey}`}
-        key={`Resource-${levelKey}`}
+        key={`${name}-${levelKey}`}
       >
         <Col className="column-1-fixed">
           <Field
-            defaultValue={!policyId && getResourceLabelOp(levelKey, index)[0]}
+            initialValue={
+              !policyId && !formValues?.[resourceKey]
+                ? getResourceLabelOp(levelKey, index)[0]
+                : undefined
+            }
             name={
               isMultiResources
                 ? `${name}.resourceName-${levelKey}`
                 : `resourceName-${levelKey}`
             }
-            render={({ input }) =>
-              formValues[resourceKey] ? (
+            render={({ input }) => {
+              const hasResourceData = Boolean(formValues?.[resourceKey]);
+
+              return hasResourceData ? (
                 renderResourceSelect(levelKey, index) ? (
                   <span className="float-end fnt-14">
                     <FormB.Label className="position-relative">
@@ -217,8 +223,8 @@ export default function ResourceComp(props) {
                     <RenderValidateField name={`resourceName-${levelKey}`} />
                   </div>
                 )
-              ) : null
-            }
+              ) : null;
+            }}
           />
         </Col>
 
@@ -249,6 +255,14 @@ export default function ResourceComp(props) {
                         ? `${name}.isExcludesSupport-${levelKey}`
                         : `isExcludesSupport-${levelKey}`
                     }
+                    key={
+                      isMultiResources
+                        ? `${name}.isExcludesSupport-${levelKey}`
+                        : `isExcludesSupport-${levelKey}`
+                    }
+                    initialValue={
+                      formValues?.[`isExcludesSupport-${levelKey}`] ?? true
+                    }
                     render={({ input }) => (
                       <BootstrapSwitchButton
                         {...input}
@@ -273,6 +287,14 @@ export default function ResourceComp(props) {
                       isMultiResources
                         ? `${name}.isRecursiveSupport-${levelKey}`
                         : `isRecursiveSupport-${levelKey}`
+                    }
+                    key={
+                      isMultiResources
+                        ? `${name}.isRecursiveSupport-${levelKey}`
+                        : `isRecursiveSupport-${levelKey}`
+                    }
+                    initialValue={
+                      formValues?.[`isRecursiveSupport-${levelKey}`] ?? true
                     }
                     render={({ input }) => (
                       <BootstrapSwitchButton
