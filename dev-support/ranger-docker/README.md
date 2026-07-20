@@ -100,7 +100,7 @@ docker compose -f docker-compose.ranger.yml -f docker-compose.ranger-hadoop.yml 
 The flag is controlled at runtime by
 `ranger.servicedef.ozone.enableActionMatcherInPoliciesCondition` in
 `ranger-admin-site.xml`. Docker maps it from
-`FF_ENAB_OZONE_ACTION_MATCHES_CONDITION` in
+`FF_ENABLE_OZONE_ACTION_MATCHES_CONDITION` in
 `scripts/admin/ranger-admin-install-*.properties` during Admin setup.
 
 **Prerequisite:** the admin distribution must include an uncommented property
@@ -112,12 +112,12 @@ docker compose -f docker-compose.ranger-build.yml build
 docker compose -f docker-compose.ranger-build.yml up
 ~~~
 
-**First-time setup:** set `FF_ENAB_OZONE_ACTION_MATCHES_CONDITION=true` in
+**First-time setup:** set `FF_ENABLE_OZONE_ACTION_MATCHES_CONDITION=true` in
 `scripts/admin/ranger-admin-install-<db>.properties`, then bring up services.
 
 **Changing the flag later** (choose one):
 
-1. Edit `FF_ENAB_OZONE_ACTION_MATCHES_CONDITION` in
+1. Edit `FF_ENABLE_OZONE_ACTION_MATCHES_CONDITION` in
    `scripts/admin/ranger-admin-install-<db>.properties` and recreate Admin so
    setup runs again:
    ~~~
