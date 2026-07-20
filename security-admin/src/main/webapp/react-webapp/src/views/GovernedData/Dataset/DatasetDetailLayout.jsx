@@ -58,7 +58,7 @@ import groupColourIcon from "../../../images/group-colour.svg";
 import roleColourIcon from "../../../images/role-colour.svg";
 import historyDetailsIcon from "../../../images/history-details.svg";
 import arrayMutators from "final-form-arrays";
-import { groupBy, isEmpty, isArray } from "lodash";
+import { groupBy, isEmpty, isArray, map } from "lodash";
 import PrinciplePermissionComp from "./PrinciplePermissionComp";
 import ReactPaginate from "react-paginate";
 import CustomBreadcrumb from "Views/CustomBreadcrumb";
@@ -1027,10 +1027,10 @@ const DatasetDetailLayout = () => {
     /*Policy Condition*/
     if (values?.conditions) {
       data.conditions = [];
-      Object.entries(values.conditions).map(([key, value]) => {
+      map(values.conditions, (value, key) => {
         return data.conditions.push({
           type: key,
-          values: value?.split(",")
+          values: isArray(value) ? [...value] : [value]
         });
       });
     } else {
@@ -1589,7 +1589,7 @@ const DatasetDetailLayout = () => {
                                   >
                                     <span className="gds-label-color">ID</span>
                                   </div>
-                                  <div line-height="30px">{datasetInfo.id}</div>
+                                  <div>{datasetInfo.id}</div>
                                 </div>
                                 <div className="wrapper">
                                   <div
@@ -1600,7 +1600,7 @@ const DatasetDetailLayout = () => {
                                       Date Updated
                                     </span>
                                   </div>
-                                  <div line-height="30px">
+                                  <div>
                                     {dateFormat(
                                       datasetInfo.updateTime,
                                       "mm/dd/yyyy hh:MM:ss TT"
@@ -1609,15 +1609,12 @@ const DatasetDetailLayout = () => {
                                 </div>
 
                                 <div className="wrapper">
-                                  <div
-                                    className="gds-left-inline-field"
-                                    line-height="30px"
-                                  >
+                                  <div className="gds-left-inline-field">
                                     <span className="gds-label-color">
                                       Date Created
                                     </span>
                                   </div>
-                                  <div line-height="30px">
+                                  <div>
                                     {dateFormat(
                                       datasetInfo.createTime,
                                       "mm/dd/yyyy hh:MM:ss TT"
@@ -2255,8 +2252,8 @@ const DatasetDetailLayout = () => {
             <Modal show={showDeleteDatasetModal} onHide={toggleClose}>
               <Modal.Header closeButton>
                 <span className="text-word-break">
-                  Are you sure you want to delete dataset&nbsp;"
-                  <b>{datasetInfo.name}</b>" ?
+                  Are you sure you want to delete dataset&nbsp;
+                  <b>{datasetInfo.name}</b> ?
                 </span>
               </Modal.Header>
               <Modal.Footer>

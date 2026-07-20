@@ -29,11 +29,20 @@ import {
   dragOver,
   getAllTimeZoneList,
   policyConditionUpdatedJSON,
-  isSystemAdmin
+  isSystemAdmin,
+  getPolicyConditionDisplayLbl
 } from "../../../utils/XAUtils";
 import { fetchApi } from "Utils/fetchAPI";
-import { isPerRowCondition } from "Utils/policyConditionUtils";
-import { maxBy, find, isEmpty, isArray, isEqual, isObject } from "lodash";
+import {
+  map,
+  maxBy,
+  find,
+  isEmpty,
+  isArray,
+  isEqual,
+  isObject,
+  join
+} from "lodash";
 import userGreyIcon from "../../../images/user-grey.svg";
 import groupGreyIcon from "../../../images/group-grey.svg";
 import roleGreyIcon from "../../../images/role-grey.svg";
@@ -194,7 +203,21 @@ function AccessGrantForm({
         if (policyData?.conditions?.length > 0) {
           data.conditions = {};
           for (let val of policyData.conditions) {
-            data.conditions[val?.type] = val?.values?.join(",");
+            let conditionObj = find(
+              policyConditionUpdatedJSON(serviceCompData?.policyConditions),
+              function (m) {
+                if (m.name == val.type) {
+                  return m;
+                }
+              }
+            );
+
+            if (!isEmpty(conditionObj.uiHint)) {
+              data.conditions[val?.type] = JSON.parse(conditionObj.uiHint)
+                .isMultiValue
+                ? val?.values
+                : val?.values.toString().trim();
+            }
           }
         }
       }
@@ -292,9 +315,7 @@ function AccessGrantForm({
     });
   };
 
-  const handleSubmit = async (values) => {
-    saveAccessGrant(values);
-  };
+  const handleSubmit = async () => {};
 
   const fetchPrincipleData = async (inputValue) => {
     let params = { name: inputValue || "", isVisible: 1 };
@@ -335,11 +356,7 @@ function AccessGrantForm({
     return null;
   };
 
-  const onConditionChange = () => {
-    onDataChange(formValues, policyData);
-  };
-
-  const onRemovingPolicyItem = (index) => {
+  const onRemovingPolicyItem = () => {
     onDataChange(undefined, undefined);
   };
 
@@ -355,15 +372,6 @@ function AccessGrantForm({
           modified?.conditions ||
           modifiedVal == true
         ) {
-          modifiedVal = true;
-          break;
-        }
-        if (
-          dirtyFieldVal == "policyItems" &&
-          values.policyItems.length == 1 &&
-          values.policyItems[0] == undefined
-        ) {
-        } else if (!isEqual(values.policyItems, initialValues.policyItems)) {
           modifiedVal = true;
           break;
         }
@@ -664,7 +672,7 @@ function AccessGrantForm({
                         <></>
                       )}
 
-                      {values?.conditions && !isEmpty(values.conditions) && (
+                      {!isEmpty(values.conditions) && (
                         <div className="gds-action-card mb-5 pl-0 pr-0">
                           <div className="gds-section-title">
                             <p className="gds-card-heading">Conditions</p>
@@ -680,49 +688,39 @@ function AccessGrantForm({
                               Edit Conditions
                             </Button>
                           </div>
-                          {Object.keys(values.conditions).map((keyName) => {
-                            if (isPerRowCondition(keyName)) {
-                              return null;
-                            }
-                            if (
-                              values.conditions[keyName] != "" &&
-                              values.conditions[keyName] != null
-                            ) {
-                              let conditionObj = find(
-                                serviceCompDetails?.policyConditions,
-                                function (m) {
-                                  if (m.name == keyName) {
-                                    return m;
-                                  }
-                                }
-                              );
+
+                          {(() => {
+                            const policyConditions =
+                              serviceCompDetails?.policyConditions || [];
+
+                            return map(values.conditions, (val, key) => {
+                              const conditionConfig = find(policyConditions, {
+                                name: key
+                              });
+                              const displayLabel =
+                                getPolicyConditionDisplayLbl(
+                                  conditionConfig?.label
+                                ) || conditionConfig?.label;
+
                               return (
-                                <div className="pt-3">
-                                  {isObject(values.conditions[keyName]) ? (
-                                    <div>
-                                      <span className="fnt-14">
-                                        {values.conditions[keyName].length > 1
-                                          ? values.conditions[keyName].map(
-                                              (m) => {
-                                                return ` ${m.label} `;
-                                              }
-                                            )
-                                          : values.conditions[keyName].label}
-                                      </span>
-                                    </div>
-                                  ) : (
-                                    <div>
-                                      <span className="fnt-14">
-                                        {values.conditions[keyName]}
-                                      </span>
-                                    </div>
-                                  )}
+                                <div className="pt-3" key={key}>
+                                  <div className="d-flex align-items-center">
+                                    <span className="fnt-14 font-weight-bold me-2">
+                                      {displayLabel} :
+                                    </span>
+                                    <span className="fnt-14">
+                                      {isArray(val)
+                                        ? join(val, ", ")
+                                        : String(val)}
+                                    </span>
+                                  </div>
                                 </div>
                               );
-                            }
-                          })}
+                            });
+                          })()}
                         </div>
                       )}
+
                       {isAdmin && showModal && (
                         <Field
                           className="form-control"
