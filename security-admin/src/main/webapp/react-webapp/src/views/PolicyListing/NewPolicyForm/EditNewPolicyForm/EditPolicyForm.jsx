@@ -43,7 +43,9 @@ import {
   has,
   maxBy,
   forIn,
-  includes
+  includes,
+  filter,
+  isEqual
 } from "lodash";
 import moment from "moment";
 import {
@@ -354,7 +356,7 @@ const getPolicyItemsVal = (formData, name, finalAccessTypes) => {
         );
       } else if (isArray(key.accesses) && key.accesses.length > 0) {
         const validValues = map(finalAccessTypes, "value");
-        const result = _.filter(key.accesses, (item) =>
+        const result = filter(key.accesses, (item) =>
           includes(validValues, item.type)
         );
         obj.accesses = result.map((a) => {
@@ -713,11 +715,14 @@ export default function EditPolicyForm() {
             invalid,
             errors,
             dirty,
-            pristine
+            pristine,
+            initialValues
           }) => (
             <form onSubmit={submitForm} noValidate>
               <PromptDialog
-                isDirtyField={dirty && !pristine}
+                isDirtyField={
+                  dirty && !isEqual(values, initialValues) && !pristine
+                }
                 isUnblock={preventUnBlock}
               />
 
