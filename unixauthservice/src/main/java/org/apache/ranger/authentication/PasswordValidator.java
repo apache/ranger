@@ -17,7 +17,10 @@
  * under the License.
  */
 
- package org.apache.ranger.authentication;
+package org.apache.ranger.authentication;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -27,135 +30,140 @@ import java.io.PrintWriter;
 import java.net.Socket;
 import java.util.List;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 public class PasswordValidator implements Runnable {
+    private static final Logger LOG = LoggerFactory.getLogger(PasswordValidator.class);
+    private static final String GENERIC_FAILURE_RESPONSE = "FAILED: Authentication failed.";
+    private static final String LOCKED_OUT_RESPONSE = "FAILED: Too many attempts. Try again later.";
 
-	private static final Logger LOG = LoggerFactory.getLogger(PasswordValidator.class);
-	
-	private static String validatorProgram = null;
+    private static List<String> adminUserList;
+    private static String adminRoleNames;
+    private static String validatorProgram;
 
-	private static List<String> adminUserList;
+    private final LoginAttemptTracker loginAttemptTracker;
+    private Socket client;
 
-	private static String adminRoleNames;
+    public PasswordValidator(Socket client, LoginAttemptTracker loginAttemptTracker) {
+        this.client = client;
+        this.loginAttemptTracker = loginAttemptTracker;
+    }
 
-	private Socket client;
-	
-	public PasswordValidator(Socket client) {
-		this.client = client;
-	}
+    public static String getValidatorProgram() {
+        return validatorProgram;
+    }
 
-	@Override
-	public void run() {
-		BufferedReader reader = null;
-		PrintWriter writer = null;
+    public static void setValidatorProgram(String validatorProgram) {
+        PasswordValidator.validatorProgram = validatorProgram;
+    }
 
-		String userName = null;
+    public static List<String> getAdminUserList() {
+        return adminUserList;
+    }
 
-		try {
-			reader = new BufferedReader(new InputStreamReader(client.getInputStream()));
-			writer = new PrintWriter(new OutputStreamWriter(client.getOutputStream()));
-			String request = reader.readLine();
-			
-			if (request.startsWith("LOGIN:")) {
-				String line = request.substring(6).trim();
-				int passwordAt = line.indexOf(' ');
-				if (passwordAt != -1) {
-					userName = line.substring(0,passwordAt).trim();
-				}
-			}
+    public static void setAdminUserList(List<String> adminUserList) {
+        PasswordValidator.adminUserList = adminUserList;
+    }
 
-			if (validatorProgram == null) {
-				String res = "FAILED: Unable to validate credentials.";
-				writer.println(res);
-				writer.flush();
-				LOG.error("Response [" + res + "] for user: " + userName + " as ValidatorProgram is not defined in configuration.");
+    public static String getAdminRoleNames() {
+        return adminRoleNames;
+    }
 
-			}
-			else {
-				
-				BufferedReader pReader = null;
-				PrintWriter pWriter = null;
-				Process p =  null;
-				
-				try {
-					p = Runtime.getRuntime().exec(validatorProgram);
-					
-					pReader = new BufferedReader(new InputStreamReader(p.getInputStream()));
-					
-					pWriter = new PrintWriter(new OutputStreamWriter(p.getOutputStream()));
-					
-					pWriter.println(request); pWriter.flush();
-	
-					String res = pReader.readLine();
+    public static void setAdminRoleNames(String adminRoleNames) {
+        PasswordValidator.adminRoleNames = adminRoleNames;
+    }
 
+    @Override
+    public void run() {
+        BufferedReader reader;
+        PrintWriter    writer = null;
 
-					if (res != null && res.startsWith("OK")) {
-						if (adminRoleNames != null && adminUserList != null) {
-							if (adminUserList.contains(userName)) {
-								res = res + " " + adminRoleNames;
-							}
-						}
-					}
+        String userName = null;
 
-					LOG.info("Response [" + res + "] for user: " + userName);
-					
-					writer.println(res); writer.flush();
-				}
-				finally {
-					if (p != null) {
-						p.destroy();
-					}
-				}
-			}
-			
-		}
-		catch(Throwable t) {
-			if (userName != null && writer != null ) {
-                                String res = "FAILED: unable to validate due to error " + t.getMessage();
-				writer.println(res);
-                                LOG.error("Response [" + res + "] for user: " + userName+", "+ t.getMessage());
-			}
-		}
-		finally {
-			try {
-				if (client != null) {
-					client.close();
-				}
-			}
-			catch(IOException ioe){
-				LOG.debug("Close socket failure. Detail: \n", ioe);
-			}
-			finally {
-				client = null;
-			}
-		}
-	}
-	
-	
-	public static String getValidatorProgram() {
-		return validatorProgram;
-	}
+        String remoteIp = client.getInetAddress() != null ? client.getInetAddress().getHostAddress() : "unknown";
+        try {
+            reader = new BufferedReader(new InputStreamReader(client.getInputStream()));
+            writer = new PrintWriter(new OutputStreamWriter(client.getOutputStream()));
+            String request = reader.readLine();
+            if (loginAttemptTracker.isBlocked(remoteIp)) {
+                LOG.warn("Rejected UnixAuth attempt from [{}] - source IP is temporarily locked out due to repeated failures.", remoteIp);
+                writer.println(LOCKED_OUT_RESPONSE);
+                writer.flush();
+                return;
+            }
+            if (request == null) {
+                loginAttemptTracker.recordFailure(remoteIp);
+                LOG.warn("Rejected UnixAuth attempt from [{}] - connection closed before sending any data.", remoteIp);
+                writer.println(GENERIC_FAILURE_RESPONSE);
+                writer.flush();
+                return;
+            }
+            if (request.startsWith("LOGIN:")) {
+                String line       = request.substring(6).trim();
+                int    passwordAt = line.indexOf(' ');
+                if (passwordAt != -1) {
+                    userName = line.substring(0, passwordAt).trim();
+                }
+            }
 
-	public static void setValidatorProgram(String validatorProgram) {
-		PasswordValidator.validatorProgram = validatorProgram;
-	}
+            if (validatorProgram == null) {
+                loginAttemptTracker.recordFailure(remoteIp);
+                LOG.error("Response [{}] for user: {} from [{}] as ValidatorProgram is not defined in configuration.", GENERIC_FAILURE_RESPONSE, userName, remoteIp);
+                writer.println(GENERIC_FAILURE_RESPONSE);
+                writer.flush();
+            } else {
+                BufferedReader pReader;
+                PrintWriter    pWriter;
+                Process        p       = null;
 
-	public static List<String> getAdminUserList() {
-		return adminUserList;
-	}
+                try {
+                    p = Runtime.getRuntime().exec(validatorProgram);
 
-	public static void setAdminUserList(List<String> adminUserList) {
-		PasswordValidator.adminUserList = adminUserList;
-	}
+                    pReader = new BufferedReader(new InputStreamReader(p.getInputStream()));
+                    pWriter = new PrintWriter(new OutputStreamWriter(p.getOutputStream()));
 
-	public static String getAdminRoleNames() {
-		return adminRoleNames;
-	}
+                    pWriter.println(request);
+                    pWriter.flush();
 
-	public static void setAdminRoleNames(String adminRoleNames) {
-		PasswordValidator.adminRoleNames = adminRoleNames;
-	}
+                    String res = pReader.readLine();
 
+                    if (res != null && res.startsWith("OK")) {
+                        loginAttemptTracker.recordSuccess(remoteIp);
+                        if (adminRoleNames != null && adminUserList != null) {
+                            if (adminUserList.contains(userName)) {
+                                res = res + " " + adminRoleNames;
+                            }
+                        }
+                    } else {
+                        loginAttemptTracker.recordFailure(remoteIp);
+                        res = GENERIC_FAILURE_RESPONSE;
+                    }
+
+                    LOG.info("Response [{}] for user: {} from [{}]", res, userName, remoteIp);
+
+                    writer.println(res);
+                    writer.flush();
+                } finally {
+                    if (p != null) {
+                        p.destroy();
+                    }
+                }
+            }
+        } catch (Throwable t) {
+            loginAttemptTracker.recordFailure(remoteIp);
+            if (userName != null && writer != null) {
+                LOG.error("Response [{}] for user: {} from [{}], {}", GENERIC_FAILURE_RESPONSE, userName, remoteIp, t.getMessage());
+                writer.println(GENERIC_FAILURE_RESPONSE);
+                writer.flush();
+            }
+        } finally {
+            try {
+                if (client != null) {
+                    client.close();
+                }
+            } catch (IOException ioe) {
+                LOG.debug("Close socket failure. Detail: ", ioe);
+            } finally {
+                client = null;
+            }
+        }
+    }
 }
