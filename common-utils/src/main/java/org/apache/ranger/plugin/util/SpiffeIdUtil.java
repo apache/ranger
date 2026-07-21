@@ -39,10 +39,16 @@ public final class SpiffeIdUtil {
     private static final String  HEADER_NAMES_SEP  = ",";
 
     /**
-     * Matches {@code spiffe://<trust-domain>/ns/<namespace>/sa/<service-account>}, where each of the
-     * three segments is non-empty and contains no {@code /}. Group 3 is the service-account name.
+     * Matches {@code spiffe://<trust-domain>/ns/<namespace>/sa/<service-account>}.
+     *
+     * <p>The trust-domain is a DNS-style label set (lowercase alphanumerics, {@code -} and {@code .});
+     * the namespace and service-account are RFC-1123 labels (lowercase alphanumerics and {@code -},
+     * not starting or ending with {@code -}), matching Kubernetes naming. This deliberately excludes
+     * uppercase, whitespace and control characters so the extracted principal is well-formed.
+     * The service-account is exposed via the named group {@code sa}.
      */
-    private static final Pattern SPIFFE_ID_PATTERN = Pattern.compile("^spiffe://([^/]+)/ns/([^/]+)/sa/([^/]+)$");
+    private static final Pattern SPIFFE_ID_PATTERN = Pattern.compile(
+            "^spiffe://[a-z0-9]([-.a-z0-9]*[a-z0-9])?/ns/[a-z0-9]([-a-z0-9]*[a-z0-9])?/sa/(?<sa>[a-z0-9]([-a-z0-9]*[a-z0-9])?)$");
 
     private SpiffeIdUtil() {
         // to block instantiation
@@ -96,7 +102,7 @@ public final class SpiffeIdUtil {
     public static String extractServiceAccount(String spiffeId) {
         Matcher matcher = matchSpiffeId(spiffeId);
 
-        return matcher != null ? matcher.group(3) : null;
+        return matcher != null ? matcher.group("sa") : null;
     }
 
     /**

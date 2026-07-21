@@ -304,6 +304,31 @@ public class TestRangerHeaderPreAuthFilter {
     }
 
     @Test
+    public void testDoFilter_enabled_nonRfc1123SpiffeHeader_passesThrough() throws Exception {
+        PropertiesUtil.getPropertiesMap().put(RangerHeaderPreAuthFilter.PROP_HEADER_AUTH_ENABLED, "true");
+        PropertiesUtil.getPropertiesMap().put(RangerHeaderPreAuthFilter.PROP_SPIFFE_HEADER_NAME, "x-awc-source-workload-id");
+
+        RangerHeaderPreAuthFilter filter  = new RangerHeaderPreAuthFilter();
+        UserMgr                   userMgr = mock(UserMgr.class);
+
+        filter.userMgr = userMgr;
+        filter.initialize();
+
+        HttpServletRequest  request  = mock(HttpServletRequest.class);
+        HttpServletResponse response = mock(HttpServletResponse.class);
+        FilterChain         chain    = mock(FilterChain.class);
+
+        // Correct layout but the service-account is not an RFC-1123 label (contains an underscore).
+        when(request.getHeader("x-awc-source-workload-id")).thenReturn("spiffe://my-cluster/ns/prod/sa/service_sa");
+
+        filter.doFilter(request, response, chain);
+
+        verify(chain).doFilter(request, response);
+        verify(userMgr, never()).getRolesByLoginId(anyString());
+        assertNull(SecurityContextHolder.getContext().getAuthentication());
+    }
+
+    @Test
     public void testDoFilter_enabled_existingAuthenticatedContext_doesNotOverrideAuthentication() throws Exception {
         PropertiesUtil.getPropertiesMap().put(RangerHeaderPreAuthFilter.PROP_HEADER_AUTH_ENABLED, "true");
         PropertiesUtil.getPropertiesMap().put(RangerHeaderPreAuthFilter.PROP_USERNAME_HEADER_NAME, "x-awc-username");

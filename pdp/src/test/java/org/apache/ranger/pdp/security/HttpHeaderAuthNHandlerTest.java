@@ -160,6 +160,23 @@ public class HttpHeaderAuthNHandlerTest {
         assertNull(result.getUserName());
     }
 
+    @Test
+    void testAuthenticate_nonRfc1123SpiffeHeaderSkips() {
+        HttpHeaderAuthNHandler handler = new HttpHeaderAuthNHandler();
+        Properties             config  = new Properties();
+
+        config.setProperty(RangerPdpConstants.PROP_AUTHN_HEADER_SPIFFE, "x-awc-source-workload-id");
+
+        handler.init(config);
+
+        // Correct layout but the service-account is not an RFC-1123 label (contains an underscore).
+        HttpServletRequest     request = requestWithHeader("x-awc-source-workload-id", "spiffe://my-cluster/ns/prod/sa/service_sa");
+        PdpAuthNHandler.Result result  = handler.authenticate(request, null);
+
+        assertEquals(PdpAuthNHandler.Result.Status.SKIP, result.getStatus());
+        assertNull(result.getUserName());
+    }
+
     private static HttpServletRequest requestWithHeader(String expectedHeader, String headerValue) {
         return requestWithHeaders(Collections.singletonMap(expectedHeader, headerValue));
     }
