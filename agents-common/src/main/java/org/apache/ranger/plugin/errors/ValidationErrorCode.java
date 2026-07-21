@@ -137,6 +137,14 @@ public enum ValidationErrorCode {
     ROLE_VALIDATION_ERR_INVALID_ROLE_NAME(4007, "No RangerRole found for name[{0}]"),
     ROLE_VALIDATION_ERR_UNSUPPORTED_ACTION(4008, "Internal error: method signature isValid(Long) is only supported for DELETE"),
 
+    //RANGER ROLE Validations
+    AUDIT_METRICS_VALIDATION_ERR_NULL_AUDIT_METRICS__OBJECT(5001, "Internal error: RangerRole object passed in was null"),
+    AUDIT_METRICS_VALIDATION_ERR_MISSING_FIELD(5002, "Internal error: missing field[{0}]"),
+    AUDIT_METRICS_VALIDATION_ERR_NULL_RANGER_ROLE_NAME(5003, "Internal error: RangerRole name passed in was null/empty"),
+    AUDIT_METRICS_VALIDATION_ERR_INVALID_ROLE_ID(5006, "No RangerRole found for id[{0}]"),
+    AUDIT_METRICS_VALIDATION_ERR_INVALID_ROLE_NAME(5007, "No RangerRole found for name[{0}]"),
+    AUDIT_METRICS_VALIDATION_ERR_UNSUPPORTED_ACTION(5008, "Internal error: method signature isValid(Long) is only supported for DELETE"),
+
     GDS_VALIDATION_ERR_NON_EXISTING_USER(4101, "User [{0}] does not exist"),
     GDS_VALIDATION_ERR_NON_EXISTING_GROUP(4102, "Group [{0}] does not exist"),
     GDS_VALIDATION_ERR_NON_EXISTING_ROLE(4103, "Role [{0}] does not exist"),

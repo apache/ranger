@@ -397,4 +397,8 @@ public abstract class RangerDaoManagerBase {
     public XXGdsProjectPolicyMapDao getXXGdsProjectPolicyMap() {
         return new XXGdsProjectPolicyMapDao(this);
     }
+
+    public XXAuditMetricsDao getXXAuditMetricsDao()                        {
+        return new XXAuditMetricsDao(this);
+    }
 }
