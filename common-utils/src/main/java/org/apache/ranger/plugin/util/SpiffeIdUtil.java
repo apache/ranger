@@ -48,11 +48,13 @@ public final class SpiffeIdUtil {
      *       (SPIFFE path segments are case-sensitive).
      * </ul>
      * All segments must be non-empty. This is an allow-list of safe characters, so whitespace, control
-     * characters and {@code /} are excluded, keeping the extracted principal well-formed. The
-     * service-account is exposed via the named group {@code sa}.
+     * characters and {@code /} are excluded, keeping the extracted principal well-formed. Per the spec,
+     * the namespace and service-account path segments must not be the relative modifiers {@code .} or
+     * {@code ..} (enforced by the leading negative look-aheads). The service-account is exposed via the
+     * named group {@code sa}.
      */
     private static final Pattern SPIFFE_ID_PATTERN = Pattern.compile(
-            "^spiffe://[a-z0-9._-]+/ns/[A-Za-z0-9._-]+/sa/(?<sa>[A-Za-z0-9._-]+)$");
+            "^spiffe://[a-z0-9._-]+/ns/(?!\\.{1,2}/)[A-Za-z0-9._-]+/sa/(?<sa>(?!\\.{1,2}$)[A-Za-z0-9._-]+)$");
 
     private SpiffeIdUtil() {
         // to block instantiation

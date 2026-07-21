@@ -67,6 +67,22 @@ class SpiffeIdUtilTest {
     }
 
     @Test
+    void isValidSpiffeId_rejectsRelativePathModifierSegments() {
+        // Per SPIFFE spec 2.2, path segments must not be the relative modifiers '.' or '..'.
+        assertFalse(SpiffeIdUtil.isValidSpiffeId("spiffe://my-cluster/ns/./sa/service-sa"));   // namespace '.'
+        assertFalse(SpiffeIdUtil.isValidSpiffeId("spiffe://my-cluster/ns/../sa/service-sa"));  // namespace '..'
+        assertFalse(SpiffeIdUtil.isValidSpiffeId("spiffe://my-cluster/ns/prod/sa/."));         // service-account '.'
+        assertFalse(SpiffeIdUtil.isValidSpiffeId("spiffe://my-cluster/ns/prod/sa/.."));        // service-account '..'
+
+        assertNull(SpiffeIdUtil.extractServiceAccount("spiffe://my-cluster/ns/prod/sa/."));
+        assertNull(SpiffeIdUtil.extractServiceAccount("spiffe://my-cluster/ns/../sa/service-sa"));
+
+        // Dots inside a segment (not a bare '.'/'..') remain valid.
+        assertTrue(SpiffeIdUtil.isValidSpiffeId("spiffe://my-cluster/ns/prod/sa/svc.v1"));
+        assertEquals("svc.v1", SpiffeIdUtil.extractServiceAccount("spiffe://my-cluster/ns/..prod/sa/svc.v1"));
+    }
+
+    @Test
     void isValidSpiffeId_acceptsSpecAllowedCharacters() {
         // SPIFFE path segments are case-sensitive and allow letters (any case), digits, '.', '-', '_'.
         assertTrue(SpiffeIdUtil.isValidSpiffeId("spiffe://my-cluster.example.com/ns/service-namespace/sa/service-sa"));
