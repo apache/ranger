@@ -164,13 +164,14 @@ public class TestRangerHeaderPreAuthFilter {
         filter.userMgr = userMgr;
         filter.initialize();
 
-        when(userMgr.getRolesByLoginId("service-sa")).thenReturn(Collections.singletonList("ROLE_USER"));
+        when(userMgr.getRolesByLoginId("nginx-ingress")).thenReturn(Collections.singletonList("ROLE_USER"));
 
         HttpServletRequest  request  = mock(HttpServletRequest.class);
         HttpServletResponse response = mock(HttpServletResponse.class);
 
         when(request.getHeader("x-awc-username")).thenReturn(null);
-        when(request.getHeader("x-awc-source-workload-id")).thenReturn("spiffe://my-cluster/ns/service-namespace/sa/service-sa");
+        // Realistic production SPIFFE ID: DNS-style Kubernetes cluster trust domain + namespace/service-account.
+        when(request.getHeader("x-awc-source-workload-id")).thenReturn("spiffe://prod-cluster.k8s.example.com/ns/ingress-nginx/sa/nginx-ingress");
 
         FilterChain chain = new FilterChain() {
             @Override
@@ -181,7 +182,7 @@ public class TestRangerHeaderPreAuthFilter {
                 assertTrue(auth instanceof RangerAuthenticationToken);
                 RangerAuthenticationToken rangerAuth = (RangerAuthenticationToken) auth;
                 assertEquals(XXAuthSession.AUTH_TYPE_TRUSTED_PROXY, rangerAuth.getAuthType());
-                assertEquals("service-sa", auth.getName());
+                assertEquals("nginx-ingress", auth.getName());
             }
         };
 
@@ -304,7 +305,7 @@ public class TestRangerHeaderPreAuthFilter {
     }
 
     @Test
-    public void testDoFilter_enabled_nonRfc1123SpiffeHeader_passesThrough() throws Exception {
+    public void testDoFilter_enabled_spiffeHeaderWithIllegalChars_passesThrough() throws Exception {
         PropertiesUtil.getPropertiesMap().put(RangerHeaderPreAuthFilter.PROP_HEADER_AUTH_ENABLED, "true");
         PropertiesUtil.getPropertiesMap().put(RangerHeaderPreAuthFilter.PROP_SPIFFE_HEADER_NAME, "x-awc-source-workload-id");
 
@@ -318,8 +319,8 @@ public class TestRangerHeaderPreAuthFilter {
         HttpServletResponse response = mock(HttpServletResponse.class);
         FilterChain         chain    = mock(FilterChain.class);
 
-        // Correct layout but the service-account is not an RFC-1123 label (contains an underscore).
-        when(request.getHeader("x-awc-source-workload-id")).thenReturn("spiffe://my-cluster/ns/prod/sa/service_sa");
+        // Correct layout but the service-account contains whitespace, which is not an allowed SPIFFE character.
+        when(request.getHeader("x-awc-source-workload-id")).thenReturn("spiffe://my-cluster/ns/prod/sa/service sa");
 
         filter.doFilter(request, response, chain);
 

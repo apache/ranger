@@ -76,11 +76,12 @@ public class HttpHeaderAuthNHandlerTest {
 
         handler.init(config);
 
-        HttpServletRequest     request = requestWithHeader("x-awc-source-workload-id", "spiffe://my-cluster/ns/service-namespace/sa/service-sa");
+        // Realistic production SPIFFE ID: DNS-style Kubernetes cluster trust domain + namespace/service-account.
+        HttpServletRequest     request = requestWithHeader("x-awc-source-workload-id", "spiffe://prod-cluster.k8s.example.com/ns/ingress-nginx/sa/nginx-ingress");
         PdpAuthNHandler.Result result  = handler.authenticate(request, null);
 
         assertEquals(PdpAuthNHandler.Result.Status.AUTHENTICATED, result.getStatus());
-        assertEquals("service-sa", result.getUserName());
+        assertEquals("nginx-ingress", result.getUserName());
         assertEquals(HttpHeaderAuthNHandler.AUTH_TYPE_SPIFFE, result.getAuthType());
     }
 
@@ -161,7 +162,7 @@ public class HttpHeaderAuthNHandlerTest {
     }
 
     @Test
-    void testAuthenticate_nonRfc1123SpiffeHeaderSkips() {
+    void testAuthenticate_spiffeHeaderWithIllegalCharsSkips() {
         HttpHeaderAuthNHandler handler = new HttpHeaderAuthNHandler();
         Properties             config  = new Properties();
 
@@ -169,8 +170,8 @@ public class HttpHeaderAuthNHandlerTest {
 
         handler.init(config);
 
-        // Correct layout but the service-account is not an RFC-1123 label (contains an underscore).
-        HttpServletRequest     request = requestWithHeader("x-awc-source-workload-id", "spiffe://my-cluster/ns/prod/sa/service_sa");
+        // Correct layout but the service-account contains whitespace, which is not an allowed SPIFFE character.
+        HttpServletRequest     request = requestWithHeader("x-awc-source-workload-id", "spiffe://my-cluster/ns/prod/sa/service sa");
         PdpAuthNHandler.Result result  = handler.authenticate(request, null);
 
         assertEquals(PdpAuthNHandler.Result.Status.SKIP, result.getStatus());

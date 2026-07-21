@@ -39,16 +39,20 @@ public final class SpiffeIdUtil {
     private static final String  HEADER_NAMES_SEP  = ",";
 
     /**
-     * Matches {@code spiffe://<trust-domain>/ns/<namespace>/sa/<service-account>}.
-     *
-     * <p>The trust-domain is a DNS-style label set (lowercase alphanumerics, {@code -} and {@code .});
-     * the namespace and service-account are RFC-1123 labels (lowercase alphanumerics and {@code -},
-     * not starting or ending with {@code -}), matching Kubernetes naming. This deliberately excludes
-     * uppercase, whitespace and control characters so the extracted principal is well-formed.
-     * The service-account is exposed via the named group {@code sa}.
+     * Matches {@code spiffe://<trust-domain>/ns/<namespace>/sa/<service-account>} using the character
+     * sets from the SPIFFE-ID specification:
+     * <ul>
+     *   <li>trust-domain: lowercase letters, digits, {@code .}, {@code -}, {@code _} (the spec requires
+     *       the trust domain to be lowercase);
+     *   <li>namespace and service-account: ASCII letters (any case), digits, {@code .}, {@code -}, {@code _}
+     *       (SPIFFE path segments are case-sensitive).
+     * </ul>
+     * All segments must be non-empty. This is an allow-list of safe characters, so whitespace, control
+     * characters and {@code /} are excluded, keeping the extracted principal well-formed. The
+     * service-account is exposed via the named group {@code sa}.
      */
     private static final Pattern SPIFFE_ID_PATTERN = Pattern.compile(
-            "^spiffe://[a-z0-9]([-.a-z0-9]*[a-z0-9])?/ns/[a-z0-9]([-a-z0-9]*[a-z0-9])?/sa/(?<sa>[a-z0-9]([-a-z0-9]*[a-z0-9])?)$");
+            "^spiffe://[a-z0-9._-]+/ns/[A-Za-z0-9._-]+/sa/(?<sa>[A-Za-z0-9._-]+)$");
 
     private SpiffeIdUtil() {
         // to block instantiation
