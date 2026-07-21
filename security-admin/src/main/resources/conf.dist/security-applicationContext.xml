@@ -43,13 +43,13 @@ http://www.springframework.org/schema/security/spring-security-oauth2-2.0.xsd">
 	<security:http pattern="/service/assets/policyList/*" security="none"/>
 	<security:http pattern="/service/assets/resources/grant" security="none"/>
 	<security:http pattern="/service/assets/resources/revoke" security="none"/>
-	<security:http pattern="/service/gds/download/*" security="none"/>
-	<security:http pattern="/service/plugins/policies/download/*" security="none"/>
+	<security:http pattern="/service/gds/download/**" security="none"/>
+	<security:http pattern="/service/plugins/policies/download/**" security="none"/>
 	<security:http pattern="/service/plugins/services/grant/*" security="none"/>
 	<security:http pattern="/service/plugins/services/revoke/*" security="none"/>
-	<security:http pattern="/service/tags/download/*" security="none"/>
-	<security:http pattern="/service/roles/download/*" security="none"/>
-	<security:http pattern="/service/xusers/download/*" security="none"/>
+	<security:http pattern="/service/tags/download/**" security="none"/>
+	<security:http pattern="/service/roles/download/**" security="none"/>
+	<security:http pattern="/service/xusers/download/**" security="none"/>
 	<security:http pattern="/service/actuator/health" security="none" />
 	<security:http pattern="/service/metrics/**" security="none" />
 	<security:http disable-url-rewriting="true" use-expressions="true" create-session="always" entry-point-ref="authenticationProcessingFilterEntryPoint">
