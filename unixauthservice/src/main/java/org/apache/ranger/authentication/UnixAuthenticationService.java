@@ -70,6 +70,11 @@ public class UnixAuthenticationService {
     private static final String SSL_ENABLED_PARAM                    = "ranger.usersync.ssl";
     private static final String CREDSTORE_FILENAME_PARAM             = "ranger.usersync.credstore.filename";
     private static final String[] UGSYNC_CONFIG_XML_FILES            = {"ranger-ugsync-default.xml", "ranger-ugsync-site.xml"};
+    private static final String UNIXAUTH_MAX_FAILED_ATTEMPTS_PARAM   = "ranger.usersync.unixauth.max.failed.attempts";
+    private static final String UNIXAUTH_ATTEMPT_WINDOW_MS_PARAM     = "ranger.usersync.unixauth.attempt.window.ms";
+    private static final String UNIXAUTH_LOCKOUT_DURATION_MS_PARAM   = "ranger.usersync.unixauth.lockout.duration.ms";
+    private static final String UNIXAUTH_REQUIRE_CLIENT_AUTH_PARAM   = "ranger.usersync.unixauth.require.client.auth";
+    private static final String UNIXAUTH_SOCKET_TIMEOUT_MS_PARAM     = "ranger.usersync.unixauth.socket.timeout.ms";
 
     private static boolean enableUnixAuth;
 
@@ -87,6 +92,9 @@ public class UnixAuthenticationService {
     private UserSyncHAInitializerImpl userSyncHAInitializerImpl;
     private int portNum;
     private boolean sslEnabled;
+    private boolean requireClientAuth;
+    private LoginAttemptTracker loginAttemptTracker;
+    private int socketTimeoutMs;
 
     public UnixAuthenticationService() {
     }
@@ -193,6 +201,13 @@ public class UnixAuthenticationService {
                         LOG.debug("Disabling CipherSuite : [{}]", enabledCipherSuite);
                     }
                 }
+                if (requireClientAuth) {
+                    if (trustStoreKeyStore == null) {
+                        throw new RuntimeException("[" + UNIXAUTH_REQUIRE_CLIENT_AUTH_PARAM + "] is enabled but [" + SSL_TRUSTSTORE_PATH_PARAM + "] is not configured - a truststore is required to validate client certificates.");
+                    }
+                    LOG.info("Enabling TLS client certificate authentication for UnixAuth listener.");
+                    secureSocket.setNeedClientAuth(true);
+                }
                 if (!allowedCipherSuites.isEmpty()) {
                     secureSocket.setEnabledCipherSuites(allowedCipherSuites.toArray(new String[0]));
                 }
@@ -202,7 +217,12 @@ public class UnixAuthenticationService {
 
             try {
                 while ((client = socket.accept()) != null) {
-                    Thread clientValidatorThread = new Thread(new PasswordValidator(client));
+                    try {
+                        client.setSoTimeout(socketTimeoutMs);
+                    } catch (java.net.SocketException se) {
+                        LOG.warn("Failed to set socket timeout for connection from [{}]: {}", client.getInetAddress(), se.getMessage());
+                    }
+                    Thread clientValidatorThread = new Thread(new PasswordValidator(client, loginAttemptTracker));
                     clientValidatorThread.start();
                 }
             } catch (IOException e) {
@@ -308,6 +328,15 @@ public class UnixAuthenticationService {
         String enabledCipherSuites     = prop.getProperty("ranger.usersync.https.ssl.enabled.cipher.suites", "");
         enabledProtocolsList           = new ArrayList<>(Arrays.asList(enabledProtocols.toUpperCase().trim().split("\\s*,\\s*")));
         enabledCipherSuiteList         = new ArrayList<>(Arrays.asList(enabledCipherSuites.toUpperCase().trim().split("\\s*,\\s*")));
+        int  maxFailedAttempts = Integer.parseInt(prop.getProperty(UNIXAUTH_MAX_FAILED_ATTEMPTS_PARAM, "5"));
+        long attemptWindowMs   = Long.parseLong(prop.getProperty(UNIXAUTH_ATTEMPT_WINDOW_MS_PARAM, "60000"));
+        long lockoutDurationMs = Long.parseLong(prop.getProperty(UNIXAUTH_LOCKOUT_DURATION_MS_PARAM, "30000"));
+        socketTimeoutMs = Integer.parseInt(prop.getProperty(UNIXAUTH_SOCKET_TIMEOUT_MS_PARAM, "10000"));
+
+        loginAttemptTracker = new LoginAttemptTracker(maxFailedAttempts, attemptWindowMs, lockoutDurationMs);
+
+        String requireClientAuthProp = prop.getProperty(UNIXAUTH_REQUIRE_CLIENT_AUTH_PARAM, "false");
+        requireClientAuth = requireClientAuthProp.trim().equalsIgnoreCase("true");
     }
 
     private InputStream getFileInputStream(String path) throws FileNotFoundException {
