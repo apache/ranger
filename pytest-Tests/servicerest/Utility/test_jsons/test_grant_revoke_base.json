@@ -1,0 +1,19 @@
+{
+    "replaceExistingPermissions": false,
+    "accessTypes": ["select"],
+    "grantor": "{user1}",
+    "resource": {
+        "database": "{grant_db_name}",
+        "column": "*",
+        "table": "{grant_table_name}"
+    },
+    "grantorGroups": [],
+    "clusterName": "",
+    "clientIPAddress": "",
+    "roles": [],
+    "delegateAdmin": false,
+    "isRecursive": false,
+    "users": ["{user2}"],
+    "groups": [],
+    "enableAudit": true
+}
