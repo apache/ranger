@@ -107,7 +107,7 @@ public class TestPasswordValidator {
             new PasswordValidator(socket, permissiveTracker()).run();
         }
 
-        String response = out.toString(StandardCharsets.UTF_8).trim();
+        String response = out.toString(StandardCharsets.UTF_8.name()).trim();
         assertEquals("OK ROLE_ADMIN", response);
         verify(process, times(1)).destroy();
         verify(socket, times(1)).close();
@@ -158,7 +158,7 @@ public class TestPasswordValidator {
             new PasswordValidator(socket, permissiveTracker()).run();
         }
 
-        String response = out.toString(StandardCharsets.UTF_8).trim();
+        String response = out.toString(StandardCharsets.UTF_8.name()).trim();
         assertEquals("FAILED: Authentication failed.", response);
         verify(socket, times(1)).close();
     }
@@ -190,7 +190,7 @@ public class TestPasswordValidator {
         LoginAttemptTracker tracker = mock(LoginAttemptTracker.class);
         when(tracker.isBlocked(anyString())).thenReturn(true);
         new PasswordValidator(socket, tracker).run();
-        String response = out.toString(StandardCharsets.UTF_8).trim();
+        String response = out.toString(StandardCharsets.UTF_8.name()).trim();
         assertEquals("FAILED: Too many attempts. Try again later.", response);
         verify(socket, times(1)).close();
     }
@@ -219,7 +219,7 @@ public class TestPasswordValidator {
             new PasswordValidator(socket, tracker).run();
         }
 
-        String response = out.toString(StandardCharsets.UTF_8).trim();
+        String response = out.toString(StandardCharsets.UTF_8.name()).trim();
         assertEquals("FAILED: Authentication failed.", response);
         verify(tracker, times(1)).recordFailure(anyString());
         verify(tracker, never()).recordSuccess(anyString());
@@ -250,7 +250,7 @@ public class TestPasswordValidator {
             new PasswordValidator(socket, tracker).run();
         }
 
-        String response = out.toString(StandardCharsets.UTF_8).trim();
+        String response = out.toString(StandardCharsets.UTF_8.name()).trim();
         assertEquals("OK", response);
         verify(tracker, times(1)).recordSuccess(anyString());
         verify(tracker, never()).recordFailure(anyString());
