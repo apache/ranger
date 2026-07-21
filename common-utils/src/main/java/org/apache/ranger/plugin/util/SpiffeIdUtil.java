@@ -24,18 +24,25 @@ import org.apache.commons.lang3.StringUtils;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
- * Helper for extracting a service-account identity from a SPIFFE ID.
+ * Helper for validating a SPIFFE ID and extracting the service-account identity from it.
  *
- * <p>A SPIFFE ID has the form {@code spiffe://<trust-domain>/ns/<namespace>/sa/<service-account>};
+ * <p>A SPIFFE ID is expected in the exact form {@code spiffe://<trust-domain>/ns/<namespace>/sa/<service-account>};
  * for service-to-service authentication the receiving server trusts the workload
  * identity carried in a header (e.g. {@code x-service-spiffe-id}) and uses
  * the trailing service-account segment as the authenticated principal.
  */
 public final class SpiffeIdUtil {
-    private static final String SPIFFE_SCHEME     = "spiffe://";
-    private static final String HEADER_NAMES_SEP  = ",";
+    private static final String  HEADER_NAMES_SEP  = ",";
+
+    /**
+     * Matches {@code spiffe://<trust-domain>/ns/<namespace>/sa/<service-account>}, where each of the
+     * three segments is non-empty and contains no {@code /}. Group 3 is the service-account name.
+     */
+    private static final Pattern SPIFFE_ID_PATTERN = Pattern.compile("^spiffe://([^/]+)/ns/([^/]+)/sa/([^/]+)$");
 
     private SpiffeIdUtil() {
         // to block instantiation
@@ -67,27 +74,45 @@ public final class SpiffeIdUtil {
     }
 
     /**
-     * Extracts the service-account name (the last non-empty path segment) from a
-     * SPIFFE ID such as {@code spiffe://my-cluster/ns/service-namespace/sa/service-sa}.
+     * Validates that the given value is a well-formed SPIFFE ID in the exact form
+     * {@code spiffe://<trust-domain>/ns/<namespace>/sa/<service-account>} with non-empty segments.
      *
      * @param spiffeId the raw SPIFFE ID value from the request header
-     * @return the trailing service-account segment (e.g. {@code service-sa}), or
+     * @return {@code true} if the value matches the expected SPIFFE ID format; {@code false} otherwise
+     */
+    public static boolean isValidSpiffeId(String spiffeId) {
+        return matchSpiffeId(spiffeId) != null;
+    }
+
+    /**
+     * Extracts the service-account name from a SPIFFE ID such as
+     * {@code spiffe://my-cluster/ns/service-namespace/sa/service-sa}. The value must match the exact
+     * SPIFFE ID format (see {@link #isValidSpiffeId(String)}); otherwise {@code null} is returned.
+     *
+     * @param spiffeId the raw SPIFFE ID value from the request header
+     * @return the service-account segment (e.g. {@code service-sa}), or
      *         {@code null} if the input is blank or not a well-formed SPIFFE ID
      */
     public static String extractServiceAccount(String spiffeId) {
+        Matcher matcher = matchSpiffeId(spiffeId);
+
+        return matcher != null ? matcher.group(3) : null;
+    }
+
+    /**
+     * Matches the given value against the expected SPIFFE ID format, computing the {@link Matcher} once.
+     *
+     * @param spiffeId the raw SPIFFE ID value from the request header
+     * @return a matched {@link Matcher} (with groups available) if the value is a well-formed SPIFFE ID;
+     *         {@code null} if the value is blank or does not match
+     */
+    private static Matcher matchSpiffeId(String spiffeId) {
         if (StringUtils.isBlank(spiffeId)) {
             return null;
         }
 
-        String trimmed = spiffeId.trim();
+        Matcher matcher = SPIFFE_ID_PATTERN.matcher(spiffeId.trim());
 
-        if (!trimmed.startsWith(SPIFFE_SCHEME)) {
-            return null;
-        }
-
-        String path = StringUtils.stripEnd(trimmed, "/");
-        int    idx  = path.lastIndexOf('/');
-
-        return idx >= 0 && idx < path.length() - 1 ? path.substring(idx + 1) : null;
+        return matcher.matches() ? matcher : null;
     }
 }

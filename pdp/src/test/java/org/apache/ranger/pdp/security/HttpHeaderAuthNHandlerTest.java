@@ -143,6 +143,23 @@ public class HttpHeaderAuthNHandlerTest {
         assertNull(result.getUserName());
     }
 
+    @Test
+    void testAuthenticate_specValidButNonConformingSpiffeHeaderSkips() {
+        HttpHeaderAuthNHandler handler = new HttpHeaderAuthNHandler();
+        Properties             config  = new Properties();
+
+        config.setProperty(RangerPdpConstants.PROP_AUTHN_HEADER_SPIFFE, "x-awc-source-workload-id");
+
+        handler.init(config);
+
+        // Valid SPIFFE ID per the SPIFFE spec, but not in the expected /ns/<ns>/sa/<sa> layout.
+        HttpServletRequest     request = requestWithHeader("x-awc-source-workload-id", "spiffe://example.org/workload/frontend");
+        PdpAuthNHandler.Result result  = handler.authenticate(request, null);
+
+        assertEquals(PdpAuthNHandler.Result.Status.SKIP, result.getStatus());
+        assertNull(result.getUserName());
+    }
+
     private static HttpServletRequest requestWithHeader(String expectedHeader, String headerValue) {
         return requestWithHeaders(Collections.singletonMap(expectedHeader, headerValue));
     }

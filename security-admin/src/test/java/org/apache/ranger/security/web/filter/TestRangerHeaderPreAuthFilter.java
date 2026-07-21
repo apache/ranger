@@ -279,6 +279,31 @@ public class TestRangerHeaderPreAuthFilter {
     }
 
     @Test
+    public void testDoFilter_enabled_specValidButNonConformingSpiffeHeader_passesThrough() throws Exception {
+        PropertiesUtil.getPropertiesMap().put(RangerHeaderPreAuthFilter.PROP_HEADER_AUTH_ENABLED, "true");
+        PropertiesUtil.getPropertiesMap().put(RangerHeaderPreAuthFilter.PROP_SPIFFE_HEADER_NAME, "x-awc-source-workload-id");
+
+        RangerHeaderPreAuthFilter filter  = new RangerHeaderPreAuthFilter();
+        UserMgr                   userMgr = mock(UserMgr.class);
+
+        filter.userMgr = userMgr;
+        filter.initialize();
+
+        HttpServletRequest  request  = mock(HttpServletRequest.class);
+        HttpServletResponse response = mock(HttpServletResponse.class);
+        FilterChain         chain    = mock(FilterChain.class);
+
+        // Valid SPIFFE ID per the SPIFFE spec, but not in the expected /ns/<ns>/sa/<sa> layout.
+        when(request.getHeader("x-awc-source-workload-id")).thenReturn("spiffe://example.org/workload/frontend");
+
+        filter.doFilter(request, response, chain);
+
+        verify(chain).doFilter(request, response);
+        verify(userMgr, never()).getRolesByLoginId(anyString());
+        assertNull(SecurityContextHolder.getContext().getAuthentication());
+    }
+
+    @Test
     public void testDoFilter_enabled_existingAuthenticatedContext_doesNotOverrideAuthentication() throws Exception {
         PropertiesUtil.getPropertiesMap().put(RangerHeaderPreAuthFilter.PROP_HEADER_AUTH_ENABLED, "true");
         PropertiesUtil.getPropertiesMap().put(RangerHeaderPreAuthFilter.PROP_USERNAME_HEADER_NAME, "x-awc-username");
