@@ -59,7 +59,6 @@ import folderIcon from "Images/folder-grey.png";
 export const LoginUser = (role) => {
   const userProfile = getUserProfile();
   const roles = userProfile?.userRoleList;
-
   if (!roles || roles.length === 0) {
     return false;
   }
@@ -1084,7 +1083,7 @@ export const InfoIcon = (props) => {
 };
 
 /* Edit Permission Module Infinite Scroll */
-export const CustomInfiniteScroll = (props) => {
+export const CustomInfinteScroll = (props) => {
   const { data, removeUsrGrp, scrollableDiv } = props;
   const [count, setCount] = useState({
     startIndex: 0,
@@ -1546,9 +1545,8 @@ export const getServiceDefIcon = (serviceDefName) => {
   let imageStyling;
 
   try {
-    const serviceDefIcon = require(
-      `../images/serviceDefIcons/${serviceDefName}/icon.svg`
-    ).default;
+    const serviceDefIcon =
+      require(`../images/serviceDefIcons/${serviceDefName}/icon.svg`).default;
     imagePath = serviceDefIcon;
     imageStyling = { height: "27px", width: "27px" };
   } catch (error) {
@@ -1593,47 +1591,4 @@ export const getPolicyConditionDisplayLbl = (lbl) => {
   return has(policyConditionDisplayLabel, lbl)
     ? policyConditionDisplayLabel[lbl]
     : lbl;
-};
-
-// Common function to safeguard JSON parsing
-export const safeJsonParse = (value, fallback) => {
-  try {
-    return JSON.parse(value);
-  } catch (error) {
-    console.error("JSON Parsing Error:", error);
-    return fallback;
-  }
-};
-
-//CommonFunction to get display label for policy permission item
-export const getPolicyPermissionItemDisplayLbl = (
-  serviceDef,
-  policyType,
-  accessType
-) => {
-  let accessTypeDefVal = [];
-  const accesTypeKeys = map(accessType, (item) => {
-    return isObject(item) ? item.type : item;
-  });
-  if (RangerPolicyType.RANGER_MASKING_POLICY_TYPE.value == policyType) {
-    accessTypeDefVal = serviceDef.dataMaskDef.accessTypes;
-  } else if (
-    RangerPolicyType.RANGER_ROW_FILTER_POLICY_TYPE.value == policyType
-  ) {
-    accessTypeDefVal = serviceDef.rowFilterDef.accessTypes;
-  } else {
-    accessTypeDefVal = serviceDef.accessTypes;
-  }
-  if (serviceDef.name == "tag") {
-    return map(sortBy(accesTypeKeys), (val) => ({ label: val }));
-  } else {
-    if (accessType.length == accessTypeDefVal.length) {
-      return sortBy(accessTypeDefVal, "label");
-    } else {
-      const accessTypeDisplayLblObj = filter(accessTypeDefVal, (item) =>
-        includes(accesTypeKeys, { type: item.name })
-      );
-      return sortBy(accessTypeDisplayLblObj, "label");
-    }
-  }
 };

@@ -53,8 +53,7 @@ import {
   BlockUi,
   Loader,
   scrollToError,
-  selectInputCustomStyles,
-  trimInputValue
+  selectInputCustomStyles
 } from "Components/CommonComponents";
 import { fetchApi } from "Utils/fetchAPI";
 import { RangerPolicyType, getEnumElementByValue } from "Utils/XAEnums";
@@ -72,8 +71,7 @@ import {
   getResourcesDefVal,
   getAllTimeZoneList,
   policyConditionUpdatedJSON,
-  policyInfo,
-  getPolicyConditionDisplayLbl
+  policyInfo
 } from "Utils/XAUtils";
 import { useAccordionButton } from "react-bootstrap/AccordionButton";
 import AccordionContext from "react-bootstrap/AccordionContext";
@@ -294,7 +292,7 @@ export default function AddUpdatePolicyForm() {
   const fetchPolicyLabel = async (inputValue) => {
     let params = {};
     if (inputValue) {
-      params["policyLabel"] = inputValue.trim() || "";
+      params["policyLabel"] = inputValue || "";
     }
     const policyLabelResp = await fetchApi({
       url: "plugins/policyLabels",
@@ -302,8 +300,8 @@ export default function AddUpdatePolicyForm() {
     });
 
     return policyLabelResp.data.map((name) => ({
-      label: name.trim(),
-      value: name.trim()
+      label: name,
+      value: name
     }));
   };
 
@@ -394,12 +392,12 @@ export default function AddUpdatePolicyForm() {
       data.policyName = policyData?.name;
       data.isEnabled = policyData?.isEnabled;
       data.policyPriority = policyData?.policyPriority == 0 ? false : true;
-      data.description = policyData?.description?.trim();
+      data.description = policyData?.description;
       data.isAuditEnabled = policyData?.isAuditEnabled;
       data.policyLabel =
         policyData &&
         policyData?.policyLabels?.map((val) => {
-          return { label: val?.trim(), value: val?.trim() };
+          return { label: val, value: val };
         });
       if (policyData?.resources) {
         if (!isMultiResources) {
@@ -408,7 +406,7 @@ export default function AddUpdatePolicyForm() {
             let setResources = find(serviceCompResourcesDetails, ["name", key]);
             data[`resourceName-${setResources?.level}`] = setResources;
             data[`value-${setResources?.level}`] = value.values.map((m) => {
-              return { label: m?.trim(), value: m?.trim() };
+              return { label: m, value: m };
             });
             if (setResources?.excludesSupported) {
               data[`isExcludesSupport-${setResources?.level}`] =
@@ -453,7 +451,7 @@ export default function AddUpdatePolicyForm() {
                   setResources;
                 additionalResourcesObj[`value-${setResources?.level}`] =
                   value.values.map((m) => {
-                    return { label: m?.trim(), value: m?.trim() };
+                    return { label: m, value: m };
                   });
                 if (setResources?.excludesSupported) {
                   additionalResourcesObj[
@@ -526,7 +524,7 @@ export default function AddUpdatePolicyForm() {
             data.conditions[val?.type] = JSON.parse(conditionObj.uiHint)
               .isMultiValue
               ? val?.values
-              : val?.values.toString().trim();
+              : val?.values.toString();
           }
         }
       }
@@ -596,7 +594,7 @@ export default function AddUpdatePolicyForm() {
                 type: conditionKey,
                 values: isArray(conditionValue)
                   ? conditionValue.map((m) => {
-                      return m;
+                      return m.value;
                     })
                   : [conditionValue]
               });
@@ -717,8 +715,10 @@ export default function AddUpdatePolicyForm() {
           if (conditionObj?.uiHint && !isEmpty(conditionObj.uiHint)) {
             obj.conditions[data?.type] = JSON.parse(conditionObj.uiHint)
               .isMultiValue
-              ? data?.values
-              : data?.values.toString().trim();
+              ? data?.values.map((m) => {
+                  return { value: m, label: m };
+                })
+              : data?.values.toString();
           }
         }
       }
@@ -894,7 +894,7 @@ export default function AddUpdatePolicyForm() {
       data["conditions"] = [];
     }
 
-    /* For create zone policy*/
+    /* For create zoen policy*/
     if (localStorage.getItem("zoneDetails") != null) {
       data["zoneName"] = JSON.parse(localStorage.getItem("zoneDetails")).label;
     }
@@ -1308,7 +1308,6 @@ export default function AddUpdatePolicyForm() {
                                           : "form-control"
                                       }
                                       data-cy="policyName"
-                                      onBlur={(e) => trimInputValue(e, input)}
                                     />
                                     <InfoIcon
                                       css="input-box-info-icon"
@@ -1399,25 +1398,6 @@ export default function AddUpdatePolicyForm() {
                                   }}
                                   defaultOptions={defaultPolicyLabelOptions}
                                   styles={selectInputCustomStyles}
-                                  // Add this prop to trim the visual "Create" label
-                                  formatCreateLabel={(inputValue) =>
-                                    `Create "${inputValue.trim()}"`
-                                  }
-                                  // Add this prop to trim the value when a tag is created
-                                  onCreateOption={(inputValue) => {
-                                    const policyLabelVal = inputValue.trim();
-                                    if (policyLabelVal) {
-                                      input.onChange([
-                                        ...input.value,
-                                        {
-                                          label: policyLabelVal,
-                                          value: policyLabelVal
-                                        }
-                                      ]);
-                                    }
-                                  }}
-                                  tabSelectsValue={false}
-                                  placeholder="Add Policy Labels"
                                 />
                               </Col>
                             </FormB.Group>
@@ -1450,7 +1430,6 @@ export default function AddUpdatePolicyForm() {
                                   as="textarea"
                                   rows={3}
                                   data-cy="description"
-                                  onBlur={(e) => trimInputValue(e, input)}
                                 />
                               </Col>
                             </FormB.Group>
@@ -1513,7 +1492,6 @@ export default function AddUpdatePolicyForm() {
                                             handleCloseModal={
                                               policyConditionState
                                             }
-                                            modalHeader="Policy Conditions"
                                           />
                                         )}
                                       />
@@ -1555,25 +1533,23 @@ export default function AddUpdatePolicyForm() {
                                           return (
                                             <tr key={keyName}>
                                               <td>
-                                                <span>
-                                                  {getPolicyConditionDisplayLbl(
-                                                    conditionObj.label
-                                                  )}
-                                                </span>
+                                                <center>
+                                                  {conditionObj.label}
+                                                </center>
                                               </td>
                                               <td>
                                                 {isArray(
                                                   values?.conditions[keyName]
                                                 ) ? (
-                                                  <span className="line-clamp line-clamp-3">
+                                                  <center>
                                                     {values.conditions[
                                                       keyName
                                                     ].join(", ")}
-                                                  </span>
+                                                  </center>
                                                 ) : (
-                                                  <span className="line-clamp line-clamp-3">
+                                                  <center>
                                                     {values.conditions[keyName]}
-                                                  </span>
+                                                  </center>
                                                 )}
                                               </td>
                                             </tr>
@@ -1584,9 +1560,7 @@ export default function AddUpdatePolicyForm() {
                                   ) : (
                                     <tr>
                                       <td>
-                                        <center className="text-muted">
-                                          No Conditions
-                                        </center>
+                                        <center> No Conditions </center>
                                       </td>
                                     </tr>
                                   )}
@@ -1601,11 +1575,7 @@ export default function AddUpdatePolicyForm() {
                     {isMultiResources && (
                       <>
                         <fieldset>
-                          <p className="formHeader">
-                            {serviceCompDetails.name == "tag"
-                              ? "Tags :"
-                              : "Resources :"}
-                          </p>
+                          <p className="formHeader">Resources :</p>
                         </fieldset>
                         <>
                           <FieldArray name="additionalResources">
@@ -1672,7 +1642,7 @@ export default function AddUpdatePolicyForm() {
                           <Accordion defaultActiveKey="0">
                             <>
                               <p className="formHeader">
-                                Allow Rules:{" "}
+                                Allow Conditions:{" "}
                                 <CustomToggle eventKey="0"></CustomToggle>
                               </p>
                               <Accordion.Collapse eventKey="0">
@@ -1700,7 +1670,7 @@ export default function AddUpdatePolicyForm() {
                                       <fieldset>
                                         <p className="wrap-header search-header">
                                           <i className="fa-fw fa fa-exclamation-triangle fa-fw fa fa-1 text-color-red"></i>
-                                          Exclude from Allow Rules:
+                                          Exclude from Allow Conditions:
                                         </p>
                                       </fieldset>
                                       <div className="wrap">
@@ -1766,7 +1736,7 @@ export default function AddUpdatePolicyForm() {
                                 <Accordion defaultActiveKey="0">
                                   <>
                                     <p className="formHeader">
-                                      Deny Rules:
+                                      Deny Conditions:
                                       <CustomToggle eventKey="0"></CustomToggle>
                                     </p>
                                     <Accordion.Collapse eventKey="0">
@@ -1792,7 +1762,7 @@ export default function AddUpdatePolicyForm() {
                                         <fieldset>
                                           <p className="wrap-header search-header">
                                             <i className="fa-fw fa fa-exclamation-triangle fa-fw fa fa-1 text-color-red"></i>
-                                            Exclude from Deny Rules:
+                                            Exclude from Deny Conditions:
                                           </p>
                                         </fieldset>
                                         <div className="wrap">
@@ -1827,7 +1797,7 @@ export default function AddUpdatePolicyForm() {
                         <Accordion defaultActiveKey="0">
                           <>
                             <p className="formHeader">
-                              Mask Rules:
+                              Mask Conditions:
                               <CustomToggle eventKey="0"></CustomToggle>
                             </p>
                             <Accordion.Collapse eventKey="0">
@@ -1859,7 +1829,7 @@ export default function AddUpdatePolicyForm() {
                           <Accordion defaultActiveKey="0">
                             <>
                               <p className="wrap-header search-header">
-                                Row Filter Rules:
+                                Row Filter Conditions:
                                 <CustomToggle eventKey="0"></CustomToggle>
                               </p>
                               <Accordion.Collapse eventKey="0">
