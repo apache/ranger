@@ -15,7 +15,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-set -x
 function getInstallProperty() {
     local propertyName=$1
     local propertyValue=""
@@ -76,6 +75,9 @@ pidf=${USERSYNC_PID_DIR_PATH}/${USERSYNC_PID_NAME}
 if [ -z "${UNIX_USERSYNC_USER}" ]; then
         UNIX_USERSYNC_USER=ranger
 fi
+if [ -z "${UNIX_USERSYNC_GROUP}" ]; then
+        UNIX_USERSYNC_GROUP=ranger
+fi
 
 INSTALL_ARGS="${cdir}/install.properties"
 RANGER_BASE_DIR=$(getInstallProperty 'ranger_base_dir')
@@ -97,13 +99,14 @@ if [ "${action}" == "START" ]; then
         RANGER_USERSYNC_LOG_DIR=/var/log/ranger/usersync
     fi
 
-    if [ ! -d RANGER_USERSYNC_LOG_DIR ]; then
-      mkdir -p $RANGER_USERSYNC_LOG_DIR
-      chmod 777 $RANGER_USERSYNC_LOG_DIR
+    if [ ! -d "${RANGER_USERSYNC_LOG_DIR}" ]; then
+      mkdir -p "${RANGER_USERSYNC_LOG_DIR}"
     fi
+    chown -R "${UNIX_USERSYNC_USER}:${UNIX_USERSYNC_GROUP}" "${RANGER_USERSYNC_LOG_DIR}"
+    chmod 755 "${RANGER_USERSYNC_LOG_DIR}"
 
     RANGER_USERSYNC_WEBAPP=${cdir}/ews/webapp
-    cp="${cdir}/dist/*:${cdir}/lib/*:${cdir}/conf:${RANGER_USERSYNC_WEBAPP}/WEB-INF/classes:${cdir}/ews/lib/*:${RANGER_USERSYNC_HADOOP_CONF_DIR}/*:${RANGER_USERSYNC_WEBAPP}/WEB-INF/lib/*:${JAVA_HOME}/lib/*"
+    cp="${cdir}/dist/*:${cdir}/conf:${RANGER_USERSYNC_WEBAPP}/WEB-INF/classes:${cdir}/ews/lib/*:${RANGER_USERSYNC_HADOOP_CONF_DIR}/*:${RANGER_USERSYNC_WEBAPP}/WEB-INF/lib/*:${JAVA_HOME}/lib/*"
 
 	cd ${cdir}
 	
@@ -117,7 +120,7 @@ if [ "${action}" == "START" ]; then
 		pid=`cat $pidf`
 		if  ps -p $pid > /dev/null
 		then
-			echo "Ranger Usersync Service is already running [pid={$pid}]"
+			echo "Apache Ranger Usersync Service is already running [pid={$pid}]"
 			exit ;
 		else
 			rm -rf $pidf
@@ -134,9 +137,9 @@ if [ "${action}" == "START" ]; then
                 chown ${UNIX_USERSYNC_USER} ${pidf}
 		chmod 660 ${pidf}
 		pid=`cat $pidf`
-		echo "Ranger Usersync Service with pid ${pid} has started."
+		echo "Apache Ranger Usersync Service with pid ${pid} has started."
 	else
-		echo "Ranger Usersync Service failed to start!"
+		echo "Apache Ranger Usersync Service failed to start!"
 	fi
 	exit;
 
@@ -151,11 +154,11 @@ elif [ "${action}" == "STOP" ]; then
 		if [ "$pid" != "" ];then
 			echo "pid file($pidf) not present, taking pid from \'ps\' command.."
 		else
-			echo "Ranger Usersync Service is not running"
+			echo "Apache Ranger Usersync Service is not running"
 			return	
 		fi
 	fi
-	echo "Found Ranger Usersync Service with pid $pid, Stopping it..."
+	echo "Found Apache Ranger Usersync Service with pid $pid, Stopping it..."
 	kill -15 $pid
 	for ((i=0; i<$NR_ITER_FOR_SHUTDOWN_CHECK; i++))
 	do
@@ -179,18 +182,18 @@ elif [ "${action}" == "STOP" ]; then
 
 	else
 		rm -rf $pidf
-		echo "Ranger Usersync Service with pid ${pid} has been stopped."
+		echo "Apache Ranger Usersync Service with pid ${pid} has been stopped."
 	fi
 	exit;
 	
 elif [ "${action}" == "RESTART" ]; then
-	echo "Restarting Ranger Usersync"
+	echo "Restarting Apache Ranger Usersync"
 	${cdir}/ranger-usersync-services.sh stop
 	${cdir}/ranger-usersync-services.sh start
 	exit;
 elif [ "${action}" == "VERSION" ]; then
-	cd ${cdir}/lib
-	java -cp ranger-util-*.jar org.apache.ranger.common.RangerVersionInfo
+	cd "${cdir}"
+	java -cp "${cdir}/ews/lib/ranger-util-*.jar" org.apache.ranger.common.RangerVersionInfo
 	exit
 else 
 	echo "Invalid argument [$1];"

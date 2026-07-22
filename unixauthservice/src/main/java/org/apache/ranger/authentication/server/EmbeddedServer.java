@@ -311,7 +311,7 @@ public class EmbeddedServer {
 
             webappCtx.init();
 
-            LOG.info("Finished init of webapp [{}] = path [{}].", webContextName + webappDir);
+            LOG.info("Finished init of webapp [{}] = path [{}].", webContextName, webappDir);
         } catch (LifecycleException lce) {
             LOG.error("Tomcat Server failed to start webapp", lce);
 

@@ -17,26 +17,28 @@
  * under the License.
  */
 
-package org.apache.ranger.authentication.server;
+package org.apache.ranger.authentication.metrics.source;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.ranger.authentication.metrics.UserSyncMetricsFetcher;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
-public final class RangerUserSyncServer {
-    private static final Logger LOG = LoggerFactory.getLogger(RangerUserSyncServer.class);
+import java.util.Map;
 
-    private RangerUserSyncServer() {
+@Component
+public class RangerUserSyncSourceApis extends RangerUserSyncSourceBase {
+    @Autowired
+    private UserSyncMetricsFetcher userSyncMetricsFetcher;
+
+    public RangerUserSyncSourceApis() {
+        super("usersync", "ApiCall");
     }
 
-    public static void main(String[] args) {
-        LOG.info("==>> RangerUserSyncServer.main()");
-        try {
-            EmbeddedServer server = new EmbeddedServer("ranger-usersync", "ranger.usersync.");
-            server.start();
-        } catch (Throwable e) {
-            LOG.error("Failed to initialize embedded server due to: ", e);
-            System.exit(1);
+    @Override
+    protected void refresh() {
+        Map<String, Long> totalApiCount = userSyncMetricsFetcher.getTotalApiCount();
+        for (String key : totalApiCount.keySet()) {
+            metricsMap.put(key, totalApiCount.get(key));
         }
-        LOG.info("<<== RangerUserSyncServer.main()");
     }
 }

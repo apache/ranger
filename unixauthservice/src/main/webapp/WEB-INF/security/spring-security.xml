@@ -23,17 +23,7 @@
                              http://www.springframework.org/schema/security https://www.springframework.org/schema/security/spring-security.xsd">
 
     <http pattern="/css/**" security="none" />
-    <http pattern="/api/metrics/**" disable-url-rewriting="true" use-expressions="true" create-session="always" entry-point-ref="userSyncAuthEntryPoint">
-        <csrf disabled="true"/>
-        <headers>
-            <frame-options/>
-            <cache-control/>
-            <content-type-options/>
-            <xss-protection/>
-            <hsts include-subdomains="true" max-age-seconds="31536000" preload="true" />
-        </headers>
-        <session-management session-fixation-protection="newSession" />
-    </http>
+    <http pattern="/api/metrics/**" security="none" />
 
     <http use-expressions="true" disable-url-rewriting="true" create-session="stateless" entry-point-ref="userSyncAuthEntryPoint">
         <csrf disabled="true" />
