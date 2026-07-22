@@ -65,6 +65,7 @@ public final class RangerPdpConstants {
     public static final String PROP_AUTHN_HEADER_PREFIX   = PROP_AUTHN_PREFIX + "header.";
     public static final String PROP_AUTHN_HEADER_ENABLED  = PROP_AUTHN_HEADER_PREFIX + "enabled";
     public static final String PROP_AUTHN_HEADER_USERNAME = PROP_AUTHN_HEADER_PREFIX + "username";
+    public static final String PROP_AUTHN_HEADER_SPIFFE   = PROP_AUTHN_HEADER_PREFIX + "spiffe";
 
     // JWT auth
     public static final String PROP_AUTHN_JWT_PREFIX       = PROP_AUTHN_PREFIX + "jwt.";

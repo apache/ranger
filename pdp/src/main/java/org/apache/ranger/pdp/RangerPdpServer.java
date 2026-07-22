@@ -225,6 +225,7 @@ public class RangerPdpServer {
         // HTTP Header auth
         authFilterDef.addInitParameter(RangerPdpConstants.PROP_AUTHN_HEADER_ENABLED, Boolean.toString(config.isHeaderAuthnEnabled()));
         authFilterDef.addInitParameter(RangerPdpConstants.PROP_AUTHN_HEADER_USERNAME, config.getHeaderAuthnUsername());
+        authFilterDef.addInitParameter(RangerPdpConstants.PROP_AUTHN_HEADER_SPIFFE, config.getHeaderAuthnSpiffe());
 
         // JWT bearer token auth
         authFilterDef.addInitParameter(RangerPdpConstants.PROP_AUTHN_JWT_ENABLED, Boolean.toString(config.isJwtAuthnEnabled()));

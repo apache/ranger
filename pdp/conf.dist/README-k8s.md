@@ -82,6 +82,7 @@ When configuring inbound PDP authentication in `ranger-pdp-site.xml`, use the
 - `ranger.pdp.authn.types`
 - `ranger.pdp.authn.header.enabled`
 - `ranger.pdp.authn.header.username`
+- `ranger.pdp.authn.header.spiffe`
 - `ranger.pdp.authn.jwt.enabled`
 - `ranger.pdp.authn.jwt.provider.url`
 - `ranger.pdp.authn.jwt.public.key`
