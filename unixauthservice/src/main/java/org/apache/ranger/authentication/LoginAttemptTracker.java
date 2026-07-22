@@ -27,61 +27,121 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public class LoginAttemptTracker {
     private static final long CLEANUP_INTERVAL_MS = TimeUnit.MINUTES.toMillis(5);
-    private final ConcurrentHashMap<String, Record> attemptsByIp = new ConcurrentHashMap<>();
 
-    private final int maxFailures;
-    private final long windowMs;
-    private final long lockoutMs;
-    private volatile long lastCleanupTime;
+    private final AttemptCounter ipAttempts;
+    private final AttemptCounter accountAttempts;
+    private final boolean        accountLockoutEnabled;
 
-    public LoginAttemptTracker(int maxFailures, long windowMs, long lockoutMs) {
-        this.maxFailures = maxFailures;
-        this.windowMs = windowMs;
-        this.lockoutMs = lockoutMs;
-        this.lastCleanupTime = System.currentTimeMillis();
+    public LoginAttemptTracker(int maxIpFailures, long ipWindowMs, long ipLockoutMs) {
+        this(maxIpFailures, ipWindowMs, ipLockoutMs, true, maxIpFailures, ipWindowMs, ipLockoutMs);
+    }
+
+    public LoginAttemptTracker(int maxIpFailures, long ipWindowMs, long ipLockoutMs,
+                               boolean accountLockoutEnabled,
+                               int maxAccountFailures, long accountWindowMs, long accountLockoutMs) {
+        this.ipAttempts             = new AttemptCounter(maxIpFailures, ipWindowMs, ipLockoutMs);
+        this.accountAttempts        = new AttemptCounter(maxAccountFailures, accountWindowMs, accountLockoutMs);
+        this.accountLockoutEnabled  = accountLockoutEnabled;
     }
 
     public boolean isBlocked(String sourceIp) {
-        Record record = attemptsByIp.get(sourceIp);
-        if (record == null) {
-            return false;
-        }
-        return record.lockedUntil > System.currentTimeMillis();
+        return ipAttempts.isBlocked(sourceIp);
+    }
+
+    public boolean isAccountBlocked(String account) {
+        return accountLockoutEnabled && accountAttempts.isBlocked(account);
+    }
+
+    public boolean isBlocked(String sourceIp, String account) {
+        return isBlocked(sourceIp) || isAccountBlocked(account);
     }
 
     public void recordFailure(String sourceIp) {
-        maybeCleanup();
-        long now = System.currentTimeMillis();
-        Record record = attemptsByIp.computeIfAbsent(sourceIp, k -> new Record(now));
-        synchronized (record) {
-            if (now - record.windowStart > windowMs) {
-                record.windowStart = now;
-                record.failCount.set(0);
-            }
-            record.lastActivity = now;
-            int count = record.failCount.incrementAndGet();
-            if (count >= maxFailures) {
-                record.lockedUntil = now + lockoutMs;
-            }
+        recordFailure(sourceIp, null);
+    }
+
+    public void recordFailure(String sourceIp, String account) {
+        ipAttempts.recordFailure(sourceIp);
+        if (accountLockoutEnabled) {
+            accountAttempts.recordFailure(account);
         }
     }
 
     public void recordSuccess(String sourceIp) {
-        attemptsByIp.remove(sourceIp);
+        recordSuccess(sourceIp, null);
     }
 
-    private void maybeCleanup() {
-        long now = System.currentTimeMillis();
-        if (now - lastCleanupTime < CLEANUP_INTERVAL_MS) {
-            return;
+    public void recordSuccess(String sourceIp, String account) {
+        ipAttempts.recordSuccess(sourceIp);
+        if (accountLockoutEnabled) {
+            accountAttempts.recordSuccess(account);
         }
-        lastCleanupTime = now;
-        long cutoff = now - windowMs;
-        Iterator<Map.Entry<String, Record>> it = attemptsByIp.entrySet().iterator();
-        while (it.hasNext()) {
-            Record record = it.next().getValue();
-            if (record.lastActivity < cutoff && record.lockedUntil <= now) {
-                it.remove();
+    }
+
+    private static final class AttemptCounter {
+        private final ConcurrentHashMap<String, Record> attempts = new ConcurrentHashMap<>();
+        private final int                               maxFailures;
+        private final long                              windowMs;
+        private final long                              lockoutMs;
+        private volatile long                           lastCleanupTime;
+
+        AttemptCounter(int maxFailures, long windowMs, long lockoutMs) {
+            this.maxFailures = maxFailures;
+            this.windowMs    = windowMs;
+            this.lockoutMs   = lockoutMs;
+        }
+
+        boolean isBlocked(String key) {
+            if (key == null || key.isEmpty()) {
+                return false;
+            }
+            Record record = attempts.get(key);
+            if (record == null) {
+                return false;
+            }
+            return record.lockedUntil > System.currentTimeMillis();
+        }
+
+        void recordFailure(String key) {
+            if (key == null || key.isEmpty()) {
+                return;
+            }
+            maybeCleanup();
+            long now = System.currentTimeMillis();
+            Record record = attempts.computeIfAbsent(key, k -> new Record(now));
+            synchronized (record) {
+                if (now - record.windowStart > windowMs) {
+                    record.windowStart = now;
+                    record.failCount.set(0);
+                }
+                record.lastActivity = now;
+                int count = record.failCount.incrementAndGet();
+                if (count >= maxFailures) {
+                    record.lockedUntil = now + lockoutMs;
+                }
+            }
+        }
+
+        void recordSuccess(String key) {
+            if (key == null || key.isEmpty()) {
+                return;
+            }
+            attempts.remove(key);
+        }
+
+        private void maybeCleanup() {
+            long now = System.currentTimeMillis();
+            if (now - lastCleanupTime < CLEANUP_INTERVAL_MS) {
+                return;
+            }
+            lastCleanupTime = now;
+            long cutoff = now - windowMs;
+            Iterator<Map.Entry<String, Record>> it = attempts.entrySet().iterator();
+            while (it.hasNext()) {
+                Record record = it.next().getValue();
+                if (record.lastActivity < cutoff && record.lockedUntil <= now) {
+                    it.remove();
+                }
             }
         }
     }
@@ -93,7 +153,7 @@ public class LoginAttemptTracker {
         volatile long lockedUntil;
 
         Record(long now) {
-            this.windowStart = now;
+            this.windowStart  = now;
             this.lastActivity = now;
         }
     }

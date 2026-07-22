@@ -97,4 +97,37 @@ public class LoginAttemptTrackerTest {
         assertTrue(tracker.isBlocked("10.0.0.6"));
         assertFalse(tracker.isBlocked("10.0.0.7"), "a different source IP must not be affected");
     }
+
+    @Test
+    public void accountFailuresAccumulateAcrossIps() {
+        LoginAttemptTracker tracker = new LoginAttemptTracker(100, 60_000, 30_000, true, 3, 60_000, 30_000);
+        tracker.recordFailure("10.0.0.1", "alice");
+        tracker.recordFailure("10.0.0.2", "alice");
+        assertFalse(tracker.isAccountBlocked("alice"));
+        tracker.recordFailure("10.0.0.3", "alice");
+        assertTrue(tracker.isAccountBlocked("alice"));
+        assertFalse(tracker.isBlocked("10.0.0.99"));
+        assertTrue(tracker.isBlocked("10.0.0.99", "alice"));
+    }
+
+    @Test
+    public void accountLockoutCanBeDisabled() {
+        LoginAttemptTracker tracker = new LoginAttemptTracker(100, 60_000, 30_000, false, 3, 60_000, 30_000);
+        for (int i = 0; i < 5; i++) {
+            tracker.recordFailure("10.0.0." + i, "alice");
+        }
+        assertFalse(tracker.isAccountBlocked("alice"));
+        assertFalse(tracker.isBlocked("10.0.0.99", "alice"));
+    }
+
+    @Test
+    public void accountSuccessClearsAccountFailureHistory() {
+        LoginAttemptTracker tracker = new LoginAttemptTracker(100, 60_000, 30_000, true, 3, 60_000, 30_000);
+        tracker.recordFailure("10.0.0.1", "alice");
+        tracker.recordFailure("10.0.0.2", "alice");
+        tracker.recordSuccess("10.0.0.3", "alice");
+        assertFalse(tracker.isAccountBlocked("alice"));
+        tracker.recordFailure("10.0.0.4", "alice");
+        assertFalse(tracker.isAccountBlocked("alice"));
+    }
 }
