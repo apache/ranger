@@ -39,8 +39,6 @@ services:
         condition: service_started
       ranger:
         condition: service_started
-      ranger-solr:
-        condition: service_started
     environment:
       OZONE_OPTS: -XX:-UseContainerSupport -Dcom.sun.net.ssl.checkRevocation=false
       OZONE_HOME: /opt/hadoop

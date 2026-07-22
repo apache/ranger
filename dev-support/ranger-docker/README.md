@@ -79,11 +79,21 @@ cd dev-support/ranger-docker
 # To enable file based sync source for usersync do:
 # export ENABLE_FILE_SYNC_SOURCE=true
 
-# valid values for RANGER_DB_TYPE: mysql/postgres/oracle
+# valid values for RANGER_DB_TYPE: mysql/postgres/oracle/sqlserver
 
 docker compose -f docker-compose.ranger.yml -f docker-compose.ranger-usersync.yml -f docker-compose.ranger-tagsync.yml -f docker-compose.ranger-pdp.yml -f docker-compose.ranger-kms.yml up -d
 
 # Ranger Admin can be accessed at http://localhost:6080 (admin/rangerR0cks!)
+~~~
+
+Solr is no longer part of the core stack, so the command above brings up Ranger **without Solr**.
+Choose an audit store explicitly:
+- For **Solr** audits, add `-f docker-compose.ranger-solr.yml` to any command below and set `audit_store=solr` in the relevant `scripts/admin/ranger-admin-install-${RANGER_DB_TYPE}.properties`.
+- For **OpenSearch** audits, add `-f docker-compose.ranger-opensearch.yml` and set `audit_store=opensearch` (see "OpenSearch audit flow" below).
+
+~~~
+# Example: core services with Solr audits
+docker compose -f docker-compose.ranger.yml -f docker-compose.ranger-solr.yml -f docker-compose.ranger-usersync.yml -f docker-compose.ranger-tagsync.yml -f docker-compose.ranger-pdp.yml -f docker-compose.ranger-kms.yml up -d
 ~~~
 #### Bring up hive container
 ~~~
@@ -205,7 +215,7 @@ Similarly, check the `depends` section of the `docker-compose.ranger-service.yam
 #### Bring up all containers
 ~~~
 ./scripts/ozone/ozone-plugin-docker-setup.sh
-docker compose -f docker-compose.ranger.yml -f docker-compose.ranger-usersync.yml -f docker-compose.ranger-tagsync.yml -f docker-compose.ranger-pdp.yml -f docker-compose.ranger-kms.yml -f docker-compose.ranger-hadoop.yml -f docker-compose.ranger-hbase.yml -f docker-compose.ranger-kafka.yml -f docker-compose.ranger-hive.yml -f docker-compose.ranger-knox.yml -f docker-compose.ranger-ozone.yml up -d
+docker compose -f docker-compose.ranger.yml -f docker-compose.ranger-solr.yml -f docker-compose.ranger-usersync.yml -f docker-compose.ranger-tagsync.yml -f docker-compose.ranger-pdp.yml -f docker-compose.ranger-kms.yml -f docker-compose.ranger-hadoop.yml -f docker-compose.ranger-hbase.yml -f docker-compose.ranger-kafka.yml -f docker-compose.ranger-hive.yml -f docker-compose.ranger-knox.yml -f docker-compose.ranger-ozone.yml up -d
 ~~~
           
 #### To rebuild specific images and start containers with the new image:
@@ -215,7 +225,7 @@ docker compose -f docker-compose.ranger.yml -f docker-compose.ranger-usersync.ym
 
 #### To bring up audit server ingestor + dispatchers. Make sure kafka, solr, and hdfs containers are running before bringing up audit server services.
 ~~~
-docker compose -f docker-compose.ranger.yml -f docker-compose.ranger-hadoop.yml -f docker-compose.ranger-kafka.yml -f docker-compose.ranger-audit-server.yml up -d
+docker compose -f docker-compose.ranger.yml -f docker-compose.ranger-solr.yml -f docker-compose.ranger-hadoop.yml -f docker-compose.ranger-kafka.yml -f docker-compose.ranger-audit-server.yml up -d
 ~~~
 
 #### To bring up audit server services individually:
@@ -224,7 +234,7 @@ docker compose -f docker-compose.ranger.yml -f docker-compose.ranger-hadoop.yml 
 docker compose -f docker-compose.ranger.yml -f docker-compose.ranger-kafka.yml -f docker-compose.ranger-audit-ingestor.yml up -d
 
 # Solr dispatcher
-docker compose -f docker-compose.ranger.yml -f docker-compose.ranger-kafka.yml -f docker-compose.ranger-audit-dispatcher-solr.yml up -d
+docker compose -f docker-compose.ranger.yml -f docker-compose.ranger-solr.yml -f docker-compose.ranger-kafka.yml -f docker-compose.ranger-audit-dispatcher-solr.yml up -d
 
 # HDFS dispatcher
 docker compose -f docker-compose.ranger.yml -f docker-compose.ranger-hadoop.yml -f docker-compose.ranger-kafka.yml -f docker-compose.ranger-audit-dispatcher-hdfs.yml up -d
