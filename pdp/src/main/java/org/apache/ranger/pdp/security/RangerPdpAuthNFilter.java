@@ -151,7 +151,8 @@ public class RangerPdpAuthNFilter implements Filter {
         switch (type) {
             case "header":
                 ret = getBoolean(filterConfig, RangerPdpConstants.PROP_AUTHN_HEADER_ENABLED) &&
-                        StringUtils.isNotBlank(filterConfig.getInitParameter(RangerPdpConstants.PROP_AUTHN_HEADER_USERNAME))
+                        (StringUtils.isNotBlank(filterConfig.getInitParameter(RangerPdpConstants.PROP_AUTHN_HEADER_USERNAME)) ||
+                                StringUtils.isNotBlank(filterConfig.getInitParameter(RangerPdpConstants.PROP_AUTHN_HEADER_SPIFFE)))
                         ? new HttpHeaderAuthNHandler() : null;
                 break;
             case "jwt":
