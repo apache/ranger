@@ -15,6 +15,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+set -x
 function getInstallProperty() {
     local propertyName=$1
     local propertyValue=""
@@ -92,7 +93,17 @@ if [ "${action}" == "START" ]; then
         	export PATH=$JAVA_HOME/bin:$PATH
 	fi
 
-	cp="${cdir}/dist/*:${cdir}/lib/*:${cdir}/conf:${RANGER_USERSYNC_HADOOP_CONF_DIR}/*"
+	if [ -z "${RANGER_USERSYNC_LOG_DIR}" ]; then
+        RANGER_USERSYNC_LOG_DIR=/var/log/ranger/usersync
+    fi
+
+    if [ ! -d RANGER_USERSYNC_LOG_DIR ]; then
+      mkdir -p $RANGER_USERSYNC_LOG_DIR
+      chmod 777 $RANGER_USERSYNC_LOG_DIR
+    fi
+
+    RANGER_USERSYNC_WEBAPP=${cdir}/ews/webapp
+    cp="${cdir}/dist/*:${cdir}/lib/*:${cdir}/conf:${RANGER_USERSYNC_WEBAPP}/WEB-INF/classes:${cdir}/ews/lib/*:${RANGER_USERSYNC_HADOOP_CONF_DIR}/*:${RANGER_USERSYNC_WEBAPP}/WEB-INF/lib/*:${JAVA_HOME}/lib/*"
 
 	cd ${cdir}
 	
@@ -106,16 +117,16 @@ if [ "${action}" == "START" ]; then
 		pid=`cat $pidf`
 		if  ps -p $pid > /dev/null
 		then
-			echo "Apache Ranger Usersync Service is already running [pid={$pid}]"
+			echo "Ranger Usersync Service is already running [pid={$pid}]"
 			exit ;
 		else
 			rm -rf $pidf
         fi
     fi
 	SLEEP_TIME_AFTER_START=5
-	nohup java -Dproc_rangerusersync -Djdk.tls.ephemeralDHKeySize=2048 -Dlogback.configurationFile=file:${USERSYNC_CONF_DIR}/logback.xml ${JAVA_OPTS} -Duser=${USER} -Dhostname=${HOSTNAME} -Dlogdir="${logdir}" -cp "${cp}" org.apache.ranger.authentication.UnixAuthenticationService -enableUnixAuth > ${logdir}/auth.log 2>&1 &
+	nohup java -Dproc_rangerusersync -Duser=rangerusersync -Dhostname=${HOSTNAME} -Dservername=rangerusersync -Dranger.usersync.home=`pwd` -Dlogdir="${logdir}" -Dranger.usersync.log.dir="${RANGER_USERSYNC_LOG_DIR}" -Dlogback.configurationFile=file:${USERSYNC_CONF_DIR}/logback.xml -Djdk.tls.ephemeralDHKeySize=2048 -Dranger.usersync.webapp.dir="${RANGER_USERSYNC_WEBAPP}" -Dranger.usersync.service.host="${HOSTNAME}" -Dcatalina.base=${cdir}/ews -cp "${cp}" org.apache.ranger.authentication.server.RangerUserSyncServer -enableUnixAuth > ${RANGER_USERSYNC_LOG_DIR}/catalina.out 2>&1 &
 	VALUE_OF_PID=$!
-    echo "Starting Apache Ranger Usersync Service"
+    echo "Starting Ranger Usersync Service"
     sleep $SLEEP_TIME_AFTER_START
     if ps -p $VALUE_OF_PID > /dev/null
     then
@@ -123,9 +134,9 @@ if [ "${action}" == "START" ]; then
                 chown ${UNIX_USERSYNC_USER} ${pidf}
 		chmod 660 ${pidf}
 		pid=`cat $pidf`
-		echo "Apache Ranger Usersync Service with pid ${pid} has started."
+		echo "Ranger Usersync Service with pid ${pid} has started."
 	else
-		echo "Apache Ranger Usersync Service failed to start!"
+		echo "Ranger Usersync Service failed to start!"
 	fi
 	exit;
 
@@ -140,11 +151,11 @@ elif [ "${action}" == "STOP" ]; then
 		if [ "$pid" != "" ];then
 			echo "pid file($pidf) not present, taking pid from \'ps\' command.."
 		else
-			echo "Apache Ranger Usersync Service is not running"
+			echo "Ranger Usersync Service is not running"
 			return	
 		fi
 	fi
-	echo "Found Apache Ranger Usersync Service with pid $pid, Stopping it..."
+	echo "Found Ranger Usersync Service with pid $pid, Stopping it..."
 	kill -15 $pid
 	for ((i=0; i<$NR_ITER_FOR_SHUTDOWN_CHECK; i++))
 	do
@@ -168,12 +179,12 @@ elif [ "${action}" == "STOP" ]; then
 
 	else
 		rm -rf $pidf
-		echo "Apache Ranger Usersync Service with pid ${pid} has been stopped."
+		echo "Ranger Usersync Service with pid ${pid} has been stopped."
 	fi
 	exit;
 	
 elif [ "${action}" == "RESTART" ]; then
-	echo "Restarting Apache Ranger Usersync"
+	echo "Restarting Ranger Usersync"
 	${cdir}/ranger-usersync-services.sh stop
 	${cdir}/ranger-usersync-services.sh start
 	exit;
