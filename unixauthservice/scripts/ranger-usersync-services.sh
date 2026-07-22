@@ -117,7 +117,7 @@ if [ "${action}" == "START" ]; then
 		pid=`cat $pidf`
 		if  ps -p $pid > /dev/null
 		then
-			echo "Ranger Usersync Service is already running [pid={$pid}]"
+			echo "Apache Ranger Usersync Service is already running [pid={$pid}]"
 			exit ;
 		else
 			rm -rf $pidf
@@ -134,9 +134,9 @@ if [ "${action}" == "START" ]; then
                 chown ${UNIX_USERSYNC_USER} ${pidf}
 		chmod 660 ${pidf}
 		pid=`cat $pidf`
-		echo "Ranger Usersync Service with pid ${pid} has started."
+		echo "Apache Ranger Usersync Service with pid ${pid} has started."
 	else
-		echo "Ranger Usersync Service failed to start!"
+		echo "Apache Ranger Usersync Service failed to start!"
 	fi
 	exit;
 
@@ -151,11 +151,11 @@ elif [ "${action}" == "STOP" ]; then
 		if [ "$pid" != "" ];then
 			echo "pid file($pidf) not present, taking pid from \'ps\' command.."
 		else
-			echo "Ranger Usersync Service is not running"
+			echo "Apache Ranger Usersync Service is not running"
 			return	
 		fi
 	fi
-	echo "Found Ranger Usersync Service with pid $pid, Stopping it..."
+	echo "Found Apache Ranger Usersync Service with pid $pid, Stopping it..."
 	kill -15 $pid
 	for ((i=0; i<$NR_ITER_FOR_SHUTDOWN_CHECK; i++))
 	do
@@ -179,12 +179,12 @@ elif [ "${action}" == "STOP" ]; then
 
 	else
 		rm -rf $pidf
-		echo "Ranger Usersync Service with pid ${pid} has been stopped."
+		echo "Apache Ranger Usersync Service with pid ${pid} has been stopped."
 	fi
 	exit;
 	
 elif [ "${action}" == "RESTART" ]; then
-	echo "Restarting Ranger Usersync"
+	echo "Restarting Apache Ranger Usersync"
 	${cdir}/ranger-usersync-services.sh stop
 	${cdir}/ranger-usersync-services.sh start
 	exit;

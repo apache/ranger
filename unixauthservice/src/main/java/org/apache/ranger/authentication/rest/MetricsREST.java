@@ -19,10 +19,12 @@
 
 package org.apache.ranger.authentication.rest;
 
+import org.apache.ranger.authentication.metrics.UserSyncMetricsWrapper;
 import org.apache.ranger.plugin.model.RangerMetrics;
 import org.apache.ranger.plugin.util.RangerMetricsUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import javax.ws.rs.GET;
@@ -48,6 +50,9 @@ public class MetricsREST {
 
     RangerMetricsUtil jvmMetricUtil = new RangerMetricsUtil();
 
+    @Autowired
+    private UserSyncMetricsWrapper userSyncMetricsWrapper;
+
     @GET
     @Path("/status")
     @Produces(MediaType.APPLICATION_JSON)
@@ -70,5 +75,45 @@ public class MetricsREST {
         }
 
         return new RangerMetrics(jvm);
+    }
+
+    @GET
+    @Path("/prometheus")
+    @Produces(MediaType.TEXT_PLAIN)
+    public String getMetricsPrometheus() {
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("===>> MetricsREST.getMetricsPrometheus()");
+        }
+        String ret = "";
+        try {
+            ret = userSyncMetricsWrapper.getRangerMetricsInPrometheusFormat();
+        } catch (Exception e) {
+            LOG.error("MetricsREST.getMetricsPrometheus(): Exception occured while getting metric.", e);
+        }
+
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("<<=== MetricsREST.getMetricsPrometheus() {}" + ret);
+        }
+        return ret;
+    }
+
+    @GET
+    @Path("/json")
+    @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
+    public Map<String, Map<String, Object>> getMetricsJson() {
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("===>> MetricsREST.getMetricsJson()");
+        }
+        Map<String, Map<String, Object>> ret = null;
+        try {
+            ret = userSyncMetricsWrapper.getRangerMetricsInJsonFormat();
+        } catch (Exception e) {
+            LOG.error("MetricsREST.getMetricsJson(): Exception occured while getting metric.", e);
+        }
+
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("<<=== MetricsREST.getMetricsJson() {}" + ret);
+        }
+        return ret;
     }
 }
