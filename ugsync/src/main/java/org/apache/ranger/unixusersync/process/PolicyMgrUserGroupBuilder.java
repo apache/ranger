@@ -271,6 +271,12 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
                 ugsyncAuditInfo.getFileSyncSourceInfo().setTotalUsersDeleted(noOfDeletedUsers);
                 ugsyncAuditInfo.getFileSyncSourceInfo().setTotalGroupsDeleted(noOfDeletedGroups);
                 break;
+            case "EntraID":
+                ugsyncAuditInfo.getEntraIdSyncSourceInfo().setTotalUsersSynced(noOfCachedUsers);
+                ugsyncAuditInfo.getEntraIdSyncSourceInfo().setTotalGroupsSynced(noOfCachedGroups);
+                ugsyncAuditInfo.getEntraIdSyncSourceInfo().setTotalUsersDeleted(noOfDeletedUsers);
+                ugsyncAuditInfo.getEntraIdSyncSourceInfo().setTotalGroupsDeleted(noOfDeletedGroups);
+                break;
             default:
                 break;
         }
@@ -1938,6 +1944,82 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
         LOG.debug("<== PolicyMgrUserGroupBuilder.getDeletedUsers({})", ret);
 
         return ret;
+    }
+
+    @Override
+    public void deleteUsersAndGroups(Map<String, Map<String, String>> deletedUsersMap, Map<String, Map<String, String>> deletedGroupsMap) throws Throwable {
+        LOG.debug("==> PolicyMgrUserGroupBuilder.deleteUsersAndGroups(users={}, groups={})", MapUtils.isNotEmpty(deletedUsersMap) ? deletedUsersMap.keySet() : "[]", MapUtils.isNotEmpty(deletedGroupsMap) ? deletedGroupsMap.keySet() : "[]");
+        if (isStartupFlag) {
+            LOG.info("Skipping per-record deletes during startup cycle");
+            return;
+        }
+        if (MapUtils.isNotEmpty(deletedGroupsMap)) {
+            markDeletedGroupsByFullName(deletedGroupsMap.keySet());
+            if (MapUtils.isNotEmpty(deletedGroups)) {
+                if (updateDeletedGroups() == 0) {
+                    String msg = "Failed to update deleted groups to ranger admin";
+                    LOG.error(msg);
+                    throw new Exception(msg);
+                }
+                groupCache.putAll(deletedGroups);
+                noOfDeletedGroups += deletedGroups.size();
+            }
+            LOG.info("No. of groups marked for delete (per-record) = {}", deletedGroups.size());
+        }
+        if (MapUtils.isNotEmpty(deletedUsersMap)) {
+            markDeletedUsersByFullName(deletedUsersMap.keySet());
+            if (MapUtils.isNotEmpty(deletedUsers)) {
+                if (updateDeletedUsers() == 0) {
+                    String msg = "Failed to update deleted users to ranger admin";
+                    LOG.error(msg);
+                    throw new Exception(msg);
+                }
+                userCache.putAll(deletedUsers);
+                noOfDeletedUsers += deletedUsers.size();
+            }
+            LOG.info("No. of users marked for delete (per-record) = {}", deletedUsers.size());
+        }
+        LOG.debug("<== PolicyMgrUserGroupBuilder.deleteUsersAndGroups()");
+    }
+
+    private void markDeletedGroupsByFullName(Set<String> deletedGroupFullNames) {
+        LOG.debug("PolicyMgrUserGroupBuilder.markDeletedGroupsByFullName({})", deletedGroupFullNames);
+        deletedGroups = new HashMap<>();
+        for (XGroupInfo groupInfo : groupCache.values()) {
+            Map<String, String> groupOtherAttrs = groupInfo.getOtherAttrsMap();
+            String              groupDN         = groupOtherAttrs != null ? groupOtherAttrs.get(UgsyncCommonConstants.FULL_NAME) : null;
+            if (StringUtils.isNotEmpty(groupDN) && deletedGroupFullNames.contains(groupDN)
+                    && StringUtils.equalsIgnoreCase(groupOtherAttrs.get(UgsyncCommonConstants.SYNC_SOURCE), currentSyncSource)
+                    && StringUtils.equalsIgnoreCase(groupOtherAttrs.get(UgsyncCommonConstants.LDAP_URL), ldapUrl)) {
+                if (!ISHIDDEN.equals(groupInfo.getIsVisible())) {
+                    groupInfo.setIsVisible(ISHIDDEN);
+                    deletedGroups.put(groupInfo.getName(), groupInfo);
+                } else {
+                    LOG.info("group {} already marked for delete", groupInfo.getName());
+                }
+            }
+        }
+        LOG.debug("<== PolicyMgrUserGroupBuilder.markDeletedGroupsByFullName({})", deletedGroups);
+    }
+
+    private void markDeletedUsersByFullName(Set<String> deletedUserFullNames) {
+        LOG.debug("PolicyMgrUserGroupBuilder.markDeletedUsersByFullName({})", deletedUserFullNames);
+        deletedUsers = new HashMap<>();
+        for (XUserInfo userInfo : userCache.values()) {
+            Map<String, String> userOtherAttrs = userInfo.getOtherAttrsMap();
+            String              userDN         = userOtherAttrs != null ? userOtherAttrs.get(UgsyncCommonConstants.FULL_NAME) : null;
+            if (StringUtils.isNotEmpty(userDN) && deletedUserFullNames.contains(userDN)
+                    && StringUtils.equalsIgnoreCase(userOtherAttrs.get(UgsyncCommonConstants.SYNC_SOURCE), currentSyncSource)
+                    && StringUtils.equalsIgnoreCase(userOtherAttrs.get(UgsyncCommonConstants.LDAP_URL), ldapUrl)) {
+                if (!ISHIDDEN.equals(userInfo.getIsVisible())) {
+                    userInfo.setIsVisible(ISHIDDEN);
+                    deletedUsers.put(userInfo.getName(), userInfo);
+                } else {
+                    LOG.info("user {} already marked for delete", userInfo.getName());
+                }
+            }
+        }
+        LOG.debug("<== PolicyMgrUserGroupBuilder.markDeletedUsersByFullName({})", deletedUsers);
     }
 
     // This will throw RuntimeException if Server is not Active
