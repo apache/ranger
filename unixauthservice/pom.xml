@@ -119,6 +119,22 @@
                 </exclusion>
             </exclusions>
         </dependency>
+        <!-- Ranger Metrics -->
+        <dependency>
+            <groupId>org.apache.ranger</groupId>
+            <artifactId>ranger-metrics</artifactId>
+            <version>${project.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>com.github.pjfanning</groupId>
+                    <artifactId>jersey-json</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.ranger</groupId>
+                    <artifactId>embeddedwebserver</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
         <dependency>
             <groupId>org.apache.ranger</groupId>
             <artifactId>unixusersync</artifactId>
