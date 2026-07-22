@@ -110,7 +110,7 @@ public class RangerHeaderPreAuthFilter extends GenericFilterBean {
 
     /**
      * Resolves the principal from trusted headers. The username header (user identity) takes
-     * precedence; when it is absent, the SPIFFE header (service identity) is used and
+     * precedence; when it is absent, the SPIFFE header (service-to-service identity) is used and
      * the trailing service-account segment of the SPIFFE ID becomes the principal.
      */
     private String resolvePrincipal(HttpServletRequest httpRequest) {

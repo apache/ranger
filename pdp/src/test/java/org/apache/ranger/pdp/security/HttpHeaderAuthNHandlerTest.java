@@ -72,12 +72,12 @@ public class HttpHeaderAuthNHandlerTest {
         Properties             config  = new Properties();
 
         config.setProperty(RangerPdpConstants.PROP_AUTHN_HEADER_USERNAME, "X-Authenticated-User");
-        config.setProperty(RangerPdpConstants.PROP_AUTHN_HEADER_SPIFFE, "x-awc-source-workload-id");
+        config.setProperty(RangerPdpConstants.PROP_AUTHN_HEADER_SPIFFE, "X-Spiffe-Id");
 
         handler.init(config);
 
         // Realistic production SPIFFE ID: DNS-style Kubernetes cluster trust domain + namespace/service-account.
-        HttpServletRequest     request = requestWithHeader("x-awc-source-workload-id", "spiffe://prod-cluster.k8s.example.com/ns/ingress-nginx/sa/nginx-ingress");
+        HttpServletRequest     request = requestWithHeader("X-Spiffe-Id", "spiffe://prod-cluster.k8s.example.com/ns/ingress-nginx/sa/nginx-ingress");
         PdpAuthNHandler.Result result  = handler.authenticate(request, null);
 
         assertEquals(PdpAuthNHandler.Result.Status.AUTHENTICATED, result.getStatus());
@@ -91,14 +91,14 @@ public class HttpHeaderAuthNHandlerTest {
         Properties             config  = new Properties();
 
         config.setProperty(RangerPdpConstants.PROP_AUTHN_HEADER_USERNAME, "X-Authenticated-User");
-        config.setProperty(RangerPdpConstants.PROP_AUTHN_HEADER_SPIFFE, "x-awc-source-workload-id");
+        config.setProperty(RangerPdpConstants.PROP_AUTHN_HEADER_SPIFFE, "X-Spiffe-Id");
 
         handler.init(config);
 
         Map<String, String> headers = new HashMap<>();
 
         headers.put("X-Authenticated-User", "bob");
-        headers.put("x-awc-source-workload-id", "spiffe://my-cluster/ns/service-namespace/sa/service-sa");
+        headers.put("X-Spiffe-Id", "spiffe://my-cluster/ns/service-namespace/sa/service-sa");
 
         PdpAuthNHandler.Result result = handler.authenticate(requestWithHeaders(headers), null);
 
@@ -112,14 +112,14 @@ public class HttpHeaderAuthNHandlerTest {
         HttpHeaderAuthNHandler handler = new HttpHeaderAuthNHandler();
         Properties             config  = new Properties();
 
-        config.setProperty(RangerPdpConstants.PROP_AUTHN_HEADER_SPIFFE, "x-awc-source-workload-id, x-awc-upstream-workload-id");
+        config.setProperty(RangerPdpConstants.PROP_AUTHN_HEADER_SPIFFE, "X-Spiffe-Id, X-Workload-Id");
 
         handler.init(config);
 
         Map<String, String> headers = new HashMap<>();
 
-        headers.put("x-awc-source-workload-id", "not-a-spiffe-id");
-        headers.put("x-awc-upstream-workload-id", "spiffe://my-cluster/ns/service-namespace/sa/service-sa");
+        headers.put("X-Spiffe-Id", "not-a-spiffe-id");
+        headers.put("X-Workload-Id", "spiffe://my-cluster/ns/service-namespace/sa/service-sa");
 
         PdpAuthNHandler.Result result = handler.authenticate(requestWithHeaders(headers), null);
 
@@ -133,11 +133,11 @@ public class HttpHeaderAuthNHandlerTest {
         HttpHeaderAuthNHandler handler = new HttpHeaderAuthNHandler();
         Properties             config  = new Properties();
 
-        config.setProperty(RangerPdpConstants.PROP_AUTHN_HEADER_SPIFFE, "x-awc-source-workload-id");
+        config.setProperty(RangerPdpConstants.PROP_AUTHN_HEADER_SPIFFE, "X-Spiffe-Id");
 
         handler.init(config);
 
-        HttpServletRequest     request = requestWithHeader("x-awc-source-workload-id", "not-a-spiffe-id");
+        HttpServletRequest     request = requestWithHeader("X-Spiffe-Id", "not-a-spiffe-id");
         PdpAuthNHandler.Result result  = handler.authenticate(request, null);
 
         assertEquals(PdpAuthNHandler.Result.Status.SKIP, result.getStatus());
@@ -149,12 +149,12 @@ public class HttpHeaderAuthNHandlerTest {
         HttpHeaderAuthNHandler handler = new HttpHeaderAuthNHandler();
         Properties             config  = new Properties();
 
-        config.setProperty(RangerPdpConstants.PROP_AUTHN_HEADER_SPIFFE, "x-awc-source-workload-id");
+        config.setProperty(RangerPdpConstants.PROP_AUTHN_HEADER_SPIFFE, "X-Spiffe-Id");
 
         handler.init(config);
 
         // Valid SPIFFE ID per the SPIFFE spec, but not in the expected /ns/<ns>/sa/<sa> layout.
-        HttpServletRequest     request = requestWithHeader("x-awc-source-workload-id", "spiffe://example.org/workload/frontend");
+        HttpServletRequest     request = requestWithHeader("X-Spiffe-Id", "spiffe://example.org/workload/frontend");
         PdpAuthNHandler.Result result  = handler.authenticate(request, null);
 
         assertEquals(PdpAuthNHandler.Result.Status.SKIP, result.getStatus());
@@ -166,12 +166,12 @@ public class HttpHeaderAuthNHandlerTest {
         HttpHeaderAuthNHandler handler = new HttpHeaderAuthNHandler();
         Properties             config  = new Properties();
 
-        config.setProperty(RangerPdpConstants.PROP_AUTHN_HEADER_SPIFFE, "x-awc-source-workload-id");
+        config.setProperty(RangerPdpConstants.PROP_AUTHN_HEADER_SPIFFE, "X-Spiffe-Id");
 
         handler.init(config);
 
         // Correct layout but the service-account contains whitespace, which is not an allowed SPIFFE character.
-        HttpServletRequest     request = requestWithHeader("x-awc-source-workload-id", "spiffe://my-cluster/ns/prod/sa/service sa");
+        HttpServletRequest     request = requestWithHeader("X-Spiffe-Id", "spiffe://my-cluster/ns/prod/sa/service sa");
         PdpAuthNHandler.Result result  = handler.authenticate(request, null);
 
         assertEquals(PdpAuthNHandler.Result.Status.SKIP, result.getStatus());

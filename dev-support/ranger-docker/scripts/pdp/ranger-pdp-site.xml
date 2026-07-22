@@ -118,7 +118,7 @@
   <!-- service-to-service authentication via SPIFFE ID (comma-separated header names) -->
   <property>
     <name>ranger.pdp.authn.header.spiffe</name>
-    <value>x-awc-source-workload-id</value>
+    <value>X-Spiffe-Id</value>
   </property>
 
   <!-- JWT bearer token authentication for incoming REST requests -->

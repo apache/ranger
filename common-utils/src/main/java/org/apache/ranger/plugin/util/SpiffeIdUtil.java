@@ -64,7 +64,7 @@ public final class SpiffeIdUtil {
      * Parses a configured, comma-separated list of SPIFFE header names into an ordered list of
      * trimmed, non-empty names. Supports a single header name as a list of length one.
      *
-     * @param configValue the raw config value (e.g. {@code x-awc-source-workload-id, x-other-id})
+     * @param configValue the raw config value (e.g. {@code X-Spiffe-Id, X-Workload-Id})
      * @return an ordered, immutable list of header names; empty when the input is blank
      */
     public static List<String> parseHeaderNames(String configValue) {
