@@ -21,12 +21,14 @@ package org.apache.ranger.pdp.security;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.ranger.pdp.config.RangerPdpConstants;
+import org.apache.ranger.plugin.util.SpiffeIdUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import java.util.List;
 import java.util.Properties;
 
 /**
@@ -44,24 +46,44 @@ import java.util.Properties;
 public class HttpHeaderAuthNHandler implements PdpAuthNHandler {
     private static final Logger LOG = LoggerFactory.getLogger(HttpHeaderAuthNHandler.class);
 
-    public static final String AUTH_TYPE = "HEADER";
+    public static final String AUTH_TYPE        = "HEADER";
+    public static final String AUTH_TYPE_SPIFFE = "SPIFFE";
 
-    private String usernameHeader;
+    private String       usernameHeader;
+    private List<String> spiffeHeaders;
 
     @Override
     public void init(Properties config) {
         usernameHeader = config.getProperty(RangerPdpConstants.PROP_AUTHN_HEADER_USERNAME);
+        spiffeHeaders  = SpiffeIdUtil.parseHeaderNames(config.getProperty(RangerPdpConstants.PROP_AUTHN_HEADER_SPIFFE));
 
-        LOG.info("HttpHeaderAuthHandler initialized; username header={}", usernameHeader);
+        LOG.info("HttpHeaderAuthHandler initialized; username header={}, spiffe headers={}", usernameHeader, spiffeHeaders);
     }
 
     @Override
     public Result authenticate(HttpServletRequest request, HttpServletResponse response) {
-        String userName = request.getHeader(usernameHeader);
+        String userName = StringUtils.isNotBlank(usernameHeader) ? request.getHeader(usernameHeader) : null;
 
-        LOG.debug("authenticate(): user={} (from header {})", userName, usernameHeader);
+        if (StringUtils.isNotBlank(userName)) {
+            LOG.debug("authenticate(): user={} (from header {})", userName, usernameHeader);
 
-        return StringUtils.isBlank(userName) ? Result.skip() : Result.authenticated(userName.trim(), AUTH_TYPE);
+            return Result.authenticated(userName.trim(), AUTH_TYPE);
+        }
+
+        for (String spiffeHeader : spiffeHeaders) {
+            String spiffeId       = request.getHeader(spiffeHeader);
+            String serviceAccount = SpiffeIdUtil.extractServiceAccount(spiffeId);
+
+            if (StringUtils.isNotBlank(serviceAccount)) {
+                LOG.debug("authenticate(): service-account={} (from SPIFFE header {})", serviceAccount, spiffeHeader);
+
+                return Result.authenticated(serviceAccount, AUTH_TYPE_SPIFFE);
+            } else if (StringUtils.isNotBlank(spiffeId)) {
+                LOG.warn("SPIFFE header '{}' value is not a well-formed SPIFFE ID", spiffeHeader);
+            }
+        }
+
+        return Result.skip();
     }
 
     @Override

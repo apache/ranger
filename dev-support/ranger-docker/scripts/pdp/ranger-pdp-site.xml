@@ -115,6 +115,12 @@
     <value>X-Forwarded-User</value>
   </property>
 
+  <!-- service-to-service authentication via SPIFFE ID (comma-separated header names) -->
+  <property>
+    <name>ranger.pdp.authn.header.spiffe</name>
+    <value>X-Spiffe-Id</value>
+  </property>
+
   <!-- JWT bearer token authentication for incoming REST requests -->
   <property>
     <name>ranger.pdp.authn.jwt.enabled</name>

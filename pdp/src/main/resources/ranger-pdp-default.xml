@@ -145,6 +145,13 @@
     <description>HTTP header name from which the authenticated username is read.</description>
   </property>
 
+  <!-- optional; enables service-to-service authentication via SPIFFE ID -->
+  <property>
+    <name>ranger.pdp.authn.header.spiffe</name>
+    <value></value>
+    <description>Comma-separated list of HTTP header name(s) carrying a SPIFFE ID (e.g. spiffe://cluster/ns/&lt;ns&gt;/sa/&lt;service-account&gt;). A single header name is also valid. The trailing service-account segment is used as the authenticated principal. When multiple headers are configured, the first one carrying a well-formed SPIFFE ID is used. Consulted only when the username header is absent.</description>
+  </property>
+
   <!-- JWT bearer token authentication for incoming REST requests -->
   <property>
     <name>ranger.pdp.authn.jwt.enabled</name>

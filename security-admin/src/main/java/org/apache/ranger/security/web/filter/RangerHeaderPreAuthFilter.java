@@ -22,6 +22,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.ranger.biz.UserMgr;
 import org.apache.ranger.common.PropertiesUtil;
 import org.apache.ranger.entity.XXAuthSession;
+import org.apache.ranger.plugin.util.SpiffeIdUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -51,10 +52,12 @@ public class RangerHeaderPreAuthFilter extends GenericFilterBean {
 
     public static final String PROP_HEADER_AUTH_ENABLED    = "ranger.admin.authn.header.enabled";
     public static final String PROP_USERNAME_HEADER_NAME   = "ranger.admin.authn.header.username";
+    public static final String PROP_SPIFFE_HEADER_NAME     = "ranger.admin.authn.header.spiffe";
     public static final String PROP_REQUEST_ID_HEADER_NAME = "ranger.admin.authn.header.requestid";
 
-    private boolean headerAuthEnabled;
-    private String  userNameHeaderName;
+    private boolean      headerAuthEnabled;
+    private String       userNameHeaderName;
+    private List<String> spiffeHeaderNames;
 
     @Autowired
     UserMgr userMgr;
@@ -65,9 +68,10 @@ public class RangerHeaderPreAuthFilter extends GenericFilterBean {
 
         if (headerAuthEnabled) {
             userNameHeaderName = PropertiesUtil.getProperty(PROP_USERNAME_HEADER_NAME);
+            spiffeHeaderNames  = SpiffeIdUtil.parseHeaderNames(PropertiesUtil.getProperty(PROP_SPIFFE_HEADER_NAME));
 
-            if (StringUtils.isBlank(userNameHeaderName)) {
-                LOG.warn("Disabling header-based authentication, as configuration {} is not set", PROP_USERNAME_HEADER_NAME);
+            if (StringUtils.isBlank(userNameHeaderName) && spiffeHeaderNames.isEmpty()) {
+                LOG.warn("Disabling header-based authentication, as neither {} nor {} is set", PROP_USERNAME_HEADER_NAME, PROP_SPIFFE_HEADER_NAME);
 
                 headerAuthEnabled = false;
             }
@@ -81,7 +85,7 @@ public class RangerHeaderPreAuthFilter extends GenericFilterBean {
 
             if (existingAuthn == null || !existingAuthn.isAuthenticated()) {
                 HttpServletRequest  httpRequest = (HttpServletRequest) request;
-                String              username    = StringUtils.trimToNull(httpRequest.getHeader(userNameHeaderName));
+                String              username    = resolvePrincipal(httpRequest);
 
                 if (StringUtils.isNotBlank(username)) {
                     List<GrantedAuthority>    grantedAuthorities = getAuthoritiesFromRanger(username);
@@ -94,7 +98,7 @@ public class RangerHeaderPreAuthFilter extends GenericFilterBean {
 
                     LOG.debug("Authenticated request using trusted headers for user={}", username);
                 } else {
-                    LOG.debug("Username header '{}' is missing or empty in the request!", userNameHeaderName);
+                    LOG.debug("No trusted identity header found in the request!");
                 }
             }
         } else {
@@ -102,6 +106,34 @@ public class RangerHeaderPreAuthFilter extends GenericFilterBean {
         }
 
         chain.doFilter(request, response);
+    }
+
+    /**
+     * Resolves the principal from trusted headers. The username header (user identity) takes
+     * precedence; when it is absent, the SPIFFE header (service identity) is used and
+     * the trailing service-account segment of the SPIFFE ID becomes the principal.
+     */
+    private String resolvePrincipal(HttpServletRequest httpRequest) {
+        String username = StringUtils.isNotBlank(userNameHeaderName) ? StringUtils.trimToNull(httpRequest.getHeader(userNameHeaderName)) : null;
+
+        if (StringUtils.isNotBlank(username)) {
+            return username;
+        }
+
+        for (String spiffeHeaderName : spiffeHeaderNames) {
+            String spiffeId       = StringUtils.trimToNull(httpRequest.getHeader(spiffeHeaderName));
+            String serviceAccount = SpiffeIdUtil.extractServiceAccount(spiffeId);
+
+            if (StringUtils.isNotBlank(serviceAccount)) {
+                LOG.debug("Resolved service-account '{}' from SPIFFE header '{}'", serviceAccount, spiffeHeaderName);
+
+                return serviceAccount;
+            } else if (StringUtils.isNotBlank(spiffeId)) {
+                LOG.warn("SPIFFE header '{}' value is not a well-formed SPIFFE ID", spiffeHeaderName);
+            }
+        }
+
+        return null;
     }
 
     /**

@@ -26,6 +26,9 @@ import javax.servlet.http.HttpServletRequest;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Proxy;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Properties;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -63,12 +66,128 @@ public class HttpHeaderAuthNHandlerTest {
         assertEquals("bob", result.getUserName());
     }
 
+    @Test
+    void testAuthenticate_usesSpiffeHeaderWhenUsernameAbsent() {
+        HttpHeaderAuthNHandler handler = new HttpHeaderAuthNHandler();
+        Properties             config  = new Properties();
+
+        config.setProperty(RangerPdpConstants.PROP_AUTHN_HEADER_USERNAME, "X-Authenticated-User");
+        config.setProperty(RangerPdpConstants.PROP_AUTHN_HEADER_SPIFFE, "X-Spiffe-Id");
+
+        handler.init(config);
+
+        // Realistic production SPIFFE ID: DNS-style Kubernetes cluster trust domain + namespace/service-account.
+        HttpServletRequest     request = requestWithHeader("X-Spiffe-Id", "spiffe://prod-cluster.k8s.example.com/ns/ingress-nginx/sa/nginx-ingress");
+        PdpAuthNHandler.Result result  = handler.authenticate(request, null);
+
+        assertEquals(PdpAuthNHandler.Result.Status.AUTHENTICATED, result.getStatus());
+        assertEquals("nginx-ingress", result.getUserName());
+        assertEquals(HttpHeaderAuthNHandler.AUTH_TYPE_SPIFFE, result.getAuthType());
+    }
+
+    @Test
+    void testAuthenticate_usernameTakesPrecedenceOverSpiffe() {
+        HttpHeaderAuthNHandler handler = new HttpHeaderAuthNHandler();
+        Properties             config  = new Properties();
+
+        config.setProperty(RangerPdpConstants.PROP_AUTHN_HEADER_USERNAME, "X-Authenticated-User");
+        config.setProperty(RangerPdpConstants.PROP_AUTHN_HEADER_SPIFFE, "X-Spiffe-Id");
+
+        handler.init(config);
+
+        Map<String, String> headers = new HashMap<>();
+
+        headers.put("X-Authenticated-User", "bob");
+        headers.put("X-Spiffe-Id", "spiffe://my-cluster/ns/service-namespace/sa/service-sa");
+
+        PdpAuthNHandler.Result result = handler.authenticate(requestWithHeaders(headers), null);
+
+        assertEquals(PdpAuthNHandler.Result.Status.AUTHENTICATED, result.getStatus());
+        assertEquals("bob", result.getUserName());
+        assertEquals(HttpHeaderAuthNHandler.AUTH_TYPE, result.getAuthType());
+    }
+
+    @Test
+    void testAuthenticate_multipleSpiffeHeadersUsesFirstValid() {
+        HttpHeaderAuthNHandler handler = new HttpHeaderAuthNHandler();
+        Properties             config  = new Properties();
+
+        config.setProperty(RangerPdpConstants.PROP_AUTHN_HEADER_SPIFFE, "X-Spiffe-Id, X-Workload-Id");
+
+        handler.init(config);
+
+        Map<String, String> headers = new HashMap<>();
+
+        headers.put("X-Spiffe-Id", "not-a-spiffe-id");
+        headers.put("X-Workload-Id", "spiffe://my-cluster/ns/service-namespace/sa/service-sa");
+
+        PdpAuthNHandler.Result result = handler.authenticate(requestWithHeaders(headers), null);
+
+        assertEquals(PdpAuthNHandler.Result.Status.AUTHENTICATED, result.getStatus());
+        assertEquals("service-sa", result.getUserName());
+        assertEquals(HttpHeaderAuthNHandler.AUTH_TYPE_SPIFFE, result.getAuthType());
+    }
+
+    @Test
+    void testAuthenticate_malformedSpiffeHeaderSkips() {
+        HttpHeaderAuthNHandler handler = new HttpHeaderAuthNHandler();
+        Properties             config  = new Properties();
+
+        config.setProperty(RangerPdpConstants.PROP_AUTHN_HEADER_SPIFFE, "X-Spiffe-Id");
+
+        handler.init(config);
+
+        HttpServletRequest     request = requestWithHeader("X-Spiffe-Id", "not-a-spiffe-id");
+        PdpAuthNHandler.Result result  = handler.authenticate(request, null);
+
+        assertEquals(PdpAuthNHandler.Result.Status.SKIP, result.getStatus());
+        assertNull(result.getUserName());
+    }
+
+    @Test
+    void testAuthenticate_specValidButNonConformingSpiffeHeaderSkips() {
+        HttpHeaderAuthNHandler handler = new HttpHeaderAuthNHandler();
+        Properties             config  = new Properties();
+
+        config.setProperty(RangerPdpConstants.PROP_AUTHN_HEADER_SPIFFE, "X-Spiffe-Id");
+
+        handler.init(config);
+
+        // Valid SPIFFE ID per the SPIFFE spec, but not in the expected /ns/<ns>/sa/<sa> layout.
+        HttpServletRequest     request = requestWithHeader("X-Spiffe-Id", "spiffe://example.org/workload/frontend");
+        PdpAuthNHandler.Result result  = handler.authenticate(request, null);
+
+        assertEquals(PdpAuthNHandler.Result.Status.SKIP, result.getStatus());
+        assertNull(result.getUserName());
+    }
+
+    @Test
+    void testAuthenticate_spiffeHeaderWithIllegalCharsSkips() {
+        HttpHeaderAuthNHandler handler = new HttpHeaderAuthNHandler();
+        Properties             config  = new Properties();
+
+        config.setProperty(RangerPdpConstants.PROP_AUTHN_HEADER_SPIFFE, "X-Spiffe-Id");
+
+        handler.init(config);
+
+        // Correct layout but the service-account contains whitespace, which is not an allowed SPIFFE character.
+        HttpServletRequest     request = requestWithHeader("X-Spiffe-Id", "spiffe://my-cluster/ns/prod/sa/service sa");
+        PdpAuthNHandler.Result result  = handler.authenticate(request, null);
+
+        assertEquals(PdpAuthNHandler.Result.Status.SKIP, result.getStatus());
+        assertNull(result.getUserName());
+    }
+
     private static HttpServletRequest requestWithHeader(String expectedHeader, String headerValue) {
+        return requestWithHeaders(Collections.singletonMap(expectedHeader, headerValue));
+    }
+
+    private static HttpServletRequest requestWithHeaders(Map<String, String> headers) {
         InvocationHandler invocationHandler = (proxy, method, args) -> {
             String methodName = method.getName();
 
             if ("getHeader".equals(methodName)) {
-                return expectedHeader.equals(args[0]) ? headerValue : null;
+                return headers.get(args[0]);
             } else if ("getHeaders".equals(methodName) || "getHeaderNames".equals(methodName)) {
                 return java.util.Collections.emptyEnumeration();
             } else if ("getMethod".equals(methodName)) {

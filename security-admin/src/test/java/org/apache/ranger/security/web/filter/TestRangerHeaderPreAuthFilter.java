@@ -66,6 +66,7 @@ public class TestRangerHeaderPreAuthFilter {
 
         PropertiesUtil.getPropertiesMap().remove(RangerHeaderPreAuthFilter.PROP_HEADER_AUTH_ENABLED);
         PropertiesUtil.getPropertiesMap().remove(RangerHeaderPreAuthFilter.PROP_USERNAME_HEADER_NAME);
+        PropertiesUtil.getPropertiesMap().remove(RangerHeaderPreAuthFilter.PROP_SPIFFE_HEADER_NAME);
         PropertiesUtil.getPropertiesMap().remove(RangerHeaderPreAuthFilter.PROP_REQUEST_ID_HEADER_NAME);
     }
 
@@ -91,7 +92,7 @@ public class TestRangerHeaderPreAuthFilter {
     @Test
     public void testDoFilter_enabled_missingUsername_passesThrough() throws Exception {
         PropertiesUtil.getPropertiesMap().put(RangerHeaderPreAuthFilter.PROP_HEADER_AUTH_ENABLED, "true");
-        PropertiesUtil.getPropertiesMap().put(RangerHeaderPreAuthFilter.PROP_USERNAME_HEADER_NAME, "x-awc-username");
+        PropertiesUtil.getPropertiesMap().put(RangerHeaderPreAuthFilter.PROP_USERNAME_HEADER_NAME, "X-Forwarded-User");
 
         RangerHeaderPreAuthFilter filter  = new RangerHeaderPreAuthFilter();
         UserMgr                   userMgr = mock(UserMgr.class);
@@ -115,7 +116,7 @@ public class TestRangerHeaderPreAuthFilter {
     @Test
     public void testDoFilter_enabled_withUsername_setsAuthenticationFromRangerDbRoles() throws Exception {
         PropertiesUtil.getPropertiesMap().put(RangerHeaderPreAuthFilter.PROP_HEADER_AUTH_ENABLED, "true");
-        PropertiesUtil.getPropertiesMap().put(RangerHeaderPreAuthFilter.PROP_USERNAME_HEADER_NAME, "x-awc-username");
+        PropertiesUtil.getPropertiesMap().put(RangerHeaderPreAuthFilter.PROP_USERNAME_HEADER_NAME, "X-Forwarded-User");
 
         RangerHeaderPreAuthFilter filter  = new RangerHeaderPreAuthFilter();
         UserMgr                   userMgr = mock(UserMgr.class);
@@ -128,7 +129,7 @@ public class TestRangerHeaderPreAuthFilter {
         HttpServletRequest  request  = mock(HttpServletRequest.class);
         HttpServletResponse response = mock(HttpServletResponse.class);
 
-        when(request.getHeader("x-awc-username")).thenReturn("joeuser");
+        when(request.getHeader("X-Forwarded-User")).thenReturn("joeuser");
 
         FilterChain chain = new FilterChain() {
             @Override
@@ -152,9 +153,186 @@ public class TestRangerHeaderPreAuthFilter {
     }
 
     @Test
+    public void testDoFilter_enabled_withSpiffeHeader_setsServiceAccountAuthentication() throws Exception {
+        PropertiesUtil.getPropertiesMap().put(RangerHeaderPreAuthFilter.PROP_HEADER_AUTH_ENABLED, "true");
+        PropertiesUtil.getPropertiesMap().put(RangerHeaderPreAuthFilter.PROP_USERNAME_HEADER_NAME, "X-Forwarded-User");
+        PropertiesUtil.getPropertiesMap().put(RangerHeaderPreAuthFilter.PROP_SPIFFE_HEADER_NAME, "X-Spiffe-Id");
+
+        RangerHeaderPreAuthFilter filter  = new RangerHeaderPreAuthFilter();
+        UserMgr                   userMgr = mock(UserMgr.class);
+
+        filter.userMgr = userMgr;
+        filter.initialize();
+
+        when(userMgr.getRolesByLoginId("nginx-ingress")).thenReturn(Collections.singletonList("ROLE_USER"));
+
+        HttpServletRequest  request  = mock(HttpServletRequest.class);
+        HttpServletResponse response = mock(HttpServletResponse.class);
+
+        when(request.getHeader("X-Forwarded-User")).thenReturn(null);
+        // Realistic production SPIFFE ID: DNS-style Kubernetes cluster trust domain + namespace/service-account.
+        when(request.getHeader("X-Spiffe-Id")).thenReturn("spiffe://prod-cluster.k8s.example.com/ns/ingress-nginx/sa/nginx-ingress");
+
+        FilterChain chain = new FilterChain() {
+            @Override
+            public void doFilter(ServletRequest req, ServletResponse res) {
+                org.springframework.security.core.Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+
+                assertNotNull(auth);
+                assertTrue(auth instanceof RangerAuthenticationToken);
+                RangerAuthenticationToken rangerAuth = (RangerAuthenticationToken) auth;
+                assertEquals(XXAuthSession.AUTH_TYPE_TRUSTED_PROXY, rangerAuth.getAuthType());
+                assertEquals("nginx-ingress", auth.getName());
+            }
+        };
+
+        filter.doFilter(request, response, chain);
+    }
+
+    @Test
+    public void testDoFilter_enabled_usernameHeaderTakesPrecedenceOverSpiffe() throws Exception {
+        PropertiesUtil.getPropertiesMap().put(RangerHeaderPreAuthFilter.PROP_HEADER_AUTH_ENABLED, "true");
+        PropertiesUtil.getPropertiesMap().put(RangerHeaderPreAuthFilter.PROP_USERNAME_HEADER_NAME, "X-Forwarded-User");
+        PropertiesUtil.getPropertiesMap().put(RangerHeaderPreAuthFilter.PROP_SPIFFE_HEADER_NAME, "X-Spiffe-Id");
+
+        RangerHeaderPreAuthFilter filter  = new RangerHeaderPreAuthFilter();
+        UserMgr                   userMgr = mock(UserMgr.class);
+
+        filter.userMgr = userMgr;
+        filter.initialize();
+
+        when(userMgr.getRolesByLoginId("joeuser")).thenReturn(Collections.singletonList("ROLE_USER"));
+
+        HttpServletRequest  request  = mock(HttpServletRequest.class);
+        HttpServletResponse response = mock(HttpServletResponse.class);
+
+        when(request.getHeader("X-Forwarded-User")).thenReturn("joeuser");
+
+        FilterChain chain = new FilterChain() {
+            @Override
+            public void doFilter(ServletRequest req, ServletResponse res) {
+                org.springframework.security.core.Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+
+                assertNotNull(auth);
+                assertEquals("joeuser", auth.getName());
+            }
+        };
+
+        filter.doFilter(request, response, chain);
+
+        verify(userMgr, never()).getRolesByLoginId("service-sa");
+    }
+
+    @Test
+    public void testDoFilter_enabled_multipleSpiffeHeaders_usesFirstValid() throws Exception {
+        PropertiesUtil.getPropertiesMap().put(RangerHeaderPreAuthFilter.PROP_HEADER_AUTH_ENABLED, "true");
+        PropertiesUtil.getPropertiesMap().put(RangerHeaderPreAuthFilter.PROP_SPIFFE_HEADER_NAME, "X-Spiffe-Id, X-Workload-Id");
+
+        RangerHeaderPreAuthFilter filter  = new RangerHeaderPreAuthFilter();
+        UserMgr                   userMgr = mock(UserMgr.class);
+
+        filter.userMgr = userMgr;
+        filter.initialize();
+
+        when(userMgr.getRolesByLoginId("service-sa")).thenReturn(Collections.singletonList("ROLE_USER"));
+
+        HttpServletRequest  request  = mock(HttpServletRequest.class);
+        HttpServletResponse response = mock(HttpServletResponse.class);
+
+        when(request.getHeader("X-Spiffe-Id")).thenReturn("not-a-spiffe-id");
+        when(request.getHeader("X-Workload-Id")).thenReturn("spiffe://my-cluster/ns/service-namespace/sa/service-sa");
+
+        FilterChain chain = new FilterChain() {
+            @Override
+            public void doFilter(ServletRequest req, ServletResponse res) {
+                org.springframework.security.core.Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+
+                assertNotNull(auth);
+                assertEquals("service-sa", auth.getName());
+            }
+        };
+
+        filter.doFilter(request, response, chain);
+    }
+
+    @Test
+    public void testDoFilter_enabled_malformedSpiffeHeader_passesThrough() throws Exception {
+        PropertiesUtil.getPropertiesMap().put(RangerHeaderPreAuthFilter.PROP_HEADER_AUTH_ENABLED, "true");
+        PropertiesUtil.getPropertiesMap().put(RangerHeaderPreAuthFilter.PROP_SPIFFE_HEADER_NAME, "X-Spiffe-Id");
+
+        RangerHeaderPreAuthFilter filter  = new RangerHeaderPreAuthFilter();
+        UserMgr                   userMgr = mock(UserMgr.class);
+
+        filter.userMgr = userMgr;
+        filter.initialize();
+
+        HttpServletRequest  request  = mock(HttpServletRequest.class);
+        HttpServletResponse response = mock(HttpServletResponse.class);
+        FilterChain         chain    = mock(FilterChain.class);
+
+        when(request.getHeader("X-Spiffe-Id")).thenReturn("not-a-spiffe-id");
+
+        filter.doFilter(request, response, chain);
+
+        verify(chain).doFilter(request, response);
+        verify(userMgr, never()).getRolesByLoginId(anyString());
+        assertNull(SecurityContextHolder.getContext().getAuthentication());
+    }
+
+    @Test
+    public void testDoFilter_enabled_specValidButNonConformingSpiffeHeader_passesThrough() throws Exception {
+        PropertiesUtil.getPropertiesMap().put(RangerHeaderPreAuthFilter.PROP_HEADER_AUTH_ENABLED, "true");
+        PropertiesUtil.getPropertiesMap().put(RangerHeaderPreAuthFilter.PROP_SPIFFE_HEADER_NAME, "X-Spiffe-Id");
+
+        RangerHeaderPreAuthFilter filter  = new RangerHeaderPreAuthFilter();
+        UserMgr                   userMgr = mock(UserMgr.class);
+
+        filter.userMgr = userMgr;
+        filter.initialize();
+
+        HttpServletRequest  request  = mock(HttpServletRequest.class);
+        HttpServletResponse response = mock(HttpServletResponse.class);
+        FilterChain         chain    = mock(FilterChain.class);
+
+        // Valid SPIFFE ID per the SPIFFE spec, but not in the expected /ns/<ns>/sa/<sa> layout.
+        when(request.getHeader("X-Spiffe-Id")).thenReturn("spiffe://example.org/workload/frontend");
+
+        filter.doFilter(request, response, chain);
+
+        verify(chain).doFilter(request, response);
+        verify(userMgr, never()).getRolesByLoginId(anyString());
+        assertNull(SecurityContextHolder.getContext().getAuthentication());
+    }
+
+    @Test
+    public void testDoFilter_enabled_spiffeHeaderWithIllegalChars_passesThrough() throws Exception {
+        PropertiesUtil.getPropertiesMap().put(RangerHeaderPreAuthFilter.PROP_HEADER_AUTH_ENABLED, "true");
+        PropertiesUtil.getPropertiesMap().put(RangerHeaderPreAuthFilter.PROP_SPIFFE_HEADER_NAME, "X-Spiffe-Id");
+
+        RangerHeaderPreAuthFilter filter  = new RangerHeaderPreAuthFilter();
+        UserMgr                   userMgr = mock(UserMgr.class);
+
+        filter.userMgr = userMgr;
+        filter.initialize();
+
+        HttpServletRequest  request  = mock(HttpServletRequest.class);
+        HttpServletResponse response = mock(HttpServletResponse.class);
+        FilterChain         chain    = mock(FilterChain.class);
+
+        // Correct layout but the service-account contains whitespace, which is not an allowed SPIFFE character.
+        when(request.getHeader("X-Spiffe-Id")).thenReturn("spiffe://my-cluster/ns/prod/sa/service sa");
+
+        filter.doFilter(request, response, chain);
+
+        verify(chain).doFilter(request, response);
+        verify(userMgr, never()).getRolesByLoginId(anyString());
+        assertNull(SecurityContextHolder.getContext().getAuthentication());
+    }
+
+    @Test
     public void testDoFilter_enabled_existingAuthenticatedContext_doesNotOverrideAuthentication() throws Exception {
         PropertiesUtil.getPropertiesMap().put(RangerHeaderPreAuthFilter.PROP_HEADER_AUTH_ENABLED, "true");
-        PropertiesUtil.getPropertiesMap().put(RangerHeaderPreAuthFilter.PROP_USERNAME_HEADER_NAME, "x-awc-username");
+        PropertiesUtil.getPropertiesMap().put(RangerHeaderPreAuthFilter.PROP_USERNAME_HEADER_NAME, "X-Forwarded-User");
 
         RangerHeaderPreAuthFilter filter  = new RangerHeaderPreAuthFilter();
         UserMgr                   userMgr = mock(UserMgr.class);

@@ -143,6 +143,10 @@ public class RangerPdpConfig {
         return get(RangerPdpConstants.PROP_AUTHN_HEADER_USERNAME, "");
     }
 
+    public String getHeaderAuthnSpiffe() {
+        return get(RangerPdpConstants.PROP_AUTHN_HEADER_SPIFFE, "");
+    }
+
     // --- JWT bearer token auth ---
     public boolean isJwtAuthnEnabled() {
         return getBoolean(RangerPdpConstants.PROP_AUTHN_JWT_ENABLED, false);
