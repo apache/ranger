@@ -44,6 +44,7 @@ http://www.springframework.org/schema/util/spring-util-4.3.xsd">
 		<security:session-management session-fixation-protection="newSession" />
 		<intercept-url pattern="/api/audit/health" access="permitAll()"/>
 		<intercept-url pattern="/api/audit/status" access="permitAll()"/>
+		<intercept-url pattern="/api/audit/partition-plan" access="permitAll()"/>
 		<intercept-url pattern="/api/audit/**" access="isAuthenticated()"/>
 		<security:access-denied-handler error-page="/index.jsp"/>
 		<custom-filter ref="auditJwtAuthFilter" after="SERVLET_API_SUPPORT_FILTER" />

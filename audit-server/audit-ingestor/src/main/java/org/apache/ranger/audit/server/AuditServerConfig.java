@@ -29,7 +29,8 @@ import org.slf4j.LoggerFactory;
 public class AuditServerConfig extends AuditConfig {
     private static final Logger LOG = LoggerFactory.getLogger(AuditServerConfig.class);
 
-    private static final String CONFIG_FILE_PATH = "conf/ranger-audit-ingestor-site.xml";
+    private static final String CONFIG_FILE_PATH     = "conf/ranger-audit-ingestor-site.xml";
+    private static final String AUDIT_CONFIG_PROPERTY = "audit.config";
 
     private static volatile AuditServerConfig sInstance;
 
@@ -60,9 +61,10 @@ public class AuditServerConfig extends AuditConfig {
 
         boolean ret = true;
 
-        // Load ranger-audit-ingestor-site.xml
-        if (!addAuditResource(CONFIG_FILE_PATH, true)) {
-            LOG.error("Could not load required configuration: {}", CONFIG_FILE_PATH);
+        // Prefer -Daudit.config (external conf dir) over classpath WEB-INF copy
+        String configPath = System.getProperty(AUDIT_CONFIG_PROPERTY, CONFIG_FILE_PATH);
+        if (!addAuditResource(configPath, true)) {
+            LOG.error("Could not load required configuration: {}", configPath);
             ret = false;
         }
 

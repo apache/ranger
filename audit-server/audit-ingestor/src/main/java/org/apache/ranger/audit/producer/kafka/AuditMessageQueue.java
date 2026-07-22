@@ -23,6 +23,8 @@ import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.ranger.audit.destination.AuditDestination;
 import org.apache.ranger.audit.model.AuditEventBase;
 import org.apache.ranger.audit.model.AuthzAuditEvent;
+import org.apache.ranger.audit.producer.kafka.partition.PartitionPlanKafkaConfig;
+import org.apache.ranger.audit.producer.kafka.partition.PartitionPlanWatcher;
 import org.apache.ranger.audit.provider.MiscUtil;
 import org.apache.ranger.audit.utils.AuditMessageQueueUtils;
 import org.slf4j.Logger;
@@ -48,6 +50,7 @@ public class AuditMessageQueue extends AuditDestination {
     private String                        topicName;
     private Thread                        producerThread;
     private AuditRecoveryManager          recoveryManager;
+    private PartitionPlanWatcher            partitionPlanWatcher;
 
     @Override
     public void init(Properties props, String propPrefix) {
@@ -56,6 +59,7 @@ public class AuditMessageQueue extends AuditDestination {
         super.init(props, propPrefix);
 
         createAuditsTopic(props, PROP_INGESTOR_PREFIX);
+        startPartitionPlanWatcherIfEnabled(props);
         createKafkaProducer(props, PROP_INGESTOR_PREFIX);
         createRecoveryManager(props, PROP_INGESTOR_PREFIX);
 
@@ -74,6 +78,16 @@ public class AuditMessageQueue extends AuditDestination {
     @Override
     public void stop() {
         LOG.info("==> AuditMessageQueue.stop() [CORE AUDIT SERVER]");
+
+        if (partitionPlanWatcher != null) {
+            try {
+                partitionPlanWatcher.stop();
+            } catch (Exception e) {
+                LOG.error("Error stopping partition plan watcher", e);
+            } finally {
+                partitionPlanWatcher = null;
+            }
+        }
 
         // Shutdown recovery manager first to process any remaining messages
         if (recoveryManager != null) {
@@ -337,6 +351,22 @@ public class AuditMessageQueue extends AuditDestination {
     private void createAuditsTopic(final Properties props, final String propPrefix) {
         if (topicName == null) {
             topicName = AuditMessageQueueUtils.createAuditsTopicIfNotExists(props, propPrefix);
+        }
+    }
+
+    private void startPartitionPlanWatcherIfEnabled(final Properties props) {
+        if (!PartitionPlanKafkaConfig.isDynamicPartitionPlanEnabled(props, PROP_INGESTOR_PREFIX)) {
+            return;
+        }
+        if (topicName == null) {
+            throw new IllegalStateException("Audit topic must be created before starting partition plan watcher");
+        }
+        try {
+            partitionPlanWatcher = new PartitionPlanWatcher(props, PROP_INGESTOR_PREFIX, topicName, null);
+            partitionPlanWatcher.startBlocking();
+        } catch (Exception e) {
+            LOG.error("Failed to start partition plan watcher for audit topic '{}'", topicName, e);
+            throw new RuntimeException("Failed to start partition plan watcher for dynamic partitioning", e);
         }
     }
 
