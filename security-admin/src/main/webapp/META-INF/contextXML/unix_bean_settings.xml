@@ -28,7 +28,7 @@
 							<beans:array>
 								<beans:bean class="javax.security.auth.login.AppConfigurationEntry">
 									<beans:constructor-arg
-										value="org.apache.ranger.authentication.unix.jaas.RemoteUnixLoginModule" />
+										value="org.apache.ranger.authentication.unix.jaas.PamLoginModule" />
 									<beans:constructor-arg>
 										<util:constant static-field="javax.security.auth.login.AppConfigurationEntry$LoginModuleControlFlag.REQUIRED" />
 									</beans:constructor-arg>

@@ -101,7 +101,6 @@ mvn versions:set -DnewVersion=${RANGER_VERSION} -DgenerateBackupPoms=false
 # Also, manually update versions in:
 # - dev-support/ranger-docker/.env
 # - docs/pom.xml
-# - unixauthnative/pom.xml
 # - ranger-trino-plugin-shim/pom.xml
 ```
 

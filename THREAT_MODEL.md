@@ -68,7 +68,7 @@ limitations under the License.
 | Tag sync | `tagsync/` | Atlas/Kafka; writes to Admin | **In** |
 | Audit framework | `agents-audit/`, `audit-server/` | Solr/OpenSearch/Kafka/HDFS/DB audit sinks | **In** |
 | Ranger KMS | `kms/`, `plugin-kms/` | Key store (DB/HSM), HDFS NameNode/DataNode | **In** (model at its own trust level — handles key material) |
-| Authentication | `ranger-authn/`, `unixauthservice/`, `agents-cred/`, `credentialbuilder/` | Kerberos/SPNEGO/LDAP; credential stores | **In** |
+| Authentication | `ranger-authn/`, `security-admin/` (PAM/JAAS login), `agents-cred/`, `credentialbuilder/` | Kerberos/SPNEGO/LDAP/PAM; credential stores | **In** |
 | Examples / sample app + tools | `ranger-examples/`, `ranger-tools/` *(documented — repo layout)* | Demo / utility | **In** *(maintainer, 2026-06-12 — §14 Q4)* |
 | Build / install / migration / ugsync tooling | `distro/`, `agents-installer/`, `migration-util/`, ugsync `filesourceusersynctool`/`ldapconfigchecktool`, `dev-support/` | Build/deploy host | **Out** *(maintainer, 2026-06-12 — §14 Q4)* |
 

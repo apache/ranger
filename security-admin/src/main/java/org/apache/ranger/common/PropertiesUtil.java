@@ -266,40 +266,6 @@ public class PropertiesUtil extends PropertyPlaceholderConfigurer {
             System.setProperty("javax.net.ssl.keyStorePassword", propertiesMap.get("ranger.keystore.password"));
         }
 
-        //update unixauth keystore and truststore credentials
-        if (propertiesMap.containsKey("ranger.credential.provider.path")) {
-            String path = propertiesMap.get("ranger.credential.provider.path");
-
-            if (path != null) {
-                String unixAuthKeyStoreAlias = getProperty("ranger.unixauth.keystore.alias", "unixAuthKeyStoreAlias");
-
-                if (unixAuthKeyStoreAlias != null) {
-                    String unixAuthKeyStorePass = CredentialReader.getDecryptedString(path.trim(), unixAuthKeyStoreAlias.trim(), storeType);
-
-                    if (unixAuthKeyStorePass != null && !unixAuthKeyStorePass.trim().isEmpty() && !unixAuthKeyStorePass.trim().equalsIgnoreCase("none")) {
-                        propertiesMap.put("ranger.unixauth.keystore.password", unixAuthKeyStorePass);
-                        props.put("ranger.unixauth.keystore.password", unixAuthKeyStorePass);
-                    } else {
-                        LOG.info("unixauth keystore password not applied; clear text password shall be applicable");
-                    }
-                }
-
-                //
-                String unixAuthTrustStoreAlias = getProperty("ranger.unixauth.truststore.alias", "unixAuthTrustStoreAlias");
-
-                if (unixAuthTrustStoreAlias != null) {
-                    String unixAuthTrustStorePass = CredentialReader.getDecryptedString(path.trim(), unixAuthTrustStoreAlias.trim(), storeType);
-
-                    if (unixAuthTrustStorePass != null && !unixAuthTrustStorePass.trim().isEmpty() && !unixAuthTrustStorePass.trim().equalsIgnoreCase("none")) {
-                        propertiesMap.put("ranger.unixauth.truststore.password", unixAuthTrustStorePass);
-                        props.put("ranger.unixauth.truststore.password", unixAuthTrustStorePass);
-                    } else {
-                        LOG.info("unixauth truststore password not applied; clear text password shall be applicable");
-                    }
-                }
-            }
-        }
-
         //update credential from keystore
         if (propertiesMap.containsKey("ranger.credential.provider.path") && propertiesMap.containsKey("ranger.jpa.jdbc.credential.alias")) {
             String path  = propertiesMap.get("ranger.credential.provider.path");

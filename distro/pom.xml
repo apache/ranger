@@ -466,18 +466,6 @@
         </dependency>
         <dependency>
             <groupId>org.apache.ranger</groupId>
-            <artifactId>unixauthclient</artifactId>
-            <version>${project.version}</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.ranger</groupId>
-            <artifactId>unixauthservice</artifactId>
-            <version>${project.version}</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.ranger</groupId>
             <artifactId>unixusersync</artifactId>
             <version>${project.version}</version>
             <scope>provided</scope>
@@ -581,6 +569,35 @@
                                     <skipAssembly>false</skipAssembly>
                                     <descriptors>
                                         <descriptor>src/main/assembly/admin-web.xml</descriptor>
+                                    </descriptors>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+        <profile>
+            <id>ranger-usersync</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <artifactId>maven-assembly-plugin</artifactId>
+                        <version>${assembly.plugin.version}</version>
+                        <configuration>
+                            <finalName>ranger-${project.version}</finalName>
+                            <outputDirectory>../target</outputDirectory>
+                        </configuration>
+                        <executions>
+                            <execution>
+                                <goals>
+                                    <goal>single</goal>
+                                </goals>
+                                <phase>package</phase>
+                                <configuration>
+                                    <skipAssembly>false</skipAssembly>
+                                    <descriptors>
+                                        <descriptor>src/main/assembly/usersync.xml</descriptor>
                                     </descriptors>
                                 </configuration>
                             </execution>

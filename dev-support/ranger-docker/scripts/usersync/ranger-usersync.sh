@@ -47,7 +47,7 @@ fi
 
 cd ${RANGER_HOME}/usersync && ./start.sh
 
-RANGER_USERSYNC_PID=`ps -ef  | grep -v grep | grep -i "org.apache.ranger.authentication.UnixAuthenticationService" | awk '{print $2}'`
+RANGER_USERSYNC_PID=`ps -ef  | grep -v grep | grep -i "proc_rangerusersync" | awk '{print $2}'`
 
 # prevent the container from exiting
 if [ -z "$RANGER_USERSYNC_PID" ]
