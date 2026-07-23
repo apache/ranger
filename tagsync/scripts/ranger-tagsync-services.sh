@@ -15,6 +15,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+set -x
 if [[ -z $1 ]]; then
         echo "No argument provided.."
         echo "Usage: $0 {start | stop | restart | version}"
@@ -77,7 +78,8 @@ if [ "${action}" == "START" ]; then
 		chmod 777 $RANGER_TAGSYNC_LOG_DIR
 	fi
 
-	cp="${cdir}/conf:${cdir}/dist/*:${cdir}/lib/*:${RANGER_TAGSYNC_HADOOP_CONF_DIR}/*"
+	RANGER_TAGSYNC_WEBAPP=${cdir}/ews/webapp
+	cp="${cdir}/conf:${RANGER_TAGSYNC_WEBAPP}/WEB-INF/classes:${RANGER_TAGSYNC_WEBAPP}/WEB-INF/lib/*:${cdir}/ews/lib/*:${RANGER_TAGSYNC_HADOOP_CONF_DIR}/*:${JAVA_HOME}/lib/*"
 
 	if [ -f "$pidf" ] ; then
 		pid=`cat $pidf`
@@ -98,7 +100,7 @@ if [ "${action}" == "START" ]; then
 	export TAGSYNC_CONF_DIR
 
 	SLEEP_TIME_AFTER_START=5
-	nohup java -Dproc_rangertagsync ${JAVA_OPTS} -Datlas.conf="${TAGSYNC_CONF_DIR}" -Dlogdir="${RANGER_TAGSYNC_LOG_DIR}" -Dlogback.configurationFile=file:${TAGSYNC_CONF_DIR}/logback.xml -Duser=${USER} -Dhostname=${HOSTNAME} -cp "${cp}" org.apache.ranger.tagsync.process.TagSynchronizer  > ${RANGER_TAGSYNC_LOG_DIR}/tagsync.out 2>&1 &
+	nohup java -Dproc_rangertagsync ${JAVA_OPTS} -Dlogback.configurationFile=file:${TAGSYNC_CONF_DIR}/logback.xml -Dlogdir="${RANGER_TAGSYNC_LOG_DIR}" -Dranger.tagsync.log.dir="${RANGER_TAGSYNC_LOG_DIR}" -Duser="${TAGSYNC_LOG_USER}" -Dhostname="${HOSTNAME}" -Dservername=rangertagsync -Dranger.tagsync.home=`pwd` -Dranger.tagsync.webapp.dir="${RANGER_TAGSYNC_WEBAPP}" -Dcatalina.base=${cdir}/ews -cp "${cp}" org.apache.ranger.tagsync.server.RangerTagSyncServer > ${RANGER_TAGSYNC_LOG_DIR}/catalina.out 2>&1 &
 	VALUE_OF_PID=$!
 	echo "Starting Apache Ranger Tagsync Service"
 	sleep $SLEEP_TIME_AFTER_START

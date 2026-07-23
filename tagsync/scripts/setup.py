@@ -208,7 +208,7 @@ def updatePropertyInJCKSFile(jcksFileName,propName,value):
 	fn = jcksFileName
 	if (value == ''):
 		value = ' '
-	cmd = "java -cp './lib/*' %s create '%s' -value '%s' -provider jceks://file%s 2>&1" % (credUpdateClassName,propName,value,fn)
+	cmd = "java -cp './ews/lib/*' %s create '%s' -value '%s' -provider jceks://file%s 2>&1" % (credUpdateClassName,propName,value,fn)
 	ret = os.system(cmd)
 	if (ret != 0):
 		print("ERROR: Unable to update the JCKSFile (%s) for aliasName (%s)" % (fn,propName))
