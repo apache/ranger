@@ -129,13 +129,6 @@ unix_user=$(get_prop 'unix_user' $PROPFILE)
 unix_user_pwd=$(get_prop 'unix_user_pwd' $PROPFILE)
 unix_group=$(get_prop 'unix_group' $PROPFILE)
 authentication_method=$(get_prop 'authentication_method' $PROPFILE)
-remoteLoginEnabled=$(get_prop_or_default 'remoteLoginEnabled' $PROPFILE 'false')
-authServiceHostName=$(get_prop_or_default 'authServiceHostName' $PROPFILE '')
-authServicePort=$(get_prop_or_default 'authServicePort' $PROPFILE '')
-ranger_unixauth_keystore=$(get_prop_or_default 'ranger_unixauth_keystore' $PROPFILE '')
-ranger_unixauth_keystore_password=$(get_prop_or_default 'ranger_unixauth_keystore_password' $PROPFILE '')
-ranger_unixauth_truststore=$(get_prop_or_default 'ranger_unixauth_truststore' $PROPFILE '')
-ranger_unixauth_truststore_password=$(get_prop_or_default 'ranger_unixauth_truststore_password' $PROPFILE '')
 xa_ldap_url=$(get_prop 'xa_ldap_url' $PROPFILE)
 xa_ldap_userDNpattern=$(get_prop 'xa_ldap_userDNpattern' $PROPFILE)
 xa_ldap_groupSearchBase=$(get_prop 'xa_ldap_groupSearchBase' $PROPFILE)
@@ -1219,72 +1212,9 @@ update_properties() {
 		fi
 	fi
 
-	if [ "${ranger_unixauth_keystore}" != "" ] && [ "${ranger_unixauth_keystore_password}" != "" ]
-	then
-		propertyName=ranger.unixauth.keystore
-		newPropertyValue="${ranger_unixauth_keystore}"
-		updatePropertyToFilePy $propertyName "${newPropertyValue}" $to_file_default
-
-		ranger_unixauth_keystore_alias=unixAuthKeyStoreAlias
-		propertyName=ranger.unixauth.keystore.credential.alias
-		newPropertyValue="${ranger_unixauth_keystore_alias}"
-		updatePropertyToFilePy $propertyName "${newPropertyValue}" $to_file_default
-		if [ "${keystore}" != "" ]
-		then
-			propertyName=ranger.unixauth.keystore.password
-			newPropertyValue="_"
-			updatePropertyToFilePy $propertyName "${newPropertyValue}" $to_file_default
-			$PYTHON_COMMAND_INVOKER ranger_credential_helper.py -l "cred/lib/*" -f "$keystore" -k "$ranger_unixauth_keystore_alias" -v "$ranger_unixauth_keystore_password" -c 1
-
-			if test -f "${keystore}"; then
-				chown -R ${unix_user}:${unix_group} ${keystore}
-			else
-				propertyName=ranger.unixauth.keystore.password
-				newPropertyValue="${ranger_unixauth_keystore_password}"
-				updatePropertyToFilePy $propertyName "${newPropertyValue}" $to_file_default
-			fi
-		else
-			propertyName=ranger.unixauth.keystore.password
-			newPropertyValue="${ranger_unixauth_keystore_password}"
-			updatePropertyToFilePy $propertyName "${newPropertyValue}" $to_file_default
-		fi
-	fi
-
-	if [ "${ranger_unixauth_truststore}" != "" ] && [ "${ranger_unixauth_truststore_password}" != "" ]
-	then
-		propertyName=ranger.unixauth.truststore
-		newPropertyValue="${ranger_unixauth_truststore}"
-		updatePropertyToFilePy $propertyName "${newPropertyValue}" $to_file_default
-
-		ranger_unixauth_truststore_alias=unixAuthTrustStoreAlias
-		propertyName=ranger.unixauth.truststore.credential.alias
-		newPropertyValue="${ranger_unixauth_truststore_alias}"
-		updatePropertyToFilePy $propertyName "${newPropertyValue}" $to_file_default
-
-		if [ "${keystore}" != "" ]
-		then
-			propertyName=ranger.unixauth.truststore.password
-			newPropertyValue="_"
-			updatePropertyToFilePy $propertyName "${newPropertyValue}" $to_file_default
-			$PYTHON_COMMAND_INVOKER ranger_credential_helper.py -l "cred/lib/*" -f "$keystore" -k "$ranger_unixauth_truststore_alias" -v "$ranger_unixauth_truststore_password" -c 1
-
-			if test -f $keystore; then
-				chown -R ${unix_user}:${unix_group} ${keystore}
-			else
-				propertyName=ranger.unixauth.truststore.password
-				newPropertyValue="${ranger_unixauth_truststore_password}"
-				updatePropertyToFilePy $propertyName "${newPropertyValue}" $to_file_default
-			fi
-		else
-			propertyName=ranger.unixauth.truststore.password
-			newPropertyValue="${ranger_unixauth_truststore_password}"
-			updatePropertyToFilePy $propertyName "${newPropertyValue}" $to_file_default
-		fi
-	fi
-
 }
 
-do_unixauth_setup() {
+do_unix_authentication_method_setup() {
 
         ldap_file=$app_home/WEB-INF/classes/conf/ranger-admin-site.xml
         if test -f $ldap_file; then
@@ -1292,18 +1222,6 @@ do_unixauth_setup() {
 
                 propertyName=ranger.authentication.method
                 newPropertyValue="${authentication_method}"
-                updatePropertyToFilePy $propertyName "${newPropertyValue}" $ldap_file
-
-                propertyName=ranger.unixauth.remote.login.enabled
-                newPropertyValue="${remoteLoginEnabled}"
-                updatePropertyToFilePy $propertyName "${newPropertyValue}" $ldap_file
-
-                propertyName=ranger.unixauth.service.hostname
-                newPropertyValue="${authServiceHostName}"
-                updatePropertyToFilePy $propertyName "${newPropertyValue}" $ldap_file
-
-                propertyName=ranger.unixauth.service.port
-                newPropertyValue="${authServicePort}"
                 updatePropertyToFilePy $propertyName "${newPropertyValue}" $ldap_file
 	else
 		log "[E] $ldap_file does not exists" ; exit 1;
@@ -1501,8 +1419,8 @@ do_authentication_setup(){
 			log "[E] $ldap_file does not exists" ; exit 1;
 		fi
         fi
-        if [ $authentication_method = "UNIX" ] ; then
-                do_unixauth_setup
+        if [ $authentication_method = "UNIX" ] || [ $authentication_method = "PAM" ] ; then
+                do_unix_authentication_method_setup
         fi
 
         if [ $authentication_method = "NONE" ] ; then

@@ -50,11 +50,9 @@ for opt,arg in opts:
 # configDirectory: where OLD (champlain) configuration exists and NEW (dal) configuration is written to
 #
 configDirectory = '/etc/ranger/admin/conf' 
-rangerJAASDirectoryName = join(configDirectory,'ranger_jaas')
 
 xaSystemPropFile = 'xa_system.properties' 
 ldapPropFile = 'xa_ldap.properties'
-rangerJAASPropFile = 'unixauth.properties' 
 securityContextFile  = 'security-applicationContext.xml' 
 webserverConfigFile = 'ranger_webserver.properties'
 
@@ -193,9 +191,6 @@ def main():
 
 	ldapPropFileName = join(configDirectory, ldapPropFile) 
 	xaLdapProps = getPropertiesConfigMap (ldapPropFileName)
-	
-	jaasPropFileName = join(rangerJAASDirectoryName, rangerJAASPropFile)
-	unixauthProps = getPropertiesConfigMap (jaasPropFileName)
 
 	webserverConfigFileName = join(configDirectory, webserverConfigFile)
 	webconfig = getPropertiesConfigMap(webserverConfigFileName)
@@ -206,8 +201,6 @@ def main():
 			xmlVal = xaSysProps[k]
 		elif (k in list(xaLdapProps)):
 			xmlVal = xaLdapProps[k]
-		elif (k in list(unixauthProps)):
-			xmlVal = unixauthProps[k]
 		elif (k in list(webconfig)):
 			xmlVal = webconfig[k]
 		else:
@@ -290,9 +283,6 @@ def main():
 		installProps['xa_ldap_groupRoleAttribute'] = xaLdapProps['xa_ldap_groupRoleAttribute']
 	elif ( len(root.findall(".//*[@id='jaasAuthProvider']",ns)) > 0 ):
 		installProps['authentication_method'] = 'UNIX'
-		installProps['remoteLoginEnabled'] = unixauthProps['remoteLoginEnabled']
-		installProps['authServiceHostName'] = unixauthProps['authServiceHostName']
-		installProps['authServicePort'] = unixauthProps['authServicePort']
 	else:
 		installProps['authentication_method'] = 'NONE'
 

@@ -257,58 +257,7 @@
 #
 -->
 
-<!--  Unix auth properties -->
-
-	<property>
-		<name>ranger.unixauth.remote.login.enabled</name>
-		<value>true</value>
-	</property>
-	<property>
-		<name>ranger.unixauth.service.hostname</name>
-		<value>localhost</value>
-	</property>
-	<property>
-		<name>ranger.unixauth.service.port</name>
-		<value>5151</value>
-	</property>
-	<property>
-		<name>ranger.unixauth.ssl.enabled</name>
-		<value>true</value>
-	</property>
-	<property>
-		<name>ranger.unixauth.debug</name>
-		<value>false</value>
-	</property>
-	<property>
-		<name>ranger.unixauth.server.cert.validation</name>
-		<value>false</value>
-	</property>
-
-	<property>
-		<name>ranger.unixauth.keystore</name>
-		<value>keystore.jks</value>
-	</property>
-	<property>
-		<name>ranger.unixauth.keystore.credential.alias</name>
-		<value>unixAuthKeyStoreAlias</value>
-	</property>
-	<property>
-		<name>ranger.unixauth.keystore.password</name>
-		<value>password</value>
-	</property>
-	<property>
-		<name>ranger.unixauth.truststore</name>
-		<value>cacerts</value>
-	</property>
-	<property>
-		<name>ranger.unixauth.truststore.credential.alias</name>
-		<value>unixAuthTrustStoreAlias</value>
-	</property>
-	<property>
-		<name>ranger.unixauth.truststore.password</name>
-		<value>changeit</value>
-	</property>
-
+<!--  Unix auth properties removed: remote Unix login via UserSync TCP listener is no longer supported. -->
 
 <!-- Maven project Version  -->
 	<property>

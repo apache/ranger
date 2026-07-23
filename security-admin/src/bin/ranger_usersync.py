@@ -99,7 +99,7 @@ if service_entry:
 		init_variables()
 		jdk_options = get_jdk_options()
 		class_path = get_ranger_classpath()
-		java_class = 'org.apache.ranger.authentication.UnixAuthenticationService'
+		java_class = 'org.apache.ranger.usergroupsync.UserSyncService'
 		class_arguments = ''
 
 		dom = getDOMImplementation()
