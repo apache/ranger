@@ -75,10 +75,11 @@ public class UnixAuthenticationService {
     private static final String UNIXAUTH_LOCKOUT_DURATION_MS_PARAM   = "ranger.usersync.unixauth.lockout.duration.ms";
     private static final String UNIXAUTH_REQUIRE_CLIENT_AUTH_PARAM   = "ranger.usersync.unixauth.require.client.auth";
     private static final String UNIXAUTH_SOCKET_TIMEOUT_MS_PARAM     = "ranger.usersync.unixauth.socket.timeout.ms";
-    private static final String UNIXAUTH_ACCOUNT_LOCKOUT_ENABLED_PARAM = "ranger.usersync.unixauth.account.lockout.enabled";
-    private static final String UNIXAUTH_ACCOUNT_MAX_FAILED_ATTEMPTS_PARAM = "ranger.usersync.unixauth.account.max.failed.attempts";
+    private static final String UNIXAUTH_ACCOUNT_LOCKOUT_ENABLED_PARAM     = "ranger.usersync.unixauth.account.lockout.enabled";
+    private static final String UNIXAUTH_ACCOUNT_DISTINCT_IP_THRESHOLD_PARAM = "ranger.usersync.unixauth.account.distinct.ip.threshold";
     private static final String UNIXAUTH_ACCOUNT_ATTEMPT_WINDOW_MS_PARAM   = "ranger.usersync.unixauth.account.attempt.window.ms";
-    private static final String UNIXAUTH_ACCOUNT_LOCKOUT_DURATION_MS_PARAM = "ranger.usersync.unixauth.account.lockout.duration.ms";
+    private static final String UNIXAUTH_ACCOUNT_DELAY_STEP_MS_PARAM       = "ranger.usersync.unixauth.account.delay.step.ms";
+    private static final String UNIXAUTH_ACCOUNT_MAX_DELAY_MS_PARAM        = "ranger.usersync.unixauth.account.max.delay.ms";
 
     private static boolean enableUnixAuth;
 
@@ -337,13 +338,14 @@ public class UnixAuthenticationService {
         long lockoutDurationMs = Long.parseLong(prop.getProperty(UNIXAUTH_LOCKOUT_DURATION_MS_PARAM, "30000"));
         socketTimeoutMs = Integer.parseInt(prop.getProperty(UNIXAUTH_SOCKET_TIMEOUT_MS_PARAM, "10000"));
 
-        boolean accountLockoutEnabled = Boolean.parseBoolean(prop.getProperty(UNIXAUTH_ACCOUNT_LOCKOUT_ENABLED_PARAM, "true"));
-        int     maxAccountFailedAttempts = Integer.parseInt(prop.getProperty(UNIXAUTH_ACCOUNT_MAX_FAILED_ATTEMPTS_PARAM, "5"));
+        boolean accountThrottlingEnabled = Boolean.parseBoolean(prop.getProperty(UNIXAUTH_ACCOUNT_LOCKOUT_ENABLED_PARAM, "false"));
+        int     distinctIpThreshold      = Integer.parseInt(prop.getProperty(UNIXAUTH_ACCOUNT_DISTINCT_IP_THRESHOLD_PARAM, "3"));
         long    accountAttemptWindowMs   = Long.parseLong(prop.getProperty(UNIXAUTH_ACCOUNT_ATTEMPT_WINDOW_MS_PARAM, "60000"));
-        long    accountLockoutDurationMs = Long.parseLong(prop.getProperty(UNIXAUTH_ACCOUNT_LOCKOUT_DURATION_MS_PARAM, "30000"));
+        long    accountDelayStepMs       = Long.parseLong(prop.getProperty(UNIXAUTH_ACCOUNT_DELAY_STEP_MS_PARAM, "1000"));
+        long    accountMaxDelayMs        = Long.parseLong(prop.getProperty(UNIXAUTH_ACCOUNT_MAX_DELAY_MS_PARAM, "5000"));
 
         loginAttemptTracker = new LoginAttemptTracker(maxFailedAttempts, attemptWindowMs, lockoutDurationMs,
-                accountLockoutEnabled, maxAccountFailedAttempts, accountAttemptWindowMs, accountLockoutDurationMs);
+                accountThrottlingEnabled, distinctIpThreshold, accountAttemptWindowMs, accountDelayStepMs, accountMaxDelayMs);
 
         String requireClientAuthProp = prop.getProperty(UNIXAUTH_REQUIRE_CLIENT_AUTH_PARAM, "false");
         requireClientAuth = requireClientAuthProp.trim().equalsIgnoreCase("true");

@@ -51,19 +51,23 @@
 	</property>
 	<property>
 		<name>ranger.usersync.unixauth.account.lockout.enabled</name>
-		<value>true</value>
+		<value>false</value>
 	</property>
 	<property>
-		<name>ranger.usersync.unixauth.account.max.failed.attempts</name>
-		<value>5</value>
+		<name>ranger.usersync.unixauth.account.distinct.ip.threshold</name>
+		<value>3</value>
 	</property>
 	<property>
 		<name>ranger.usersync.unixauth.account.attempt.window.ms</name>
 		<value>60000</value>
 	</property>
 	<property>
-		<name>ranger.usersync.unixauth.account.lockout.duration.ms</name>
-		<value>30000</value>
+		<name>ranger.usersync.unixauth.account.delay.step.ms</name>
+		<value>1000</value>
+	</property>
+	<property>
+		<name>ranger.usersync.unixauth.account.max.delay.ms</name>
+		<value>5000</value>
 	</property>
 	<property>
 		<name>ranger.usersync.passwordvalidator.path</name>

@@ -85,14 +85,24 @@ public class PasswordValidator implements Runnable {
             String request = reader.readLine();
             userName = parseUserName(request);
 
-            if (loginAttemptTracker.isBlocked(remoteIp, userName)) {
-                LOG.warn("Rejected UnixAuth attempt from [{}] for user [{}] - temporarily locked out due to repeated failures.", remoteIp, userName);
+            if (loginAttemptTracker.isBlocked(remoteIp)) {
+                LOG.warn("Rejected UnixAuth attempt from [{}] for user [{}] - temporarily locked out due to repeated failures from this source.", remoteIp, userName);
                 writer.println(LOCKED_OUT_RESPONSE);
                 writer.flush();
                 return;
             }
+            long accountDelayMs = loginAttemptTracker.getAccountDelayMs(accountKey(userName), remoteIp);
+            if (accountDelayMs > 0) {
+                LOG.warn("Slowing UnixAuth attempt from [{}] for user [{}] by {} ms due to failed attempts from multiple source IPs for this account.", remoteIp, userName, accountDelayMs);
+                try {
+                    Thread.sleep(accountDelayMs);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    LOG.warn("Account delay interrupted for user [{}] from [{}]", userName, remoteIp);
+                }
+            }
             if (request == null) {
-                loginAttemptTracker.recordFailure(remoteIp, userName);
+                loginAttemptTracker.recordFailure(remoteIp, accountKey(userName));
                 LOG.warn("Rejected UnixAuth attempt from [{}] - connection closed before sending any data.", remoteIp);
                 writer.println(GENERIC_FAILURE_RESPONSE);
                 writer.flush();
@@ -100,7 +110,7 @@ public class PasswordValidator implements Runnable {
             }
 
             if (validatorProgram == null) {
-                loginAttemptTracker.recordFailure(remoteIp, userName);
+                loginAttemptTracker.recordFailure(remoteIp, accountKey(userName));
                 LOG.error("Response [{}] for user: {} from [{}] as ValidatorProgram is not defined in configuration.", GENERIC_FAILURE_RESPONSE, userName, remoteIp);
                 writer.println(GENERIC_FAILURE_RESPONSE);
                 writer.flush();
@@ -121,14 +131,14 @@ public class PasswordValidator implements Runnable {
                     String res = pReader.readLine();
 
                     if (res != null && res.startsWith("OK")) {
-                        loginAttemptTracker.recordSuccess(remoteIp, userName);
+                        loginAttemptTracker.recordSuccess(remoteIp, accountKey(userName));
                         if (adminRoleNames != null && adminUserList != null) {
                             if (adminUserList.contains(userName)) {
                                 res = res + " " + adminRoleNames;
                             }
                         }
                     } else {
-                        loginAttemptTracker.recordFailure(remoteIp, userName);
+                        loginAttemptTracker.recordFailure(remoteIp, accountKey(userName));
                         res = GENERIC_FAILURE_RESPONSE;
                     }
 
@@ -143,7 +153,7 @@ public class PasswordValidator implements Runnable {
                 }
             }
         } catch (Throwable t) {
-            loginAttemptTracker.recordFailure(remoteIp, userName);
+            loginAttemptTracker.recordFailure(remoteIp, accountKey(userName));
             if (userName != null && writer != null) {
                 LOG.error("Response [{}] for user: {} from [{}], {}", GENERIC_FAILURE_RESPONSE, userName, remoteIp, t.getMessage());
                 writer.println(GENERIC_FAILURE_RESPONSE);
@@ -160,6 +170,16 @@ public class PasswordValidator implements Runnable {
                 client = null;
             }
         }
+    }
+
+    private static String accountKey(String userName) {
+        if (userName == null || userName.isEmpty()) {
+            return null;
+        }
+        if (adminUserList != null && adminUserList.contains(userName)) {
+            return null;
+        }
+        return userName;
     }
 
     private static String parseUserName(String request) {

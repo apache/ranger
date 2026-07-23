@@ -37,8 +37,10 @@ import java.util.Arrays;
 import java.util.Collections;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
@@ -188,7 +190,7 @@ public class TestPasswordValidator {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         Socket socket = buildSocket("LOGIN: alice secret", out);
         LoginAttemptTracker tracker = mock(LoginAttemptTracker.class);
-        when(tracker.isBlocked(anyString(), any())).thenReturn(true);
+        when(tracker.isBlocked(anyString())).thenReturn(true);
         new PasswordValidator(socket, tracker).run();
         String response = out.toString(StandardCharsets.UTF_8).trim();
         assertEquals("FAILED: Too many attempts. Try again later.", response);
@@ -210,7 +212,8 @@ public class TestPasswordValidator {
         when(process.getOutputStream()).thenReturn(new ByteArrayOutputStream());
 
         LoginAttemptTracker tracker = mock(LoginAttemptTracker.class);
-        when(tracker.isBlocked(anyString(), any())).thenReturn(false);
+        when(tracker.isBlocked(anyString())).thenReturn(false);
+        when(tracker.getAccountDelayMs(any(), anyString())).thenReturn(0L);
 
         try (MockedStatic<Runtime> runtimeStatic = mockStatic(Runtime.class)) {
             Runtime rt = mock(Runtime.class);
@@ -240,7 +243,8 @@ public class TestPasswordValidator {
         when(process.getOutputStream()).thenReturn(new ByteArrayOutputStream());
 
         LoginAttemptTracker tracker = mock(LoginAttemptTracker.class);
-        when(tracker.isBlocked(anyString(), any())).thenReturn(false);
+        when(tracker.isBlocked(anyString())).thenReturn(false);
+        when(tracker.getAccountDelayMs(any(), anyString())).thenReturn(0L);
 
         try (MockedStatic<Runtime> runtimeStatic = mockStatic(Runtime.class)) {
             Runtime rt = mock(Runtime.class);
@@ -257,7 +261,7 @@ public class TestPasswordValidator {
     }
 
     @Test
-    public void test09_blockedAccountSkipsValidatorAndReturnsLockedOutResponse() throws Exception {
+    public void test09_accountDelayStillInvokesValidator() throws Exception {
         PasswordValidator.setValidatorProgram("/bin/validator");
         PasswordValidator.setAdminUserList(null);
         PasswordValidator.setAdminRoleNames(null);
@@ -265,15 +269,58 @@ public class TestPasswordValidator {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         Socket socket = buildSocket("LOGIN: alice secret", out);
         LoginAttemptTracker tracker = mock(LoginAttemptTracker.class);
-        when(tracker.isBlocked(anyString(), any())).thenAnswer(invocation -> {
-            String account = invocation.getArgument(1);
-            return "alice".equals(account);
-        });
-        new PasswordValidator(socket, tracker).run();
+        when(tracker.isBlocked(anyString())).thenReturn(false);
+        when(tracker.getAccountDelayMs(eq("alice"), anyString())).thenReturn(1L);
+
+        Process process = mock(Process.class);
+        ByteArrayInputStream processStdout = new ByteArrayInputStream("OK".getBytes(StandardCharsets.UTF_8));
+        when(process.getInputStream()).thenReturn(processStdout);
+        when(process.getOutputStream()).thenReturn(new ByteArrayOutputStream());
+
+        try (MockedStatic<Runtime> runtimeStatic = mockStatic(Runtime.class)) {
+            Runtime rt = mock(Runtime.class);
+            runtimeStatic.when(Runtime::getRuntime).thenReturn(rt);
+            when(rt.exec("/bin/validator")).thenReturn(process);
+            new PasswordValidator(socket, tracker).run();
+        }
+
         String response = out.toString(StandardCharsets.UTF_8.name()).trim();
-        assertEquals("FAILED: Too many attempts. Try again later.", response);
-        verify(tracker, never()).recordFailure(anyString(), anyString());
-        verify(socket, times(1)).close();
+        assertEquals("OK", response);
+        verify(tracker, never()).isBlocked(anyString(), any());
+    }
+
+    @Test
+    public void test10_adminUserSkipsAccountTracking() throws Exception {
+        PasswordValidator.setValidatorProgram("/bin/validator");
+        PasswordValidator.setAdminUserList(Collections.singletonList("admin"));
+        PasswordValidator.setAdminRoleNames("ROLE_ADMIN");
+
+        LoginAttemptTracker tracker = new LoginAttemptTracker(100, 60_000, 30_000, true, 3, 60_000, 500, 5_000);
+        for (int i = 0; i < 5; i++) {
+            tracker.recordFailure("10.0.0." + i, "alice");
+        }
+        assertTrue(tracker.getAccountDelayMs("alice", "10.0.0.99") > 0);
+
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        Socket socket = buildSocket("LOGIN: admin secret", out);
+
+        Process process = mock(Process.class);
+        ByteArrayInputStream processStdout = new ByteArrayInputStream("FAILED: bad".getBytes(StandardCharsets.UTF_8));
+        when(process.getInputStream()).thenReturn(processStdout);
+        when(process.getOutputStream()).thenReturn(new ByteArrayOutputStream());
+
+        LoginAttemptTracker adminTracker = new LoginAttemptTracker(100, 60_000, 30_000, true, 3, 60_000, 500, 5_000);
+
+        try (MockedStatic<Runtime> runtimeStatic = mockStatic(Runtime.class)) {
+            Runtime rt = mock(Runtime.class);
+            runtimeStatic.when(Runtime::getRuntime).thenReturn(rt);
+            when(rt.exec("/bin/validator")).thenReturn(process);
+
+            new PasswordValidator(socket, adminTracker).run();
+        }
+
+        assertEquals(0, adminTracker.getAccountDelayMs("admin", "10.0.0.1"));
+        verify(process, times(1)).destroy();
     }
 
     private Socket buildSocket(String requestLine, ByteArrayOutputStream responseOut) throws IOException {
