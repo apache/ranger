@@ -21,6 +21,7 @@ package org.apache.ranger.authentication;
 
 import org.junit.jupiter.api.Test;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -55,36 +56,33 @@ public class LoginAttemptTrackerTest {
         }
         tracker.recordSuccess(ip);
         assertFalse(tracker.isBlocked(ip));
-        // failure count should have reset - one more failure should not lock out
         tracker.recordFailure(ip);
         assertFalse(tracker.isBlocked(ip));
     }
 
     @Test
     public void windowExpiryResetsFailureCount() throws InterruptedException {
-        // very short window so the test runs fast
         LoginAttemptTracker tracker = new LoginAttemptTracker(3, 50, 30_000);
         String ip = "10.0.0.4";
         tracker.recordFailure(ip);
         tracker.recordFailure(ip);
         assertFalse(tracker.isBlocked(ip));
-        Thread.sleep(100); // let the window expire
-        tracker.recordFailure(ip); // should start a fresh window, count = 1
+        Thread.sleep(100);
+        tracker.recordFailure(ip);
         assertFalse(tracker.isBlocked(ip), "window should have reset the failure count");
     }
 
     @Test
     public void reLocksImmediatelyIfRetriedRightAfterLockoutExpires() throws InterruptedException {
-        // short lockout, long window - so lockout expires but window doesn't
         LoginAttemptTracker tracker = new LoginAttemptTracker(3, 60_000, 50);
         String ip = "10.0.0.5";
         tracker.recordFailure(ip);
         tracker.recordFailure(ip);
         tracker.recordFailure(ip);
         assertTrue(tracker.isBlocked(ip));
-        Thread.sleep(100); // let the lockout expire, window is still active
+        Thread.sleep(100);
         assertFalse(tracker.isBlocked(ip), "lockout should have expired");
-        tracker.recordFailure(ip); // one more failure within the same window
+        tracker.recordFailure(ip);
         assertTrue(tracker.isBlocked(ip), "should re-lock immediately since window's failure count carried over");
     }
 
@@ -96,5 +94,67 @@ public class LoginAttemptTrackerTest {
         }
         assertTrue(tracker.isBlocked("10.0.0.6"));
         assertFalse(tracker.isBlocked("10.0.0.7"), "a different source IP must not be affected");
+    }
+
+    @Test
+    public void singleIpFailuresDoNotTriggerAccountDelay() {
+        LoginAttemptTracker tracker = new LoginAttemptTracker(100, 60_000, 30_000, true, 3, 60_000, 500, 5_000);
+        for (int i = 0; i < 10; i++) {
+            tracker.recordFailure("10.0.0.1", "alice");
+            assertEquals(0, tracker.getAccountDelayMs("alice", "10.0.0.1"), "one IP retrying must not trigger account delay");
+        }
+        assertFalse(tracker.isBlocked("10.0.0.1", "alice"));
+    }
+
+    @Test
+    public void distinctIpFanoutTriggersAccountDelay() {
+        LoginAttemptTracker tracker = new LoginAttemptTracker(100, 60_000, 30_000, true, 3, 60_000, 500, 5_000);
+        tracker.recordFailure("10.0.0.1", "alice");
+        tracker.recordFailure("10.0.0.2", "alice");
+        assertEquals(500, tracker.getAccountDelayMs("alice", "10.0.0.3"), "3rd distinct failing IP triggers 500 ms delay");
+        tracker.recordFailure("10.0.0.3", "alice");
+        assertEquals(1_000, tracker.getAccountDelayMs("alice", "10.0.0.4"), "4th distinct failing IP doubles delay to 1 s");
+        tracker.recordFailure("10.0.0.4", "alice");
+        assertEquals(2_000, tracker.getAccountDelayMs("alice", "10.0.0.5"), "5th distinct failing IP doubles delay again to 2 s");
+        assertFalse(tracker.isBlocked("10.0.0.99", "alice"), "account is never hard-blocked");
+    }
+
+    @Test
+    public void accountThrottlingCanBeDisabled() {
+        LoginAttemptTracker tracker = new LoginAttemptTracker(100, 60_000, 30_000, false, 3, 60_000, 500, 5_000);
+        for (int i = 0; i < 5; i++) {
+            tracker.recordFailure("10.0.0." + i, "alice");
+        }
+        assertEquals(0, tracker.getAccountDelayMs("alice", "10.0.0.99"));
+        assertFalse(tracker.isBlocked("10.0.0.99", "alice"));
+    }
+
+    @Test
+    public void accountSuccessClearsDistinctIpSet() {
+        LoginAttemptTracker tracker = new LoginAttemptTracker(100, 60_000, 30_000, true, 3, 60_000, 500, 5_000);
+        tracker.recordFailure("10.0.0.1", "alice");
+        tracker.recordFailure("10.0.0.2", "alice");
+        tracker.recordSuccess("10.0.0.3", "alice");
+        assertEquals(0, tracker.getAccountDelayMs("alice", "10.0.0.4"));
+        tracker.recordFailure("10.0.0.5", "alice");
+        assertEquals(0, tracker.getAccountDelayMs("alice", "10.0.0.6"));
+    }
+
+    @Test
+    public void accountDelayCapsAtMaxDelay() {
+        LoginAttemptTracker tracker = new LoginAttemptTracker(100, 60_000, 30_000, true, 3, 60_000, 500, 1_500);
+        for (int i = 0; i < 10; i++) {
+            tracker.recordFailure("10.0.0." + i, "alice");
+        }
+        assertEquals(1_500, tracker.getAccountDelayMs("alice", "10.0.0.99"));
+    }
+
+    @Test
+    public void repeatFailureFromSameIpDoesNotIncreaseDistinctIpCount() {
+        LoginAttemptTracker tracker = new LoginAttemptTracker(100, 60_000, 30_000, true, 3, 60_000, 500, 5_000);
+        tracker.recordFailure("10.0.0.1", "alice");
+        tracker.recordFailure("10.0.0.1", "alice");
+        tracker.recordFailure("10.0.0.2", "alice");
+        assertEquals(500, tracker.getAccountDelayMs("alice", "10.0.0.3"));
     }
 }
