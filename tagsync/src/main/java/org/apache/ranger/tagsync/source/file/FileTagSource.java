@@ -21,8 +21,10 @@ package org.apache.ranger.tagsync.source.file;
 
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.hadoop.util.StopWatch;
 import org.apache.ranger.authorization.utils.JsonUtils;
 import org.apache.ranger.plugin.util.ServiceTags;
+import org.apache.ranger.tagsync.metrics.source.RangerTagSyncMetricsSourceTags;
 import org.apache.ranger.tagsync.model.AbstractTagSource;
 import org.apache.ranger.tagsync.model.TagSink;
 import org.apache.ranger.tagsync.process.TagSyncConfig;
@@ -42,6 +44,7 @@ import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
 import java.util.Properties;
+import java.util.concurrent.TimeUnit;
 
 public class FileTagSource extends AbstractTagSource implements Runnable {
     private static final Logger LOG = LoggerFactory.getLogger(FileTagSource.class);
@@ -203,17 +206,23 @@ public class FileTagSource extends AbstractTagSource implements Runnable {
         LOG.debug("==> FileTagSource.run()");
 
         while (true) {
+            StopWatch eventStopWatchFile = new StopWatch().start();
             try {
                 if (TagSyncConfig.isTagSyncServiceActive()) {
                     LOG.debug("==> FileTagSource is running as server is active");
 
                     synchUp();
                 }
+                eventStopWatchFile.stop();
+                long timeElapsed = TimeUnit.MILLISECONDS.convert(eventStopWatchFile.now(), TimeUnit.NANOSECONDS);
+                RangerTagSyncMetricsSourceTags.updateTotalUploadsTime(timeElapsed);
             } catch (Exception e) {
                 LOG.error("Caught exception..", e);
             } finally {
                 LOG.debug("Sleeping for [{}] milliSeconds", fileModTimeCheckIntervalInMs);
-
+                if (eventStopWatchFile != null) {
+                    eventStopWatchFile.close();
+                }
                 try {
                     Thread.sleep(fileModTimeCheckIntervalInMs);
                 } catch (InterruptedException exception) {
