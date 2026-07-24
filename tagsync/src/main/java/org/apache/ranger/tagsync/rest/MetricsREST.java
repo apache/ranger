@@ -21,13 +21,16 @@ package org.apache.ranger.tagsync.rest;
 
 import org.apache.ranger.plugin.model.RangerMetrics;
 import org.apache.ranger.plugin.util.RangerMetricsUtil;
+import org.apache.ranger.tagsync.metrics.TagSyncMetricsWrapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
+import javax.ws.rs.core.MediaType;
 
 import java.lang.management.ManagementFactory;
 import java.lang.management.RuntimeMXBean;
@@ -46,6 +49,9 @@ public class MetricsREST {
     private static final String        JVM_VENDOR_NAME                 = RUNTIME.getVmVendor();
 
     RangerMetricsUtil jvmMetricUtil = new RangerMetricsUtil();
+
+    @Autowired
+    private TagSyncMetricsWrapper tagSyncMetricsWrapper;
 
     @GET
     @Path("/status")
@@ -70,5 +76,46 @@ public class MetricsREST {
         }
 
         return new RangerMetrics(jvm);
+    }
+
+    @GET
+    @Path("/prometheus")
+    @Produces(MediaType.TEXT_PLAIN)
+    public String getMetricsPrometheus() {
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("===>> MetricsREST.getMetricsPrometheus()");
+        }
+        String ret = "";
+        try {
+            ret = tagSyncMetricsWrapper.getRangerMetricsInPrometheusFormat();
+        } catch (Exception e) {
+            LOG.error("MetricsREST.getMetricsPrometheus(): Exception occured while getting metric.", e);
+        }
+
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("<<=== MetricsREST.getMetricsPrometheus() {}" + ret);
+        }
+        return ret;
+    }
+
+    @GET
+    @Path("/json")
+    @Produces({"application/json", "application/xml"})
+    public Map<String, Map<String, Object>> getMetricsJson() {
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("===>> MetricsREST.getMetricsJson()");
+        }
+
+        Map<String, Map<String, Object>> ret = null;
+        try {
+            ret = tagSyncMetricsWrapper.getRangerMetricsInJsonFormat();
+        } catch (Exception e) {
+            LOG.error("MetricsREST.getMetricsJson(): Exception occured while getting metric.", e);
+        }
+
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("<<=== MetricsREST.getMetricsJson() {}" + ret);
+        }
+        return ret;
     }
 }
