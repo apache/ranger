@@ -75,6 +75,11 @@ public class UnixAuthenticationService {
     private static final String UNIXAUTH_LOCKOUT_DURATION_MS_PARAM   = "ranger.usersync.unixauth.lockout.duration.ms";
     private static final String UNIXAUTH_REQUIRE_CLIENT_AUTH_PARAM   = "ranger.usersync.unixauth.require.client.auth";
     private static final String UNIXAUTH_SOCKET_TIMEOUT_MS_PARAM     = "ranger.usersync.unixauth.socket.timeout.ms";
+    private static final String UNIXAUTH_ACCOUNT_FANOUT_ENABLED_PARAM        = "ranger.usersync.unixauth.account.fanout.enabled";
+    private static final String UNIXAUTH_ACCOUNT_DISTINCT_IP_THRESHOLD_PARAM = "ranger.usersync.unixauth.account.distinct.ip.threshold";
+    private static final String UNIXAUTH_ACCOUNT_WINDOW_MS_PARAM             = "ranger.usersync.unixauth.account.window.ms";
+    private static final String UNIXAUTH_ACCOUNT_BASE_DELAY_MS_PARAM         = "ranger.usersync.unixauth.account.base.delay.ms";
+    private static final String UNIXAUTH_ACCOUNT_MAX_DELAY_MS_PARAM          = "ranger.usersync.unixauth.account.max.delay.ms";
 
     private static boolean enableUnixAuth;
 
@@ -333,7 +338,14 @@ public class UnixAuthenticationService {
         long lockoutDurationMs = Long.parseLong(prop.getProperty(UNIXAUTH_LOCKOUT_DURATION_MS_PARAM, "30000"));
         socketTimeoutMs = Integer.parseInt(prop.getProperty(UNIXAUTH_SOCKET_TIMEOUT_MS_PARAM, "10000"));
 
-        loginAttemptTracker = new LoginAttemptTracker(maxFailedAttempts, attemptWindowMs, lockoutDurationMs);
+        boolean accountFanoutEnabled       = Boolean.parseBoolean(prop.getProperty(UNIXAUTH_ACCOUNT_FANOUT_ENABLED_PARAM, "true"));
+        int     accountDistinctIpThreshold = Integer.parseInt(prop.getProperty(UNIXAUTH_ACCOUNT_DISTINCT_IP_THRESHOLD_PARAM, "3"));
+        long    accountWindowMs            = Long.parseLong(prop.getProperty(UNIXAUTH_ACCOUNT_WINDOW_MS_PARAM, "60000"));
+        long    accountBaseDelayMs         = Long.parseLong(prop.getProperty(UNIXAUTH_ACCOUNT_BASE_DELAY_MS_PARAM, "200"));
+        long    accountMaxDelayMs          = Long.parseLong(prop.getProperty(UNIXAUTH_ACCOUNT_MAX_DELAY_MS_PARAM, "2000"));
+
+        loginAttemptTracker = new LoginAttemptTracker(maxFailedAttempts, attemptWindowMs, lockoutDurationMs, accountFanoutEnabled,
+                accountDistinctIpThreshold, accountWindowMs, accountBaseDelayMs, accountMaxDelayMs);
 
         String requireClientAuthProp = prop.getProperty(UNIXAUTH_REQUIRE_CLIENT_AUTH_PARAM, "false");
         requireClientAuth = requireClientAuthProp.trim().equalsIgnoreCase("true");

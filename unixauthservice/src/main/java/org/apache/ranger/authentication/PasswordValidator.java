@@ -83,6 +83,7 @@ public class PasswordValidator implements Runnable {
             reader = new BufferedReader(new InputStreamReader(client.getInputStream()));
             writer = new PrintWriter(new OutputStreamWriter(client.getOutputStream()));
             String request = reader.readLine();
+            userName = parseUserName(request);
             if (loginAttemptTracker.isBlocked(remoteIp)) {
                 LOG.warn("Rejected UnixAuth attempt from [{}] - source IP is temporarily locked out due to repeated failures.", remoteIp);
                 writer.println(LOCKED_OUT_RESPONSE);
@@ -90,22 +91,26 @@ public class PasswordValidator implements Runnable {
                 return;
             }
             if (request == null) {
-                loginAttemptTracker.recordFailure(remoteIp);
+                loginAttemptTracker.recordFailure(remoteIp, userName);
                 LOG.warn("Rejected UnixAuth attempt from [{}] - connection closed before sending any data.", remoteIp);
                 writer.println(GENERIC_FAILURE_RESPONSE);
                 writer.flush();
                 return;
             }
-            if (request.startsWith("LOGIN:")) {
-                String line       = request.substring(6).trim();
-                int    passwordAt = line.indexOf(' ');
-                if (passwordAt != -1) {
-                    userName = line.substring(0, passwordAt).trim();
+            long accountDelayMs = loginAttemptTracker.getAccountDelayMs(userName);
+
+            if (accountDelayMs > 0) {
+                LOG.warn("Applying {}ms delay for user [{}] from [{}] - failures against this account recently seen from multiple source IPs.", accountDelayMs, userName, remoteIp);
+
+                try {
+                    Thread.sleep(accountDelayMs);
+                } catch (InterruptedException ie) {
+                    Thread.currentThread().interrupt();
                 }
             }
 
             if (validatorProgram == null) {
-                loginAttemptTracker.recordFailure(remoteIp);
+                loginAttemptTracker.recordFailure(remoteIp, userName);
                 LOG.error("Response [{}] for user: {} from [{}] as ValidatorProgram is not defined in configuration.", GENERIC_FAILURE_RESPONSE, userName, remoteIp);
                 writer.println(GENERIC_FAILURE_RESPONSE);
                 writer.flush();
@@ -126,14 +131,14 @@ public class PasswordValidator implements Runnable {
                     String res = pReader.readLine();
 
                     if (res != null && res.startsWith("OK")) {
-                        loginAttemptTracker.recordSuccess(remoteIp);
+                        loginAttemptTracker.recordSuccess(remoteIp, userName);
                         if (adminRoleNames != null && adminUserList != null) {
                             if (adminUserList.contains(userName)) {
                                 res = res + " " + adminRoleNames;
                             }
                         }
                     } else {
-                        loginAttemptTracker.recordFailure(remoteIp);
+                        loginAttemptTracker.recordFailure(remoteIp, userName);
                         res = GENERIC_FAILURE_RESPONSE;
                     }
 
@@ -148,7 +153,7 @@ public class PasswordValidator implements Runnable {
                 }
             }
         } catch (Throwable t) {
-            loginAttemptTracker.recordFailure(remoteIp);
+            loginAttemptTracker.recordFailure(remoteIp, userName);
             if (userName != null && writer != null) {
                 LOG.error("Response [{}] for user: {} from [{}], {}", GENERIC_FAILURE_RESPONSE, userName, remoteIp, t.getMessage());
                 writer.println(GENERIC_FAILURE_RESPONSE);
@@ -165,5 +170,17 @@ public class PasswordValidator implements Runnable {
                 client = null;
             }
         }
+    }
+
+    private static String parseUserName(String request) {
+        if (request == null || !request.startsWith("LOGIN:")) {
+            return null;
+        }
+        String line = request.substring(6).trim();
+        int passwordAt = line.indexOf(' ');
+        if (passwordAt == -1) {
+            return null;
+        }
+        return line.substring(0, passwordAt).trim();
     }
 }
