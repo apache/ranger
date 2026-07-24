@@ -21,16 +21,20 @@ package org.apache.ranger.tagsync.rest;
 
 import org.apache.ranger.plugin.model.RangerMetrics;
 import org.apache.ranger.plugin.util.RangerMetricsUtil;
+import org.apache.ranger.tagsync.metrics.TagSyncMetricsWrapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
+import javax.ws.rs.core.MediaType;
 
 import java.lang.management.ManagementFactory;
 import java.lang.management.RuntimeMXBean;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -47,14 +51,14 @@ public class MetricsREST {
 
     RangerMetricsUtil jvmMetricUtil = new RangerMetricsUtil();
 
+    @Autowired
+    private TagSyncMetricsWrapper tagSyncMetricsWrapper;
+
     @GET
     @Path("/status")
     @Produces("application/json")
     public RangerMetrics getStatus() {
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("==> MetricsREST.getStatus()");
-        }
-        LOG.info("==> MetricsREST.getStatus()");
+        LOG.debug("==> MetricsREST.getStatus()");
         Map<String, Object> jvm       = new LinkedHashMap<>();
         Map<String, Object> vmDetails = new LinkedHashMap<>();
         vmDetails.put("JVM Machine Actual Name", JVM_MACHINE_ACTUAL_NAME);
@@ -65,10 +69,43 @@ public class MetricsREST {
         vmDetails.putAll(jvmMetricUtil.getValues());
         jvm.put("jvm", vmDetails);
 
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("<== MetricsREST.getStatus() {}", jvm);
-        }
+        LOG.debug("<== MetricsREST.getStatus() {}", jvm);
 
         return new RangerMetrics(jvm);
+    }
+
+    @GET
+    @Path("/prometheus")
+    @Produces(MediaType.TEXT_PLAIN)
+    public String getMetricsPrometheus() {
+        LOG.debug("===>> MetricsREST.getMetricsPrometheus()");
+        String ret = "";
+        try {
+            ret = tagSyncMetricsWrapper.getRangerMetricsInPrometheusFormat();
+        } catch (Exception e) {
+            LOG.error("MetricsREST.getMetricsPrometheus(): Exception occured while getting metric.", e);
+        }
+
+        LOG.debug("<<=== MetricsREST.getMetricsPrometheus() {}", ret);
+        return ret;
+    }
+
+    @GET
+    @Path("/json")
+    @Produces({"application/json", "application/xml"})
+    public Map<String, Map<String, Object>> getMetricsJson() {
+        LOG.debug("===>> MetricsREST.getMetricsJson()");
+        Map<String, Map<String, Object>> ret = Collections.emptyMap();
+        try {
+            Map<String, Map<String, Object>> metrics = tagSyncMetricsWrapper.getRangerMetricsInJsonFormat();
+            if (metrics != null) {
+                ret = metrics;
+            }
+        } catch (Exception e) {
+            LOG.error("MetricsREST.getMetricsJson(): Exception occured while getting metric.", e);
+        }
+
+        LOG.debug("<<=== MetricsREST.getMetricsJson() {}", ret);
+        return ret;
     }
 }
