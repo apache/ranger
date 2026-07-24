@@ -216,13 +216,14 @@ public class TestPasswordValidator {
             Runtime rt = mock(Runtime.class);
             runtimeStatic.when(Runtime::getRuntime).thenReturn(rt);
             when(rt.exec("/bin/validator")).thenReturn(process);
+
             new PasswordValidator(socket, tracker).run();
         }
 
         String response = out.toString(StandardCharsets.UTF_8).trim();
         assertEquals("FAILED: Authentication failed.", response);
-        verify(tracker, times(1)).recordFailure(anyString());
-        verify(tracker, never()).recordSuccess(anyString());
+        verify(tracker, times(1)).recordFailure(anyString(), anyString());
+        verify(tracker, never()).recordSuccess(anyString(), anyString());
     }
 
     @Test
@@ -252,8 +253,8 @@ public class TestPasswordValidator {
 
         String response = out.toString(StandardCharsets.UTF_8).trim();
         assertEquals("OK", response);
-        verify(tracker, times(1)).recordSuccess(anyString());
-        verify(tracker, never()).recordFailure(anyString());
+        verify(tracker, times(1)).recordSuccess(anyString(), anyString());
+        verify(tracker, never()).recordFailure(anyString(), anyString());
     }
 
     private Socket buildSocket(String requestLine, ByteArrayOutputStream responseOut) throws IOException {
