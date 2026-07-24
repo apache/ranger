@@ -35,9 +35,11 @@ import org.apache.atlas.type.AtlasTypeRegistry;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.hadoop.util.StopWatch;
 import org.apache.ranger.authorization.utils.JsonUtils;
 import org.apache.ranger.plugin.model.RangerValiditySchedule;
 import org.apache.ranger.plugin.util.ServiceTags;
+import org.apache.ranger.tagsync.metrics.source.RangerTagSyncMetricsSourceTags;
 import org.apache.ranger.tagsync.model.AbstractTagSource;
 import org.apache.ranger.tagsync.model.TagSink;
 import org.apache.ranger.tagsync.process.TagSyncConfig;
@@ -59,6 +61,7 @@ import java.util.Objects;
 import java.util.Properties;
 import java.util.Set;
 import java.util.TimeZone;
+import java.util.concurrent.TimeUnit;
 
 public class AtlasRESTTagSource extends AbstractTagSource implements Runnable {
     private static final Logger LOG = LoggerFactory.getLogger(AtlasRESTTagSource.class);
@@ -71,11 +74,11 @@ public class AtlasRESTTagSource extends AbstractTagSource implements Runnable {
         return dateFormat;
     });
 
-    private long     sleepTimeBetweenCycleInMillis;
+    private long                sleepTimeBetweenCycleInMillis;
     private AtlasRESTHttpClient atlasRestClient;
-    private boolean  isKerberized;
-    private String[] userNamePassword;
-    private int      entitiesBatchSize = TagSyncConfig.DEFAULT_TAGSYNC_ATLASREST_SOURCE_ENTITIES_BATCH_SIZE;
+    private boolean             isKerberized;
+    private String[]            userNamePassword;
+    private int                 entitiesBatchSize = TagSyncConfig.DEFAULT_TAGSYNC_ATLASREST_SOURCE_ENTITIES_BATCH_SIZE;
 
     private Thread myThread;
 
@@ -177,20 +180,21 @@ public class AtlasRESTTagSource extends AbstractTagSource implements Runnable {
             try {
                 if (TagSyncConfig.isTagSyncServiceActive()) {
                     LOG.debug("==> AtlasRESTTagSource.run() is running as server is Active");
-
                     synchUp();
                 } else {
                     LOG.debug("==> This server is running passive mode");
                 }
-                LOG.debug("Sleeping for [{}] milliSeconds", sleepTimeBetweenCycleInMillis);
-
-                Thread.sleep(sleepTimeBetweenCycleInMillis);
-            } catch (InterruptedException exception) {
-                LOG.error("Interrupted..: ", exception);
-                return;
             } catch (Exception e) {
                 LOG.error("Caught exception", e);
                 return;
+            } finally {
+                LOG.debug("Sleeping for [{}] milliSeconds", sleepTimeBetweenCycleInMillis);
+                try {
+                    Thread.sleep(sleepTimeBetweenCycleInMillis);
+                } catch (InterruptedException exception) {
+                    LOG.error("Interrupted..: ", exception);
+                    return;
+                }
             }
         }
     }
@@ -207,16 +211,23 @@ public class AtlasRESTTagSource extends AbstractTagSource implements Runnable {
             Map<String, ServiceTags> serviceTagsMap = AtlasNotificationMapper.processAtlasEntities(rangerAtlasEntities);
 
             if (MapUtils.isNotEmpty(serviceTagsMap)) {
-                for (Map.Entry<String, ServiceTags> entry : serviceTagsMap.entrySet()) {
-                    if (LOG.isDebugEnabled()) {
-                        try {
-                            String serviceTagsString = JsonUtils.objectToJson(entry.getValue());
-                            LOG.debug("serviceTags={}", serviceTagsString);
-                        } catch (Exception e) {
-                            LOG.error("An error occurred while conveting serviceTags to string", e);
+                StopWatch uploadStopWatch = new StopWatch().start();
+                try {
+                    for (Map.Entry<String, ServiceTags> entry : serviceTagsMap.entrySet()) {
+                        if (LOG.isDebugEnabled()) {
+                            try {
+                                String serviceTagsString = JsonUtils.objectToJson(entry.getValue());
+                                LOG.debug("serviceTags={}", serviceTagsString);
+                            } catch (Exception e) {
+                                LOG.error("An error occurred while converting serviceTags to string", e);
+                            }
                         }
+                        updateSink(entry.getValue());
                     }
-                    updateSink(entry.getValue());
+                } finally {
+                    uploadStopWatch.stop();
+                    RangerTagSyncMetricsSourceTags.updateTotalUploadsTime(TimeUnit.MILLISECONDS.convert(uploadStopWatch.now(), TimeUnit.NANOSECONDS));
+                    uploadStopWatch.close();
                 }
             }
         }
@@ -288,7 +299,7 @@ public class AtlasRESTTagSource extends AbstractTagSource implements Runnable {
 
                 if (CollectionUtils.isNotEmpty(entityHeaders)) {
                     nextStartIndex += entityHeaders.size();
-                    isMoreData     = true;
+                    isMoreData = true;
 
                     for (AtlasEntityHeader header : entityHeaders) {
                         if (!header.getStatus().equals(AtlasEntity.Status.ACTIVE)) {

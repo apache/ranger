@@ -77,7 +77,7 @@ public class EmbeddedServer {
     public static final  String        DEFAULT_NAME_RULE                 = "DEFAULT";
     public static final  String        KEYSTORE_FILE_TYPE_DEFAULT        = KeyStore.getDefaultType();
     public static final  String        TRUSTSTORE_FILE_TYPE_DEFAULT      = KeyStore.getDefaultType();
-    private static final Logger LOG = LoggerFactory.getLogger(EmbeddedServer.class);
+    private static final Logger        LOG                               = LoggerFactory.getLogger(EmbeddedServer.class);
     private static final String        RANGER_SSL_CONTEXT_ALGO_TYPE      = "TLS";
     private static final String        RANGER_SSL_KEYMANAGER_ALGO_TYPE   = KeyManagerFactory.getDefaultAlgorithm();
     private static final String        RANGER_SSL_TRUSTMANAGER_ALGO_TYPE = TrustManagerFactory.getDefaultAlgorithm();

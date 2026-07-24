@@ -15,7 +15,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-set -x
 if [[ -z $1 ]]; then
         echo "No argument provided.."
         echo "Usage: $0 {start | stop | restart | version}"
@@ -73,9 +72,10 @@ if [ "${action}" == "START" ]; then
 	    RANGER_TAGSYNC_LOG_DIR=/var/log/ranger/tagsync
 	fi
 
-	if [ ! -d $RANGER_TAGSYNC_LOG_DIR ]; then
-		mkdir -p $RANGER_TAGSYNC_LOG_DIR
-		chmod 777 $RANGER_TAGSYNC_LOG_DIR
+	if [ ! -d "${RANGER_TAGSYNC_LOG_DIR}" ]; then
+		mkdir -p "${RANGER_TAGSYNC_LOG_DIR}"
+		chown "${UNIX_TAGSYNC_USER}" "${RANGER_TAGSYNC_LOG_DIR}"
+		chmod 755 "${RANGER_TAGSYNC_LOG_DIR}"
 	fi
 
 	RANGER_TAGSYNC_WEBAPP=${cdir}/ews/webapp
@@ -100,7 +100,7 @@ if [ "${action}" == "START" ]; then
 	export TAGSYNC_CONF_DIR
 
 	SLEEP_TIME_AFTER_START=5
-	nohup java -Dproc_rangertagsync ${JAVA_OPTS} -Dlogback.configurationFile=file:${TAGSYNC_CONF_DIR}/logback.xml -Dlogdir="${RANGER_TAGSYNC_LOG_DIR}" -Dranger.tagsync.log.dir="${RANGER_TAGSYNC_LOG_DIR}" -Duser="${TAGSYNC_LOG_USER}" -Dhostname="${HOSTNAME}" -Dservername=rangertagsync -Dranger.tagsync.home=`pwd` -Dranger.tagsync.webapp.dir="${RANGER_TAGSYNC_WEBAPP}" -Dcatalina.base=${cdir}/ews -cp "${cp}" org.apache.ranger.tagsync.server.RangerTagSyncServer > ${RANGER_TAGSYNC_LOG_DIR}/catalina.out 2>&1 &
+	nohup java -Dproc_rangertagsync ${JAVA_OPTS} -Dlogback.configurationFile=file:${TAGSYNC_CONF_DIR}/logback.xml -Dlogdir="${RANGER_TAGSYNC_LOG_DIR}" -Dranger.tagsync.log.dir="${RANGER_TAGSYNC_LOG_DIR}" -Duser="${UNIX_TAGSYNC_USER}" -Dhostname="${HOSTNAME}" -Dservername=rangertagsync -Dranger.tagsync.home=`pwd` -Dranger.tagsync.webapp.dir="${RANGER_TAGSYNC_WEBAPP}" -Dcatalina.base=${cdir}/ews -cp "${cp}" org.apache.ranger.tagsync.server.RangerTagSyncServer > ${RANGER_TAGSYNC_LOG_DIR}/catalina.out 2>&1 &
 	VALUE_OF_PID=$!
 	echo "Starting Apache Ranger Tagsync Service"
 	sleep $SLEEP_TIME_AFTER_START
@@ -165,7 +165,7 @@ elif [ "${action}" == "RESTART" ]; then
 	${cdir}/ranger-tagsync-services.sh start
 	exit;
 elif [ "${action}" == "VERSION" ]; then
-	cd ${cdir}/lib
+	cd ${cdir}/ews/lib
 	java -cp ranger-util-*.jar org.apache.ranger.common.RangerVersionInfo
 	exit
 else 
