@@ -61,7 +61,7 @@ public class RangerServiceDefValidator extends RangerValidator {
 
         RangerServiceDef normalizedServiceDef = ServiceDefUtil.normalize(serviceDef);
 
-        LOG.debug("Normalized Service Definition being validated: ({}, {})", serviceDef, action);
+        LOG.debug("Normalized Service Definition being validated: ({}, {})", normalizedServiceDef, action);
 
         List<ValidationFailureDetails> failures = new ArrayList<>();
         boolean                        valid    = isValid(normalizedServiceDef, action, failures);

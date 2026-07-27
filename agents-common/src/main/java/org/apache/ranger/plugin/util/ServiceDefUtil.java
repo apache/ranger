@@ -126,10 +126,11 @@ public class ServiceDefUtil {
     }
 
     public static RangerServiceDef normalize(RangerServiceDef serviceDef) {
-        normalizeDataMaskDef(serviceDef);
-        normalizeRowFilterDef(serviceDef);
+        RangerServiceDef ret = serviceDef == null ? null : new RangerServiceDef(serviceDef);
+        normalizeDataMaskDef(ret);
+        normalizeRowFilterDef(ret);
 
-        return serviceDef;
+        return ret;
     }
 
     public static RangerPolicyConditionDef getConditionDef(RangerServiceDef serviceDef, String conditionName) {

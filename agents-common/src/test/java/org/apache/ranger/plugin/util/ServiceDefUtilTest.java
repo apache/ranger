@@ -57,6 +57,9 @@ import static org.apache.ranger.plugin.util.ServiceDefUtil.ACCESS_TYPE_MARKER_UP
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNotSame;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class ServiceDefUtilTest {
@@ -387,6 +390,59 @@ public class ServiceDefUtilTest {
             svcPolicies.getSecurityZones().get("zone1").getPolicyDeltas().add(new RangerPolicyDelta(1L, RangerPolicyDelta.CHANGE_TYPE_POLICY_CREATE, 1L, policy));
             assertTrue(ServiceDefUtil.addUserStoreEnricherIfNeeded(svcPolicies, RangerAdminUserStoreRetriever.class.getCanonicalName(), "60000"), "zone-policy-delta data-mask refers to user/group attribute: " + filterExpr);
         }
+    }
+
+    @Test
+    public void testNormalizeDoesNotMutateOrShareStateWithSource() throws Exception {
+        RangerServiceDef source = EmbeddedServiceDefsUtil.instance().getEmbeddedServiceDef(EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_HIVE_NAME);
+
+        assertNotNull(source, "hive embedded service-def should be available");
+        assertNotNull(source.getDataMaskDef(), "hive service-def should have dataMaskDef");
+        assertNotNull(source.getRowFilterDef(), "hive service-def should have rowFilterDef");
+
+        // snapshot every nested list/map/object reference on the source BEFORE calling normalize(),
+        // so we can prove afterward that normalize() never touched any of them
+        List<RangerAccessTypeDef> srcAccessTypes = source.getAccessTypes();
+        List<RangerServiceDef.RangerResourceDef> srcResources = source.getResources();
+        List<RangerServiceDef.RangerServiceConfigDef> srcConfigs = source.getConfigs();
+        RangerServiceDef.RangerDataMaskDef srcDataMaskDef = source.getDataMaskDef();
+        List<RangerAccessTypeDef> srcDataMaskAccessTypes = srcDataMaskDef.getAccessTypes();
+        List<RangerServiceDef.RangerResourceDef> srcDataMaskResources = srcDataMaskDef.getResources();
+        List<RangerServiceDef.RangerDataMaskTypeDef> srcMaskTypes = srcDataMaskDef.getMaskTypes();
+        RangerServiceDef.RangerRowFilterDef srcRowFilterDef = source.getRowFilterDef();
+        List<RangerAccessTypeDef> srcRowFilterAccessTypes = srcRowFilterDef.getAccessTypes();
+        List<RangerServiceDef.RangerResourceDef> srcRowFilterResources = srcRowFilterDef.getResources();
+
+        int srcAccessTypeCount = srcAccessTypes.size();
+        int srcResourceCount = srcResources.size();
+
+        RangerServiceDef normalized = ServiceDefUtil.normalize(source);
+
+        // --- normalize() must return a DIFFERENT object, not mutate source in place ---
+        assertNotSame(source, normalized, "normalize() must return a copy, not mutate the input in place");
+
+        // --- none of the returned object's nested collections may be the SAME instances as source's ---
+        assertNotSame(srcAccessTypes, normalized.getAccessTypes(), "accessTypes list must not be shared with source");
+        assertNotSame(srcResources, normalized.getResources(), "resources list must not be shared with source");
+        assertNotSame(srcConfigs, normalized.getConfigs(), "configs list must not be shared with source");
+        assertNotSame(srcDataMaskDef, normalized.getDataMaskDef(), "dataMaskDef must not be shared with source");
+        assertNotSame(srcDataMaskAccessTypes, normalized.getDataMaskDef().getAccessTypes(), "dataMaskDef.accessTypes must not be shared with source");
+        assertNotSame(srcDataMaskResources, normalized.getDataMaskDef().getResources(), "dataMaskDef.resources must not be shared with source");
+        assertNotSame(srcMaskTypes, normalized.getDataMaskDef().getMaskTypes(), "dataMaskDef.maskTypes must not be shared with source");
+        assertNotSame(srcRowFilterDef, normalized.getRowFilterDef(), "rowFilterDef must not be shared with source");
+        assertNotSame(srcRowFilterAccessTypes, normalized.getRowFilterDef().getAccessTypes(), "rowFilterDef.accessTypes must not be shared with source");
+        assertNotSame(srcRowFilterResources, normalized.getRowFilterDef().getResources(), "rowFilterDef.resources must not be shared with source");
+
+        // --- source's own fields must be completely untouched - same references, same sizes, as before the call ---
+        assertSame(srcAccessTypes, source.getAccessTypes(), "source.accessTypes reference must be unchanged after normalize()");
+        assertSame(srcResources, source.getResources(), "source.resources reference must be unchanged after normalize()");
+        assertSame(srcDataMaskDef, source.getDataMaskDef(), "source.dataMaskDef reference must be unchanged after normalize()");
+        assertEquals(srcAccessTypeCount, source.getAccessTypes().size(), "source.accessTypes size must be unchanged after normalize()");
+        assertEquals(srcResourceCount, source.getResources().size(), "source.resources size must be unchanged after normalize()");
+
+        // --- sanity: the copy still has real, non-empty data - not just identity-different but empty/broken ---
+        assertFalse(normalized.getAccessTypes().isEmpty(), "normalized accessTypes should not be empty");
+        assertFalse(normalized.getResources().isEmpty(), "normalized resources should not be empty");
     }
 
     private RangerAccessTypeDef getAccessType(List<RangerAccessTypeDef> accessTypeDefs, String accessType) {
