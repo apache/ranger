@@ -39,6 +39,7 @@
  * (ozone.json keyed by volume | bucket | key) and the row's selected access types.
  */
 
+import { find, isEqual, isArray } from "lodash";
 import { actionRequirementsRegistry } from "./actionRequirements/registry";
 
 /**
@@ -753,4 +754,108 @@ export const buildActionReqsMapFromConditionDef = (conditionDefVal) => {
   });
 
   return map;
+};
+
+export const pruneStaleActionMatcherInPolicyItemCondition = ({
+  form,
+  attrNames,
+  serviceCompDetails,
+  conditionDefVal,
+  actionReqsMap
+}) => {
+  if (!Array.isArray(attrNames) || attrNames.length === 0) {
+    return;
+  }
+
+  // Read form state AFTER accesses have already been pruned by the caller.
+  const formValues = form.getState().values;
+  const leafResourceTypes = getSelectedLeafResourceTypes(
+    serviceCompDetails,
+    formValues
+  );
+
+  for (const attrName of attrNames) {
+    const items = formValues?.[attrName];
+    if (!isArray(items)) {
+      continue;
+    }
+
+    let hasChanges = false;
+    const newItems = [...items];
+
+    items.forEach((item, index) => {
+      if (!item?.conditions) {
+        return;
+      }
+
+      const accesses = getSelectedAccessTypesForRow(
+        formValues,
+        attrName,
+        index
+      );
+
+      let itemChanged = false;
+      const newConditions = { ...item.conditions };
+
+      for (const conditionName in newConditions) {
+        if (!isPerRowCondition(conditionName)) {
+          continue;
+        }
+
+        if (accesses.length === 0) {
+          // No valid accesses left → unconditionally drop per-row conditions.
+          delete newConditions[conditionName];
+          itemChanged = true;
+          hasChanges = true;
+          continue;
+        }
+        //This is needed for when we update resources
+        const conditionDef = find(conditionDefVal, { name: conditionName });
+        if (!conditionDef) {
+          continue;
+        }
+
+        const uiHintVal = parseConditionUiHint(conditionDef.uiHint);
+
+        if (
+          uiHintVal?.isMultiValue &&
+          Array.isArray(newConditions[conditionName])
+        ) {
+          const current = newConditions[conditionName];
+          const actionFilterContext = {
+            selectedAccessTypes: accesses,
+            leafResourceTypes,
+            accessTypeDefs: serviceCompDetails?.accessTypes
+          };
+
+          const { prunedSelection } = getAllowedActionMatchesForCondition({
+            conditionName,
+            actionFilterContext,
+            actionReqsMap,
+            servicedefName: serviceCompDetails?.name,
+            uiHintAttb: uiHintVal,
+            currentSelection: current
+          });
+
+          if (!isEqual(current, prunedSelection)) {
+            if (prunedSelection && prunedSelection.length > 0) {
+              newConditions[conditionName] = prunedSelection;
+            } else {
+              delete newConditions[conditionName];
+            }
+            itemChanged = true;
+            hasChanges = true;
+          }
+        }
+      }
+
+      if (itemChanged) {
+        newItems[index] = { ...item, conditions: newConditions };
+      }
+    });
+
+    if (hasChanges) {
+      form.change(attrName, newItems);
+    }
+  }
 };
