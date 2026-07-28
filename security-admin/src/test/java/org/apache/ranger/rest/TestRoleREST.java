@@ -35,14 +35,17 @@ import org.apache.ranger.db.XXRoleDao;
 import org.apache.ranger.db.XXRoleRefGroupDao;
 import org.apache.ranger.db.XXRoleRefRoleDao;
 import org.apache.ranger.db.XXRoleRefUserDao;
+import org.apache.ranger.db.XXServiceDefDao;
 import org.apache.ranger.entity.XXPortalUser;
 import org.apache.ranger.entity.XXRoleRefGroup;
 import org.apache.ranger.entity.XXRoleRefUser;
 import org.apache.ranger.entity.XXService;
+import org.apache.ranger.entity.XXServiceDef;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItem;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
 import org.apache.ranger.plugin.model.RangerRole;
+import org.apache.ranger.plugin.model.RangerService;
 import org.apache.ranger.plugin.model.validation.RangerRoleValidator;
 import org.apache.ranger.plugin.util.GrantRevokeRoleRequest;
 import org.apache.ranger.plugin.util.RangerRoles;
@@ -877,6 +880,47 @@ public class TestRoleREST {
                 throw new RuntimeException(e);
             }
         });
+    }
+
+    @Test
+    public void test17eGetSecureRangerRolesIfUpdatedKmsUsesServiceByNameForDP() throws Exception {
+        RangerRoles rangerRoles        = createRangerRoles();
+        String      serviceName        = "dev_kms";
+        String      pluginId           = "kms-plugin";
+        String      clusterName        = "";
+        String      pluginCapabilities = "";
+
+        XXService xService = createXXService();
+        xService.setName(serviceName);
+        xService.setType(Id);
+
+        XXServiceDef xServiceDef = new XXServiceDef();
+        xServiceDef.setId(Id);
+        xServiceDef.setImplclassname("org.apache.ranger.services.kms.RangerServiceKMS");
+
+        RangerService rangerService = new RangerService();
+        rangerService.setId(Id);
+        rangerService.setName(serviceName);
+
+        XXServiceDefDao xServiceDefDao = Mockito.mock(XXServiceDefDao.class);
+        HttpServletRequest request = Mockito.mock(HttpServletRequest.class);
+
+        Mockito.when(serviceUtil.isValidService(serviceName, request)).thenReturn(true);
+        Mockito.when(daoMgr.getXXService().findByName(serviceName)).thenReturn(xService);
+        Mockito.when(daoMgr.getXXServiceDef()).thenReturn(xServiceDefDao);
+        Mockito.when(xServiceDefDao.getById(xService.getType())).thenReturn(xServiceDef);
+        Mockito.when(bizUtil.isAdmin()).thenReturn(false);
+        Mockito.when(bizUtil.isKeyAdmin()).thenReturn(false);
+        Mockito.when(svcStore.getServiceByNameForDP(serviceName)).thenReturn(rangerService);
+        Mockito.when(bizUtil.isUserAllowed(rangerService, RoleREST.POLICY_DOWNLOAD_USERS)).thenReturn(true);
+        Mockito.when(roleStore.getRoles(serviceName, -1L)).thenReturn(rangerRoles);
+
+        RangerRoles result = roleRest.getSecureRangerRolesIfUpdated(serviceName, -1L, 0L, pluginId, clusterName, pluginCapabilities, request);
+
+        Assertions.assertNotNull(result);
+        Assertions.assertEquals(rangerRoles.getRangerRoles().size(), result.getRangerRoles().size());
+        Mockito.verify(svcStore).getServiceByNameForDP(serviceName);
+        Mockito.verify(bizUtil).isUserAllowed(rangerService, RoleREST.POLICY_DOWNLOAD_USERS);
     }
 
     // empty request roles (requestParamRoles = 0, dbRoles = 5, return = all dbRoles)
