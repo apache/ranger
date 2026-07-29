@@ -128,7 +128,6 @@
                     <include>org.apache.orc:orc-core:jar:${orc.version}</include>
                     <include>org.apache.orc:orc-shims:jar:${orc.version}</include>
                     <include>io.airlift:aircompressor:jar:${aircompressor.version}</include>
-                    <include>javax.annotation:javax.annotation-api:jar:${javax.annotation-api}</include>
                     <include>javax.inject:javax.inject</include>
                     <include>javax.ws.rs:javax.ws.rs-api</include>
                     <include>org.apache.hadoop.thirdparty:hadoop-shaded-guava:jar:${hadoop-shaded-guava.version}</include>
