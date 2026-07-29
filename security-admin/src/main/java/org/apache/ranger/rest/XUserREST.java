@@ -1444,7 +1444,7 @@ public class XUserREST {
         boolean         isKeyAdmin        = bizUtil.isKeyAdmin();
         Long            downloadedVersion = null;
         boolean         isValid           = false;
-        boolean         isAllowed;
+        boolean         isAllowed         = false;
 
         try {
             isValid = serviceUtil.isValidService(serviceName, request);
@@ -1465,18 +1465,22 @@ public class XUserREST {
 
             if (isValid && xService != null) {
                 XXServiceDef  xServiceDef   = rangerDaoManager.getXXServiceDef().getById(xService.getType());
-                RangerService rangerService = svcStore.getServiceByName(serviceName);
+                RangerService rangerService;
 
                 if (StringUtils.equals(xServiceDef.getImplclassname(), EmbeddedServiceDefsUtil.KMS_IMPL_CLASS_NAME)) {
+                    rangerService = svcStore.getServiceByNameForDP(serviceName);
+
                     if (isKeyAdmin) {
                         isAllowed = true;
-                    } else {
+                    } else if (rangerService != null) {
                         isAllowed = bizUtil.isUserAllowed(rangerService, USERSTORE_DOWNLOAD_USERS);
                     }
                 } else {
+                    rangerService = svcStore.getServiceByName(serviceName);
+
                     if (isAdmin) {
                         isAllowed = true;
-                    } else {
+                    } else if (rangerService != null) {
                         isAllowed = bizUtil.isUserAllowed(rangerService, USERSTORE_DOWNLOAD_USERS);
                     }
                 }

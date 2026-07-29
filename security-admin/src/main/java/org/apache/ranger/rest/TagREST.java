@@ -1316,7 +1316,7 @@ public class TagREST {
         Long        downloadedVersion = null;
         String      clusterName       = null;
         String      logMsg;
-        boolean     isAllowed;
+        boolean     isAllowed         = false;
 
         if (request != null) {
             clusterName = !StringUtils.isEmpty(request.getParameter(SearchFilter.CLUSTER_NAME)) ? request.getParameter(SearchFilter.CLUSTER_NAME) : "";
@@ -1332,18 +1332,22 @@ public class TagREST {
             }
 
             XXServiceDef  xServiceDef   = daoManager.getXXServiceDef().getById(xService.getType());
-            RangerService rangerService = svcStore.getServiceByName(serviceName);
+            RangerService rangerService;
 
             if (StringUtils.equals(xServiceDef.getImplclassname(), EmbeddedServiceDefsUtil.KMS_IMPL_CLASS_NAME)) {
+                rangerService = svcStore.getServiceByNameForDP(serviceName);
+
                 if (isKeyAdmin) {
                     isAllowed = true;
-                } else {
+                } else if (rangerService != null) {
                     isAllowed = bizUtil.isUserAllowed(rangerService, Allowed_User_List_For_Tag_Download);
                 }
             } else {
+                rangerService = svcStore.getServiceByName(serviceName);
+
                 if (isAdmin) {
                     isAllowed = true;
-                } else {
+                } else if (rangerService != null) {
                     isAllowed = bizUtil.isUserAllowed(rangerService, Allowed_User_List_For_Tag_Download);
                 }
             }
