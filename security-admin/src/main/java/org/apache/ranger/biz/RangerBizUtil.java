@@ -123,7 +123,7 @@ public class RangerBizUtil {
 	public static final int POLICY_BATCH_SIZE  = PropertiesUtil.getIntProperty("ranger.jpa.jdbc.batch-clear.size", 10);
 	public static final int BATCH_PERSIST_SIZE = PropertiesUtil.getIntProperty("ranger.jpa.jdbc.batch-persist.size", 500);
 
-	String auditDBType = AUDIT_STORE_RDBMS;
+	String auditDBType = AUDIT_STORE_SOLR;
 	private final boolean allowUnauthenticatedAccessInSecureEnvironment;
 	private final boolean allowUnauthenticatedDownloadAccessInSecureEnvironment;
 
