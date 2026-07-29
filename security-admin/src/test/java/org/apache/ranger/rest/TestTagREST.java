@@ -1626,7 +1626,7 @@ public class TestTagREST {
 		Mockito.when(daoManager.getXXServiceDef()).thenReturn(xXServiceDefDao);
 		Mockito.when(xXServiceDefDao.getById(xService.getType())).thenReturn(xServiceDef);
 		try {
-			Mockito.when(svcStore.getServiceByName(serviceName)).thenReturn(rangerService);
+			Mockito.when(svcStore.getServiceByNameForDP(serviceName)).thenReturn(rangerService);
 		} catch (Exception e) {
 		}
 		
@@ -1647,7 +1647,7 @@ public class TestTagREST {
 		Mockito.verify(daoManager).getXXServiceDef();
 		Mockito.verify(xXServiceDefDao).getById(xService.getType());
 		try {
-			Mockito.verify(svcStore).getServiceByName(serviceName);
+			Mockito.verify(svcStore).getServiceByNameForDP(serviceName);
 		} catch (Exception e) {
 		}
 		try {
@@ -1752,7 +1752,7 @@ public class TestTagREST {
 		Mockito.when(daoManager.getXXServiceDef()).thenReturn(xXServiceDefDao);
 		Mockito.when(xXServiceDefDao.getById(xService.getType())).thenReturn(xServiceDef);
 		try {
-			Mockito.when(svcStore.getServiceByName(serviceName)).thenReturn(rangerService);
+			Mockito.when(svcStore.getServiceByNameForDP(serviceName)).thenReturn(rangerService);
 		} catch (Exception e) {
 		}
 		
@@ -1774,7 +1774,7 @@ public class TestTagREST {
 		Mockito.verify(daoManager).getXXServiceDef();
 		Mockito.verify(xXServiceDefDao).getById(xService.getType());
 		try {
-			Mockito.verify(svcStore).getServiceByName(serviceName);
+			Mockito.verify(svcStore).getServiceByNameForDP(serviceName);
 		} catch (Exception e) {
 		}
 		Mockito.verify(bizUtil).isUserAllowed(rangerService, Allowed_User_List_For_Tag_Download);
