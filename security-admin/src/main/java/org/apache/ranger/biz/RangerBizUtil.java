@@ -130,7 +130,7 @@ public class RangerBizUtil {
     Set<Class<?>> groupEditableClasses;
     int           maxDisplayNameLength = 150;
     boolean       enableResourceAccessControl;
-    String        auditDBType = AUDIT_STORE_RDBMS;
+    String        auditDBType = AUDIT_STORE_SOLR;
 
     public RangerBizUtil() {
         RangerAdminConfig config = RangerAdminConfig.getInstance();

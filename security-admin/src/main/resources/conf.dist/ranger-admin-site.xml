@@ -141,7 +141,7 @@
 	</property>
 	<property>
 		<name>ranger.audit.source.type</name>
-		<value>db</value>
+		<value>solr</value>
 		<description></description>
 	</property>
 
