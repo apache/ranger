@@ -35,10 +35,69 @@ downloadIfNotPresent() {
   then
     echo "downloading ${urlBase}/${fileName}.."
 
-    curl -L ${urlBase}/${fileName} --output downloads/${fileName}
+    curl -fL --retry 3 --retry-all-errors --retry-delay 10 --connect-timeout 30 \
+      ${urlBase}/${fileName} --output downloads/${fileName}
   else
     echo "file already in cache: ${fileName}"
   fi
+}
+
+# Ozone is special among plugin archives: docker-compose.ranger-ozone.yml bind-mounts the
+# *extracted* tree (downloads/ozone-${OZONE_VERSION}/), not the .tar.gz. On a warm CI
+# cache hit, downloadIfNotPresent skips network I/O but we still need a valid extract dir.
+extractOzoneIfNeeded() {
+  local tarball="downloads/ozone-${OZONE_VERSION}.tar.gz"
+  local extractDir="downloads/ozone-${OZONE_VERSION}"
+
+  downloadIfNotPresent ozone-${OZONE_VERSION}.tar.gz https://archive.apache.org/dist/ozone/${OZONE_VERSION}
+
+  if [ ! -f "${tarball}" ]; then
+    echo "ERROR: missing ${tarball}" >&2
+    exit 1
+  fi
+
+  local stampFile="${extractDir}/.ozone-extract.stamp"
+  local tarballId
+  if stat --version >/dev/null 2>&1; then
+    tarballId=$(stat -c '%Y:%s' "${tarball}")
+  else
+    tarballId=$(stat -f '%m:%z' "${tarball}")
+  fi
+
+  local needExtract=false
+  if [ ! -d "${extractDir}" ]; then
+    needExtract=true
+    echo "ozone extract dir missing: ${extractDir}"
+  elif [ ! -f "${extractDir}/bin/ozone" ]; then
+    needExtract=true
+    echo "ozone extract dir incomplete, re-extracting: ${extractDir}"
+    rm -rf "${extractDir}"
+  elif [ ! -f "${stampFile}" ] || [ "$(cat "${stampFile}")" != "${tarballId}" ]; then
+    needExtract=true
+    echo "ozone tarball changed or stamp missing, re-extracting"
+    rm -rf "${extractDir}"
+  else
+    echo "ozone extract dir up to date: ${extractDir}"
+  fi
+
+  if [ "${needExtract}" = true ]; then
+    tar xzf "${tarball}" --directory=downloads/
+    echo "${tarballId}" > "${stampFile}"
+  fi
+
+  local stale
+  for stale in downloads/ozone-*.tar.gz; do
+    [ -e "${stale}" ] || continue
+    [ "${stale}" = "${tarball}" ] && continue
+    echo "removing stale ozone tarball: ${stale}"
+    rm -f "${stale}"
+  done
+  for stale in downloads/ozone-*/; do
+    [ -d "${stale}" ] || continue
+    [ "${stale}" = "${extractDir}/" ] && continue
+    echo "removing stale ozone extract dir: ${stale}"
+    rm -rf "${stale}"
+  done
 }
 
 downloadIfNotPresent postgresql-42.2.16.jre7.jar            "https://search.maven.org/remotecontent?filepath=org/postgresql/postgresql/42.2.16.jre7"
@@ -55,11 +114,7 @@ then
     downloadIfNotPresent hadoop-${HIVE_HADOOP_VERSION}.tar.gz   https://archive.apache.org/dist/hadoop/common/hadoop-${HIVE_HADOOP_VERSION}
     downloadIfNotPresent kafka_2.12-${KAFKA_VERSION}.tgz        https://archive.apache.org/dist/kafka/${KAFKA_VERSION}
     downloadIfNotPresent knox-${KNOX_VERSION}.tar.gz            https://archive.apache.org/dist/knox/${KNOX_VERSION}
-    downloadIfNotPresent ozone-${OZONE_VERSION}.tar.gz          https://archive.apache.org/dist/ozone/${OZONE_VERSION}
-    if [ ! -d downloads/ozone-${OZONE_VERSION} ]
-    then
-      tar xvfz downloads/ozone-${OZONE_VERSION}.tar.gz --directory=downloads/
-    fi
+    extractOzoneIfNeeded
 else
   for arg in "$@"; do
     if [[ $arg == 'hadoop' ]]
@@ -80,11 +135,7 @@ else
       downloadIfNotPresent knox-${KNOX_VERSION}.tar.gz            https://archive.apache.org/dist/knox/${KNOX_VERSION}
     elif [[ $arg == 'ozone' ]]
     then
-      downloadIfNotPresent ozone-${OZONE_VERSION}.tar.gz          https://archive.apache.org/dist/ozone/${OZONE_VERSION}
-      if [ ! -d downloads/ozone-${OZONE_VERSION} ]
-      then
-        tar xvfz downloads/ozone-${OZONE_VERSION}.tar.gz --directory=downloads/
-      fi
+      extractOzoneIfNeeded
     else
       echo "Passed argument $arg is invalid!"
     fi

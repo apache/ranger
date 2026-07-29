@@ -12,8 +12,6 @@ services:
     command: bash -c "sudo mkdir -p /data/hdds /data/metadata && sudo chown -R hadoop:hadoop /data && exec /opt/hadoop/bin/ozone datanode"
     env_file:
       - ./scripts/ozone/docker-config
-    environment:
-      OZONE_OPTS:
   om:
     build:
       context: .
@@ -35,12 +33,16 @@ services:
       - 9874:9874
       - 9862:9862
     depends_on:
+      scm:
+        condition: service_started
+      datanode:
+        condition: service_started
       ranger:
         condition: service_started
       ranger-solr:
         condition: service_started
     environment:
-      OZONE_OPTS: -XX:-UseContainerSupport -Dcom.sun.net.ssl.checkRevocation=false
+      OZONE_OPTS: -Dcom.sun.net.ssl.checkRevocation=false
       OZONE_HOME: /opt/hadoop
       OZONE_PLUGIN_VERSION: ${OZONE_PLUGIN_VERSION}
       OZONE_VERSION: ${OZONE_VERSION}
@@ -63,7 +65,6 @@ services:
       - ./scripts/ozone/docker-config
     environment:
       OZONE-SITE.XML_hdds.scm.safemode.min.datanode: "${OZONE_SAFEMODE_MIN_DATANODES:-1}"
-      OZONE_OPTS:
     command: bash -c "(test -f /data/metadata/scm/current/VERSION || /opt/hadoop/bin/ozone scm --init) && exec /opt/hadoop/bin/ozone scm"
 
 networks:
