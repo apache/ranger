@@ -5,13 +5,20 @@ services:
     hostname: datanode.rangernw
     volumes:
       - ./downloads/ozone-${OZONE_VERSION}:/opt/hadoop
+      - ./dist/keytabs/datanode:/etc/keytabs
+      - ./scripts/kdc/krb5.conf:/etc/krb5.conf:ro
     networks:
       - ranger
     ports:
       - 9864
+    depends_on:
+      ranger-kdc:
+        condition: service_started
     command: bash -c "sudo mkdir -p /data/hdds /data/metadata && sudo chown -R hadoop:hadoop /data && exec /opt/hadoop/bin/ozone datanode"
     env_file:
       - ./scripts/ozone/docker-config
+    environment:
+      KERBEROS_ENABLED: ${KERBEROS_ENABLED}
   om:
     build:
       context: .
@@ -21,18 +28,23 @@ services:
         - OZONE_RUNNER_VERSION=${OZONE_RUNNER_VERSION}
         - OZONE_HOME=/opt/hadoop
         - OZONE_PLUGIN_VERSION=${OZONE_PLUGIN_VERSION}
+        - KERBEROS_ENABLED=${KERBEROS_ENABLED}
     image: ranger-ozone:latest
     container_name: ozone-om
     hostname: om.rangernw
     volumes:
       - ./downloads/ozone-${OZONE_VERSION}:/opt/hadoop
       - ./dist/ranger-${OZONE_PLUGIN_VERSION}-ozone-plugin:/opt/hadoop/ranger-ozone-plugin
+      - ./dist/keytabs/om:/etc/keytabs
+      - ./scripts/kdc/krb5.conf:/etc/krb5.conf:ro
     networks:
       - ranger
     ports:
       - 9874:9874
       - 9862:9862
     depends_on:
+      ranger-kdc:
+        condition: service_started
       scm:
         condition: service_started
       datanode:
@@ -46,6 +58,7 @@ services:
       OZONE_HOME: /opt/hadoop
       OZONE_PLUGIN_VERSION: ${OZONE_PLUGIN_VERSION}
       OZONE_VERSION: ${OZONE_VERSION}
+      KERBEROS_ENABLED: ${KERBEROS_ENABLED}
     env_file:
       - ./scripts/ozone/docker-config
     # Ozone 2.1 entrypoint init uses obsolete -createObjectStore fallback; use --init explicitly.
@@ -56,14 +69,20 @@ services:
     hostname: scm.rangernw
     volumes:
       - ./downloads/ozone-${OZONE_VERSION}:/opt/hadoop
+      - ./dist/keytabs/scm:/etc/keytabs
+      - ./scripts/kdc/krb5.conf:/etc/krb5.conf:ro
     networks:
       - ranger
     ports:
       - 9876:9876
       - 9860:9860
+    depends_on:
+      ranger-kdc:
+        condition: service_started
     env_file:
       - ./scripts/ozone/docker-config
     environment:
+      KERBEROS_ENABLED: ${KERBEROS_ENABLED}
       OZONE-SITE.XML_hdds.scm.safemode.min.datanode: "${OZONE_SAFEMODE_MIN_DATANODES:-1}"
     command: bash -c "(test -f /data/metadata/scm/current/VERSION || /opt/hadoop/bin/ozone scm --init) && exec /opt/hadoop/bin/ozone scm"
 
