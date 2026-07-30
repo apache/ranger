@@ -18,10 +18,6 @@
 
 cd "${OZONE_HOME}"/ranger-ozone-plugin || exit
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-# shellcheck source=quarantine-ozone-jersey-server.sh
-source "${SCRIPT_DIR}/quarantine-ozone-jersey-server.sh"
-
 wait_for_keytab() {
   local keytab_name=$1
   if [ "${RANGER_KERBEROS_ENABLED}" != "true" ]; then
@@ -63,8 +59,6 @@ wait_for_scm() {
   exit 1
 }
 wait_for_scm
-
-quarantine_ozone_jersey_server "${OZONE_HOME}/share/ozone/lib"
 
 if [[ ! -f "${OZONE_HOME}"/.setupDone ]];
 then
