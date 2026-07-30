@@ -58,10 +58,12 @@ services:
       OZONE_PLUGIN_VERSION: ${OZONE_PLUGIN_VERSION}
       OZONE_VERSION: ${OZONE_VERSION}
       RANGER_KERBEROS_ENABLED: ${KERBEROS_ENABLED}
+      # Jersey 2.x on Ozone's OM classpath needs javax.annotation.Priority (jar is under share/ozone/lib but omitted from default OM CP).
+      OZONE_MANAGER_CLASSPATH: /opt/hadoop/ranger-ozone-plugin/lib/libext/*:/opt/hadoop/ranger-ozone-plugin/conf:/opt/hadoop/share/ozone/lib/javax.annotation-api-*.jar
     env_file:
       - ./scripts/ozone/docker-config
     # Do not pass KERBEROS_ENABLED: Ozone libexec/entrypoint.sh waits for krb5:8081.
-    command: bash -c "unset KERBEROS_ENABLED; /opt/hadoop/ranger-ozone-plugin/ranger-ozone-setup.sh && (test -f /data/metadata/om/current/VERSION || /opt/hadoop/bin/ozone om --init) && exec /opt/hadoop/bin/ozone om"
+    command: bash -c "unset KERBEROS_ENABLED; source /opt/hadoop/ranger-ozone-plugin/ranger-ozone-setup.sh && (test -f /data/metadata/om/current/VERSION || /opt/hadoop/bin/ozone om --init) && exec /opt/hadoop/bin/ozone om"
   scm:
     image: ${OZONE_RUNNER_IMAGE}:${OZONE_RUNNER_VERSION}
     container_name: ozone-scm

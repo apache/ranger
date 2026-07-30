@@ -18,6 +18,31 @@
 
 cd "${OZONE_HOME}"/ranger-ozone-plugin || exit
 
+# Ozone 2.1.x ships javax.annotation-api under share/ozone/lib but omits it from the
+# default OM classpath. Jersey 2.x (used for Kerberos policy download after RANGER-5642
+# style packaging) needs javax.annotation.Priority on the same classpath as jersey-client.
+ensure_javax_annotation_on_om_classpath() {
+  local annotation_jar
+  annotation_jar="$(ls "${OZONE_HOME}"/share/ozone/lib/javax.annotation-api-*.jar 2>/dev/null | head -1)"
+  if [ -z "${annotation_jar}" ]; then
+    echo "WARN: javax.annotation-api jar not found under ${OZONE_HOME}/share/ozone/lib" >&2
+    return 0
+  fi
+  if [[ "${OZONE_MANAGER_CLASSPATH}" == *"javax.annotation-api"* ]]; then
+    return 0
+  fi
+  case ":${OZONE_MANAGER_CLASSPATH}:" in
+    *:"${annotation_jar}":*) return 0 ;;
+  esac
+  if [ -n "${OZONE_MANAGER_CLASSPATH}" ]; then
+    export OZONE_MANAGER_CLASSPATH="${OZONE_MANAGER_CLASSPATH}:${annotation_jar}"
+  else
+    export OZONE_MANAGER_CLASSPATH="${annotation_jar}"
+  fi
+  echo "Extended OZONE_MANAGER_CLASSPATH with ${annotation_jar}"
+}
+ensure_javax_annotation_on_om_classpath
+
 wait_for_keytab() {
   local keytab_name=$1
   if [ "${RANGER_KERBEROS_ENABLED}" != "true" ]; then
