@@ -20,7 +20,7 @@ cd "${OZONE_HOME}"/ranger-ozone-plugin || exit
 
 wait_for_keytab() {
   local keytab_name=$1
-  if [ "${KERBEROS_ENABLED}" != "true" ]; then
+  if [ "${RANGER_KERBEROS_ENABLED}" != "true" ]; then
     return 0
   fi
   local keytab_path="/etc/keytabs/${keytab_name}"
@@ -63,6 +63,10 @@ wait_for_scm
 if [[ ! -f "${OZONE_HOME}"/.setupDone ]];
 then
   wait_for_keytab om.keytab
+
+  if [ -f "${OZONE_HOME}/libexec/envtoconf.py" ]; then
+    python3 "${OZONE_HOME}/libexec/envtoconf.py" --destination "${OZONE_CONF_DIR:-/etc/hadoop}"
+  fi
 
   if [ ! -d conf ]; then
     mkdir -p conf

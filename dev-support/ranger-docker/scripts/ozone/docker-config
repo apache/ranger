@@ -69,7 +69,7 @@ no_proxy=om,scm,s3g,recon,kdc,localhost,127.0.0.1
 # Explicitly enable filesystem snapshot feature for this Docker compose cluster
 OZONE-SITE.XML_ozone.filesystem.snapshot.enabled=true
 
-# Kerberos (required for Ranger plugin policy download when KERBEROS_ENABLED=true)
+# Kerberos via Ranger KDC keytabs (do not set KERBEROS_ENABLED env; Ozone entrypoint expects krb5:8081)
 OZONE-SITE.XML_ozone.security.enabled=true
 OZONE-SITE.XML_hdds.scm.kerberos.principal=scm/scm.rangernw@EXAMPLE.COM
 OZONE-SITE.XML_hdds.scm.kerberos.keytab.file=/etc/keytabs/scm.keytab
