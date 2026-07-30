@@ -150,17 +150,25 @@ WadlAutoDiscoverable cannot be cast to AutoDiscoverable
 Error getting policies; Received NULL response!!
 ~~~
 
-Ozone ships `jersey-server` on the app classpath; the Ranger plugin loads
-Jersey client classes in `RangerPluginClassLoader` — same issue class as
-RANGER-5642 (Kafka).
+Ozone ships `jersey-server` on the app classpath; bundling duplicate Jersey/Jackson
+in the plugin tarball caused `WadlAutoDiscoverable` ClassCastException (same as
+RANGER-5642 on Kafka). The Ozone plugin assembly now excludes those libraries and
+uses Ozone's classpath via `RangerPluginClassLoader`.
 
 | Fix | Scope | Notes |
 |-----|-------|-------|
-| **A. Quarantine `jersey-server`** (default) | docker | Automated in `ozone-plugin-docker-setup.sh` and `ranger-ozone-setup.sh`. Set `OZONE_JERSEY_SERVER_QUARANTINE=false` to skip. |
-| **B. Manual quarantine** | docker | `scripts/ozone/quarantine-ozone-jersey-server.sh downloads/ozone-${OZONE_VERSION}/share/ozone/lib` then recreate OM. |
-| **C. Exclude Jersey from plugin tarball** | product | Like Kafka (`plugin-kafka.xml` excludes); use Ozone's Jersey on app classpath. Requires Ozone/Ranger version alignment. |
-| **D. Disable secure download** | config | Set `ranger.admin.allow.unauthenticated.download.access=true` on Admin — not recommended for production. |
-| **E. Disable Kerberos for Ozone plugin** | docker | `KERBEROS_ENABLED=false` — avoids SPNEGO client path; only for non-secure dev stacks. |
+| **A. Exclude Jersey/Jackson from plugin tarball** (default) | product | `plugin-ozone.xml` — RANGER-5642 parity; rebuild ozone plugin tarball. |
+| **B. Quarantine `jersey-server`** | docker fallback | `quarantine-ozone-jersey-server.sh`; optional if using an older plugin build. Set `OZONE_JERSEY_SERVER_QUARANTINE=false` to skip. |
+| **C. Disable secure download** | config | `ranger.admin.allow.unauthenticated.download.access=true` — not recommended. |
+| **D. Disable Kerberos for Ozone plugin** | docker | `KERBEROS_ENABLED=false` — avoids SPNEGO path; dev only. |
+
+After rebuilding the plugin, redeploy with:
+
+~~~
+./scripts/ozone/ozone-plugin-docker-setup.sh
+rm -f downloads/ozone-${OZONE_VERSION}/.setupDone
+docker compose -f docker-compose.ranger.yml -f docker-compose.ranger-ozone.yml up -d --no-deps --force-recreate om
+~~~
 
 Verify (after login):
 
