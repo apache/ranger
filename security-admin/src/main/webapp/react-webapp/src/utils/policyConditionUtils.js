@@ -39,7 +39,7 @@
  * (ozone.json keyed by volume | bucket | key) and the row's selected access types.
  */
 
-import { find, isEqual, isArray } from "lodash";
+import { isEmpty, isEqual, isArray, find } from "lodash";
 import { actionRequirementsRegistry } from "./actionRequirements/registry";
 
 /**
@@ -188,17 +188,27 @@ export const getSelectedAccessTypesForRow = (formValues, attrName, index) => {
  */
 export const isPerRowCondition = (name) => name === "action-matches";
 
+export const isActionMatcherEnabled = (serviceDefOptions) => {
+  const value = serviceDefOptions?.enableActionMatcherInPoliciesCondition;
+  return value === "true" || value === true;
+};
+
 /**
  * Safely parses a condition definition uiHint JSON string.
  * @returns {object|null} Parsed uiHint object, or null if missing or invalid.
  */
 export const parseConditionUiHint = (uiHint) => {
-  if (uiHint == null || uiHint === "") {
+  if (isEmpty(uiHint)) {
     return null;
   }
+
   try {
     const parsed = JSON.parse(uiHint);
-    return parsed && typeof parsed === "object" ? parsed : null;
+    return parsed !== null &&
+      typeof parsed === "object" &&
+      !Array.isArray(parsed)
+      ? parsed
+      : null;
   } catch (e) {
     return null;
   }
@@ -231,6 +241,135 @@ export const sortPolicyConditions = (conditions) => {
   });
 };
 
+const getResourceLevels = (resources) => {
+  if (!Array.isArray(resources)) {
+    return [];
+  }
+  return [
+    ...new Set(resources.map((r) => r?.level).filter(Number.isFinite))
+  ].sort((a, b) => a - b);
+};
+
+const getResourceBlocks = (formValues) => {
+  if (Array.isArray(formValues?.additionalResources)) {
+    return formValues.additionalResources;
+  }
+  return [formValues];
+};
+
+const hasResourcePathValue = (block, level) => {
+  const valueField = block?.[`value-${level}`];
+  if (Array.isArray(valueField)) {
+    return valueField.length > 0;
+  }
+  return valueField != null && valueField !== "";
+};
+
+/**
+ * A resource block is complete when the deepest selected level has a path value
+ * or an explicit "None" (e.g. all keys under a bucket). Auto-populated child
+ * levels without user input stay incomplete until resolved.
+ */
+const isResourceBlockComplete = (block, levels) => {
+  if (!block || typeof block !== "object") {
+    return false;
+  }
+
+  let deepestLevel = null;
+  for (const level of levels) {
+    const sel = block[`resourceName-${level}`];
+    if (sel && sel.name) {
+      deepestLevel = level;
+    }
+  }
+
+  if (deepestLevel == null) {
+    return false;
+  }
+
+  const deepestSel = block[`resourceName-${deepestLevel}`];
+  if (deepestSel?.value === NONE_RESOURCE_VALUE) {
+    return true;
+  }
+
+  return hasResourcePathValue(block, deepestLevel);
+};
+
+/** Defer resource-driven background prune while a multi-resource row is empty or mid-edit.
+ *  Does not block clearing action-matches when row permissions are removed. */
+export const shouldDeferActionMatchesPrune = (
+  serviceCompDetails,
+  formValues
+) => {
+  if (!Array.isArray(formValues?.additionalResources)) {
+    return false;
+  }
+
+  const levels = getResourceLevels(serviceCompDetails?.resources);
+  if (levels.length === 0) {
+    return false;
+  }
+
+  return formValues.additionalResources.some((block) => {
+    if (!block || typeof block !== "object") {
+      return false;
+    }
+
+    const hasSelection = levels.some((level) => {
+      const sel = block[`resourceName-${level}`];
+      return sel && sel.name;
+    });
+
+    // Empty "Add Resource" row
+    if (!hasSelection) {
+      return true;
+    }
+
+    // Row started but deepest level not committed yet (e.g. key not rendered)
+    return !isResourceBlockComplete(block, levels);
+  });
+};
+
+const resourceSelectionPart = (sel) => {
+  if (!sel) {
+    return "";
+  }
+  return `${sel.name ?? ""}:${sel.value ?? ""}`;
+};
+
+/**
+ * Stable string signature of resource selection fields only.
+ * Multi-resource: additionalResources blocks only.
+ * Single-resource: root formValues resourceName-* fields.
+ *
+ * @param {number[]} resourceLevels - Sorted resource level keys (grpResourcesKeys).
+ * @param {object} formValues - Policy form state.
+ * @returns {string} Signature used to memoize leafResourceTypes.
+ */
+export const getResourceSelectionSignature = (resourceLevels, formValues) => {
+  if (!isArray(resourceLevels) || resourceLevels.length === 0) {
+    return "";
+  }
+
+  if (isArray(formValues?.additionalResources)) {
+    return formValues.additionalResources
+      .map((block) =>
+        resourceLevels
+          .map((level) =>
+            resourceSelectionPart(block?.[`resourceName-${level}`])
+          )
+          .join("|")
+      )
+      .join(";");
+  }
+
+  return resourceLevels
+    .map((level) =>
+      resourceSelectionPart(formValues?.[`resourceName-${level}`])
+    )
+    .join("|");
+};
+
 /**
  * Determines the deepest (leaf) resource types currently selected in the policy form.
  * For Ozone, this might return {"key"} or {"bucket"} depending on which resource
@@ -254,13 +393,9 @@ export const getSelectedLeafResourceTypes = (
     return result;
   }
 
-  const levels = [
-    ...new Set(resources.map((r) => r?.level).filter(Number.isFinite))
-  ].sort((a, b) => a - b);
+  const levels = getResourceLevels(resources);
 
-  const blocks = Array.isArray(formValues?.additionalResources)
-    ? formValues.additionalResources
-    : [formValues];
+  const blocks = getResourceBlocks(formValues);
 
   for (const block of blocks) {
     if (!block) {
@@ -723,35 +858,42 @@ export const getAllowedActionMatchesForCondition = ({
 };
 
 /**
- * Pre-builds the action requirements map from the condition definitions.
- * Scans each condition's uiHint for an `actionRequirementsFile` reference
- * (which points to a JSON file in the actionRequirements registry, e.g. "ozone")
- * or an inline `actionRequirements` object.
+ * Pre-builds action requirements for the action-matches condition.
+ * Only per-row conditions (today: action-matches) may declare
+ * actionRequirementsFile (registry) or inline actionRequirements in uiHint.
  *
- * This is memoized in PolicyPermissionItem and Editable so we don't re-parse
- * uiHint JSON on every render.
+ * Memoized in PolicyPermissionItem and Editable so uiHint JSON is not
+ * re-parsed on every render.
  *
  * @param {Array<{name: string, uiHint: string}>} conditionDefVal - Condition definitions from service def.
- * @returns {object} Map of condition name → action requirements object.
+ * @returns {object} Map with at most one entry: { "action-matches": requirementsObject }.
  */
 export const buildActionReqsMapFromConditionDef = (conditionDefVal) => {
   const map = {};
-  if (!Array.isArray(conditionDefVal) || conditionDefVal.length === 0) {
+
+  if (!isArray(conditionDefVal) || isEmpty(conditionDefVal)) {
     return map;
   }
 
-  conditionDefVal.forEach((m) => {
-    const uiHintAttb = parseConditionUiHint(m.uiHint);
+  const actionMatchesDef = find(conditionDefVal, (def) =>
+    isPerRowCondition(def?.name)
+  );
 
-    if (uiHintAttb) {
-      const fileToLoad = uiHintAttb?.actionRequirementsFile;
-      if (fileToLoad && actionRequirementsRegistry[fileToLoad]) {
-        map[m.name] = actionRequirementsRegistry[fileToLoad];
-      } else if (uiHintAttb?.actionRequirements) {
-        map[m.name] = uiHintAttb.actionRequirements;
-      }
-    }
-  });
+  if (!actionMatchesDef) {
+    return map;
+  }
+
+  const uiHintAttb = parseConditionUiHint(actionMatchesDef.uiHint);
+  if (!uiHintAttb) {
+    return map;
+  }
+
+  const fileToLoad = uiHintAttb.actionRequirementsFile;
+  if (fileToLoad && actionRequirementsRegistry[fileToLoad]) {
+    map[actionMatchesDef.name] = actionRequirementsRegistry[fileToLoad];
+  } else if (uiHintAttb.actionRequirements) {
+    map[actionMatchesDef.name] = uiHintAttb.actionRequirements;
+  }
 
   return map;
 };
