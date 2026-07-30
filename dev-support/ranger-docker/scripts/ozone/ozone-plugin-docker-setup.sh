@@ -17,6 +17,10 @@
 
 source .env
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=quarantine-ozone-jersey-server.sh
+source "${SCRIPT_DIR}/quarantine-ozone-jersey-server.sh"
+
 if [ ! -d dist/ranger-${OZONE_PLUGIN_VERSION}-ozone-plugin ]
 then
   tar xvfz dist/ranger-${OZONE_PLUGIN_VERSION}-ozone-plugin.tar.gz --directory=dist/
@@ -25,4 +29,8 @@ fi
 cp -f scripts/ozone/ranger-ozone-plugin-install.properties dist/ranger-${OZONE_PLUGIN_VERSION}-ozone-plugin/install.properties
 cp -f scripts/ozone/ranger-ozone-setup.sh dist/ranger-${OZONE_PLUGIN_VERSION}-ozone-plugin/
 cp -f scripts/ozone/enable-ozone-plugin.sh dist/ranger-${OZONE_PLUGIN_VERSION}-ozone-plugin/
+cp -f scripts/ozone/quarantine-ozone-jersey-server.sh dist/ranger-${OZONE_PLUGIN_VERSION}-ozone-plugin/
 chmod +x dist/ranger-${OZONE_PLUGIN_VERSION}-ozone-plugin/ranger-ozone-setup.sh
+chmod +x dist/ranger-${OZONE_PLUGIN_VERSION}-ozone-plugin/quarantine-ozone-jersey-server.sh
+
+quarantine_ozone_jersey_server "downloads/ozone-${OZONE_VERSION}/share/ozone/lib"
