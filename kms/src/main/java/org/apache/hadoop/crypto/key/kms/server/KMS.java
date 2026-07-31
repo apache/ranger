@@ -118,7 +118,7 @@ public class KMS {
 
       validateKeyName(name);
 
-      assertAccess(Type.CREATE, user, KMSOp.CREATE_KEY, name, request.getRemoteAddr());
+      assertAccess(Type.CREATE, user, KMSOp.CREATE_KEY, name, getClientIp(request));
 
       final String cipher      = (String) jsonKey.get(KMSRESTConstants.CIPHER_FIELD);
       final String material    = (String) jsonKey.get(KMSRESTConstants.MATERIAL_FIELD);
@@ -130,7 +130,7 @@ public class KMS {
       Map<String, String> attributes = (Map<String, String>) jsonKey.get(KMSRESTConstants.ATTRIBUTES_FIELD);
 
       if (material != null) {
-        assertAccess(Type.SET_KEY_MATERIAL, user, KMSOp.CREATE_KEY, name, request.getRemoteAddr());
+        assertAccess(Type.SET_KEY_MATERIAL, user, KMSOp.CREATE_KEY, name, getClientIp(request));
       }
 
       final KeyProvider.Options options = new KeyProvider.Options(KMSWebApp.getConfiguration());
@@ -162,7 +162,7 @@ public class KMS {
 
       kmsAudit.ok(user, KMSOp.CREATE_KEY, name, "UserProvidedMaterial:" + (material != null) + " Description:" + description);
 
-      if (!KMSWebApp.getACLs().hasAccess(Type.GET, user, request.getRemoteAddr())) {
+      if (!KMSWebApp.getACLs().hasAccess(Type.GET, user, getClientIp(request))) {
         keyVersion = removeKeyMaterial(keyVersion);
       }
 
@@ -191,7 +191,7 @@ public class KMS {
 
       UserGroupInformation user = HttpUserGroupInformation.get();
 
-      assertAccess(Type.DELETE, user, KMSOp.DELETE_KEY, name, request.getRemoteAddr());
+      assertAccess(Type.DELETE, user, KMSOp.DELETE_KEY, name, getClientIp(request));
 
       checkNotEmpty(name, "name");
 
@@ -226,14 +226,14 @@ public class KMS {
 
       UserGroupInformation user = HttpUserGroupInformation.get();
 
-      assertAccess(Type.ROLLOVER, user, KMSOp.ROLL_NEW_VERSION, name, request.getRemoteAddr());
+      assertAccess(Type.ROLLOVER, user, KMSOp.ROLL_NEW_VERSION, name, getClientIp(request));
 
       checkNotEmpty(name, "name");
 
       final String material = (String) jsonMaterial.get(KMSRESTConstants.MATERIAL_FIELD);
 
       if (material != null) {
-        assertAccess(Type.SET_KEY_MATERIAL, user, KMSOp.ROLL_NEW_VERSION, name, request.getRemoteAddr());
+        assertAccess(Type.SET_KEY_MATERIAL, user, KMSOp.ROLL_NEW_VERSION, name, getClientIp(request));
       }
 
       KeyVersion keyVersion = user.doAs((PrivilegedExceptionAction<KeyVersion>) () -> {
@@ -252,7 +252,7 @@ public class KMS {
 
       kmsAudit.ok(user, KMSOp.ROLL_NEW_VERSION, name, "UserProvidedMaterial:" + (material != null) + " NewVersion:" + keyVersion.getVersionName());
 
-      if (!KMSWebApp.getACLs().hasAccess(Type.GET, user, request.getRemoteAddr())) {
+      if (!KMSWebApp.getACLs().hasAccess(Type.GET, user, getClientIp(request))) {
         keyVersion = removeKeyMaterial(keyVersion);
       }
 
@@ -269,7 +269,7 @@ public class KMS {
 
   @POST
   @Path(KMSRESTConstants.KEY_RESOURCE + "/{name:.*}/" + KMSRESTConstants.INVALIDATECACHE_RESOURCE)
-  public Response invalidateCache(@PathParam("name") final String name) throws Exception {
+  public Response invalidateCache(@PathParam("name") final String name, @Context HttpServletRequest request) throws Exception {
     LOG.debug("==> invalidateCache({})", name);
 
     try (APIMetric apiMetric = kmsMetricsCollector.createAPIMetric(KMSMetrics.KMSMetric.INVALIDATE_CACHE_COUNT, KMSMetrics.KMSMetric.INVALIDATE_CACHE_ELAPSED_TIME)) {
@@ -279,7 +279,7 @@ public class KMS {
 
       UserGroupInformation user = HttpUserGroupInformation.get();
 
-      assertAccess(Type.ROLLOVER, user, KMSOp.INVALIDATE_CACHE, name);
+      assertAccess(Type.ROLLOVER, user, KMSOp.INVALIDATE_CACHE, name, getClientIp(request));
 
       user.doAs((PrivilegedExceptionAction<Void>) () -> {
         provider.invalidateCache(name);
@@ -312,7 +312,7 @@ public class KMS {
       final UserGroupInformation user     = HttpUserGroupInformation.get();
       final String[]             keyNames = keyNamesList.toArray(new String[0]);
 
-      assertAccess(Type.GET_METADATA, user, KMSOp.GET_KEYS_METADATA, request.getRemoteAddr());
+      assertAccess(Type.GET_METADATA, user, KMSOp.GET_KEYS_METADATA, getClientIp(request));
 
       KeyProvider.Metadata[] keysMeta = user.doAs((PrivilegedExceptionAction<KeyProvider.Metadata[]>) () -> provider.getKeysMetadata(keyNames));
       Object                 json     = KMSServerJSONUtils.toJSON(keyNames, keysMeta);
@@ -340,7 +340,7 @@ public class KMS {
 
       UserGroupInformation user = HttpUserGroupInformation.get();
 
-      assertAccess(Type.GET_KEYS, user, KMSOp.GET_KEYS, request.getRemoteAddr());
+      assertAccess(Type.GET_KEYS, user, KMSOp.GET_KEYS, getClientIp(request));
 
       List<String> json = user.doAs((PrivilegedExceptionAction<List<String>>) provider::getKeys);
 
@@ -383,7 +383,7 @@ public class KMS {
 
       checkNotEmpty(name, "name");
 
-      assertAccess(Type.GET_METADATA, user, KMSOp.GET_METADATA, name, request.getRemoteAddr());
+      assertAccess(Type.GET_METADATA, user, KMSOp.GET_METADATA, name, getClientIp(request));
 
       KeyProvider.Metadata metadata = user.doAs((PrivilegedExceptionAction<KeyProvider.Metadata>) () -> provider.getMetadata(name));
       Object               json     = KMSServerJSONUtils.toJSON(name, metadata);
@@ -411,7 +411,7 @@ public class KMS {
 
       checkNotEmpty(name, "name");
 
-      assertAccess(Type.GET, user, KMSOp.GET_CURRENT_KEY, name, request.getRemoteAddr());
+      assertAccess(Type.GET, user, KMSOp.GET_CURRENT_KEY, name, getClientIp(request));
 
       KeyVersion keyVersion = user.doAs((PrivilegedExceptionAction<KeyVersion>) () -> provider.getCurrentKey(name));
 
@@ -440,7 +440,7 @@ public class KMS {
 
       checkNotEmpty(versionName, "versionName");
 
-      assertAccess(Type.GET, user, KMSOp.GET_KEY_VERSION, request.getRemoteAddr());
+      assertAccess(Type.GET, user, KMSOp.GET_KEY_VERSION, getClientIp(request));
 
       KeyVersion keyVersion = user.doAs((PrivilegedExceptionAction<KeyVersion>) () -> provider.getKeyVersion(versionName));
 
@@ -470,14 +470,14 @@ public class KMS {
 
       EncryptedKeyVersion encryptedKeyVersion = null;
       try (APIMetric apiMetric = kmsMetricsCollector.createAPIMetric(KMSMetrics.KMSMetric.EEK_GENERATE_COUNT, KMSMetrics.KMSMetric.EEK_GENERATE_ELAPSED_TIME)) {
-        assertAccess(Type.GENERATE_EEK, user, KMSOp.GENERATE_EEK, name, request.getRemoteAddr());
+        assertAccess(Type.GENERATE_EEK, user, KMSOp.GENERATE_EEK, name, getClientIp(request));
         encryptedKeyVersion = user.doAs((PrivilegedExceptionAction<EncryptedKeyVersion>) () -> provider.generateEncryptedKey(name));
         kmsAudit.ok(user, KMSOp.GENERATE_EEK, name, "generateDataKey execution");
       }
 
       KeyVersion retKeyVersion = null;
       try (APIMetric apiMetric = kmsMetricsCollector.createAPIMetric(KMSMetrics.KMSMetric.EEK_DECRYPT_COUNT, KMSMetrics.KMSMetric.EEK_DECRYPT_ELAPSED_TIME)) {
-        assertAccess(Type.DECRYPT_EEK, user, KMSOp.DECRYPT_EEK, name, request.getRemoteAddr());
+        assertAccess(Type.DECRYPT_EEK, user, KMSOp.DECRYPT_EEK, name, getClientIp(request));
 
         EncryptedKeyVersion finalEncryptedKeyVersion = encryptedKeyVersion;
         retKeyVersion = user.doAs((PrivilegedExceptionAction<KeyVersion>) () -> {
@@ -526,7 +526,7 @@ public class KMS {
         final List<EncryptedKeyVersion> retEdeks = new LinkedList<>();
 
         try {
-          assertAccess(Type.GENERATE_EEK, user, KMSOp.GENERATE_EEK, name, request.getRemoteAddr());
+          assertAccess(Type.GENERATE_EEK, user, KMSOp.GENERATE_EEK, name, getClientIp(request));
           user.doAs((PrivilegedExceptionAction<Void>) () -> {
             for (int i = 0; i < numKeys; i++) {
               retEdeks.add(provider.generateEncryptedKey(name));
@@ -575,7 +575,7 @@ public class KMS {
   @Path(KMSRESTConstants.KEY_RESOURCE + "/{name:.*}/" + KMSRESTConstants.REENCRYPT_BATCH_SUB_RESOURCE)
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON )
-  public Response reencryptEncryptedKeys(@PathParam("name") final String name, final List<Map> jsonPayload) throws Exception {
+  public Response reencryptEncryptedKeys(@PathParam("name") final String name, final List<Map> jsonPayload, @Context HttpServletRequest request) throws Exception {
     LOG.debug("==> reencryptEncryptedKeys(name={}, count={})", name, (jsonPayload != null ? jsonPayload.size() : 0));
 
     final Stopwatch sw = Stopwatch.createStarted();
@@ -592,7 +592,7 @@ public class KMS {
         LOG.warn("Payload size {} too big for reencryptEncryptedKeys from" + " user {}.", jsonPayload.size(), user);
       }
 
-      assertAccess(Type.GENERATE_EEK, user, KMSOp.REENCRYPT_EEK_BATCH,name);
+      assertAccess(Type.GENERATE_EEK, user, KMSOp.REENCRYPT_EEK_BATCH, name, getClientIp(request));
 
       final List<EncryptedKeyVersion> ekvs = KMSUtil.parseJSONEncKeyVersions(name, jsonPayload);
 
@@ -661,7 +661,7 @@ public class KMS {
       if (eekOp.equals(KMSRESTConstants.EEK_DECRYPT)) {
         KMSWebApp.getDecryptEEKCallsMeter().mark();
         apiMetric.setMetrics(KMSMetrics.KMSMetric.EEK_DECRYPT_COUNT, KMSMetrics.KMSMetric.EEK_DECRYPT_ELAPSED_TIME);
-        assertAccess(Type.DECRYPT_EEK, user, KMSOp.DECRYPT_EEK, keyName, request.getRemoteAddr());
+        assertAccess(Type.DECRYPT_EEK, user, KMSOp.DECRYPT_EEK, keyName, getClientIp(request));
 
         KeyVersion retKeyVersion = user.doAs((PrivilegedExceptionAction<KeyVersion>) () -> {
           KMSEncryptedKeyVersion ekv = new KMSEncryptedKeyVersion(keyName, versionName, iv, KeyProviderCryptoExtension.EEK, encMaterial);
@@ -675,7 +675,7 @@ public class KMS {
       } else if (eekOp.equals(KMSRESTConstants.EEK_REENCRYPT)) {
         KMSWebApp.getReencryptEEKCallsMeter().mark();
         apiMetric.setMetrics(KMSMetrics.KMSMetric.EEK_REENCRYPT_COUNT, KMSMetrics.KMSMetric.EEK_REENCRYPT_ELAPSED_TIME);
-        assertAccess(Type.GENERATE_EEK, user, KMSOp.REENCRYPT_EEK, keyName);
+        assertAccess(Type.GENERATE_EEK, user, KMSOp.REENCRYPT_EEK, keyName, getClientIp(request));
 
         EncryptedKeyVersion retEncryptedKeyVersion = user.doAs((PrivilegedExceptionAction<EncryptedKeyVersion>) () -> {
           KMSEncryptedKeyVersion ekv = new KMSEncryptedKeyVersion(keyName,versionName, iv, KeyProviderCryptoExtension.EEK, encMaterial);
@@ -721,7 +721,7 @@ public class KMS {
 
       checkNotEmpty(name, "name");
 
-      assertAccess(Type.GET, user, KMSOp.GET_KEY_VERSIONS, name, request.getRemoteAddr());
+      assertAccess(Type.GET, user, KMSOp.GET_KEY_VERSIONS, name, getClientIp(request));
 
       List<KeyVersion> ret  = user.doAs((PrivilegedExceptionAction<List<KeyVersion>>) () -> provider.getKeyVersions(name));
       Object           json = KMSServerJSONUtils.toJSON(ret);
@@ -736,6 +736,10 @@ public class KMS {
       LOG.debug("<== getKeyVersions({})", name);
     }
    }
+
+  private static String getClientIp(HttpServletRequest request) {
+    return request != null ? request.getRemoteAddr() : null;
+  }
 
   private void assertAccess(Type aclType, UserGroupInformation ugi, KMSOp operation, String clientIp) throws AccessControlException {
     KMSWebApp.getACLs().assertAccess(aclType, ugi, operation, null, clientIp);
