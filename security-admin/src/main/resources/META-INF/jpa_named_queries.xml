@@ -558,6 +558,10 @@
 		<query>SELECT DISTINCT(xsd.name) FROM XXServiceDef xsd, XXContextEnricherDef xced WHERE xsd.id = xced.defId</query>
 	</named-query>
 
+	<named-query name="XXServiceDef.getAllNames">
+		<query>SELECT obj.name FROM XXServiceDef obj ORDER BY obj.name</query>
+	</named-query>
+
 	<named-query name="XXServiceDef.getServiceCount">
 		<query>SELECT xsd.name, COUNT(xs.id) FROM XXService xs, XXServiceDef xsd WHERE xs.type = xsd.id GROUP BY xsd.name</query>
 	</named-query>

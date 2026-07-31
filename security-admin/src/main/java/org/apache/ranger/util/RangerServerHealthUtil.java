@@ -25,8 +25,10 @@ import org.apache.ranger.common.AppConstants;
 import org.apache.ranger.plugin.model.RangerServerHealth;
 import org.springframework.stereotype.Component;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
@@ -38,6 +40,7 @@ public class RangerServerHealthUtil {
     private static final String COMPONENTS          = "components";
     private static final String STATUS              = "status";
     private static final String DETAILS             = "details";
+    private static final String SERVICE_DEFS        = "service-defs";
     private static final String DB                  = "db";
     private static final String DB_FLAVOR           = "flavor";
     private static final String DB_VERSION          = "version";
@@ -61,6 +64,19 @@ public class RangerServerHealthUtil {
        }
      }
     */
+
+    public RangerServerHealth serviceUp() {
+        return RangerServerHealth.up().build();
+    }
+
+    public RangerServerHealth serviceDown() {
+        return RangerServerHealth.down().build();
+    }
+
+    public RangerServerHealth serviceUpWithAvailableServiceDefs(List<String> serviceDefNames) {
+        Map<String, Object> components = Collections.singletonMap(SERVICE_DEFS, serviceDefNames);
+        return RangerServerHealth.up().withDetail(COMPONENTS, components).build();
+    }
 
     public RangerServerHealth getRangerServerHealth(String dbVersion) {
         Map<String, Object> components = new HashMap<>();

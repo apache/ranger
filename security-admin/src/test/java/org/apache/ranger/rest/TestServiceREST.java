@@ -59,6 +59,7 @@ import org.apache.ranger.entity.XXSecurityZoneRefService;
 import org.apache.ranger.entity.XXSecurityZoneRefTagService;
 import org.apache.ranger.entity.XXService;
 import org.apache.ranger.entity.XXServiceDef;
+import org.apache.ranger.entity.XXAuthSession;
 import org.apache.ranger.plugin.model.RangerPluginInfo;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItem;
@@ -93,6 +94,7 @@ import org.apache.ranger.plugin.util.SearchFilter;
 import org.apache.ranger.plugin.util.ServicePolicies;
 import org.apache.ranger.security.context.RangerContextHolder;
 import org.apache.ranger.security.context.RangerSecurityContext;
+import org.apache.ranger.security.web.filter.RangerAuthenticationToken;
 import org.apache.ranger.service.RangerAuditFields;
 import org.apache.ranger.service.RangerDataHistService;
 import org.apache.ranger.service.RangerPluginInfoService;
@@ -127,6 +129,9 @@ import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.User;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -536,6 +541,101 @@ public class TestServiceREST {
         Assertions.assertNotNull(dbRangerServiceDef);
         Mockito.verify(searchUtil).getSearchFilter(request, serviceDefService.sortFields);
         Mockito.verify(svcStore).getPaginatedServiceDefs(filter);
+    }
+
+    @Test
+    public void test7aGetServiceDefNames_AllowedForHealthCheckUser() {
+        List<String> expected = Arrays.asList("hdfs", "hive");
+        Mockito.when(bizUtil.getCurrentUserLoginId()).thenReturn(RangerConstants.HEALTH_CHECK_USERNAME);
+        Mockito.when(serviceDefService.getAllServiceDefNames()).thenReturn(expected);
+
+        List<String> ret = serviceREST.getServiceDefNames();
+
+        Assertions.assertEquals(expected, ret);
+        Mockito.verify(serviceDefService).getAllServiceDefNames();
+    }
+
+    @Test
+    public void test7bGetServiceDefNames_ForbiddenForOtherUser() {
+        Mockito.when(bizUtil.getCurrentUserLoginId()).thenReturn("admin");
+        Mockito.when(restErrorUtil.createRESTException(Mockito.eq(HttpServletResponse.SC_FORBIDDEN),
+                Mockito.eq("Only the healthcheck user may query service-def names via this path."),
+                Mockito.eq(true))).thenReturn(new WebApplicationException(HttpServletResponse.SC_FORBIDDEN));
+
+        Assertions.assertThrows(WebApplicationException.class, () -> serviceREST.getServiceDefNames());
+
+        Mockito.verify(restErrorUtil).createRESTException(HttpServletResponse.SC_FORBIDDEN,
+                "Only the healthcheck user may query service-def names via this path.", true);
+        Mockito.verify(serviceDefService, Mockito.never()).getAllServiceDefNames();
+    }
+
+    @Test
+    public void test7cGetServiceDefNames_ForbiddenWhenUnauthenticated() {
+        Mockito.when(bizUtil.getCurrentUserLoginId()).thenReturn(null);
+        SecurityContextHolder.clearContext();
+        Mockito.when(restErrorUtil.createRESTException(Mockito.eq(HttpServletResponse.SC_FORBIDDEN),
+                Mockito.eq("Only the healthcheck user may query service-def names via this path."),
+                Mockito.eq(true))).thenReturn(new WebApplicationException(HttpServletResponse.SC_FORBIDDEN));
+
+        Assertions.assertThrows(WebApplicationException.class, () -> serviceREST.getServiceDefNames());
+
+        Mockito.verify(serviceDefService, Mockito.never()).getAllServiceDefNames();
+    }
+
+    @Test
+    public void test7dGetServiceDefNames_AllowedForHealthCheckUserViaSpringSecurity() {
+        List<String> expected = Arrays.asList("hdfs", "hive");
+
+        Mockito.when(bizUtil.getCurrentUserLoginId()).thenReturn(null);
+        SecurityContextHolder.getContext().setAuthentication(
+                trustedProxyAuth(RangerConstants.HEALTH_CHECK_USERNAME));
+        Mockito.when(serviceDefService.getAllServiceDefNames()).thenReturn(expected);
+
+        try {
+            List<String> ret = serviceREST.getServiceDefNames();
+            Assertions.assertEquals(expected, ret);
+            Mockito.verify(serviceDefService).getAllServiceDefNames();
+        } finally {
+            SecurityContextHolder.clearContext();
+        }
+    }
+
+    @Test
+    public void test7eGetServiceDefNames_ForbiddenForOtherUserViaSpringSecurity() {
+        Mockito.when(bizUtil.getCurrentUserLoginId()).thenReturn(null);
+        SecurityContextHolder.getContext().setAuthentication(trustedProxyAuth("admin"));
+        Mockito.when(restErrorUtil.createRESTException(Mockito.eq(HttpServletResponse.SC_FORBIDDEN),
+                Mockito.eq("Only the healthcheck user may query service-def names via this path."),
+                Mockito.eq(true))).thenReturn(new WebApplicationException(HttpServletResponse.SC_FORBIDDEN));
+
+        try {
+            Assertions.assertThrows(WebApplicationException.class, () -> serviceREST.getServiceDefNames());
+            Mockito.verify(serviceDefService, Mockito.never()).getAllServiceDefNames();
+        } finally {
+            SecurityContextHolder.clearContext();
+        }
+    }
+
+    @Test
+    public void test7fGetServiceDefNames_ForbiddenForNonTrustedProxyAuth() {
+        Mockito.when(bizUtil.getCurrentUserLoginId()).thenReturn(null);
+        SecurityContextHolder.getContext().setAuthentication(
+                new UsernamePasswordAuthenticationToken(RangerConstants.HEALTH_CHECK_USERNAME, "", Collections.emptyList()));
+        Mockito.when(restErrorUtil.createRESTException(Mockito.eq(HttpServletResponse.SC_FORBIDDEN),
+                Mockito.eq("Only the healthcheck user may query service-def names via this path."),
+                Mockito.eq(true))).thenReturn(new WebApplicationException(HttpServletResponse.SC_FORBIDDEN));
+
+        try {
+            Assertions.assertThrows(WebApplicationException.class, () -> serviceREST.getServiceDefNames());
+            Mockito.verify(serviceDefService, Mockito.never()).getAllServiceDefNames();
+        } finally {
+            SecurityContextHolder.clearContext();
+        }
+    }
+
+    private RangerAuthenticationToken trustedProxyAuth(String username) {
+        return new RangerAuthenticationToken(new User(username, "", Collections.emptyList()),
+                Collections.emptyList(), XXAuthSession.AUTH_TYPE_TRUSTED_PROXY);
     }
 
     @Test

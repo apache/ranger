@@ -130,6 +130,36 @@ public class TestSessionMgr {
     }
 
     @Test
+    public void testStoreAuthSessionSkipsHealthCheckUser() {
+        XXAuthSession authSession = new XXAuthSession();
+        authSession.setLoginId(RangerConstants.HEALTH_CHECK_USERNAME);
+
+        XXAuthSession ret = sessionMgr.storeAuthSession(authSession);
+
+        // No x_auth_sess record is created for the health-check user, and the DAO is never touched.
+        assertEquals(authSession, ret);
+        assertNull(ret.getId());
+        verify(daoManager, never()).getXXAuthSession();
+    }
+
+    @Test
+    public void testStoreAuthSessionPersistsRegularUser() {
+        XXAuthSession authSession = new XXAuthSession();
+        authSession.setLoginId("regularUser");
+
+        XXAuthSession created = new XXAuthSession();
+        created.setId(7L);
+
+        XXAuthSessionDao authDao = mock(XXAuthSessionDao.class);
+        when(daoManager.getXXAuthSession()).thenReturn(authDao);
+        when(authDao.create(authSession)).thenReturn(created);
+
+        XXAuthSession ret = sessionMgr.storeAuthSession(authSession);
+
+        assertEquals(created, ret);
+    }
+
+    @Test
     public void testProcessSuccessLogin_ExistingValidSession() {
         // Prepare existing user session in RangerContextHolder
         UserSessionBase existing = new UserSessionBase();

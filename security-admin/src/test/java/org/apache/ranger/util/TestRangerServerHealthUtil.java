@@ -22,6 +22,7 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 
+import java.util.Arrays;
 import java.util.Map;
 
 import static org.apache.ranger.plugin.model.RangerServerHealth.RangerServerStatus.DOWN;
@@ -36,5 +37,13 @@ public class TestRangerServerHealthUtil {
         Assertions.assertEquals(DOWN, rangerServerHealth.getStatus(), "RangerHealth.down()");
         Assertions.assertEquals(1, rangerServerHealth.getDetails().size(), "RangerHealth.getDetails()");
         Assertions.assertEquals(1, ((Map<?, ?>) rangerServerHealth.getDetails().get("components")).size(), "RangerHealth.getDetails('component')");
+    }
+
+    @Test
+    public void testServiceUpWithAvailableServiceDefNames() {
+        RangerServerHealth health = rangerServerHealthUtil.serviceUpWithAvailableServiceDefs(Arrays.asList("hdfs", "hive"));
+        Assertions.assertEquals(RangerServerHealth.RangerServerStatus.UP, health.getStatus());
+        Assertions.assertEquals(Arrays.asList("hdfs", "hive"),
+                ((Map<?, ?>) health.getDetails().get("components")).get("service-defs"));
     }
 }

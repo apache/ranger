@@ -32,6 +32,8 @@ import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 
+import java.util.List;
+
 @Path("actuator")
 @Component
 @Scope("request")
@@ -41,6 +43,9 @@ public class RangerHealthREST {
 
     @Autowired
     RangerServerHealthUtil rangerServerHealthUtil;
+
+    @Autowired
+    ServiceREST serviceREST;
 
     /*
     This API is used to get the Health check of the Ranger Admin
@@ -53,5 +58,27 @@ public class RangerHealthREST {
         String dbVersion = xaBizUtil.getDBVersion();
 
         return rangerServerHealthUtil.getRangerServerHealth(dbVersion);
+    }
+
+    @GET
+    @Path("/health/readiness")
+    @Produces("application/json")
+    @Transactional(propagation = Propagation.NOT_SUPPORTED)
+    public RangerServerHealth getRangerServerReadiness() {
+        List<String> serviceDefNames = serviceREST.getServiceDefNames();
+
+        if (serviceDefNames != null && !serviceDefNames.isEmpty()) {
+            return rangerServerHealthUtil.serviceUpWithAvailableServiceDefs(serviceDefNames);
+        } else {
+            return rangerServerHealthUtil.serviceDown();
+        }
+    }
+
+    @GET
+    @Path("/health/liveness")
+    @Produces("application/json")
+    @Transactional(propagation = Propagation.NOT_SUPPORTED)
+    public RangerServerHealth getRangerServerLiveness() {
+        return rangerServerHealthUtil.serviceUp();
     }
 }
