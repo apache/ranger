@@ -106,9 +106,9 @@ ozone = RangerService({'name': 'dev_ozone',
                        'configs': {'username': 'hdfs', 'password': 'hdfs',
                                    'ozone.om.http-address': 'http://om:9874',
                                    'hadoop.security.authentication': 'simple',
-                                   'policy.download.auth.users': 'ozone',
-                                   'tag.download.auth.users': 'ozone',
-                                   'userstore.download.auth.users': 'ozone',
+                                   'policy.download.auth.users': 'om',
+                                   'tag.download.auth.users': 'om',
+                                   'userstore.download.auth.users': 'om',
                                    'ranger.plugin.ozone.policy.refresh.synchronous':'true'}})
 
 solr = RangerService({'name': 'dev_solr', 'type': 'solr',
@@ -120,6 +120,24 @@ solr = RangerService({'name': 'dev_solr', 'type': 'solr',
                                  'ranger.plugin.super.users': 'solr',
                                  'ranger.plugin.solr.policy.refresh.synchronous':'true'}})
 
+def ensure_ozone_kerberos_download_auth():
+    """Existing docker volumes may have dev_ozone with policy.download.auth.users=ozone."""
+    try:
+        existing = ranger_client.get_service('dev_ozone')
+    except JSONDecodeError:
+        return
+    if existing is None:
+        return
+    configs = existing.get('configs') or {}
+    if configs.get('policy.download.auth.users') == 'om':
+        return
+    configs['policy.download.auth.users'] = 'om'
+    configs['tag.download.auth.users'] = 'om'
+    configs['userstore.download.auth.users'] = 'om'
+    existing['configs'] = configs
+    ranger_client.update_service_by_id(existing['id'], existing)
+    print(' dev_ozone service updated for OM Kerberos policy download (policy.download.auth.users=om)')
+
 services = [hdfs, yarn, hive, hbase, kafka, knox, kms, trino, ozone, solr]
 for service in services:
     try:
@@ -128,3 +146,5 @@ for service in services:
             print(f" {service.name} service created!")
     except Exception as e:
         print(f"An exception occured: {e}")
+
+ensure_ozone_kerberos_download_auth()

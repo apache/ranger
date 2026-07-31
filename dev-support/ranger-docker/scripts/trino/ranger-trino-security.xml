@@ -73,6 +73,22 @@
   </property>
 
   <property>
+    <name>ranger.plugin.trino.policy.rest.client.username</name>
+    <value>admin</value>
+    <description>
+      Ranger Admin login for policy download (dev docker sandbox)
+    </description>
+  </property>
+
+  <property>
+    <name>ranger.plugin.trino.policy.rest.client.password</name>
+    <value>rangerR0cks!</value>
+    <description>
+      Ranger Admin password for policy download (dev docker sandbox)
+    </description>
+  </property>
+
+  <property>
     <name>ranger.plugin.trino.policy.cache.dir</name>
     <value>/tmp</value>
   </property>
