@@ -82,6 +82,9 @@
                     <include>org.glassfish.hk2.external:javax.inject</include>
                     <include>org.glassfish:osgi-resource-locator</include>
 
+                    <!-- Gson (policy/role/tag JSON parsing in ranger-plugins-common) -->
+                    <include>com.google.code.gson:gson:jar:${gson.version}</include>
+
                     <!-- Jackson (JSON serialization for authz-api model classes) -->
                     <include>com.fasterxml.jackson.core:jackson-databind:jar:${fasterxml.jackson.databind.version}</include>
                     <include>com.fasterxml.jackson.core:jackson-core:jar:${fasterxml.jackson.version}</include>
