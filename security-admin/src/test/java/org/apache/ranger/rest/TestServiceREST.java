@@ -3914,6 +3914,34 @@ public class TestServiceREST {
         Assertions.assertThrows(WebApplicationException.class, () -> serviceREST.grantAccess("HDFS_1", grantRequest, request));
     }
 
+    @Test
+    void test157GrantAccessRejectsNullRequest() {
+        HttpServletRequest request = Mockito.mock(HttpServletRequest.class);
+
+        Mockito.when(restErrorUtil.createRESTException(Mockito.eq(HttpServletResponse.SC_BAD_REQUEST), Mockito.anyString(), Mockito.eq(false)))
+                .thenReturn(new WebApplicationException());
+
+        Assertions.assertThrows(WebApplicationException.class, () -> serviceREST.grantAccess("cm_hive", null, request));
+
+        Mockito.verify(restErrorUtil).createRESTException(HttpServletResponse.SC_BAD_REQUEST,
+                "Grant request object is null or missing body in grant access api", false);
+        Mockito.verifyNoInteractions(serviceUtil);
+    }
+
+    @Test
+    void test158SecureGrantAccessRejectsNullRequest() {
+        HttpServletRequest request = Mockito.mock(HttpServletRequest.class);
+
+        Mockito.when(restErrorUtil.createRESTException(Mockito.eq(HttpServletResponse.SC_BAD_REQUEST), Mockito.anyString(), Mockito.eq(false)))
+                .thenReturn(new WebApplicationException());
+
+        Assertions.assertThrows(WebApplicationException.class, () -> serviceREST.secureGrantAccess("cm_hive", null, request));
+
+        Mockito.verify(restErrorUtil).createRESTException(HttpServletResponse.SC_BAD_REQUEST,
+                "Grant request object is null or missing body in grant access api", false);
+        Mockito.verifyNoInteractions(bizUtil);
+    }
+
     RangerPolicy rangerPolicy() {
         List<RangerPolicyItemAccess>    accesses         = new ArrayList<>();
         List<String>                    users            = new ArrayList<>();
