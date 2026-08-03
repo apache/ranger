@@ -88,6 +88,8 @@ public class RangerBizUtil {
     public static final  String  AUDIT_STORE_ELASTIC_SEARCH = "elasticSearch";
     public static final  String  AUDIT_STORE_OPENSEARCH     = "opensearch";
     public static final  String  AUDIT_STORE_CLOUD_WATCH    = "cloudwatch";
+    // login id used by the Ranger Admin health readiness endpoint
+    public static final  String  HEALTHCHECK_USERNAME       = RangerAdminConfig.getInstance().get("ranger.admin.healthcheck.username", "healthcheck");
     public static final  boolean BATCH_CLEAR_ENABLED        = PropertiesUtil.getBooleanProperty("ranger.jpa.jdbc.batch-clear.enable", true);
     public static final  int     POLICY_BATCH_SIZE          = PropertiesUtil.getIntProperty("ranger.jpa.jdbc.batch-clear.size", 10);
     public static final  int     BATCH_PERSIST_SIZE         = PropertiesUtil.getIntProperty("ranger.jpa.jdbc.batch-persist.size", 500);
@@ -1171,7 +1173,7 @@ public class RangerBizUtil {
     }
 
     public boolean isHealthCheckUser(String user) {
-        return RangerConstants.HEALTH_CHECK_USERNAME.equalsIgnoreCase(user);
+        return HEALTHCHECK_USERNAME.equalsIgnoreCase(user);
     }
 
     /**

@@ -135,9 +135,9 @@ public class TestSessionMgr {
     @Test
     public void testStoreAuthSessionSkipsHealthCheckUser() {
         XXAuthSession authSession = new XXAuthSession();
-        authSession.setLoginId(RangerConstants.HEALTH_CHECK_USERNAME);
+        authSession.setLoginId(RangerBizUtil.HEALTHCHECK_USERNAME);
 
-        when(bizUtil.isHealthCheckUser(RangerConstants.HEALTH_CHECK_USERNAME)).thenReturn(true);
+        when(bizUtil.isHealthCheckUser(RangerBizUtil.HEALTHCHECK_USERNAME)).thenReturn(true);
 
         XXAuthSession ret = sessionMgr.storeAuthSession(authSession);
 

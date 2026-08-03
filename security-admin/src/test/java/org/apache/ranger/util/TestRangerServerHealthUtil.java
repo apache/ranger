@@ -19,7 +19,6 @@ package org.apache.ranger.util;
 
 import org.apache.ranger.biz.RangerBizUtil;
 import org.apache.ranger.common.RESTErrorUtil;
-import org.apache.ranger.common.RangerConstants;
 import org.apache.ranger.entity.XXAuthSession;
 import org.apache.ranger.plugin.model.RangerServerHealth;
 import org.apache.ranger.security.web.filter.RangerAuthenticationToken;
@@ -83,8 +82,8 @@ public class TestRangerServerHealthUtil {
     @Test
     public void testGetServiceDefNames_AllowedForHealthCheckUser() {
         List<String> expected = Arrays.asList("hdfs", "hive");
-        Mockito.when(bizUtil.getCurrentUserLoginId()).thenReturn(RangerConstants.HEALTH_CHECK_USERNAME);
-        Mockito.when(bizUtil.isHealthCheckUser(RangerConstants.HEALTH_CHECK_USERNAME)).thenReturn(true);
+        Mockito.when(bizUtil.getCurrentUserLoginId()).thenReturn(RangerBizUtil.HEALTHCHECK_USERNAME);
+        Mockito.when(bizUtil.isHealthCheckUser(RangerBizUtil.HEALTHCHECK_USERNAME)).thenReturn(true);
         Mockito.when(serviceDefService.getAllServiceDefNames()).thenReturn(expected);
 
         List<String> ret = rangerServerHealthUtil.getServiceDefNames();
@@ -127,9 +126,9 @@ public class TestRangerServerHealthUtil {
         List<String> expected = Arrays.asList("hdfs", "hive");
 
         Mockito.when(bizUtil.getCurrentUserLoginId()).thenReturn(null);
-        Mockito.when(bizUtil.isHealthCheckUser(RangerConstants.HEALTH_CHECK_USERNAME)).thenReturn(true);
+        Mockito.when(bizUtil.isHealthCheckUser(RangerBizUtil.HEALTHCHECK_USERNAME)).thenReturn(true);
         SecurityContextHolder.getContext().setAuthentication(
-                trustedProxyAuth(RangerConstants.HEALTH_CHECK_USERNAME));
+                trustedProxyAuth(RangerBizUtil.HEALTHCHECK_USERNAME));
         Mockito.when(serviceDefService.getAllServiceDefNames()).thenReturn(expected);
 
         try {
@@ -163,7 +162,7 @@ public class TestRangerServerHealthUtil {
         Mockito.when(bizUtil.getCurrentUserLoginId()).thenReturn(null);
         Mockito.when(bizUtil.isHealthCheckUser(isNull())).thenReturn(false);
         SecurityContextHolder.getContext().setAuthentication(
-                new UsernamePasswordAuthenticationToken(RangerConstants.HEALTH_CHECK_USERNAME, "", Collections.emptyList()));
+                new UsernamePasswordAuthenticationToken(RangerBizUtil.HEALTHCHECK_USERNAME, "", Collections.emptyList()));
         Mockito.when(restErrorUtil.createRESTException(Mockito.eq(HttpServletResponse.SC_FORBIDDEN),
                 Mockito.eq("Only the healthcheck user may query service-def names via this path."),
                 Mockito.eq(true))).thenReturn(new WebApplicationException(HttpServletResponse.SC_FORBIDDEN));

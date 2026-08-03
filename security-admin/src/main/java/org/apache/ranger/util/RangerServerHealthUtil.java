@@ -160,20 +160,18 @@ public class RangerServerHealthUtil {
     private String resolveAuthenticatedLoginId() {
         String loginId = bizUtil.getCurrentUserLoginId();
 
-        if (loginId != null) {
-            return loginId;
-        }
+        if (loginId == null) {
+            Object authentication = SecurityContextHolder.getContext().getAuthentication();
 
-        Object authentication = SecurityContextHolder.getContext().getAuthentication();
+            if (authentication instanceof RangerAuthenticationToken) {
+                RangerAuthenticationToken token = (RangerAuthenticationToken) authentication;
 
-        if (authentication instanceof RangerAuthenticationToken) {
-            RangerAuthenticationToken token = (RangerAuthenticationToken) authentication;
-
-            if (token.getAuthType() == XXAuthSession.AUTH_TYPE_TRUSTED_PROXY) {
-                return token.getName();
+                if (token.getAuthType() == XXAuthSession.AUTH_TYPE_TRUSTED_PROXY) {
+                    loginId = token.getName();
+                }
             }
         }
 
-        return null;
+        return loginId;
     }
 }

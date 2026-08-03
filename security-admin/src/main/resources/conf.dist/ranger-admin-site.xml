@@ -310,6 +310,10 @@
 		<value>Mozilla,chrome</value>
 	</property>
 	<!-- SSO Properties Ends-->
+	<property>
+		<name>ranger.admin.healthcheck.username</name>
+		<value>healthcheck</value>
+	</property>
 	<!-- Trusted header auth properties start -->
 	<property>
 		<name>ranger.admin.authn.header.enabled</name>
