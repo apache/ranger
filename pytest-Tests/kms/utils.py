@@ -112,30 +112,6 @@ krb_requests = KerberosRequests()
 
 
 
-# def ensure_keyadmin_keytab():
-#     """Creates keytab inside ranger-kdc and transfers to KMS — skips if already present."""
-#     exit_code, _ = container.exec_run("test -f /etc/keytabs/keyadmin.keytab", user="root")
-#     if exit_code == 0:
-#         print("Keytab already present in KMS container — skipping generation.")
-#         return
-
-#     print("Generating keytab inside ranger-kdc …")
-#     kdc = client.containers.get("ranger-kdc")
-
-#     kdc.exec_run('kadmin.local -q "addprinc -randkey keyadmin@EXAMPLE.COM"', user="root")
-
-#     exit_code, output = kdc.exec_run(
-#         'kadmin.local -q "xst -k /tmp/keyadmin.keytab keyadmin@EXAMPLE.COM"', user="root"
-#     )
-#     if exit_code != 0:
-#         raise RuntimeError(f"xst failed: {output.decode()}")
-
-#     subprocess.check_call("docker cp ranger-kdc:/tmp/keyadmin.keytab ./keyadmin.keytab", shell=True)
-#     subprocess.check_call(f"docker exec {KMS_CONTAINER_NAME} mkdir -p /etc/keytabs", shell=True)
-#     subprocess.check_call(f"docker cp ./keyadmin.keytab {KMS_CONTAINER_NAME}:/etc/keytabs/keyadmin.keytab", shell=True)
-#     container.exec_run("chown root:root /etc/keytabs/keyadmin.keytab", user="root")
-#     container.exec_run("chmod 400 /etc/keytabs/keyadmin.keytab", user="root")
-#     print("Keytab generated and transferred.")
 
 def ensure_keyadmin_keytab():
     """Creates keytab inside ranger-kdc and transfers to KMS — skips only if
@@ -174,20 +150,94 @@ def ensure_keyadmin_keytab():
     container.exec_run("chmod 400 /etc/keytabs/keyadmin.keytab", user="root")
     print("Keytab generated and transferred.")
 
+# def ensure_ticket():
+#     """Ensures a valid Kerberos ticket exists inside the KMS container."""
+#     exit_code, _ = container.exec_run("klist -s", user="root")
+#     if exit_code == 0:
+#         return
+#
+#     print("Ticket missing — running kinit inside KMS container …")
+#     exit_code, output = container.exec_run(
+#         "kinit -kt /etc/keytabs/keyadmin.keytab keyadmin@EXAMPLE.COM", user="root"
+#     )
+#     if exit_code != 0:
+#         raise RuntimeError(f"kinit failed: {output.decode()}")
+#     print("kinit succeeded.")
+
+'''KMS_PRINCIPAL = "rangerkms/ranger-kms.rangernw@EXAMPLE.COM"
+KMS_KEYTAB = "/etc/keytabs/rangerkms.keytab"
+def ensure_kms_keytab():
+    exit_code, _ = container.exec_run(f"test -f {KMS_KEYTAB}", user="root")
+    if exit_code != 0:
+        raise RuntimeError(
+            f"{KMS_KEYTAB} missing in ranger-kms — start KDC first, wait for keytabs"
+        )
 def ensure_ticket():
-    """Ensures a valid Kerberos ticket exists inside the KMS container."""
+    ensure_kms_keytab()
     exit_code, _ = container.exec_run("klist -s", user="root")
     if exit_code == 0:
         return
-
-    print("Ticket missing — running kinit inside KMS container …")
     exit_code, output = container.exec_run(
-        "kinit -kt /etc/keytabs/keyadmin.keytab keyadmin@EXAMPLE.COM", user="root"
+        f"kinit -kt {KMS_KEYTAB} {KMS_PRINCIPAL}", user="root"
+    )
+    if exit_code != 0:
+        raise RuntimeError(f"kinit failed: {output.decode()}")'''
+
+KEYADMIN_PRINCIPAL = "keyadmin@EXAMPLE.COM"
+KEYADMIN_KEYTAB = "/etc/keytabs/keyadmin.keytab"
+KDC_CONTAINER = "ranger-kdc"
+
+
+def _ensure_kdc_principal_keytab(
+        principal: str,
+        dest_container_name: str,
+        dest_keytab_path: str,
+        kdc_tmp_path: str,
+) -> None:
+    """Idempotent: create principal in KDC, export keytab, copy to target container."""
+    kdc = client.containers.get(KDC_CONTAINER)
+    dest = client.containers.get(dest_container_name)
+
+    exit_code, output = kdc.exec_run(f'kadmin.local -q "getprinc {principal}"', user="root")
+    if exit_code != 0 or b"does not exist" in output:
+        kdc.exec_run(f'kadmin.local -q "addprinc -randkey {principal}"', user="root")
+
+    exit_code, output = kdc.exec_run(
+        f'kadmin.local -q "xst -k {kdc_tmp_path} {principal}"', user="root"
+    )
+    if exit_code != 0:
+        raise RuntimeError(f"keytab export failed for {principal}: {output.decode()}")
+
+    import tempfile, os
+    local = os.path.join(tempfile.gettempdir(), os.path.basename(dest_keytab_path))
+    subprocess.check_call(f"docker cp {KDC_CONTAINER}:{kdc_tmp_path} {local}", shell=True)
+    subprocess.check_call(f"docker cp {local} {dest_container_name}:{dest_keytab_path}", shell=True)
+    dest.exec_run(f"chmod 400 {dest_keytab_path}", user="root")
+    os.remove(local)
+
+
+def ensure_keyadmin_keytab():
+    """Runtime: create keyadmin@EXAMPLE.COM and install keytab in ranger-kms."""
+    _ensure_kdc_principal_keytab(
+        KEYADMIN_PRINCIPAL,
+        KMS_CONTAINER_NAME,
+        KEYADMIN_KEYTAB,
+        "/tmp/keyadmin.keytab",
+    )
+
+
+def ensure_ticket():
+    """Always kinit as keyadmin — do not reuse a stale rangerkms ticket from cache."""
+    exit_code, _ = container.exec_run(f"test -f {KEYADMIN_KEYTAB}", user="root")
+    if exit_code != 0:
+        ensure_keyadmin_keytab()
+
+    container.exec_run("kdestroy -A 2>/dev/null || true", user="root")
+    exit_code, output = container.exec_run(
+        f"kinit -kt {KEYADMIN_KEYTAB} {KEYADMIN_PRINCIPAL}", user="root"
     )
     if exit_code != 0:
         raise RuntimeError(f"kinit failed: {output.decode()}")
-    print("kinit succeeded.")
-
 
 # **************** Blacklist helpers -----------------------------------------------
 

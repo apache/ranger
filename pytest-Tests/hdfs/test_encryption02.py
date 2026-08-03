@@ -23,12 +23,22 @@
 # documentation.
 
 import pytest
-import requests
-from hdfs.utils import run_command,get_error_logs
-from hdfs.test_config import (HDFS_USER,HIVE_USER,HEADERS,PARAMS,BASE_URL,
-                         CREATE_EZ_COMMANDS ,GRANT_PERMISSIONS_COMMANDS,
-                         CREATE_FILE_COMMAND, ACTIONS_COMMANDS,READ_EZ_FILE,
-                         CLEANUP_COMMANDS)
+from kms.utils import krb_requests
+from hdfs.utils import (
+    run_command,
+    ensure_kms_key,
+    create_encryption_zone,
+    delete_kms_key,
+    run_kerberos_command,
+    HIVE_PRINCIPAL,
+    HIVE_KEYTAB
+)
+from hdfs.test_config import (
+    HDFS_USER, HIVE_USER, HEADERS, PARAMS, BASE_URL,
+    GRANT_PERMISSIONS_COMMANDS,
+    CREATE_FILE_COMMAND, ACTIONS_COMMANDS, READ_EZ_FILE,
+    CLEANUP_COMMANDS,
+)
 
 # ****** ********************Test Case 01 ********************************************
 # ***** Check if after key roll over old files can be read or not
@@ -40,19 +50,8 @@ def test_read_old_file_after_rollover(hadoop_container):
     filecontent="Hello Human"
 
     #create EZ key-------
-    key_data={
-        "name":key_name
-    }
-    response=requests.post(f"{BASE_URL}/keys",json=key_data,params=PARAMS,headers=HEADERS)
-    assert response.status_code == 201, f"Key creation failed: {response.text}"
-
-    # create EZ ------------
-    create_ez_commands = [cmd.format(ez_name=ez_name, key_name=key_name) for cmd in CREATE_EZ_COMMANDS]
-
-    for cmd in create_ez_commands:
-        output = run_command(hadoop_container, cmd, HDFS_USER)
-        print(output)
-
+    ensure_kms_key(key_name)
+    create_encryption_zone(hadoop_container, ez_name, key_name)
     #grant permissions for 'hive' user------------
     grant_permission_commands= [cmd.format(ez_name=ez_name, user=HIVE_USER) for cmd in GRANT_PERMISSIONS_COMMANDS]
 
@@ -72,16 +71,16 @@ def test_read_old_file_after_rollover(hadoop_container):
     #read-write using 'hive' user-------
     read_write_cmd= [cmd.format(filename=filename, ez_name=ez_name, user=HIVE_USER) for cmd in ACTIONS_COMMANDS]
     for cmd in read_write_cmd:
-        run_command(hadoop_container,cmd,HIVE_USER)
+        run_kerberos_command(hadoop_container, cmd, HIVE_USER, HIVE_PRINCIPAL, HIVE_KEYTAB)
 
     #roll-over of key---------
-    response=requests.post(f"{BASE_URL}/key/{key_name}", json={}, headers=HEADERS, params=PARAMS)
+    response=krb_requests.post(f"{BASE_URL}/key/{key_name}", json={}, headers=HEADERS, params=PARAMS)
     assert response.status_code == 200, f"Key roll over failed: {response.text}"
 
     #read same file after roll over---------
     read_ez_file=[cmd.format(filename=filename, ez_name=ez_name) for cmd in READ_EZ_FILE]
     for cmd in read_ez_file:
-        run_command(hadoop_container,cmd,HIVE_USER)
+        run_kerberos_command(hadoop_container, cmd, HIVE_USER, HIVE_PRINCIPAL, HIVE_KEYTAB)
 
     #cleanup EZ and EZ file--------
     cleanup_cmd=[cmd.format(filename=filename, ez_name=ez_name) for cmd in CLEANUP_COMMANDS]
@@ -89,8 +88,8 @@ def test_read_old_file_after_rollover(hadoop_container):
         run_command(hadoop_container,cmd,HDFS_USER)
 
     #delete EZ key ----------
-    delete_output2=requests.delete(f"{BASE_URL}/key/{key_name}", params=PARAMS)
-    print(delete_output2)
+    delete_kms_key(key_name)
+
 
 
 # ****** ********************Test Case 02 ********************************************
@@ -105,25 +104,15 @@ def test_writeAndRead_Newfile_after_rollover(hadoop_container):
     filecontent2="Hello Second"
 
     #create EZ key-------
-    key_data={
-        "name":key_name
-    }
-    response=requests.post(f"{BASE_URL}/keys",json=key_data,params=PARAMS,headers=HEADERS)
-    assert response.status_code == 201, f"Key creation failed: {response.text}"
-
-    # create EZ ------------
-    create_ez_commands = [cmd.format(ez_name=ez_name, key_name=key_name) for cmd in CREATE_EZ_COMMANDS]
-
-    for cmd in create_ez_commands:
-        output = run_command(hadoop_container, cmd, HDFS_USER)
-        print(output)
-
     #grant permissions for 'hive' user------------
-    grant_permission_commands= [cmd.format(ez_name=ez_name, user=HIVE_USER) for cmd in GRANT_PERMISSIONS_COMMANDS]
+    ensure_kms_key(key_name)
+    create_encryption_zone(hadoop_container, ez_name, key_name)
 
+    grant_permission_commands = [
+        cmd.format(ez_name=ez_name, user=HIVE_USER) for cmd in GRANT_PERMISSIONS_COMMANDS
+    ]
     for cmd in grant_permission_commands:
-        output = run_command(hadoop_container,cmd,HDFS_USER)
-        print(output)
+        run_command(hadoop_container, cmd, HDFS_USER)
 
     #create file in EZ as 'hive' user-------
     create_file_cmd = [cmd.format(
@@ -141,7 +130,7 @@ def test_writeAndRead_Newfile_after_rollover(hadoop_container):
         print(output)
 
     #roll-over of key---------
-    response=requests.post(f"{BASE_URL}/key/{key_name}", json={}, headers=HEADERS, params=PARAMS)
+    response=krb_requests.post(f"{BASE_URL}/key/{key_name}", json={}, headers=HEADERS, params=PARAMS)
     assert response.status_code == 200, f"Key roll over failed: {response.text}"
 
     #write new file after rollover
@@ -165,8 +154,8 @@ def test_writeAndRead_Newfile_after_rollover(hadoop_container):
         run_command(hadoop_container,cmd,HDFS_USER)
 
     #delete EZ key ----------
-    delete_output2=requests.delete(f"{BASE_URL}/key/{key_name}", params=PARAMS)
-    print(delete_output2)
+    delete_kms_key(key_name)
+
 
 
 # ****** ********************Test Case 03 ********************************************
@@ -179,20 +168,12 @@ def test_Readfile_after_keyDeletion(hadoop_container):
     filecontent="You are reading it before key deletion"
 
     #create EZ key-------
-    key_data={
-        "name":key_name
-    }
-    response=requests.post(f"{BASE_URL}/keys",json=key_data,params=PARAMS,headers=HEADERS)
-    assert response.status_code == 201, f"Key creation failed: {response.text}"
-
+    ensure_kms_key(key_name)
     # create EZ ------------
-    create_ez_commands = [cmd.format(ez_name=ez_name, key_name=key_name) for cmd in CREATE_EZ_COMMANDS]
+    create_encryption_zone(hadoop_container, ez_name, key_name)
 
-    for cmd in create_ez_commands:
-        output = run_command(hadoop_container, cmd, HDFS_USER)
-        print(output)
 
-    #grant permissions for 'hive' user------------
+#grant permissions for 'hive' user------------
     grant_permission_commands= [cmd.format(ez_name=ez_name, user=HIVE_USER) for cmd in GRANT_PERMISSIONS_COMMANDS]
 
     for cmd in grant_permission_commands:
@@ -216,8 +197,7 @@ def test_Readfile_after_keyDeletion(hadoop_container):
 
 
     #delete EZ key ----------
-    delete_output2=requests.delete(f"{BASE_URL}/key/{key_name}", params=PARAMS)
-    print(delete_output2)
+    delete_kms_key(key_name)
 
 
     #read-write file after key deletion --------------

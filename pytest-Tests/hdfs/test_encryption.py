@@ -23,12 +23,22 @@
 # documentation.
 
 import pytest
-from hdfs.utils import run_command,get_error_logs
-from hdfs.test_config import (HDFS_USER,HIVE_USER,HBASE_USER,KEY_ADMIN,
-                         CREATE_KEY_COMMAND, VALIDATE_KEY_COMMAND, CREATE_EZ_COMMANDS,GRANT_PERMISSIONS_COMMANDS,
-                         UNAUTHORIZED_WRITE_COMMAND, ACTIONS_COMMANDS,
-                         UNAUTHORIZED_READ_COMMAND,KEY_DELETION_CMD,
-                         CLEANUP_COMMANDS,CREATE_FILE_COMMAND)
+from hdfs.utils import (
+    run_command,
+    run_kerberos_command,
+    ensure_kms_key,
+    create_encryption_zone,
+    delete_kms_key,
+    HIVE_PRINCIPAL,
+    HIVE_KEYTAB,
+)
+from kms.utils import krb_requests, BASE_URL, PARAMS
+from hdfs.test_config import (
+    HDFS_USER, HIVE_USER, HBASE_USER,
+    GRANT_PERMISSIONS_COMMANDS, UNAUTHORIZED_WRITE_COMMAND,
+    ACTIONS_COMMANDS, UNAUTHORIZED_READ_COMMAND,
+    CLEANUP_COMMANDS, CREATE_FILE_COMMAND,
+)
 
 key_name="hdfs-key"
 ez_name="secure_zone"
@@ -37,29 +47,15 @@ filecontent="Welcome to hdfs encryption"
 
 # EZ key creation before creating an EZ---------------------------------------------
 def test_create_key(hadoop_container):
-    create_key_cmd= CREATE_KEY_COMMAND.format(key_name=key_name)
-    output = run_command(hadoop_container,create_key_cmd, KEY_ADMIN) # Run the command as keyadmin user
-    print("Key Creation Output:", output)
-
-    # Validate if the key was created successfully
-    validation_output = run_command(hadoop_container, VALIDATE_KEY_COMMAND, KEY_ADMIN)
-
-    print("Key List Output:", validation_output)
-
-    # Check if key is present
-    if key_name not in validation_output:
-        error_logs = get_error_logs()                           # Fetch logs on failure
-        pytest.fail(f"Key creation failed. Logs:\n{error_logs}")
-
+    ensure_kms_key(key_name)
+    names = krb_requests.get(f"{BASE_URL}/keys/names", params=PARAMS)
+    assert key_name in names.text, f"Key not found in: {names.text}"
+    print("Key List Output:", names.text)
 
 # Create Encryption Zone -----------------------------------------------------------
 @pytest.mark.createEZ
 def test_create_encryption_zone(hadoop_container):
-    create_ez_commands = [cmd.format(ez_name=ez_name, key_name=key_name) for cmd in CREATE_EZ_COMMANDS]
-
-    for cmd in create_ez_commands:
-        output = run_command(hadoop_container, cmd, HDFS_USER)
-        print(output)
+    create_encryption_zone(hadoop_container, ez_name, key_name)
 
 
 # Grant Permissions to 'Hive' User to above EZ----------------------------------------
@@ -84,7 +80,7 @@ def test_hive_user_write_read(hadoop_container):
     #read-write using 'hive' user
     read_write_cmd= [cmd.format(filename=filename, ez_name=ez_name, user=HIVE_USER) for cmd in ACTIONS_COMMANDS]
     for cmd in read_write_cmd:
-        run_command(hadoop_container,cmd,HIVE_USER)
+        run_kerberos_command(hadoop_container, cmd, HIVE_USER, HIVE_PRINCIPAL, HIVE_KEYTAB)
 
 
 # Negative Test - Unauthorized User Cannot Write i.e 'HBASE' in this case-------------
@@ -112,31 +108,18 @@ def test_unauthorized_read(hadoop_container):
 
     print(f"Command Output:\n{output}")
 
-    # Check for known failure indicators in output
-    if exit_code != 0:
-        failure_detected = True
-
-    #assert that failure was detected as expected
-    assert failure_detected, "Expected failure due to no permission on EZ, but command succeeded."
+    assert exit_code != 0, "Expected failure due to no permission on EZ, but command succeeded."
 
 
 # Clean Up - Remove Test file and EZ -------------------------------------------------
 @pytest.mark.cleanEZ
 def test_cleanup(hadoop_container):
-    cleanup_cmd=[cmd.format(filename=filename, ez_name=ez_name) for cmd in CLEANUP_COMMANDS]
-    for cmd in cleanup_cmd:
-        output=run_command(hadoop_container,cmd,HDFS_USER)
+    cleanup_cmd = [cmd.format(filename=filename, ez_name=ez_name) for cmd in CLEANUP_COMMANDS]
+    for i, cmd in enumerate(cleanup_cmd):
+        output = run_command(
+            hadoop_container, cmd, HDFS_USER,
+            fail_on_error=(i == len(cleanup_cmd) - 1),
+        )
+        print(output)
 
-    print(output)
-
-    #clean EZ key
-    key_deletion_cmd=KEY_DELETION_CMD.format(key_name=key_name)
-    output=run_command(hadoop_container,key_deletion_cmd,KEY_ADMIN)
-    print(output)
-
-
-
-
-
-
-
+    delete_kms_key(key_name)

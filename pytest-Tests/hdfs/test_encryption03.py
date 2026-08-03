@@ -23,12 +23,19 @@
 # documentation.
 
 import pytest
-import requests
-from hdfs.utils import run_command,get_error_logs
-from hdfs.test_config import (HDFS_USER,HIVE_USER,HEADERS,PARAMS,BASE_URL,
-                         CREATE_EZ_COMMANDS ,GRANT_PERMISSIONS_COMMANDS,
-                         CREATE_FILE_COMMAND, ACTIONS_COMMANDS,READ_EZ_FILE,
-                         CLEANUP_COMMANDS,CROSS_EZ_ACTION_COMMANDS,CLEANUP_EZ)
+from hdfs.utils import (
+    run_command,
+    ensure_kms_key,
+    create_encryption_zone,
+    delete_kms_key,
+    run_kerberos_command,
+)
+from hdfs.test_config import (
+    HDFS_USER, HIVE_USER,
+    GRANT_PERMISSIONS_COMMANDS,
+    CREATE_FILE_COMMAND, ACTIONS_COMMANDS,
+    CROSS_EZ_ACTION_COMMANDS, CLEANUP_EZ,
+)
 
 
 # ****** ********************Test Case 01 ********************************************
@@ -48,30 +55,12 @@ def test_cross_EZ_operations(hadoop_container):
     dirname2="dir2"
 
     #create 2 EZ key-------
-    key_data1={
-        "name":key_name
-    }
-    key_data2={
-        "name":key_name2
-    }
-    response=requests.post(f"{BASE_URL}/keys",json=key_data1,params=PARAMS,headers=HEADERS)
-    assert response.status_code == 201, f"Key creation failed: {response.text}"
-
-    response2=requests.post(f"{BASE_URL}/keys",json=key_data2,params=PARAMS,headers=HEADERS)
-    assert response2.status_code == 201, f"Key creation failed: {response2.text}"
+    ensure_kms_key(key_name)
+    ensure_kms_key(key_name2)
 
     # create 2 EZ ------------
-    create_ez_commands = [cmd.format(ez_name=ez_name, key_name=key_name) for cmd in CREATE_EZ_COMMANDS]
-
-    for cmd in create_ez_commands:
-        output = run_command(hadoop_container, cmd, HDFS_USER)
-        print(output)
-
-    create_ez_commands = [cmd.format(ez_name=ez_name2, key_name=key_name2) for cmd in CREATE_EZ_COMMANDS]
-
-    for cmd in create_ez_commands:
-        output = run_command(hadoop_container, cmd, HDFS_USER)
-        print(output)
+    create_encryption_zone(hadoop_container, ez_name, key_name)
+    create_encryption_zone(hadoop_container, ez_name2, key_name2)
 
     # Create the subdirectories inside the encryption zone as HDFS user
     create_dirs_cmds = [
@@ -133,9 +122,6 @@ def test_cross_EZ_operations(hadoop_container):
         run_command(hadoop_container,cmd,HDFS_USER)
 
     #delete EZ key ----------
-    delete_output2=requests.delete(f"{BASE_URL}/key/{key_name}", params=PARAMS)
-    print(delete_output2)
-
-    delete_output2=requests.delete(f"{BASE_URL}/key/{key_name2}", params=PARAMS)
-    print(delete_output2)
+    delete_kms_key(key_name)
+    delete_kms_key(key_name2)
 

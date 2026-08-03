@@ -24,19 +24,19 @@
 
 ##Contains all constant values regarding USER, PATH, HDFS Commands----------------------
 
+from kms.utils import BASE_URL, PARAMS
+
 HDFS_USER = "hdfs"
 HIVE_USER = "hive"
 HBASE_USER= "hbase"
 KEY_ADMIN="keyadmin"
 HEADERS={"Content-Type": "application/json","Accept":"application/json"}
-PARAMS={"user.name":"keyadmin"}
-BASE_URL="http://localhost:9292/kms/v1"
 
 HADOOP_CONTAINER = "ranger-hadoop"
 KMS_CONTAINER = "ranger-kms"
 
 #KMS configs that needs to be added in XML file------------add more if needed
-KMS_PROPERTY = """<property><name>hadoop.security.key.provider.path</name><value>kms://http@host.docker.internal:9292/kms</value></property>"""
+KMS_PROPERTY = """<property><name>hadoop.security.key.provider.path</name><value>kms://http@ranger-kms.rangernw:9292/kms</value></property>"""
 
 CORE_SITE_XML_PATH = "/opt/hadoop/etc/hadoop/core-site.xml"
 HADOOP_NAMENODE_LOG_PATH="/opt/hadoop/logs/hadoop-hdfs-namenode-ranger-hadoop.rangernw.log"
@@ -44,12 +44,12 @@ KMS_LOG_PATH="/var/log/ranger/kms/ranger-kms-ranger-kms.rangernw-root.log"
 
 
 # HDFS Commands----------------------------------------------------
-CREATE_KEY_COMMAND = "hadoop key create {key_name} -size 128 -provider kms://http@host.docker.internal:9292/kms"
+CREATE_KEY_COMMAND = "hadoop key create {key_name} -size 128 -provider kms://http@ranger-kms.rangernw:9292/kms"
 
-VALIDATE_KEY_COMMAND = "hadoop key list -provider kms://http@host.docker.internal:9292/kms"
+VALIDATE_KEY_COMMAND = "hadoop key list -provider kms://http@ranger-kms.rangernw:9292/kms"
 
 CREATE_EZ_COMMANDS = [
-    "hdfs dfs -mkdir /{ez_name}",
+    "hdfs dfs -mkdir -p /{ez_name}",
     "hdfs crypto -createZone -keyName {key_name} -path /{ez_name}",
     "hdfs crypto -listZones"
 ]
@@ -86,8 +86,8 @@ UNAUTHORIZED_WRITE_COMMAND = 'hdfs dfs -put /home/{user}/{filename}.txt /{ez_nam
 UNAUTHORIZED_READ_COMMAND = "hdfs dfs -cat /{ez_name}/{filename}.txt"
 
 CLEANUP_COMMANDS = [
-    "hdfs dfs -rm /{ez_name}/{filename}.txt",
-    "hdfs dfs -rm -R /{ez_name}"
+    "hdfs dfs -rm -f /{ez_name}/{filename}.txt",
+    "hdfs dfs -rm -R -f /{ez_name}",
 ]
 CLEANUP_EZ = [
     "hdfs dfs -rm -R /{ez_name}"
@@ -95,6 +95,17 @@ CLEANUP_EZ = [
 CLEANUP_EZ_FILE = [
     "hdfs dfs -rm /{ez_name}/{filename}.txt"
 ]
-KEY_DELETION_CMD = "bash -c \"echo 'Y' | hadoop key delete {key_name} -provider kms://http@host.docker.internal:9292/kms\""
+KEY_DELETION_CMD = "bash -c \"echo 'Y' | hadoop key delete {key_name} -provider kms://http@ranger-kms.rangernw:9292/kms\""
 
-
+# All KMS keys used across hdfs tests
+TEST_KMS_KEYS = [
+    "hdfs-key",
+    "test-key1", "test-key2", "test-key3",
+    "cross-key", "cross-key2",
+]
+# All HDFS encryption zone paths
+TEST_EZ_PATHS = [
+    "/secure_zone",
+    "/secure_zone1",
+    "/secure_zone2",
+]
