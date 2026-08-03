@@ -22,8 +22,19 @@ package org.apache.ranger.util;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.ranger.biz.RangerBizUtil;
 import org.apache.ranger.common.AppConstants;
+import org.apache.ranger.common.RESTErrorUtil;
+import org.apache.ranger.common.UserSessionBase;
+import org.apache.ranger.entity.XXAuthSession;
 import org.apache.ranger.plugin.model.RangerServerHealth;
+import org.apache.ranger.security.web.filter.RangerAuthenticationToken;
+import org.apache.ranger.service.RangerServiceDefService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
+
+import javax.servlet.http.HttpServletResponse;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -37,6 +48,8 @@ import static org.apache.ranger.plugin.model.RangerServerHealth.RangerServerStat
 
 @Component
 public class RangerServerHealthUtil {
+    private static final Logger LOG = LoggerFactory.getLogger(RangerServerHealthUtil.class);
+
     private static final String COMPONENTS          = "components";
     private static final String STATUS              = "status";
     private static final String DETAILS             = "details";
@@ -46,6 +59,15 @@ public class RangerServerHealthUtil {
     private static final String DB_VERSION          = "version";
     private static final String DB_VALIDATION_QUERY = "validationQuery";
     private static final String NOT_AVAILABLE       = "Not Available";
+
+    @Autowired
+    RangerBizUtil bizUtil;
+
+    @Autowired
+    RangerServiceDefService serviceDefService;
+
+    @Autowired
+    RESTErrorUtil restErrorUtil;
 
     /* RangerAdmin Health Check JSON Response look like
      {
@@ -69,8 +91,8 @@ public class RangerServerHealthUtil {
         return RangerServerHealth.up().build();
     }
 
-    public RangerServerHealth serviceDown() {
-        return RangerServerHealth.down().build();
+    public RangerServerHealth serviceInitFailure() {
+        return RangerServerHealth.initFailure().build();
     }
 
     public RangerServerHealth serviceUpWithAvailableServiceDefs(List<String> serviceDefNames) {
@@ -113,5 +135,45 @@ public class RangerServerHealthUtil {
         }
 
         return ret;
+    }
+
+    public List<String> getServiceDefNames() {
+        LOG.debug("==> RangerServerHealthUtil.getServiceDefNames()");
+
+        if (!bizUtil.isHealthCheckUser(resolveAuthenticatedLoginId())) {
+            throw restErrorUtil.createRESTException(HttpServletResponse.SC_FORBIDDEN,
+                    "Only the healthcheck user may query service-def names via this path.", true);
+        }
+
+        List<String> ret = serviceDefService.getAllServiceDefNames();
+
+        LOG.debug("<== RangerServerHealthUtil.getServiceDefNames(): count={}", (ret == null ? 0 : ret.size()));
+
+        return ret;
+    }
+
+    /**
+     * Header-based auth sets {@link RangerAuthenticationToken} before Ranger
+     * {@link UserSessionBase} is available. Fall back to that token when the Ranger session
+     * has not been materialized yet (e.g. healthcheck user not in DB).
+     */
+    private String resolveAuthenticatedLoginId() {
+        String loginId = bizUtil.getCurrentUserLoginId();
+
+        if (loginId != null) {
+            return loginId;
+        }
+
+        Object authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        if (authentication instanceof RangerAuthenticationToken) {
+            RangerAuthenticationToken token = (RangerAuthenticationToken) authentication;
+
+            if (token.getAuthType() == XXAuthSession.AUTH_TYPE_TRUSTED_PROXY) {
+                return token.getName();
+            }
+        }
+
+        return null;
     }
 }

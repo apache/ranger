@@ -30,15 +30,13 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import javax.servlet.http.HttpServletRequest;
-
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-import static org.apache.ranger.plugin.model.RangerServerHealth.RangerServerStatus.DOWN;
+import static org.apache.ranger.plugin.model.RangerServerHealth.RangerServerStatus.INITIALIZATION_FAILURE;
 import static org.apache.ranger.plugin.model.RangerServerHealth.RangerServerStatus.UP;
 
 @ExtendWith(MockitoExtension.class)
@@ -49,14 +47,12 @@ public class TestRangerHealthREST {
     @InjectMocks
     RangerHealthREST       rangerHealthREST = new RangerHealthREST();
     @Mock
-    RangerBizUtil          xaBizUtil;
-    @Mock
-    ServiceREST            serviceREST;
+    RangerBizUtil          bizUtil;
 
     @Test
     public void testHealthCheckStatusAPI() {
         String dbVersion = "23.2.0";
-        Mockito.when(xaBizUtil.getDBVersion()).thenReturn(dbVersion);
+        Mockito.when(bizUtil.getDBVersion()).thenReturn(dbVersion);
         Mockito.when(rangerServerHealthUtil.getRangerServerHealth(dbVersion)).thenReturn(createRangerServerHealth());
         RangerServerHealth rangerServerHealth = rangerHealthREST.getRangerServerHealth();
         Assertions.assertEquals(UP, rangerServerHealth.getStatus(), "RangerHealth.down()");
@@ -73,27 +69,24 @@ public class TestRangerHealthREST {
 
     @Test
     public void testReadinessUpWhenServiceDefsExist() {
-        HttpServletRequest request = Mockito.mock(HttpServletRequest.class);
-
-        Mockito.when(serviceREST.getServiceDefNames()).thenReturn(Arrays.asList("hdfs"));
+        Mockito.when(rangerServerHealthUtil.getServiceDefNames()).thenReturn(Arrays.asList("hdfs"));
         Mockito.when(rangerServerHealthUtil.serviceUpWithAvailableServiceDefs(Arrays.asList("hdfs"))).thenReturn(RangerServerHealth.up().build());
 
         RangerServerHealth health = rangerHealthREST.getRangerServerReadiness();
         Assertions.assertEquals(UP, health.getStatus(), "readiness should be UP when service-defs exist");
-        Mockito.verify(serviceREST).getServiceDefNames();
+        Mockito.verify(rangerServerHealthUtil).getServiceDefNames();
         Mockito.verify(rangerServerHealthUtil).serviceUpWithAvailableServiceDefs(Arrays.asList("hdfs"));
     }
 
     @Test
-    public void testReadinessDownWhenNoServiceDefs() {
-        HttpServletRequest request = Mockito.mock(HttpServletRequest.class);
-
-        Mockito.when(serviceREST.getServiceDefNames()).thenReturn(Collections.emptyList());
-        Mockito.when(rangerServerHealthUtil.serviceDown()).thenReturn(RangerServerHealth.down().build());
+    public void testReadinessInitFailureWhenNoServiceDefs() {
+        Mockito.when(rangerServerHealthUtil.getServiceDefNames()).thenReturn(Collections.emptyList());
+        Mockito.when(rangerServerHealthUtil.serviceInitFailure()).thenReturn(RangerServerHealth.initFailure().build());
 
         RangerServerHealth health = rangerHealthREST.getRangerServerReadiness();
-        Assertions.assertEquals(DOWN, health.getStatus(), "readiness should be DOWN when no service-defs exist");
-        Mockito.verify(serviceREST).getServiceDefNames();
+        Assertions.assertEquals(INITIALIZATION_FAILURE, health.getStatus(),
+                "readiness should report INITIALIZATION_FAILURE when no service-defs exist");
+        Mockito.verify(rangerServerHealthUtil).getServiceDefNames();
     }
 
     private RangerServerHealth createRangerServerHealth() {

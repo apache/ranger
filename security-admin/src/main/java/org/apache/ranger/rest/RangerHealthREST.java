@@ -39,13 +39,10 @@ import java.util.List;
 @Scope("request")
 public class RangerHealthREST {
     @Autowired
-    RangerBizUtil xaBizUtil;
+    RangerBizUtil bizUtil;
 
     @Autowired
     RangerServerHealthUtil rangerServerHealthUtil;
-
-    @Autowired
-    ServiceREST serviceREST;
 
     /*
     This API is used to get the Health check of the Ranger Admin
@@ -55,7 +52,7 @@ public class RangerHealthREST {
     @Produces("application/json")
     @Transactional(propagation = Propagation.NOT_SUPPORTED)
     public RangerServerHealth getRangerServerHealth() {
-        String dbVersion = xaBizUtil.getDBVersion();
+        String dbVersion = bizUtil.getDBVersion();
 
         return rangerServerHealthUtil.getRangerServerHealth(dbVersion);
     }
@@ -65,12 +62,12 @@ public class RangerHealthREST {
     @Produces("application/json")
     @Transactional(propagation = Propagation.NOT_SUPPORTED)
     public RangerServerHealth getRangerServerReadiness() {
-        List<String> serviceDefNames = serviceREST.getServiceDefNames();
+        List<String> serviceDefNames = rangerServerHealthUtil.getServiceDefNames();
 
         if (serviceDefNames != null && !serviceDefNames.isEmpty()) {
             return rangerServerHealthUtil.serviceUpWithAvailableServiceDefs(serviceDefNames);
         } else {
-            return rangerServerHealthUtil.serviceDown();
+            return rangerServerHealthUtil.serviceInitFailure();
         }
     }
 

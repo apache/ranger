@@ -46,7 +46,7 @@ public class RangerConstants extends RangerCommonEnums {
     public static final String RANGER_ADMIN_SUPER_USERS  = "ranger.admin.super.users";
     public static final String RANGER_ADMIN_SUPER_GROUPS = "ranger.admin.super.groups";
 
-    // Built-in login id used by the Ranger Admin health readiness endpoint
+    // login id used by the Ranger Admin health readiness endpoint
     public static final String HEALTH_CHECK_USERNAME = "healthcheck";
 
     // Action constants

@@ -83,6 +83,9 @@ public class SessionMgr {
     RangerDaoManager daoManager;
 
     @Autowired
+    RangerBizUtil bizUtil;
+
+    @Autowired
     XUserMgr xUserMgr;
 
     @Autowired
@@ -510,7 +513,7 @@ public class SessionMgr {
         /*
         Recording an x_auth_sess row for every liveness/readiness probe is not required
          */
-        if (gjAuthSession != null && RangerConstants.HEALTH_CHECK_USERNAME.equalsIgnoreCase(gjAuthSession.getLoginId())) {
+        if (gjAuthSession != null && bizUtil.isHealthCheckUser(gjAuthSession.getLoginId())) {
             return gjAuthSession;
         }
 
@@ -528,7 +531,7 @@ public class SessionMgr {
         if (gjUser == null && ((request.getAttribute("spnegoEnabled") != null && (boolean) request.getAttribute("spnegoEnabled")) || (ssoEnabled))) {
             logger.debug("User : {} doesn't exist in Ranger DB So creating user as it's SSO or Spnego authenticated", currentLoginId);
 
-            if (RangerConstants.HEALTH_CHECK_USERNAME.equalsIgnoreCase(currentLoginId)) {
+            if (bizUtil.isHealthCheckUser(currentLoginId)) {
                 xUserMgr.createServiceConfigUserSynchronously(currentLoginId);
             } else {
                 xUserMgr.createServiceConfigUser(currentLoginId);

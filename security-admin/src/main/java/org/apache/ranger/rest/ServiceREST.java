@@ -57,7 +57,6 @@ import org.apache.ranger.common.UserSessionBase;
 import org.apache.ranger.common.db.RangerTransactionSynchronizationAdapter;
 import org.apache.ranger.db.RangerDaoManager;
 import org.apache.ranger.db.XXRoleDao;
-import org.apache.ranger.entity.XXAuthSession;
 import org.apache.ranger.entity.XXPolicy;
 import org.apache.ranger.entity.XXPolicyExportAudit;
 import org.apache.ranger.entity.XXPolicyLabel;
@@ -100,7 +99,6 @@ import org.apache.ranger.plugin.util.SearchFilter;
 import org.apache.ranger.plugin.util.ServicePolicies;
 import org.apache.ranger.security.context.RangerAPIList;
 import org.apache.ranger.security.context.RangerContextHolder;
-import org.apache.ranger.security.web.filter.RangerAuthenticationToken;
 import org.apache.ranger.security.web.filter.RangerCSRFPreventionFilter;
 import org.apache.ranger.service.RangerPluginInfoService;
 import org.apache.ranger.service.RangerPolicyLabelsService;
@@ -126,7 +124,6 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -608,46 +605,6 @@ public class ServiceREST {
         LOG.debug("<== ServiceREST.getServiceDefs(): count={}", (ret == null ? 0 : ret.getListSize()));
 
         return ret;
-    }
-
-    public List<String> getServiceDefNames() {
-        LOG.debug("==> ServiceREST.getServiceDefNames()");
-
-        if (!RangerConstants.HEALTH_CHECK_USERNAME.equalsIgnoreCase(resolveAuthenticatedLoginId())) {
-            throw restErrorUtil.createRESTException(HttpServletResponse.SC_FORBIDDEN,
-                    "Only the healthcheck user may query service-def names via this path.", true);
-        }
-
-        List<String> ret = serviceDefService.getAllServiceDefNames();
-
-        LOG.debug("<== ServiceREST.getServiceDefNames(): count={}", (ret == null ? 0 : ret.size()));
-
-        return ret;
-    }
-
-    /**
-     * Header-based auth sets {@link RangerAuthenticationToken} before Ranger
-     * {@link UserSessionBase} is available. Fall back to that token when the Ranger session
-     * has not been materialized yet (e.g. healthcheck user not in DB).
-     */
-    private String resolveAuthenticatedLoginId() {
-        String loginId = bizUtil.getCurrentUserLoginId();
-
-        if (loginId != null) {
-            return loginId;
-        }
-
-        Object authentication = SecurityContextHolder.getContext().getAuthentication();
-
-        if (authentication instanceof RangerAuthenticationToken) {
-            RangerAuthenticationToken token = (RangerAuthenticationToken) authentication;
-
-            if (token.getAuthType() == XXAuthSession.AUTH_TYPE_TRUSTED_PROXY) {
-                return token.getName();
-            }
-        }
-
-        return null;
     }
 
     @GET

@@ -122,6 +122,9 @@ public class TestSessionMgr {
     @Mock
     StringUtil stringUtil;
 
+    @Mock
+    RangerBizUtil bizUtil;
+
     @AfterEach
     public void tearDownSuperUserConfig() {
         PropertiesUtil.getPropertiesMap().remove(RangerConstants.RANGER_ADMIN_SUPER_USERS);
@@ -133,6 +136,8 @@ public class TestSessionMgr {
     public void testStoreAuthSessionSkipsHealthCheckUser() {
         XXAuthSession authSession = new XXAuthSession();
         authSession.setLoginId(RangerConstants.HEALTH_CHECK_USERNAME);
+
+        when(bizUtil.isHealthCheckUser(RangerConstants.HEALTH_CHECK_USERNAME)).thenReturn(true);
 
         XXAuthSession ret = sessionMgr.storeAuthSession(authSession);
 
@@ -146,6 +151,8 @@ public class TestSessionMgr {
     public void testStoreAuthSessionPersistsRegularUser() {
         XXAuthSession authSession = new XXAuthSession();
         authSession.setLoginId("regularUser");
+
+        when(bizUtil.isHealthCheckUser("regularUser")).thenReturn(false);
 
         XXAuthSession created = new XXAuthSession();
         created.setId(7L);

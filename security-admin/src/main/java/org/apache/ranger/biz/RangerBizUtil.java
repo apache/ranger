@@ -1170,6 +1170,10 @@ public class RangerBizUtil {
         return isAdmin;
     }
 
+    public boolean isHealthCheckUser(String user) {
+        return RangerConstants.HEALTH_CHECK_USERNAME.equalsIgnoreCase(user);
+    }
+
     /**
      * True when the current session is a config super-user per
      * {@code ranger.admin.super.users} / {@code ranger.admin.super.groups}.
