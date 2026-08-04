@@ -247,7 +247,7 @@ def delete_hdfs_path(container, path: str) -> None:
     )
 
 def cleanup_encryption_zone(container, ez_path: str) -> None:
-    """Remove EZ directory (and contents). Must run before deleting bound KMS key."""
+    # Remove EZ directory (Must run before deleting bound KMS key)
     delete_hdfs_path(container, ez_path)
 
 def cleanup_test_artifacts(container, keys: list, ez_paths: list) -> None:

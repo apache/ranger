@@ -57,25 +57,25 @@ class TestKeyOperations:
         # cleanup after test
         krb_requests.delete(f"{BASE_URL}/key/rollover-key", params=PARAMS)
 
-    ##chinmay bhaiya here the rollover code i gave to llm since giving error
+    #chinmay bhaiya here the rollover code i gave to llm since giving error
     # ***********************************************************************************
     #  Parametrized Roll over of key
     # ***********************************************************************************
-    # @pytest.mark.parametrize("key_name, expected_status", [
-    #     ("rollover-key", 200),             # Valid key rollover
-    #     ("non-existent-key", 500)          # Rollover on a non-existent key
-    # ])
+    @pytest.mark.parametrize("key_name, expected_status", [
+        ("rollover-key", 200),             # Valid key rollover
+        ("non-existent-key", 500)          # Rollover on a non-existent key
+    ])
 
-    # def test_roll_over_key(self, headers, key_name, expected_status):
+    def test_roll_over_key(self, headers, key_name, expected_status):
 
-    #     response = krb_requests.post(f"{BASE_URL}/key/{key_name}", json={}, headers=headers, params=PARAMS)
+        response = krb_requests.post(f"{BASE_URL}/key/{key_name}", json={}, headers=headers, params=PARAMS)
 
-    #     if response.status_code != expected_status:      #log check
-    #         logs=fetch_logs()
-    #         pytest.fail(f"Rollover key operation failed. API Response: {response.status_code} {response.text}\nLogs:\n{logs}")
+        if response.status_code != expected_status:      #log check
+            logs=fetch_logs()
+            pytest.fail(f"Rollover key operation failed. API Response: {response.status_code} {response.text}\nLogs:\n{logs}")
 
-    #     # Cleanup after test
-    #     krb_requests.delete(f"{BASE_URL}/key/rollover-key", params=PARAMS)
+        # Cleanup after test
+        krb_requests.delete(f"{BASE_URL}/key/rollover-key", params=PARAMS)
 
     @pytest.mark.parametrize("key_name, expected_status", [
         ("rollover-key", 200),

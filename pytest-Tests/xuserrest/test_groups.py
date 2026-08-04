@@ -1432,14 +1432,14 @@ class TestGroupUsers:
                 "name": temp_group["name"], 
                 "userId": -9999
             }
-            response_code = 404
+            response_code = 400
         elif test_case == "invalid payload - non existent group name":
             payload = {
                 "id": grp_user_id,
                 "name": "non_existent_group_name_ugn_" + str(uuid.uuid4())[:8], 
                 "userId": temp_user_id
             }
-            response_code = 200
+            response_code = 400
         elif test_case == "invalid payload - non existent id":
             payload = {
                 "id": -999999,

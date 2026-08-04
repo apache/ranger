@@ -29,7 +29,7 @@ import time
 from kms.utils import (
     fetch_logs, krb_requests,
     ensure_keyadmin_keytab, ensure_ticket,
-    BASE_URL, PARAMS
+    BASE_URL, PARAMS, ensure_test_user_exists, ensure_keyadmin_ticket, ensure_testuser_ticket, delete_test_user, ensure_testuser_keytab
 )
 
 RANGER_AUTH = ('keyadmin', 'rangerR0cks!')
@@ -111,7 +111,8 @@ def kms_policy(user1):
     }
 
     response = requests.post(BASE_URL_RANGER, auth=RANGER_AUTH, json=policy_data)
-    time.sleep(30)
+    #time.sleep(30)
+    time.sleep(5)  # Wait for Ranger to process the policy creation
     if response.status_code not in [200, 201]:
         raise Exception(f"Failed to create policy: {response.text}")
 

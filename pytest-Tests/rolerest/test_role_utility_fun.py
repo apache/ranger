@@ -211,59 +211,59 @@ class TestRoleUtilityFun:
             assert data.get("serviceName") == service_name, f"Expected serviceName {service_name}"
 
 
+    @pytest.mark.skip(reason = "Skipping download tests due to existing code changes in rolerest")
+    @pytest.mark.get
+    @pytest.mark.positive
+    @pytest.mark.parametrize(
+        "role, auth",
+        [
+            ("admin", "ranger_admin_config"),
+            ("key_admin", "ranger_key_admin_config"),
+            ("auditor", "ranger_auditor_config"),
+            ("user", "ranger_user_config"),
+        ]
+    )
+    @pytest.mark.parametrize(
+        "test_case, last_known_version, expected_status",
+        [
+            ("valid-service-no-change", -1, 304), # will be updated in future
+            ("valid-service-with-update", 0, 200),
+            ("valid-service-old-version", 1, 200),
+        ])
+    def test_get_download_by_serviceName(self, test_case, auth, last_known_version, expected_status, role):
+        auth = getattr(self, auth)
+        service_name = "dev_hdfs"  # valid existing service
 
-    # @pytest.mark.get
-    # @pytest.mark.positive
-    # @pytest.mark.parametrize(
-    #     "role, auth",
-    #     [
-    #         ("admin", "ranger_admin_config"),
-    #         ("key_admin", "ranger_key_admin_config"),
-    #         ("auditor", "ranger_auditor_config"),
-    #         ("user", "ranger_user_config"),
-    #     ]
-    # )
-    # @pytest.mark.parametrize(
-    #     "test_case, last_known_version, expected_status",
-    #     [
-    #         ("valid-service-no-change", -1, 304), # will be updated in future
-    #         ("valid-service-with-update", 0, 200),
-    #         ("valid-service-old-version", 1, 200),
-    #     ])
-    # def test_get_download_by_serviceName(self, test_case, auth, last_known_version, expected_status, role):
-    #     auth = getattr(self, auth)
-    #     service_name = "dev_hdfs"  # valid existing service
+        if test_case == "valid-service-no-change":
+            seed_response = requests.get(
+                f"{self.base_url}/roles/download/{service_name}",
+                params={"lastKnownUserStoreVersion": -1, "lastActivationTime": 0,
+                    "clusterName": "mycluster", "pluginId": "hdfs@host1"},
+                auth=auth,
+                headers=self.headers
+            )
+            assert seed_response.status_code == 200, f"Seed request failed: {seed_response.status_code}"
+            current_version = seed_response.json().get("userStoreVersion")
+            last_known_version = current_version  # now use the actual version → should get 304
 
-    #     if test_case == "valid-service-no-change":
-    #         seed_response = requests.get(
-    #             f"{self.base_url}/roles/download/{service_name}",
-    #             params={"lastKnownUserStoreVersion": -1, "lastActivationTime": 0,
-    #                 "clusterName": "mycluster", "pluginId": "hdfs@host1"},
-    #             auth=auth,
-    #             headers=self.headers
-    #         )
-    #         assert seed_response.status_code == 200, f"Seed request failed: {seed_response.status_code}"
-    #         current_version = seed_response.json().get("userStoreVersion")
-    #         last_known_version = current_version  # now use the actual version → should get 304
+        params = {
+            "lastKnownUserStoreVersion": last_known_version,
+            "lastActivationTime": 0,
+            "clusterName": "mycluster",
+            "pluginId": f"hdfs@host1"
+        }
 
-    #     params = {
-    #         "lastKnownUserStoreVersion": last_known_version,
-    #         "lastActivationTime": 0,
-    #         "clusterName": "mycluster",
-    #         "pluginId": f"hdfs@host1"
-    #     }
-
-    #     response = requests.get(
-    #         f"{self.base_url}/roles/download/{service_name}",
-    #         params=params,
-    #         auth=auth,
-    #         headers=self.headers
-    #     )
-    #     assert_response(response, expected_status, test_case)
-    #     if expected_status == 200:
-    #         data = response.json()
-    #         assert "userStoreVersion" in data, f"Response missing 'userStoreVersion' for {test_case}"
-    #         assert "userGroupMapping" in data or "users" in data, f"Response missing user/group data for {test_case}"
+        response = requests.get(
+            f"{self.base_url}/roles/download/{service_name}",
+            params=params,
+            auth=auth,
+            headers=self.headers
+        )
+        assert_response(response, expected_status, test_case)
+        if expected_status == 200:
+            data = response.json()
+            assert "userStoreVersion" in data, f"Response missing 'userStoreVersion' for {test_case}"
+            assert "userGroupMapping" in data or "users" in data, f"Response missing user/group data for {test_case}"
         
 
 
@@ -925,7 +925,7 @@ class TestRoleUtilityFun:
             ("empty-service-name", "ranger_admin_config", "", 404),
             ("admin-accessing-kms", "ranger_admin_config", "dev_kms", 403),
             ("unauthorized-auditor-access", "ranger_auditor_config", "dev_kms", 403),
-            ("unauthorized-user-access", "ranger_user_config", "dev_kms", 400),
+            ("unauthorized-user-access", "ranger_user_config", "dev_kms", 403),
             ("keyadmin-nonkms-access", "ranger_key_admin_config", "dev_hdfs", 400),
         ]
     )
@@ -951,45 +951,46 @@ class TestRoleUtilityFun:
 
         assert_response(response, expected_status, test_case)
 
-    # @pytest.mark.get
-    # @pytest.mark.negative
-    # @pytest.mark.parametrize(
-    #     "test_case, auth, expected_status",
-    #     [
-    #         #("unauthorized-access-user", "ranger_user_config", 403),
-    #         ("invalid-service-name", "ranger_admin_config", 404),
-    #         ("empty-service-name", "ranger_admin_config", 404),
-    #         ("missing-plugin-id", "ranger_admin_config", 200),
-    #     ]
-    # )
-    # def test_get_download_by_serviceName_negative(self, test_case, auth, expected_status):
-    #     auth_credentials = getattr(self, auth)
+    @pytest.mark.skip(reason = "Skipping download tests due to existing code changes in rolerest")
+    @pytest.mark.get
+    @pytest.mark.negative
+    @pytest.mark.parametrize(
+        "test_case, auth, expected_status",
+        [
+            #("unauthorized-access-user", "ranger_user_config", 403),
+            ("invalid-service-name", "ranger_admin_config", 404),
+            ("empty-service-name", "ranger_admin_config", 404),
+            ("missing-plugin-id", "ranger_admin_config", 200),
+        ]
+    )
+    def test_get_download_by_serviceName_negative(self, test_case, auth, expected_status):
+        auth_credentials = getattr(self, auth)
 
-    #     if test_case == "invalid-service-name":
-    #         service_name = "nonExistentService_XYZ"
-    #     elif test_case == "empty-service-name":
-    #         service_name = ""
-    #     else:
-    #         service_name = "dev_hdfs"  # Assuming this is your valid seed service
+        if test_case == "invalid-service-name":
+            service_name = "nonExistentService_XYZ"
+        elif test_case == "empty-service-name":
+            service_name = ""
+        else:
+            service_name = "dev_hdfs"  # Assuming this is your valid seed service
 
 
-    #     params = {
-    #         "lastKnownUserStoreVersion": -1,
-    #         "lastActivationTime": 0,
-    #         "clusterName": "mycluster",
-    #     }
+        params = {
+            "lastKnownUserStoreVersion": -1,
+            "lastActivationTime": 0,
+            "clusterName": "mycluster",
+        }
 
-    #     if test_case != "missing-plugin-id":
-    #         params["pluginId"] = "hdfs@host1"
+        if test_case != "missing-plugin-id":
+            params["pluginId"] = "hdfs@host1"
 
-    #     response = requests.get(
-    #         f"{self.base_url}/xusers/download/{service_name}",
-    #         params=params,
-    #         auth=auth_credentials,
-    #         headers=self.headers
-    #     )
+        response = requests.get(
+            f"{self.base_url}/xusers/download/{service_name}",
+            params=params,
+            auth=auth_credentials,
+            headers=self.headers
+        )
 
-    #     assert_response(response, expected_status, test_case)
+        assert_response(response, expected_status, test_case)
 
 
     @pytest.mark.post

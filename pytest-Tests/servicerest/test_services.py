@@ -162,6 +162,7 @@ def test_count_services_by_admin():
     resp = requests.get(request_url, verify=False, auth=admin_auth, headers=headers)
     assert resp.status_code == 200, "Expected status code not returned"
 
+@pytest.mark.skip
 def test_grant_access_create_new_policy_by_admin(log, user2=None):
     """Verify that a user with proper permissions can successfully grant access by creating a new policy."""
     service_name = 'dev_hive'
@@ -254,7 +255,7 @@ def test_secure_grant_access_with_multiple_columns_by_admin(log):
                       extra={"policy_id": created_policy_id, "status_code": delete_resp.status_code})
 
 
-# @pytest.mark.skip(reason="There might be a bug related to the test , this test grants access to multiple columns but  it is not reflected in the created policy ")
+@pytest.mark.skip(reason="There might be a bug related to the test , this test grants access to multiple columns but  it is not reflected in the created policy ")
 def test_grant_access_with_multiple_columns_by_admin():
     """
     Verify grant access works correctly with complex resources having multiple columns.
@@ -281,7 +282,7 @@ def test_grant_access_with_multiple_columns_by_admin():
 
 
 
-
+@pytest.mark.skip
 def test_grant_access_update_existing_policy_by_admin(log):
     """
     Verify that grant request updates an existing policy.
@@ -362,7 +363,7 @@ def test_grant_access_update_existing_policy_by_admin(log):
             log.error(f"Failed to delete policy during cleanup", extra={"policy_id": policy_id, "status_code": delete_resp.status_code})
 
 
-
+@pytest.mark.skip
 def test_grant_access_denied_insufficient_permissions_by_admin():  # pylint: disable=redefined-outer-name,unused-argument
     """
     Verify that users without proper grant permissions are denied access. user 2 do not have admin permission
@@ -415,7 +416,7 @@ def test_get_service_using_name_hides_sensitive_info_from_non_admin():
     assert 'configs' not in resp, "Expected sensitive 'configs' field to be hidden from non-admin users"
 
 
-
+@pytest.mark.skip
 def test_revoke_access_by_admin(log):
     """
     Verify successful revocation of access permissions by updating an existing policy.

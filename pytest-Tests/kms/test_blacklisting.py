@@ -60,7 +60,8 @@ def test_user_keyOperation_before_blacklist(headers):
 def test_blacklist_create(headers, user1):
     blacklist_op_users('CREATE', [user1])
     container.restart()
-    time.sleep(30)
+    #time.sleep(30)
+    time.sleep(5)
     ensure_ticket()
 
     key_name = "blacklist-key2"
@@ -71,7 +72,8 @@ def test_blacklist_create(headers, user1):
 
     unblacklist_op_users('CREATE', [user1])
     container.restart()
-    time.sleep(30)
+    #time.sleep(30)
+    time.sleep(5)
     ensure_ticket()
 
     # delete before retry — KMS may have written the key even on a 403
@@ -88,7 +90,8 @@ def test_blacklist_create(headers, user1):
 def test_blacklist_rollOver(headers, user1):
     blacklist_op_users('ROLLOVER', [user1])
     container.restart()
-    time.sleep(30)
+    #time.sleep(30)
+    time.sleep(5)
     ensure_ticket()
 
     key_name = "blacklist-key3"
@@ -101,7 +104,8 @@ def test_blacklist_rollOver(headers, user1):
 
     unblacklist_op_users('ROLLOVER', [user1])
     container.restart()
-    time.sleep(30)
+    #time.sleep(30)
+    time.sleep(5)
     ensure_ticket()
 
     response_after_unblacklist = krb_requests.post(f"{BASE_URL}/key/{key_name}", headers=headers, json={}, params=PARAMS)
@@ -115,7 +119,8 @@ def test_blacklist_rollOver(headers, user1):
 def test_blacklist_delete(headers, user1):
     blacklist_op_users('DELETE', [user1])
     container.restart()
-    time.sleep(30)
+    #time.sleep(30)
+    time.sleep(5)
     ensure_ticket()
 
     key_name = "blacklist-key4"
@@ -128,7 +133,8 @@ def test_blacklist_delete(headers, user1):
 
     unblacklist_op_users('DELETE', [user1])
     container.restart()
-    time.sleep(30)
+    #time.sleep(30)
+    time.sleep(5)
     ensure_ticket()
 
     delete_response_after = krb_requests.delete(f"{BASE_URL}/key/{key_name}", params=PARAMS)

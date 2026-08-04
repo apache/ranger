@@ -429,15 +429,7 @@ class TestRoleCRUD:
         assert_response(response, 200, f"Failed to get roles for user by userName and got response code {response.status_code} with \n response text: {response.text}")
         data = response.json()
         assert isinstance(data, list), f"Expected response to be a list of roles but got {type(data)} for test case {test_case}"
-        if test_case == "user assigned to roles via group membership":
-            if roles == "user":
-                assert data == [], f"1. expected silent failure and groups should not be returned for user role but got {data} for test case {test_case}"
-            elif u_role in ["admin", "auditor"] and roles == "keyadmin":
-                assert data == [], f"2. expected silent failure and groups should not be returned for non key admin role but got {data} for test case {test_case}"
-            elif u_role == "key_admin" and roles in ["admin", "auditor"]:
-                assert data == [], f"3. expected silent failure and groups should not be returned for non key admin role but got {data} for user role but got {data} for test case {test_case}"
-        else:
-            assert role['name'] in data, f"Expected role {role['name']} to be in the response but got {data} for test case {test_case}"
+        assert role['name'] in data, f"Expected role {role['name']} to be in the response but got {data} for test case {test_case}"
 
     @pytest.mark.get
     @pytest.mark.positive

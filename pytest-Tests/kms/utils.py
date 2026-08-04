@@ -27,9 +27,34 @@ import json
 import io
 import tarfile
 import docker
+import tempfile, os
+import xml.etree.ElementTree as ET
+import requests
+
+
+TESTUSER_PARAMS = {}
+BASE_URL_RANGER = "http://localhost:6080/service/public/v2/api/policy"
+BASE_URL_RANGER_USERS = "http://localhost:6080/service/xusers/secure/users"
+BASE_URL_RANGER_USERS_BY_NAME = "http://localhost:6080/service/xusers/users/userName"
+
+RANGER_ADMIN_AUTH = ("admin", "rangerR0cks!")
+RANGER_KMS_AUTH = ('keyadmin', 'rangerR0cks!')  # Ranger key admin user
+KMS_SERVICE_NAME = "dev_kms"
+TEST_USER = "testuser"
 
 KMS_CONTAINER_NAME = "ranger-kms"
 KMS_LOG_FILE = "/var/log/ranger/kms/ranger-kms-ranger-kms.rangernw-root.log"
+BASE_URL = "http://ranger-kms.rangernw:9292/kms/v1"
+PARAMS = {"user.name": "keyadmin"}
+client = docker.from_env()
+container = client.containers.get(KMS_CONTAINER_NAME)
+KEYADMIN_PRINCIPAL = "keyadmin@EXAMPLE.COM"
+KEYADMIN_KEYTAB = "/etc/keytabs/keyadmin.keytab"
+KDC_CONTAINER = "ranger-kdc"
+
+TESTUSER = "testuser"
+TESTUSER_PRINCIPAL = f"{TESTUSER}@EXAMPLE.COM"
+TESTUSER_KEYTAB = f"/etc/keytabs/{TESTUSER}.keytab"
 
 def fetch_logs():
     try:
@@ -40,21 +65,7 @@ def fetch_logs():
     except subprocess.CalledProcessError as e:
         return f"Failed to fetch logs from container. Command failed with exit code {e.returncode}: {e.output}"
 
-
-BASE_URL = "http://ranger-kms.rangernw:9292/kms/v1"
-PARAMS = {"user.name": "keyadmin"}
-
-client = docker.from_env()
-container = client.containers.get(KMS_CONTAINER_NAME)
-
-
 class KerberosRequests:
-    """
-    Runs curl --negotiate inside the KMS container.
-    Mirrors: curl --negotiate -u : "http://ranger-kms.rangernw:9292/kms/v1/keys/names"
-    Works on any host regardless of local GSSAPI/Kerberos setup.
-    """
-
     def _curl(self, method, url, json_body=None, params=None):
         full_url = url
         if params:
@@ -110,91 +121,8 @@ class _FakeResponse:
 
 krb_requests = KerberosRequests()
 
-
-
-
-def ensure_keyadmin_keytab():
-    """Creates keytab inside ranger-kdc and transfers to KMS — skips only if
-    both the keytab file is present AND the principal still exists in the KDC."""
-    kdc = client.containers.get("ranger-kdc")
-
-    # Check principal actually exists in the KDC database
-    exit_code, output = kdc.exec_run(
-        'kadmin.local -q "getprinc keyadmin@EXAMPLE.COM"', user="root"
-    )
-    principal_exists = exit_code == 0 and b"does not exist" not in output
-
-    exit_code, _ = container.exec_run("test -f /etc/keytabs/keyadmin.keytab", user="root")
-    keytab_present = exit_code == 0
-
-    if keytab_present and principal_exists:
-        print("Keytab present and principal valid in KDC — skipping generation.")
-        return
-
-    if keytab_present and not principal_exists:
-        print("Stale keytab found, but principal missing from KDC — regenerating.")
-
-    print("Generating keytab inside ranger-kdc …")
-    kdc.exec_run('kadmin.local -q "addprinc -randkey keyadmin@EXAMPLE.COM"', user="root")
-
-    exit_code, output = kdc.exec_run(
-        'kadmin.local -q "xst -k /tmp/keyadmin.keytab keyadmin@EXAMPLE.COM"', user="root"
-    )
-    if exit_code != 0:
-        raise RuntimeError(f"xst failed: {output.decode()}")
-
-    subprocess.check_call("docker cp ranger-kdc:/tmp/keyadmin.keytab ./keyadmin.keytab", shell=True)
-    subprocess.check_call(f"docker exec {KMS_CONTAINER_NAME} mkdir -p /etc/keytabs", shell=True)
-    subprocess.check_call(f"docker cp ./keyadmin.keytab {KMS_CONTAINER_NAME}:/etc/keytabs/keyadmin.keytab", shell=True)
-    container.exec_run("chown root:root /etc/keytabs/keyadmin.keytab", user="root")
-    container.exec_run("chmod 400 /etc/keytabs/keyadmin.keytab", user="root")
-    print("Keytab generated and transferred.")
-
-# def ensure_ticket():
-#     """Ensures a valid Kerberos ticket exists inside the KMS container."""
-#     exit_code, _ = container.exec_run("klist -s", user="root")
-#     if exit_code == 0:
-#         return
-#
-#     print("Ticket missing — running kinit inside KMS container …")
-#     exit_code, output = container.exec_run(
-#         "kinit -kt /etc/keytabs/keyadmin.keytab keyadmin@EXAMPLE.COM", user="root"
-#     )
-#     if exit_code != 0:
-#         raise RuntimeError(f"kinit failed: {output.decode()}")
-#     print("kinit succeeded.")
-
-'''KMS_PRINCIPAL = "rangerkms/ranger-kms.rangernw@EXAMPLE.COM"
-KMS_KEYTAB = "/etc/keytabs/rangerkms.keytab"
-def ensure_kms_keytab():
-    exit_code, _ = container.exec_run(f"test -f {KMS_KEYTAB}", user="root")
-    if exit_code != 0:
-        raise RuntimeError(
-            f"{KMS_KEYTAB} missing in ranger-kms — start KDC first, wait for keytabs"
-        )
-def ensure_ticket():
-    ensure_kms_keytab()
-    exit_code, _ = container.exec_run("klist -s", user="root")
-    if exit_code == 0:
-        return
-    exit_code, output = container.exec_run(
-        f"kinit -kt {KMS_KEYTAB} {KMS_PRINCIPAL}", user="root"
-    )
-    if exit_code != 0:
-        raise RuntimeError(f"kinit failed: {output.decode()}")'''
-
-KEYADMIN_PRINCIPAL = "keyadmin@EXAMPLE.COM"
-KEYADMIN_KEYTAB = "/etc/keytabs/keyadmin.keytab"
-KDC_CONTAINER = "ranger-kdc"
-
-
-def _ensure_kdc_principal_keytab(
-        principal: str,
-        dest_container_name: str,
-        dest_keytab_path: str,
-        kdc_tmp_path: str,
-) -> None:
-    """Idempotent: create principal in KDC, export keytab, copy to target container."""
+def _ensure_kdc_principal_keytab(principal: str, dest_container_name: str, dest_keytab_path: str, kdc_tmp_path: str, ) -> None:
+    # create principal in KDC, export keytab, copy to target container
     kdc = client.containers.get(KDC_CONTAINER)
     dest = client.containers.get(dest_container_name)
 
@@ -207,8 +135,6 @@ def _ensure_kdc_principal_keytab(
     )
     if exit_code != 0:
         raise RuntimeError(f"keytab export failed for {principal}: {output.decode()}")
-
-    import tempfile, os
     local = os.path.join(tempfile.gettempdir(), os.path.basename(dest_keytab_path))
     subprocess.check_call(f"docker cp {KDC_CONTAINER}:{kdc_tmp_path} {local}", shell=True)
     subprocess.check_call(f"docker cp {local} {dest_container_name}:{dest_keytab_path}", shell=True)
@@ -217,17 +143,11 @@ def _ensure_kdc_principal_keytab(
 
 
 def ensure_keyadmin_keytab():
-    """Runtime: create keyadmin@EXAMPLE.COM and install keytab in ranger-kms."""
-    _ensure_kdc_principal_keytab(
-        KEYADMIN_PRINCIPAL,
-        KMS_CONTAINER_NAME,
-        KEYADMIN_KEYTAB,
-        "/tmp/keyadmin.keytab",
-    )
-
+    # creation of keyadmin@example.com  & install keytab in ranger-kms
+    _ensure_kdc_principal_keytab(KEYADMIN_PRINCIPAL, KMS_CONTAINER_NAME, KEYADMIN_KEYTAB,"/tmp/keyadmin.keytab",)
 
 def ensure_ticket():
-    """Always kinit as keyadmin — do not reuse a stale rangerkms ticket from cache."""
+    # Always kinit as keyadmin — do not reuse a stale rangerkms ticket from cache.
     exit_code, _ = container.exec_run(f"test -f {KEYADMIN_KEYTAB}", user="root")
     if exit_code != 0:
         ensure_keyadmin_keytab()
@@ -239,7 +159,7 @@ def ensure_ticket():
     if exit_code != 0:
         raise RuntimeError(f"kinit failed: {output.decode()}")
 
-# **************** Blacklist helpers -----------------------------------------------
+# Blacklist helpers
 
 def modify_blacklist_property(operation, users, action="add"):
     dbks_site_path = (
@@ -248,8 +168,6 @@ def modify_blacklist_property(operation, users, action="add"):
     )
 
     ensure_ticket()
-
-    import xml.etree.ElementTree as ET
 
     result = container.exec_run(f"cat {dbks_site_path}", user="root")
     if result.exit_code != 0:
@@ -291,10 +209,7 @@ def modify_blacklist_property(operation, users, action="add"):
         tar.addfile(info, io.BytesIO(data))
     tarstream.seek(0)
 
-    container.put_archive(
-        path="/opt/ranger/ranger-3.0.0-SNAPSHOT-kms/ews/webapp/WEB-INF/classes/conf/",
-        data=tarstream
-    )
+    container.put_archive(path="/opt/ranger/ranger-3.0.0-SNAPSHOT-kms/ews/webapp/WEB-INF/classes/conf/", data=tarstream)
     print(f"Successfully {'added' if action == 'add' else 'removed'} {users} in {prop_name}")
 
 
@@ -304,3 +219,57 @@ def blacklist_op_users(operation, users=[]):
 
 def unblacklist_op_users(operation, users=[]):
     modify_blacklist_property(operation, users, action="remove")
+
+def ensure_testuser_keytab():
+    _ensure_kdc_principal_keytab(
+        TESTUSER_PRINCIPAL,
+        KMS_CONTAINER_NAME,
+        TESTUSER_KEYTAB,
+        f"/tmp/{TESTUSER}.keytab",
+    )
+
+def ensure_testuser_ticket():
+    ensure_testuser_keytab()
+    container.exec_run("kdestroy -A 2>/dev/null || true", user="root")
+    exit_code, output = container.exec_run(
+        f"kinit -kt {TESTUSER_KEYTAB} {TESTUSER_PRINCIPAL}", user="root"
+    )
+    if exit_code != 0:
+        raise RuntimeError(f"testuser kinit failed: {output.decode()}")
+
+def ensure_keyadmin_ticket():
+    ensure_keyadmin_keytab()
+    container.exec_run("kdestroy -A 2>/dev/null || true", user="root")
+    exit_code, output = container.exec_run(
+        f"kinit -kt {KEYADMIN_KEYTAB} {KEYADMIN_PRINCIPAL}", user="root"
+    )
+    if exit_code != 0:
+        raise RuntimeError(f"keyadmin kinit failed: {output.decode()}")
+
+def ensure_test_user_exists(username: str) -> None:
+    payload = {
+        "name": username,
+        "firstName": "Test",
+        "lastName": "User",
+        "password": "Password123!",
+        "description": "pytest dummy user created via API",
+        "status": 1,
+        "isVisible": 1,
+        "userSource": 0,
+        "userRoleList": ["ROLE_USER"],
+    }
+
+    r = requests.post(BASE_URL_RANGER_USERS, auth=RANGER_ADMIN_AUTH, json=payload)
+    if r.status_code in (200, 201):
+        return
+    raise RuntimeError(f"Failed to create Ranger user {username}: {r.status_code} {r.text}")
+
+def delete_test_user(username: str) -> None:
+    r = requests.delete(
+        f"{BASE_URL_RANGER_USERS_BY_NAME}/{username}",
+        params={"forceDelete": "true"},
+        auth=RANGER_ADMIN_AUTH,
+    )
+    if r.status_code in (200, 204, 404):
+        return
+    raise RuntimeError(f"Failed to delete Ranger user {username}: {r.status_code} {r.text}")
