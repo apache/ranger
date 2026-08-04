@@ -21,9 +21,3 @@
 # They are provided by a third-party and are governed by
 # separate terms of service, privacy policy, and support
 # documentation.
-
-[pytest]
-markers =
-    cleanEZ: clean up the encryption zone
-    createEZ: create encryption zone
-pythonpath = .

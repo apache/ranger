@@ -13,12 +13,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import requests
 import pytest
-from utils import fetch_logs
-
-BASE_URL = "http://localhost:9292/kms/v1"
-PARAMS = {"user.name": "keyadmin"}
+from kms.utils import (
+    krb_requests, fetch_logs,
+    BASE_URL, PARAMS
+)
 
 class TestKeyDetails:
 
@@ -30,10 +29,10 @@ class TestKeyDetails:
     #  Get key names
     # ***********************************************************************************
     def test_get_key_names(self):
-        response = requests.get(f"{BASE_URL}/keys/names",params=PARAMS)
+        response = krb_requests.get(f"{BASE_URL}/keys/names", params=PARAMS)
 
-        if response.status_code!=200:                        #log check
-            logs=fetch_logs()
+        if response.status_code != 200:                      # log check
+            logs = fetch_logs()
             pytest.fail(f"Get key operation failed. API Response: {response.text}\nLogs:\n{logs}")
 
         print(response.json())
@@ -50,13 +49,13 @@ class TestKeyDetails:
         ("non-existent-key", 200, "invalid"),     # Key does not exist but returns 200 with [] should give 404
     ])
     def test_get_key_metadata(self, headers, key_name, expected_status, expected_response):
-        response = requests.get(f"{BASE_URL}/key/{key_name}/_metadata", headers=headers, params=PARAMS)
+        response = krb_requests.get(f"{BASE_URL}/key/{key_name}/_metadata", headers=headers, params=PARAMS)
 
-        logs=fetch_logs()                #log check
-        assert response.status_code==expected_status,f"Get key metadata operation failed. API Response: {response.text}\nLogs:\n{logs}"
+        logs = fetch_logs()                       # log check
+        assert response.status_code == expected_status, f"Get key metadata operation failed. API Response: {response.text}\nLogs:\n{logs}"
 
         if expected_response == "invalid":
-            assert response.text.strip() in ["", "[ ]", "{ }"], f"Expected blank response for non-existent key, got: {response.text}"
+            assert response.text.strip() in ["", "{}", "{ }", "[]", "[ ]"], f"Expected blank response for non-existent key, got: {response.text}"
 
 
     # ***********************************************************************************
@@ -69,13 +68,13 @@ class TestKeyDetails:
         ("non-existent-key", 200,"invalid"),  # Key does not exist but returns 200 with [] should give 404
     ])
     def test_get_key_versions(self, headers, key_name, expected_status,expected_response):
-        response = requests.get(f"{BASE_URL}/key/{key_name}/_versions", headers=headers, params=PARAMS)
+        response = krb_requests.get(f"{BASE_URL}/key/{key_name}/_versions", headers=headers, params=PARAMS)
 
-        logs=fetch_logs()    #log check
-        assert response.status_code == expected_status,f"Get key version operation failed. API Response: {response.text}\nLogs:\n{logs}"
+        logs = fetch_logs()                   # log check
+        assert response.status_code == expected_status, f"Get key version operation failed. API Response: {response.text}\nLogs:\n{logs}"
 
         if expected_response == "invalid":
-            assert response.text.strip() in ["", "[ ]", "{ }"], f"Expected blank response for non-existent key, got: {response.text}"
+            assert response.text.strip() in ["", "{}", "{ }", "[]", "[ ]"], f"Expected blank response for non-existent key, got: {response.text}"
 
 
     # ***********************************************************************************
@@ -89,7 +88,7 @@ class TestKeyDetails:
         data = {
             "name":key_name
         }
-        create_response = requests.post(f"{BASE_URL}/keys", headers=headers, json=data, params=PARAMS)
+        create_response = krb_requests.post(f"{BASE_URL}/keys", headers=headers, json=data, params=PARAMS)
         assert create_response.status_code == 201, f"Key2 creation failed: {create_response.text}"
 
         try:
@@ -98,7 +97,7 @@ class TestKeyDetails:
             params = [("key", k) for k in existing_keys]
             params.append(("user.name", "keyadmin"))
 
-            response = requests.get(f"{BASE_URL}/keys/metadata", headers=headers, params=params)
+            response = krb_requests.get(f"{BASE_URL}/keys/metadata", headers=headers, params=params)
             assert response.status_code == 200, f"Metadata fetch failed: {response.status_code}"
 
             metadata = response.json()
@@ -111,14 +110,14 @@ class TestKeyDetails:
             params = [("key", k) for k in fake_keys]
             params.append(("user.name", "keyadmin"))
 
-            response = requests.get(f"{BASE_URL}/keys/metadata", headers=headers, params=params)
+            response = krb_requests.get(f"{BASE_URL}/keys/metadata", headers=headers, params=params)
             assert response.status_code == 200, f"Metadata fetch failed for non-existent keys: {response.status_code}"
 
             assert response.json() == [{}, {}], f"Expected blank response for non-existent key, got: {response.text}"
 
         finally:
             # Cleanup key2
-            requests.delete(f"{BASE_URL}/key/{key_name}", params=PARAMS)
+            krb_requests.delete(f"{BASE_URL}/key/{key_name}", params=PARAMS)
 
 
     # ***********************************************************************************
@@ -132,10 +131,10 @@ class TestKeyDetails:
     ])
 
     def test_get_key_version(self, headers, version_name, expected_status, expected_valid):
-        response = requests.get(f"{BASE_URL}/keyversion/{version_name}", headers=headers, params=PARAMS)
+        response = krb_requests.get(f"{BASE_URL}/keyversion/{version_name}", headers=headers, params=PARAMS)
 
         logs = fetch_logs()
-        assert response.status_code == expected_status,f"Get key version failed. Response: {response.text}\nLogs:\n{logs}"
+        assert response.status_code == expected_status, f"Get key version failed. Response: {response.text}\nLogs:\n{logs}"
 
         if expected_valid:
             try:
@@ -145,7 +144,7 @@ class TestKeyDetails:
             except ValueError:
                 pytest.fail(f"Expected valid JSON response, got: {response.text}")
         else:
-            assert response.text.strip() in [" ", "{ }", "[ ]"], f"Expected empty for invalid version, got: {response.text}"
+            assert response.text.strip() in ["", "{}", "{ }", "[]", "[ ]"], f"Expected blank response for non-existent key, got: {response.text}"
 
 
 

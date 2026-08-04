@@ -16,7 +16,9 @@
 import docker
 import pytest
 import time
-from test_config import (HADOOP_CONTAINER, HDFS_USER,KMS_PROPERTY,CORE_SITE_XML_PATH)
+from hdfs.test_config import CORE_SITE_XML_PATH, HADOOP_CONTAINER, HDFS_USER, KMS_CONTAINER, KMS_PROPERTY, TEST_EZ_PATHS, TEST_KMS_KEYS
+from hdfs.utils import cleanup_test_artifacts, ensure_hadoop_user_keytab, ensure_kms_hdfs_policy, ensure_kms_kerberos_rules
+from kms.utils import ensure_keyadmin_keytab, ensure_ticket
 
 # Setup Docker Client
 client = docker.from_env()
@@ -47,27 +49,14 @@ def ensure_key_provider_and_simple_auth(container) -> bool:
         )
         changed = True
 
-    # 2) Force auth to simple (replace value if property exists, else insert new property)
+    # 2) Fix stale host.docker.internal from previous runs
     exit_code, _ = container.exec_run(
-        f"grep -q '<name>hadoop.security.authentication</name>' {CORE_SITE_XML_PATH}",
+        f"grep -q 'host.docker.internal' {CORE_SITE_XML_PATH}",
         user="root",
     )
     if exit_code == 0:
         container.exec_run(
-            "sed -i "
-            "'/<name>hadoop.security.authentication<\\/name>/,/<\\/property>/ "
-            "s/<value>[^<]*<\\/value>/<value>simple<\\/value>/' "
-            f"{CORE_SITE_XML_PATH}",
-            user="root",
-        )
-        changed = True
-    else:
-        simple_prop = (
-            "<property><name>hadoop.security.authentication</name>"
-            "<value>simple</value></property>"
-        )
-        container.exec_run(
-            f"sed -i '/<\\/configuration>/i {simple_prop}' {CORE_SITE_XML_PATH}",
+            f"sed -i 's|host.docker.internal|ranger-kms.rangernw|g' {CORE_SITE_XML_PATH}",
             user="root",
         )
         changed = True
@@ -82,16 +71,73 @@ def ensure_user_exists(container, username: str) -> None:
     container.exec_run(f"useradd -m -s /bin/bash {username}", user="root")
     container.exec_run(f"usermod -aG hadoop {username}", user="root")
 
+def ensure_kms_provider_configured(container) -> bool:
+    """
+    Ensures KMS provider property exists in core-site.xml.
+    Returns True if the file was modified (restart needed).
+    """
+    changed = False
+
+    # 1) Ensure KMS provider property exists
+    exit_code, _ = container.exec_run(
+        f"grep -q 'hadoop.security.key.provider.path' {CORE_SITE_XML_PATH}",
+        user="root",
+    )
+    if exit_code != 0:
+        container.exec_run(
+            f"sed -i '/<\\/configuration>/i {KMS_PROPERTY}' {CORE_SITE_XML_PATH}",
+            user="root",
+        )
+        changed = True
+
+    # 2) Fix stale host.docker.internal from previous runs
+    exit_code, _ = container.exec_run(
+        f"grep -q 'host.docker.internal' {CORE_SITE_XML_PATH}",
+        user="root",
+    )
+    if exit_code == 0:
+        container.exec_run(
+            f"sed -i 's|host.docker.internal|ranger-kms.rangernw|g' {CORE_SITE_XML_PATH}",
+            user="root",
+        )
+        changed = True
+
+    return changed
 
 @pytest.fixture(scope="session", autouse=True)
 def setup_environment(hadoop_container):
-    changed = ensure_key_provider_and_simple_auth(hadoop_container)
+    changed = ensure_kms_provider_configured(hadoop_container)
     if changed:
         hadoop_container.restart()
+        time.sleep(30)
 
-    time.sleep(30)  # Wait for container to restart and services to come up
+    ensure_user_exists(hadoop_container, "hive")
+    ensure_user_exists(hadoop_container, "hbase")
+    ensure_hadoop_user_keytab("hive")
 
-    ensure_user_exists(hadoop_container, "keyadmin")
-    hadoop_container.exec_run("hdfs dfsadmin -safemode leave", user=HDFS_USER)
+    # safemode leave with kerberos (hdfs principal already has keytab in container)
+    hadoop_container.exec_run(
+        ["bash", "-c",
+         "kinit -kt /etc/keytabs/hdfs.keytab hdfs/ranger-hadoop.rangernw@EXAMPLE.COM 2>/dev/null;"
+         "hdfs dfsadmin -safemode leave"],
+        user=HDFS_USER,
+    )
 
+    kms_container = client.containers.get(KMS_CONTAINER)
+    if ensure_kms_kerberos_rules(kms_container):
+        time.sleep(5)
+
+    ensure_keyadmin_keytab()
+    ensure_ticket()
+    ensure_kms_hdfs_policy()
+    ensure_ticket()
+
+    cleanup_test_artifacts(hadoop_container, TEST_KMS_KEYS, TEST_EZ_PATHS)
     yield
+    cleanup_test_artifacts(hadoop_container, TEST_KMS_KEYS, TEST_EZ_PATHS)
+
+@pytest.fixture(scope="session", autouse=True)
+def setup_kerberos():
+    ensure_keyadmin_keytab()
+    ensure_ticket()
+

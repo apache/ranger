@@ -13,14 +13,21 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import pytest
 import requests
+import pytest
+import time
 
-from utils import fetch_logs
+from kms.utils import (
+    fetch_logs, krb_requests,
+    ensure_keyadmin_keytab, ensure_ticket,
+    BASE_URL, PARAMS, ensure_test_user_exists, ensure_keyadmin_ticket, ensure_testuser_ticket, delete_test_user, ensure_testuser_keytab
+)
 
-BASE_URL="http://localhost:9292/kms/v1"
-PARAMS={"user.name":"keyadmin"}
-HEADERS={"Content-Type": "application/json"}
+RANGER_AUTH = ('keyadmin', 'rangerR0cks!')
+BASE_URL_RANGER = "http://localhost:6080/service/public/v2/api/policy"
+KMS_SERVICE_NAME = "dev_kms"
+TEST_USER = "keyadmin"
+HEADERS = {"Content-Type": "application/json"}
 
 @pytest.fixture(scope="session")
 def headers():
@@ -28,21 +35,60 @@ def headers():
 
 @pytest.fixture(scope="class")
 def create_test_key(headers):
-    data={
-        "name":"key1",
-        "cipher": "AES/CTR/NoPadding",      # material can be provided (optional)
+    data = {
+        "name": "key1",
+        "cipher": "AES/CTR/NoPadding",
         "length": 128,
         "description": "Test key"
     }
 
-    key_creation_response=requests.post(f"{BASE_URL}/keys",headers=headers,json=data,params=PARAMS)
+    key_creation_response = krb_requests.post(
+        f"{BASE_URL}/keys", headers=headers, json=data, params=PARAMS
+    )
 
     if key_creation_response.status_code != 201:
-        error_logs = fetch_logs()            # Fetch logs on failure
-        pytest.fail(f"Key creation failed. API Response: {key_creation_response.text}\nLogs:\n{error_logs}")
+        error_logs = fetch_logs()
+        pytest.fail(
+            f"Key creation failed. API Response: {key_creation_response.text}\nLogs:\n{error_logs}"
+        )
 
     yield data
-    requests.delete(f"{BASE_URL}/key/key1",params=PARAMS)
 
+    krb_requests.delete(f"{BASE_URL}/key/key1", params=PARAMS)
 
+@pytest.fixture(scope="module")
+def user1():
+    return TEST_USER
 
+@pytest.fixture(scope="module")
+def kms_policy(user1):
+    policy_data = {
+        "policyName": "blacklist-policy",
+        "service": KMS_SERVICE_NAME,
+        "resources": {
+            "keyname": {
+                "values": ["blacklist-*"],
+                "isExcludes": False,
+                "isRecursive": False
+            }
+        },
+        "policyItems": [{
+            "accesses": [
+                {"type": "CREATE",   "isAllowed": True},
+                {"type": "ROLLOVER", "isAllowed": True},
+                {"type": "DELETE",   "isAllowed": True}
+            ],
+            "users": [user1]
+        }]
+    }
+
+    response = requests.post(BASE_URL_RANGER, auth=RANGER_AUTH, json=policy_data)
+    #time.sleep(30)
+    time.sleep(5)  # Wait for Ranger to process the policy creation
+    if response.status_code not in [200, 201]:
+        raise Exception(f"Failed to create policy: {response.text}")
+
+    policy_id = response.json()["id"]
+    yield policy_id
+
+    requests.delete(f"{BASE_URL_RANGER}/{policy_id}", auth=RANGER_AUTH)
