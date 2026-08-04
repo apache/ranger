@@ -67,18 +67,21 @@ public class RangerHealthREST {
     @Produces("application/json")
     @Transactional(propagation = Propagation.NOT_SUPPORTED)
     public RangerServerHealth getRangerServerReadiness() {
-        List<String> serviceDefNames = rangerServerHealthUtil.getServiceDefNames();
-
         if (!bizUtil.isHealthCheckUser(rangerServerHealthUtil.resolveAuthenticatedLoginId())) {
             throw restErrorUtil.createRESTException(HttpServletResponse.SC_FORBIDDEN,
                     "Only the healthcheck user may query service-def names via this path.", true);
         }
 
+        List<String> serviceDefNames = rangerServerHealthUtil.getServiceDefNames();
+        RangerServerHealth serverHealth;
+
         if (serviceDefNames != null && !serviceDefNames.isEmpty()) {
-            return rangerServerHealthUtil.serviceUpWithAvailableServiceDefs(serviceDefNames);
+            serverHealth = rangerServerHealthUtil.serviceUpWithAvailableServiceDefs(serviceDefNames);
         } else {
-            return rangerServerHealthUtil.serviceInitFailure();
+            serverHealth = rangerServerHealthUtil.serviceInitFailure();
         }
+
+        return serverHealth;
     }
 
     @GET
