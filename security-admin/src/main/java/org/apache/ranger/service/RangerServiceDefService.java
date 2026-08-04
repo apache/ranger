@@ -19,6 +19,7 @@ package org.apache.ranger.service;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.ranger.authorization.hadoop.config.RangerAdminConfig;
+import org.apache.ranger.db.XXServiceDefDao;
 import org.apache.ranger.entity.XXServiceDef;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerPolicyConditionDef;
@@ -58,6 +59,10 @@ public class RangerServiceDefService extends RangerServiceDefServiceBase<XXServi
         }
 
         return serviceDefList;
+    }
+
+    public List<String> getAllServiceDefNames() {
+        return ((XXServiceDefDao) getDao()).findAllNames();
     }
 
     public RangerServiceDef getPopulatedViewObject(XXServiceDef xServiceDef) {
