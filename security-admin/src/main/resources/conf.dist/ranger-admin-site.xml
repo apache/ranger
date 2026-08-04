@@ -302,10 +302,6 @@
 		<value>https://127.0.0.1:8443/gateway/knoxsso/api/v1/websso</value>
 	</property>
 	<property>
-		<name>ranger.sso.publicKey</name>
-		<value></value>
-	</property>
-	<property>
 		<name>ranger.sso.enabled</name>
 		<value>false</value>
 	</property>	
@@ -314,6 +310,10 @@
 		<value>Mozilla,chrome</value>
 	</property>
 	<!-- SSO Properties Ends-->
+	<property>
+		<name>ranger.admin.healthcheck.username</name>
+		<value>healthcheck</value>
+	</property>
 	<!-- Trusted header auth properties start -->
 	<property>
 		<name>ranger.admin.authn.header.enabled</name>
