@@ -63,7 +63,6 @@ public class RangerServerHealthUtil {
     @Autowired
     RangerServiceDefService serviceDefService;
 
-
     /* RangerAdmin Health Check JSON Response look like
      {
        "status": "UP",
