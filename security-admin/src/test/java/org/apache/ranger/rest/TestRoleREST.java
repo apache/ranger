@@ -1728,4 +1728,24 @@ public class TestRoleREST {
             roleRest.getSecureRangerRolesIfUpdated(serviceName, -1L, 0L, pluginId, clusterName, pluginCapabilities, Mockito.mock(HttpServletRequest.class));
         });
     }
+
+    @Test
+    public void test35GrantRoleNonExistentRole() throws Exception {
+        String                 serviceName            = "serviceName";
+        GrantRevokeRoleRequest grantRevokeRoleRequest = createGrantRevokeRoleRequest();
+        String                 roleName               = "role_100";
+        WebApplicationException roleNotFoundException   = new WebApplicationException("Role with name: " + roleName + " does not exist");
+
+        grantRevokeRoleRequest.setTargetRoles(new HashSet<>(Collections.singletonList(roleName)));
+
+        Mockito.when(bizUtil.isUserRangerAdmin(Mockito.anyString())).thenReturn(true);
+        Mockito.when(roleStore.getRole(roleName)).thenThrow(roleNotFoundException);
+
+        WebApplicationException exception = Assertions.assertThrows(WebApplicationException.class, () -> {
+            roleRest.grantRole(serviceName, grantRevokeRoleRequest, Mockito.mock(HttpServletRequest.class));
+        });
+
+        Assertions.assertNotNull(exception);
+        Mockito.verify(roleStore, Mockito.times(1)).getRole(roleName);
+    }
 }
