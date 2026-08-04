@@ -214,7 +214,7 @@ public class RoleDBStore implements RoleStore {
         XXRole xxRole = daoMgr.getXXRole().findByRoleName(name);
 
         if (xxRole == null) {
-            throw restErrorUtil.createRESTException("Role with name: " + name + " does not exist");
+            throw restErrorUtil.createRESTException("Role with name: " + name + " does not exist.");
         }
 
         return roleService.read(xxRole.getId());

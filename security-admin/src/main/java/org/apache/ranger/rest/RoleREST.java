@@ -1283,6 +1283,8 @@ public class RoleREST {
             } else {
                 existingRole = roleStore.getRole(roleName);
             }
+        } catch (WebApplicationException ex) {
+            throw ex;
         } catch (Exception ex) {
             LOG.error(ex.getMessage());
 
