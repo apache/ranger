@@ -22,7 +22,6 @@ package org.apache.ranger.util;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.ranger.biz.RangerBizUtil;
 import org.apache.ranger.common.AppConstants;
-import org.apache.ranger.common.RESTErrorUtil;
 import org.apache.ranger.common.UserSessionBase;
 import org.apache.ranger.entity.XXAuthSession;
 import org.apache.ranger.plugin.model.RangerServerHealth;
@@ -33,8 +32,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
-
-import javax.servlet.http.HttpServletResponse;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -66,8 +63,6 @@ public class RangerServerHealthUtil {
     @Autowired
     RangerServiceDefService serviceDefService;
 
-    @Autowired
-    RESTErrorUtil restErrorUtil;
 
     /* RangerAdmin Health Check JSON Response look like
      {
@@ -140,11 +135,6 @@ public class RangerServerHealthUtil {
     public List<String> getServiceDefNames() {
         LOG.debug("==> RangerServerHealthUtil.getServiceDefNames()");
 
-        if (!bizUtil.isHealthCheckUser(resolveAuthenticatedLoginId())) {
-            throw restErrorUtil.createRESTException(HttpServletResponse.SC_FORBIDDEN,
-                    "Only the healthcheck user may query service-def names via this path.", true);
-        }
-
         List<String> ret = serviceDefService.getAllServiceDefNames();
 
         LOG.debug("<== RangerServerHealthUtil.getServiceDefNames(): count={}", (ret == null ? 0 : ret.size()));
@@ -157,7 +147,7 @@ public class RangerServerHealthUtil {
      * {@link UserSessionBase} is available. Fall back to that token when the Ranger session
      * has not been materialized yet (e.g. healthcheck user not in DB).
      */
-    private String resolveAuthenticatedLoginId() {
+    public String resolveAuthenticatedLoginId() {
         String loginId = bizUtil.getCurrentUserLoginId();
 
         if (loginId == null) {

@@ -20,6 +20,7 @@
 package org.apache.ranger.rest;
 
 import org.apache.ranger.biz.RangerBizUtil;
+import org.apache.ranger.common.RESTErrorUtil;
 import org.apache.ranger.plugin.model.RangerServerHealth;
 import org.apache.ranger.util.RangerServerHealthUtil;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,6 +29,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
@@ -43,6 +45,9 @@ public class RangerHealthREST {
 
     @Autowired
     RangerServerHealthUtil rangerServerHealthUtil;
+
+    @Autowired
+    RESTErrorUtil restErrorUtil;
 
     /*
     This API is used to get the Health check of the Ranger Admin
@@ -63,6 +68,11 @@ public class RangerHealthREST {
     @Transactional(propagation = Propagation.NOT_SUPPORTED)
     public RangerServerHealth getRangerServerReadiness() {
         List<String> serviceDefNames = rangerServerHealthUtil.getServiceDefNames();
+
+        if (!bizUtil.isHealthCheckUser(rangerServerHealthUtil.resolveAuthenticatedLoginId())) {
+            throw restErrorUtil.createRESTException(HttpServletResponse.SC_FORBIDDEN,
+                    "Only the healthcheck user may query service-def names via this path.", true);
+        }
 
         if (serviceDefNames != null && !serviceDefNames.isEmpty()) {
             return rangerServerHealthUtil.serviceUpWithAvailableServiceDefs(serviceDefNames);
