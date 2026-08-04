@@ -107,7 +107,7 @@ jobs:
       - name: Download DB and Log4J connectors
         run: |
           cd dev-support/ranger-docker
-          ./download-archives.sh none
+          ./download-archives.sh opensearch
       
       - name: Build all ranger-service images
         run: |
@@ -115,7 +115,7 @@ jobs:
           export RANGER_DB_TYPE=postgres
           docker compose \
           -f docker-compose.ranger.yml \
-          -f docker-compose.ranger-solr.yml \
+          -f docker-compose.ranger-opensearch.yml \
           -f docker-compose.ranger-pdp.yml \
           -f docker-compose.ranger-usersync.yml \
           -f docker-compose.ranger-tagsync.yml \
@@ -127,7 +127,7 @@ jobs:
           export RANGER_DB_TYPE=postgres
           docker compose \
           -f docker-compose.ranger.yml \
-          -f docker-compose.ranger-solr.yml \
+          -f docker-compose.ranger-opensearch.yml \
           -f docker-compose.ranger-pdp.yml \
           -f docker-compose.ranger-usersync.yml \
           -f docker-compose.ranger-tagsync.yml \
@@ -136,7 +136,7 @@ jobs:
       - name: Check status of containers and remove them
         run: |
           sleep 60
-          containers=(ranger ranger-zk ranger-solr ranger-postgres ranger-pdp ranger-usersync ranger-tagsync ranger-kms);
+          containers=(ranger ranger-zk ranger-opensearch ranger-postgres ranger-pdp ranger-usersync ranger-tagsync ranger-kms);
           flag=true;
           for container in "${containers[@]}"; do
               if [[ $(docker inspect -f '{{.State.Running}}' $container 2>/dev/null) == "true" ]]; then

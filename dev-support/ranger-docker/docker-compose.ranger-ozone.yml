@@ -14,7 +14,7 @@ services:
     depends_on:
       ranger-kdc:
         condition: service_started
-    command: bash -c "unset KERBEROS_ENABLED; sudo mkdir -p /data/hdds /data/metadata && sudo chown -R hadoop:hadoop /data && exec /opt/hadoop/bin/ozone datanode"
+    command: bash -c "until [ -f /etc/keytabs/.provisioned ]; do echo 'waiting for keytabs...'; sleep 3; done && unset KERBEROS_ENABLED; sudo mkdir -p /data/hdds /data/metadata && sudo chown -R hadoop:hadoop /data && exec /opt/hadoop/bin/ozone datanode"
     env_file:
       - ./scripts/ozone/docker-config
     environment:
@@ -59,7 +59,7 @@ services:
     env_file:
       - ./scripts/ozone/docker-config
     # Do not pass KERBEROS_ENABLED: Ozone libexec/entrypoint.sh waits for krb5:8081.
-    command: bash -c "unset KERBEROS_ENABLED; source /opt/hadoop/ranger-ozone-plugin/ranger-ozone-setup.sh && (test -f /data/metadata/om/current/VERSION || /opt/hadoop/bin/ozone om --init) && exec /opt/hadoop/bin/ozone om"
+    command: bash -c "until [ -f /etc/keytabs/.provisioned ]; do echo 'waiting for keytabs...'; sleep 3; done && unset KERBEROS_ENABLED; source /opt/hadoop/ranger-ozone-plugin/ranger-ozone-setup.sh && (test -f /data/metadata/om/current/VERSION || /opt/hadoop/bin/ozone om --init) && exec /opt/hadoop/bin/ozone om"
   scm:
     image: ${OZONE_RUNNER_IMAGE}:${OZONE_RUNNER_VERSION}
     container_name: ozone-scm
@@ -81,7 +81,7 @@ services:
     environment:
       RANGER_KERBEROS_ENABLED: ${KERBEROS_ENABLED}
       OZONE-SITE.XML_hdds.scm.safemode.min.datanode: "${OZONE_SAFEMODE_MIN_DATANODES:-1}"
-    command: bash -c "unset KERBEROS_ENABLED; (test -f /data/metadata/scm/current/VERSION || /opt/hadoop/bin/ozone scm --init) && exec /opt/hadoop/bin/ozone scm"
+    command: bash -c "until [ -f /etc/keytabs/.provisioned ]; do echo 'waiting for keytabs...'; sleep 3; done && unset KERBEROS_ENABLED; (test -f /data/metadata/scm/current/VERSION || /opt/hadoop/bin/ozone scm --init) && exec /opt/hadoop/bin/ozone scm"
 
 networks:
   ranger:

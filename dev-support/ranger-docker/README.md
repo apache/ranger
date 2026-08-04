@@ -80,8 +80,11 @@ cd dev-support/ranger-docker
 # export ENABLE_FILE_SYNC_SOURCE=true
 
 # valid values for RANGER_DB_TYPE: mysql/postgres/oracle
+# valid values for RANGER_AUDIT_STORE: opensearch (default) | solr
+# The core stack brings up the audit backend for the default store (OpenSearch).
+# For Solr: export RANGER_AUDIT_STORE=solr and replace -f docker-compose.ranger-opensearch.yml with -f docker-compose.ranger-solr.yml below.
 
-docker compose -f docker-compose.ranger.yml -f docker-compose.ranger-solr.yml -f docker-compose.ranger-usersync.yml -f docker-compose.ranger-tagsync.yml -f docker-compose.ranger-pdp.yml -f docker-compose.ranger-kms.yml up -d
+docker compose -f docker-compose.ranger.yml -f docker-compose.ranger-opensearch.yml -f docker-compose.ranger-usersync.yml -f docker-compose.ranger-tagsync.yml -f docker-compose.ranger-pdp.yml -f docker-compose.ranger-kms.yml up -d
 
 # Ranger Admin can be accessed at http://localhost:6080 (admin/rangerR0cks!)
 ~~~
@@ -121,7 +124,7 @@ docker compose -f docker-compose.ranger-build.yml up
    `scripts/admin/ranger-admin-install-<db>.properties` and recreate Admin so
    setup runs again:
    ~~~
-   docker compose -f docker-compose.ranger.yml -f docker-compose.ranger-solr.yml -f docker-compose.ranger-ozone.yml \
+   docker compose -f docker-compose.ranger.yml -f docker-compose.ranger-opensearch.yml -f docker-compose.ranger-ozone.yml \
      up -d --build --force-recreate ranger
    ~~~
    Works even if the DB already exists; setup re-runs on a fresh container.
@@ -135,7 +138,7 @@ service-def.
 
 ~~~
 ./scripts/ozone/ozone-plugin-docker-setup.sh
-docker compose -f docker-compose.ranger.yml -f docker-compose.ranger-solr.yml -f docker-compose.ranger-ozone.yml up -d
+docker compose -f docker-compose.ranger.yml -f docker-compose.ranger-opensearch.yml -f docker-compose.ranger-ozone.yml up -d
 ~~~
 
 Verify (after login):
@@ -169,8 +172,7 @@ used by the Solr audit path.
 
 ##### Setup
 
-With the default `RANGER_DB_TYPE=postgres`, OpenSearch auditing is preconfigured and runs
-out of the box — the commands below need no `install.properties` changes.
+Set `RANGER_AUDIT_STORE=opensearch` — no manual `install.properties` edits needed.
 
 ~~~
 # Prerequisites: build Ranger artifacts (admin, audit ingestor/dispatcher, ...) and download archives
@@ -180,6 +182,7 @@ cd dev-support/ranger-docker
 ./download-archives.sh kafka opensearch hadoop
 
 export RANGER_DB_TYPE=postgres
+export RANGER_AUDIT_STORE=opensearch
 
 # 1. Start OpenSearch first (Ranger Admin's bootstrapper needs it on startup)
 docker compose -f docker-compose.ranger.yml -f docker-compose.ranger-opensearch.yml \
@@ -202,23 +205,22 @@ docker compose -f docker-compose.ranger.yml -f docker-compose.ranger-opensearch.
   -f docker-compose.ranger-audit-dispatcher-opensearch.yml up -d ranger-audit-ingestor ranger-audit-dispatcher-opensearch
 ~~~
 
-To use OpenSearch with **mysql or oracle** instead, enable the OpenSearch block in the matching
-`scripts/admin/ranger-admin-install-${RANGER_DB_TYPE}.properties` (uncomment the `audit_store=opensearch`
-and `audit_opensearch_*` lines and comment out the Solr block) before running the setup commands.
+To use OpenSearch with **any DB type**, simply set `export RANGER_AUDIT_STORE=opensearch` before
+bringing up the stack — no manual `install.properties` edits required.
 
-For **existing Solr-based installs**, switch stores by setting `audit_store=opensearch` (and the
-`audit_opensearch_*` properties) in install.properties and restarting Ranger Admin.
+For **existing Solr-based installs**, set `RANGER_AUDIT_STORE=opensearch`, recreate the Ranger
+Admin container (so setup re-runs with the new audit block), and restart.
 Similarly, check the `depends` section of the `docker-compose.ranger-service.yaml` file and add docker-compose files for these services when trying to bring up the `service` container.
 
 #### Bring up all containers
 ~~~
 ./scripts/ozone/ozone-plugin-docker-setup.sh
-docker compose -f docker-compose.ranger.yml -f docker-compose.ranger-solr.yml -f docker-compose.ranger-usersync.yml -f docker-compose.ranger-tagsync.yml -f docker-compose.ranger-pdp.yml -f docker-compose.ranger-kms.yml -f docker-compose.ranger-hadoop.yml -f docker-compose.ranger-hbase.yml -f docker-compose.ranger-kafka.yml -f docker-compose.ranger-hive.yml -f docker-compose.ranger-knox.yml -f docker-compose.ranger-ozone.yml up -d
+docker compose -f docker-compose.ranger.yml -f docker-compose.ranger-opensearch.yml -f docker-compose.ranger-usersync.yml -f docker-compose.ranger-tagsync.yml -f docker-compose.ranger-pdp.yml -f docker-compose.ranger-kms.yml -f docker-compose.ranger-hadoop.yml -f docker-compose.ranger-hbase.yml -f docker-compose.ranger-kafka.yml -f docker-compose.ranger-hive.yml -f docker-compose.ranger-knox.yml -f docker-compose.ranger-ozone.yml up -d
 ~~~
           
 #### To rebuild specific images and start containers with the new image:
 ~~~
-docker compose -f docker-compose.ranger.yml -f docker-compose.ranger-solr.yml -f docker-compose.ranger-usersync.yml -f docker-compose.ranger-tagsync.yml -f docker-compose.ranger-kms.yml -f docker-compose.ranger-hadoop.yml -f docker-compose.ranger-hbase.yml -f docker-compose.ranger-kafka.yml -f docker-compose.ranger-hive.yml -f docker-compose.ranger-trino.yml -f docker-compose.ranger-knox.yml up -d --no-deps --force-recreate --build <service-1> <service-2>
+docker compose -f docker-compose.ranger.yml -f docker-compose.ranger-opensearch.yml -f docker-compose.ranger-usersync.yml -f docker-compose.ranger-tagsync.yml -f docker-compose.ranger-kms.yml -f docker-compose.ranger-hadoop.yml -f docker-compose.ranger-hbase.yml -f docker-compose.ranger-kafka.yml -f docker-compose.ranger-hive.yml -f docker-compose.ranger-trino.yml -f docker-compose.ranger-knox.yml up -d --no-deps --force-recreate --build <service-1> <service-2>
 ~~~
 
 #### To bring up audit server ingestor + dispatchers. Make sure kafka, solr, and hdfs containers are running before bringing up audit server services.
