@@ -17,7 +17,7 @@
  * under the License.
  */
 
-import React, { useMemo, useRef, useState } from "react";
+import React, { useRef, useState } from "react";
 import { Table, Button, Form } from "react-bootstrap";
 import { FieldArray } from "react-final-form-arrays";
 import { Col } from "react-bootstrap";
@@ -25,7 +25,6 @@ import { Field, useForm } from "react-final-form";
 import AsyncSelect from "react-select/async";
 import {
   find,
-  groupBy,
   isEmpty,
   isArray,
   map,
@@ -43,19 +42,19 @@ import {
   dragEnter,
   drop,
   dragOver,
-  policyConditionUpdatedJSON,
   getPolicyConditionDisplayLbl,
   safeJsonParse
 } from "Utils/XAUtils";
-import { selectInputCustomStyles, ConfirmationClearIndicator } from "Components/CommonComponents";
+import {
+  selectInputCustomStyles,
+  ConfirmationClearIndicator
+} from "Components/CommonComponents";
 import PolicyConditionsComp from "./PolicyConditionsComp";
 import {
-  getSelectedLeafResourceTypes,
   getSelectedAccessTypesForRow,
-  buildActionReqsMapFromConditionDef,
   getCleanConditions
 } from "Utils/policyConditionUtils";
-import { usePruneStaleConditions } from "../../hooks/usePruneStaleConditions";
+import { usePolicyPermissionConditionContext } from "Hooks/usePolicyPermissionConditionContext";
 
 const noneOptions = {
   label: "None",
@@ -86,6 +85,8 @@ export default function PolicyPermissionItem(props) {
   const [activeConditionRow, setActiveConditionRow] = useState(null);
 
   const permList = ["Select Roles", "Select Groups", "Select Users"];
+
+  const form = useForm();
 
   if (serviceCompDetails?.policyConditions?.length > 0) {
     permList.push("Rule Conditions");
@@ -123,66 +124,17 @@ export default function PolicyPermissionItem(props) {
     });
   };
 
-  const grpResourcesKeys = useMemo(() => {
-    const { resources = [] } = serviceCompDetails || {};
-    const grpResources = groupBy(resources, "level");
-    let grpResourcesKeys = [];
-    for (const resourceKey in grpResources) {
-      grpResourcesKeys.push(+resourceKey);
-    }
-    grpResourcesKeys = grpResourcesKeys.sort((a, b) => a - b);
-    return grpResourcesKeys;
-  }, [serviceCompDetails?.resources]);
-
-  // Narrow dependency: only recompute leafResourceTypes when resource selection
-  // fields change, not on every keystroke in user/group/permission fields.
-  const resourceSelectionPart = (sel) => {
-    if (!sel) {
-      return "";
-    }
-    return `${sel.name ?? ""}:${sel.value ?? ""}`;
-  };
-
-  const resourceSelectionSignature = Array.isArray(
-    formValues?.additionalResources
-  )
-    ? formValues.additionalResources
-        .map((b) =>
-          grpResourcesKeys
-            .map((level) => resourceSelectionPart(b?.[`resourceName-${level}`]))
-            .join("|")
-        )
-        .join(";")
-    : grpResourcesKeys
-        .map((level) =>
-          resourceSelectionPart(formValues?.[`resourceName-${level}`])
-        )
-        .join("|");
-
-  const leafResourceTypes = useMemo(() => {
-    return getSelectedLeafResourceTypes(serviceCompDetails, formValues);
-  }, [serviceCompDetails, resourceSelectionSignature]);
-
-  const conditionDefVal = useMemo(
-    () => policyConditionUpdatedJSON(serviceCompDetails.policyConditions),
-    [serviceCompDetails.policyConditions]
-  );
-
-  const form = useForm();
-
-  const actionReqsMap = useMemo(
-    () => buildActionReqsMapFromConditionDef(conditionDefVal),
-    [conditionDefVal]
-  );
-
-  usePruneStaleConditions({
+  const {
+    conditionDefVal,
+    actionReqsMap,
+    leafResourceTypes,
+    grpResourcesKeys
+  } = usePolicyPermissionConditionContext({
+    serviceCompDetails,
     formValues,
     attrName,
     form,
-    leafResourceTypes,
-    serviceCompDetails,
-    conditionDefVal,
-    actionReqsMap
+    enableResourcePruneDefer: true
   });
 
   const getAccessTypeOptions = () => {
@@ -414,8 +366,8 @@ export default function PolicyPermissionItem(props) {
             >
               <span className="line-clamp line-clamp-5 text-start">
                 {`${getPolicyConditionDisplayLbl(conditionObj.label)}: ${
-                isArray(selectVal[property]) ? ipRangVal : selectVal[property]
-              }`}
+                  isArray(selectVal[property]) ? ipRangVal : selectVal[property]
+                }`}
               </span>
             </span>
           </div>
@@ -592,33 +544,40 @@ export default function PolicyPermissionItem(props) {
                                       <>
                                         {showConditionsModal && (
                                           <PolicyConditionsComp
-                                            policyConditionDetails={
-                                              conditionDefVal
-                                            }
-                                            inputVal={input}
+                                            // Visibility & Control
                                             showModal={true}
+                                            modalHeader="Rule Conditions"
                                             handleCloseModal={() =>
                                               setActiveConditionRow(null)
                                             }
-                                            modalHeader="Rule Conditions"
+                                            // Data & Value Binding
                                             scope="policyItem"
+                                            inputVal={input}
+                                            policyConditionDetails={
+                                              conditionDefVal
+                                            }
+                                            // Service & Actions Metadata
                                             servicedefName={
                                               serviceCompDetails?.name
                                             }
+                                            serviceDefOptions={
+                                              serviceCompDetails?.options
+                                            }
                                             actionReqsMap={actionReqsMap}
+                                            // Filter Context Evaluation
                                             actionFilterContext={{
+                                              leafResourceTypes,
+                                              accessTypeDefs:
+                                                serviceCompDetails?.accessTypes,
                                               selectedAccessTypes:
                                                 getSelectedAccessTypesForRow(
                                                   formValues,
                                                   attrName,
                                                   index
-                                                ),
-                                              leafResourceTypes,
-                                              accessTypeDefs:
-                                                serviceCompDetails?.accessTypes
+                                                )
                                             }}
                                           />
-                                      )}
+                                        )}
                                         <div className="table-editable">
                                           {hasValue ? (
                                             <h6>
@@ -633,6 +592,8 @@ export default function PolicyPermissionItem(props) {
                                                 onClick={() =>
                                                   setActiveConditionRow(name)
                                                 }
+                                                data-js="customPolicyConditions"
+                                                data-cy="customPolicyConditions"
                                               >
                                                 <i className="fa-fw fa fa-pencil"></i>
                                               </Button>
@@ -650,6 +611,8 @@ export default function PolicyPermissionItem(props) {
                                                 onClick={() =>
                                                   setActiveConditionRow(name)
                                                 }
+                                                data-js="customPolicyConditions"
+                                                data-cy="customPolicyConditions"
                                               >
                                                 <i className="fa-fw fa fa-plus"></i>
                                               </Button>
