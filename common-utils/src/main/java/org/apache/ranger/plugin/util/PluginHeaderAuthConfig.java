@@ -30,15 +30,15 @@ import java.util.Map;
 import java.util.Properties;
 
 /**
- * Outbound trusted-header auth for Ranger plugins.
+ * Outbound trusted-header auth for audit-server and other REST clients.
  *
- * <p>Example (Ozone):
+ * <p>Properties are read under a caller-supplied prefix (audit destination example):
  * <pre>
- * ranger.ozone.authn.header.enabled=true
- * ranger.ozone.authn.header.spiffe=X-Spiffe-Id
+ * xasecure.audit.destination.auditserver.authn.header.enabled=true
+ * xasecure.audit.destination.auditserver.authn.header.spiffe=X-Spiffe-Id
  * </pre>
  * SPIFFE ID value is resolved via {@link SpiffeIdentityResolver} under the same
- * prefix.
+ * prefix (explicit value, identity file, or {@code SPIFFE_ID} environment variable).
  */
 public final class PluginHeaderAuthConfig {
     public static final String RANGER_CONFIG_PREFIX       = "ranger.";
@@ -118,7 +118,7 @@ public final class PluginHeaderAuthConfig {
      * Builds SPIFFE header(s) for outbound REST calls when header auth is enabled.
      *
      * @param props        plugin or site configuration properties
-     * @param configPrefix prefix such as {@code ranger.hive}
+     * @param configPrefix prefix such as {@code xasecure.audit.destination.auditserver}
      * @return immutable header map; empty when auth is disabled or misconfigured
      */
     public static Map<String, String> buildSpiffeAuthHeaders(final Properties props,
