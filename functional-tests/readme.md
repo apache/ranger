@@ -13,15 +13,6 @@ distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
-
-
-This workflow will build a Java project with Maven, and cache/restore any dependencies to improve the workflow execution time
-For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-java-with-maven
-
-This workflow uses actions that are not certified by GitHub.
-They are provided by a third-party and are governed by
-separate terms of service, privacy policy, and support
-documentation.
 -->
 
 
@@ -46,31 +37,10 @@ This test suite validates REST API endpoints for Apache Ranger services,Admin (r
 ```text
 functional-tests/
 ├── hdfs/                        # Tests on HDFS encryption cycle
-│   ├── conftest.py              # Fixtures and setup for HDFS tests
-│   └── test_file.py             # HDFS encryption test cases
-│
 ├── kms/                         # Tests on KMS REST API
-│   ├── conftest.py              # Fixtures and setup for KMS tests
-│   └── test_file.py              # KMS API test cases
-│
 ├── xuserrest/                   # Tests on Ranger User/Group/Role REST APIs
-│   ├──utility/                  # Utility Folder contains helper functions
-│   |     ├── utils.py   
-│   ├── conftest.py              # Fixtures and setup for user REST tests
-│   └── test_file.py             # User REST API test cases
-│
 ├── rolerest/                    # Tests on Ranger Role REST APIs
-│   ├──utility/                  # Utility Folder contains helper functions
-│   |     ├── utils.py   
-│   ├── conftest.py              # Fixtures and setup for role REST tests
-│   └── test_file.py             # User REST API test cases
-│ 
 ├── servicerest/                 # Tests on Ranger Service REST APIs
-│   ├──utility/                  # Utility Folder contains helper functions
-│   |     ├── utils.py   
-│   ├── conftest.py              # Fixtures and setup for service REST tests
-│   ├── test_file.py             # Service REST API test cases
-│   └── automation.log           # logs related to the tests and the conftest files for service rest
 │
 ├── pytest.ini                   # Registers custom pytest markers
 ├── run-tests.sh                 # Script to automate setup and test execution
@@ -85,9 +55,9 @@ functional-tests/
 ## Prerequisites
 1. Docker & Docker Compose installed and running
 2. Python 3.10 or higher
-3. Change the working directory to pytest-Tests
+3. Change the working directory to functional-tests
 ```text
-cd pytest-Tests/
+cd functional-tests/
 ```
 4. Make the shell script executable
 
@@ -102,7 +72,7 @@ Configure container behavior before running the script using the following envir
 
 1. Fresh Setup & Cleanup:
 
-Force a clean environment & helps building binaries with local changes (removes old Ranger containers, prunes Docker space, builds fresh, and cleans up after tests):
+Force a clean environment & helps building binaries with local changes:
 ```text
 export CLEAN_CONTAINERS=1
 ./run-tests.sh
@@ -147,7 +117,7 @@ Run the script without arguments to be prompted for inputs:
 example:
 ```text
 
-Available DB types: postgres, mysql, oracle, mssql
+Available DB types: postgres, mysql, oracle
 Enter DB type (press Enter to default to postgres): postgres
 
 Available test suites: xuserrest servicerest hdfs kms
@@ -161,24 +131,14 @@ Pass arguments directly to skip prompts:
 ```text
 ./run-tests.sh [db-type] [test-suites...]
 ```
-db-type — Must be the first argument. Valid values: postgres, mysql, oracle, mssql.
+db-type — Must be the first argument. Valid values: postgres, mysql, oracle.
 
 test-suites — Space-separated list: hdfs, kms, xuserrest, servicerest.
 
 Examples:
 
 ```text
-# Run all suites with Postgres (default)
-./run-tests.sh postgres
-
-# Run specific suites with Postgres
 ./run-tests.sh postgres kms hdfs
-
-# Run only user REST tests with MySQL
-./run-tests.sh mysql xuserrest
-
-# Run service REST tests with Oracle
-./run-tests.sh oracle servicerest
  ```
 
 ## Test Reports
