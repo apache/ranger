@@ -12,18 +12,3 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
-[pytest]
-markers =
-    cleanEZ: clean up the encryption zone
-    createEZ: create encryption zone
-    get: get methods
-    post: post methods
-    put: put methods
-    delete: delete methods
-    positive: positive test cases
-    negative: negative test cases
-    xuserrest: xuserrest test cases
-    secure_endpoint: secure endpoint test cases
-    rolerest: rolerest test cases
-pythonpath = .
