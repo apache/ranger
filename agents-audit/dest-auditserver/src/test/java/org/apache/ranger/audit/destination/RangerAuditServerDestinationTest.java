@@ -17,37 +17,41 @@
 
 package org.apache.ranger.audit.destination;
 
+import org.apache.ranger.plugin.util.PluginHeaderAuthConfig;
 import org.junit.jupiter.api.Test;
 
+import java.util.Map;
 import java.util.Properties;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class RangerAuditServerDestinationTest {
-    @Test
-    public void resolvePluginHeaderAuthPrefixUsesExplicitAuditProperty() {
-        Properties props = new Properties();
-        props.setProperty("xasecure.audit.destination.auditserver.authn.header.config.prefix", "ranger.ozone");
+    private static final String AUDIT_DEST_PREFIX = "xasecure.audit.destination.auditserver";
 
-        assertEquals("ranger.ozone",
-                RangerAuditServerDestination.resolvePluginHeaderAuthPrefix(props, "xasecure.audit.destination.auditserver"));
+    @Test
+    public void buildSpiffeAuthHeadersUsesAuditDestinationPrefix() {
+        Properties props = new Properties();
+        props.setProperty(AUDIT_DEST_PREFIX + ".authn.header.enabled", "true");
+        props.setProperty(AUDIT_DEST_PREFIX + ".authn.header.spiffe", "X-Spiffe-Id");
+        props.setProperty(AUDIT_DEST_PREFIX + ".authn.spiffe.value",
+                "spiffe://example.com/ns/default/sa/hive");
+
+        Map<String, String> headers = PluginHeaderAuthConfig.buildSpiffeAuthHeaders(props, AUDIT_DEST_PREFIX);
+
+        assertEquals(1, headers.size());
+        assertEquals("spiffe://example.com/ns/default/sa/hive", headers.get("X-Spiffe-Id"));
     }
 
     @Test
-    public void resolvePluginHeaderAuthPrefixScansPluginSiteProperties() {
+    public void buildSpiffeAuthHeadersEmptyWhenAuditDestinationDisabled() {
         Properties props = new Properties();
-        props.setProperty("ranger.hive.authn.header.enabled", "true");
+        props.setProperty(AUDIT_DEST_PREFIX + ".authn.header.enabled", "false");
+        props.setProperty(AUDIT_DEST_PREFIX + ".authn.spiffe.value",
+                "spiffe://example.com/ns/default/sa/hive");
 
-        assertEquals("ranger.hive",
-                RangerAuditServerDestination.resolvePluginHeaderAuthPrefix(props, "xasecure.audit.destination.auditserver"));
-    }
+        Map<String, String> headers = PluginHeaderAuthConfig.buildSpiffeAuthHeaders(props, AUDIT_DEST_PREFIX);
 
-    @Test
-    public void resolvePluginHeaderAuthPrefixNullWhenNotEnabled() {
-        Properties props = new Properties();
-        props.setProperty("ranger.hive.authn.header.enabled", "false");
-
-        assertNull(RangerAuditServerDestination.resolvePluginHeaderAuthPrefix(props, "xasecure.audit.destination.auditserver"));
+        assertTrue(headers.isEmpty());
     }
 }
