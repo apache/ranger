@@ -34,6 +34,8 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
+import static java.util.Objects.requireNonNull;
+
 /** Append-only plan updates for Admin-managed audit partition routing. */
 public final class PartitionPlanAllocator {
     private PartitionPlanAllocator() {
@@ -95,7 +97,7 @@ public final class PartitionPlanAllocator {
             return current;
         }
 
-        PluginEntry existing = Objects.requireNonNull(current.getPlugins().get(owningPluginId));
+        PluginEntry existing = requireNonNull(current.getPlugins().get(owningPluginId));
         List<String> remainingServices = new ArrayList<>(existing.getServices());
         remainingServices.remove(trimmedService);
 
@@ -271,7 +273,7 @@ public final class PartitionPlanAllocator {
     }
 
     private static void assertPromoteNotConflicting(PartitionPlan current, String pluginId, int partitionCount, String serviceName) {
-        PluginEntry existing = Objects.requireNonNull(current.getPlugins().get(pluginId));
+        PluginEntry existing = requireNonNull(current.getPlugins().get(pluginId));
         if (existing.getPartitions().size() != partitionCount) {
             throw new PartitionPlanException("Plugin '" + pluginId + "' already has " + existing.getPartitions().size() + " dedicated partition(s); requested " + partitionCount);
         }
