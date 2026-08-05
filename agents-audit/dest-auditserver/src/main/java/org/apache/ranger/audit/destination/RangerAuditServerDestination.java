@@ -104,7 +104,7 @@ public class RangerAuditServerDestination extends AuditDestination {
         Map<String, String> spiffeHeaders = PluginHeaderAuthConfig.buildSpiffeAuthHeaders(props, headerAuthPrefix);
         if (!spiffeHeaders.isEmpty()) {
             this.restClient.setTrustedAuthHeaders(spiffeHeaders);
-            LOG.info("SPIFFE header authentication enabled for audit-server destination");
+            LOG.debug("SPIFFE header authentication enabled for audit-server destination");
         }
 
         LOG.info("<== RangerAuditServerDestination:init()");
