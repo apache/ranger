@@ -27,6 +27,7 @@ import org.apache.ranger.audit.model.AuditEventBase;
 import org.apache.ranger.audit.model.AuthzAuditEvent;
 import org.apache.ranger.audit.provider.MiscUtil;
 import org.apache.ranger.plugin.authn.DefaultJwtProvider;
+import org.apache.ranger.plugin.util.PluginHeaderAuthConfig;
 import org.apache.ranger.plugin.util.RangerRESTClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -53,6 +54,7 @@ public class RangerAuditServerDestination extends AuditDestination {
     public static final String PROP_AUTHN_BASIC_PASSWORD   = "authn.basic.password";
     public static final String PROP_AUTHN_JWT_ENV          = "authn.jwt.env";
     public static final String PROP_AUTHN_JWT_FILE         = "authn.jwt.file";
+    public static final String PROP_AUTHN_HEADER_CONFIG_PREFIX = "authn.header.config.prefix";
     public static final String PROP_CLIENT_CONN_TIMEOUT_MS = "connection.timeout.ms";
     public static final String PROP_CLIENT_READ_TIMEOUT_MS = "read.timeout.ms";
     public static final String PROP_MAX_RETRY_ATTEMPTS     = "max.retry.attempts";
@@ -98,7 +100,29 @@ public class RangerAuditServerDestination extends AuditDestination {
         this.restClient.setMaxRetryAttempts(maxRetryAttempts);
         this.restClient.setRetryIntervalMs(retryIntervalMs);
 
+        String headerAuthPrefix = resolvePluginHeaderAuthPrefix(props, propPrefix);
+        Map<String, String> spiffeHeaders = PluginHeaderAuthConfig.buildSpiffeAuthHeaders(props, headerAuthPrefix);
+        if (!spiffeHeaders.isEmpty()) {
+            this.restClient.setTrustedAuthHeaders(spiffeHeaders);
+            LOG.info("SPIFFE header authentication enabled for audit-server destination (headers={})", spiffeHeaders.keySet());
+        }
+
         LOG.info("<== RangerAuditServerDestination:init()");
+    }
+
+    /**
+     * Resolves the plugin site-config prefix for outbound SPIFFE headers.
+     * Explicit {@code authn.header.config.prefix} wins; otherwise scans for {@code ranger.*.authn.header.enabled=true}.
+     */
+    public static String resolvePluginHeaderAuthPrefix(Properties props, String auditDestPrefix) {
+        if (props == null || StringUtils.isBlank(auditDestPrefix)) {
+            return null;
+        }
+        String explicit = StringUtils.trimToNull(props.getProperty(auditDestPrefix + "." + PROP_AUTHN_HEADER_CONFIG_PREFIX));
+        if (explicit != null) {
+            return explicit;
+        }
+        return PluginHeaderAuthConfig.resolveEnabledConfigPrefix(props);
     }
 
     @Override
