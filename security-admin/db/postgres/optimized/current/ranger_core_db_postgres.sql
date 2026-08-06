@@ -607,7 +607,7 @@ added_by_id BIGINT DEFAULT NULL NULL,
 upd_by_id BIGINT DEFAULT NULL NULL,
 version BIGINT DEFAULT NULL NULL,
 state_name varchar(255) NOT NULL,
-app_data varchar(255) DEFAULT NULL NULL,
+app_data TEXT DEFAULT NULL NULL,
 primary key (id),
 CONSTRAINT x_ranger_global_state_UK_state_name UNIQUE (state_name),
 CONSTRAINT x_ranger_global_state_FK_added_by_id FOREIGN KEY (added_by_id) REFERENCES x_portal_user (id),
@@ -1997,6 +1997,10 @@ INSERT INTO x_portal_user(CREATE_TIME,UPDATE_TIME,FIRST_NAME,LAST_NAME,PUB_SCR_N
 INSERT INTO x_portal_user_role(CREATE_TIME,UPDATE_TIME,USER_ID,USER_ROLE,STATUS)VALUES(current_timestamp,current_timestamp,getXportalUIdByLoginId('rangertagsync'),'ROLE_SYS_ADMIN',1);
 INSERT INTO x_user(CREATE_TIME,UPDATE_TIME,user_name,status,descr)VALUES(current_timestamp,current_timestamp,'rangertagsync',0,'rangertagsync');
 
+INSERT INTO x_portal_user(CREATE_TIME,UPDATE_TIME,FIRST_NAME,LAST_NAME,PUB_SCR_NAME,LOGIN_ID,PASSWORD,EMAIL,STATUS)VALUES(current_timestamp,current_timestamp,'rangerauditserver','','rangerauditserver','rangerauditserver','9c8f4e2b1a0d6e3f7b5c4a8291d0e6f3','rangerauditserver',1);
+INSERT INTO x_portal_user_role(CREATE_TIME,UPDATE_TIME,USER_ID,USER_ROLE,STATUS)VALUES(current_timestamp,current_timestamp,getXportalUIdByLoginId('rangerauditserver'),'ROLE_ADMIN_AUDITOR',1);
+INSERT INTO x_user(CREATE_TIME,UPDATE_TIME,user_name,status,descr)VALUES(current_timestamp,current_timestamp,'rangerauditserver',0,'Ranger audit server machine user');
+
 INSERT INTO x_modules_master(create_time,update_time,added_by_id,upd_by_id,module,url) VALUES(current_timestamp,current_timestamp,getXportalUIdByLoginId('admin'),getXportalUIdByLoginId('admin'),'Tag Based Policies','');
 INSERT INTO x_modules_master(create_time,update_time,added_by_id,upd_by_id,module,url) VALUES(current_timestamp,current_timestamp,getXportalUIdByLoginId('admin'),getXportalUIdByLoginId('admin'),'Security Zone','');
 INSERT INTO x_modules_master(create_time,update_time,added_by_id,upd_by_id,module,url) VALUES(current_timestamp,current_timestamp,getXportalUIdByLoginId('admin'),getXportalUIdByLoginId('admin'),'Governed Data Sharing','');
@@ -2059,6 +2063,7 @@ INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('075',current_timestamp,'Ranger 3.0.0',current_timestamp,'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('076',current_timestamp,'Ranger 3.0.0',current_timestamp,'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('077',current_timestamp,'Ranger 3.0.0',current_timestamp,'localhost','Y');
+INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('078',current_timestamp,'Ranger 3.0.0',current_timestamp,'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('DB_PATCHES',current_timestamp,'Ranger 1.0.0',current_timestamp,'localhost','Y');
 
 INSERT INTO x_user_module_perm (user_id,module_id,create_time,update_time,added_by_id,upd_by_id,is_allowed) VALUES
@@ -2110,6 +2115,7 @@ INSERT INTO x_user_module_perm (user_id,module_id,create_time,update_time,added_
 INSERT INTO x_ranger_global_state (create_time,update_time,added_by_id,upd_by_id,version,state_name,app_data) VALUES (current_timestamp,current_timestamp,getXportalUIdByLoginId('admin'),getXportalUIdByLoginId('admin'),1,'RangerRole','{"Version":"1"}');
 INSERT INTO x_ranger_global_state (create_time,update_time,added_by_id,upd_by_id,version,state_name,app_data) VALUES (current_timestamp,current_timestamp,getXportalUIdByLoginId('admin'),getXportalUIdByLoginId('admin'),1,'RangerUserStore','{"Version":"1"}');
 INSERT INTO x_ranger_global_state (create_time,update_time,added_by_id,upd_by_id,version,state_name,app_data) VALUES (current_timestamp,current_timestamp,getXportalUIdByLoginId('admin'),getXportalUIdByLoginId('admin'),1,'RangerSecurityZone','{"Version":"1"}');
+INSERT INTO x_ranger_global_state (create_time,update_time,added_by_id,upd_by_id,version,state_name,app_data) VALUES (current_timestamp,current_timestamp,getXportalUIdByLoginId('admin'),getXportalUIdByLoginId('admin'),1,'RangerAuditPartitionPlan','{"version":1,"topic":"ranger_audits","topicPartitionCount":9,"plugins":{},"buffer":{"partitions":[1,2,3,4,5,6,7,8,9]}}');
 
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('J10001',current_timestamp,'Ranger 1.0.0',current_timestamp,'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('J10002',current_timestamp,'Ranger 1.0.0',current_timestamp,'localhost','Y');
