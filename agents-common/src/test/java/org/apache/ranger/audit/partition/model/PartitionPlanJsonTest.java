@@ -17,7 +17,6 @@
 
 package org.apache.ranger.audit.partition.model;
 
-import org.apache.ranger.audit.partition.AuditPartitionPlanConstants;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -32,7 +31,7 @@ public class PartitionPlanJsonTest {
         String seedJson = "{\"version\":1,\"topic\":\"ranger_audits\",\"topicPartitionCount\":9,\"plugins\":{},\"buffer\":{\"partitions\":[1,2,3,4,5,6,7,8,9]}}";
         PartitionPlan plan = PartitionPlan.fromJson(seedJson);
 
-        assertEquals(AuditPartitionPlanConstants.DEFAULT_AUDIT_TOPIC, plan.getTopic());
+        assertEquals("ranger_audits", plan.getTopic());
         assertEquals(1, plan.getVersion());
         assertEquals(9, plan.getTopicPartitionCount());
         assertEquals(0, plan.getPlugins().size());

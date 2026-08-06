@@ -106,10 +106,6 @@ public final class PartitionPlanAllocator {
         return commitPlanUpdate(current, updatedBy, current.getTopicPartitionCount(), plugins, current.getBuffer().getPartitions());
     }
 
-    public static PartitionPlan promotePlugin(PartitionPlan current, String pluginId, int partitionCount, String updatedBy) {
-        return promotePlugin(current, pluginId, partitionCount, updatedBy, null);
-    }
-
     /**
      * Give a plugin its own partitions. Uses buffer IDs first; adds new tail IDs when buffer is too small.
      * Optionally attaches {@code serviceName} to the new plugin entry.

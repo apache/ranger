@@ -54,10 +54,6 @@ public class PluginEntry implements Serializable {
         return new PluginEntry(ids, Collections.emptyList());
     }
 
-    public static PluginEntry empty() {
-        return new PluginEntry(Collections.emptyList(), Collections.emptyList());
-    }
-
     public List<Integer> getPartitions() {
         return partitions;
     }

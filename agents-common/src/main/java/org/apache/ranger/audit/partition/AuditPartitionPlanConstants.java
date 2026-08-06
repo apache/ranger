@@ -20,8 +20,7 @@
 package org.apache.ranger.audit.partition;
 
 public final class AuditPartitionPlanConstants {
-    public static final int    INITIAL_PLAN_VERSION = 1;
-    public static final String DEFAULT_AUDIT_TOPIC  = "ranger_audits";
+    public static final int INITIAL_PLAN_VERSION = 1;
 
     /** Default partition slots allocated when a plugin is first promoted from buffer. */
     public static final int DEFAULT_PARTITIONS_PER_PLUGIN = 3;

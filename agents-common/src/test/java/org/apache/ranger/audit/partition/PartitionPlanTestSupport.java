@@ -32,7 +32,7 @@ final class PartitionPlanTestSupport {
 
     static PartitionPlan seedPlan() {
         return PartitionPlan.builder()
-                .topic(AuditPartitionPlanConstants.DEFAULT_AUDIT_TOPIC)
+                .topic("ranger_audits")
                 .version(AuditPartitionPlanConstants.INITIAL_PLAN_VERSION)
                 .topicPartitionCount(9)
                 .buffer(new BufferEntry(partitionRange(1, 9)))
@@ -44,7 +44,7 @@ final class PartitionPlanTestSupport {
         plugins.put("hdfs", PluginEntry.ofPartitions(1, 2, 3));
         plugins.put("hiveServer2", PluginEntry.ofPartitions(4, 5, 6));
         return PartitionPlan.builder()
-                .topic(AuditPartitionPlanConstants.DEFAULT_AUDIT_TOPIC)
+                .topic("ranger_audits")
                 .version(AuditPartitionPlanConstants.INITIAL_PLAN_VERSION)
                 .topicPartitionCount(9)
                 .plugins(plugins)

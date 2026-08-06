@@ -41,7 +41,7 @@ public class PartitionPlanAllocatorTest {
 
     @Test
     public void testPromotePluginFromBuffer() {
-        PartitionPlan next = PartitionPlanAllocator.promotePlugin(initialPlan, "trino", 3, "ops");
+        PartitionPlan next = PartitionPlanAllocator.promotePlugin(initialPlan, "trino", 3, "ops", null);
 
         assertEquals(2, next.getVersion());
         assertEquals(9, next.getTopicPartitionCount());
@@ -54,7 +54,7 @@ public class PartitionPlanAllocatorTest {
     @Test
     public void testPromotePluginGrowsTopicWhenBufferInsufficient() {
         PartitionPlan seed = PartitionPlanTestSupport.seedPlan();
-        PartitionPlan next = PartitionPlanAllocator.promotePlugin(seed, "trino", 12, "ops");
+        PartitionPlan next = PartitionPlanAllocator.promotePlugin(seed, "trino", 12, "ops", null);
 
         assertEquals(2, next.getVersion());
         assertEquals(12, next.getTopicPartitionCount());
@@ -96,7 +96,7 @@ public class PartitionPlanAllocatorTest {
     @Test
     public void testPromoteAlreadyConfiguredPluginFails() {
         PartitionPlanException error = assertThrows(PartitionPlanException.class,
-                () -> PartitionPlanAllocator.promotePlugin(initialPlan, "hdfs", 1, "ops"));
+                () -> PartitionPlanAllocator.promotePlugin(initialPlan, "hdfs", 1, "ops", null));
         assertTrue(error.getMessage().contains("requested 1"));
     }
 
@@ -110,10 +110,10 @@ public class PartitionPlanAllocatorTest {
 
     @Test
     public void testPromoteConflictWhenPartitionCountDiffers() {
-        PartitionPlan promoted = PartitionPlanAllocator.promotePlugin(initialPlan, "trino", 3, "ops");
+        PartitionPlan promoted = PartitionPlanAllocator.promotePlugin(initialPlan, "trino", 3, "ops", null);
 
         PartitionPlanException error = assertThrows(PartitionPlanException.class,
-                () -> PartitionPlanAllocator.promotePlugin(promoted, "trino", 5, "ops"));
+                () -> PartitionPlanAllocator.promotePlugin(promoted, "trino", 5, "ops", null));
 
         assertTrue(error.getMessage().contains("requested 5"));
     }
