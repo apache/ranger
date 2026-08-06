@@ -404,6 +404,9 @@ public class RangerBasePlugin {
         AuditProviderFactory providerFactory = AuditProviderFactory.getInstance();
 
         if (!providerFactory.isInitDone()) {
+            pluginConfig.set("ranger.plugin.serviceName", getServiceName());
+            pluginConfig.set("ranger.plugin.serviceType", getServiceType());
+            pluginConfig.set("ranger.plugin.appId", getAppId());
             providerFactory.init(pluginConfig.getProperties(), getAppId());
         }
 

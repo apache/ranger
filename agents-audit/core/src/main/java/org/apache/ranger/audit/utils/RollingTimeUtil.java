@@ -31,9 +31,14 @@ public class RollingTimeUtil {
     public static final String MONTHS  = "M"; //months
     public static final String YEARS   = "y"; //years
 
+    public static final String MINUTE_STR = "MINUTE";
+    public static final String HOUR_STR   = "HOUR";
+    public static final String DAY_STR    = "WEEK";
     private static final int SECONDS_IN_MINUTE = 60;
     private static final int SECONDS_IN_HOUR   = 60 * SECONDS_IN_MINUTE;
     private static final int SECONDS_IN_DAY    = 24 * SECONDS_IN_HOUR;
+
+    public static final long MILLISECOND_CONVERSION_FACTOR = 60000L; // 1 min = 60000 milli second.
 
     private static volatile RollingTimeUtil me;
 
@@ -61,9 +66,9 @@ public class RollingTimeUtil {
         // Test Method for RolloverTime calculation
         // Set rollOverPeriod 10m,30m..,1h,2h,..1d,2d..,1w,2w..,1M,2M..1y..2y
         // If nothing is set for rollOverPeriod or Duration default rollOverPeriod is 1 day
-        String          rollOverPeriod   = "";
-        RollingTimeUtil rollingTimeUtil  = new RollingTimeUtil();
-        int             duration         = 86400;
+        String          rollOverPeriod  = "";
+        RollingTimeUtil rollingTimeUtil = new RollingTimeUtil();
+        int             duration        = 86400;
         Date            nextRollOvertime;
 
         try {
@@ -166,6 +171,66 @@ public class RollingTimeUtil {
         return nextRolloverTime;
     }
 
+    public int getTimeNumeral(String rollOverPeriod, String timeLiteral) throws Exception {
+        int ret = Integer.valueOf(rollOverPeriod.substring(0, rollOverPeriod.length() - (rollOverPeriod.length() - rollOverPeriod.indexOf(timeLiteral))));
+
+        return ret;
+    }
+
+    public String getTimeLiteral(String rollOverPeriod) throws Exception {
+        String ret = null;
+        if (StringUtils.isEmpty(rollOverPeriod)) {
+            throw new Exception("empty rollover period");
+        } else if (rollOverPeriod.endsWith(MINUTES)) {
+            ret = MINUTES;
+        } else if (rollOverPeriod.endsWith(HOURS)) {
+            ret = HOURS;
+        } else if (rollOverPeriod.endsWith(DAYS)) {
+            ret = DAYS;
+        } else if (rollOverPeriod.endsWith(WEEKS)) {
+            ret = WEEKS;
+        } else if (rollOverPeriod.endsWith(MONTHS)) {
+            ret = MONTHS;
+        } else if (rollOverPeriod.endsWith(YEARS)) {
+            ret = YEARS;
+        } else {
+            throw new Exception(rollOverPeriod + ": invalid rollover period");
+        }
+        return ret;
+    }
+
+    public long getTimeInMilliSeconds(int timeNumeral, String computePeriod) throws Exception {
+        long ret;
+
+        if (computePeriod.equals(MINUTES)) {
+            ret = Integer.toUnsignedLong(timeNumeral) * MILLISECOND_CONVERSION_FACTOR;
+        } else if (computePeriod.equals(HOURS)) {
+            ret = (timeNumeral * 60L) * MILLISECOND_CONVERSION_FACTOR;
+        } else if (computePeriod.equals(DAYS)) {
+            ret = ((long) timeNumeral * 24 * 60) * MILLISECOND_CONVERSION_FACTOR;
+        } else {
+            throw new Exception("Unsupported time interval = " + timeNumeral + computePeriod);
+        }
+
+        return ret;
+    }
+
+    public String getTimeString(int timeNumeral, String computePeriod) throws Exception {
+        String ret;
+
+        if (computePeriod.equals(MINUTES)) {
+            ret = "PER" + " " + ((timeNumeral == 1) ? "" : timeNumeral) + " " + ((timeNumeral > 1) ? MINUTE_STR + "S" : MINUTE_STR);
+        } else if (computePeriod.equals(HOURS)) {
+            ret = "PER" + " " + ((timeNumeral == 1) ? "" : timeNumeral) + " " + ((timeNumeral > 1) ? HOUR_STR + "S" : HOUR_STR);
+        } else if (computePeriod.equals(DAYS)) {
+            ret = "PER" + " " + ((timeNumeral == 1) ? "" : timeNumeral) + " " + ((timeNumeral > 1) ? DAY_STR + "S" : DAY_STR);
+        } else {
+            throw new Exception("Unsupported time interval = " + timeNumeral + computePeriod);
+        }
+
+        return ret;
+    }
+
     private Date computeTopOfYearDate(int years) {
         Calendar calendarStart = Calendar.getInstance();
 
@@ -237,33 +302,5 @@ public class RollingTimeUtil {
         calendarMin.clear(Calendar.MILLISECOND);
 
         return calendarMin.getTime();
-    }
-
-    private int getTimeNumeral(String rollOverPeriod, String timeLiteral) {
-        return Integer.parseInt(rollOverPeriod.substring(0, rollOverPeriod.length() - (rollOverPeriod.length() - rollOverPeriod.indexOf(timeLiteral))));
-    }
-
-    private String getTimeLiteral(String rollOverPeriod) throws Exception {
-        final String ret;
-
-        if (StringUtils.isEmpty(rollOverPeriod)) {
-            throw new Exception("empty rollover period");
-        } else if (rollOverPeriod.endsWith(MINUTES)) {
-            ret = MINUTES;
-        } else if (rollOverPeriod.endsWith(HOURS)) {
-            ret = HOURS;
-        } else if (rollOverPeriod.endsWith(DAYS)) {
-            ret = DAYS;
-        } else if (rollOverPeriod.endsWith(WEEKS)) {
-            ret = WEEKS;
-        } else if (rollOverPeriod.endsWith(MONTHS)) {
-            ret = MONTHS;
-        } else if (rollOverPeriod.endsWith(YEARS)) {
-            ret = YEARS;
-        } else {
-            throw new Exception(rollOverPeriod + ": invalid rollover period");
-        }
-
-        return ret;
     }
 }

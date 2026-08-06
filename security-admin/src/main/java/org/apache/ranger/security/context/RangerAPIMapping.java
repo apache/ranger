@@ -427,6 +427,12 @@ public class RangerAPIMapping {
         apiAssociatedWithAudit.add(RangerAPIList.GET_AUTH_SESSION);
         apiAssociatedWithAudit.add(RangerAPIList.GET_AUTH_SESSIONS);
 
+        apiAssociatedWithAudit.add(RangerAPIList.GET_LATEST_AUDIT_METRICS);
+        apiAssociatedWithAudit.add(RangerAPIList.GET_AUDIT_METRICS);
+        apiAssociatedWithAudit.add(RangerAPIList.GET_ALL_LATEST_AUDIT_METRICS);
+        apiAssociatedWithAudit.add(RangerAPIList.GET_DAILY_AUDIT_METRICS);
+        apiAssociatedWithAudit.add(RangerAPIList.GET_DAYS_AUDIT_METRICS);
+
         rangerAPIMappingWithUI.put(TAB_AUDIT, apiAssociatedWithAudit);
 
         for (String api : apiAssociatedWithAudit) {

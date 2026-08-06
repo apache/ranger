@@ -14,6 +14,9 @@
 -- limitations under the License.
 
 DROP VIEW IF EXISTS `vx_principal`;
+DROP VIEW IF EXISTS `vx_audit_metrics_by_hours`;
+DROP VIEW IF EXISTS `vx_audit_metrics_by_days`;
+DROP TABLE IF EXISTS `x_audit_metrics`;
 DROP TABLE IF EXISTS `x_rms_mapping_provider`;
 DROP TABLE IF EXISTS `x_rms_resource_mapping`;
 DROP TABLE IF EXISTS `x_rms_notification`;
@@ -1516,6 +1519,32 @@ CREATE INDEX x_policy_label_label_id ON x_policy_label(id);
 CREATE INDEX x_policy_label_label_name ON x_policy_label(label_name);
 CREATE INDEX x_policy_label_label_map_id ON x_policy_label_map(id);
 
+CREATE TABLE IF NOT EXISTS `x_audit_metrics` (
+`id` bigint(20) NOT NULL AUTO_INCREMENT,
+`service_type` bigint(20) NULL DEFAULT NULL,
+`service_name` varchar(255) NULL DEFAULT NULL,
+`app_id` varchar(255) NULL DEFAULT NULL,
+`cluster_name` varchar(255) NULL DEFAULT NULL,
+`client_ip` varchar(255) NULL DEFAULT NULL,
+`metrics_text` varchar(4000) NULL DEFAULT NULL,
+`throughput_unit` varchar(255) NULL DEFAULT NULL,
+`number_of_audits` bigint(20) NULL DEFAULT NULL,
+`version` bigint(20) NULL DEFAULT NULL,
+`create_time` datetime NULL DEFAULT NULL,
+`update_time` datetime NULL DEFAULT NULL,
+`added_by_id` bigint(20) NULL DEFAULT NULL,
+`upd_by_id` bigint(20) NULL DEFAULT NULL,
+ PRIMARY KEY (`id`),
+ CONSTRAINT `x_audit_metrics_FK_service_type` FOREIGN KEY (`service_type`) REFERENCES `x_service_def` (`id`),
+ CONSTRAINT `x_audit_metrics_FK_added_by_id` FOREIGN KEY (`added_by_id`) REFERENCES `x_portal_user` (`id`),
+ CONSTRAINT `x_audit_metrics_FK_upd_by_id` FOREIGN KEY (`upd_by_id`) REFERENCES `x_portal_user` (`id`)
+) ROW_FORMAT=DYNAMIC;
+
+
+CREATE VIEW vx_audit_metrics_by_hours AS select service_type, service_name, app_id, cluster_name, client_ip, EXTRACT(HOUR from create_time) as hours, sum(number_of_audits) as numberOfAudits from x_audit_metrics where (cast(CREATE_TIME as date) = CURRENT_DATE) group by service_type, service_name, app_id, cluster_name, client_ip, hours ORDER BY hours;
+
+CREATE OR REPLACE VIEW  vx_audit_metrics_by_days AS select service_type, service_name, app_id, cluster_name, client_ip, EXTRACT(DAY from create_time) as days, sum(number_of_audits) as numberOfAudits, cast(create_time as date) as auditDate from x_audit_metrics group by service_type, service_name, app_id, cluster_name, client_ip, days, auditDate ORDER BY auditDate, days;
+
 CREATE VIEW vx_principal as (SELECT u.user_name AS principal_name, 0 AS principal_type, u.status status, u.is_visible is_visible, u.other_attributes other_attributes, u.create_time create_time, u.update_time update_time, u.added_by_id added_by_id, u.upd_by_id upd_by_id FROM x_user u) UNION (SELECT g.group_name principal_name, 1 AS principal_type, g.status status, g.is_visible is_visible, g.other_attributes other_attributes, g.create_time create_time, g.update_time update_time, g.added_by_id added_by_id, g.upd_by_id upd_by_id FROM x_group g) UNION (SELECT r.name principal_name, 2 AS principal_name, 1 status, 1 is_visible, null other_attributes, r.create_time create_time, r.update_time update_time, r.added_by_id added_by_id, r.upd_by_id upd_by_id FROM x_role r);
 
 DELIMITER $$
@@ -1940,6 +1969,8 @@ INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('058',UTC_TIMESTAMP(),'Ranger 1.0.0',UTC_TIMESTAMP(),'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('059',UTC_TIMESTAMP(),'Ranger 1.0.0',UTC_TIMESTAMP(),'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('060',UTC_TIMESTAMP(),'Ranger 1.0.0',UTC_TIMESTAMP(),'localhost','Y');
+INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('063',UTC_TIMESTAMP(),'Ranger 1.0.0',UTC_TIMESTAMP(),'localhost','Y');
+INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('064',UTC_TIMESTAMP(),'Ranger 1.0.0',UTC_TIMESTAMP(),'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('065',UTC_TIMESTAMP(),'Ranger 1.0.0',UTC_TIMESTAMP(),'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('066',UTC_TIMESTAMP(),'Ranger 3.0.0',UTC_TIMESTAMP(),'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('067',UTC_TIMESTAMP(),'Ranger 3.0.0',UTC_TIMESTAMP(),'localhost','Y');

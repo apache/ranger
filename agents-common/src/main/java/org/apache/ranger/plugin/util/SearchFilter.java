@@ -95,6 +95,10 @@ public class SearchFilter {
 
     public static final String SERVICE_NAME_PARTIAL = "serviceNamePartial";
 
+    public static final String AUDIT_METRICS_ID = "auditMerticsId";
+    public static final String CLIENT_IP        = "clientIP";
+    public static final String APP_ID           = "appId";
+
     public static final String PLUGIN_HOST_NAME           = "pluginHostName";
     public static final String PLUGIN_APP_TYPE            = "pluginAppType";
     public static final String PLUGIN_ENTITY_TYPE         = "pluginEntityType";

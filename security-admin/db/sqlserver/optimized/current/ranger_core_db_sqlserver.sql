@@ -726,6 +726,31 @@ IF (OBJECT_ID('x_gds_ppm_FK_policy_id') IS NOT NULL)
 BEGIN
     ALTER TABLE [dbo].[x_gds_project_policy_map] DROP CONSTRAINT x_gds_ppm_FK_policy_id
 END
+IF (OBJECT_ID('x_audit_metrics_FK_service_type') IS NOT NULL)
+BEGIN
+    ALTER TABLE [dbo].[x_audit_metrics] DROP CONSTRAINT x_audit_metrics_FK_service_type
+END
+IF (OBJECT_ID('x_audit_metrics_FK_added_by_id') IS NOT NULL)
+BEGIN
+    ALTER TABLE [dbo].[x_audit_metrics] DROP CONSTRAINT x_audit_metrics_FK_added_by_id
+END
+IF (OBJECT_ID('x_audit_metrics_FK_upd_by_id') IS NOT NULL)
+BEGIN
+    ALTER TABLE [dbo].[x_audit_metrics] DROP CONSTRAINT x_audit_metrics_FK_upd_by_id
+END
+IF (OBJECT_ID('vx_audit_metrics_by_hours') IS NOT NULL)
+BEGIN
+    DROP VIEW [dbo].[vx_audit_metrics_by_hours]
+END
+IF (OBJECT_ID('vx_audit_metrics_by_days') IS NOT NULL)
+BEGIN
+    DROP VIEW [dbo].[vx_audit_metrics_by_days]
+END
+
+IF (OBJECT_ID('x_audit_metrics') IS NOT NULL)
+BEGIN
+    DROP TABLE [dbo].[x_audit_metrics]
+END
 IF (OBJECT_ID('x_rms_mapping_provider') IS NOT NULL)
 BEGIN
     DROP TABLE [dbo].[x_rms_mapping_provider]
@@ -4435,6 +4460,36 @@ CREATE NONCLUSTERED INDEX [x_gds_ppm_policy_id] ON [x_gds_project_policy_map]
 WITH (SORT_IN_TEMPDB = OFF,DROP_EXISTING = OFF,IGNORE_DUP_KEY = OFF,ONLINE = OFF) ON [PRIMARY]
 GO
 
+SET ANSI_NULLS ON
+SET QUOTED_IDENTIFIER ON
+SET ANSI_PADDING ON
+CREATE TABLE [dbo].[x_audit_metrics](
+[id] [bigint] IDENTITY(1,1) NOT NULL,
+[service_type] [bigint] DEFAULT NULL NULL,
+[service_name] [nvarchar](255) DEFAULT NULL NULL,
+[app_id] [nvarchar](255) DEFAULT NULL NULL,
+[cluster_name] [nvarchar](255) DEFAULT NULL NULL,
+[client_ip] [nvarchar](255) DEFAULT NULL NULL,
+[metrics_text] [nvarchar](4000) DEFAULT NULL NULL,
+[throughput_unit] [nvarchar](255) DEFAULT NULL NULL,
+[number_of_audits] bigint DEFAULT NULL NULL,
+[version] [bigint] DEFAULT NULL NULL,
+[create_time] [datetime2] DEFAULT NULL NULL,
+[update_time] [datetime2] DEFAULT NULL NULL,
+[added_by_id] [bigint] DEFAULT NULL NULL,
+[upd_by_id] [bigint] DEFAULT NULL NULL,
+  PRIMARY KEY CLUSTERED
+(
+        [id] ASC
+)WITH (PAD_INDEX = OFF,STATISTICS_NORECOMPUTE = OFF,IGNORE_DUP_KEY = OFF,ALLOW_ROW_LOCKS = ON,ALLOW_PAGE_LOCKS = ON) ON [PRIMARY])
+GO
+ALTER TABLE [dbo].[x_audit_metrics] WITH CHECK ADD CONSTRAINT [x_audit_metrics_FK_service_type] FOREIGN KEY([service_type]) REFERENCES [dbo].[x_service_def] ([id])
+GO
+ALTER TABLE [dbo].[x_audit_metrics] WITH CHECK ADD CONSTRAINT [x_audit_metrics_FK_added_by_id] FOREIGN KEY([added_by_id]) REFERENCES [dbo].[x_portal_user] ([id])
+GO
+ALTER TABLE [dbo].[x_audit_metrics] WITH CHECK ADD CONSTRAINT [x_audit_metrics_FK_upd_by_id] FOREIGN KEY([upd_by_id]) REFERENCES [dbo].[x_portal_user] ([id])
+GO
+
 insert into x_portal_user (CREATE_TIME,UPDATE_TIME,FIRST_NAME,LAST_NAME,PUB_SCR_NAME,LOGIN_ID,PASSWORD,EMAIL,STATUS) values (CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,'Admin','','Admin','admin','ceb4f32325eda6142bd65215f4c0f371','',1);
 insert into x_portal_user_role (CREATE_TIME,UPDATE_TIME,USER_ID,USER_ROLE,STATUS) values (CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,dbo.getXportalUIdByLoginId('admin'),'ROLE_SYS_ADMIN',1);
 insert into x_user (CREATE_TIME,UPDATE_TIME,user_name,status,descr) values (CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,'admin',0,'Administrator');
@@ -4502,6 +4557,8 @@ INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('058',CURRENT_TIMESTAMP,'Ranger 1.0.0',CURRENT_TIMESTAMP,'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('059',CURRENT_TIMESTAMP,'Ranger 1.0.0',CURRENT_TIMESTAMP,'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('060',CURRENT_TIMESTAMP,'Ranger 1.0.0',CURRENT_TIMESTAMP,'localhost','Y');
+INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('063',CURRENT_TIMESTAMP,'Ranger 1.0.0',CURRENT_TIMESTAMP,'localhost','Y');
+INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('064',CURRENT_TIMESTAMP,'Ranger 1.0.0',CURRENT_TIMESTAMP,'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('065',CURRENT_TIMESTAMP,'Ranger 1.0.0',CURRENT_TIMESTAMP,'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('066',CURRENT_TIMESTAMP,'Ranger 3.0.0',CURRENT_TIMESTAMP,'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('067',CURRENT_TIMESTAMP,'Ranger 3.0.0',CURRENT_TIMESTAMP,'localhost','Y');
@@ -4595,4 +4652,8 @@ INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('J10063',CURRENT_TIMESTAMP,'Ranger 3.0.0',CURRENT_TIMESTAMP,'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('J10064',CURRENT_TIMESTAMP,'Ranger 3.0.0',CURRENT_TIMESTAMP,'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('JAVA_PATCHES',CURRENT_TIMESTAMP,'Ranger 1.0.0',CURRENT_TIMESTAMP,'localhost','Y');
+GO
+CREATE VIEW vx_audit_metrics_by_hours AS select service_type, service_name, app_id, cluster_name, client_ip, DATEPART(HOUR,create_time) as hours, sum(number_of_audits) as numberOfAudits from x_audit_metrics where (cast(CREATE_TIME as date) = CAST( GETDATE() AS Date )) group by service_type, service_name, app_id, cluster_name, client_ip, DATEPART(HOUR,create_time) ;
+GO
+CREATE VIEW	vx_audit_metrics_by_days AS select service_type, service_name, app_id, cluster_name, client_ip, DAY(create_time) as days, sum(number_of_audits) as numberOfAudits, cast(create_time as date) as auditDate from x_audit_metrics group by  service_type, service_name, app_id, cluster_name, client_ip, DAY(create_time), cast(create_time as date) ;
 GO
