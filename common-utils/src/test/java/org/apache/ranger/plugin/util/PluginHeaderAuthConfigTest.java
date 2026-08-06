@@ -28,20 +28,11 @@ import java.util.Properties;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class PluginHeaderAuthConfigTest {
     private static final String VALID_SPIFFE =
             "spiffe://prod-cluster.k8s.example.com/ns/ranger/sa/om";
-
-    @Test
-    public void resolveEnabledConfigPrefixFindsOzonePrefix() {
-        Properties props = new Properties();
-        props.setProperty("ranger.ozone.authn.header.enabled", "true");
-
-        assertEquals("ranger.ozone", PluginHeaderAuthConfig.resolveEnabledConfigPrefix(props));
-    }
 
     @Test
     public void buildSpiffeAuthHeadersUsesConfiguredHeaderName() {
@@ -78,13 +69,5 @@ public class PluginHeaderAuthConfigTest {
     @Test
     public void isHeaderAuthEnabledFalseForMissingPrefix() {
         assertFalse(PluginHeaderAuthConfig.isHeaderAuthEnabled(new Properties(), "ranger.ozone"));
-    }
-
-    @Test
-    public void resolveEnabledConfigPrefixNullWhenDisabled() {
-        Properties props = new Properties();
-        props.setProperty("ranger.hive.authn.header.enabled", "false");
-
-        assertNull(PluginHeaderAuthConfig.resolveEnabledConfigPrefix(props));
     }
 }

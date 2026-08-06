@@ -5,7 +5,7 @@
  * regarding copyright ownership.  The ASF licenses this file
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
+ * with the License.  You may obtain a copy of the License at
  *
  * http://www.apache.org/licenses/LICENSE-2.0
  *
@@ -41,7 +41,6 @@ import java.util.Properties;
  * prefix (explicit value, identity file, or {@code SPIFFE_ID} environment variable).
  */
 public final class PluginHeaderAuthConfig {
-    public static final String RANGER_CONFIG_PREFIX       = "ranger.";
     public static final String PROP_HEADER_AUTH_ENABLED   = "authn.header.enabled";
     public static final String PROP_HEADER_SPIFFE         = "authn.header.spiffe";
     public static final String DEFAULT_SPIFFE_HEADER_NAME = "X-Spiffe-Id";
@@ -54,53 +53,10 @@ public final class PluginHeaderAuthConfig {
     }
 
     /**
-     * Builds the {@code ranger.<serviceType>} config prefix for a service type.
-     *
-     * @param serviceType Ranger service type (e.g. {@code hive})
-     * @return the config prefix, or {@code null} when {@code serviceType} is blank
-     */
-    public static String configPrefixForServiceType(final String serviceType) {
-        if (StringUtils.isBlank(serviceType)) {
-            return null;
-        }
-
-        return RANGER_CONFIG_PREFIX + serviceType.trim();
-    }
-
-    /**
-     * Finds the first {@code ranger.<serviceType>.authn.header.enabled=true}
-     * prefix in {@code props}.
-     *
-     * @param props plugin or site configuration properties
-     * @return the matching config prefix, or {@code null} when none is enabled
-     */
-    public static String resolveEnabledConfigPrefix(final Properties props) {
-        if (props == null || props.isEmpty()) {
-            return null;
-        }
-
-        String suffix = "." + PROP_HEADER_AUTH_ENABLED;
-
-        for (String key : props.stringPropertyNames()) {
-            if (!key.startsWith(RANGER_CONFIG_PREFIX) || !key.endsWith(suffix)) {
-                continue;
-            }
-
-            String prefix = key.substring(0, key.length() - suffix.length());
-
-            if (isHeaderAuthEnabled(props, prefix)) {
-                return prefix;
-            }
-        }
-
-        return null;
-    }
-
-    /**
      * Returns whether trusted header auth is enabled for the given config prefix.
      *
      * @param props        plugin or site configuration properties
-     * @param configPrefix prefix such as {@code ranger.hive}
+     * @param configPrefix property prefix for header-auth settings
      * @return {@code true} when header auth is enabled
      */
     public static boolean isHeaderAuthEnabled(final Properties props,
