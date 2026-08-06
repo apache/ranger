@@ -57,6 +57,17 @@ public class RangerBaseModelObject implements java.io.Serializable {
         setIsEnabled(null);
     }
 
+    public RangerBaseModelObject(RangerBaseModelObject other) {
+        setId(other.getId());
+        setGuid(other.getGuid());
+        setIsEnabled(other.getIsEnabled());
+        setCreatedBy(other.getCreatedBy());
+        setUpdatedBy(other.getUpdatedBy());
+        setCreateTime(other.getCreateTime());
+        setUpdateTime(other.getUpdateTime());
+        setVersion(other.getVersion());
+    }
+
     public static <T> List<T> nullSafeList(List<T> coll) {
         return nullSafeSupplier.toList(coll);
     }

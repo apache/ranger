@@ -716,7 +716,7 @@ public abstract class RangerServiceDefServiceBase<T extends XXServiceDefBase, V 
 
         addImplicitConditionExpressionIfNeeded(serviceDef);
 
-        ServiceDefUtil.normalize(serviceDef);
+        serviceDef = (V) ServiceDefUtil.normalize(serviceDef);
 
         return serviceDef;
     }

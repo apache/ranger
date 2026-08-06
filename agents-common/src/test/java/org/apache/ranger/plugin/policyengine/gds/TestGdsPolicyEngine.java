@@ -126,7 +126,7 @@ public class TestGdsPolicyEngine {
 
         assertTrue(testCase.gdsInfo != null && testCase.tests != null, "invalid input: " + testName);
 
-        ServiceDefUtil.normalize(testCase.serviceDef);
+        testCase.serviceDef = ServiceDefUtil.normalize(testCase.serviceDef);
         testCase.serviceDef.setMarkerAccessTypes(ServiceDefUtil.getMarkerAccessTypes(testCase.serviceDef.getAccessTypes()));
 
         RangerPluginContext       pluginContext = new RangerPluginContext(new RangerPluginConfig(testCase.serviceDef.getName(), null, "hive", "cl1", "on-prem", null));

@@ -32,6 +32,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.UnaryOperator;
 
 @JsonAutoDetect(fieldVisibility = Visibility.ANY)
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
@@ -112,6 +113,39 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
             List<RangerEnumDef> enums) {
         this(name, implClass, label, description, options, configs, modifiedResourceDefs, accessTypes, policyConditions, contextEnrichers, enums);
         this.setDisplayName(displayName);
+    }
+
+    public RangerServiceDef(RangerServiceDef other) {
+        super(other);
+
+        setName(other.getName());
+        setDisplayName(other.getDisplayName());
+        setImplClass(other.getImplClass());
+        setLabel(other.getLabel());
+        setDescription(other.getDescription());
+        setRbKeyLabel(other.getRbKeyLabel());
+        setRbKeyDescription(other.getRbKeyDescription());
+        setOptions(other.getOptions() == null ? null : new HashMap<>(other.getOptions()));
+        setConfigs(copyList(other.getConfigs(), RangerServiceConfigDef::new));
+        setResources(copyList(other.getResources(), RangerResourceDef::new));
+        setAccessTypes(copyList(other.getAccessTypes(), RangerAccessTypeDef::new));
+        setPolicyConditions(copyList(other.getPolicyConditions(), RangerPolicyConditionDef::new));
+        setContextEnrichers(copyList(other.getContextEnrichers(), RangerContextEnricherDef::new));
+        setEnums(copyList(other.getEnums(), RangerEnumDef::new));
+        setDataMaskDef(other.getDataMaskDef() == null ? null : new RangerDataMaskDef(other.getDataMaskDef()));
+        setRowFilterDef(other.getRowFilterDef() == null ? null : new RangerRowFilterDef(other.getRowFilterDef()));
+        setMarkerAccessTypes(copyList(other.getMarkerAccessTypes(), RangerAccessTypeDef::new));
+    }
+
+    private static <T> List<T> copyList(List<T> list, UnaryOperator<T> copier) {
+        List<T> ret = null;
+        if (list != null) {
+            ret = new ArrayList<>(list.size());
+            for (T item : list) {
+                ret.add(item == null ? null : copier.apply(item));
+            }
+        }
+        return ret;
     }
 
     /**
@@ -644,6 +678,24 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
             setDefaultIndex(defaultIndex);
         }
 
+        public RangerEnumDef(RangerEnumDef other) {
+            setItemId(other.getItemId());
+            setName(other.getName());
+            setElements(copyEnumElementDefs(other.getElements()));
+            setDefaultIndex(other.getDefaultIndex());
+        }
+
+        private static List<RangerEnumElementDef> copyEnumElementDefs(List<RangerEnumElementDef> elementDefs) {
+            List<RangerEnumElementDef> ret = null;
+            if (elementDefs != null) {
+                ret = new ArrayList<>(elementDefs.size());
+                for (RangerEnumElementDef elementDef : elementDefs) {
+                    ret.add(elementDef == null ? null : new RangerEnumElementDef(elementDef));
+                }
+            }
+            return ret;
+        }
+
         /**
          * @return the itemId
          */
@@ -831,6 +883,13 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
             setRbKeyLabel(rbKeyLabel);
         }
 
+        public RangerEnumElementDef(RangerEnumElementDef other) {
+            setItemId(other.getItemId());
+            setName(other.getName());
+            setLabel(other.getLabel());
+            setRbKeyLabel(other.getRbKeyLabel());
+        }
+
         /**
          * @return the itemId
          */
@@ -1007,6 +1066,23 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
             setRbKeyLabel(rbKeyLabel);
             setRbKeyDescription(rbKeyDescription);
             setRbKeyValidationMessage(rbKeyValidationMessage);
+        }
+
+        public RangerServiceConfigDef(RangerServiceConfigDef other) {
+            setItemId(other.getItemId());
+            setName(other.getName());
+            setType(other.getType());
+            setSubType(other.getSubType());
+            setMandatory(other.getMandatory());
+            setDefaultValue(other.getDefaultValue());
+            setValidationRegEx(other.getValidationRegEx());
+            setValidationMessage(other.getValidationMessage());
+            setUiHint(other.getUiHint());
+            setLabel(other.getLabel());
+            setDescription(other.getDescription());
+            setRbKeyLabel(other.getRbKeyLabel());
+            setRbKeyDescription(other.getRbKeyDescription());
+            setRbKeyValidationMessage(other.getRbKeyValidationMessage());
         }
 
         /**
@@ -1436,7 +1512,7 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
             setRecursiveSupported(other.getRecursiveSupported());
             setExcludesSupported(other.getExcludesSupported());
             setMatcher(other.getMatcher());
-            setMatcherOptions(other.getMatcherOptions());
+            setMatcherOptions(other.getMatcherOptions() == null ? null : new HashMap<>(other.getMatcherOptions()));
             setValidationRegEx(other.getValidationRegEx());
             setValidationMessage(other.getValidationMessage());
             setUiHint(other.getUiHint());
@@ -2304,6 +2380,21 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
             setRbKeyValidationMessage(rbKeyValidationMessage);
         }
 
+        public RangerPolicyConditionDef(RangerPolicyConditionDef other) {
+            setItemId(other.getItemId());
+            setName(other.getName());
+            setEvaluator(other.getEvaluator());
+            setEvaluatorOptions(other.getEvaluatorOptions() == null ? null : new HashMap<>(other.getEvaluatorOptions()));
+            setValidationRegEx(other.getValidationRegEx());
+            setValidationMessage(other.getValidationMessage());
+            setUiHint(other.getUiHint());
+            setLabel(other.getLabel());
+            setDescription(other.getDescription());
+            setRbKeyLabel(other.getRbKeyLabel());
+            setRbKeyDescription(other.getRbKeyDescription());
+            setRbKeyValidationMessage(other.getRbKeyValidationMessage());
+        }
+
         /**
          * @return the itemId
          */
@@ -2672,6 +2763,13 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
             setEnricherOptions(enricherOptions);
         }
 
+        public RangerContextEnricherDef(RangerContextEnricherDef other) {
+            setItemId(other.getItemId());
+            setName(other.getName());
+            setEnricher(other.getEnricher());
+            setEnricherOptions(other.getEnricherOptions() == null ? null : new HashMap<>(other.getEnricherOptions()));
+        }
+
         /**
          * @return the itemId
          */
@@ -2828,15 +2926,15 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
         }
 
         public RangerDataMaskDef(List<RangerDataMaskTypeDef> maskTypes, List<RangerAccessTypeDef> accessTypes, List<RangerResourceDef> resources) {
-            setMaskTypes(maskTypes);
-            setAccessTypes(accessTypes);
-            setResources(resources);
+            setMaskTypes(copyList(maskTypes, RangerDataMaskTypeDef::new));
+            setAccessTypes(copyList(accessTypes, RangerAccessTypeDef::new));
+            setResources(copyList(resources, RangerResourceDef::new));
         }
 
         public RangerDataMaskDef(RangerDataMaskDef other) {
-            setMaskTypes(other.getMaskTypes());
-            setAccessTypes(other.getAccessTypes());
-            setResources(other.getResources());
+            setMaskTypes(copyList(other.getMaskTypes(), RangerDataMaskTypeDef::new));
+            setAccessTypes(copyList(other.getAccessTypes(), RangerAccessTypeDef::new));
+            setResources(copyList(other.getResources(), RangerResourceDef::new));
         }
 
         public List<RangerDataMaskTypeDef> getMaskTypes() {
@@ -3301,13 +3399,13 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
         }
 
         public RangerRowFilterDef(List<RangerAccessTypeDef> accessTypes, List<RangerResourceDef> resources) {
-            setAccessTypes(accessTypes);
-            setResources(resources);
+            setAccessTypes(copyList(accessTypes, RangerAccessTypeDef::new));
+            setResources(copyList(resources, RangerResourceDef::new));
         }
 
         public RangerRowFilterDef(RangerRowFilterDef other) {
-            setAccessTypes(other.getAccessTypes());
-            setResources(other.getResources());
+            setAccessTypes(copyList(other.getAccessTypes(), RangerAccessTypeDef::new));
+            setResources(copyList(other.getResources(), RangerResourceDef::new));
         }
 
         public List<RangerAccessTypeDef> getAccessTypes() {

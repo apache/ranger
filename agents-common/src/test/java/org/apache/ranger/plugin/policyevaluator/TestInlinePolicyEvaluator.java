@@ -90,7 +90,7 @@ public class TestInlinePolicyEvaluator {
         ServicePolicies  servicePolicies = testCase.servicePolicies;
         RangerServiceDef serviceDef      = servicePolicies.getServiceDef();
 
-        ServiceDefUtil.normalize(serviceDef);
+        serviceDef = ServiceDefUtil.normalize(serviceDef);
 
         RangerPolicyEngineOptions   policyEngineOptions = new RangerPolicyEngineOptions();
         RangerPluginContext         pluginContext       = new RangerPluginContext(new RangerPluginConfig(serviceDef.getName(), servicePolicies.getServiceName(), null, "cl1", "on-prem", policyEngineOptions));
