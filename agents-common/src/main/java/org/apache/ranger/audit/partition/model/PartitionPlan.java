@@ -227,11 +227,6 @@ public class PartitionPlan implements Serializable {
             return this;
         }
 
-        public Builder putPlugin(String pluginId, PluginEntry entry) {
-            this.plugins.put(pluginId, entry);
-            return this;
-        }
-
         public Builder buffer(BufferEntry buffer) {
             this.buffer = buffer != null ? buffer : BufferEntry.empty();
             return this;
