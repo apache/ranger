@@ -94,30 +94,10 @@ public class PartitionPlanAllocatorTest {
     }
 
     @Test
-    public void testScalePluginAppendsTailOnly() {
-        PartitionPlan promoted = PartitionPlanAllocator.promotePlugin(initialPlan, "trino", 3, "ops");
-        PartitionPlan scaled   = PartitionPlanAllocator.scalePlugin(promoted, "hiveServer2", 3, "ops");
-
-        assertEquals(3, scaled.getVersion());
-        assertEquals(12, scaled.getTopicPartitionCount());
-        assertIterableEquals(List.of(4, 5, 6, 10, 11, 12), scaled.getPlugins().get("hiveServer2").getPartitions());
-        assertIterableEquals(List.of(1, 2, 3), scaled.getPlugins().get("hdfs").getPartitions());
-        assertIterableEquals(List.of(7, 8, 9), scaled.getPlugins().get("trino").getPartitions());
-    }
-
-    @Test
     public void testPromoteAlreadyConfiguredPluginFails() {
         PartitionPlanException error = assertThrows(PartitionPlanException.class,
                 () -> PartitionPlanAllocator.promotePlugin(initialPlan, "hdfs", 1, "ops"));
         assertTrue(error.getMessage().contains("requested 1"));
-    }
-
-    @Test
-    public void testIsPromoteAlreadyAppliedWhenPluginAndCountMatch() {
-        PartitionPlan promoted = PartitionPlanAllocator.promotePlugin(initialPlan, "trino", 3, "ops");
-
-        assertTrue(PartitionPlanAllocator.isPromoteAlreadyApplied(promoted, "trino", 3));
-        assertFalse(PartitionPlanAllocator.isPromoteAlreadyApplied(promoted, "trino", 5));
     }
 
     @Test
@@ -136,11 +116,6 @@ public class PartitionPlanAllocatorTest {
                 () -> PartitionPlanAllocator.promotePlugin(promoted, "trino", 5, "ops"));
 
         assertTrue(error.getMessage().contains("requested 5"));
-    }
-
-    @Test
-    public void testScaleUnknownPluginFails() {
-        assertThrows(PartitionPlanException.class, () -> PartitionPlanAllocator.scalePlugin(initialPlan, "trino", 2, "ops"));
     }
 
     @Test

@@ -94,17 +94,6 @@ public class PartitionPlan implements Serializable {
         return serviceAllowedUsers;
     }
 
-    /** Compares routing payload; ignores version, updatedAt, updatedBy, and serviceAllowedUsers. */
-    public boolean sameContentAs(PartitionPlan other) {
-        if (other == null) {
-            return false;
-        }
-        return topicPartitionCount == other.topicPartitionCount
-                && Objects.equals(topic, other.topic)
-                && Objects.equals(plugins, other.plugins)
-                && Objects.equals(buffer, other.buffer);
-    }
-
     public Builder toBuilder() {
         return new Builder(this);
     }

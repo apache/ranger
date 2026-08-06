@@ -137,20 +137,6 @@ public final class PartitionPlanAllocator {
         return commitPlanUpdate(current, updatedBy, topicPartitionCount, plugins, remainingBuffer);
     }
 
-    /** Add more partitions to an existing plugin by appending new tail IDs only. */
-    public static PartitionPlan scalePlugin(PartitionPlan current, String pluginId, int additionalPartitions, String updatedBy) {
-        requireMutationInputs(current, pluginId, additionalPartitions, updatedBy);
-        if (!current.getPlugins().containsKey(pluginId)) {
-            throw new PartitionPlanException("Plugin '" + pluginId + "' is not configured; promote it first");
-        }
-
-        List<Integer> pluginIds = new ArrayList<>(current.getPlugins().get(pluginId).getPartitions());
-        int topicPartitionCount = appendTailPartitions(pluginIds, current.getTopicPartitionCount(), additionalPartitions, collectAssignedPartitionIds(current));
-
-        Map<String, PluginEntry> plugins = addPluginAssignment(current, pluginId, pluginIds, current.getPlugins().get(pluginId).getServices());
-        return commitPlanUpdate(current, updatedBy, topicPartitionCount, plugins, current.getBuffer().getPartitions());
-    }
-
     public static boolean isOnboardAlreadyApplied(PartitionPlan current, String pluginId, String serviceName, int partitionCount) {
         if (current == null || StringUtils.isBlank(serviceName)) {
             return false;
@@ -160,28 +146,6 @@ public final class PartitionPlanAllocator {
             return false;
         }
         return existing.getPartitions().size() == partitionCount && existing.getServices().contains(serviceName.trim());
-    }
-
-    public static boolean isPromoteAlreadyApplied(PartitionPlan current, String pluginId, int partitionCount) {
-        if (current == null) {
-            return false;
-        }
-        PluginEntry existing = current.getPlugins().get(pluginId);
-        return existing != null && existing.getPartitions().size() == partitionCount;
-    }
-
-    /** Applies a merged plan with append-only checks against the current plan. */
-    public static PartitionPlan replacePlan(PartitionPlan current, PartitionPlan proposed) {
-        if (current == null || proposed == null) {
-            throw new PartitionPlanException("Current and proposed plans are required");
-        }
-        if (!StringUtils.equals(current.getTopic(), proposed.getTopic())) {
-            throw new PartitionPlanException("Proposed topic must match current topic");
-        }
-        PartitionPlan next = proposed.toBuilder().version(current.getVersion() + 1).build();
-        PartitionPlanValidator.validate(next);
-        PartitionPlanValidator.validateAppendOnly(current, next);
-        return next;
     }
 
     /** Updates audit POST allow-list metadata; bumps version only when the map changes. */

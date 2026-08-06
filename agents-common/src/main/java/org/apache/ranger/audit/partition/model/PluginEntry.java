@@ -66,10 +66,6 @@ public class PluginEntry implements Serializable {
         return services;
     }
 
-    public PluginEntry withPartitions(List<Integer> newPartitions) {
-        return new PluginEntry(newPartitions, services);
-    }
-
     public PluginEntry withServices(List<String> newServices) {
         return new PluginEntry(partitions, newServices);
     }

@@ -24,7 +24,6 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertIterableEquals;
@@ -62,14 +61,5 @@ public class PolicyDownloadAuthUsersUtilTest {
 
         assertEquals(1, normalized.size());
         assertIterableEquals(List.of("hive"), normalized.get("dev_hive"));
-    }
-
-    @Test
-    public void testToAllowedUserSets() {
-        Map<String, List<String>> input = Map.of("dev_hive", List.of("hive", "hive2"));
-
-        Map<String, Set<String>> allowed = PolicyDownloadAuthUsersUtil.toAllowedUserSets(input);
-
-        assertEquals(Set.of("hive", "hive2"), allowed.get("dev_hive"));
     }
 }

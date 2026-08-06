@@ -25,22 +25,13 @@ import org.apache.ranger.plugin.model.RangerService;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 /** Parses {@code policy.download.auth.users} service config for audit ingestor authorization. */
 public final class PolicyDownloadAuthUsersUtil {
     public static final String CONFIG_NAME = "policy.download.auth.users";
-
-    /**
-     * Ingestor site key pattern: {@code ranger.audit.ingestor.service.<repo>.allowed.users}.
-     * Values originate from Admin {@link #CONFIG_NAME}; partition plan {@code serviceAllowedUsers}
-     * keys use the same {@code <repo>} names (Policy Manager service name).
-     */
-    public static final String INGESTOR_ALLOWED_USERS_SUFFIX = "allowed.users";
 
     private PolicyDownloadAuthUsersUtil() {
     }
@@ -79,18 +70,5 @@ public final class PolicyDownloadAuthUsersUtil {
             normalized.put(entry.getKey().trim(), List.copyOf(users));
         }
         return Collections.unmodifiableMap(normalized);
-    }
-
-    /** Converts plan allow-list to ingestor lookup map; skips repos with no users (same as static site config). */
-    public static Map<String, Set<String>> toAllowedUserSets(Map<String, List<String>> serviceAllowedUsers) {
-        Map<String, List<String>> normalized = normalizeServiceAllowedUsers(serviceAllowedUsers);
-        if (normalized.isEmpty()) {
-            return Collections.emptyMap();
-        }
-        Map<String, Set<String>> allowed = new LinkedHashMap<>();
-        for (Map.Entry<String, List<String>> entry : normalized.entrySet()) {
-            allowed.put(entry.getKey(), new LinkedHashSet<>(entry.getValue()));
-        }
-        return Collections.unmodifiableMap(allowed);
     }
 }

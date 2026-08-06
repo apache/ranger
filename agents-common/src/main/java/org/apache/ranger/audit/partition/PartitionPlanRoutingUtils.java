@@ -19,8 +19,6 @@
 
 package org.apache.ranger.audit.partition;
 
-import org.apache.commons.lang3.StringUtils;
-
 /** Converts Admin-managed plan partition ids to Kafka producer partition indices. */
 public final class PartitionPlanRoutingUtils {
     private PartitionPlanRoutingUtils() {
@@ -35,20 +33,6 @@ public final class PartitionPlanRoutingUtils {
             return 0;
         }
         return plannedPartitionId - 1;
-    }
-
-    /**
-     * Returns a non-negative slot index in {@code [0, slotCount)} for hash-based buffer routing.
-     * Uses {@link Math#floorMod(int, int)} so {@code Integer.MIN_VALUE} hash codes are safe.
-     */
-    public static int hashToSlotIndex(String key, int slotCount) {
-        if (slotCount <= 0) {
-            return 0;
-        }
-        if (StringUtils.isBlank(key)) {
-            return 0;
-        }
-        return Math.floorMod(key.hashCode(), slotCount);
     }
 
     /**

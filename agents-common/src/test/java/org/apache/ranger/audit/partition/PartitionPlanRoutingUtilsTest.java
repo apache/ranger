@@ -33,11 +33,4 @@ public class PartitionPlanRoutingUtilsTest {
         assertEquals(8, PartitionPlanRoutingUtils.resolveKafkaPartitionIndex(9, 9));
         assertEquals(8, PartitionPlanRoutingUtils.resolveKafkaPartitionIndex(12, 9));
     }
-
-    @Test
-    public void testHashToSlotIndexUsesFloorModForMinHashCode() {
-        String minHashKey = "polygenelubricants";
-        assertEquals(Integer.MIN_VALUE, minHashKey.hashCode());
-        assertEquals(2, PartitionPlanRoutingUtils.hashToSlotIndex(minHashKey, 5));
-    }
 }
