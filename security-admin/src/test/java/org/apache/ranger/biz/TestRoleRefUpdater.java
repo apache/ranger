@@ -196,6 +196,55 @@ public class TestRoleRefUpdater {
     }
 
     @Test
+    public void test05a_createNewRoleMapping_createRoleOnlyDoesNotCreateMissingUser() throws Exception {
+        RoleRefUpdater updater = new RoleRefUpdater();
+        RangerDaoManager dao = mock(RangerDaoManager.class);
+        XXUserDao xUserDao = mock(XXUserDao.class);
+        RESTErrorUtil rest = mock(RESTErrorUtil.class);
+        RangerBizUtil biz = mock(RangerBizUtil.class);
+
+        setField(updater, RoleRefUpdater.class, "daoMgr", dao);
+        setField(updater, RoleRefUpdater.class, "restErrorUtil", rest);
+        setField(updater, RoleRefUpdater.class, "xaBizUtil", biz);
+
+        when(dao.getXXUser()).thenReturn(xUserDao);
+        when(xUserDao.getIdsByUserNames(anySet())).thenReturn(Collections.emptyMap());
+        when(biz.checkAdminAccess()).thenReturn(true);
+
+        RuntimeException expected = new RuntimeException("missing user");
+        when(rest.createRESTException(anyString(), any())).thenThrow(expected);
+
+        // Missing user with createNonExistUserGroup=false, createNonExistRole=true -> must fail (no user create)
+        RangerRole roleWithMissingUser = buildRole(9L, Collections.singletonList("missingUser"), Collections.emptyList(),
+                Collections.emptyList());
+        Assertions.assertThrows(RuntimeException.class,
+                () -> updater.createNewRoleMappingForRefTable(roleWithMissingUser, false, true, false));
+    }
+
+    @Test
+    public void test05b_createNewRoleMapping_createRoleOnlyCreatesMissingNestedRole() throws Exception {
+        RoleRefUpdater updater = new RoleRefUpdater();
+        RangerDaoManager dao = mock(RangerDaoManager.class);
+        XXRoleDao xRoleDao = mock(XXRoleDao.class);
+        RangerTransactionSynchronizationAdapter adapter = mock(RangerTransactionSynchronizationAdapter.class);
+        RangerBizUtil biz = mock(RangerBizUtil.class);
+
+        setField(updater, RoleRefUpdater.class, "daoMgr", dao);
+        setField(updater, RoleRefUpdater.class, "rangerTransactionSynchronizationAdapter", adapter);
+        setField(updater, RoleRefUpdater.class, "xaBizUtil", biz);
+
+        when(dao.getXXRole()).thenReturn(xRoleDao);
+        when(xRoleDao.getIdsByRoleNames(anySet())).thenReturn(Collections.emptyMap());
+        when(biz.checkAdminAccess()).thenReturn(true);
+
+        // Missing nested role with createNonExistUserGroup=false, createNonExistRole=true -> schedule role create only
+        RangerRole roleWithMissingNestedRole = buildRole(9L, Collections.emptyList(), Collections.emptyList(),
+                Collections.singletonList("missingRole"));
+        updater.createNewRoleMappingForRefTable(roleWithMissingNestedRole, false, true, false);
+        verify(adapter, times(1)).executeOnTransactionCommit(any(Runnable.class));
+    }
+
+    @Test
     public void test04_cleanupRefTablesForUpdate_selectivePrincipalCleanup() throws Exception {
         RoleRefUpdater updater = new RoleRefUpdater();
         RangerDaoManager dao = mock(RangerDaoManager.class);
