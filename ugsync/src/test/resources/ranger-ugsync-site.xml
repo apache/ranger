@@ -70,7 +70,7 @@
     
     <property>
       <name>ranger.usersync.keystore.file</name>
-      <value>/usr/hdp/current/ranger-usersync/conf/unixauthservice.jks</value>
+      <value>/usr/hdp/current/ranger-usersync/conf/usersync.jks</value>
     </property>
     
     <property>

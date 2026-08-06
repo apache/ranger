@@ -231,7 +231,7 @@ public class FileSourceUserGroupBuilder extends AbstractUserGroupSource implemen
 
     public void buildUserGroupList() throws Throwable {
         if (userGroupFilename == null) {
-            throw new Exception("User Group Source File is not Configured. Please maintain in unixauthservice.properties or pass it as command line argument for org.apache.ranger.unixusersync.process.FileSourceUserGroupBuilder");
+            throw new Exception("User Group Source File is not Configured. Please maintain in ranger-ugsync-site.xml or pass it as command line argument for org.apache.ranger.unixusersync.process.FileSourceUserGroupBuilder");
         }
 
         File f = new File(userGroupFilename);

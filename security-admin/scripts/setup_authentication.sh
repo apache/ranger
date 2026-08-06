@@ -16,7 +16,7 @@
 # limitations under the License.
 
 
-USAGE="Usage: setup_authentication.sh [UNIX|LDAP|AD|NONE] <path>"
+USAGE="Usage: setup_authentication.sh [UNIX|PAM|LDAP|AD|NONE] <path>"
 
 if [ $# -ne 2 ]
   then
@@ -28,7 +28,7 @@ authentication_method=$1
 path=$2
 CONFIG_FILE=$path/WEB-INF/classes/conf/security-applicationContext.xml
 
-if [ $authentication_method = "UNIX" ] ; then
+if [ $authentication_method = "UNIX" ] || [ $authentication_method = "PAM" ] ; then
     	echo $path;
 	awk 'FNR==NR{ _[++d]=$0;next}
 	/UNIX_BEAN_SETTINGS_START/{

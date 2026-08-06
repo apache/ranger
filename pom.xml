@@ -976,8 +976,6 @@
                 <module>ugsync</module>
                 <module>ugsync-util</module>
                 <module>ugsync/ldapconfigchecktool/ldapconfigcheck</module>
-                <module>unixauthclient</module>
-                <module>unixauthservice</module>
             </modules>
         </profile>
         <profile>
@@ -1327,22 +1325,6 @@
                 <module>ugsync</module>
                 <module>ugsync-util</module>
                 <module>ugsync/ldapconfigchecktool/ldapconfigcheck</module>
-                <module>unixauthclient</module>
-                <module>unixauthservice</module>
-            </modules>
-        </profile>
-        <profile>
-            <id>linux-pam</id>
-            <activation>
-                <os>
-                    <family>linux</family>
-                </os>
-                <file>
-                    <exists>/usr/include/security/pam_appl.h</exists>
-                </file>
-            </activation>
-            <modules>
-                <module>unixauthpam</module>
             </modules>
         </profile>
         <profile>
@@ -1415,8 +1397,6 @@
                 <module>ugsync</module>
                 <module>ugsync-util</module>
                 <module>ugsync/ldapconfigchecktool/ldapconfigcheck</module>
-                <module>unixauthclient</module>
-                <module>unixauthservice</module>
             </modules>
             <build>
                 <plugins>
