@@ -244,7 +244,6 @@ class TestAuthSession:
             json_resp = response.json()
             assert "vXAuthSessions" in json_resp or "totalCount" in json_resp
 
-
     @pytest.mark.get
     @pytest.mark.positive
     @pytest.mark.parametrize(
@@ -286,7 +285,6 @@ class TestAuthSession:
         expected_user = auth[0] 
         assert data.get("loginId") == expected_user, f"Expected loginId to be {expected_user} but got {data.get('loginId')}"
         assert data.get("id") is not None
-
     
     # NEGATIVE TEST CASES
 
@@ -321,7 +319,6 @@ class TestAuthSession:
         elif test_case == "invalid-input-data":
             assert response.status_code == 400, f"Expected 400 Bad Request for {test_case}, but got {response.status_code}"
 
-
     @pytest.mark.get
     @pytest.mark.negative
     @pytest.mark.parametrize(
@@ -351,7 +348,6 @@ class TestAuthSession:
             assert response.status_code == 403, f"Expected 403 Forbidden for {test_case}, but got {response.status_code}"
         elif test_case in ["missing-session-id", "invalid-session-id"]:
             assert response.status_code == 400, f"Expected 400 Bad Request for {test_case}, but got {response.status_code}"
-
 
 @pytest.mark.usefixtures("ranger_config", "ranger_key_admin_config")
 @pytest.mark.xuserrest
@@ -453,7 +449,6 @@ class TestDownloadServiceName:
             data = response.json()
             assert "userStoreVersion" in data, f"Response missing 'userStoreVersion' for {test_case}"
             assert "userGroupMapping" in data or "users" in data, f"Response missing user/group data for {test_case}"
-        
 
     @pytest.mark.get
     @pytest.mark.positive
@@ -512,10 +507,14 @@ class TestDownloadServiceName:
             data = response.json()
 
             assert "userStoreVersion" in data
-            assert "userGroupMapping" in data or "users" in data
-
+            assert (
+                    "userAttrMapping" in data
+                    or "groupAttrMapping" in data
+                    or "userGroupMapping" in data
+            ), "Response missing user/group data"
 
     # NEGATIVE TEST CASES
+
     @pytest.mark.skip(reason = "Skipping download tests due to existing code changes in xuserrest")
     @pytest.mark.get
     @pytest.mark.negative
@@ -557,8 +556,6 @@ class TestDownloadServiceName:
 
         assert_response(response, expected_status, test_case)
 
-
-
     @pytest.mark.get
     @pytest.mark.negative
     @pytest.mark.parametrize(
@@ -594,7 +591,6 @@ class TestDownloadServiceName:
 
         assert_response(response, expected_status, test_case)
 
-    
 @pytest.mark.usefixtures("ranger_config", "ranger_key_admin_config")
 @pytest.mark.xuserrest
 class TestMiscellaneous:
@@ -647,7 +643,6 @@ class TestMiscellaneous:
             cls.ranger_user_config,
         )
 
-    
     @pytest.mark.get
     @pytest.mark.positive
     @pytest.mark.parametrize(
@@ -686,7 +681,6 @@ class TestMiscellaneous:
             assert i["id"] in lis, f"Unexpected group id {i['id']} found in response for {test_case}"
             lis.remove(i["id"])
 
-
     @pytest.mark.get
     @pytest.mark.positive
     @pytest.mark.parametrize(
@@ -719,8 +713,6 @@ class TestMiscellaneous:
         for i in data["vXUsers"]:
             assert i["id"] in user_ids, f"Unexpected user id {i['id']} found in response for {test_case}"
             user_ids.remove(i["id"])
-
-
 
     @pytest.mark.delete
     @pytest.mark.positive
@@ -818,7 +810,6 @@ class TestMiscellaneous:
             )
             assert get_response.status_code == 400, f"Expected group {i['name']} to be deleted, but it still exists"  
 
-    
     # Negative Tests
 
     @pytest.mark.get

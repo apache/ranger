@@ -24,24 +24,20 @@ separate terms of service, privacy policy, and support
 documentation.
 -->
 
-# This is the main directory for running XUSERREST API functionality tests
+# This is the main directory for running ROLEREST API functionality tests
 
-This directory contains automated functional tests for the XUSERREST API, covering user management, group management, permissions, secure user operations, and UGSync functionality.
+This directory contains automated functional tests for the ROLEREST API, covering roles functionality.
 
 ## Structure
 ```
-test_xuserrest/
+rolerrest/
 ├── utility/                        
 │   ├── __init__.py
 │   ├── utils.py              
 ├── __init__.py 
 ├── conftest.py 
-├── test_groups.py 
-├── test_permission.py  
-├── test_secure_user.py
-├── test_ugsync.py
-├── test_user.py       
-├── test_utility_fun.py
+├── test_role_management.py 
+├── test_role_utility_fun.py  
 ```
 
 
@@ -57,81 +53,38 @@ test_xuserrest/
 
 ## `utils.py`
 
-- Shared utility module for all xuser REST test files — provides reusable helpers, schema validators, and API interaction functions
+## `utils.py`
+- Shared utility module for all role REST test files — provides reusable helpers and API interaction functions
 - Defines global constants: BIGINT_MIN/BIGINT_MAX for boundary checks, RANGER_CONTAINER_NAME/RANGER_LOG_FILE for Docker log access
-init_configs() sets global auth configs for all four roles (admin, keyadmin, auditor, user)
-assert_response() validates HTTP status codes (single or list) and on failure fetches Ranger logs via fetch_ranger_logs()
-fetch_ranger_logs() runs docker exec to pull categorized log sections — recent activity, errors/warns, API calls, and HTTP-code-specific patterns using keyword_map
-- Schema validators: validate_user_schema(), validate_secure_user_schema(), validate_xgroup_schema(), validate_external_user_schema(), group_permission_schema() — enforce field types, lengths, and value constraints
-CRUD helpers: user_exists(), delete_user(), group_exists(), delete_group(), groupuser_exists(), delete_groupuser() — used for test setup/teardown
-- UGSync helpers: validate_auditinfo_schema(), validate_sync_source_info() — validate sync audit responses across unix, file, and ldap sources with source-specific field schemas
-- Permission helpers: build_user_permission(), build_group_permission(), build_permission_payload(), user_permission_exists() — construct and verify module permission payloads return_value_ugsync_groupusers() computes expected count of group-user sync operations for assertion in UGSync tests
-
-
+- init_configs() sets global auth configs for all four roles (admin, keyadmin, auditor, user)
+- assert_response() delegates to xuserrest — validates HTTP status codes and fetches Ranger logs on failure
+- Service helpers: create_service(), assign_service_admin(), assign_service_admin_group(), delete_service() — provision HDFS services and service-admin access for authorization tests
+- Role helpers: get_role_by_name(), delete_role() — lookup and teardown of roles
+- ensureRoleAccess() provisions users, groups, roles, and services based on test case (admin, service admin, group admin, role membership) and returns auth, query params, and cleanup items
 ---
-
 ## `conftest.py`
-
-- Central pytest configuration file providing shared fixtures and helpers for the entire test suite
+- Central pytest configuration file providing shared fixtures and helpers for the test suite
 - Defines module-level constants: CREDENTIALS, DEFAULT_HEADERS, KEYADMIN_CREDENTIALS
-- Includes create_user_with_retry() — retries user POST creation up to 5 times with incremental sleep on failure
+- Includes create_user_with_retry() — retries secure user POST creation up to 5 times with incremental sleep on failure
 - Provides session/function/class scoped fixtures:
-   1. Session: credentials, default_headers, keyadmin_credentials, ranger_config, ranger_key_admin_config, client_roles
-   2. Function: ranger_session, all_users, all_schema_following_users, get_user_by_id
-   3. Class: temp_secure_user, temp_keyadmin_user, temp_permission_module, temp_group, temp_permission_group, temp_permission_user, temp_role — all auto-cleanup after test class
-
+  1. Session: credentials, default_headers, keyadmin_credentials, ranger_config, ranger_key_admin_config
+  2. Function: ranger_session
+  3. Class: temp_secure_user, temp_keyadmin_user, temp_group, temp_role — all auto-cleanup after test class
 ---
-
-## `test_groups.py`
-
-- Tests for Group management operations across three test classes: TestSecureGroups, TestGroups, and TestGroupUsers
-- Each class uses a _setup fixture (class-scoped) that provisions primary & secondary users across all roles (admin, key admin, auditor, user) and two temporary groups with auto-cleanup
-- Default response code for auth failure cases is set to 404 to prevent API endpoint discovery due to Spring silent failures
-
+## `test_role_management.py`
+- Tests Role CRUD and lookup operations within TestRoleCRUD
+- Class-scoped _setup provisions primary and secondary users across all roles (admin, keyadmin, auditor, user), groups, and roles with auto-cleanup
+- GET: /roles/roles, /roles/roles/{id}, /roles/roles/names, /roles/roles/name/{name}, /roles/roles/user/{userName}, /roles/lookup/roles
+- POST/PUT/DELETE: create, update, and delete roles by ID and name
+- Covers role-based access control including service admin and service-admin-group paths via ensureRoleAccess()
+- Negative tests validate unauthorized access, invalid IDs/names, and malformed payloads
 ---
-
-## `test_secure_user.py`
-
-- Tests Secure User CRUD operations via /xusers/secure/users/* endpoints within TestSecureUserEndpoint
-- Class-scoped _setup provisions primary & secondary users across all roles (admin, keyadmin, auditor, user) with auto-cleanup
-- Defines BIGINT_MIN / BIGINT_MAX constants for boundary value testing
-- Covers role-based access control across all operations — verifying both allowed and restricted role/target combinations
-- Validates immutability of fields (name, id, createDate) on PUT and silent 204 behavior on malformed bulk DELETE payloads
-Uses forceDelete=true and X-Requested-By: ranger headers where required by the API
-
----
-
-## `test_ugsync.py`
-
-- Covers userinfo endpoint for user-group association creation with schema validation
-- Tests UGSync (User-Group Sync) operations within TestUgsync for syncing users/groups from external sources (LDAP, UNIX, FILE, MULTI_SOURCES)
-- Class-scoped _setup provisions primary & secondary users across all roles (admin, keyadmin, auditor, user) and two temp groups with auto-cleanup
-- All endpoints are admin-only; unauthorized roles (keyadmin, auditor, user) consistently return 404 due to Spring's silent failure instead of 403
-- Invalid payloads (bad group/user names, missing fields) often return 200 as silent failures — response body is validated instead of status code
-- Validates addUsers/delUsers group membership changes are reflected via follow-up GET calls
-- Covers sync source audit logging for all source types with schema validation via validate_auditinfo_schema() and validate_sync_source_info()
-- Tests group/user visibility toggling (sets isVisible=0) and verifies persistence via follow-up GET
-- Handles semi-failure scenarios (mixed valid/invalid users in one payload) and asserts partial success count in response
-
----
-
-## `test_user.py`
-
-- Tests User CRUD operations via /xusers/users/* endpoints within TestUsers
-- Class-scoped _setup provisions primary & secondary users across all roles (admin, keyadmin, auditor, user) with auto-cleanup
-- Covers role-based access control across all operations — verifying both allowed and restricted role/target combinations
-- Tests role assignment logic via /roleassignments endpoint — validating priority order: whiteListUser > whiteListGroup > userMap > groupMap > default
-- Validates Spring's silent 404 failure pattern for unauthorized POST/DELETE operations (non-admin roles)
-- Tests external user creation flow — 204 on first call (new user), 200 on second call (existing user)
-- Covers userinfo endpoint for user-group association creation with schema validation
-Validates immutability enforcement and invalid role assignment (ROLE_KEY_ADMIN, ROLE_NON_EXISTEN) returning 400/403
-
----
-
-## `test_utility_fun.py`
-
-- Tests Lookup and AuthSession utility endpoints within TestLookup and AuthSession classes
-- Class-scoped _setup provisions users across all roles (admin, keyadmin, auditor, user) with auto-cleanup
-- All four roles are permitted for every endpoint — no role-based restriction tests
-- TestLookup covers /xusers/lookup/users, /xusers/lookup/groups, and /xusers/lookup/principals — validating vXStrings schema when response is non-empty
-- AuthSession covers /xusers/authSessions with query param variations  — validates vXAuthSessions or totalCount in response
+## `test_role_utility_fun.py`
+- Tests role utility and advanced operations within TestRoleUtilityFun
+- Class-scoped _setup mirrors TestRoleCRUD — users, groups, roles, and init_configs()
+- Export/import: GET /roles/roles/exportJson, POST /roles/roles/importRolesFromFile
+- Download: GET /roles/secure/download/{serviceName} with version-based 200/304 responses
+- Membership: PUT addUsersAndGroups, removeUsersAndGroups, removeAdminFromUsersAndGroups
+- Grant/revoke: PUT /roles/roles/grant/{serviceName} and /roles/roles/revoke/{serviceName}
+- Negative and unauthorized variants for all utility endpoints
+- Note: /roles/download/{serviceName} tests are currently skipped pending rolerest changes

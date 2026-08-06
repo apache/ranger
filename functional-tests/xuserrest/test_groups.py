@@ -1389,7 +1389,6 @@ class TestGroupUsers:
 
         assert_response(response, response_code, f"Group-User association creation should have failed with {response_code} but got {response.status_code} instead for test case: {test_case}")
 
-
     @pytest.mark.negative
     @pytest.mark.put
     @pytest.mark.parametrize(
@@ -1452,7 +1451,6 @@ class TestGroupUsers:
         )   
         assert_response(response, response_code, f"Group-User association update should have failed with {response_code} but got {response.status_code} instead for test case: {test_case}")
         delete_groupuser(grp_user_id, self.ranger_admin_config, self.base_url, self.headers)
-
 
     @pytest.mark.negative
     @pytest.mark.delete

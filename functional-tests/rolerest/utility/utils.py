@@ -22,7 +22,6 @@ import inspect
 import subprocess
 import xuserrest.utility.utils as xutils
 
-
 BASE_URL = "http://localhost:6080/service"
 AUTH = ("admin", "rangerR0cks!")
 HEADERS = {"Content-Type": "application/json"}
@@ -40,7 +39,6 @@ RANGER_KEY_ADMIN_CONFIG = None
 RANGER_AUDITOR_CONFIG = None
 RANGER_USER_CONFIG = None
 
-
 def init_configs(ranger_config, ranger_key_admin_config, ranger_auditor_config, ranger_user_config):
     global RANGER_CONFIG, RANGER_KEY_ADMIN_CONFIG, RANGER_AUDITOR_CONFIG, RANGER_USER_CONFIG
 
@@ -48,9 +46,6 @@ def init_configs(ranger_config, ranger_key_admin_config, ranger_auditor_config, 
     RANGER_KEY_ADMIN_CONFIG = ranger_key_admin_config
     RANGER_AUDITOR_CONFIG = ranger_auditor_config
     RANGER_USER_CONFIG = ranger_user_config
-
-
-
 
 def create_service(user_name = "hdfs", password = "hdfs"):
     
@@ -83,9 +78,7 @@ def create_service(user_name = "hdfs", password = "hdfs"):
     service_id = service["id"]
     print(f"[+] Service created: name={service['name']}, id={service_id}")
 
-
     return service, service_id
-
 
 def assign_service_admin(service_id, service, username):
     configs = service.get("configs", {})
@@ -154,8 +147,6 @@ def delete_service(service_id):
     resp.raise_for_status()
     print(f"[+] Service deleted: id={service_id}")
 
-
-
 def assert_response(response, expected_status, text = None, service_name=SERVICE_NAME):
     xutils.assert_response(response, expected_status, text, service_name)
 
@@ -178,8 +169,6 @@ def delete_role(role_id):
     #assert_response(resp, [200, 204], f"Failed to delete role id={role_id}: {resp.text}")
     assert resp.status_code in [200, 204], f"Failed to delete role id={role_id}: {resp.text}"
     print(f" /n /n [+] Role deleted successfully with id={role_id}. Response status: {resp.status_code}. Response text: {resp.text} /n /n")
-
-
 
 def ensureRoleAccess(test_case, request, existing_service=None):
 
@@ -227,7 +216,6 @@ def ensureRoleAccess(test_case, request, existing_service=None):
 
         req = requests.get(f"{BASE_URL}/xusers/groups/{group_id}", auth=AUTH, headers=HEADERS)
         print("\n [+] Group details after assigning service admin group: ", req.json(), "\n")
-
 
     elif test_case.endswith("role-user"):   # must be before endswith("user")
         temp_user, temp_user_id = request.getfixturevalue("temp_secure_user")("user")

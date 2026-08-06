@@ -117,7 +117,6 @@ class TestUgsync:
             if first_value:
                 assert isinstance(first_value[0], str) and len(first_value[0]) <= 767, f"Expected elements of the list to be strings, got {type(first_value[0])}"
 
-
     @pytest.mark.positive
     @pytest.mark.post
     @pytest.mark.parametrize("role, auth", [
@@ -164,8 +163,6 @@ class TestUgsync:
         data = fetch_groups_for_user_id(self.user1["id"], self.ranger_admin_config, self.base_url, self.headers)
         assert not check_group_in_user_groups(self.group1['id'], data), \
             f"Group with id {self.group1['id']} is still assigned to user1 with id {self.user1['id']} which is not expected for test case: {role}"
-    
-
 
     @pytest.mark.positive
     @pytest.mark.post
@@ -218,7 +215,6 @@ class TestUgsync:
         data = response.json()
         validate_auditinfo_schema(data)
         validate_sync_source_info(payload, data)
-
 
     @pytest.mark.positive
     @pytest.mark.post
@@ -291,8 +287,6 @@ class TestUgsync:
                     if resp.status_code == 200:
                         delete_group(resp.json().get("id"), self.ranger_admin_config, self.base_url, self.headers)
 
-    
-    
     @pytest.mark.positive
     @pytest.mark.post
     @pytest.mark.parametrize("role, auth", [
@@ -321,7 +315,6 @@ class TestUgsync:
         
         flg, resp = group_exists(self.group1["id"], auth, self.base_url, self.headers)
         assert flg and resp.get("isVisible") == 0, f"Group visibility is not updated to 0 as expected for test case: {role}"
-
 
     @pytest.mark.positive
     @pytest.mark.post
@@ -387,7 +380,6 @@ class TestUgsync:
                     delete_user(resp.json().get("id"), self.ranger_admin_config, self.base_url, self.headers)
                     deleted_users.add(username)
     
-    
     @pytest.mark.positive
     @pytest.mark.post
     @pytest.mark.parametrize("role, auth", [
@@ -422,8 +414,6 @@ class TestUgsync:
         data = resp.json()
         assert resp.status_code == 200 and data.get("isVisible") == 0, f"User visibility is not updated to 0 as expected for test case: {role}"
 
-
-
     # NEGATIVE TESTS
 
     @pytest.mark.negative
@@ -441,7 +431,6 @@ class TestUgsync:
             headers = self.headers
         )
         assert_response(response, 404, f"Expected status code 404 for role {role} due to spring's silent failure, got {response.status_code}")
-
     
     @pytest.mark.negative
     @pytest.mark.post
@@ -496,8 +485,7 @@ class TestUgsync:
         
         response_data = return_value_ugsync_groupusers(payload, self.ranger_admin_config, self.base_url, self.headers)
         data = response.json()
-        assert data == response_data, f"Expected response to be {response_data} for test case: {testcase}, got {data}"            
-
+        assert data == response_data, f"Expected response to be {response_data} for test case: {testcase}, got {data}"
 
     @pytest.mark.negative
     @pytest.mark.post
@@ -544,7 +532,6 @@ class TestUgsync:
 
         assert_response(response, expected_status, f"Expected status code {expected_status} for test case: {testcase}, got {response.status_code}")
 
-
     @pytest.mark.negative
     @pytest.mark.post
     @pytest.mark.parametrize("auth, testcase", [
@@ -583,7 +570,6 @@ class TestUgsync:
         )
 
         assert_response(response, expected_status, f"Expected status code {expected_status} for test case: {testcase}, got {response.status_code}")
-
 
     @pytest.mark.negative
     @pytest.mark.post

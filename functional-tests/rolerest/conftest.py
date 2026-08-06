@@ -82,9 +82,6 @@ def ranger_key_admin_config(keyadmin_credentials, default_headers):
         "headers": default_headers
     }
 
-
-
-
 @pytest.fixture(scope="class")
 def temp_secure_user(ranger_config):
 
@@ -318,8 +315,6 @@ def temp_role(ranger_config):
             "groups": group_list,
             "roles": role_list
         }
-
-       
 
         response = requests.post(
             f"{ranger_config['base_url']}/roles/roles",

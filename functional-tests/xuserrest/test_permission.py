@@ -27,8 +27,6 @@ class TestPermissions:
 
     SERVICE_NAME = "admin"
 
-
-    
     @pytest.fixture(autouse=True, scope="class")
     def _setup(
         self,
@@ -1101,7 +1099,6 @@ class TestPermissions:
         )
         assert_response(response, expected_status, f"{test_case}: Expected status {expected_status}, got {response.status_code}")
 
-
     @pytest.mark.put
     @pytest.mark.negative
     @pytest.mark.parametrize(
@@ -1161,7 +1158,6 @@ class TestPermissions:
 
         response = requests.post(f"{self.base_url}/xusers/permission/group", json=payload, auth=auth, headers=self.headers)
         assert_response(response, expected_status, f"Case {test_case} failed: {response.status_code}")
-
 
     @pytest.mark.post
     @pytest.mark.negative
@@ -1288,7 +1284,6 @@ class TestPermissions:
         )
         assert_response(del_response, 204, f"Cleanup failed for permission group ID {perm_id}: {del_response.text}")
 
-    
     @pytest.mark.put
     @pytest.mark.negative
     @pytest.mark.parametrize(
@@ -1361,7 +1356,6 @@ class TestPermissions:
     def test_delete_permissions_with_invalid_roles(self, role, auth):
 
         auth_config = getattr(self, auth)
-        
 
         perm_id = self.permission_module_id
 

@@ -30,7 +30,7 @@ This directory contains automated functional tests for the XUSERREST API, coveri
 
 ## Structure
 ```
-test_xuserrest/
+xuserrest/
 ├── utility/                        
 │   ├── __init__.py
 │   ├── utils.py              

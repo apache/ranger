@@ -169,7 +169,6 @@ class TestUsers:
         data = response.json()
         validate_user_schema(data)
         assert data["id"] == user_id, "Fetched user ID does not match requested ID"
-        
 
     @pytest.mark.positive
     @pytest.mark.get
@@ -349,13 +348,11 @@ class TestUsers:
             headers=self.headers
         )
 
-
         assert_response(response, 200)
 
         data = response.json()
 
         validate_xgroup_schema(data["xgroupInfo"][0])
-
 
         assert data["xgroupInfo"][0]["name"] == payload["xgroupInfo"][0]["name"], "Response group name should match the test user name"
 
@@ -369,7 +366,6 @@ class TestUsers:
             params=params
         )
         print(f"Deleted group {grp_name} created during test, status code: {del_req.status_code}")
-
 
     @pytest.mark.positive
     @pytest.mark.post
@@ -461,7 +457,6 @@ class TestUsers:
             assert expected_role in actual_roles, \
                 f"{user}: expected {expected_role}, got {actual_roles}"
 
-
         # cleanup of created groups
         for group in [group_admin, group_auditor, group_user]:
             resp = requests.get(
@@ -517,7 +512,6 @@ class TestUsers:
             assert "ROLE_ADMIN_AUDITOR" not in payload["userRoleList"], "Key Admin can not promote any one to auditor role"
             assert "ROLE_SYS_ADMIN" not in user["userRoleList"], "Key Admin can not update admin role"
             assert "ROLE_ADMIN_AUDITOR" not in user["userRoleList"], "Key Admin can not update auditor role"
-        
 
         resp = requests.get(
             f"{self.base_url}/xusers/users/{user_id}",
@@ -586,9 +580,9 @@ class TestUsers:
         )
         assert response, "External user deletion failed"
         assert_response(response, 204)
-        
 
     # Negative Test Cases
+
     @pytest.mark.negative
     @pytest.mark.get
     def test_get_users_using_invalid_auth(self):
@@ -602,7 +596,6 @@ class TestUsers:
         )
 
         assert_response(response, 400, "Expected status code not returned for invalid user ID")
-
 
     @pytest.mark.negative
     @pytest.mark.get
@@ -644,7 +637,6 @@ class TestUsers:
             )       
         
         assert_response(response, 403, f"{auth_role} should not have permission to access user of role {user_role}")
-
 
     @pytest.mark.negative
     @pytest.mark.get
@@ -708,7 +700,6 @@ class TestUsers:
 
         assert_response(response, 400)
 
-
     @pytest.mark.post
     @pytest.mark.negative
     def test_create_user_via_invalid_roles(self, request):
@@ -751,7 +742,6 @@ class TestUsers:
 
             print(f"{username} → {response.status_code}")
             assert_response(response, 404, f"{username} should not have permission to create  users and expected 404 due to spring silent failure, but got {response.status_code}")
-    
 
     @pytest.mark.negative
     @pytest.mark.post
@@ -877,7 +867,6 @@ class TestUsers:
 
         assert_response(response, 404, f"{auth_role} is expected to return 404 due to spring's silent failure and should not have permission to assign roles, but got {response.status_code}")
 
-
     @pytest.mark.negative
     @pytest.mark.post
     @pytest.mark.parametrize("invalid_role", ["ROLE_NON_EXISTEN", "ROLE_KEY_ADMIN"])
@@ -905,8 +894,6 @@ class TestUsers:
         elif invalid_role == "ROLE_KEY_ADMIN":
             expected_status = 403  # since ROLE_KEY_ADMIN is not a valid role but it has admin keyword so it will be blocked by permission check before role validation
         assert_response(response, expected_status, f"Assigning non-existent role should fail with {expected_status}, but got {response.status_code}")
-    
-
 
     @pytest.mark.negative
     @pytest.mark.put
@@ -965,8 +952,6 @@ class TestUsers:
             assert_response(response, 403, f"{auth_role} should not have permission to update users, but got {response.status_code}")
         elif auth_role in ["admin", "keyadmin"]:
             assert_response(response, 400, f"{auth_role} should not have permission to update {user_role} role, expected 400 but got {response.status_code}")
-    
-
 
     @pytest.mark.negative
     @pytest.mark.put

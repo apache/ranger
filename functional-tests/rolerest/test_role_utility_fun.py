@@ -27,7 +27,6 @@ import requests
 from datetime import datetime
 import random
 
-
 @pytest.mark.usefixtures("ranger_config", "ranger_key_admin_config")
 @pytest.mark.rolerest
 class TestRoleUtilityFun:
@@ -98,9 +97,6 @@ class TestRoleUtilityFun:
             cls.ranger_user_config,
         )
 
-
-    
-
     @pytest.mark.get
     @pytest.mark.positive
     @pytest.mark.parametrize(
@@ -135,7 +131,6 @@ class TestRoleUtilityFun:
         finally:
             if os.path.exists(export_filename):
                 os.remove(export_filename)
-
 
     @pytest.mark.get
     @pytest.mark.positive
@@ -200,7 +195,6 @@ class TestRoleUtilityFun:
             
             assert data.get("serviceName") == service_name, f"Expected serviceName {service_name}"
 
-
     @pytest.mark.skip(reason = "Skipping download tests due to existing code changes in rolerest")
     @pytest.mark.get
     @pytest.mark.positive
@@ -254,8 +248,6 @@ class TestRoleUtilityFun:
             data = response.json()
             assert "userStoreVersion" in data, f"Response missing 'userStoreVersion' for {test_case}"
             assert "userGroupMapping" in data or "users" in data, f"Response missing user/group data for {test_case}"
-        
-
 
     @pytest.mark.post
     @pytest.mark.positive
@@ -386,7 +378,6 @@ class TestRoleUtilityFun:
         elif "skip existing role identical - updateIfExists=true" in test_case:
             assert data['Total Role Updated'] == 0, f"Expected 0 roles to be updated but got {data['Total Role Updated']}"
 
-
     @pytest.mark.put
     @pytest.mark.positive
     @pytest.mark.parametrize(
@@ -468,8 +459,7 @@ class TestRoleUtilityFun:
                 f"Expected 2 groups in the updated role but got {len(returned_groups)}"
             assert param_group["name"] in returned_groups and group["name"] in returned_groups, \
                 "Expected both the new and existing group to be present."
-            
-    
+
     @pytest.mark.put
     @pytest.mark.positive
     @pytest.mark.parametrize(
@@ -536,7 +526,6 @@ class TestRoleUtilityFun:
                 assert group["name"] in returned_groups, "Original group should remain if a different group was removed."
             else:
                 assert group["name"] not in returned_groups, "Existing group should have been removed from the role."
-
 
     @pytest.mark.put
     @pytest.mark.positive
@@ -642,7 +631,6 @@ class TestRoleUtilityFun:
             assign_service_admin(service_id, service, temp_user['name'])
             auth = (temp_user["name"], "Test@123")
 
-
         elif test_case == "login user has service admin groups":  
             
             temp_user, temp_user_id = request.getfixturevalue("temp_secure_user")(["auditor"])
@@ -651,8 +639,6 @@ class TestRoleUtilityFun:
             service, service_id = create_service()
             assign_service_admin_group(service_id, service, group["name"])
             auth = (temp_user["name"], "Test@123")
-        
-
 
         if query_param_user == "not_exists":
             role, role_id = request.getfixturevalue("temp_role")()
@@ -706,7 +692,6 @@ class TestRoleUtilityFun:
 
         assert_response(response, 200, f"Failed to update roles and got response code {response.status_code} with \n response text: {response.text}")
 
-
         if payload_test_case == "users adition":
             get_role_by_name_flg, role_data = get_role_by_name(role["name"])
             assert get_role_by_name_flg, "Role not found when fetched by name after granting role to user."
@@ -723,7 +708,6 @@ class TestRoleUtilityFun:
             returned_roles = [r["name"] for r in role_data.get("roles", [])]
             assert payload_role["name"] in returned_roles, "New role added in the grant payload is not present in the updated role."
 
-        
         # # Cleanup
         if service_id is not None and service_id not in clean_up_items.get("service_list", []):
             clean_up_items["service_list"].append(service_id)
@@ -842,7 +826,6 @@ class TestRoleUtilityFun:
         )
 
         assert_response(response, 200, f"Failed to revoke roles and got response code {response.status_code} with \n response text: {response.text}")
-
  
         get_role_by_name_flg, role_data = get_role_by_name(role["name"])
         assert get_role_by_name_flg, "Role not found when fetched by name after revoking role."
@@ -883,10 +866,8 @@ class TestRoleUtilityFun:
             delete_role(payload_role_id)
             
         for item in clean_up_items.get("service_list", []):
-            delete_service(item)       
-        
-        
-            
+            delete_service(item)
+
     # NEGATIVE TEST CASES
 
     @pytest.mark.get
@@ -904,7 +885,6 @@ class TestRoleUtilityFun:
         )
         
         assert_response(response, 403, f"Expected 403 for unauthorized user but got {response.status_code}")
-
 
     @pytest.mark.get
     @pytest.mark.negative
@@ -963,7 +943,6 @@ class TestRoleUtilityFun:
         else:
             service_name = "dev_hdfs"  # Assuming this is your valid seed service
 
-
         params = {
             "lastKnownUserStoreVersion": -1,
             "lastActivationTime": 0,
@@ -981,7 +960,6 @@ class TestRoleUtilityFun:
         )
 
         assert_response(response, expected_status, test_case)
-
 
     @pytest.mark.post
     @pytest.mark.negative
@@ -1110,7 +1088,6 @@ class TestRoleUtilityFun:
         finally:
             delete_role(role_id) 
 
-
     @pytest.mark.put
     @pytest.mark.negative
     @pytest.mark.parametrize(
@@ -1157,7 +1134,6 @@ class TestRoleUtilityFun:
             assert_response(response, 400, f"Expected 400 for {test_case} but got {response.status_code} with \n response text: {response.text}")
         finally:
             delete_role(role_id)
-
 
     @pytest.mark.put
     @pytest.mark.negative

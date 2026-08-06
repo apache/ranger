@@ -84,7 +84,6 @@ class TestSecureUserEndpoint:
             cls.ranger_auditor_config,
             cls.ranger_user_config,
         )
-
         
     # POSITIVE TESTS
     @pytest.mark.get
@@ -122,13 +121,10 @@ class TestSecureUserEndpoint:
 
         assert_response(response, 200)
 
-
         data = response.json()
 
         validate_secure_user_schema(data)
-        
 
-    
     @pytest.mark.get
     @pytest.mark.positive
     @pytest.mark.parametrize("auth_role, target_role", [
@@ -154,7 +150,6 @@ class TestSecureUserEndpoint:
             target_id = self.ranger_auditor_id
         elif target_role == "user":
             target_id = self.ranger_user_id
-            
 
         if auth_role == "admin":
             authorization = self.ranger_admin_config
@@ -167,7 +162,6 @@ class TestSecureUserEndpoint:
             authorization = self.ranger_auditor_config
         elif auth_role == "keyadmin":
             authorization = self.ranger_key_admin_config
- 
 
         response = requests.get(
         f"{self.base_url}/xusers/secure/users/external/{target_id}",
@@ -189,7 +183,6 @@ class TestSecureUserEndpoint:
             else:
                 assert data["vXStrings"] == [], \
                 "Auditor should not see other users' external roles"
-
 
     @pytest.mark.get
     @pytest.mark.positive
@@ -455,7 +448,6 @@ class TestSecureUserEndpoint:
             authorization = self.ranger_auditor_config
         elif auth_role == "user":
             authorization = self.ranger_user_config
-            
 
         print(f"\nTesting role update for user: {target_user['name']}")
 
@@ -480,7 +472,6 @@ class TestSecureUserEndpoint:
         updated_data = response.json()
         validate_external_user_schema(updated_data)
         assert "ROLE_USER" in updated_data["vXStrings"][0]["value"]
-
 
     @pytest.mark.parametrize("auth_role, target_role", [
         ("admin", "admin"),
@@ -557,7 +548,6 @@ class TestSecureUserEndpoint:
 
         assert_response(resp, 204, f"Failed to delete user: {target_user['name']}")
 
-
     @pytest.mark.delete
     @pytest.mark.positive
     def test_delete_secure_bulk_users(self, request, client_roles):
@@ -611,7 +601,6 @@ class TestSecureUserEndpoint:
             auth=self.ranger_admin_config
         )
         assert_response(response, 404)
-       
 
     # NEGATIVE TESTS
     
@@ -706,7 +695,6 @@ class TestSecureUserEndpoint:
 
         assert_response(response, 403, f"{target_role} should not access external user endpoint")
 
-
     @pytest.mark.get
     @pytest.mark.negative
     @pytest.mark.parametrize("auth_role, target_role", [
@@ -762,7 +750,6 @@ class TestSecureUserEndpoint:
         else:
             assert_response(response, 403)
 
-
     @pytest.mark.post
     @pytest.mark.negative
     def test_create_secure_user_missing_name(self):
@@ -788,7 +775,6 @@ class TestSecureUserEndpoint:
         )
 
         assert_response(response, 400)
-
 
     @pytest.mark.post
     @pytest.mark.negative
@@ -882,7 +868,6 @@ class TestSecureUserEndpoint:
 
             print(f"{username} → {response.status_code}")
             assert_response(response, [403,404] , f"{username} should not have permission to create secure users, but got {response.status_code}")
-
 
     @pytest.mark.put
     @pytest.mark.negative
@@ -981,7 +966,6 @@ class TestSecureUserEndpoint:
         print(field, "update response code:", update_response.status_code)
 
         assert_response(update_response, 400, f"Expected status code 400 when trying to modify mandatory field: {field}")
-
 
     @pytest.mark.put
     @pytest.mark.negative
@@ -1120,8 +1104,6 @@ class TestSecureUserEndpoint:
 
         assert_response(response, 403)
 
-
-
     @pytest.mark.parametrize("auth_role, target_role", [
         ("admin", "keyadmin"),
         ("keyadmin", "admin"),
@@ -1174,7 +1156,6 @@ class TestSecureUserEndpoint:
         )
 
         assert_response(response, 403)
-
 
     @pytest.mark.delete
     @pytest.mark.negative

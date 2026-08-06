@@ -74,7 +74,6 @@ class TestRoleCRUD:
         cls.ranger_auditor_id1 = cls.audit1["id"]
         cls.ranger_user_id1 = cls.user1["id"]
 
-
         # ---------- group details ----------
         cls.group, cls.group_id = temp_group()
         cls.group1, cls.group_id1 = temp_group()
@@ -282,7 +281,6 @@ class TestRoleCRUD:
         for item in clean_up_items["service_list"]:
             delete_service(item)
 
-
     @pytest.mark.get
     @pytest.mark.positive
     @pytest.mark.parametrize(
@@ -328,7 +326,6 @@ class TestRoleCRUD:
             assign_service_admin(service_id, service, temp_user['name'])
             auth = (temp_user["name"], "Test@123")
 
-
         elif test_case == "login user has service admin groups":  
             
             temp_user, temp_user_id = request.getfixturevalue("temp_secure_user")(["auditor"])
@@ -336,11 +333,8 @@ class TestRoleCRUD:
             assign_groups_to_user(temp_user["name"], [group["name"]], self.ranger_admin_config, self.base_url, self.headers)
             service, service_id = create_service()
             assign_service_admin_group(service_id, service, group["name"])
-        
-
 
         auth = (temp_user["name"], "Test@123")
-
 
         if query_param_user == "not_exists":
             role, role_id = request.getfixturevalue("temp_role")()
@@ -358,7 +352,6 @@ class TestRoleCRUD:
             if service:
                 params["serviceName"] = service["name"]
 
-
         print("\n Auth used: ", auth)
         print("\n Query params used: ", params)
         response = requests.get(
@@ -369,7 +362,6 @@ class TestRoleCRUD:
         )
 
         assert_response(response, 200, f"Failed to get role by name with different creds and got response code {response.status_code} with \n response text: {response.text}")
-
 
         data = response.json()
         assert data["id"] == role["id"], f"Expected role ID {role['id']} but got {data['id']} for test case {test_case}"
@@ -396,7 +388,6 @@ class TestRoleCRUD:
             "user assigned to roles via group membership",
         ])
     def test_get_roles_for_user_by_userName(self, test_case, roles, auth, u_role, request):
-        
 
         if u_role == "key_admin":
             test_user, test_user_id = request.getfixturevalue("temp_keyadmin_user")()
@@ -532,8 +523,7 @@ class TestRoleCRUD:
             auth = getattr(self, auth)
         else:
             pytest.fail("Invalid role for this test")
-        
-        
+
         param = {}
 
         if test_case == "minimal_request":
@@ -584,7 +574,6 @@ class TestRoleCRUD:
             new_user = payload["users"][0]["name"]
             new_group = payload["groups"][0]["name"]
 
-
             requests.delete(
                 f"{self.base_url}/xusers/users/userName/{new_user}",
                 params={"forceDelete": "true"},
@@ -592,7 +581,6 @@ class TestRoleCRUD:
                 headers={**self.headers, "X-Requested-By": "ranger"}
             )
             assert_response(response, [200, 204], f"Expected 200 for user deletion but got {response.status_code}")
-
 
             requests.delete(
                 f"{self.base_url}/xusers/groups/groupName/{new_group}",
@@ -644,7 +632,6 @@ class TestRoleCRUD:
             role, r_id = request.getfixturevalue("temp_role")(role_list=role_list)
             assign_groups_to_user(user["name"], [group["name"]], self.ranger_admin_config, self.base_url, self.headers)
 
-        
         payload = {
             "id": r_id,
             "name": role["name"],
@@ -671,7 +658,6 @@ class TestRoleCRUD:
             delete_group(group_id, self.ranger_admin_config, self.base_url, self.headers) 
         
         delete_user(user_id, self.ranger_admin_config, self.base_url, self.headers)
-
 
     @pytest.mark.delete
     @pytest.mark.positive
@@ -907,7 +893,6 @@ class TestRoleCRUD:
 
         assert_response(response, 400, f"Expected 400 for {login_test_case} but got {response.status_code} with \n response text: {response.text}")
 
-
     @pytest.mark.get
     @pytest.mark.negative
     @pytest.mark.parametrize(
@@ -942,7 +927,6 @@ class TestRoleCRUD:
         )
 
         assert_response(response, 400, f"Expected 400 for {test_case} but got {response.status_code} with \n response text: {response.text}")
-
 
     @pytest.mark.get
     @pytest.mark.negative
@@ -983,7 +967,6 @@ class TestRoleCRUD:
             data = response.json()
             assert isinstance(data, dict), f"Expected response to be a dictionary of roles but got {type(data)} for test case {test_case}"
             assert data.get("roles") == [], f"Expected empty roles list for user with no membership but got {data.get('roles')} for test case {test_case}"
-    
 
     @pytest.mark.post
     @pytest.mark.negative
