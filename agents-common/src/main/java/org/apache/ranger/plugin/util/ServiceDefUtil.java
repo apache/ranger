@@ -44,7 +44,6 @@ import org.apache.ranger.plugin.model.RangerServiceDef.RangerResourceDef;
 import org.apache.ranger.plugin.policyengine.RangerPluginContext;
 import org.apache.ranger.plugin.policyengine.RangerRequestScriptEvaluator;
 import org.apache.ranger.plugin.resourcematcher.RangerAbstractResourceMatcher;
-import org.apache.ranger.plugin.store.AbstractServiceStore;
 import org.apache.ranger.plugin.store.EmbeddedServiceDefsUtil;
 import org.apache.ranger.plugin.util.ServicePolicies.SecurityZoneInfo;
 import org.slf4j.Logger;
@@ -126,10 +125,7 @@ public class ServiceDefUtil {
     }
 
     public static RangerServiceDef normalize(RangerServiceDef serviceDef) {
-        normalizeDataMaskDef(serviceDef);
-        normalizeRowFilterDef(serviceDef);
-
-        return serviceDef;
+        return serviceDef != null ? serviceDef.normalize() : null;
     }
 
     public static RangerPolicyConditionDef getConditionDef(RangerServiceDef serviceDef, String conditionName) {
@@ -260,20 +256,7 @@ public class ServiceDefUtil {
     }
 
     public static RangerServiceDef normalizeAccessTypeDefs(RangerServiceDef serviceDef, final String componentType) {
-        if (serviceDef != null && StringUtils.isNotBlank(componentType)) {
-            normalizeAccessTypeDefs(serviceDef.getAccessTypes(), componentType);
-            normalizeAccessTypeDefs(serviceDef.getMarkerAccessTypes(), componentType);
-
-            if (serviceDef.getDataMaskDef() != null) {
-                normalizeAccessTypeDefs(serviceDef.getDataMaskDef().getAccessTypes(), componentType);
-            }
-
-            if (serviceDef.getRowFilterDef() != null) {
-                normalizeAccessTypeDefs(serviceDef.getRowFilterDef().getAccessTypes(), componentType);
-            }
-        }
-
-        return serviceDef;
+        return serviceDef != null ? serviceDef.normalizeAccessTypeDefs(componentType) : null;
     }
 
     public static boolean getBooleanValue(Map<String, String> map, String elementName, boolean defaultValue) {
@@ -519,249 +502,6 @@ public class ServiceDefUtil {
             if (ret) {
                 break;
             }
-        }
-
-        return ret;
-    }
-
-    private static void normalizeAccessTypeDefs(List<RangerAccessTypeDef> accessTypeDefs, String componentType) {
-        if (CollectionUtils.isNotEmpty(accessTypeDefs)) {
-            String                    prefix                 = componentType + AbstractServiceStore.COMPONENT_ACCESSTYPE_SEPARATOR;
-            List<RangerAccessTypeDef> unneededAccessTypeDefs = null;
-
-            for (RangerAccessTypeDef accessTypeDef : accessTypeDefs) {
-                String accessType = accessTypeDef.getName();
-
-                if (StringUtils.startsWith(accessType, prefix)) {
-                    String newAccessType = StringUtils.removeStart(accessType, prefix);
-
-                    accessTypeDef.setName(newAccessType);
-                } else if (StringUtils.contains(accessType, AbstractServiceStore.COMPONENT_ACCESSTYPE_SEPARATOR)) {
-                    if (unneededAccessTypeDefs == null) {
-                        unneededAccessTypeDefs = new ArrayList<>();
-                    }
-
-                    unneededAccessTypeDefs.add(accessTypeDef);
-
-                    continue;
-                }
-
-                Collection<String> impliedGrants = accessTypeDef.getImpliedGrants();
-
-                if (CollectionUtils.isNotEmpty(impliedGrants)) {
-                    Set<String> newImpliedGrants = new HashSet<>();
-
-                    for (String impliedGrant : impliedGrants) {
-                        if (StringUtils.startsWith(impliedGrant, prefix)) {
-                            String newImpliedGrant = StringUtils.removeStart(impliedGrant, prefix);
-
-                            newImpliedGrants.add(newImpliedGrant);
-                        } else if (!StringUtils.contains(impliedGrant, AbstractServiceStore.COMPONENT_ACCESSTYPE_SEPARATOR)) {
-                            newImpliedGrants.add(impliedGrant);
-                        }
-                    }
-
-                    accessTypeDef.setImpliedGrants(newImpliedGrants);
-                }
-            }
-
-            if (unneededAccessTypeDefs != null) {
-                accessTypeDefs.removeAll(unneededAccessTypeDefs);
-            }
-        }
-    }
-
-    private static void normalizeDataMaskDef(RangerServiceDef serviceDef) {
-        if (serviceDef != null && serviceDef.getDataMaskDef() != null) {
-            List<RangerResourceDef>   dataMaskResources   = serviceDef.getDataMaskDef().getResources();
-            List<RangerAccessTypeDef> dataMaskAccessTypes = serviceDef.getDataMaskDef().getAccessTypes();
-
-            if (CollectionUtils.isNotEmpty(dataMaskResources)) {
-                List<RangerResourceDef> resources     = serviceDef.getResources();
-                List<RangerResourceDef> processedDefs = new ArrayList<>(dataMaskResources.size());
-
-                for (RangerResourceDef dataMaskResource : dataMaskResources) {
-                    RangerResourceDef processedDef = dataMaskResource;
-
-                    for (RangerResourceDef resourceDef : resources) {
-                        if (StringUtils.equals(resourceDef.getName(), dataMaskResource.getName())) {
-                            processedDef = ServiceDefUtil.mergeResourceDef(resourceDef, dataMaskResource);
-
-                            break;
-                        }
-                    }
-
-                    processedDefs.add(processedDef);
-                }
-
-                serviceDef.getDataMaskDef().setResources(processedDefs);
-            }
-
-            if (CollectionUtils.isNotEmpty(dataMaskAccessTypes)) {
-                List<RangerAccessTypeDef> accessTypes   = serviceDef.getAccessTypes();
-                List<RangerAccessTypeDef> processedDefs = new ArrayList<>(accessTypes.size());
-
-                for (RangerAccessTypeDef dataMaskAccessType : dataMaskAccessTypes) {
-                    RangerAccessTypeDef processedDef = dataMaskAccessType;
-
-                    for (RangerAccessTypeDef accessType : accessTypes) {
-                        if (StringUtils.equals(accessType.getName(), dataMaskAccessType.getName())) {
-                            processedDef = ServiceDefUtil.mergeAccessTypeDef(accessType, dataMaskAccessType);
-
-                            break;
-                        }
-                    }
-
-                    processedDefs.add(processedDef);
-                }
-
-                serviceDef.getDataMaskDef().setAccessTypes(processedDefs);
-            }
-        }
-    }
-
-    private static void normalizeRowFilterDef(RangerServiceDef serviceDef) {
-        if (serviceDef != null && serviceDef.getRowFilterDef() != null) {
-            List<RangerResourceDef>   rowFilterResources   = serviceDef.getRowFilterDef().getResources();
-            List<RangerAccessTypeDef> rowFilterAccessTypes = serviceDef.getRowFilterDef().getAccessTypes();
-
-            if (CollectionUtils.isNotEmpty(rowFilterResources)) {
-                List<RangerResourceDef> resources     = serviceDef.getResources();
-                List<RangerResourceDef> processedDefs = new ArrayList<>(rowFilterResources.size());
-
-                for (RangerResourceDef rowFilterResource : rowFilterResources) {
-                    RangerResourceDef processedDef = rowFilterResource;
-
-                    for (RangerResourceDef resourceDef : resources) {
-                        if (StringUtils.equals(resourceDef.getName(), rowFilterResource.getName())) {
-                            processedDef = ServiceDefUtil.mergeResourceDef(resourceDef, rowFilterResource);
-
-                            break;
-                        }
-                    }
-
-                    processedDefs.add(processedDef);
-                }
-
-                serviceDef.getRowFilterDef().setResources(processedDefs);
-            }
-
-            if (CollectionUtils.isNotEmpty(rowFilterAccessTypes)) {
-                List<RangerAccessTypeDef> accessTypes   = serviceDef.getAccessTypes();
-                List<RangerAccessTypeDef> processedDefs = new ArrayList<>(accessTypes.size());
-
-                for (RangerAccessTypeDef rowFilterAccessType : rowFilterAccessTypes) {
-                    RangerAccessTypeDef processedDef = rowFilterAccessType;
-
-                    for (RangerAccessTypeDef accessType : accessTypes) {
-                        if (StringUtils.equals(accessType.getName(), rowFilterAccessType.getName())) {
-                            processedDef = ServiceDefUtil.mergeAccessTypeDef(accessType, rowFilterAccessType);
-
-                            break;
-                        }
-                    }
-
-                    processedDefs.add(processedDef);
-                }
-
-                serviceDef.getRowFilterDef().setAccessTypes(processedDefs);
-            }
-        }
-    }
-
-    private static RangerResourceDef mergeResourceDef(RangerResourceDef base, RangerResourceDef delta) {
-        RangerResourceDef ret = new RangerResourceDef(base);
-
-        // retain base values for: itemId, name, type, level, parent, lookupSupported
-
-        if (Boolean.TRUE.equals(delta.getMandatory())) {
-            ret.setMandatory(delta.getMandatory());
-        }
-
-        if (delta.getRecursiveSupported() != null) {
-            ret.setRecursiveSupported(delta.getRecursiveSupported());
-        }
-
-        if (delta.getExcludesSupported() != null) {
-            ret.setExcludesSupported(delta.getExcludesSupported());
-        }
-
-        if (StringUtils.isNotEmpty(delta.getMatcher())) {
-            ret.setMatcher(delta.getMatcher());
-        }
-
-        if (MapUtils.isNotEmpty(delta.getMatcherOptions())) {
-            if (ret.getMatcherOptions() == null) {
-                ret.setMatcherOptions(new HashMap<>());
-            }
-
-            for (Map.Entry<String, String> e : delta.getMatcherOptions().entrySet()) {
-                ret.getMatcherOptions().put(e.getKey(), e.getValue());
-            }
-        }
-
-        if (StringUtils.isNotEmpty(delta.getValidationRegEx())) {
-            ret.setValidationRegEx(delta.getValidationRegEx());
-        }
-
-        if (StringUtils.isNotEmpty(delta.getValidationMessage())) {
-            ret.setValidationMessage(delta.getValidationMessage());
-        }
-
-        ret.setUiHint(delta.getUiHint());
-
-        if (StringUtils.isNotEmpty(delta.getLabel())) {
-            ret.setLabel(delta.getLabel());
-        }
-
-        if (StringUtils.isNotEmpty(delta.getDescription())) {
-            ret.setDescription(delta.getDescription());
-        }
-
-        if (StringUtils.isNotEmpty(delta.getRbKeyLabel())) {
-            ret.setRbKeyLabel(delta.getRbKeyLabel());
-        }
-
-        if (StringUtils.isNotEmpty(delta.getRbKeyDescription())) {
-            ret.setRbKeyDescription(delta.getRbKeyDescription());
-        }
-
-        if (StringUtils.isNotEmpty(delta.getRbKeyValidationMessage())) {
-            ret.setRbKeyValidationMessage(delta.getRbKeyValidationMessage());
-        }
-
-        if (CollectionUtils.isNotEmpty(delta.getAccessTypeRestrictions())) {
-            ret.setAccessTypeRestrictions(delta.getAccessTypeRestrictions());
-        }
-
-        boolean copyLeafValue = false;
-        if (ret.getIsValidLeaf() != null) {
-            if (!ret.getIsValidLeaf().equals(delta.getIsValidLeaf())) {
-                copyLeafValue = true;
-            }
-        } else {
-            if (delta.getIsValidLeaf() != null) {
-                copyLeafValue = true;
-            }
-        }
-        if (copyLeafValue) {
-            ret.setIsValidLeaf(delta.getIsValidLeaf());
-        }
-
-        return ret;
-    }
-
-    private static RangerAccessTypeDef mergeAccessTypeDef(RangerAccessTypeDef base, RangerAccessTypeDef delta) {
-        RangerAccessTypeDef ret = new RangerAccessTypeDef(base);
-
-        // retain base values for: itemId, name, impliedGrants
-
-        if (StringUtils.isNotEmpty(delta.getLabel())) {
-            ret.setLabel(delta.getLabel());
-        }
-
-        if (StringUtils.isNotEmpty(delta.getRbKeyLabel())) {
-            ret.setRbKeyLabel(delta.getRbKeyLabel());
         }
 
         return ret;
