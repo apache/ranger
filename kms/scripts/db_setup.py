@@ -140,9 +140,9 @@ class MysqlConf(BaseDB):
 		self.JAVA_BIN = self.JAVA_BIN.strip("'")
 		if is_unix:
 			if self.is_db_override_jdbc_connection_string == 'true' and self.db_override_jdbc_connection_string is not None and len(self.db_override_jdbc_connection_string) > 0:
-				jisql_cmd = "%s %s %s -cp %s:%s/jisql/lib/* org.apache.util.sql.Jisql -driver mysqlconj -cstring %s -u '%s' -p '%s' -noheader -trim -c \\;" %(self.JAVA_BIN,self.JAVA_OPTS,db_ssl_cert_param,self.SQL_CONNECTOR_JAR,path,self.db_override_jdbc_connection_string,user,password)
+				jisql_cmd = "%s %s %s -cp %s:%s/jisql/lib/* org.apache.util.sql.Jisql -driver mysqlconj -cstring %s -u %s -p %s -noheader -trim -c \\;" %(self.JAVA_BIN,self.JAVA_OPTS,db_ssl_cert_param,self.SQL_CONNECTOR_JAR,path,self.db_override_jdbc_connection_string,shlex.quote(user),shlex.quote(password))
 			else:
-				jisql_cmd = "%s %s %s -cp %s:%s/jisql/lib/* org.apache.util.sql.Jisql -driver mysqlconj -cstring jdbc:mysql://%s/%s%s -u '%s' -p '%s' -noheader -trim -c \\;" %(self.JAVA_BIN,self.JAVA_OPTS,db_ssl_cert_param,self.SQL_CONNECTOR_JAR,path,self.host,db_name,db_ssl_param,user,password)
+				jisql_cmd = "%s %s %s -cp %s:%s/jisql/lib/* org.apache.util.sql.Jisql -driver mysqlconj -cstring jdbc:mysql://%s/%s%s -u %s -p %s -noheader -trim -c \\;" %(self.JAVA_BIN,self.JAVA_OPTS,db_ssl_cert_param,self.SQL_CONNECTOR_JAR,path,self.host,db_name,db_ssl_param,shlex.quote(user),shlex.quote(password))
 		elif os_name == "WINDOWS":
 			if self.is_db_override_jdbc_connection_string == 'true' and self.db_override_jdbc_connection_string is not None and len(self.db_override_jdbc_connection_string) > 0:
 				jisql_cmd = "%s %s %s -cp %s;%s\\jisql\\lib\\* org.apache.util.sql.Jisql -driver mysqlconj -cstring %s -u \"%s\" -p \"%s\" -noheader -trim" %(self.JAVA_BIN,self.JAVA_OPTS,db_ssl_cert_param,self.SQL_CONNECTOR_JAR, path, self.db_override_jdbc_connection_string,user, password)
@@ -233,9 +233,9 @@ class OracleConf(BaseDB):
 
 		if is_unix:
 			if self.is_db_override_jdbc_connection_string == 'true' and self.db_override_jdbc_connection_string is not None and len(self.db_override_jdbc_connection_string) > 0:
-				jisql_cmd = "%s %s -cp %s:%s/jisql/lib/* org.apache.util.sql.Jisql -driver oraclethin -cstring %s -u '%s' -p '%s' -noheader -trim" %(self.JAVA_BIN,self.JAVA_OPTS,self.SQL_CONNECTOR_JAR,path, self.db_override_jdbc_connection_string, user, password)
+				jisql_cmd = "%s %s -cp %s:%s/jisql/lib/* org.apache.util.sql.Jisql -driver oraclethin -cstring %s -u %s -p %s -noheader -trim" %(self.JAVA_BIN,self.JAVA_OPTS,self.SQL_CONNECTOR_JAR,path, self.db_override_jdbc_connection_string, shlex.quote(user), shlex.quote(password))
 			else:
-				jisql_cmd = "%s %s -cp %s:%s/jisql/lib/* org.apache.util.sql.Jisql -driver oraclethin -cstring %s -u '%s' -p '%s' -noheader -trim" %(self.JAVA_BIN,self.JAVA_OPTS,self.SQL_CONNECTOR_JAR,path, cstring, user, password)
+				jisql_cmd = "%s %s -cp %s:%s/jisql/lib/* org.apache.util.sql.Jisql -driver oraclethin -cstring %s -u %s -p %s -noheader -trim" %(self.JAVA_BIN,self.JAVA_OPTS,self.SQL_CONNECTOR_JAR,path, cstring, shlex.quote(user), shlex.quote(password))
 		elif os_name == "WINDOWS":
 			if self.is_db_override_jdbc_connection_string == 'true' and self.db_override_jdbc_connection_string is not None and len(self.db_override_jdbc_connection_string) > 0:
 				jisql_cmd = "%s %s -cp %s;%s\\jisql\\lib\\* org.apache.util.sql.Jisql -driver oraclethin -cstring %s -u \"%s\" -p \"%s\" -noheader -trim" %(self.JAVA_BIN,self.JAVA_OPTS,self.SQL_CONNECTOR_JAR, path, self.db_override_jdbc_connection_string, user, password)
@@ -355,9 +355,9 @@ class PostgresConf(BaseDB):
 				db_ssl_param="?ssl=%s" %(self.db_ssl_enabled)
 		if is_unix:
 			if self.is_db_override_jdbc_connection_string == 'true' and self.db_override_jdbc_connection_string is not None and len(self.db_override_jdbc_connection_string) > 0:
-				jisql_cmd = "%s %s %s -cp %s:%s/jisql/lib/* org.apache.util.sql.Jisql -driver postgresql -cstring %s -u %s -p '%s' -noheader -trim -c \\;" %(self.JAVA_BIN,self.JAVA_OPTS,db_ssl_cert_param,self.SQL_CONNECTOR_JAR,path, self.db_override_jdbc_connection_string,user, password)
+				jisql_cmd = "%s %s %s -cp %s:%s/jisql/lib/* org.apache.util.sql.Jisql -driver postgresql -cstring %s -u %s -p %s -noheader -trim -c \\;" %(self.JAVA_BIN,self.JAVA_OPTS,db_ssl_cert_param,self.SQL_CONNECTOR_JAR,path, self.db_override_jdbc_connection_string,user, shlex.quote(password))
 			else:
-				jisql_cmd = "%s %s %s -cp %s:%s/jisql/lib/* org.apache.util.sql.Jisql -driver postgresql -cstring jdbc:postgresql://%s/%s%s -u %s -p '%s' -noheader -trim -c \\;" %(self.JAVA_BIN,self.JAVA_OPTS,db_ssl_cert_param,self.SQL_CONNECTOR_JAR,path, self.host, db_name, db_ssl_param,user, password)
+				jisql_cmd = "%s %s %s -cp %s:%s/jisql/lib/* org.apache.util.sql.Jisql -driver postgresql -cstring jdbc:postgresql://%s/%s%s -u %s -p %s -noheader -trim -c \\;" %(self.JAVA_BIN,self.JAVA_OPTS,db_ssl_cert_param,self.SQL_CONNECTOR_JAR,path, self.host, db_name, db_ssl_param,user, shlex.quote(password))
 		elif os_name == "WINDOWS":
 			if self.is_db_override_jdbc_connection_string == 'true' and self.db_override_jdbc_connection_string is not None and len(self.db_override_jdbc_connection_string) > 0:
 				jisql_cmd = "%s %s %s -cp %s;%s\\jisql\\lib\\* org.apache.util.sql.Jisql -driver postgresql -cstring %s -u %s -p \"%s\" -noheader -trim" %(self.JAVA_BIN,self.JAVA_OPTS,db_ssl_cert_param,self.SQL_CONNECTOR_JAR, path, self.db_override_jdbc_connection_string,user, password)
@@ -437,9 +437,9 @@ class SqlServerConf(BaseDB):
 		self.JAVA_BIN = self.JAVA_BIN.strip("'")
 		if is_unix:
 			if self.is_db_override_jdbc_connection_string == 'true' and self.db_override_jdbc_connection_string is not None and len(self.db_override_jdbc_connection_string) > 0:
-				jisql_cmd = "%s %s -cp %s:%s/jisql/lib/* org.apache.util.sql.Jisql -user %s -p '%s' -driver mssql -cstring %s -noheader -trim"%(self.JAVA_BIN,self.JAVA_OPTS,self.SQL_CONNECTOR_JAR,path, user, password, self.db_override_jdbc_connection_string)
+				jisql_cmd = "%s %s -cp %s:%s/jisql/lib/* org.apache.util.sql.Jisql -user %s -p %s -driver mssql -cstring %s -noheader -trim"%(self.JAVA_BIN,self.JAVA_OPTS,self.SQL_CONNECTOR_JAR,path, user, shlex.quote(password), self.db_override_jdbc_connection_string)
 			else:
-				jisql_cmd = "%s %s -cp %s:%s/jisql/lib/* org.apache.util.sql.Jisql -user %s -p '%s' -driver mssql -cstring jdbc:sqlserver://%s\\;databaseName=%s -noheader -trim"%(self.JAVA_BIN,self.JAVA_OPTS,self.SQL_CONNECTOR_JAR,path, user, password, self.host,db_name)
+				jisql_cmd = "%s %s -cp %s:%s/jisql/lib/* org.apache.util.sql.Jisql -user %s -p %s -driver mssql -cstring jdbc:sqlserver://%s\\;databaseName=%s -noheader -trim"%(self.JAVA_BIN,self.JAVA_OPTS,self.SQL_CONNECTOR_JAR,path, user, shlex.quote(password), self.host,db_name)
 		elif os_name == "WINDOWS":
 			if self.is_db_override_jdbc_connection_string == 'true' and self.db_override_jdbc_connection_string is not None and len(self.db_override_jdbc_connection_string) > 0:
 				jisql_cmd = "%s %s -cp %s;%s\\jisql\\lib\\* org.apache.util.sql.Jisql -user %s -p \"%s\" -driver mssql -cstring %s -noheader -trim"%(self.JAVA_BIN,self.JAVA_OPTS,self.SQL_CONNECTOR_JAR, path, user, password, self.db_override_jdbc_connection_string)
@@ -515,9 +515,9 @@ class SqlAnywhereConf(BaseDB):
 		self.JAVA_BIN = self.JAVA_BIN.strip("'")
 		if is_unix:
 			if self.is_db_override_jdbc_connection_string == 'true' and self.db_override_jdbc_connection_string is not None and len(self.db_override_jdbc_connection_string) > 0:
-				jisql_cmd = "%s %s -cp %s:%s/jisql/lib/* org.apache.util.sql.Jisql -user %s -p '%s' -driver sapsajdbc4 -cstring %s -noheader -trim"%(self.JAVA_BIN,self.JAVA_OPTS,self.SQL_CONNECTOR_JAR, path,user, password,self.db_override_jdbc_connection_string)
+				jisql_cmd = "%s %s -cp %s:%s/jisql/lib/* org.apache.util.sql.Jisql -user %s -p %s -driver sapsajdbc4 -cstring %s -noheader -trim"%(self.JAVA_BIN,self.JAVA_OPTS,self.SQL_CONNECTOR_JAR, path,user, shlex.quote(password),self.db_override_jdbc_connection_string)
 			else:
-				jisql_cmd = "%s %s -cp %s:%s/jisql/lib/* org.apache.util.sql.Jisql -user %s -p '%s' -driver sapsajdbc4 -cstring jdbc:sqlanywhere:database=%s;host=%s -noheader -trim"%(self.JAVA_BIN,self.JAVA_OPTS,self.SQL_CONNECTOR_JAR, path,user, password,db_name,self.host)
+				jisql_cmd = "%s %s -cp %s:%s/jisql/lib/* org.apache.util.sql.Jisql -user %s -p %s -driver sapsajdbc4 -cstring jdbc:sqlanywhere:database=%s;host=%s -noheader -trim"%(self.JAVA_BIN,self.JAVA_OPTS,self.SQL_CONNECTOR_JAR, path,user, shlex.quote(password),db_name,self.host)
 		elif os_name == "WINDOWS":
 			if self.is_db_override_jdbc_connection_string == 'true' and self.db_override_jdbc_connection_string is not None and len(self.db_override_jdbc_connection_string) > 0:
 				jisql_cmd = "%s %s -cp %s;%s\\jisql\\lib\\* org.apache.util.sql.Jisql -user %s -p \"%s\" -driver sapsajdbc4 -cstring %s -noheader -trim"%(self.JAVA_BIN,self.JAVA_OPTS,self.SQL_CONNECTOR_JAR, path, user, password,self.db_override_jdbc_connection_string)
