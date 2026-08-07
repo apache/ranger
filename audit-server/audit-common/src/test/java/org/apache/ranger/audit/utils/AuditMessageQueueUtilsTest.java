@@ -17,6 +17,7 @@
 
 package org.apache.ranger.audit.utils;
 
+import org.apache.kafka.clients.admin.AdminClientConfig;
 import org.apache.ranger.audit.server.AuditServerConstants;
 import org.junit.jupiter.api.Test;
 
@@ -64,5 +65,17 @@ public class AuditMessageQueueUtilsTest {
         assertEquals("604800000", configs.get("retention.ms"));
         assertEquals("lz4", configs.get("compression.type"));
         assertEquals("2", configs.get("min.insync.replicas"));
+    }
+
+    @Test
+    public void testBuildAdminClientConfigUsesBootstrapServers() {
+        Properties props = new Properties();
+        props.setProperty(PROP_PREFIX + "." + AuditServerConstants.PROP_BOOTSTRAP_SERVERS, "kafka:9092");
+        props.setProperty(PROP_PREFIX + "." + AuditServerConstants.PROP_SECURITY_PROTOCOL, "PLAINTEXT");
+
+        Map<String, Object> adminConfig = AuditMessageQueueUtils.buildAdminClientConfig(props, PROP_PREFIX);
+
+        assertEquals("kafka:9092", adminConfig.get(AdminClientConfig.BOOTSTRAP_SERVERS_CONFIG));
+        assertEquals("PLAINTEXT", adminConfig.get(AdminClientConfig.SECURITY_PROTOCOL_CONFIG));
     }
 }
