@@ -1051,6 +1051,160 @@ public class TestPolicyMgrUserGroupBuilder {
         }
     }
 
+    private static XUserInfo cachedUser(String name, String fullName, String syncSource, String ldapUrl, String isVisible) {
+        XUserInfo u = new XUserInfo();
+        u.setName(name);
+        Map<String, String> attrs = new HashMap<>();
+        attrs.put(UgsyncCommonConstants.FULL_NAME, fullName);
+        attrs.put(UgsyncCommonConstants.SYNC_SOURCE, syncSource);
+        if (ldapUrl != null) {
+            attrs.put(UgsyncCommonConstants.LDAP_URL, ldapUrl);
+        }
+        u.setOtherAttrsMap(attrs);
+        u.setOtherAttributes(JsonUtils.objectToJson(attrs));
+        u.setIsVisible(isVisible);
+        return u;
+    }
+
+    private static XGroupInfo cachedGroup(String name, String fullName, String syncSource, String ldapUrl, String isVisible) {
+        XGroupInfo g = new XGroupInfo();
+        g.setName(name);
+        Map<String, String> attrs = new HashMap<>();
+        attrs.put(UgsyncCommonConstants.FULL_NAME, fullName);
+        attrs.put(UgsyncCommonConstants.SYNC_SOURCE, syncSource);
+        if (ldapUrl != null) {
+            attrs.put(UgsyncCommonConstants.LDAP_URL, ldapUrl);
+        }
+        g.setOtherAttrsMap(attrs);
+        g.setOtherAttributes(JsonUtils.objectToJson(attrs));
+        g.setIsVisible(isVisible);
+        return g;
+    }
+
+    @Test
+    public void testW1_markDeletedUsersByFullName_marksMatchingGuid() throws Exception {
+        PolicyMgrUserGroupBuilder builder = new PolicyMgrUserGroupBuilder();
+        // EntraID is a non-LDAP source: ldapUrl null, so the null==null gate applies.
+        setPrivate(builder, "currentSyncSource", "EntraID");
+        setPrivate(builder, "ldapUrl", null);
+
+        String guid = "aaaaaaaa-0000-0000-0000-000000000001";
+        Map<String, XUserInfo> ucache = new HashMap<>();
+        ucache.put("alice", cachedUser("alice", guid, "EntraID", null, "1"));
+        setPrivate(builder, "userCache", ucache);
+
+        Method mark = PolicyMgrUserGroupBuilder.class.getDeclaredMethod("markDeletedUsersByFullName", Set.class);
+        mark.setAccessible(true);
+        mark.invoke(builder, new HashSet<>(Collections.singletonList(guid)));
+
+        Map<String, XUserInfo> deletedUsers = getPrivate(builder, "deletedUsers", Map.class);
+        assertTrue(deletedUsers.containsKey("alice"), "user with matching GUID must be marked deleted");
+        assertEquals("0", deletedUsers.get("alice").getIsVisible(), "deleted user must be set ISHIDDEN");
+    }
+
+    @Test
+    public void testW2_markDeletedUsersByFullName_ignoresUnmatchedGuid() throws Exception {
+        PolicyMgrUserGroupBuilder builder = new PolicyMgrUserGroupBuilder();
+        setPrivate(builder, "currentSyncSource", "EntraID");
+        setPrivate(builder, "ldapUrl", null);
+
+        Map<String, XUserInfo> ucache = new HashMap<>();
+        ucache.put("alice", cachedUser("alice", "guid-keep", "EntraID", null, "1"));
+        setPrivate(builder, "userCache", ucache);
+
+        Method mark = PolicyMgrUserGroupBuilder.class.getDeclaredMethod("markDeletedUsersByFullName", Set.class);
+        mark.setAccessible(true);
+        mark.invoke(builder, new HashSet<>(Collections.singletonList("guid-other")));
+
+        Map<String, XUserInfo> deletedUsers = getPrivate(builder, "deletedUsers", Map.class);
+        assertTrue(deletedUsers.isEmpty(), "no cache record matches the delete GUID -> nothing marked");
+    }
+
+    @Test
+    public void testW3_markDeletedUsersByFullName_skipsDifferentSyncSource() throws Exception {
+        PolicyMgrUserGroupBuilder builder = new PolicyMgrUserGroupBuilder();
+        setPrivate(builder, "currentSyncSource", "EntraID");
+        setPrivate(builder, "ldapUrl", null);
+
+        String guid = "shared-guid";
+        Map<String, XUserInfo> ucache = new HashMap<>();
+        // Cached record belongs to a different source; must not be deletable by EntraID.
+        ucache.put("alice", cachedUser("alice", guid, "Unix", null, "1"));
+        setPrivate(builder, "userCache", ucache);
+
+        Method mark = PolicyMgrUserGroupBuilder.class.getDeclaredMethod("markDeletedUsersByFullName", Set.class);
+        mark.setAccessible(true);
+        mark.invoke(builder, new HashSet<>(Collections.singletonList(guid)));
+
+        Map<String, XUserInfo> deletedUsers = getPrivate(builder, "deletedUsers", Map.class);
+        assertTrue(deletedUsers.isEmpty(), "a record from another sync source must not be deleted");
+    }
+
+    @Test
+    public void testW4_markDeletedUsersByFullName_skipsAlreadyHidden() throws Exception {
+        PolicyMgrUserGroupBuilder builder = new PolicyMgrUserGroupBuilder();
+        setPrivate(builder, "currentSyncSource", "EntraID");
+        setPrivate(builder, "ldapUrl", null);
+
+        String guid = "guid-hidden";
+        Map<String, XUserInfo> ucache = new HashMap<>();
+        ucache.put("alice", cachedUser("alice", guid, "EntraID", null, "0")); // already ISHIDDEN
+        setPrivate(builder, "userCache", ucache);
+
+        Method mark = PolicyMgrUserGroupBuilder.class.getDeclaredMethod("markDeletedUsersByFullName", Set.class);
+        mark.setAccessible(true);
+        mark.invoke(builder, new HashSet<>(Collections.singletonList(guid)));
+
+        Map<String, XUserInfo> deletedUsers = getPrivate(builder, "deletedUsers", Map.class);
+        assertTrue(deletedUsers.isEmpty(), "already-hidden records must not be re-marked");
+    }
+
+    @Test
+    public void testW5_markDeletedGroupsByFullName_marksMatchingGuid() throws Exception {
+        PolicyMgrUserGroupBuilder builder = new PolicyMgrUserGroupBuilder();
+        setPrivate(builder, "currentSyncSource", "EntraID");
+        setPrivate(builder, "ldapUrl", null);
+
+        String guid = "bbbbbbbb-0000-0000-0000-000000000002";
+        Map<String, XGroupInfo> gcache = new HashMap<>();
+        gcache.put("Engineering", cachedGroup("Engineering", guid, "EntraID", null, "1"));
+        setPrivate(builder, "groupCache", gcache);
+
+        Method mark = PolicyMgrUserGroupBuilder.class.getDeclaredMethod("markDeletedGroupsByFullName", Set.class);
+        mark.setAccessible(true);
+        mark.invoke(builder, new HashSet<>(Collections.singletonList(guid)));
+
+        Map<String, XGroupInfo> deletedGroups = getPrivate(builder, "deletedGroups", Map.class);
+        assertTrue(deletedGroups.containsKey("Engineering"), "group with matching GUID must be marked deleted");
+        assertEquals("0", deletedGroups.get("Engineering").getIsVisible(), "deleted group must be set ISHIDDEN");
+    }
+
+    @Test
+    public void testW6_deleteUsersAndGroups_skipsDuringStartup() throws Throwable {
+        PolicyMgrUserGroupBuilder builder = new PolicyMgrUserGroupBuilder();
+        setPrivate(builder, "currentSyncSource", "EntraID");
+        setPrivate(builder, "ldapUrl", null);
+        setPrivate(builder, "isStartupFlag", true); // startup cycle: must not compute deletes
+
+        String guid = "guid-startup";
+        Map<String, XUserInfo> ucache = new HashMap<>();
+        ucache.put("alice", cachedUser("alice", guid, "EntraID", null, "1"));
+        setPrivate(builder, "userCache", ucache);
+        setPrivate(builder, "ldapUgSyncClient", new FakeRest());
+
+        Map<String, Map<String, String>> delUsers = new HashMap<>();
+        Map<String, String> attrs = new HashMap<>();
+        attrs.put(UgsyncCommonConstants.FULL_NAME, guid);
+        attrs.put(UgsyncCommonConstants.SYNC_SOURCE, "EntraID");
+        delUsers.put(guid, attrs);
+
+        builder.deleteUsersAndGroups(delUsers, new HashMap<>());
+
+        // Startup guard returns early; the cached user stays visible.
+        Map<String, XUserInfo> ucacheAfter = getPrivate(builder, "userCache", Map.class);
+        assertEquals("1", ucacheAfter.get("alice").getIsVisible(), "startup cycle must not mark deletes");
+    }
+
     // Helpers
     @SuppressWarnings("unchecked")
     private static <T> T getPrivate(Object target, String field, Class<T> type) throws Exception {

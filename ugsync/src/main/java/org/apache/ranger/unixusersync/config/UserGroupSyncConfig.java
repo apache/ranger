@@ -78,6 +78,7 @@ public class UserGroupSyncConfig {
     private static final String UGSYNC_SOURCE_CLASS                    = "org.apache.ranger.unixusersync.process.UnixUserGroupBuilder";
     private static final String UGSYNC_SINK_CLASS                      = "org.apache.ranger.unixusersync.process.PolicyMgrUserGroupBuilder";
     private static final String LGSYNC_SOURCE_CLASS                    = "org.apache.ranger.ldapusersync.process.LdapUserGroupBuilder";
+    private static final String EGSYNC_SOURCE_CLASS                    = "org.apache.ranger.entraid.EntraIdUserGroupSource";
     /* LDAP Configs */
     private static final String LGSYNC_LDAP_URL                        = "ranger.usersync.ldap.url";
     private static final String LGSYNC_LDAP_AUTHENTICATION_MECHANISM   = "ranger.usersync.ldap.authentication.mechanism";
@@ -1343,6 +1344,8 @@ public class UserGroupSyncConfig {
             currentSyncSource = "LDAP/AD";
         } else if (UGSYNC_SOURCE_CLASS.equalsIgnoreCase(className)) {
             currentSyncSource = "Unix";
+        } else if (EGSYNC_SOURCE_CLASS.equalsIgnoreCase(className)) {
+            currentSyncSource = "EntraID";
         } else {
             currentSyncSource = "File";
         }
