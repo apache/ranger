@@ -335,15 +335,6 @@ public class PolicyEngine {
         return toString(new StringBuilder()).toString();
     }
 
-    @Override
-    protected void finalize() throws Throwable {
-        try {
-            cleanup();
-        } finally {
-            super.finalize();
-        }
-    }
-
     public StringBuilder toString(StringBuilder sb) {
         if (sb == null) {
             sb = new StringBuilder();
@@ -601,36 +592,6 @@ public class PolicyEngine {
         RangerPerfTracer.log(perf);
 
         LOG.debug("<== reorderEvaluators()");
-    }
-
-    private void cleanup() {
-        LOG.debug("==> PolicyEngine.cleanup()");
-
-        RangerPerfTracer perf = null;
-
-        if (RangerPerfTracer.isPerfTraceEnabled(PERF_POLICYENGINE_INIT_LOG)) {
-            perf = RangerPerfTracer.getPerfTracer(PERF_POLICYENGINE_INIT_LOG, "RangerPolicyEngine.cleanUp(hashCode=" + Integer.toHexString(System.identityHashCode(this)) + ")");
-        }
-
-        preCleanup(false);
-
-        if (policyRepository != null) {
-            policyRepository.cleanup();
-        }
-
-        if (tagPolicyRepository != null) {
-            tagPolicyRepository.cleanup();
-        }
-
-        if (MapUtils.isNotEmpty(this.zonePolicyRepositories)) {
-            for (Map.Entry<String, RangerPolicyRepository> entry : this.zonePolicyRepositories.entrySet()) {
-                entry.getValue().cleanup();
-            }
-        }
-
-        RangerPerfTracer.log(perf);
-
-        LOG.debug("<== PolicyEngine.cleanup()");
     }
 
     private void getDeltasSortedByZones(PolicyEngine current, ServicePolicies servicePolicies, List<RangerPolicyDelta> defaultZoneDeltas, List<RangerPolicyDelta> defaultZoneDeltasForTagPolicies) {
