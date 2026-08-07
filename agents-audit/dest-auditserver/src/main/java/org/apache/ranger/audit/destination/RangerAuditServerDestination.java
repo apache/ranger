@@ -27,6 +27,7 @@ import org.apache.ranger.audit.model.AuditEventBase;
 import org.apache.ranger.audit.model.AuthzAuditEvent;
 import org.apache.ranger.audit.provider.MiscUtil;
 import org.apache.ranger.plugin.authn.DefaultJwtProvider;
+import org.apache.ranger.plugin.util.PluginHeaderAuthConfig;
 import org.apache.ranger.plugin.util.RangerRESTClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -97,6 +98,12 @@ public class RangerAuditServerDestination extends AuditDestination {
         this.restClient.setRestClientReadTimeOutMs(readTimeoutMs);
         this.restClient.setMaxRetryAttempts(maxRetryAttempts);
         this.restClient.setRetryIntervalMs(retryIntervalMs);
+
+        Map<String, String> spiffeHeaders = PluginHeaderAuthConfig.buildSpiffeAuthHeaders(props, propPrefix);
+        if (!spiffeHeaders.isEmpty()) {
+            this.restClient.setTrustedAuthHeaders(spiffeHeaders);
+            LOG.debug("SPIFFE header authentication enabled for audit-server destination");
+        }
 
         LOG.info("<== RangerAuditServerDestination:init()");
     }
