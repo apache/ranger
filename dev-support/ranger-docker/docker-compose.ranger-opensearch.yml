@@ -1,27 +1,12 @@
 services:
   ranger-opensearch:
-    build:
-      context: .
-      dockerfile: Dockerfile.ranger-opensearch
-      args:
-        - RANGER_BASE_IMAGE=${RANGER_BASE_IMAGE}
-        - RANGER_BASE_VERSION=${RANGER_BASE_VERSION}
-        - OPENSEARCH_VERSION=${OPENSEARCH_VERSION}
-        - KERBEROS_ENABLED=${KERBEROS_ENABLED}
-    image: ranger-opensearch
+    image: opensearchproject/opensearch:${OPENSEARCH_VERSION}
     container_name: ranger-opensearch
     hostname: ranger-opensearch.rangernw
     volumes:
-      - ./dist/keytabs/ranger-opensearch:/etc/keytabs
-      - ./scripts/opensearch/ranger-opensearch-setup.sh:/opt/ranger/ranger-opensearch-setup.sh
-      - ./scripts/opensearch/ranger-opensearch.sh:/opt/ranger/ranger-opensearch.sh
-      - ./scripts/opensearch/opensearch.yml:/opt/opensearch/config/opensearch.yml
-      - ./scripts/opensearch/opensearch-jaas.conf:/opt/opensearch/config/opensearch-jaas.conf
-      - ./scripts/kdc/krb5.conf:/etc/krb5.conf
-      - opensearch-data:/opt/opensearch/data
-      - opensearch-logs:/opt/opensearch/logs
-    stdin_open: true
-    tty: true
+      - ./scripts/opensearch/opensearch.yml:/usr/share/opensearch/config/opensearch.yml
+      - opensearch-data:/usr/share/opensearch/data
+      - opensearch-logs:/usr/share/opensearch/logs
     networks:
       - ranger
     ports:
@@ -33,8 +18,6 @@ services:
       ranger:
         condition: service_started
     environment:
-      - OPENSEARCH_VERSION=${OPENSEARCH_VERSION}
-      - KERBEROS_ENABLED=${KERBEROS_ENABLED}
       - OPENSEARCH_JAVA_OPTS=-Xms512m -Xmx512m
 
 volumes:
