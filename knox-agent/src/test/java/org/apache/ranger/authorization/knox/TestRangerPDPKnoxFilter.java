@@ -25,11 +25,13 @@ import org.apache.knox.gateway.security.PrimaryPrincipal;
 import org.apache.ranger.audit.provider.MiscUtil;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
 import org.apache.ranger.plugin.policyengine.RangerAccessResult;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.MockedConstruction;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -47,8 +49,17 @@ import java.lang.reflect.Method;
 import java.security.PrivilegedExceptionAction;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.mockConstruction;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -60,6 +71,11 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 @TestMethodOrder(MethodOrderer.MethodName.class)
 public class TestRangerPDPKnoxFilter {
+    @AfterEach
+    void tearDown() throws Exception {
+        setStaticPlugin(null);
+    }
+
     @Test
     public void test01_init_initializesPluginOnce() {
         RangerPDPKnoxFilter filter = new RangerPDPKnoxFilter();
@@ -165,6 +181,72 @@ public class TestRangerPDPKnoxFilter {
         Assertions.assertNull(invokeGetTopologyName(filter, null));
         Assertions.assertNull(invokeGetTopologyName(filter, "/one"));
         Assertions.assertEquals("two", invokeGetTopologyName(filter, "/one/two/three"));
+    }
+
+    void test07_concurrentTopologyInit_blocksSecondTopologyUntilPluginReady() throws Exception {
+        setStaticPlugin(null);
+
+        // topology A pauses inside plugin.init() until releaseTopologyA
+        CountDownLatch topologyAInPluginInit = new CountDownLatch(1);
+        CountDownLatch releaseTopologyA      = new CountDownLatch(1);
+        AtomicBoolean topologyBInitFinished = new AtomicBoolean(false);
+
+        try (MockedStatic<MiscUtil> miscUtil = Mockito.mockStatic(MiscUtil.class)) {
+            miscUtil.when(() -> MiscUtil.setUGIFromJAASConfig(anyString())).thenAnswer(invocation -> null);
+            miscUtil.when(MiscUtil::getUGILoginUser).thenReturn(null);
+
+            try (MockedConstruction<KnoxRangerPlugin> ignored =
+                         mockConstruction(KnoxRangerPlugin.class, (mock, context) ->
+                                 doAnswer(invocation -> {
+                                     topologyAInPluginInit.countDown();
+                                     releaseTopologyA.await(10, TimeUnit.SECONDS);
+                                     return null;
+                                 }).when(mock).init())) {
+                FilterConfig config = Mockito.mock(FilterConfig.class);
+                when(config.getInitParameter("resource.role")).thenReturn("WEBHDFS");
+
+                RangerPDPKnoxFilter filterTopologyA = new RangerPDPKnoxFilter();
+                RangerPDPKnoxFilter filterTopologyB = new RangerPDPKnoxFilter();
+                ExecutorService executor = Executors.newFixedThreadPool(2);
+
+                // Thread 1: topology B tries to init while topology A is still in plugin.init()
+                Future<?> topologyBInit = executor.submit(() -> {
+                    try {
+                        topologyAInPluginInit.await(10, TimeUnit.SECONDS);
+                        filterTopologyB.init(config);
+                        topologyBInitFinished.set(true);
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
+                    }
+                });
+
+                // Thread 2: verify topology B is still waiting, then let topology A finish
+                Future<?> checker = executor.submit(() -> {
+                    try {
+                        topologyAInPluginInit.await(10, TimeUnit.SECONDS);
+                        Thread.sleep(200);
+                        Assertions.assertFalse(topologyBInitFinished.get(),
+                                "topology B init must block until plugin is ready");
+                        releaseTopologyA.countDown();
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
+                    }
+                });
+
+                // Main thread: topology A init (Mockito construction mock works on this thread)
+                filterTopologyA.init(config);
+
+                checker.get(10, TimeUnit.SECONDS);
+                topologyBInit.get(10, TimeUnit.SECONDS);
+                executor.shutdownNow();
+            }
+        }
+    }
+
+    private static void setStaticPlugin(KnoxRangerPlugin plugin) throws Exception {
+        Field f = RangerPDPKnoxFilter.class.getDeclaredField("plugin");
+        f.setAccessible(true);
+        f.set(null, plugin);
     }
 
     private String invokeGetInitParameter(RangerPDPKnoxFilter filter, FilterConfig cfg, String name) {

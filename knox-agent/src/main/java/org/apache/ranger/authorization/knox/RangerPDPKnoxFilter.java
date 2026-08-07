@@ -77,9 +77,11 @@ public class RangerPDPKnoxFilter implements Filter {
 
                     LOG.info("Creating KnoxRangerPlugin");
 
-                    plugin = new KnoxRangerPlugin();
+                    me = new KnoxRangerPlugin();
 
-                    plugin.init();
+                    me.init();
+
+                    plugin = me;
                 }
             }
         }
