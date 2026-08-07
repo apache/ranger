@@ -39,13 +39,11 @@ import java.util.List;
 import java.util.Map;
 
 public final class AtlasNotificationMapper {
-    private static final Logger            LOG                 = LoggerFactory.getLogger(AtlasNotificationMapper.class);
+    private static final Logger LOG = LoggerFactory.getLogger(AtlasNotificationMapper.class);
+    private static final int REPORTING_INTERVAL_FOR_UNHANDLED_ENTITYTYPE_IN_MILLIS = 5 * 60 * 1000; // 5 minutes
+    private static final Map<String, Long> unhandledEventTypes = new HashMap<>();
 
     private AtlasNotificationMapper() {}
-
-    private static final int REPORTING_INTERVAL_FOR_UNHANDLED_ENTITYTYPE_IN_MILLIS = 5 * 60 * 1000; // 5 minutes
-
-    private static final Map<String, Long> unhandledEventTypes = new HashMap<>();
 
     public static void logUnhandledEntityNotification(EntityNotificationWrapper entityNotification) {
         boolean skipLogging = entityNotification.getIsEntityCreateOp() && entityNotification.getIsEmptyClassifications();
@@ -58,8 +56,7 @@ public final class AtlasNotificationMapper {
             if (entityTypeName != null) {
                 Long timeInMillis        = unhandledEventTypes.get(entityTypeName);
                 long currentTimeInMillis = System.currentTimeMillis();
-                if (timeInMillis == null ||
-                        (currentTimeInMillis - timeInMillis) >= REPORTING_INTERVAL_FOR_UNHANDLED_ENTITYTYPE_IN_MILLIS) {
+                if (timeInMillis == null || (currentTimeInMillis - timeInMillis) >= REPORTING_INTERVAL_FOR_UNHANDLED_ENTITYTYPE_IN_MILLIS) {
                     unhandledEventTypes.put(entityTypeName, currentTimeInMillis);
                     loggingNeeded = true;
                 }
@@ -126,6 +123,7 @@ public final class AtlasNotificationMapper {
             }
             if (!ret) {
                 LOG.debug("Notification : [{}] will NOT be processed.", entityNotification);
+                AtlasTagSource.isTagAssociated = false;
             }
         }
 
@@ -220,6 +218,7 @@ public final class AtlasNotificationMapper {
                 }
             } else {
                 LOG.debug("Entity {} does not have any tags associated with it", entityWithTags);
+                AtlasTagSource.isTagAssociated = false;
             }
 
             ret.getResourceToTagIds().put(serviceResource.getId(), tagIds);

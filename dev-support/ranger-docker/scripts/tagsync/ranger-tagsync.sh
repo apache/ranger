@@ -47,7 +47,7 @@ fi
 
 cd ${RANGER_HOME}/tagsync && ./ranger-tagsync-services.sh start
 
-RANGER_TAGSYNC_PID=`ps -ef  | grep -v grep | grep -i "org.apache.ranger.tagsync.process.TagSynchronizer" | awk '{print $2}'`
+RANGER_TAGSYNC_PID=`ps -ef  | grep -v grep | grep -i "org.apache.ranger.tagsync.server.RangerTagSyncServer" | awk '{print $2}'`
 
 # prevent the container from exiting
 if [ -z "$RANGER_TAGSYNC_PID" ]
