@@ -187,6 +187,17 @@ public class EmbeddedServer {
                 keystorePass = EmbeddedServerUtil.getConfig("ranger.service.https.attrib.keystore.pass");
             }
 
+            String truststoreAlias = EmbeddedServerUtil.getConfig("ranger.truststore.alias");
+            String truststorePass  = null;
+
+            if (providerPath != null && truststoreAlias != null) {
+                truststorePass = CredentialReader.getDecryptedString(providerPath.trim(), truststoreAlias.trim(), EmbeddedServerUtil.getConfig("ranger.truststore.file.type", RANGER_TRUSTSTORE_FILE_TYPE_DEFAULT));
+
+                if (StringUtils.isBlank(truststorePass) || "none".equalsIgnoreCase(truststorePass.trim())) {
+                    truststorePass = EmbeddedServerUtil.getConfig("ranger.service.https.attrib.truststore.pass");
+                }
+            }
+
             String keystoreFile    = getKeystoreFile();
             String keyAlias        = EmbeddedServerUtil.getConfig("ranger.service.https.attrib.keystore.keyalias", "rangeradmin");
             String keystoreType    = EmbeddedServerUtil.getConfig("ranger.keystore.file.type", RANGER_KEYSTORE_FILE_TYPE_DEFAULT);
@@ -199,6 +210,14 @@ public class EmbeddedServer {
             ssl.setAttribute("keyAlias", keyAlias);
             ssl.setAttribute("keystorePass", keystorePass);
             ssl.setAttribute("keystoreFile", keystoreFile);
+
+            String trustStoreFile = EmbeddedServerUtil.getConfig("ranger.truststore.file");
+            if (StringUtils.isNotBlank(trustStoreFile) && StringUtils.isNotBlank(truststorePass)) {
+                ssl.setAttribute("truststorePass", truststorePass);
+                ssl.setAttribute("truststoreFile", trustStoreFile);
+            } else {
+                LOG.info("TrustStore is not set, TrustStoreFile is " +  trustStoreFile + " and is TruststorePass empty " + StringUtils.isBlank(truststorePass));
+            }
 
             String enabledProtocols        = EmbeddedServerUtil.getConfig("ranger.service.https.attrib.ssl.enabled.protocols", DEFAULT_ENABLED_PROTOCOLS);
 
