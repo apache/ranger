@@ -38,8 +38,7 @@ import logging
 ##
 ## parameters:
 ##  kms_url:             URL to Apache Ranger admin server
-##  kms_user:            user name to pass when kms auth is 'simple'.
-##                         Ignored in kerberos mode.
+##  kms_auth:            authentication to connect to Apache Ranger admin server
 ##  key_count            number of keys to create
 ##  rollover_key_count:  number of times each key to be rolled over
 ##  encrypted_key_count: number of encrypted keys to generate per key
@@ -155,7 +154,7 @@ LOG.info("****** TEST RUN: START ******")
 LOG.info("*******************************")
 LOG.info("")
 LOG.info("PARAM: kms_url             = %s", kms_url)
-LOG.info("PARAM: kms_user            = %s", kms_user)
+LOG.info("PARAM: kms_auth            = %s", kms_auth)
 LOG.info("PARAM: key_count           = %s", key_count)
 LOG.info("PARAM: rollover_key_count  = %s", rollover_key_count)
 LOG.info("PARAM: encrypted_key_count = %s", encrypted_key_count)
