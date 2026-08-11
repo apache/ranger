@@ -180,21 +180,21 @@ public class TestPublicAPIs {
     @Test
     public void test5searchRepositories() {
         HttpServletRequest  request       = Mockito.mock(HttpServletRequest.class);
-        List<RangerService> ret           = new ArrayList<>();
+        List<RangerService> services      = new ArrayList<>();
         RangerService       rangerService = rangerService();
         VXRepository        vXRepository  = vXRepository(rangerService);
-        List<VXRepository>  repoList      = new ArrayList<>();
-        repoList.add(vXRepository);
-        VXRepositoryList vXRepositoryList = new VXRepositoryList(repoList);
-        SearchFilter     filter           = new SearchFilter();
+        services.add(rangerService);
+        SearchFilter filter = new SearchFilter();
         filter.setParam(SearchFilter.POLICY_NAME, "policyName");
         filter.setParam(SearchFilter.SERVICE_NAME, "serviceName");
         Mockito.when(searchUtil.getSearchFilterFromLegacyRequestForRepositorySearch(request, xAssetService.sortFields)).thenReturn(filter);
-        Mockito.when(serviceREST.getServices(filter)).thenReturn(ret);
-        Mockito.when(serviceUtil.rangerServiceListToPublicObjectList(ret)).thenReturn(vXRepositoryList);
+        Mockito.when(serviceREST.getServices(filter)).thenReturn(services);
+        Mockito.when(serviceUtil.toVXRepository(rangerService)).thenReturn(vXRepository);
         VXRepositoryList dbVXRepositoryList = publicAPIs.searchRepositories(request);
         Assertions.assertNotNull(dbVXRepositoryList);
-        Assertions.assertEquals(dbVXRepositoryList.getResultSize(), vXRepositoryList.getResultSize());
+        Assertions.assertEquals(1, dbVXRepositoryList.getResultSize());
+        Assertions.assertEquals(vXRepository, dbVXRepositoryList.getVXRepositories().get(0));
+        Mockito.verify(serviceUtil).toVXRepository(rangerService);
     }
 
     @Test

@@ -32,6 +32,7 @@ import org.apache.ranger.entity.XXService;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerService;
 import org.apache.ranger.plugin.util.SearchFilter;
+import org.apache.ranger.security.context.RangerAPIList;
 import org.apache.ranger.service.RangerPolicyService;
 import org.apache.ranger.service.XAssetService;
 import org.apache.ranger.view.VXAsset;
@@ -62,6 +63,7 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Path("public")
@@ -175,18 +177,31 @@ public class PublicAPIs {
     @GET
     @Path("/api/repository/")
     @Produces("application/json")
+    @PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.SEARCH_X_ASSETS + "\")")
     public VXRepositoryList searchRepositories(@Context HttpServletRequest request) {
         logger.debug("==> PublicAPIs.searchRepositories()");
 
+        VXRepositoryList ret = new VXRepositoryList();
+
         SearchFilter        filter      = searchUtil.getSearchFilterFromLegacyRequestForRepositorySearch(request, xAssetService.sortFields);
         List<RangerService> serviceList = serviceREST.getServices(filter);
-        VXRepositoryList    ret         = null;
 
         if (serviceList != null) {
-            ret = serviceUtil.rangerServiceListToPublicObjectList(serviceList);
+            List<VXRepository> repositories = new ArrayList<>(serviceList.size());
+            for (RangerService service : serviceList) {
+                VXRepository repository = serviceUtil.toVXRepository(service);
+
+                if (repository != null) {
+                    repositories.add(repository);
+                }
+            }
+
+            ret.setVXRepositories(repositories);
+            ret.setTotalCount(repositories.size());
+            ret.setResultSize(repositories.size());
         }
 
-        logger.debug("<== PublicAPIs.searchRepositories(): count={}", (ret == null ? 0 : ret.getListSize()));
+        logger.debug("<== PublicAPIs.searchRepositories(): count={}", ret.getListSize());
 
         return ret;
     }

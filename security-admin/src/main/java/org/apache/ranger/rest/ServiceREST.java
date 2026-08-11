@@ -992,6 +992,19 @@ public class ServiceREST {
             }
 
             ret = svcStore.getServices(filter);
+
+            if (ret != null) {
+                UserSessionBase userSession = ContextUtil.getCurrentUserSession();
+                if (userSession != null && userSession.isSingleRoleUserSession()) {
+                    List<RangerService> updateServiceList = new ArrayList<>(ret.size());
+                    for (RangerService rangerService : ret) {
+                        if (rangerService != null) {
+                            updateServiceList.add(hideCriticalServiceDetailsForRoleUser(rangerService));
+                        }
+                    }
+                    ret = updateServiceList;
+                }
+            }
         } catch (WebApplicationException excp) {
             throw excp;
         } catch (Throwable excp) {
