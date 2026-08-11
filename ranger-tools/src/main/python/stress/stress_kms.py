@@ -20,6 +20,7 @@
 
 from apache_ranger.client.ranger_kms_client import RangerKMSClient
 from apache_ranger.client.ranger_client     import HadoopSimpleAuth
+from requests_kerberos import HTTPKerberosAuth, DISABLED
 from apache_ranger.model.ranger_kms         import RangerKey
 from threading                              import Thread
 from datetime                               import datetime
@@ -37,29 +38,21 @@ import logging
 ##
 ## parameters:
 ##  kms_url:             URL to Apache Ranger admin server
-##  kms_auth_type:       authentication mode used to connect to Ranger KMS
-##                         'simple'   - Hadoop simple auth; identity is taken
-##                                      from `kms_user`.
-##                         'kerberos' - SPNEGO/Kerberos auth; identity is taken
-##                                      from the caller's Kerberos ticket cache
-##                                      (run `kinit` before starting the script).
-##                                      Requires the `requests-kerberos` package.
-##  kms_user:            user name to pass when kms_auth_type == 'simple'.
+##  kms_user:            user name to pass when kms auth is 'simple'.
 ##                         Ignored in kerberos mode.
 ##  key_count            number of keys to create
 ##  rollover_key_count:  number of times each key to be rolled over
 ##  encrypted_key_count: number of encrypted keys to generate per key
 ##  thread_count:        number of threads to call Apache Ranger APIs from
 ##
-kms_auth_type       = 'kerberos'          # 'simple' | 'kerberos'
-kms_user            = 'keyadmin'          # used only when kms_auth_type == 'simple'
+kms_user            = 'keyadmin'          # used only when kms auth is 'simple'
 
 ## Following instructions may be useful when KMS is running in Docker and auth_type is Kerberos :
 ##   Use Docker network hostname in URL instead of localhost, like, 'http://ranger-kms.rangernw:9292'
 ##   Docker network hostname should be resolved to an IP.
 ##       On local system, update '/etc/hosts' to contain following entry:
 ##         127.0.0.1       ranger-kms.rangernw ranger-kdc.rangernw ranger.rangernw
-kms_url             = 'http://ranger-kms.rangernw:9292'
+kms_url             = 'http://localhost:9292'
 key_count           = 320
 rollover_key_count  = 10
 encrypted_key_count = 6
@@ -67,18 +60,10 @@ thread_count        = 16
 delete_on_exit      = True
 key_prefix          = 'test_'
 
-
-def _build_kms_auth(auth_type):
-  if auth_type == 'simple':
-    return HadoopSimpleAuth(kms_user)
-  if auth_type == 'kerberos':
-    # Imported lazily so simple-mode users don't need requests-kerberos installed.
-    from requests_kerberos import HTTPKerberosAuth, DISABLED
-    return HTTPKerberosAuth(mutual_authentication=DISABLED)
-  raise ValueError('unsupported kms_auth_type: %s (expected "simple" or "kerberos")' % auth_type)
-
-
-kms_auth = _build_kms_auth(kms_auth_type)
+# for simple:
+kms_auth = HadoopSimpleAuth(kms_user)
+# for kerberos:
+# kms_auth = HTTPKerberosAuth(mutual_authentication=DISABLED)
 
 
 ##
@@ -170,9 +155,7 @@ LOG.info("****** TEST RUN: START ******")
 LOG.info("*******************************")
 LOG.info("")
 LOG.info("PARAM: kms_url             = %s", kms_url)
-LOG.info("PARAM: kms_auth_type       = %s", kms_auth_type)
-if kms_auth_type == 'simple':
-  LOG.info("PARAM: kms_user            = %s", kms_user)
+LOG.info("PARAM: kms_user            = %s", kms_user)
 LOG.info("PARAM: key_count           = %s", key_count)
 LOG.info("PARAM: rollover_key_count  = %s", rollover_key_count)
 LOG.info("PARAM: encrypted_key_count = %s", encrypted_key_count)
