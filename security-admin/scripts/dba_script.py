@@ -216,86 +216,13 @@ class MysqlConf(BaseDB):
 			jisql_cmd = "%s %s -cp %s;%s\\jisql\\lib\\* org.apache.util.sql.Jisql -driver mysqlconj -cstring jdbc:mysql://%s/%s%s -u %s -p \"%s\" -noheader -trim" %(self.JAVA_BIN, db_ssl_cert_param,self.SQL_CONNECTOR_JAR, path, self.host, db_name,db_ssl_param,user, password)
 		return jisql_cmd
 
-	def mysql_user_hosts(self):
+	def user_hosts(self):
 		if self.host == "localhost":
 			return ["%", "localhost"]
 		if self.is_mariadb is True:
 			# Grant db_host before FLUSH from wildcard/localhost grants (MariaDB docker init issue).
 			return [self.host, "%", "localhost"]
 		return ["%", "localhost", self.host]
-
-	def recreate_mysql_user(self, root_user, db_root_password, db_user, db_password, host, get_cmd, dryMode):
-		if dryMode == False:
-			log("[I] Recreating MySQL user " + db_user + " for host " + host, "info")
-		if is_unix:
-			query = get_cmd + " -query \"drop user if exists '%s'@'%s';\"" %(db_user, host)
-			jisql_log(query, db_root_password)
-			subprocessCallWithRetry(shlex.split(query))
-			if db_password == "":
-				query = get_cmd + " -query \"create user '%s'@'%s';\"" %(db_user, host)
-				jisql_log(query, db_root_password)
-				ret = subprocessCallWithRetry(shlex.split(query))
-			else:
-				query = get_cmd + " -query \"create user '%s'@'%s' identified by '%s';\"" %(db_user, host, db_password)
-				query_with_masked_pwd = get_cmd + " -query \"create user '%s'@'%s' identified by '%s';\"" %(db_user, host, masked_pwd_string)
-				jisql_log(query_with_masked_pwd, db_root_password)
-				ret = subprocessCallWithRetry(shlex.split(query))
-		elif os_name == "WINDOWS":
-			query = get_cmd + " -query \"drop user if exists '%s'@'%s';\" -c ;" %(db_user, host)
-			jisql_log(query, db_root_password)
-			subprocessCallWithRetry(query)
-			if db_password == "":
-				query = get_cmd + " -query \"create user '%s'@'%s';\" -c ;" %(db_user, host)
-				jisql_log(query, db_root_password)
-				ret = subprocessCallWithRetry(query)
-			else:
-				query = get_cmd + " -query \"create user '%s'@'%s' identified by '%s';\" -c ;" %(db_user, host, db_password)
-				query_with_masked_pwd = get_cmd + " -query \"create user '%s'@'%s' identified by '%s';\" -c ;" %(db_user, host, masked_pwd_string)
-				jisql_log(query_with_masked_pwd, db_root_password)
-				ret = subprocessCallWithRetry(query)
-		if ret != 0:
-			return False
-		return self.verify_user(root_user, db_root_password, host, db_user, get_cmd, dryMode)
-
-	def grant_mysql_user_on_db(self, get_cmd, db_root_password, db_name, db_user, db_password, host, root_user, dryMode, retry_on_failure):
-		if dryMode == False:
-			log("[I] ---------- Granting privileges TO user '"+db_user+"'@'"+host+"' on db '"+db_name+"'----------" , "info")
-			if is_unix:
-				query = get_cmd + " -query \"grant all privileges on %s.* to '%s'@'%s' with grant option;\"" %(db_name,db_user, host)
-				jisql_log(query, db_root_password)
-				ret = subprocessCallWithRetry(shlex.split(query))
-			elif os_name == "WINDOWS":
-				query = get_cmd + " -query \"grant all privileges on %s.* to '%s'@'%s' with grant option;\" -c ;" %(db_name,db_user, host)
-				jisql_log(query, db_root_password)
-				ret = subprocessCallWithRetry(query)
-			if ret != 0 and retry_on_failure:
-				log("[I] Grant failed for '" + db_user + "'@'" + host + "', recreating user and retrying", "info")
-				if not self.recreate_mysql_user(root_user, db_root_password, db_user, db_password, host, get_cmd, dryMode):
-					return False
-				if is_unix:
-					ret = subprocessCallWithRetry(shlex.split(query))
-				elif os_name == "WINDOWS":
-					ret = subprocessCallWithRetry(query)
-			if ret != 0:
-				return False
-			log("[I] Privileges granted to '" + db_user + "' on '"+db_name+"'", "info")
-		else:
-			logFile("grant all privileges on %s.* to '%s'@'%s' with grant option;" %(db_name,db_user, host))
-		return True
-
-	def flush_mysql_privileges(self, get_cmd, db_root_password, db_user, db_name):
-		log("[I] ---------- FLUSH PRIVILEGES ----------" , "info")
-		if is_unix:
-			query = get_cmd + " -query \"FLUSH PRIVILEGES;\""
-			jisql_log(query, db_root_password)
-			ret = subprocessCallWithRetry(shlex.split(query))
-		elif os_name == "WINDOWS":
-			query = get_cmd + " -query \"FLUSH PRIVILEGES;\" -c ;"
-			jisql_log(query, db_root_password)
-			ret = subprocessCallWithRetry(query)
-		if ret != 0:
-			log("[E] Granting privileges to '" +db_user+"' failed on '"+db_name+"'", "error")
-			sys.exit(1)
 
 	def verify_user(self, root_user, db_root_password, host, db_user, get_cmd,dryMode):
 		if dryMode == False:
@@ -330,7 +257,7 @@ class MysqlConf(BaseDB):
 
 	def create_rangerdb_user(self, root_user, db_user, db_password, db_root_password,dryMode):
 		if self.check_connection('mysql', root_user, db_root_password):
-			hosts_arr = self.mysql_user_hosts()
+			hosts_arr = self.user_hosts()
 			for host in hosts_arr:
 				get_cmd = self.get_jisql_cmd(root_user, db_root_password, 'mysql')
 				if self.verify_user(root_user, db_root_password, host, db_user, get_cmd,dryMode):
@@ -427,19 +354,90 @@ class MysqlConf(BaseDB):
 
 
 	def grant_xa_db_user(self, root_user, db_name, db_user, db_password, db_root_password, is_revoke,dryMode):
+		hosts_arr = self.user_hosts()
 		get_cmd = self.get_jisql_cmd(root_user, db_root_password, 'mysql')
 		if dryMode == False:
 			self.detect_server_type(get_cmd, db_root_password)
-		hosts_arr = self.mysql_user_hosts()
-		retry_on_failure = self.is_mariadb is True
 		for host in hosts_arr:
-			if not self.grant_mysql_user_on_db(get_cmd, db_root_password, db_name, db_user, db_password, host, root_user, dryMode, retry_on_failure):
+			if dryMode == False:
+				log("[I] ---------- Granting privileges TO user '"+db_user+"'@'"+host+"' on db '"+db_name+"'----------" , "info")
+				if is_unix:
+					query = get_cmd + " -query \"grant all privileges on %s.* to '%s'@'%s' with grant option;\"" %(db_name,db_user, host)
+					jisql_log(query, db_root_password)
+					ret = subprocessCallWithRetry(shlex.split(query))
+				elif os_name == "WINDOWS":
+					query = get_cmd + " -query \"grant all privileges on %s.* to '%s'@'%s' with grant option;\" -c ;" %(db_name,db_user, host)
+					jisql_log(query, db_root_password)
+					ret = subprocessCallWithRetry(query)
+				if ret != 0 and self.is_mariadb is True:
+					log("[I] Grant failed for '" + db_user + "'@'" + host + "', recreating user and retrying", "info")
+					if is_unix:
+						drop_query = get_cmd + " -query \"drop user if exists '%s'@'%s';\"" %(db_user, host)
+						jisql_log(drop_query, db_root_password)
+						subprocessCallWithRetry(shlex.split(drop_query))
+						if db_password == "":
+							create_query = get_cmd + " -query \"create user '%s'@'%s';\"" %(db_user, host)
+							jisql_log(create_query, db_root_password)
+							ret = subprocessCallWithRetry(shlex.split(create_query))
+						else:
+							create_query = get_cmd + " -query \"create user '%s'@'%s' identified by '%s';\"" %(db_user, host, db_password)
+							create_query_with_masked_pwd = get_cmd + " -query \"create user '%s'@'%s' identified by '%s';\"" %(db_user, host, masked_pwd_string)
+							jisql_log(create_query_with_masked_pwd, db_root_password)
+							ret = subprocessCallWithRetry(shlex.split(create_query))
+					elif os_name == "WINDOWS":
+						drop_query = get_cmd + " -query \"drop user if exists '%s'@'%s';\" -c ;" %(db_user, host)
+						jisql_log(drop_query, db_root_password)
+						subprocessCallWithRetry(drop_query)
+						if db_password == "":
+							create_query = get_cmd + " -query \"create user '%s'@'%s';\" -c ;" %(db_user, host)
+							jisql_log(create_query, db_root_password)
+							ret = subprocessCallWithRetry(create_query)
+						else:
+							create_query = get_cmd + " -query \"create user '%s'@'%s' identified by '%s';\" -c ;" %(db_user, host, db_password)
+							create_query_with_masked_pwd = get_cmd + " -query \"create user '%s'@'%s' identified by '%s';\" -c ;" %(db_user, host, masked_pwd_string)
+							jisql_log(create_query_with_masked_pwd, db_root_password)
+							ret = subprocessCallWithRetry(create_query)
+					if ret == 0 and self.verify_user(root_user, db_root_password, host, db_user, get_cmd, dryMode):
+						if is_unix:
+							ret = subprocessCallWithRetry(shlex.split(query))
+						elif os_name == "WINDOWS":
+							ret = subprocessCallWithRetry(query)
+					else:
+						ret = 1
+				if ret == 0:
+					if self.is_mariadb is not True:
+						log("[I] ---------- FLUSH PRIVILEGES ----------" , "info")
+						if is_unix:
+							query = get_cmd + " -query \"FLUSH PRIVILEGES;\""
+							jisql_log(query, db_root_password)
+							ret = subprocessCallWithRetry(shlex.split(query))
+						elif os_name == "WINDOWS":
+							query = get_cmd + " -query \"FLUSH PRIVILEGES;\" -c ;"
+							jisql_log(query, db_root_password)
+							ret = subprocessCallWithRetry(query)
+					if ret == 0:
+						log("[I] Privileges granted to '" + db_user + "' on '"+db_name+"'", "info")
+					else:
+						log("[E] Granting privileges to '" +db_user+"' failed on '"+db_name+"'", "error")
+						sys.exit(1)
+				else:
+					log("[E] Granting privileges to '" +db_user+"' failed on '"+db_name+"'", "error")
+					sys.exit(1)
+			else:
+				logFile("grant all privileges on %s.* to '%s'@'%s' with grant option;" %(db_name,db_user, host))
+		if dryMode == False and self.is_mariadb is True:
+			log("[I] ---------- FLUSH PRIVILEGES ----------" , "info")
+			if is_unix:
+				query = get_cmd + " -query \"FLUSH PRIVILEGES;\""
+				jisql_log(query, db_root_password)
+				ret = subprocessCallWithRetry(shlex.split(query))
+			elif os_name == "WINDOWS":
+				query = get_cmd + " -query \"FLUSH PRIVILEGES;\" -c ;"
+				jisql_log(query, db_root_password)
+				ret = subprocessCallWithRetry(query)
+			if ret != 0:
 				log("[E] Granting privileges to '" +db_user+"' failed on '"+db_name+"'", "error")
 				sys.exit(1)
-			if dryMode == False and self.is_mariadb is not True:
-				self.flush_mysql_privileges(get_cmd, db_root_password, db_user, db_name)
-		if dryMode == False and self.is_mariadb is True:
-			self.flush_mysql_privileges(get_cmd, db_root_password, db_user, db_name)
 
 	def create_auditdb_user(self, xa_db_host, audit_db_host, db_name, audit_db_name, xa_db_root_user, audit_db_root_user, db_user, audit_db_user, xa_db_root_password, audit_db_root_password, db_password, audit_db_password, DBA_MODE,dryMode):
 		is_revoke=False
@@ -452,7 +450,7 @@ class MysqlConf(BaseDB):
 
 	def writeDrymodeCmd(self, xa_db_host, audit_db_host, xa_db_root_user, xa_db_root_password, db_user, db_password, db_name, audit_db_root_user, audit_db_root_password, audit_db_user, audit_db_password, audit_db_name):
 		logFile("# Login to MySQL Server from a MySQL dba user(i.e 'root') to execute below sql statements.")
-		hosts_arr = self.mysql_user_hosts()
+		hosts_arr = self.user_hosts()
 		for host in hosts_arr:
 			logFile("create user '%s'@'%s' identified by '%s';" %(db_user, host, db_password))
 		logFile("create database %s;"%(db_name))
