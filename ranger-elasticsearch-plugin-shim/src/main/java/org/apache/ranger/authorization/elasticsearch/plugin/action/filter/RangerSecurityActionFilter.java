@@ -19,6 +19,7 @@ package org.apache.ranger.authorization.elasticsearch.plugin.action.filter;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.ranger.authorization.elasticsearch.authorizer.RangerElasticsearchAuthorizer;
+import org.apache.ranger.authorization.elasticsearch.plugin.authc.ElasticsearchAuthenticatedUserResolver;
 import org.apache.ranger.authorization.elasticsearch.plugin.authc.user.UsernamePasswordToken;
 import org.apache.ranger.authorization.elasticsearch.plugin.utils.RequestUtils;
 import org.elasticsearch.ElasticsearchStatusException;
@@ -28,6 +29,7 @@ import org.elasticsearch.action.ActionResponse;
 import org.elasticsearch.action.support.ActionFilter;
 import org.elasticsearch.action.support.ActionFilterChain;
 import org.elasticsearch.common.component.AbstractLifecycleComponent;
+import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.util.concurrent.ThreadContext;
 import org.elasticsearch.rest.RestStatus;
 import org.elasticsearch.tasks.Task;
@@ -39,12 +41,14 @@ import java.util.List;
 public class RangerSecurityActionFilter extends AbstractLifecycleComponent implements ActionFilter {
     private static final Logger LOG = LoggerFactory.getLogger(RangerSecurityActionFilter.class);
 
+    private final Settings                      settings;
     private final ThreadContext                 threadContext;
     private final RangerElasticsearchAuthorizer rangerElasticsearchAuthorizer = new RangerElasticsearchAuthorizer();
 
-    public RangerSecurityActionFilter(ThreadContext threadContext) {
+    public RangerSecurityActionFilter(Settings settings, ThreadContext threadContext) {
         super();
 
+        this.settings      = settings;
         this.threadContext = threadContext;
     }
 
@@ -57,7 +61,18 @@ public class RangerSecurityActionFilter extends AbstractLifecycleComponent imple
     public <Request extends ActionRequest, Response extends ActionResponse> void apply(Task task, String action, Request request, ActionListener<Response> listener, ActionFilterChain<Request, Response> chain) {
         String user = threadContext.getTransient(UsernamePasswordToken.USERNAME);
 
-        // If user is not null, then should check permission of the outside caller.
+        if (StringUtils.isEmpty(user)) {
+            ElasticsearchAuthenticatedUserResolver authResolver = new ElasticsearchAuthenticatedUserResolver(settings, threadContext);
+
+            if (authResolver.requiresAuthenticatedUser()) {
+                user = authResolver.resolveUsername();
+
+                if (StringUtils.isNotEmpty(user)) {
+                    threadContext.putTransient(UsernamePasswordToken.USERNAME, user);
+                }
+            }
+        }
+
         if (StringUtils.isNotEmpty(user)) {
             List<String> indexs          = RequestUtils.getIndexFromRequest(request);
             String       clientIPAddress = threadContext.getTransient(RequestUtils.CLIENT_IP_ADDRESS);
@@ -71,8 +86,10 @@ public class RangerSecurityActionFilter extends AbstractLifecycleComponent imple
                     throw new ElasticsearchStatusException(errorMsg, RestStatus.FORBIDDEN, user, action, index);
                 }
             }
+        } else if (threadContext.isSystemContext()) {
+            LOG.debug("System context request, skipping Ranger permission check for action[{}].", action);
         } else {
-            LOG.debug("User is null, no check permission for elasticsearch do action[{}] with request[{}]", action, request);
+            throw new ElasticsearchStatusException("Error: Request requires authenticated user.", RestStatus.UNAUTHORIZED);
         }
 
         chain.proceed(task, action, request, listener);
