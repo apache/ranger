@@ -28,6 +28,10 @@ import java.util.Base64;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Legacy helper for parsing Basic credentials from a REST request.
+ * Parsed credentials must not be used as an authenticated identity.
+ */
 public class UsernamePasswordToken {
     public static final String USERNAME          = "username";
     public static final String BASIC_AUTH_PREFIX = "Basic ";
@@ -41,6 +45,10 @@ public class UsernamePasswordToken {
         this.password = password;
     }
 
+    /**
+     * @deprecated Do not use parsed Basic credentials for authorization decisions.
+     */
+    @Deprecated
     public static UsernamePasswordToken parseToken(RestRequest request) {
         Map<String, List<String>> headers = request.getHeaders();
 

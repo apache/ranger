@@ -72,7 +72,7 @@ public class RangerElasticsearchPlugin extends Plugin implements ActionPlugin {
 
     @Override
     public UnaryOperator<RestHandler> getRestHandlerWrapper(ThreadContext threadContext) {
-        return handler -> new RangerSecurityRestFilter(threadContext, handler);
+        return handler -> new RangerSecurityRestFilter(settings, threadContext, handler);
     }
 
     @Override
@@ -81,7 +81,7 @@ public class RangerElasticsearchPlugin extends Plugin implements ActionPlugin {
             final NamedWriteableRegistry namedWriteableRegistry, IndexNameExpressionResolver indexNameExpressionResolver, Supplier<RepositoriesService> repositoriesServiceSupplier) {
         addPluginConfig2Classpath(environment);
 
-        rangerSecurityActionFilter = new RangerSecurityActionFilter(threadPool.getThreadContext());
+        rangerSecurityActionFilter = new RangerSecurityActionFilter(settings, threadPool.getThreadContext());
 
         return Collections.singletonList(rangerSecurityActionFilter);
     }
