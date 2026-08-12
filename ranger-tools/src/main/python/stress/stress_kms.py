@@ -30,7 +30,6 @@ import logging
 # This script requires Python package apache_ranger to be present.
 # The package can be installed using following command:
 #    pip3 install --upgrade apache_ranger
-# If KMS is running with Kerberos, then 'requests-kerberos' package is required and can be installed using following command:
 #    pip3 install requests-kerberos
 
 ##
