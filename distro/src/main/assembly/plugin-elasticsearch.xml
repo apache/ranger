@@ -37,8 +37,9 @@
         <fileMode>644</fileMode>
         <includes>
           <include>commons-collections:commons-collections</include>
-          <include>org.slf4j:slf4j-api</include>
-          <include>org.slf4j:slf4j-log4j12</include>
+          <include>org.apache.commons:commons-lang3</include>
+          <include>org.apache.httpcomponents:httpclient</include>
+          <include>org.apache.httpcomponents:httpcore</include>
         </includes>
       </binaries>
     </moduleSet>
@@ -56,65 +57,40 @@
         <include>org.apache.ranger:ranger-elasticsearch-plugin</include>
       </includes>
       <binaries>
-        <outputDirectory>lib/ranger-elasticsearch-plugin/ranger-elasticsearch-plugin-impl</outputDirectory>
-        <includeDependencies>false</includeDependencies>
+        <outputDirectory>lib/ranger-elasticsearch-plugin</outputDirectory>
+        <includeDependencies>true</includeDependencies>
         <unpack>false</unpack>
         <directoryMode>755</directoryMode>
         <fileMode>644</fileMode>
         <includes>
-          <include>com.carrotsearch:hppc</include>
-          <include>com.fasterxml.jackson.core:jackson-annotations:jar:${fasterxml.jackson.version}</include>
-          <include>com.fasterxml.jackson.core:jackson-core:jar:${fasterxml.jackson.version}</include>
-          <include>com.fasterxml.jackson.core:jackson-databind:${fasterxml.jackson.version}</include>
-          <include>com.fasterxml.jackson.jaxrs:jackson-jaxrs-base:jar:${fasterxml.jackson.version}</include>
-          <include>com.fasterxml.jackson.jaxrs:jackson-jaxrs-json-provider:jar:${fasterxml.jackson.version}</include>
+          <include>org.apache.ranger:ranger-audit-core</include>
+          <include>org.apache.ranger:ranger-audit-dest-auditserver</include>
+          <include>org.apache.ranger:ranger-authz-api</include>
+          <include>org.apache.ranger:ranger-common-utils</include>
+          <include>org.apache.ranger:ranger-plugins-cred</include>
+          <include>org.apache.ranger:ranger-plugins-common</include>
+          <include>org.apache.ranger:ugsync-util</include>
+          <include>org.apache.ranger:ranger-elasticsearch-plugin</include>
           <include>com.google.code.gson:gson</include>
-          <include>commons-codec:commons-codec</include>
-          <include>commons-collections:commons-collections</include>
-          <include>commons-configuration:commons-configuration:jar:${commons.configuration.version}</include>
-          <include>commons-io:commons-io</include>
-          <include>commons-logging:commons-logging:jar:${commons.logging.version}</include>
-          <include>io.airlift:aircompressor:jar:${aircompressor.version}</include>
-          <include>joda-time:joda-time</include>
-          <include>org.apache.hadoop.thirdparty:hadoop-shaded-guava:jar:${hadoop-shaded-guava.version}</include>
-          <include>org.apache.hadoop:hadoop-auth:jar:${hadoop.version}</include>
-          <include>org.apache.hadoop:hadoop-auth:jar:${hadoop.version}</include>
+          <include>commons-configuration:commons-configuration</include>
+          <include>javax.ws.rs:javax.ws.rs-api</include>
+          <include>javax.annotation:javax.annotation-api</include>
+          <include>org.glassfish.jersey.core:jersey-client</include>
+          <include>org.glassfish.jersey.core:jersey-common</include>
+          <include>org.glassfish.jersey.inject:jersey-hk2</include>
+          <include>org.glassfish.jersey.ext:jersey-entity-filtering</include>
+          <include>org.glassfish.jersey.media:jersey-media-json-jackson</include>
+          <include>org.glassfish.hk2:hk2-api</include>
+          <include>org.glassfish.hk2:hk2-locator</include>
+          <include>org.glassfish.hk2:hk2-utils</include>
+          <include>org.glassfish.hk2.external:aopalliance-repackaged</include>
+          <include>org.glassfish.hk2.external:jakarta.inject</include>
+          <include>org.javassist:javassist</include>
+          <include>com.fasterxml.jackson.jaxrs:jackson-jaxrs-base</include>
+          <include>com.fasterxml.jackson.jaxrs:jackson-jaxrs-json-provider</include>
+          <include>com.fasterxml.jackson.module:jackson-module-jaxb-annotations</include>
           <include>org.apache.hadoop:hadoop-client-api:jar:${hadoop.version}</include>
           <include>org.apache.hadoop:hadoop-client-runtime:jar:${hadoop.version}</include>
-          <include>org.apache.hive:hive-storage-api:jar:${hive.storage-api.version}</include>
-          <include>org.apache.httpcomponents:httpasyncclient:jar:${httpcomponents.httpasyncclient.version}</include>
-          <include>org.apache.httpcomponents:httpclient:jar:${httpcomponents.httpclient.version}</include>
-          <include>org.apache.httpcomponents:httpcore-nio:jar:${httpcomponents.httpcore.version}</include>
-          <include>org.apache.httpcomponents:httpcore:jar:${httpcomponents.httpcore.version}</include>
-          <include>org.apache.httpcomponents:httpmime:jar:${httpcomponents.httpmime.version}</include>
-          <include>org.apache.lucene:lucene-core</include>
-          <include>org.apache.orc:orc-core:jar:${orc.version}</include>
-          <include>org.apache.orc:orc-shims:jar:${orc.version}</include>
-          <include>org.apache.solr:solr-solrj:jar:${solr.version}</include>
-          <include>org.eclipse.jetty:jetty-client:jar:${jetty-client.version}</include>
-          <include>org.elasticsearch.client:elasticsearch-rest-client</include>
-          <include>org.elasticsearch.client:elasticsearch-rest-high-level-client</include>
-          <include>org.elasticsearch.plugin:lang-mustache-client</include>
-          <include>org.elasticsearch.plugin:rank-eval-client</include>
-          <include>org.elasticsearch:elasticsearch-core</include>
-          <include>org.elasticsearch:elasticsearch-x-content</include>
-          <include>org.elasticsearch:elasticsearch</include>
-          <include>org.noggit:noggit:jar:${noggit.version}</include>
-          <!-- GraalJS 25.x runtime (js is now a POM, not a JAR) -->
-          <include>org.graalvm.js:js-language:jar:${graalvm.version}</include>
-          <include>org.graalvm.js:js-scriptengine:jar:${graalvm.version}</include>
-          <include>org.graalvm.polyglot:polyglot:jar:${graalvm.version}</include>
-          <include>org.graalvm.regex:regex:jar:${graalvm.version}</include>
-          <include>org.graalvm.truffle:truffle-api:jar:${graalvm.version}</include>
-          <include>org.graalvm.truffle:truffle-runtime:jar:${graalvm.version}</include>
-          <include>org.graalvm.truffle:truffle-compiler:jar:${graalvm.version}</include>
-          <include>org.graalvm.sdk:jniutils:jar:${graalvm.version}</include>
-          <include>org.graalvm.sdk:collections:jar:${graalvm.version}</include>
-          <include>org.graalvm.sdk:nativeimage:jar:${graalvm.version}</include>
-          <include>org.graalvm.sdk:word:jar:${graalvm.version}</include>
-          <include>org.graalvm.shadowed:icu4j:jar:${graalvm.version}</include>
-          <include>org.graalvm.shadowed:xz:jar:${graalvm.version}</include>
-
         </includes>
       </binaries>
     </moduleSet>
@@ -127,7 +103,7 @@
       </includes>
       <binaries>
         <outputDirectory>install/lib</outputDirectory>
-        <includeDependencies>false</includeDependencies>
+        <includeDependencies>true</includeDependencies>
         <unpack>false</unpack>
         <directoryMode>755</directoryMode>
         <fileMode>644</fileMode>
@@ -218,5 +194,33 @@
       <outputDirectory>/lib/ranger-elasticsearch-plugin</outputDirectory>
       <fileMode>755</fileMode>
     </file>
+    <!-- ES 7.17 bundles jackson-core 2.14.2; ship matching databind/annotations from local repo -->
+    <file>
+      <source>${settings.localRepository}/com/fasterxml/jackson/core/jackson-databind/${elasticsearch.jackson.version}/jackson-databind-${elasticsearch.jackson.version}.jar</source>
+      <outputDirectory>lib/ranger-elasticsearch-plugin</outputDirectory>
+    </file>
+    <file>
+      <source>${settings.localRepository}/com/fasterxml/jackson/core/jackson-annotations/${elasticsearch.jackson.version}/jackson-annotations-${elasticsearch.jackson.version}.jar</source>
+      <outputDirectory>lib/ranger-elasticsearch-plugin</outputDirectory>
+    </file>
   </files>
+  <dependencySets>
+    <dependencySet>
+      <useProjectArtifact>false</useProjectArtifact>
+      <outputDirectory>lib/ranger-elasticsearch-plugin</outputDirectory>
+      <scope>provided</scope>
+      <includes>
+        <include>javax.annotation:javax.annotation-api</include>
+      </includes>
+    </dependencySet>
+    <dependencySet>
+      <useProjectArtifact>false</useProjectArtifact>
+      <outputDirectory>lib/ranger-elasticsearch-plugin</outputDirectory>
+      <includes>
+        <include>javax.xml.bind:jaxb-api:jar:2.2.11</include>
+        <include>org.glassfish.jaxb:jaxb-runtime:jar:2.3.2</include>
+        <include>javax.activation:javax.activation-api:jar:1.2.0</include>
+      </includes>
+    </dependencySet>
+  </dependencySets>
 </assembly>

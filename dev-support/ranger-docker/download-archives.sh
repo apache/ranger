@@ -17,7 +17,7 @@
 # limitations under the License.
 
 #
-# Downloads HDFS/Hive/HBase/Kafka/Knox/Ozone archives to a local cache directory.
+# Downloads HDFS/Hive/HBase/Kafka/Knox/Ozone/OpenSearch/Elasticsearch archives to a local cache directory.
 # The downloaded archives will be used while building docker images that run these services.
 #
 
@@ -138,6 +138,8 @@ then
     downloadIfNotPresent kafka_2.12-${KAFKA_VERSION}.tgz        https://archive.apache.org/dist/kafka/${KAFKA_VERSION}
     downloadIfNotPresent knox-${KNOX_VERSION}.tar.gz            https://archive.apache.org/dist/knox/${KNOX_VERSION}
     extractOzoneIfNeeded
+    downloadIfNotPresent opensearch-${OPENSEARCH_VERSION}-linux-x64.tar.gz https://artifacts.opensearch.org/releases/bundle/opensearch/${OPENSEARCH_VERSION}
+    downloadIfNotPresent elasticsearch-${ELASTICSEARCH_VERSION}-linux-x86_64.tar.gz https://artifacts.elastic.co/downloads/elasticsearch
 else
   for arg in "$@"; do
     if [[ $arg == 'hadoop' ]]
@@ -160,6 +162,15 @@ else
     elif [[ $arg == 'ozone' ]]
     then
       extractOzoneIfNeeded
+    elif [[ $arg == 'opensearch' ]]
+    then
+      downloadIfNotPresent opensearch-${OPENSEARCH_VERSION}-linux-x64.tar.gz https://artifacts.opensearch.org/releases/bundle/opensearch/${OPENSEARCH_VERSION}
+    elif [[ $arg == 'elasticsearch' ]]
+    then
+      downloadIfNotPresent elasticsearch-${ELASTICSEARCH_VERSION}-linux-x86_64.tar.gz https://artifacts.elastic.co/downloads/elasticsearch
+      downloadIfNotPresent jaxb-api-2.2.11.jar https://repo1.maven.org/maven2/javax/xml/bind/jaxb-api/2.2.11
+      downloadIfNotPresent jaxb-runtime-2.3.2.jar https://repo1.maven.org/maven2/org/glassfish/jaxb/jaxb-runtime/2.3.2
+      downloadIfNotPresent javax.activation-api-1.2.0.jar https://repo1.maven.org/maven2/javax/activation/javax.activation-api/1.2.0
     else
       echo "Passed argument $arg is invalid!"
     fi

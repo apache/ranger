@@ -20,6 +20,7 @@ package org.apache.ranger.audit.provider;
 
 import org.apache.hadoop.util.ShutdownHookManager;
 import org.apache.ranger.audit.destination.AuditDestination;
+import org.apache.ranger.audit.model.AuditEventBase;
 import org.apache.ranger.audit.queue.AuditAsyncQueue;
 import org.apache.ranger.audit.queue.AuditBatchQueue;
 import org.apache.ranger.audit.queue.AuditFileQueue;
@@ -77,7 +78,8 @@ public class AuditProviderFactory {
     private       String            componentAppType = "";
     private       boolean           mInitDone;
     private       JVMShutdownHook   jvmShutdownHook;
-    private final ArrayList<String> hbaseAppTypes = new ArrayList<>(Arrays.asList("hbaseMaster", "hbaseRegional"));
+    private final List<AuditHandler> requestThreadDestinations = new ArrayList<>();
+    private final ArrayList<String> hbaseAppTypes = new ArrayList<>(Arrays.asList("hbaseMaster", "hbaseRegional", "elasticsearch"));
 
     public AuditProviderFactory() {
         LOG.info("AuditProviderFactory: creating..");
@@ -107,6 +109,27 @@ public class AuditProviderFactory {
         return mProvider;
     }
 
+    /**
+     * Delivers an audit event directly to configured destinations on the calling thread,
+     * bypassing async/batch queue threads. Used by the Elasticsearch plugin where ES Security
+     * Manager grants network permissions only to the request thread.
+     */
+    public boolean logOnRequestThread(AuditEventBase event) {
+        if (event == null || requestThreadDestinations.isEmpty()) {
+            return false;
+        }
+
+        boolean ret = true;
+
+        for (AuditHandler handler : requestThreadDestinations) {
+            if (!handler.log(event)) {
+                ret = false;
+            }
+        }
+
+        return ret;
+    }
+
     public boolean isInitDone() {
         return mInitDone;
     }
@@ -127,6 +150,8 @@ public class AuditProviderFactory {
         if (mInitDone) {
             LOG.warn("AuditProviderFactory.init(): already initialized! Will try to re-initialize");
         }
+
+        requestThreadDestinations.clear();
 
         mInitDone        = true;
         componentAppType = appType;
@@ -187,6 +212,7 @@ public class AuditProviderFactory {
 
             if (destProvider != null) {
                 destProvider.init(props, destPropPrefix);
+                requestThreadDestinations.add(destProvider);
 
                 String queueName = MiscUtil.getStringProperty(props, destPropPrefix + "." + AuditQueue.PROP_QUEUE);
 

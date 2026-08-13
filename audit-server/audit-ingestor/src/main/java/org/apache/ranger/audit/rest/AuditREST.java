@@ -58,11 +58,27 @@ import static org.apache.ranger.audit.server.AuditServerConstants.PROP_SUFFIX_AL
 public class AuditREST {
     private static final Logger LOG = LoggerFactory.getLogger(AuditREST.class);
 
-    private static final Map<String, Set<String>> allowedServiceUsers;
+    private static volatile Map<String, Set<String>> allowedServiceUsers;
 
     static {
-        allowedServiceUsers = initializeAllowedUsers();
         initializeAuthToLocal();
+    }
+
+    private static Map<String, Set<String>> getAllowedServiceUsers() {
+        Map<String, Set<String>> ret = allowedServiceUsers;
+
+        if (ret == null) {
+            synchronized (AuditREST.class) {
+                ret = allowedServiceUsers;
+
+                if (ret == null) {
+                    allowedServiceUsers = initializeAllowedUsers();
+                    ret               = allowedServiceUsers;
+                }
+            }
+        }
+
+        return ret;
     }
 
     @Autowired
@@ -330,7 +346,7 @@ public class AuditREST {
         boolean ret;
 
         if (StringUtils.isNotBlank(serviceName) && StringUtils.isNotBlank(userName)) {
-            Set<String> allowedUsers = allowedServiceUsers.get(serviceName);
+            Set<String> allowedUsers = getAllowedServiceUsers().get(serviceName);
 
             ret = allowedUsers != null && allowedUsers.contains(userName);
         } else {

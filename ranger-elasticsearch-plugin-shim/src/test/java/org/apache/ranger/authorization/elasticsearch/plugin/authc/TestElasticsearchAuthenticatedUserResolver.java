@@ -25,6 +25,8 @@ import org.elasticsearch.xpack.core.security.user.User;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
+import java.util.Arrays;
+
 class TestElasticsearchAuthenticatedUserResolver {
     @Test
     void resolveUsernameReturnsVerifiedUser() {
@@ -48,6 +50,28 @@ class TestElasticsearchAuthenticatedUserResolver {
 
         Assertions.assertTrue(resolver.requiresAuthenticatedUser());
         Assertions.assertNull(resolver.resolveUsername());
+    }
+
+    @Test
+    void resolveRolesReturnsVerifiedUserRoles() {
+        Settings      settings      = Settings.builder().build();
+        ThreadContext threadContext = new ThreadContext(settings);
+        SecurityContext securityContext = new SecurityContext(settings, threadContext);
+
+        securityContext.setUser(new User("admin", "superuser", "kibana_user"), Version.CURRENT);
+
+        ElasticsearchAuthenticatedUserResolver resolver = new ElasticsearchAuthenticatedUserResolver(settings, threadContext);
+
+        Assertions.assertEquals(Arrays.asList("superuser", "kibana_user"), resolver.resolveRoles());
+    }
+
+    @Test
+    void resolveRolesReturnsEmptyWithoutVerifiedUser() {
+        Settings      settings      = Settings.builder().build();
+        ThreadContext threadContext = new ThreadContext(settings);
+        ElasticsearchAuthenticatedUserResolver resolver = new ElasticsearchAuthenticatedUserResolver(settings, threadContext);
+
+        Assertions.assertTrue(resolver.resolveRoles().isEmpty());
     }
 
     @Test
