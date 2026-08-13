@@ -25,11 +25,17 @@ import org.apache.ranger.db.XXServiceDao;
 import org.apache.ranger.db.XXServiceDefDao;
 import org.apache.ranger.entity.XXService;
 import org.apache.ranger.entity.XXServiceDef;
+import org.apache.ranger.plugin.model.RangerAuditMetrics;
+import org.apache.ranger.plugin.model.RangerAuditMetricsByDays;
+import org.apache.ranger.plugin.model.RangerAuditMetricsByHours;
+import org.apache.ranger.plugin.util.SearchFilter;
 import org.apache.ranger.view.VXAccessAuditList;
 import org.apache.solr.client.solrj.SolrClient;
+import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.response.QueryResponse;
 import org.apache.solr.common.SolrDocument;
 import org.apache.solr.common.SolrDocumentList;
+import org.apache.solr.common.util.NamedList;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
@@ -39,11 +45,18 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import javax.ws.rs.WebApplicationException;
 
 import java.lang.reflect.Field;
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
@@ -192,6 +205,290 @@ public class SolrAccessAuditsServiceTest {
     public void getXAccessAuditSearchCount_returnsConstant() {
         SolrAccessAuditsService service = new SolrAccessAuditsService();
         assertEquals(100L, service.getXAccessAuditSearchCount(new SearchCriteria()).getValue());
+    }
+
+    @Test
+    public void getLatestAuditMetrics_returnsSolrCount() throws Throwable {
+        SolrAccessAuditsService service = createMetricsService();
+        SolrClient client = mock(SolrClient.class);
+        when(service.solrMgr.getSolrClient()).thenReturn(client);
+
+        QueryResponse response = mock(QueryResponse.class);
+        SolrDocumentList results = new SolrDocumentList();
+        results.setNumFound(42);
+        when(response.getResults()).thenReturn(results);
+        when(response.getStatus()).thenReturn(0);
+        when(service.solrUtil.runQuery(eq(client), any(SolrQuery.class))).thenReturn(response);
+
+        RangerAuditMetrics metrics = service.getLatestAuditMetrics("hdfs", "dev_hdfs", null);
+
+        assertEquals("dev_hdfs", metrics.getServiceName());
+        assertEquals("hdfs", metrics.getServiceType());
+        assertEquals(42L, metrics.getNumberOfAudits());
+        assertEquals("", metrics.getClientIP());
+    }
+
+    @Test
+    public void getLatestAuditMetrics_whenSolrClientNull_throws() {
+        SolrAccessAuditsService service = createMetricsService();
+        when(service.solrMgr.getSolrClient()).thenReturn(null);
+
+        assertThrows(WebApplicationException.class, () -> service.getLatestAuditMetrics("hdfs", "dev_hdfs", null));
+    }
+
+    @Test
+    public void getAuditMetrics_whenIdNull_throws() {
+        SolrAccessAuditsService service = createMetricsService();
+
+        assertThrows(WebApplicationException.class, () -> service.getAuditMetrics(null, null));
+    }
+
+    @Test
+    public void getAuditMetrics_whenServiceNotFound_throws() {
+        SolrAccessAuditsService service = createMetricsService();
+        RangerDaoManager daoManager = mock(RangerDaoManager.class);
+        XXServiceDao svcDao = mock(XXServiceDao.class);
+        when(daoManager.getXXService()).thenReturn(svcDao);
+        when(svcDao.getById(99L)).thenReturn(null);
+        injectField(service, AccessAuditsService.class, "daoManager", daoManager);
+
+        assertThrows(WebApplicationException.class, () -> service.getAuditMetrics(99L, null));
+    }
+
+    @Test
+    public void getAuditMetrics_success_setsServiceId() throws Throwable {
+        SolrAccessAuditsService service = createMetricsService();
+        SolrClient client = mock(SolrClient.class);
+        when(service.solrMgr.getSolrClient()).thenReturn(client);
+
+        QueryResponse response = mock(QueryResponse.class);
+        SolrDocumentList results = new SolrDocumentList();
+        results.setNumFound(10);
+        when(response.getResults()).thenReturn(results);
+        when(response.getStatus()).thenReturn(0);
+        when(service.solrUtil.runQuery(eq(client), any(SolrQuery.class))).thenReturn(response);
+
+        RangerDaoManager daoManager = mock(RangerDaoManager.class);
+        XXServiceDao svcDao = mock(XXServiceDao.class);
+        XXServiceDefDao sdDao = mock(XXServiceDefDao.class);
+        XXService xxService = mock(XXService.class);
+        XXServiceDef sd = mock(XXServiceDef.class);
+        when(daoManager.getXXService()).thenReturn(svcDao);
+        when(daoManager.getXXServiceDef()).thenReturn(sdDao);
+        when(svcDao.getById(5L)).thenReturn(xxService);
+        when(xxService.getName()).thenReturn("dev_hdfs");
+        when(xxService.getType()).thenReturn(1L);
+        when(sdDao.getById(1L)).thenReturn(sd);
+        when(sd.getName()).thenReturn("hdfs");
+        injectField(service, AccessAuditsService.class, "daoManager", daoManager);
+
+        RangerAuditMetrics metrics = service.getAuditMetrics(5L, null);
+
+        assertEquals(5L, metrics.getId());
+        assertEquals("dev_hdfs", metrics.getServiceName());
+        assertEquals(10L, metrics.getNumberOfAudits());
+    }
+
+    @Test
+    public void getLatestAuditMetricsList_includesAgentCliIpAndCluster() throws Throwable {
+        SolrAccessAuditsService service = createMetricsServiceWithDao("dev_hdfs", 1L, "hdfs", 10L);
+        QueryResponse response = buildFacetQueryResponse("per_repo", buildFullMetricsFacetResponse("dev_hdfs", "hdfs", "172.18.0.16", "ABC cluster", 7L));
+        stubSolrQuery(service, response);
+
+        List<RangerAuditMetrics> metrics = service.getLatestAuditMetricsList(new SearchFilter(), null);
+
+        assertEquals(1, metrics.size());
+        RangerAuditMetrics metric = metrics.get(0);
+        assertEquals("dev_hdfs", metric.getServiceName());
+        assertEquals("hdfs", metric.getAppId());
+        assertEquals("172.18.0.16", metric.getClientIP());
+        assertEquals("ABC cluster", metric.getClusterName());
+        assertEquals(7L, metric.getNumberOfAudits());
+        assertEquals(1L, metric.getId());
+    }
+
+    @Test
+    public void getLatestAuditMetricsList_missingCliIp_usesEmptyClientIP() throws Throwable {
+        SolrAccessAuditsService service = createMetricsServiceWithDao("dev_hdfs", 1L, "hdfs", 10L);
+        QueryResponse response = buildFacetQueryResponse("per_repo", buildFullMetricsFacetResponse("dev_hdfs", "hdfs", null, "ABC cluster", 3L));
+        stubSolrQuery(service, response);
+
+        List<RangerAuditMetrics> metrics = service.getLatestAuditMetricsList(new SearchFilter(), null);
+
+        assertEquals(1, metrics.size());
+        assertEquals("", metrics.get(0).getClientIP());
+        assertEquals("ABC cluster", metrics.get(0).getClusterName());
+        assertEquals("hdfs", metrics.get(0).getAppId());
+    }
+
+    @Test
+    public void getLatestAuditMetricsList_missingCluster_omitsClusterName() throws Throwable {
+        SolrAccessAuditsService service = createMetricsServiceWithDao("dev_hdfs", 1L, "hdfs", 10L);
+        QueryResponse response = buildFacetQueryResponse("per_repo", buildFullMetricsFacetResponse("dev_hdfs", "hdfs", "172.18.0.16", null, 4L));
+        stubSolrQuery(service, response);
+
+        List<RangerAuditMetrics> metrics = service.getLatestAuditMetricsList(new SearchFilter(), null);
+
+        assertEquals(1, metrics.size());
+        assertEquals("172.18.0.16", metrics.get(0).getClientIP());
+        assertNull(metrics.get(0).getClusterName());
+    }
+
+    @Test
+    public void getLatestAuditMetricsList_emptyFacets_returnsEmptyList() throws Throwable {
+        SolrAccessAuditsService service = createMetricsService();
+        QueryResponse response = buildFacetQueryResponse("per_repo", facetBuckets(Collections.emptyList()));
+        stubSolrQuery(service, response);
+
+        List<RangerAuditMetrics> metrics = service.getLatestAuditMetricsList(new SearchFilter(), null);
+
+        assertTrue(metrics.isEmpty());
+    }
+
+    @Test
+    public void getAuditMetricsByHours_usesTimezoneForHour() throws Throwable {
+        SolrAccessAuditsService service = createMetricsService();
+        long epochMillis = Instant.parse("2026-08-11T12:27:43.634Z").toEpochMilli();
+        QueryResponse response = buildFacetQueryResponse("per_hour", buildHourlyFacetResponse(epochMillis, 15L));
+        stubSolrQuery(service, response);
+
+        List<RangerAuditMetricsByHours> metricsUtc = service.getAuditMetricsByHours(new SearchFilter(), null);
+        List<RangerAuditMetricsByHours> metricsIst = service.getAuditMetricsByHours(new SearchFilter(), "Asia/Kolkata");
+
+        assertEquals(1, metricsUtc.size());
+        assertEquals(1, metricsIst.size());
+        assertEquals(12, metricsUtc.get(0).getHours());
+        assertEquals(17, metricsIst.get(0).getHours());
+        assertEquals(15L, metricsUtc.get(0).getNumberOfAudits());
+    }
+
+    @Test
+    public void getAuditMetricsByHours_invalidTimezone_fallsBackToUtcHour() throws Throwable {
+        SolrAccessAuditsService service = createMetricsService();
+        long epochMillis = Instant.parse("2026-08-11T12:27:43.634Z").toEpochMilli();
+        QueryResponse response = buildFacetQueryResponse("per_hour", buildHourlyFacetResponse(epochMillis, 8L));
+        stubSolrQuery(service, response);
+
+        List<RangerAuditMetricsByHours> metrics = service.getAuditMetricsByHours(new SearchFilter(), "Invalid/Zone");
+
+        assertEquals(1, metrics.size());
+        assertEquals(12, metrics.get(0).getHours());
+        assertEquals(8L, metrics.get(0).getNumberOfAudits());
+    }
+
+    @Test
+    public void getAuditMetricsByDays_returnsDailyBuckets() throws Throwable {
+        SolrAccessAuditsService service = createMetricsService();
+        long auditDate = ZonedDateTime.of(2026, 8, 11, 0, 0, 0, 0, ZoneId.of("UTC")).toInstant().toEpochMilli();
+        QueryResponse response = buildFacetQueryResponse("per_day", buildDailyFacetResponse(auditDate, 25L));
+        stubSolrQuery(service, response);
+
+        SearchFilter filter = new SearchFilter();
+        filter.setParam(SearchFilter.SERVICE_NAME, "dev_hdfs");
+        filter.setParam(SearchFilter.SERVICE_TYPE, "hdfs");
+
+        List<RangerAuditMetricsByDays> metrics = service.getAuditMetricsByDays(7, filter, "UTC");
+
+        assertEquals(1, metrics.size());
+        assertEquals(auditDate, metrics.get(0).getAuditDate());
+        assertEquals(25L, metrics.get(0).getNumberOfAudits());
+        assertEquals("dev_hdfs", metrics.get(0).getServiceName());
+        assertEquals("hdfs", metrics.get(0).getServiceType());
+    }
+
+    @Test
+    public void runMetricsQuery_whenSolrThrows_wrapsException() throws Throwable {
+        SolrAccessAuditsService service = createMetricsService();
+        SolrClient client = mock(SolrClient.class);
+        when(service.solrMgr.getSolrClient()).thenReturn(client);
+        when(service.solrUtil.runQuery(eq(client), any(SolrQuery.class))).thenThrow(new RuntimeException("Solr down"));
+
+        assertThrows(WebApplicationException.class, () -> service.getLatestAuditMetrics("hdfs", "dev_hdfs", null));
+    }
+
+    private SolrAccessAuditsService createMetricsService() {
+        SolrAccessAuditsService service = new SolrAccessAuditsService();
+        service.solrMgr = mock(SolrMgr.class);
+        service.solrUtil = mock(SolrUtil.class);
+        setRestErrorUtil(service);
+        return service;
+    }
+
+    private SolrAccessAuditsService createMetricsServiceWithDao(String serviceName, Long serviceId, String serviceType, Long serviceDefId) {
+        SolrAccessAuditsService service = createMetricsService();
+        RangerDaoManager daoManager = mock(RangerDaoManager.class);
+        XXServiceDao svcDao = mock(XXServiceDao.class);
+        XXServiceDefDao sdDao = mock(XXServiceDefDao.class);
+        XXService xxService = mock(XXService.class);
+        XXServiceDef sd = mock(XXServiceDef.class);
+
+        when(daoManager.getXXService()).thenReturn(svcDao);
+        when(daoManager.getXXServiceDef()).thenReturn(sdDao);
+        when(svcDao.findByName(serviceName)).thenReturn(xxService);
+        when(xxService.getId()).thenReturn(serviceId);
+        when(xxService.getType()).thenReturn(serviceDefId);
+        when(sdDao.getById(serviceDefId)).thenReturn(sd);
+        when(sd.getName()).thenReturn(serviceType);
+        injectField(service, AccessAuditsService.class, "daoManager", daoManager);
+        return service;
+    }
+
+    private void stubSolrQuery(SolrAccessAuditsService service, QueryResponse response) throws Throwable {
+        SolrClient client = mock(SolrClient.class);
+        when(service.solrMgr.getSolrClient()).thenReturn(client);
+        when(response.getStatus()).thenReturn(0);
+        when(service.solrUtil.runQuery(eq(client), any(SolrQuery.class))).thenReturn(response);
+    }
+
+    private QueryResponse buildFacetQueryResponse(String facetKey, Map<String, Object> facetValue) {
+        QueryResponse response = mock(QueryResponse.class);
+        NamedList<Object> responseList = new NamedList<>();
+        NamedList<Object> facets = new NamedList<>();
+        facets.add(facetKey, facetValue);
+        responseList.add("facets", facets);
+        when(response.getResponse()).thenReturn(responseList);
+        return response;
+    }
+
+    private Map<String, Object> buildFullMetricsFacetResponse(String serviceName, String appId, String clientIP,
+            String clusterName, long count) {
+        Map<String, Object> clusterBucket = facetBucket(clusterName, count, null);
+        Map<String, Object> cliIpBucket = facetBucket(clientIP, count, nestedFacet("per_cluster", clusterBucket));
+        Map<String, Object> agentBucket = facetBucket(appId, count, nestedFacet("per_cliip", cliIpBucket));
+        Map<String, Object> repoBucket = facetBucket(serviceName, count, nestedFacet("per_agent", agentBucket));
+        return facetBuckets(Collections.singletonList(repoBucket));
+    }
+
+    private Map<String, Object> buildHourlyFacetResponse(long epochMillis, long count) {
+        Map<String, Object> hourBucket = facetBucket(epochMillis, count, null);
+        return facetBuckets(Collections.singletonList(hourBucket));
+    }
+
+    private Map<String, Object> buildDailyFacetResponse(long auditDate, long count) {
+        Map<String, Object> dayBucket = facetBucket(auditDate, count, null);
+        return facetBuckets(Collections.singletonList(dayBucket));
+    }
+
+    private Map<String, Object> facetBucket(Object val, long count, Map<String, Object> nestedFacet) {
+        Map<String, Object> bucket = new HashMap<>();
+        bucket.put("val", val);
+        bucket.put("count", count);
+        if (nestedFacet != null) {
+            bucket.putAll(nestedFacet);
+        }
+        return bucket;
+    }
+
+    private Map<String, Object> nestedFacet(String facetName, Map<String, Object> childBucket) {
+        Map<String, Object> nested = new HashMap<>();
+        nested.put(facetName, facetBuckets(Collections.singletonList(childBucket)));
+        return nested;
+    }
+
+    private Map<String, Object> facetBuckets(List<Map<String, Object>> buckets) {
+        Map<String, Object> facet = new HashMap<>();
+        facet.put("buckets", buckets);
+        return facet;
     }
 
     private static void setRestErrorUtil(AccessAuditsService svc) {
