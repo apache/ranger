@@ -34,7 +34,7 @@ Use Dockerfiles in this directory to create docker images and run them to build 
    ~~~
    chmod +x download-archives.sh
    # use a subset of the below to download specific services
-   ./download-archives.sh hadoop hive hbase kafka knox ozone
+   ./download-archives.sh hadoop hive hbase kafka knox ozone opensearch elasticsearch
    ~~~
 
 - Execute following commands to set environment variables to build Apache Ranger docker containers:
@@ -109,6 +109,93 @@ docker compose --profile ${AUDIT_DESTINATIONS} -f docker-compose.ranger.yml -f d
 docker compose --profile ${AUDIT_DESTINATIONS} -f docker-compose.ranger.yml -f docker-compose.ranger-audit-service.yml -f docker-compose.ranger-trino.yml up -d
 ~~~
 
+#### Bring up elasticsearch container (authorization plugin testing):
+~~~
+# Prerequisites: build Ranger artifacts and download the Elasticsearch archive
+mvn clean package -pl distro -am -DskipTests
+cp target/ranger-* dev-support/ranger-docker/dist/
+cd dev-support/ranger-docker
+./download-archives.sh elasticsearch
+
+export RANGER_DB_TYPE=postgres
+
+# Host port 9201 maps to container 9200 (avoids conflict with OpenSearch on 9200).
+# On Linux, ensure vm.max_map_count >= 262144 (e.g. sudo sysctl -w vm.max_map_count=262144).
+docker compose -f docker-compose.ranger.yml -f docker-compose.ranger-solr.yml \
+  -f docker-compose.ranger-elasticsearch.yml up -d --build
+~~~
+
+Elasticsearch starts with X-Pack Security enabled (native realm). Default credentials:
+
+- `elastic` / value of `ELASTICSEARCH_BOOTSTRAP_PASSWORD` in `.env` (default: `rangerR0cks!`)
+- `testuser_2` / same password (created automatically for authorization testing)
+
+Smoke tests after the container is healthy:
+
+~~~
+# Authenticated request (expect 200 or policy-based 403, not 401)
+curl -u elastic:rangerR0cks! http://localhost:9201/test-index/_search
+
+# Unauthenticated request (expect 401)
+curl http://localhost:9201/test-index/_search
+~~~
+
+Ranger Admin registers the `dev_elasticsearch` service automatically on first startup.
+The plugin polls policies from Ranger Admin; allow up to 30 seconds after startup for
+policy refresh before running authorization tests.
+
+#### OpenSearch audit flow (replace Solr for access audits)
+
+OpenSearch can replace Solr for **audit storage and UI queries**. Ranger Admin reads audits via
+`audit_store=opensearch` using a native low-level REST client (compatible with any OpenSearch version).
+
+**Write path:** access audits flow through audit-server ingestor, Kafka, and the Java
+`ranger-audit-dispatcher-opensearch` service into the OpenSearch `ranger_audits` index.
+Ranger Admin policy/admin transaction audits remain DB-backed; this is the same boundary
+used by the Solr audit path.
+
+##### Setup
+
+With the default `RANGER_DB_TYPE=postgres`, OpenSearch auditing is preconfigured and runs
+out of the box — the commands below need no `install.properties` changes.
+
+~~~
+# Prerequisites: build Ranger artifacts (admin, audit ingestor/dispatcher, ...) and download archives
+mvn clean package -DskipTests -pl distro -am
+cp target/ranger-* dev-support/ranger-docker/dist/
+cd dev-support/ranger-docker
+./download-archives.sh kafka opensearch hadoop
+
+export RANGER_DB_TYPE=postgres
+
+# 1. Start OpenSearch first (Ranger Admin's bootstrapper needs it on startup)
+docker compose -f docker-compose.ranger.yml -f docker-compose.ranger-opensearch.yml \
+  -f docker-compose.ranger-kafka.yml -f docker-compose.ranger-hadoop.yml \
+  -f docker-compose.ranger-audit-ingestor.yml \
+  -f docker-compose.ranger-audit-dispatcher-opensearch.yml up -d ranger-opensearch
+
+# 2. Start core stack (Ranger Admin, Kafka, Hadoop)
+#    Kafka auto-creates the ranger_audits topic on startup.
+#    Ranger Admin auto-creates the OpenSearch index via OpenSearchIndexBootStrapper.
+docker compose -f docker-compose.ranger.yml -f docker-compose.ranger-opensearch.yml \
+  -f docker-compose.ranger-kafka.yml -f docker-compose.ranger-hadoop.yml \
+  -f docker-compose.ranger-audit-ingestor.yml \
+  -f docker-compose.ranger-audit-dispatcher-opensearch.yml up -d ranger ranger-kafka ranger-hadoop
+
+# 3. Start audit ingestor and OpenSearch dispatcher
+docker compose -f docker-compose.ranger.yml -f docker-compose.ranger-opensearch.yml \
+  -f docker-compose.ranger-kafka.yml -f docker-compose.ranger-hadoop.yml \
+  -f docker-compose.ranger-audit-ingestor.yml \
+  -f docker-compose.ranger-audit-dispatcher-opensearch.yml up -d ranger-audit-ingestor ranger-audit-dispatcher-opensearch
+~~~
+
+To use OpenSearch with **mysql or oracle** instead, enable the OpenSearch block in the matching
+`scripts/admin/ranger-admin-install-${RANGER_DB_TYPE}.properties` (uncomment the `audit_store=opensearch`
+and `audit_opensearch_*` lines and comment out the Solr block) before running the setup commands.
+
+For **existing Solr-based installs**, switch stores by setting `audit_store=opensearch` (and the
+`audit_opensearch_*` properties) in install.properties and restarting Ranger Admin.
+Similarly, check the `depends` section of the `docker-compose.ranger-service.yaml` file and add docker-compose files for these services when trying to bring up the `service` container.
 
 #### Bring up all containers
 ~~~
