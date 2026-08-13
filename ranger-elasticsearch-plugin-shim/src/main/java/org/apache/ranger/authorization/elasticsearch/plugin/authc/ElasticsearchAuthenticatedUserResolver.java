@@ -17,11 +17,16 @@
 
 package org.apache.ranger.authorization.elasticsearch.plugin.authc;
 
+import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.util.concurrent.ThreadContext;
 import org.elasticsearch.xpack.core.security.SecurityContext;
 import org.elasticsearch.xpack.core.security.user.User;
+
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 
 /**
  * Resolves the Elasticsearch-verified user for the current request.
@@ -52,5 +57,29 @@ public class ElasticsearchAuthenticatedUserResolver {
         }
 
         return StringUtils.isEmpty(username) ? null : username;
+    }
+
+    /**
+     * Returns X-Pack role names for the verified user. These are passed to Ranger as group
+     * hints so role/group policies can bind when Hadoop UGI has no group membership.
+     */
+    public List<String> resolveRoles() {
+        if (!requiresAuthenticatedUser()) {
+            return Collections.emptyList();
+        }
+
+        User user = securityContext.getUser();
+
+        if (user == null) {
+            return Collections.emptyList();
+        }
+
+        String[] roles = user.roles();
+
+        if (ArrayUtils.isEmpty(roles)) {
+            return Collections.emptyList();
+        }
+
+        return Arrays.asList(roles);
     }
 }
