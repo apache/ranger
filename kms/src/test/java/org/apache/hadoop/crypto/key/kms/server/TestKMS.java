@@ -222,10 +222,6 @@ public class TestKMS {
         verify(mockProvider, never()).getCurrentKey(anyString());
     }
 
-    // -------------------------------------------------------------------------
-    // getKeyVersions
-    // -------------------------------------------------------------------------
-
     @Test
     public void testGetKeyVersions_successPassesKeyNameToAssertAccess() throws Exception {
         UserGroupInformation user = createTestUser();
@@ -260,10 +256,6 @@ public class TestKMS {
         assertThrows(AccessControlException.class, () -> kms.getKeyVersions(TEST_KEY, request));
         verify(mockProvider, never()).getKeyVersions(anyString());
     }
-
-    // -------------------------------------------------------------------------
-    // getMetadata / getKey
-    // -------------------------------------------------------------------------
 
     @Test
     public void testGetMetadata_success() throws Exception {
@@ -433,10 +425,6 @@ public class TestKMS {
                 () -> kms.rolloverKey(TEST_KEY, new HashMap<>(), request));
         verify(mockProvider, never()).rollNewVersion(anyString());
     }
-
-    // -------------------------------------------------------------------------
-    // invalidateCache
-    // -------------------------------------------------------------------------
 
     @Test
     public void testInvalidateCache_success() throws Exception {
@@ -653,10 +641,6 @@ public class TestKMS {
         assertThrows(IllegalArgumentException.class, () ->
                 kms.handleEncryptedKeyOp(TEST_KEY + "@0", "bad_op", payload, request));
     }
-
-    // -------------------------------------------------------------------------
-    // generateDataKey
-    // -------------------------------------------------------------------------
 
     @Test
     public void testGenerateDataKey_success() throws Exception {
