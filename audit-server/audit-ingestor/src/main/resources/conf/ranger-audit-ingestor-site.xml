@@ -242,6 +242,12 @@
         <description>Allowed users for dev_solr (Solr plugin)</description>
     </property>
 
+    <property>
+        <name>ranger.audit.ingestor.service.dev_elasticsearch.allowed.users</name>
+        <value>elasticsearch</value>
+        <description>Allowed users for dev_elasticsearch (Elasticsearch plugin)</description>
+    </property>
+
     <!-- AUTH_TO_LOCAL RULES FOR KERBEROS PRINCIPAL MAPPING -->
     <property>
         <name>ranger.audit.ingestor.auth.to.local</name>
@@ -249,6 +255,7 @@
                RULE:[2:$1/$2@$0]([ndj]n/.*@.*|hdfs/.*@.*)s/.*/hdfs/
                RULE:[2:$1/$2@$0]([rn]m/.*@.*|yarn/.*@.*)s/.*/yarn/
                RULE:[2:$1/$2@$0](jhs/.*@.*)s/.*/mapred/
+               RULE:[2:$1/$2@$0](elasticsearch/.*@.*)s/.*/elasticsearch/
                RULE:[1:$1@$0](.*@.*)s/@.*//
                DEFAULT
         </value>

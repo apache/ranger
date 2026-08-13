@@ -62,11 +62,7 @@ if [ "${KERBEROS_ENABLED}" == "true" ]; then
     # Kerberos service name
     sasl.kerberos.service.name=kafka
 
-    # Ranger authorization
-    authorizer.class.name=org.apache.ranger.authorization.kafka.authorizer.RangerKafkaAuthorizer
-
-    # Super users bypass Ranger authorization for admin operations
-    super.users=User:kafka
+    # Broker-only for audit pipeline; Ranger Kafka authorizer needs audit-core on broker classpath.
 EOF
 else
   echo "Configuring Kafka with PLAINTEXT (no Kerberos)"

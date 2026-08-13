@@ -40,7 +40,7 @@ public class RangerServiceElasticsearch extends RangerBaseService {
 
     public static final String ACCESS_TYPE_READ = "read";
 
-    private RangerServiceElasticsearch() {
+    public RangerServiceElasticsearch() {
         super();
     }
 
