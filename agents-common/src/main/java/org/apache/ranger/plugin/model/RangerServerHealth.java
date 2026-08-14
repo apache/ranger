@@ -59,6 +59,10 @@ public class RangerServerHealth {
         return status(RangerServerStatus.DOWN);
     }
 
+    public static Builder initFailure() {
+        return status(RangerServerStatus.INITIALIZATION_FAILURE);
+    }
+
     public static Builder status(RangerServerStatus status) {
         return new Builder(status);
     }

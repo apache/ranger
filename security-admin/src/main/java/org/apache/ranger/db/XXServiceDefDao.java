@@ -126,6 +126,10 @@ public class XXServiceDefDao extends BaseDao<XXServiceDef> {
         return getEntityManager().createNamedQuery("XXServiceDef.getNameByHasEnricher", String.class).getResultList();
     }
 
+    public List<String> findAllNames() {
+        return getEntityManager().createNamedQuery("XXServiceDef.getAllNames", String.class).getResultList();
+    }
+
     /**
      * Fetch and return count of services for each service type/ def
      *

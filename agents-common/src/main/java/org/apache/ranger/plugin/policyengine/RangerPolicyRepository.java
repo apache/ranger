@@ -259,7 +259,7 @@ public class RangerPolicyRepository {
         this.serviceName          = tagPolicies.getServiceName();
         this.componentServiceName = componentServiceName;
         this.zoneName             = null;
-        this.serviceDef           = ServiceDefUtil.normalizeAccessTypeDefs(ServiceDefUtil.normalize(tagPolicies.getServiceDef()), componentServiceDef.getName());
+        this.serviceDef           = tagPolicies.getServiceDef().normalize().normalizeAccessTypeDefs(componentServiceDef.getName());
         this.componentServiceDef  = componentServiceDef;
         this.appId                = pluginContext.getConfig().getAppId();
         this.options              = new RangerPolicyEngineOptions(pluginContext.getConfig().getPolicyEngineOptions(), new RangerServiceDefHelper(serviceDef, false));

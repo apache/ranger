@@ -1,0 +1,78 @@
+---
+description: Apache Ranger code must pass Checkstyle on Maven verify
+globs: **/*.java
+alwaysApply: false
+---
+
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one
+  or more contributor license agreements.  See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership.  The ASF licenses this file
+  to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License.  You may obtain a copy of the License at
+
+      http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+
+# Ranger Checkstyle (mandatory on build)
+
+Ranger runs **maven-checkstyle-plugin** in the **`verify`** phase (`check` goal). Violations **fail the build** when `checkstyle.failOnViolation` is true. Main and **test** sources are checked (`includeTestSourceDirectory` is enabled).
+
+**Authoritative config** (read before large Java edits or refactors):
+
+- `dev-support/checkstyle.xml` — active rules
+- `dev-support/checkstyle-suppressions.xml` — per-file/line suppressions
+
+After substantive Java changes, run Checkstyle for the module, for example:
+
+`mvn -pl <module> -DskipTests verify`
+
+(Or a narrower goal if the project exposes one; `verify` is what CI uses.)
+
+## Practical reminders (config has many more rules)
+
+- Use **LF** line endings, **no tabs**; one **newline at end of file**; **no trailing whitespace**.
+- **No** multiple consecutive **blank** lines; **no** blank line immediately after `{` or before `}` in the patterns enforced by the config.
+- **Limit static imports**: e.g. avoid static imports of `Optional.*`, and avoid certain static `of` / `copyOf` / `valueOf` / `builder` patterns (see `RegexpSingleline` rules in `checkstyle.xml`).
+
+When unsure, match the style of neighboring classes in the same module and re-run `verify` on the touched module.
+
+## Single return (Ranger convention)
+
+Reviewers expect **one `return` per method** in production code (guard clauses with early return are avoided). Assign into locals and return once at the end.
+
+```java
+// Prefer
+private String resolveAuthenticatedLoginId() {
+    String loginId = bizUtil.getCurrentUserLoginId();
+
+    if (loginId == null) {
+        Object authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        if (authentication instanceof RangerAuthenticationToken) {
+            RangerAuthenticationToken token = (RangerAuthenticationToken) authentication;
+
+            if (token.getAuthType() == XXAuthSession.AUTH_TYPE_TRUSTED_PROXY) {
+                loginId = token.getName();
+            }
+        }
+    }
+
+    return loginId;
+}
+
+// Avoid multiple returns
+// if (loginId != null) { return loginId; }
+// ...
+// return null;
+```
+
+Same idea applies to other return types: use a `result` variable (or reuse an existing one), set it in branches, then `return result` once.

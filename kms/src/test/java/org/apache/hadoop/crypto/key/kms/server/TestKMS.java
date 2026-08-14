@@ -142,10 +142,12 @@ public class TestKMS {
         Field meterField = KMSWebApp.class.getDeclaredField("adminCallsMeter");
         meterField.setAccessible(true);
         meterField.set(null, dummyMeter);
+        HttpServletRequest request = mock(HttpServletRequest.class);
+        lenient().when(request.getRemoteAddr()).thenReturn("127.0.0.1");
         KMS kms = new KMS();
 
         try {
-            kms.reencryptEncryptedKeys(keyName, jsonPayload);
+            kms.reencryptEncryptedKeys(keyName, jsonPayload, request);
             fail("Expected exception due to missing provider/user context");
         } catch (Exception e) {
             System.out.println("Caught expected exception: " + e.getMessage());
@@ -435,10 +437,13 @@ public class TestKMS {
         meterField.setAccessible(true);
         meterField.set(null, dummyMeter);
 
+        HttpServletRequest request = mock(HttpServletRequest.class);
+        lenient().when(request.getRemoteAddr()).thenReturn("127.0.0.1");
+
         KMS kms = new KMS();
 
         try {
-            kms.invalidateCache(keyName);
+            kms.invalidateCache(keyName, request);
             fail("Expected exception due to missing dependencies (provider/user)");
         } catch (Exception e) {
             System.out.println("Expected exception: " + e.getMessage());

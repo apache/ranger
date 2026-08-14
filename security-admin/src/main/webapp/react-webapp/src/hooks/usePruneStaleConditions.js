@@ -23,14 +23,17 @@
  * or other per-row conditions.
  */
 
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { isArray, find, isEqual } from "lodash";
 import {
   getSelectedAccessTypesForRow,
   getAllowedActionMatchesForCondition,
-  isPerRowCondition,
+  shouldDeferActionMatchesPrune,
+  isActionMatcherEnabled,
   parseConditionUiHint
 } from "Utils/policyConditionUtils";
+
+const ACTION_MATCHES = "action-matches";
 
 /**
  * Stable dependency string: only permission accesses and per-row condition values.
@@ -44,7 +47,7 @@ const serializePruneDeps = (formValues, attrName) => {
   return JSON.stringify(
     items.map((item, index) => ({
       accesses: getSelectedAccessTypesForRow(formValues, attrName, index),
-      actionMatches: item?.conditions?.["action-matches"] ?? null
+      actionMatches: item?.conditions?.[ACTION_MATCHES] ?? null
     }))
   );
 };
@@ -56,98 +59,103 @@ export const usePruneStaleConditions = ({
   leafResourceTypes,
   serviceCompDetails,
   conditionDefVal,
-  actionReqsMap
+  actionReqsMap,
+  // When true, skip resource-driven prune while multi-resource rows are empty or mid-edit.
+  enableResourcePruneDefer = false
 }) => {
+  const actionMatcherEnabled = isActionMatcherEnabled(
+    serviceCompDetails?.options
+  );
   const serializedPruneDeps = serializePruneDeps(formValues, attrName);
+  const serializedLeafTypes = leafResourceTypes
+    ? [...leafResourceTypes].sort().join(",")
+    : "";
+
+  const actionMatchesUiHint = useMemo(() => {
+    const actionMatchesDef = find(conditionDefVal, { name: ACTION_MATCHES });
+    return actionMatchesDef
+      ? parseConditionUiHint(actionMatchesDef.uiHint)
+      : null;
+  }, [conditionDefVal]);
 
   useEffect(() => {
+    if (!actionMatcherEnabled) {
+      return;
+    }
+
     const items = formValues?.[attrName];
     if (!items || !isArray(items)) {
       return;
     }
 
-    let hasChanges = false;
-    const newItems = [...items];
+    const deferResourcePrune =
+      enableResourcePruneDefer &&
+      shouldDeferActionMatchesPrune(serviceCompDetails, formValues);
 
-    newItems.forEach((item, index) => {
+    const baseActionFilterContext = {
+      leafResourceTypes,
+      accessTypeDefs: serviceCompDetails?.accessTypes
+    };
+
+    const changedRows = [];
+
+    items.forEach((item, index) => {
       if (!item?.conditions) {
         return;
       }
 
-      const accesses = getSelectedAccessTypesForRow(formValues, attrName, index);
+      const accesses = getSelectedAccessTypesForRow(
+        formValues,
+        attrName,
+        index
+      );
+
+      // Always sync when permissions are cleared — defer must not block this.
       if (accesses.length === 0) {
-        const actionMatches = item.conditions?.["action-matches"];
+        const actionMatches = item.conditions[ACTION_MATCHES];
         if (Array.isArray(actionMatches) && actionMatches.length > 0) {
           const newConditions = { ...item.conditions };
-          delete newConditions["action-matches"];
-          newItems[index] = { ...item, conditions: newConditions };
-          hasChanges = true;
+          delete newConditions[ACTION_MATCHES];
+          changedRows.push({ index, conditions: newConditions });
         }
         return;
       }
 
-      const actionFilterContext = {
-        selectedAccessTypes: accesses,
-        leafResourceTypes,
-        accessTypeDefs: serviceCompDetails?.accessTypes
-      };
-
-      let itemChanged = false;
-      const newConditions = { ...item.conditions };
-
-      for (const conditionName in newConditions) {
-        if (!isPerRowCondition(conditionName)) {
-          continue;
-        }
-
-        const conditionDef = find(conditionDefVal, { name: conditionName });
-        if (!conditionDef) {
-          continue;
-        }
-
-        const uiHintVal = parseConditionUiHint(conditionDef.uiHint);
-
-        if (
-          uiHintVal?.isMultiValue &&
-          Array.isArray(newConditions[conditionName])
-        ) {
-          const current = newConditions[conditionName];
-          const { prunedSelection } = getAllowedActionMatchesForCondition({
-            conditionName,
-            actionFilterContext,
-            actionReqsMap,
-            servicedefName: serviceCompDetails?.name,
-            uiHintAttb: uiHintVal,
-            currentSelection: current
-          });
-
-          if (!isEqual(current, prunedSelection)) {
-            if (prunedSelection && prunedSelection.length > 0) {
-              newConditions[conditionName] = prunedSelection;
-            } else {
-              delete newConditions[conditionName];
-            }
-            itemChanged = true;
-            hasChanges = true;
-          }
-        }
+      // Defer only resource-driven prune while a multi-resource row is empty or mid-edit.
+      if (deferResourcePrune) {
+        return;
       }
 
-      if (itemChanged) {
-        newItems[index] = { ...item, conditions: newConditions };
+      const current = item.conditions[ACTION_MATCHES];
+      if (!Array.isArray(current) || current.length === 0) {
+        return;
+      }
+
+      const { prunedSelection } = getAllowedActionMatchesForCondition({
+        conditionName: ACTION_MATCHES,
+        actionFilterContext: {
+          ...baseActionFilterContext,
+          selectedAccessTypes: accesses
+        },
+        actionReqsMap,
+        servicedefName: serviceCompDetails?.name,
+        uiHintAttb: actionMatchesUiHint,
+        currentSelection: current
+      });
+
+      if (!isEqual(current, prunedSelection)) {
+        const newConditions = { ...item.conditions };
+        if (prunedSelection && prunedSelection.length > 0) {
+          newConditions[ACTION_MATCHES] = prunedSelection;
+        } else {
+          delete newConditions[ACTION_MATCHES];
+        }
+        changedRows.push({ index, conditions: newConditions });
       }
     });
 
-    if (hasChanges) {
-      form.change(attrName, newItems);
-    }
-  }, [
-    serializedPruneDeps,
-    leafResourceTypes,
-    actionReqsMap,
-    attrName,
-    form,
-    conditionDefVal,
-    serviceCompDetails
-  ]);
+    changedRows.forEach(({ index, conditions }) => {
+      form.change(`${attrName}[${index}].conditions`, conditions);
+    });
+  }, [serializedPruneDeps, serializedLeafTypes, attrName]);
 };

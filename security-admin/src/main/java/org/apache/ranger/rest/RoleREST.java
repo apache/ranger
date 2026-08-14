@@ -481,6 +481,11 @@ public class RoleREST {
                 updateIfExists = false;
             }
 
+            // For role import, createNonExistUserGroupRole only creates missing nested roles.
+            // Missing users/groups are never created during import (RANGER-5730).
+            final Boolean createNonExistUserGroup = Boolean.FALSE;
+            final Boolean createNonExistRole      = Boolean.TRUE.equals(createNonExistUserGroupRole);
+
             List<String> roleNameList      = getRoleNameList(request, new ArrayList<>());
             String       fileName          = fileDetail.getFileName();
             int          totalRoleCreate   = 0;
@@ -520,7 +525,7 @@ public class RoleREST {
 
                                                 LOG.debug("Ignoring Roles from provided role in Json file... {}", roleNameInJson);
                                             } else {
-                                                roleStore.updateRole(roleInJson, createNonExistUserGroupRole, true);
+                                                roleStore.updateRole(roleInJson, createNonExistUserGroup, createNonExistRole, true);
 
                                                 totalRoleUpdate++;
                                             }
@@ -540,7 +545,7 @@ public class RoleREST {
                                     ret.setStatusCode(RESTResponse.STATUS_SUCCESS);
                                 } else if (!roleNameList.contains(roleNameInJson) && (!roleNameInJson.isEmpty())) {
                                     try {
-                                        roleStore.createRole(roleInJson, createNonExistUserGroupRole, false);
+                                        roleStore.createRole(roleInJson, createNonExistUserGroup, createNonExistRole, false);
                                     } catch (WebApplicationException excp) {
                                         throw excp;
                                     } catch (Throwable excp) {
@@ -1085,7 +1090,7 @@ public class RoleREST {
         boolean     isKeyAdmin        = bizUtil.isKeyAdmin();
         Long        downloadedVersion = null;
         boolean     isValid           = false;
-        boolean     isAllowed;
+        boolean     isAllowed         = false;
 
         request.setAttribute("downloadPolicy", "secure");
 
@@ -1110,18 +1115,22 @@ public class RoleREST {
                 }
 
                 XXServiceDef  xServiceDef   = daoManager.getXXServiceDef().getById(xService.getType());
-                RangerService rangerService = svcStore.getServiceByName(serviceName);
+                RangerService rangerService;
 
                 if (StringUtils.equals(xServiceDef.getImplclassname(), EmbeddedServiceDefsUtil.KMS_IMPL_CLASS_NAME)) {
+                    rangerService = svcStore.getServiceByNameForDP(serviceName);
+
                     if (isKeyAdmin) {
                         isAllowed = true;
-                    } else {
+                    } else if (rangerService != null) {
                         isAllowed = bizUtil.isUserAllowed(rangerService, POLICY_DOWNLOAD_USERS);
                     }
                 } else {
+                    rangerService = svcStore.getServiceByName(serviceName);
+
                     if (isAdmin) {
                         isAllowed = true;
-                    } else {
+                    } else if (rangerService != null) {
                         isAllowed = bizUtil.isUserAllowed(rangerService, POLICY_DOWNLOAD_USERS);
                     }
                 }
@@ -1279,6 +1288,8 @@ public class RoleREST {
             } else {
                 existingRole = roleStore.getRole(roleName);
             }
+        } catch (WebApplicationException ex) {
+            throw ex;
         } catch (Exception ex) {
             LOG.error(ex.getMessage());
 

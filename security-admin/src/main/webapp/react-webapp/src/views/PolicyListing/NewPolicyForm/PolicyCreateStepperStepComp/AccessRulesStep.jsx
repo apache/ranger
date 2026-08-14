@@ -83,7 +83,11 @@ const isItemEmpty = (item) => {
   return isEmpty;
 };
 
-const AccessRulesStep = ({ values, selectedServiceComponentDef }) => {
+const AccessRulesStep = ({
+  values,
+  selectedServiceComponentDef,
+  enableResourcePruneDefer = false
+}) => {
   const isDenyAllElseEnabled = values?.isDenyAllElse === true;
   const enableDenyAndExceptions =
     selectedServiceComponentDef?.options?.enableDenyAndExceptionsInPolicies ===
@@ -185,6 +189,7 @@ const AccessRulesStep = ({ values, selectedServiceComponentDef }) => {
                         formValues={values}
                         attrName="policyItems"
                         msg="Allow rules grants access to resources when the specific criteria are met."
+                        enableResourcePruneDefer={enableResourcePruneDefer}
                       />
                     </Accordion.Body>
                   </Accordion.Item>
@@ -201,6 +206,7 @@ const AccessRulesStep = ({ values, selectedServiceComponentDef }) => {
                         formValues={values}
                         attrName="allowExceptions"
                         msg="Exclude from Allow Rules grants access to resources when the specific criteria are met."
+                        enableResourcePruneDefer={enableResourcePruneDefer}
                       />
                     </Accordion.Body>
                   </Accordion.Item>
@@ -283,6 +289,7 @@ const AccessRulesStep = ({ values, selectedServiceComponentDef }) => {
                         attrName="denyPolicyItems"
                         msg="Deny rules explicitly block access to resources when the specific
             criteria are met."
+                        enableResourcePruneDefer={enableResourcePruneDefer}
                       />
                     </Accordion.Body>
                   </Accordion.Item>
@@ -300,6 +307,7 @@ const AccessRulesStep = ({ values, selectedServiceComponentDef }) => {
                         attrName="denyExceptions"
                         msg="Exclude from Deny Rules explicitly block access to resources when the specific
             criteria are met."
+                        enableResourcePruneDefer={enableResourcePruneDefer}
                       />
                     </Accordion.Body>
                   </Accordion.Item>
@@ -317,6 +325,7 @@ const AccessRulesStep = ({ values, selectedServiceComponentDef }) => {
                 formValues={values}
                 attrName={item.attrName}
                 msg={item.msg}
+                enableResourcePruneDefer={enableResourcePruneDefer}
               />
             ))}
           </>

@@ -105,6 +105,11 @@ public class RoleDBStore implements RoleStore {
 
     @Override
     public RangerRole createRole(RangerRole role, Boolean createNonExistUserGroupRole, Boolean isRefTableCleanupRequired) throws Exception {
+        return createRole(role, createNonExistUserGroupRole, createNonExistUserGroupRole, isRefTableCleanupRequired);
+    }
+
+    @Override
+    public RangerRole createRole(RangerRole role, Boolean createNonExistUserGroup, Boolean createNonExistRole, Boolean isRefTableCleanupRequired) throws Exception {
         LOG.debug("==> RoleDBStore.createRole()");
 
         XXRole xxRole = daoMgr.getXXRole().findByRoleName(role.getName());
@@ -124,7 +129,7 @@ public class RoleDBStore implements RoleStore {
             throw new Exception("Cannot create role:[" + role + "]");
         }
 
-        roleRefUpdater.createNewRoleMappingForRefTable(createdRole, createNonExistUserGroupRole, isRefTableCleanupRequired);
+        roleRefUpdater.createNewRoleMappingForRefTable(createdRole, createNonExistUserGroup, createNonExistRole, isRefTableCleanupRequired);
 
         roleService.createTransactionLog(createdRole, null, RangerBaseModelService.OPERATION_CREATE_CONTEXT);
 
@@ -133,6 +138,11 @@ public class RoleDBStore implements RoleStore {
 
     @Override
     public RangerRole updateRole(RangerRole role, Boolean createNonExistUserGroupRole, Boolean isRefTableCleanupRequired) throws Exception {
+        return updateRole(role, createNonExistUserGroupRole, createNonExistUserGroupRole, isRefTableCleanupRequired);
+    }
+
+    @Override
+    public RangerRole updateRole(RangerRole role, Boolean createNonExistUserGroup, Boolean createNonExistRole, Boolean isRefTableCleanupRequired) throws Exception {
         XXRole xxRole = daoMgr.getXXRole().findByRoleId(role.getId());
 
         if (xxRole == null) {
@@ -159,7 +169,7 @@ public class RoleDBStore implements RoleStore {
             throw new Exception("Cannot update role:[" + role + "]");
         }
 
-        roleRefUpdater.createNewRoleMappingForRefTable(updatedRole, createNonExistUserGroupRole, isRefTableCleanupRequired);
+        roleRefUpdater.createNewRoleMappingForRefTable(updatedRole, createNonExistUserGroup, createNonExistRole, isRefTableCleanupRequired);
 
         roleService.updatePolicyVersions(updatedRole.getId());
 
@@ -214,7 +224,7 @@ public class RoleDBStore implements RoleStore {
         XXRole xxRole = daoMgr.getXXRole().findByRoleName(name);
 
         if (xxRole == null) {
-            throw restErrorUtil.createRESTException("Role with name: " + name + " does not exist");
+            throw restErrorUtil.createRESTException("Role with name: " + name + " does not exist.");
         }
 
         return roleService.read(xxRole.getId());

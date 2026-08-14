@@ -30,6 +30,7 @@ import {
   trimInputValue
 } from "Components/CommonComponents";
 import {
+  isActionMatcherEnabled,
   isPerRowCondition,
   getCleanConditions,
   parseConditionUiHint,
@@ -109,22 +110,31 @@ const pruneActionMatchesOnSubmit = ({
 
 export default function PolicyConditionsComp(props) {
   const {
-    policyConditionDetails,
-    inputVal,
+    // Visibility & Control
     showModal,
-    handleCloseModal,
     modalHeader,
+    handleCloseModal,
+
+    // Data & Value Binding
+    inputVal,
+    policyConditionDetails,
     scope = POLICY_SCOPE,
+
+    // Service & Actions Metadata
     servicedefName,
-    actionFilterContext,
-    actionReqsMap: actionReqsMapProp
+    serviceDefOptions,
+    actionReqsMap: actionReqsMapProp,
+
+    // Filter Context Evaluation
+    actionFilterContext
   } = props;
 
   const isPolicyItemScope = scope === POLICY_ITEM_SCOPE;
 
+  const hasActionMatcherEnabled = isActionMatcherEnabled(serviceDefOptions);
+
   const conditionDefVal = useMemo(
-    () =>
-      Array.isArray(policyConditionDetails) ? policyConditionDetails : [],
+    () => (Array.isArray(policyConditionDetails) ? policyConditionDetails : []),
     [policyConditionDetails]
   );
 
@@ -231,6 +241,7 @@ export default function PolicyConditionsComp(props) {
 
   const renderMultiValueField = (m, uiHintAttb) => {
     const isActionMatches =
+      hasActionMatcherEnabled &&
       isPolicyItemScope &&
       isPerRowCondition(m.name) &&
       Array.isArray(uiHintAttb?.options);
@@ -281,9 +292,7 @@ export default function PolicyConditionsComp(props) {
             value={ipRangeVal(input.value)}
             onChange={(e) => handleChange(e, input)}
             styles={selectInputCustomStyles}
-            formatCreateLabel={(inputValue) =>
-              `Create "${inputValue.trim()}"`
-            }
+            formatCreateLabel={(inputValue) => `Create "${inputValue.trim()}"`}
             onCreateOption={(inputValue) => {
               const trimmedValue = inputValue.trim();
               if (trimmedValue) {

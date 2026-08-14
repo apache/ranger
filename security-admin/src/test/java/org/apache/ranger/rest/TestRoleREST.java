@@ -35,14 +35,17 @@ import org.apache.ranger.db.XXRoleDao;
 import org.apache.ranger.db.XXRoleRefGroupDao;
 import org.apache.ranger.db.XXRoleRefRoleDao;
 import org.apache.ranger.db.XXRoleRefUserDao;
+import org.apache.ranger.db.XXServiceDefDao;
 import org.apache.ranger.entity.XXPortalUser;
 import org.apache.ranger.entity.XXRoleRefGroup;
 import org.apache.ranger.entity.XXRoleRefUser;
 import org.apache.ranger.entity.XXService;
+import org.apache.ranger.entity.XXServiceDef;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItem;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
 import org.apache.ranger.plugin.model.RangerRole;
+import org.apache.ranger.plugin.model.RangerService;
 import org.apache.ranger.plugin.model.validation.RangerRoleValidator;
 import org.apache.ranger.plugin.util.GrantRevokeRoleRequest;
 import org.apache.ranger.plugin.util.RangerRoles;
@@ -879,6 +882,47 @@ public class TestRoleREST {
         });
     }
 
+    @Test
+    public void test17eGetSecureRangerRolesIfUpdatedKmsUsesServiceByNameForDP() throws Exception {
+        RangerRoles rangerRoles        = createRangerRoles();
+        String      serviceName        = "dev_kms";
+        String      pluginId           = "kms-plugin";
+        String      clusterName        = "";
+        String      pluginCapabilities = "";
+
+        XXService xService = createXXService();
+        xService.setName(serviceName);
+        xService.setType(Id);
+
+        XXServiceDef xServiceDef = new XXServiceDef();
+        xServiceDef.setId(Id);
+        xServiceDef.setImplclassname("org.apache.ranger.services.kms.RangerServiceKMS");
+
+        RangerService rangerService = new RangerService();
+        rangerService.setId(Id);
+        rangerService.setName(serviceName);
+
+        XXServiceDefDao xServiceDefDao = Mockito.mock(XXServiceDefDao.class);
+        HttpServletRequest request = Mockito.mock(HttpServletRequest.class);
+
+        Mockito.when(serviceUtil.isValidService(serviceName, request)).thenReturn(true);
+        Mockito.when(daoMgr.getXXService().findByName(serviceName)).thenReturn(xService);
+        Mockito.when(daoMgr.getXXServiceDef()).thenReturn(xServiceDefDao);
+        Mockito.when(xServiceDefDao.getById(xService.getType())).thenReturn(xServiceDef);
+        Mockito.when(bizUtil.isAdmin()).thenReturn(false);
+        Mockito.when(bizUtil.isKeyAdmin()).thenReturn(false);
+        Mockito.when(svcStore.getServiceByNameForDP(serviceName)).thenReturn(rangerService);
+        Mockito.when(bizUtil.isUserAllowed(rangerService, RoleREST.POLICY_DOWNLOAD_USERS)).thenReturn(true);
+        Mockito.when(roleStore.getRoles(serviceName, -1L)).thenReturn(rangerRoles);
+
+        RangerRoles result = roleRest.getSecureRangerRolesIfUpdated(serviceName, -1L, 0L, pluginId, clusterName, pluginCapabilities, request);
+
+        Assertions.assertNotNull(result);
+        Assertions.assertEquals(rangerRoles.getRangerRoles().size(), result.getRangerRoles().size());
+        Mockito.verify(svcStore).getServiceByNameForDP(serviceName);
+        Mockito.verify(bizUtil).isUserAllowed(rangerService, RoleREST.POLICY_DOWNLOAD_USERS);
+    }
+
     // empty request roles (requestParamRoles = 0, dbRoles = 5, return = all dbRoles)
     @Test
     public void test18GetRolesInJson() throws Exception {
@@ -1170,7 +1214,7 @@ public class TestRoleREST {
 
         Mockito.when(searchUtil.getSearchFilter(request, roleService.sortFields)).thenReturn(filter);
         Mockito.when(roleStore.getRoleNames(Mockito.any(SearchFilter.class))).thenReturn(roleList);
-        Mockito.when(roleStore.createRole(Mockito.any(RangerRole.class), eq(createNonExistUserGroupRole), eq(isRefTableCleanupRequired))).thenReturn(rangerRole);
+        Mockito.when(roleStore.createRole(Mockito.any(RangerRole.class), eq(false), eq(createNonExistUserGroupRole), eq(isRefTableCleanupRequired))).thenReturn(rangerRole);
 
         RESTResponse resp = roleRest.importRolesFromFile(request, uploadedInputStream, fileDetail, updateIfExists, createNonExistUserGroupRole);
         Assertions.assertNotNull(resp);
@@ -1198,12 +1242,14 @@ public class TestRoleREST {
 
         Mockito.when(searchUtil.getSearchFilter(request, roleService.sortFields)).thenReturn(filter);
         Mockito.when(roleStore.getRoleNames(Mockito.any(SearchFilter.class))).thenReturn(roleList);
-        Mockito.when(roleStore.createRole(Mockito.any(RangerRole.class), eq(createNonExistUserGroupRole), eq(isRefTableCleanupRequired))).thenReturn(rangerRole);
+        Mockito.when(roleStore.createRole(Mockito.any(RangerRole.class), eq(false), eq(createNonExistUserGroupRole), eq(isRefTableCleanupRequired))).thenReturn(rangerRole);
 
         RESTResponse resp = roleRest.importRolesFromFile(request, uploadedInputStream, fileDetail, updateIfExists, createNonExistUserGroupRole);
         Assertions.assertNotNull(resp);
         Assertions.assertEquals(resp.getStatusCode(), RESTResponse.STATUS_SUCCESS);
         Assertions.assertEquals(resp.getMsgDesc(), "Total Role Created = 6 , Total Role Unchanged = 1");
+        // Import with flag=true must request role creation only (not users/groups)
+        Mockito.verify(roleStore, Mockito.atLeastOnce()).createRole(Mockito.any(RangerRole.class), eq(false), eq(true), eq(false));
     }
 
     // import role with updateIfExists=true and createNonExistUserGroupRole=true
@@ -1226,13 +1272,15 @@ public class TestRoleREST {
         Mockito.when(searchUtil.getSearchFilter(request, roleService.sortFields)).thenReturn(filter);
         Mockito.when(roleStore.getRoleNames(Mockito.any(SearchFilter.class))).thenReturn(roleList);
         Mockito.when(roleStore.getRole(Mockito.anyString())).thenReturn(rangerRole);
-        Mockito.when(roleStore.createRole(Mockito.any(RangerRole.class), eq(createNonExistUserGroupRole), eq(false))).thenReturn(rangerRole);
-        Mockito.when(roleStore.updateRole(Mockito.any(RangerRole.class), eq(createNonExistUserGroupRole), eq(true))).thenReturn(rangerRole);
+        Mockito.when(roleStore.createRole(Mockito.any(RangerRole.class), eq(false), eq(createNonExistUserGroupRole), eq(false))).thenReturn(rangerRole);
+        Mockito.when(roleStore.updateRole(Mockito.any(RangerRole.class), eq(false), eq(createNonExistUserGroupRole), eq(true))).thenReturn(rangerRole);
 
         RESTResponse resp = roleRest.importRolesFromFile(request, uploadedInputStream, fileDetail, updateIfExists, createNonExistUserGroupRole);
         Assertions.assertNotNull(resp);
         Assertions.assertEquals(resp.getStatusCode(), RESTResponse.STATUS_SUCCESS);
         Assertions.assertEquals(resp.getMsgDesc(), "Total Role Created = 6 , Total Role Updated = 1 , Total Role Unchanged = 0");
+        Mockito.verify(roleStore, Mockito.atLeastOnce()).createRole(Mockito.any(RangerRole.class), eq(false), eq(true), eq(false));
+        Mockito.verify(roleStore, Mockito.atLeastOnce()).updateRole(Mockito.any(RangerRole.class), eq(false), eq(true), eq(true));
     }
 
     // import role throws exceptions
@@ -1683,5 +1731,25 @@ public class TestRoleREST {
         Assertions.assertThrows(Throwable.class, () -> {
             roleRest.getSecureRangerRolesIfUpdated(serviceName, -1L, 0L, pluginId, clusterName, pluginCapabilities, Mockito.mock(HttpServletRequest.class));
         });
+    }
+
+    @Test
+    public void test35GrantRoleNonExistentRole() throws Exception {
+        String                 serviceName            = "serviceName";
+        GrantRevokeRoleRequest grantRevokeRoleRequest = createGrantRevokeRoleRequest();
+        String                 roleName               = "role_100";
+        WebApplicationException roleNotFoundException   = new WebApplicationException("Role with name: " + roleName + " does not exist");
+
+        grantRevokeRoleRequest.setTargetRoles(new HashSet<>(Collections.singletonList(roleName)));
+
+        Mockito.when(bizUtil.isUserRangerAdmin(Mockito.anyString())).thenReturn(true);
+        Mockito.when(roleStore.getRole(roleName)).thenThrow(roleNotFoundException);
+
+        WebApplicationException exception = Assertions.assertThrows(WebApplicationException.class, () -> {
+            roleRest.grantRole(serviceName, grantRevokeRoleRequest, Mockito.mock(HttpServletRequest.class));
+        });
+
+        Assertions.assertNotNull(exception);
+        Mockito.verify(roleStore, Mockito.times(1)).getRole(roleName);
     }
 }

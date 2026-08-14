@@ -42,7 +42,7 @@ VOLUME /etc/keytabs
 
 EXPOSE 88/tcp 88/udp 749/tcp
 
-HEALTHCHECK --interval=5s --timeout=3s --start-period=120s --retries=30 \
-  CMD test -f /etc/keytabs/.provisioned && echo | nc -w 1 localhost 88 || exit 1
+HEALTHCHECK --interval=5s --timeout=5s --start-period=120s --retries=30 \
+  CMD test -f /etc/keytabs/.provisioned && kinit -kt /etc/keytabs/datanode/dn.keytab dn/datanode.rangernw@EXAMPLE.COM && kdestroy
 
 ENTRYPOINT ["/entrypoint.sh"]

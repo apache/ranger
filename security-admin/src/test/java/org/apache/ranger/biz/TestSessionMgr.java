@@ -122,11 +122,48 @@ public class TestSessionMgr {
     @Mock
     StringUtil stringUtil;
 
+    @Mock
+    RangerBizUtil bizUtil;
+
     @AfterEach
     public void tearDownSuperUserConfig() {
         PropertiesUtil.getPropertiesMap().remove(RangerConstants.RANGER_ADMIN_SUPER_USERS);
         PropertiesUtil.getPropertiesMap().remove(RangerConstants.RANGER_ADMIN_SUPER_GROUPS);
         RangerSuperUserConfig.resetForTests();
+    }
+
+    @Test
+    public void testStoreAuthSessionSkipsHealthCheckUser() {
+        XXAuthSession authSession = new XXAuthSession();
+        authSession.setLoginId(RangerBizUtil.HEALTHCHECK_USERNAME);
+
+        when(bizUtil.isHealthCheckUser(RangerBizUtil.HEALTHCHECK_USERNAME)).thenReturn(true);
+
+        XXAuthSession ret = sessionMgr.storeAuthSession(authSession);
+
+        // No x_auth_sess record is created for the health-check user, and the DAO is never touched.
+        assertEquals(authSession, ret);
+        assertNull(ret.getId());
+        verify(daoManager, never()).getXXAuthSession();
+    }
+
+    @Test
+    public void testStoreAuthSessionPersistsRegularUser() {
+        XXAuthSession authSession = new XXAuthSession();
+        authSession.setLoginId("regularUser");
+
+        when(bizUtil.isHealthCheckUser("regularUser")).thenReturn(false);
+
+        XXAuthSession created = new XXAuthSession();
+        created.setId(7L);
+
+        XXAuthSessionDao authDao = mock(XXAuthSessionDao.class);
+        when(daoManager.getXXAuthSession()).thenReturn(authDao);
+        when(authDao.create(authSession)).thenReturn(created);
+
+        XXAuthSession ret = sessionMgr.storeAuthSession(authSession);
+
+        assertEquals(created, ret);
     }
 
     @Test
