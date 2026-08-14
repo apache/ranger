@@ -22,10 +22,10 @@ package org.apache.ranger.plugin.model;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.annotation.JsonInclude;
 
 @JsonAutoDetect(fieldVisibility = Visibility.ANY)
-@JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
+@JsonInclude(JsonInclude.Include.NON_EMPTY)
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class RangerAuditMetrics extends RangerBaseModelObject implements java.io.Serializable {
     private static final long serialVersionUID = 1L;
@@ -106,11 +106,7 @@ public class RangerAuditMetrics extends RangerBaseModelObject implements java.io
     }
 
     public void setClientIP(String clientIP) {
-        if (clientIP == null) {
-            this.clientIP = "";
-        } else {
-            this.clientIP = clientIP;
-        }
+        this.clientIP = clientIP;
     }
 
     public Long getNumberOfAudits() {

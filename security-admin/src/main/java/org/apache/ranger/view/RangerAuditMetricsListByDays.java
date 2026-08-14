@@ -42,7 +42,7 @@ public class RangerAuditMetricsListByDays extends VList {
         this.auditMetricsByDays = objList;
     }
 
-    public List<RangerAuditMetricsByDays> getAuditMetricsListByUnit() {
+    public List<RangerAuditMetricsByDays> getAuditMetricsListByDays() {
         return auditMetricsByDays;
     }
 
