@@ -154,17 +154,6 @@ public class TestRangerAuthenticationProvider {
         LdapAuthenticator authenticator = mock(LdapAuthenticator.class);
         provider.setAuthenticator(authenticator);
         assertSame(authenticator, provider.getAuthenticator());
-
-        provider.setSsoEnabled(true);
-        assertTrue(provider.isSsoEnabled());
-    }
-
-    @Test
-    public void ssoEnabled_authenticateReturnsSameToken() {
-        provider.setSsoEnabled(true);
-        UsernamePasswordAuthenticationToken input  = new UsernamePasswordAuthenticationToken("u", "p");
-        Authentication                      result = provider.authenticate(input);
-        assertSame(input, result);
     }
 
     @Test

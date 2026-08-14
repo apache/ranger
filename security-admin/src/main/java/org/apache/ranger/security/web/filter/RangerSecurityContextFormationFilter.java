@@ -172,10 +172,8 @@ public class RangerSecurityContextFormationFilter extends GenericFilterBean {
             return ((RangerAuthenticationToken) auth).getAuthType();
         }
 
-        Object  ssoEnabledObj = request.getAttribute("ssoEnabled");
-        boolean ssoEnabled    = ssoEnabledObj != null ? Boolean.parseBoolean(String.valueOf(ssoEnabledObj)) : PropertiesUtil.getBooleanProperty("ranger.sso.enabled", false);
-
-        if (ssoEnabled) {
+        // JWT/Bearer-token logins are recorded as SSO for audit continuity (marker set by RangerJwtAuthFilter).
+        if (request.getAttribute("jwtAuthenticated") != null && Boolean.parseBoolean(String.valueOf(request.getAttribute("jwtAuthenticated")))) {
             return XXAuthSession.AUTH_TYPE_SSO;
         } else if (request.getAttribute("spnegoEnabled") != null && Boolean.parseBoolean(String.valueOf(request.getAttribute("spnegoEnabled")))) {
             if (request.getAttribute("trustedProxyEnabled") != null && Boolean.parseBoolean(String.valueOf(request.getAttribute("trustedProxyEnabled")))) {

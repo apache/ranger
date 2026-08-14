@@ -163,12 +163,10 @@ export const hasAccessToPath = (pathName) => {
   let groupModules = map(userProfile?.groupPermissions, "moduleName");
   let moduleNames = union(userModules, groupModules);
   moduleNames.push("Profile");
-  moduleNames.push("KnoxSignOut");
   moduleNames.push("DataNotFound");
   moduleNames.push("PageNotFound");
   moduleNames.push("Forbidden");
 
-  moduleNames.push("localLogin");
   if (isSystemAdmin() || isAuditor()) {
     moduleNames.push("Permission");
   }
@@ -1427,7 +1425,7 @@ export const updateTagActive = (isTagView) => {
   }
 };
 
-export const handleLogout = async (checkKnoxSSOVal, navigate) => {
+export const handleLogout = async () => {
   try {
     await fetchApi({
       url: "logout",
@@ -1436,45 +1434,10 @@ export const handleLogout = async (checkKnoxSSOVal, navigate) => {
         "cache-control": "no-cache"
       }
     });
-    if (checkKnoxSSOVal !== undefined || checkKnoxSSOVal !== null) {
-      if (checkKnoxSSOVal?.toString() == "false") {
-        window.location.replace("/locallogin");
-        window.localStorage.clear();
-      } else {
-        navigate("/knoxSSOWarning");
-      }
-    } else {
-      window.location.replace("login.jsp");
-    }
+    window.localStorage.clear();
+    window.location.replace("login.jsp");
   } catch (error) {
     toast.error(`Error occurred while logout! ${error}`);
-  }
-};
-
-export const checkKnoxSSO = async (navigate) => {
-  const userProfile = getUserProfile();
-  let checkKnoxSSOresp = {};
-  try {
-    checkKnoxSSOresp = await fetchApi({
-      url: "plugins/checksso",
-      type: "GET",
-      headers: {
-        "cache-control": "no-cache"
-      }
-    });
-    if (
-      checkKnoxSSOresp?.data?.toString() == "true" &&
-      userProfile?.configProperties?.inactivityTimeout > 0
-    ) {
-      window.location.replace("index.html?action=timeout");
-    } else {
-      handleLogout(checkKnoxSSOresp?.data, navigate);
-    }
-  } catch (error) {
-    if (checkKnoxSSOresp?.status == "419") {
-      window.location.replace("login.jsp");
-    }
-    console.error(`Error occurred while logout! ${error}`);
   }
 };
 

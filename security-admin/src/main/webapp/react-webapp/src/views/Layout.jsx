@@ -29,7 +29,7 @@ import {
 import ErrorPage from "./ErrorPage";
 import {
   hasAccessToPath,
-  checkKnoxSSO,
+  handleLogout,
   navigateTo,
   getLandingPageURl
 } from "Utils/XAUtils";
@@ -44,7 +44,6 @@ import dateFormat from "dateformat";
 
 const Layout = () => {
   let location = useLocation();
-  const navigate = useNavigate();
   const userProfile = getUserProfile();
   navigateTo.navigate = useNavigate();
   const [open, setOpen] = useState(false);
@@ -57,9 +56,9 @@ const Layout = () => {
       : 900);
   const promptTimeout = 1000 * 15;
 
-  const handleLogout = async () => {
+  const onLogout = async () => {
     setOpen(false);
-    checkKnoxSSO(navigate);
+    handleLogout();
   };
 
   const onPrompt = () => {
@@ -69,7 +68,7 @@ const Layout = () => {
 
   const onIdle = () => {
     setOpen(false);
-    handleLogout();
+    onLogout();
     setTimer(0);
   };
 
@@ -132,7 +131,7 @@ const Layout = () => {
         </Modal.Body>
         <Modal.Footer>
           <Button onClick={handleStillHere}>Stay Logged in</Button>
-          <Button variant="danger" onClick={() => handleLogout()}>
+          <Button variant="danger" onClick={() => onLogout()}>
             Log Out Now
           </Button>
         </Modal.Footer>
@@ -142,7 +141,6 @@ const Layout = () => {
           <SideBar />
         </div>
         {location.pathname === "/" &&
-          window.location.pathname !== "/locallogin" &&
           window.location.pathname != "/dataNotFound" &&
           window.location.pathname != "/pageNotFound" &&
           window.location.pathname != "/forbidden" && (

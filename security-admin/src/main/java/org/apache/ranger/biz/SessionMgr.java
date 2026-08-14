@@ -121,7 +121,7 @@ public class SessionMgr {
         }
 
         if (newSessionCreation) {
-            getSSOSpnegoAuthCheckForAPI(currentLoginId, httpRequest);
+            createExternalUserIfAbsent(currentLoginId, authType, httpRequest);
 
             // Need to build the UserSession
             XXPortalUser gjUser = daoManager.getXXPortalUser().findByLoginId(currentLoginId);
@@ -187,20 +187,6 @@ public class SessionMgr {
             if (httpRequest.getAttribute("spnegoEnabled") != null && (boolean) httpRequest.getAttribute("spnegoEnabled")) {
                 userSession.setSpnegoEnabled(true);
             }
-
-            boolean ssoEnabled;
-
-            if (authType == XXAuthSession.AUTH_TYPE_TRUSTED_PROXY) {
-                ssoEnabled = true;
-            } else {
-                Object ssoEnabledObj = httpRequest.getAttribute("ssoEnabled");
-
-                ssoEnabled = ssoEnabledObj != null ? Boolean.parseBoolean(String.valueOf(ssoEnabledObj)) : PropertiesUtil.getBooleanProperty("ranger.sso.enabled", false);
-            }
-
-            logger.debug("session id = {} ssoenabled = {}", userSession.getLoginId(), ssoEnabled);
-
-            userSession.setSSOEnabled(ssoEnabled);
 
             resetUserSessionForProfiles(userSession);
             resetUserModulePermission(userSession);
@@ -522,21 +508,35 @@ public class SessionMgr {
         return dbMAuthSession;
     }
 
-    private void getSSOSpnegoAuthCheckForAPI(String currentLoginId, HttpServletRequest request) {
-        RangerSecurityContext context    = RangerContextHolder.getSecurityContext();
-        UserSessionBase       session    = context != null ? context.getUserSession() : null;
-        boolean               ssoEnabled = session != null ? session.isSSOEnabled() : PropertiesUtil.getBooleanProperty("ranger.sso.enabled", false);
-        XXPortalUser          gjUser     = daoManager.getXXPortalUser().findByLoginId(currentLoginId);
+    /**
+     * Auto-provisions a Ranger DB user for externally-authenticated principals that do not yet exist.
+     * Provisioning is driven by the actual authentication mechanism of the request (SPNEGO/Kerberos,
+     * trusted-proxy header auth, JWT bearer auth, or the internal health-check user) rather than the
+     * removed {@code ranger.sso.enabled} flag. Password/LDAP/AD logins are never auto-provisioned here
+     * since those principals must already exist to authenticate.
+     */
+    private void createExternalUserIfAbsent(String currentLoginId, int authType, HttpServletRequest request) {
+        XXPortalUser gjUser = daoManager.getXXPortalUser().findByLoginId(currentLoginId);
 
-        if (gjUser == null && ((request.getAttribute("spnegoEnabled") != null && (boolean) request.getAttribute("spnegoEnabled")) || (ssoEnabled))) {
-            logger.debug("User : {} doesn't exist in Ranger DB So creating user as it's SSO or Spnego authenticated", currentLoginId);
-
+        if (gjUser == null) {
             if (bizUtil.isHealthCheckUser(currentLoginId)) {
+                logger.debug("User : {} doesn't exist in Ranger DB. Creating healthcheck user synchronously.", currentLoginId);
+
                 xUserMgr.createServiceConfigUserSynchronously(currentLoginId);
-            } else {
+            } else if (isExternallyAuthenticated(authType, request)) {
+                logger.debug("User : {} doesn't exist in Ranger DB. Creating user as it is externally authenticated (SPNEGO/trusted-proxy/JWT).", currentLoginId);
+
                 xUserMgr.createServiceConfigUser(currentLoginId);
             }
         }
+    }
+
+    private boolean isExternallyAuthenticated(int authType, HttpServletRequest request) {
+        boolean spnegoEnabled    = request.getAttribute("spnegoEnabled") != null && Boolean.parseBoolean(String.valueOf(request.getAttribute("spnegoEnabled")));
+        boolean jwtAuthenticated = request.getAttribute("jwtAuthenticated") != null && Boolean.parseBoolean(String.valueOf(request.getAttribute("jwtAuthenticated")));
+        boolean trustedProxy     = authType == XXAuthSession.AUTH_TYPE_TRUSTED_PROXY;
+
+        return spnegoEnabled || jwtAuthenticated || trustedProxy;
     }
 
     private void setUserRoles(UserSessionBase userSession) {

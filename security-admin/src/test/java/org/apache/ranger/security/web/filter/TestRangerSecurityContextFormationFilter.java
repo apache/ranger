@@ -153,15 +153,15 @@ public class TestRangerSecurityContextFormationFilter {
         assertEquals(XXAuthSession.AUTH_TYPE_TRUSTED_PROXY,
                 m.invoke(filter, new RangerAuthenticationToken(userDetails, authorities, XXAuthSession.AUTH_TYPE_TRUSTED_PROXY), emptyRequest));
 
-        // SSO — identified via request attribute (RangerSSOAuthenticationFilter sets UsernamePasswordAuthenticationToken)
-        HttpServletRequest reqSso = Mockito.mock(HttpServletRequest.class);
-        Mockito.when(reqSso.getAttribute("ssoEnabled")).thenReturn(true);
+        // JWT/Bearer — identified via the jwtAuthenticated request attribute, recorded as SSO for audit continuity
+        HttpServletRequest reqJwt = Mockito.mock(HttpServletRequest.class);
+        Mockito.when(reqJwt.getAttribute("jwtAuthenticated")).thenReturn(true);
         assertEquals(XXAuthSession.AUTH_TYPE_SSO,
-                m.invoke(filter, new org.springframework.security.authentication.UsernamePasswordAuthenticationToken("u", "pwd", authorities), reqSso));
+                m.invoke(filter, new org.springframework.security.authentication.UsernamePasswordAuthenticationToken("u", "pwd", authorities), reqJwt));
 
         // Kerberos — identified via spnegoEnabled attribute
         HttpServletRequest reqKrb = Mockito.mock(HttpServletRequest.class);
-        Mockito.when(reqKrb.getAttribute("ssoEnabled")).thenReturn(false);
+        Mockito.when(reqKrb.getAttribute("jwtAuthenticated")).thenReturn(false);
         Mockito.when(reqKrb.getAttribute("spnegoEnabled")).thenReturn(true);
         Mockito.when(reqKrb.getAttribute("trustedProxyEnabled")).thenReturn(false);
         assertEquals(XXAuthSession.AUTH_TYPE_KERBEROS,
@@ -169,15 +169,14 @@ public class TestRangerSecurityContextFormationFilter {
 
         // Kerberos trusted proxy — both spnegoEnabled and trustedProxyEnabled
         HttpServletRequest reqKrbTp = Mockito.mock(HttpServletRequest.class);
-        Mockito.when(reqKrbTp.getAttribute("ssoEnabled")).thenReturn(false);
+        Mockito.when(reqKrbTp.getAttribute("jwtAuthenticated")).thenReturn(false);
         Mockito.when(reqKrbTp.getAttribute("spnegoEnabled")).thenReturn(true);
         Mockito.when(reqKrbTp.getAttribute("trustedProxyEnabled")).thenReturn(true);
         assertEquals(XXAuthSession.AUTH_TYPE_TRUSTED_PROXY,
                 m.invoke(filter, new org.springframework.security.authentication.UsernamePasswordAuthenticationToken("u", "pwd", authorities), reqKrbTp));
 
-        // Password — no RangerAuthenticationToken, ssoEnabled explicitly false, no Kerberos attributes
+        // Password — no RangerAuthenticationToken, no JWT/Kerberos attributes
         HttpServletRequest reqPwd = Mockito.mock(HttpServletRequest.class);
-        Mockito.when(reqPwd.getAttribute("ssoEnabled")).thenReturn(false);
         assertEquals(XXAuthSession.AUTH_TYPE_PASSWORD,
                 m.invoke(filter, new org.springframework.security.authentication.UsernamePasswordAuthenticationToken("u", "pwd", authorities), reqPwd));
     }

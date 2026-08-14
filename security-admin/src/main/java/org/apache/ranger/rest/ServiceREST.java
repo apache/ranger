@@ -2949,13 +2949,6 @@ public class ServiceREST {
     }
 
     @GET
-    @Path("/checksso")
-    @Produces(MediaType.TEXT_PLAIN)
-    public String checkSSO() {
-        return String.valueOf(bizUtil.isSSOEnabled());
-    }
-
-    @GET
     @Path("/csrfconf")
     @Produces("application/json")
     public HashMap<String, Object> getCSRFProperties(@Context HttpServletRequest request) {

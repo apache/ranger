@@ -1088,16 +1088,6 @@ public class RangerBizUtil {
         return isAccessible;
     }
 
-    public boolean isSSOEnabled() {
-        UserSessionBase session = ContextUtil.getCurrentUserSession();
-
-        if (session != null) {
-            return session.isSSOEnabled() == null ? PropertiesUtil.getBooleanProperty("ranger.sso.enabled", false) : session.isSSOEnabled();
-        } else {
-            throw restErrorUtil.createRESTException("User session is not created", MessageEnums.OPER_NOT_ALLOWED_FOR_STATE);
-        }
-    }
-
     public boolean isUserAllowed(RangerService rangerService, String cfgNameAllowedUsers) {
         Map<String, String> map         = rangerService.getConfigs();
         String              user        = null;
