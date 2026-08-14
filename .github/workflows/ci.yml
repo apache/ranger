@@ -247,6 +247,22 @@ jobs:
           -f docker-compose.ranger-knox.yml \
           -f docker-compose.ranger-ozone.yml up -d
 
+      - name: Wait for KDC Kerberos readiness
+        run: |
+          cd dev-support/ranger-docker
+          for i in $(seq 1 90); do
+            status=$(docker inspect -f '{{.State.Health.Status}}' ranger-kdc 2>/dev/null || echo missing)
+            if [ "$status" = "healthy" ]; then
+              echo "ranger-kdc is healthy after ${i} attempt(s)"
+              exit 0
+            fi
+            echo "Waiting for ranger-kdc (status=${status})..."
+            sleep 2
+          done
+          echo "ranger-kdc did not become healthy in time"
+          docker logs ranger-kdc || true
+          exit 1
+
       - name: Check status of containers and remove them
         run: |
           sleep 60
