@@ -28,6 +28,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /** Checks partition plan shape and append-only updates. */
 public final class PartitionPlanValidator {
@@ -56,11 +57,16 @@ public final class PartitionPlanValidator {
             if (StringUtils.isBlank(entry.getKey())) {
                 throw new PartitionPlanException("Plugin id is required");
             }
-            registerPartitions(entry.getValue().getPartitions(), assigned, false);
+            PluginEntry pluginEntry = entry.getValue();
+            if (pluginEntry == null) {
+                throw new PartitionPlanException("Plugin entry is required for '" + entry.getKey().trim() + "'");
+            }
+            registerPartitions(pluginEntry.getPartitions(), assigned, false);
         }
         if (assigned.size() != plan.getTopicPartitionCount()) {
             throw new PartitionPlanException("topicPartitionCount must equal the union of all assigned partition ids");
         }
+        validateContiguousPartitionRange(assigned, plan.getTopicPartitionCount());
         validateServiceUniqueness(plan.getPlugins());
         validateServiceAllowedUsers(plan.getServiceAllowedUsers());
     }
@@ -77,10 +83,10 @@ public final class PartitionPlanValidator {
             if (StringUtils.isBlank(entry.getKey())) {
                 throw new PartitionPlanException("Service repo name is required");
             }
-            List<String> users = entry.getValue();
-            if (users == null || users.isEmpty()) {
+            List<String> users = effectiveAllowedUsers(entry.getValue());
+            if (users.isEmpty()) {
                 throw new PartitionPlanException(
-                        "allowedUsers must not be empty for service '" + entry.getKey().trim() + "'");
+                        "allowedUsers must contain at least one effective user for service '" + entry.getKey().trim() + "'");
             }
         }
     }
@@ -92,7 +98,11 @@ public final class PartitionPlanValidator {
         }
         Set<String> seenServices = new HashSet<>();
         for (Map.Entry<String, PluginEntry> entry : plugins.entrySet()) {
-            for (String serviceName : entry.getValue().getServices()) {
+            PluginEntry pluginEntry = entry.getValue();
+            if (pluginEntry == null) {
+                throw new PartitionPlanException("Plugin entry is required for '" + entry.getKey() + "'");
+            }
+            for (String serviceName : pluginEntry.getServices()) {
                 if (!seenServices.add(serviceName)) {
                     throw new PartitionPlanException("Service '" + serviceName + "' is assigned to more than one plugin");
                 }
@@ -105,8 +115,11 @@ public final class PartitionPlanValidator {
         if (current == null || proposed == null) {
             throw new PartitionPlanException("Current and proposed plans are required");
         }
-        if (proposed.getTopicPartitionCount() < current.getTopicPartitionCount() || proposed.getVersion() != current.getVersion() + 1) {
-            throw new PartitionPlanException("Plan must grow partition count and increment version by one");
+        if (proposed.getTopicPartitionCount() < current.getTopicPartitionCount()) {
+            throw new PartitionPlanException("Plan must not shrink topicPartitionCount");
+        }
+        if (proposed.getVersion() != current.getVersion() + 1) {
+            throw new PartitionPlanException("Plan version must increment by one");
         }
 
         for (Map.Entry<String, PluginEntry> entry : current.getPlugins().entrySet()) {
@@ -120,10 +133,26 @@ public final class PartitionPlanValidator {
             if (after.size() < before.size()) {
                 throw new PartitionPlanException("Append-only violation for plugin '" + pluginId + "'");
             }
-            for (int i = 0; i < before.size(); i++) {
-                if (!before.get(i).equals(after.get(i))) {
-                    throw new PartitionPlanException("Append-only violation for plugin '" + pluginId + "' at index " + i);
-                }
+            if (!after.subList(0, before.size()).equals(before)) {
+                throw new PartitionPlanException("Append-only violation for plugin '" + pluginId + "': existing partitions reshuffled");
+            }
+        }
+    }
+
+    private static List<String> effectiveAllowedUsers(List<String> rawUsers) {
+        if (rawUsers == null || rawUsers.isEmpty()) {
+            return List.of();
+        }
+        return rawUsers.stream()
+                .flatMap(user -> PolicyDownloadAuthUsersUtil.parseUsers(user).stream())
+                .collect(Collectors.toList());
+    }
+
+    private static void validateContiguousPartitionRange(Set<Integer> assigned, int topicPartitionCount) {
+        for (int partitionId = 1; partitionId <= topicPartitionCount; partitionId++) {
+            if (!assigned.contains(partitionId)) {
+                throw new PartitionPlanException(
+                        "Partition ids must cover contiguous range 1.." + topicPartitionCount + " (missing id " + partitionId + ")");
             }
         }
     }

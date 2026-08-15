@@ -63,7 +63,10 @@ public final class PolicyDownloadAuthUsersUtil {
             if (StringUtils.isBlank(entry.getKey())) {
                 continue;
             }
-            List<String> users = entry.getValue() == null ? Collections.emptyList() : parseUsers(String.join(",", entry.getValue()));
+            List<String> users = entry.getValue() == null ? Collections.emptyList()
+                    : entry.getValue().stream()
+                            .flatMap(user -> parseUsers(user).stream())
+                            .collect(Collectors.toList());
             if (users.isEmpty()) {
                 continue;
             }

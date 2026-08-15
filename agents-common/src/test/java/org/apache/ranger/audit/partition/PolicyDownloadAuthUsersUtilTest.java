@@ -62,4 +62,15 @@ public class PolicyDownloadAuthUsersUtilTest {
         assertEquals(1, normalized.size());
         assertIterableEquals(List.of("hive"), normalized.get("dev_hive"));
     }
+
+    @Test
+    public void testNormalizeServiceAllowedUsersSkipsNullListElements() {
+        Map<String, List<String>> input = new LinkedHashMap<>();
+        input.put("dev_hive", java.util.Arrays.asList("hive", null));
+
+        Map<String, List<String>> normalized = PolicyDownloadAuthUsersUtil.normalizeServiceAllowedUsers(input);
+
+        assertEquals(1, normalized.size());
+        assertIterableEquals(List.of("hive"), normalized.get("dev_hive"));
+    }
 }

@@ -27,12 +27,10 @@ import org.apache.ranger.audit.partition.model.PluginEntry;
 
 import java.time.Instant;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
 
 import static java.util.Objects.requireNonNull;
 
@@ -125,7 +123,7 @@ public final class PartitionPlanAllocator {
         int topicPartitionCount       = current.getTopicPartitionCount();
         int additionalNeeded          = partitionCount - newPluginIds.size();
         if (additionalNeeded > 0) {
-            topicPartitionCount = appendTailPartitions(newPluginIds, topicPartitionCount, additionalNeeded, collectAssignedPartitionIds(current));
+            topicPartitionCount = appendTailPartitions(newPluginIds, topicPartitionCount, additionalNeeded);
         }
 
         List<String> services = StringUtils.isNotBlank(serviceName) ? List.of(serviceName.trim()) : List.of();
@@ -178,21 +176,12 @@ public final class PartitionPlanAllocator {
         return taken;
     }
 
-    private static int appendTailPartitions(List<Integer> target, int topicPartitionCount, int count, Set<Integer> assigned) {
-        int nextId = assigned.isEmpty() ? 1 : assigned.stream().mapToInt(Integer::intValue).max().orElse(0) + 1;
+    private static int appendTailPartitions(List<Integer> target, int topicPartitionCount, int count) {
+        int nextId = topicPartitionCount + 1;
         for (int i = 0; i < count; i++) {
             target.add(nextId++);
-            assigned.add(target.get(target.size() - 1));
         }
         return topicPartitionCount + count;
-    }
-
-    private static Set<Integer> collectAssignedPartitionIds(PartitionPlan plan) {
-        Set<Integer> assigned = new HashSet<>(plan.getBuffer().getPartitions());
-        for (PluginEntry entry : plan.getPlugins().values()) {
-            assigned.addAll(entry.getPartitions());
-        }
-        return assigned;
     }
 
     private static Map<String, PluginEntry> addPluginAssignment(PartitionPlan current, String pluginId, List<Integer> partitionIds, List<String> services) {

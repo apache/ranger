@@ -151,4 +151,54 @@ public class PartitionPlanValidatorTest {
                 .build();
         assertThrows(PartitionPlanException.class, () -> PartitionPlanValidator.validate(plan));
     }
+
+    @Test
+    public void testValidateRejectsNonContiguousPartitionIds() {
+        PartitionPlan plan = PartitionPlan.builder()
+                .topic("ranger_audits")
+                .version(1)
+                .topicPartitionCount(3)
+                .buffer(new BufferEntry(java.util.List.of(2, 4, 6)))
+                .build();
+        assertThrows(PartitionPlanException.class, () -> PartitionPlanValidator.validate(plan));
+    }
+
+    @Test
+    public void testValidateRejectsNullPluginEntry() {
+        Map<String, PluginEntry> plugins = new LinkedHashMap<>();
+        plugins.put("hdfs", null);
+        PartitionPlan plan = PartitionPlan.builder()
+                .topic("ranger_audits")
+                .version(1)
+                .topicPartitionCount(9)
+                .plugins(plugins)
+                .buffer(new BufferEntry(java.util.List.of(1, 2, 3, 4, 5, 6, 7, 8, 9)))
+                .build();
+        assertThrows(PartitionPlanException.class, () -> PartitionPlanValidator.validate(plan));
+    }
+
+    @Test
+    public void testValidateRejectsWildcardOnlyAllowedUsers() {
+        Map<String, java.util.List<String>> allowlists = new LinkedHashMap<>();
+        allowlists.put("dev_hive", java.util.List.of("*"));
+        PartitionPlan plan = PartitionPlan.builder()
+                .topic("ranger_audits")
+                .version(1)
+                .topicPartitionCount(9)
+                .plugins(PartitionPlanTestSupport.preAssignedPlan().getPlugins())
+                .buffer(new BufferEntry(java.util.List.of(7, 8, 9)))
+                .serviceAllowedUsers(allowlists)
+                .build();
+        assertThrows(PartitionPlanException.class, () -> PartitionPlanValidator.validate(plan));
+    }
+
+    @Test
+    public void testValidateAppendOnlyAcceptsSamePartitionCount() {
+        PartitionPlan current = PartitionPlanTestSupport.preAssignedPlan();
+        PartitionPlan proposed = current.toBuilder()
+                .version(2)
+                .serviceAllowedUsers(Map.of("dev_hive", java.util.List.of("hive")))
+                .build();
+        assertDoesNotThrow(() -> PartitionPlanValidator.validateAppendOnly(current, proposed));
+    }
 }
