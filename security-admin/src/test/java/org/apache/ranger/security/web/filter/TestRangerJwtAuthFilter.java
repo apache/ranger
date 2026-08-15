@@ -78,6 +78,30 @@ public class TestRangerJwtAuthFilter {
     }
 
     @Test
+    public void testInitialize_doesNotThrowWhenJwtConfigMissing() {
+        PropertiesUtil.getPropertiesMap().remove(RangerJwtAuthConfig.PROVIDER_URL);
+        PropertiesUtil.getPropertiesMap().remove(RangerJwtAuthConfig.PUBLIC_KEY);
+
+        RangerJwtAuthFilter filter = new RangerJwtAuthFilter();
+        assertDoesNotThrow(() -> filter.initialize());
+
+        PropertiesUtil.getPropertiesMap().remove(RangerJwtAuthConfig.PROVIDER_URL);
+        PropertiesUtil.getPropertiesMap().remove(RangerJwtAuthConfig.PUBLIC_KEY);
+    }
+
+    @Test
+    public void testInitialize_doesNotThrowWhenPublicKeyEmptyAndProviderUrlSet() {
+        PropertiesUtil.getPropertiesMap().put(RangerJwtAuthConfig.PROVIDER_URL, "https://knox.example/gateway/knoxsso/api/v1/jwks.json");
+        PropertiesUtil.getPropertiesMap().put(RangerJwtAuthConfig.PUBLIC_KEY, "");
+
+        RangerJwtAuthFilter filter = new RangerJwtAuthFilter();
+        assertDoesNotThrow(() -> filter.initialize());
+
+        PropertiesUtil.getPropertiesMap().remove(RangerJwtAuthConfig.PROVIDER_URL);
+        PropertiesUtil.getPropertiesMap().remove(RangerJwtAuthConfig.PUBLIC_KEY);
+    }
+
+    @Test
     public void testInitialize_doesNotThrow() {
         RangerJwtAuthFilter filter = new RangerJwtAuthFilter();
         assertDoesNotThrow(() -> filter.initialize());

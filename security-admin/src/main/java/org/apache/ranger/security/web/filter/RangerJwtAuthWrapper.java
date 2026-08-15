@@ -20,9 +20,6 @@ package org.apache.ranger.security.web.filter;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.ranger.common.PropertiesUtil;
-import org.apache.ranger.common.UserSessionBase;
-import org.apache.ranger.security.context.RangerContextHolder;
-import org.apache.ranger.security.context.RangerSecurityContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -56,8 +53,8 @@ public class RangerJwtAuthWrapper extends GenericFilterBean {
     @PostConstruct
     public void initialize() {
         //FIXME: Browser agents should be common across ALL filters.
-        String defaultUserAgent = PropertiesUtil.getProperty(RangerSSOAuthenticationFilter.DEFAULT_BROWSER_USERAGENT);
-        String userAgent        = PropertiesUtil.getProperty(RangerSSOAuthenticationFilter.BROWSER_USERAGENT);
+        String defaultUserAgent = PropertiesUtil.getProperty(RangerJwtAuthConfig.DEFAULT_BROWSER_USERAGENT);
+        String userAgent        = RangerJwtAuthConfig.getBrowserUserAgent();
 
         if (StringUtils.isBlank(userAgent) && StringUtils.isNotBlank(defaultUserAgent)) {
             userAgent = defaultUserAgent;
@@ -72,16 +69,16 @@ public class RangerJwtAuthWrapper extends GenericFilterBean {
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain filterChain) throws IOException, ServletException {
         LOG.debug("===>>> RangerJwtAuthWrapper.doFilter({}, {}, {})", request, response, filterChain);
 
-        RangerSecurityContext context             = RangerContextHolder.getSecurityContext();
-        UserSessionBase       session             = context != null ? context.getUserSession() : null;
-        boolean               ssoEnabled          = session != null ? session.isSSOEnabled() : PropertiesUtil.getBooleanProperty("ranger.sso.enabled", false);
-        boolean               useJwtAuthMechanism = request != null && !isRequestAuthenticated() && RangerJwtAuthFilter.canAuthenticateRequest(request);
+        HttpServletRequest httpRequest         = (HttpServletRequest) request;
+        boolean            useJwtAuthMechanism = request != null && !isRequestAuthenticated() && RangerJwtAuthFilter.canAuthenticateRequest(request);
 
-        if (!ssoEnabled && useJwtAuthMechanism) {
+        // Skip JWT processing for health probes so that /actuator/health(/liveness|/readiness) never gets
+        // redirected to the login page and works regardless of JWT configuration.
+        if (useJwtAuthMechanism && !isHealthCheckRequest(httpRequest)) {
             rangerJwtAuthFilter.doFilter(request, response, filterChain);
 
             if (!isRequestAuthenticated()) {
-                String userAgent = ((HttpServletRequest) request).getHeader("User-Agent");
+                String userAgent = httpRequest.getHeader("User-Agent");
 
                 if (isBrowserAgent(userAgent)) {
                     LOG.debug("Redirecting to login page as request does not have valid JWT auth details.");
@@ -111,6 +108,12 @@ public class RangerJwtAuthWrapper extends GenericFilterBean {
         }
 
         return isBrowserAgent;
+    }
+
+    private boolean isHealthCheckRequest(HttpServletRequest httpRequest) {
+        String requestUri = httpRequest.getRequestURI();
+
+        return StringUtils.isNotBlank(requestUri) && requestUri.contains(RangerJwtAuthConfig.HEALTH_CHECK_URI);
     }
 
     private boolean isRequestAuthenticated() {

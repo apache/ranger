@@ -18,10 +18,10 @@
  */
 
 import React, { useReducer } from "react";
-import { NavLink, useNavigate } from "react-router-dom";
+import { NavLink } from "react-router-dom";
 import { sortBy, filter, isEmpty, map, upperCase, groupBy } from "lodash";
 import closeIcon from "Images/close.svg";
-import { getUserProfile, setUserProfile } from "Utils/appState";
+import { setUserProfile } from "Utils/appState";
 import { fetchApi } from "Utils/fetchAPI";
 import Select from "react-select";
 import {
@@ -68,7 +68,6 @@ export const SideBarBody = (props) => {
   const { selectedServiceDef } = keyState;
 
   const isKMSRole = isKeyAdmin() || isKMSAuditor();
-  const navigate = useNavigate();
   const apiUrl = getBaseUrl() + "apidocs/swagger.html";
 
   const serviceSelectThemes = (theme) => {
@@ -196,36 +195,8 @@ export const SideBarBody = (props) => {
     });
   };
 
-  const checkKnoxSSO = async (e) => {
+  const handleLogout = async (e) => {
     e.preventDefault();
-    const userProfile = getUserProfile();
-    let checkKnoxSSOresp = {};
-    try {
-      checkKnoxSSOresp = await fetchApi({
-        url: "plugins/checksso",
-        type: "GET",
-        headers: {
-          "cache-control": "no-cache"
-        }
-      });
-      if (
-        checkKnoxSSOresp?.data?.toString() == "true" &&
-        userProfile?.configProperties?.inactivityTimeout > 0
-      ) {
-        window.location.replace("index.html?action=timeout");
-      } else {
-        handleLogout(checkKnoxSSOresp?.data);
-      }
-    } catch (error) {
-      if (checkKnoxSSOresp?.status == "419") {
-        setUserProfile(null);
-        window.location.replace("login.jsp");
-      }
-      console.error(`Error occurred while logout! ${error}`);
-    }
-  };
-
-  const handleLogout = async (checkKnoxSSOVal) => {
     try {
       await fetchApi({
         url: "logout",
@@ -234,17 +205,9 @@ export const SideBarBody = (props) => {
           "cache-control": "no-cache"
         }
       });
-      if (checkKnoxSSOVal !== undefined || checkKnoxSSOVal !== null) {
-        if (checkKnoxSSOVal?.toString() == "false") {
-          window.location.replace("locallogin");
-          window.localStorage.clear();
-          setUserProfile(null);
-        } else {
-          navigate("/knoxSSOWarning");
-        }
-      } else {
-        window.location.replace("login.jsp");
-      }
+      window.localStorage.clear();
+      setUserProfile(null);
+      window.location.replace("login.jsp");
     } catch (error) {
       toast.error(`Error occurred while logout! ${error}`);
     }
@@ -672,7 +635,7 @@ export const SideBarBody = (props) => {
               </li>
               <li className="list-group-item">
                 <NavLink
-                  onClick={checkKnoxSSO}
+                  onClick={handleLogout}
                   to="#"
                   className="text-decoration-none"
                 >

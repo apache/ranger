@@ -172,9 +172,8 @@ sqlserver_audit_file=$(get_prop 'sqlserver_audit_file' $PROPFILE)
 sqlanywhere_core_file=$(get_prop 'sqlanywhere_core_file' $PROPFILE)
 sqlanywhere_audit_file=$(get_prop 'sqlanywhere_audit_file' $PROPFILE)
 cred_keystore_filename=$(eval echo "$(get_prop 'cred_keystore_filename' $PROPFILE)")
-sso_enabled=$(get_prop 'sso_enabled' $PROPFILE)
-sso_providerurl=$(get_prop 'sso_providerurl' $PROPFILE)
-sso_publickey=$(get_prop 'sso_publickey' $PROPFILE)
+jwt_providerurl=$(get_prop 'jwt_providerurl' $PROPFILE)
+jwt_publickey=$(get_prop 'jwt_publickey' $PROPFILE)
 FF_ENABLE_OZONE_ACTION_MATCHES_CONDITION=$(get_prop_or_default 'FF_ENABLE_OZONE_ACTION_MATCHES_CONDITION' $PROPFILE 'false')
 RANGER_ADMIN_LOG_DIR=$(eval echo "$(get_prop 'RANGER_ADMIN_LOG_DIR' $PROPFILE)")
 RANGER_ADMIN_LOGBACK_CONF_FILE=$(eval echo "$(get_prop 'RANGER_ADMIN_LOGBACK_CONF_FILE' $PROPFILE)")
@@ -1059,38 +1058,9 @@ update_properties() {
 	updatePropertyToFilePyIfNotEmpty 'xasecure.audit.jaas.Client.option.keyTab' "$(get_prop_or_default 'audit_jaas_client_option_keyTab' $PROPFILE '')" $to_file_ranger
 	updatePropertyToFilePyIfNotEmpty 'xasecure.audit.jaas.Client.option.principal' "$(get_prop_or_default 'audit_jaas_client_option_principal' $PROPFILE '')" $to_file_ranger
 
-	if [ "${sso_enabled}" == "" ]
-	then
-		sso_enabled="false"
-	fi
-
-	sso_enabled=`echo $sso_enabled | tr '[:upper:]' '[:lower:]'`
-
-	if [ "${sso_enabled}" == "true" ]
-	then
-		if [ "${sso_providerurl}" == "" ] || [ "${sso_publickey}" == "" ]
-		then
-			log "[E] Please provide valid values in SSO config properties!";
-			exit 1
-		fi
-		propertyName=ranger.sso.enabled
-		newPropertyValue="${sso_enabled}"
-		updatePropertyToFilePy $propertyName "${newPropertyValue}" $to_file_ranger
-	 
-		propertyName=ranger.sso.providerurl
-		newPropertyValue="${sso_providerurl}"
-		updatePropertyToFilePy $propertyName "${newPropertyValue}" $to_file_ranger
-	 
-		propertyName=ranger.sso.publicKey
-		newPropertyValue="${sso_publickey}"
-		updatePropertyToFilePy $propertyName "${newPropertyValue}" $to_file_ranger
-	 
-	 else
-                propertyName=ranger.sso.enabled
-                newPropertyValue="false"
-                updatePropertyToFilePy $propertyName "${newPropertyValue}" $to_file_ranger
-
-	fi
+	# JWT (Bearer token) authentication (RANGER-3739) activates automatically when a provider URL or public key is set.
+	updatePropertyToFilePyIfNotEmpty 'ranger.admin.jwt.providerurl' "${jwt_providerurl}" $to_file_ranger
+	updatePropertyToFilePyIfNotEmpty 'ranger.admin.jwt.publickey' "${jwt_publickey}" $to_file_ranger
 
 	ff_enable_ozone_action_matches_condition=$(echo "${FF_ENABLE_OZONE_ACTION_MATCHES_CONDITION}" | tr '[:upper:]' '[:lower:]')
 	if [ "${ff_enable_ozone_action_matches_condition}" != "true" ]

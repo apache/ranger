@@ -26,7 +26,6 @@ import org.apache.ranger.biz.SessionMgr;
 import org.apache.ranger.common.JSONUtil;
 import org.apache.ranger.common.PropertiesUtil;
 import org.apache.ranger.common.RangerConfigUtil;
-import org.apache.ranger.util.RestUtil;
 import org.apache.ranger.view.VXResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -114,13 +113,6 @@ public class RangerAuthenticationEntryPoint extends LoginUrlAuthenticationEntryP
 
             response.sendError(ajaxReturnCode, "");
         } else if (!(requestURI.contains(servletPath))) {
-            if (requestURI.contains(RestUtil.LOCAL_LOGIN_URL)) {
-                if (request.getSession() != null) {
-                    request.getSession().setAttribute("locallogin", "true");
-                    request.getServletContext().setAttribute(request.getSession().getId(), "locallogin");
-                }
-            }
-
             super.commence(request, response, authException);
         }
     }

@@ -850,11 +850,7 @@ public class TestRangerBizUtil {
     }
 
     @Test
-    public void testIsSSOEnabled_andGetDBVersion_andUserAdminChecks() throws Exception {
-        // session exists, SSO from session value
-        RangerContextHolder.getSecurityContext().getUserSession().setSSOEnabled(Boolean.TRUE);
-        Assertions.assertTrue(rangerBizUtil.isSSOEnabled());
-
+    public void testGetDBVersion_andUserAdminChecks() throws Exception {
         // DB version path
         XXUserDao xxUserDao = Mockito.mock(XXUserDao.class);
         Mockito.when(daoManager.getXXUser()).thenReturn(xxUserDao);

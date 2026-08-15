@@ -2644,17 +2644,6 @@ public class TestServiceREST {
     }
 
     @Test
-    public void test84CheckSSO() throws Exception {
-        Mockito.when(bizUtil.isSSOEnabled()).thenReturn(true);
-        String result = serviceREST.checkSSO();
-        Assertions.assertEquals("true", result);
-
-        Mockito.when(bizUtil.isSSOEnabled()).thenReturn(false);
-        result = serviceREST.checkSSO();
-        Assertions.assertEquals("false", result);
-    }
-
-    @Test
     public void test85GetCSRFProperties() throws Exception {
         HttpServletRequest request = Mockito.mock(HttpServletRequest.class);
         HttpSession session = Mockito.mock(HttpSession.class);
@@ -3797,18 +3786,6 @@ public class TestServiceREST {
         });
 
         Mockito.verify(restErrorUtil).createRESTException("Service not found");
-    }
-
-    @Test
-    public void test149CheckSSOWithDifferentValues() throws Exception {
-        Mockito.when(bizUtil.isSSOEnabled()).thenReturn(true);
-        String result = serviceREST.checkSSO();
-        Assertions.assertEquals("true", result);
-
-        Mockito.reset(bizUtil);
-        Mockito.when(bizUtil.isSSOEnabled()).thenReturn(false);
-        result = serviceREST.checkSSO();
-        Assertions.assertEquals("false", result);
     }
 
     @Test

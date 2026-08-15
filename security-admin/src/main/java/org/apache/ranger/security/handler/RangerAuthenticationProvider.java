@@ -85,7 +85,6 @@ public class RangerAuthenticationProvider implements AuthenticationProvider {
 
     private String            rangerAuthenticationMethod;
     private LdapAuthenticator authenticator;
-    private boolean           ssoEnabled;
 
     public RangerAuthenticationProvider() {
         this.isFipsEnabled = RangerAdminConfig.getInstance().isFipsEnabled();
@@ -93,121 +92,111 @@ public class RangerAuthenticationProvider implements AuthenticationProvider {
 
     @Override
     public Authentication authenticate(Authentication authentication) throws AuthenticationException {
-        if (isSsoEnabled()) {
-            if (authentication != null) {
-                authentication = getSSOAuthentication(authentication);
+        String sha256PasswordUpdateDisable = PropertiesUtil.getProperty("ranger.sha256Password.update.disable", "false");
+
+        if (rangerAuthenticationMethod == null) {
+            rangerAuthenticationMethod = "NONE";
+        }
+
+        if (authentication != null) {
+            if ("LDAP".equalsIgnoreCase(rangerAuthenticationMethod)) {
+                authentication = getLdapAuthentication(authentication);
+
+                if (authentication != null && authentication.isAuthenticated()) {
+                    return authentication;
+                } else {
+                    authentication = getLdapBindAuthentication(authentication);
+
+                    if (authentication != null && authentication.isAuthenticated()) {
+                        return authentication;
+                    }
+                }
+            } else if ("ACTIVE_DIRECTORY".equalsIgnoreCase(rangerAuthenticationMethod)) {
+                authentication = getADBindAuthentication(authentication);
+
+                if (authentication != null && authentication.isAuthenticated()) {
+                    return authentication;
+                } else {
+                    authentication = getADAuthentication(authentication);
+
+                    if (authentication != null && authentication.isAuthenticated()) {
+                        return authentication;
+                    }
+                }
+            } else if ("UNIX".equalsIgnoreCase(rangerAuthenticationMethod)) {
+                boolean isPAMAuthEnabled = PropertiesUtil.getBooleanProperty("ranger.pam.authentication.enabled", false);
+
+                authentication = (isPAMAuthEnabled ? getPamAuthentication(authentication) : getUnixAuthentication(authentication));
+
+                if (authentication != null && authentication.isAuthenticated()) {
+                    return authentication;
+                }
+            } else if ("PAM".equalsIgnoreCase(rangerAuthenticationMethod)) {
+                authentication = getPamAuthentication(authentication);
 
                 if (authentication != null && authentication.isAuthenticated()) {
                     return authentication;
                 }
             }
-        } else {
-            String sha256PasswordUpdateDisable = PropertiesUtil.getProperty("ranger.sha256Password.update.disable", "false");
 
-            if (rangerAuthenticationMethod == null) {
-                rangerAuthenticationMethod = "NONE";
+            // Following are JDBC
+            if (authentication != null && authentication.getName() != null && sessionMgr.isLoginIdLocked(authentication.getName())) {
+                logger.debug("Failed to authenticate since user account is locked");
+
+                throw new LockedException(messages.getMessage("AbstractUserDetailsAuthenticationProvider.locked", "User account is locked"));
             }
 
-            if (authentication != null) {
-                if ("LDAP".equalsIgnoreCase(rangerAuthenticationMethod)) {
-                    authentication = getLdapAuthentication(authentication);
-
-                    if (authentication != null && authentication.isAuthenticated()) {
-                        return authentication;
-                    } else {
-                        authentication = getLdapBindAuthentication(authentication);
-
-                        if (authentication != null && authentication.isAuthenticated()) {
-                            return authentication;
-                        }
-                    }
-                } else if ("ACTIVE_DIRECTORY".equalsIgnoreCase(rangerAuthenticationMethod)) {
-                    authentication = getADBindAuthentication(authentication);
-
-                    if (authentication != null && authentication.isAuthenticated()) {
-                        return authentication;
-                    } else {
-                        authentication = getADAuthentication(authentication);
-
-                        if (authentication != null && authentication.isAuthenticated()) {
-                            return authentication;
-                        }
-                    }
-                } else if ("UNIX".equalsIgnoreCase(rangerAuthenticationMethod)) {
-                    boolean isPAMAuthEnabled = PropertiesUtil.getBooleanProperty("ranger.pam.authentication.enabled", false);
-
-                    authentication = (isPAMAuthEnabled ? getPamAuthentication(authentication) : getUnixAuthentication(authentication));
-
-                    if (authentication != null && authentication.isAuthenticated()) {
-                        return authentication;
-                    }
-                } else if ("PAM".equalsIgnoreCase(rangerAuthenticationMethod)) {
-                    authentication = getPamAuthentication(authentication);
-
-                    if (authentication != null && authentication.isAuthenticated()) {
-                        return authentication;
-                    }
-                }
-
-                // Following are JDBC
-                if (authentication != null && authentication.getName() != null && sessionMgr.isLoginIdLocked(authentication.getName())) {
-                    logger.debug("Failed to authenticate since user account is locked");
-
-                    throw new LockedException(messages.getMessage("AbstractUserDetailsAuthenticationProvider.locked", "User account is locked"));
-                }
-
-                if (this.isFipsEnabled) {
-                    try {
-                        authentication = getJDBCAuthentication(authentication, "");
-                    } catch (Exception e) {
-                        logger.error("JDBC Authentication failure: ", e);
-                        throw e;
-                    }
-
-                    return authentication;
-                }
-
-                String encoder = "SHA256";
-
+            if (this.isFipsEnabled) {
                 try {
-                    authentication = getJDBCAuthentication(authentication, encoder);
+                    authentication = getJDBCAuthentication(authentication, "");
                 } catch (Exception e) {
-                    logger.debug("JDBC Authentication failure: ", e);
-                }
-
-                if (authentication != null && authentication.isAuthenticated()) {
-                    return authentication;
-                }
-
-                if (authentication != null && !authentication.isAuthenticated()) {
-                    logger.info("Authentication with SHA-256 failed. Now trying with MD5.");
-
-                    encoder = "MD5";
-
-                    String userName     = authentication.getName();
-                    String userPassword = null;
-
-                    if (authentication.getCredentials() != null) {
-                        userPassword = authentication.getCredentials().toString();
-                    }
-
-                    try {
-                        authentication = getJDBCAuthentication(authentication, encoder);
-                    } catch (Exception e) {
-                        throw e;
-                    }
-
-                    if (authentication != null && authentication.isAuthenticated()) {
-                        if ("false".equalsIgnoreCase(sha256PasswordUpdateDisable)) {
-                            userMgr.updatePasswordInSHA256(userName, userPassword, false);
-                        }
-                    }
-
-                    return authentication;
+                    logger.error("JDBC Authentication failure: ", e);
+                    throw e;
                 }
 
                 return authentication;
             }
+
+            String encoder = "SHA256";
+
+            try {
+                authentication = getJDBCAuthentication(authentication, encoder);
+            } catch (Exception e) {
+                logger.debug("JDBC Authentication failure: ", e);
+            }
+
+            if (authentication != null && authentication.isAuthenticated()) {
+                return authentication;
+            }
+
+            if (authentication != null && !authentication.isAuthenticated()) {
+                logger.info("Authentication with SHA-256 failed. Now trying with MD5.");
+
+                encoder = "MD5";
+
+                String userName     = authentication.getName();
+                String userPassword = null;
+
+                if (authentication.getCredentials() != null) {
+                    userPassword = authentication.getCredentials().toString();
+                }
+
+                try {
+                    authentication = getJDBCAuthentication(authentication, encoder);
+                } catch (Exception e) {
+                    throw e;
+                }
+
+                if (authentication != null && authentication.isAuthenticated()) {
+                    if ("false".equalsIgnoreCase(sha256PasswordUpdateDisable)) {
+                        userMgr.updatePasswordInSHA256(userName, userPassword, false);
+                    }
+                }
+
+                return authentication;
+            }
+
+            return authentication;
         }
 
         return authentication;
@@ -396,20 +385,6 @@ public class RangerAuthenticationProvider implements AuthenticationProvider {
         }
 
         return authentication;
-    }
-
-    /**
-     * @return the ssoEnabled
-     */
-    public boolean isSsoEnabled() {
-        return ssoEnabled;
-    }
-
-    /**
-     * @param ssoEnabled the ssoEnabled to set
-     */
-    public void setSsoEnabled(boolean ssoEnabled) {
-        this.ssoEnabled = ssoEnabled;
     }
 
     private Authentication getLdapAuthentication(Authentication authentication) {
@@ -710,9 +685,5 @@ public class RangerAuthenticationProvider implements AuthenticationProvider {
         }
 
         return grantedAuths;
-    }
-
-    private Authentication getSSOAuthentication(Authentication authentication) throws AuthenticationException {
-        return authentication;
     }
 }

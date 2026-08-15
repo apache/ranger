@@ -296,20 +296,19 @@
 		<value>(sAMAccountName={0})</value>
 		<description></description>
 	</property>
-	<!-- SSO Properties Starts-->
+	<!-- JWT (Bearer token) authentication properties. JWT auth activates automatically when a provider URL or public key is configured. -->
 	<property>
-		<name>ranger.sso.providerurl</name>
-		<value>https://127.0.0.1:8443/gateway/knoxsso/api/v1/websso</value>
+		<name>ranger.admin.jwt.providerurl</name>
+		<value></value>
 	</property>
 	<property>
-		<name>ranger.sso.enabled</name>
-		<value>false</value>
-	</property>	
+		<name>ranger.admin.jwt.publickey</name>
+		<value></value>
+	</property>
 	<property>
-		<name>ranger.sso.browser.useragent</name>
+		<name>ranger.admin.jwt.browser.useragent</name>
 		<value>Mozilla,chrome</value>
 	</property>
-	<!-- SSO Properties Ends-->
 	<property>
 		<name>ranger.admin.healthcheck.username</name>
 		<value>healthcheck</value>

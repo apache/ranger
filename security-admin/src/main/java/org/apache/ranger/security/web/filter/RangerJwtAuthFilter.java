@@ -18,6 +18,7 @@
  */
 package org.apache.ranger.security.web.filter;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.security.authorize.AuthorizationException;
@@ -71,17 +72,24 @@ public class RangerJwtAuthFilter extends RangerDefaultJwtAuthHandler implements 
          * DelegatingFilterProxy} does not invoke init method (like Servlet container).
          */
         try {
-            Properties config = new Properties();
+            String providerUrl = StringUtils.trimToNull(RangerJwtAuthConfig.getProviderUrl());
+            String publicKey   = StringUtils.trimToNull(RangerJwtAuthConfig.getPublicKey());
 
-            config.setProperty(RangerJwtAuthHandler.KEY_PROVIDER_URL, PropertiesUtil.getProperty(RangerSSOAuthenticationFilter.JWT_AUTH_PROVIDER_URL));
-            config.setProperty(RangerJwtAuthHandler.KEY_JWT_PUBLIC_KEY, PropertiesUtil.getProperty(RangerSSOAuthenticationFilter.JWT_PUBLIC_KEY, ""));
-            config.setProperty(RangerJwtAuthHandler.KEY_JWT_AUDIENCES, PropertiesUtil.getProperty(RangerSSOAuthenticationFilter.JWT_AUDIENCES, ""));
-            config.setProperty(RangerJwtAuthHandler.KEY_JWT_ISS, PropertiesUtil.getProperty(RangerSSOAuthenticationFilter.JWT_ISSUER, ""));
+            if (providerUrl == null && publicKey == null) {
+                LOG.info("JWT authentication is not configured (no provider URL or public key). Bearer token auth will be unavailable.");
+            } else {
+                Properties config = new Properties();
 
-            super.initialize(config);
+                config.setProperty(RangerJwtAuthHandler.KEY_PROVIDER_URL, StringUtils.defaultString(providerUrl));
+                config.setProperty(RangerJwtAuthHandler.KEY_JWT_PUBLIC_KEY, StringUtils.defaultString(publicKey));
+                config.setProperty(RangerJwtAuthHandler.KEY_JWT_AUDIENCES, StringUtils.defaultString(RangerJwtAuthConfig.getAudiences()));
+                config.setProperty(RangerJwtAuthHandler.KEY_JWT_ISS, StringUtils.defaultString(RangerJwtAuthConfig.getIssuer()));
 
-            Configuration conf = getProxyuserConfiguration();
-            ProxyUsers.refreshSuperUserGroupsConfiguration(conf, "ranger.proxyuser.");
+                super.initialize(config);
+
+                Configuration conf = getProxyuserConfiguration();
+                ProxyUsers.refreshSuperUserGroupsConfiguration(conf, "ranger.proxyuser.");
+            }
         } catch (Exception e) {
             LOG.error("Failed to initialize Ranger Admin JWT Auth Filter.", e);
         }
@@ -110,6 +118,10 @@ public class RangerJwtAuthFilter extends RangerDefaultJwtAuthHandler implements 
             finalAuthentication.setDetails(webDetails);
 
             SecurityContextHolder.getContext().setAuthentication(finalAuthentication);
+
+            // Marker used by downstream filters (audit auth-type classification and user auto-provisioning)
+            // to recognize a JWT-authenticated request without relying on the removed ranger.sso.enabled flag.
+            httpServletRequest.setAttribute("jwtAuthenticated", Boolean.TRUE);
         }
 
         // Log final status of request.

@@ -18,10 +18,7 @@
  */
 package org.apache.ranger.security.web.filter;
 
-import org.apache.ranger.common.PropertiesUtil;
-import org.apache.ranger.common.UserSessionBase;
 import org.apache.ranger.security.context.RangerContextHolder;
-import org.apache.ranger.security.context.RangerSecurityContext;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Test;
@@ -64,26 +61,17 @@ public class TestRangerJwtAuthWrapper {
         SecurityContextHolder.clearContext();
         RangerContextHolder.resetSecurityContext();
         RangerContextHolder.resetOpContext();
-        PropertiesUtil.getPropertiesMap().remove("ranger.sso.enabled");
     }
 
     @Test
     public void testDoFilter_redirectsToLoginForBrowserWhenNotAuthenticated() throws IOException, ServletException {
         System.setProperty("ranger.default.browser-useragents", "Mozilla,Chrome,Opera");
         SecurityContextHolder.clearContext();
-        PropertiesUtil.getPropertiesMap().put("ranger.sso.enabled", "false");
 
         RangerJwtAuthWrapper wrapper = Mockito.spy(new RangerJwtAuthWrapper());
         wrapper.initialize();
         RangerJwtAuthFilter jwtFilter = Mockito.mock(RangerJwtAuthFilter.class);
         wrapper.rangerJwtAuthFilter = jwtFilter;
-
-        // Set context with SSO disabled
-        RangerSecurityContext context = new RangerSecurityContext();
-        UserSessionBase sessionBase = new UserSessionBase();
-        sessionBase.setSSOEnabled(Boolean.FALSE);
-        context.setUserSession(sessionBase);
-        RangerContextHolder.setSecurityContext(context);
 
         HttpServletRequest req = Mockito.mock(HttpServletRequest.class);
         HttpServletResponse res = Mockito.mock(HttpServletResponse.class);
@@ -104,7 +92,7 @@ public class TestRangerJwtAuthWrapper {
     }
 
     @Test
-    public void testDoFilter_skipsJwtWhenSsoEnabled() throws IOException, ServletException {
+    public void testDoFilter_invokesJwtWhenBearerPresent() throws IOException, ServletException {
         System.setProperty("ranger.default.browser-useragents", "Mozilla,Chrome,Opera");
 
         RangerJwtAuthWrapper wrapper = Mockito.spy(new RangerJwtAuthWrapper());
@@ -112,20 +100,15 @@ public class TestRangerJwtAuthWrapper {
         RangerJwtAuthFilter jwtFilter = Mockito.mock(RangerJwtAuthFilter.class);
         wrapper.rangerJwtAuthFilter = jwtFilter;
 
-        // SSO enabled in context
-        RangerSecurityContext context = new RangerSecurityContext();
-        UserSessionBase sessionBase = new UserSessionBase();
-        sessionBase.setSSOEnabled(Boolean.TRUE);
-        context.setUserSession(sessionBase);
-        RangerContextHolder.setSecurityContext(context);
-
         HttpServletRequest req = Mockito.mock(HttpServletRequest.class);
         HttpServletResponse res = Mockito.mock(HttpServletResponse.class);
         FilterChain chain = Mockito.mock(FilterChain.class);
 
+        when(req.getHeader("Authorization")).thenReturn("Bearer sometoken");
+
         wrapper.doFilter(req, res, chain);
 
-        verify(jwtFilter, never()).doFilter(any(ServletRequest.class), any(ServletResponse.class), any(FilterChain.class));
+        verify(jwtFilter, times(1)).doFilter(any(ServletRequest.class), any(ServletResponse.class), any(FilterChain.class));
         verify(chain, times(1)).doFilter(req, res);
     }
 
@@ -133,7 +116,6 @@ public class TestRangerJwtAuthWrapper {
     void testDoFilter_invokesJwtFilter_whenBearerHeaderPresent() throws Exception {
         RangerContextHolder.resetSecurityContext();
         SecurityContextHolder.clearContext();
-        PropertiesUtil.getPropertiesMap().put("ranger.sso.enabled", "false");
 
         HttpServletRequest req = Mockito.mock(HttpServletRequest.class);
         HttpServletResponse res = Mockito.mock(HttpServletResponse.class);
@@ -154,8 +136,6 @@ public class TestRangerJwtAuthWrapper {
 
     @Test
     void testDoFilter_skipsJwt_whenAlreadyAuthenticated_evenIfBearerHeaderPresent() throws Exception {
-        PropertiesUtil.getPropertiesMap().put("ranger.sso.enabled", "false");
-
         // mark request authenticated
         SecurityContextHolder.getContext().setAuthentication(
                 new UsernamePasswordAuthenticationToken(
@@ -178,8 +158,6 @@ public class TestRangerJwtAuthWrapper {
 
     @Test
     void testDoFilter_skipsJwtFilter_whenNoBearer() throws Exception {
-        PropertiesUtil.getPropertiesMap().put("ranger.sso.enabled", "false");
-
         HttpServletRequest req = Mockito.mock(HttpServletRequest.class);
         HttpServletResponse res = Mockito.mock(HttpServletResponse.class);
         FilterChain chain = Mockito.mock(FilterChain.class);
@@ -198,8 +176,26 @@ public class TestRangerJwtAuthWrapper {
     }
 
     @Test
+    void testDoFilter_skipsJwtForHealthCheckPath_evenWithBearerHeader() throws Exception {
+        HttpServletRequest req = Mockito.mock(HttpServletRequest.class);
+        HttpServletResponse res = Mockito.mock(HttpServletResponse.class);
+        FilterChain chain = Mockito.mock(FilterChain.class);
+
+        Mockito.when(req.getRequestURI()).thenReturn("/service/actuator/health/readiness");
+        Mockito.when(req.getHeader("Authorization")).thenReturn("Bearer token");
+
+        RangerJwtAuthFilter jwt = Mockito.mock(RangerJwtAuthFilter.class);
+        RangerJwtAuthWrapper wrapper = new RangerJwtAuthWrapper();
+        setField(wrapper, "rangerJwtAuthFilter", jwt);
+
+        wrapper.doFilter(req, res, chain);
+
+        verify(jwt, never()).doFilter(req, res, chain);
+        verify(chain, times(1)).doFilter(req, res);
+    }
+
+    @Test
     void testDoFilter_redirectsToLogin_whenJwtAttemptedButUnauthenticated_andBrowserAgent() throws Exception {
-        PropertiesUtil.getPropertiesMap().put("ranger.sso.enabled", "false");
         System.setProperty("ranger.default.browser-useragents", "Mozilla");
 
         HttpServletRequest req = Mockito.mock(HttpServletRequest.class);

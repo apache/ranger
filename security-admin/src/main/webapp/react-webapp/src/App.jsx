@@ -401,11 +401,6 @@ export default class App extends Component {
                   </Route>
                   {/* USER PROFILE */}
                   <Route path="/userprofile" element={<UserProfileComp />} />
-                  {/* KNOX SSO WARNING */}
-                  <Route
-                    path="/knoxSSOWarning"
-                    element={<ErrorPage errorCode="checkSSOTrue" />}
-                  />
                   {/*DATA NOT FOUND PAGE*/}
                   <Route
                     path="/dataNotFound"
@@ -419,7 +414,6 @@ export default class App extends Component {
                     path="/forbidden"
                     element={<ErrorPage errorCode="403" />}
                   />
-                  <Route path="/locallogin" element={<Loader />} />
                   {/* NOT FOUND ROUTE */}
                   <Route path="*" />
                   {/* GDS */}

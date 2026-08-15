@@ -42,7 +42,6 @@ public class UserSessionBase implements Serializable {
     private int                  authProvider   = RangerConstants.USER_APP;
     private List<String>         userRoleList   = new ArrayList<>();
     private RangerUserPermission rangerUserPermission;
-    private Boolean              isSSOEnabled;
     private Boolean              isSpnegoEnabled = Boolean.FALSE;
 
     public Long getUserId() {
@@ -168,14 +167,6 @@ public class UserSessionBase implements Serializable {
      */
     public void setRangerUserPermission(RangerUserPermission rangerUserPermission) {
         this.rangerUserPermission = rangerUserPermission;
-    }
-
-    public Boolean isSSOEnabled() {
-        return isSSOEnabled;
-    }
-
-    public void setSSOEnabled(Boolean isSSOEnabled) {
-        this.isSSOEnabled = isSSOEnabled;
     }
 
     public Boolean isSpnegoEnabled() {

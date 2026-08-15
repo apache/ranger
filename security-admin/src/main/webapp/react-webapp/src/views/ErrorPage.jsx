@@ -49,18 +49,6 @@ export const ErrorPage = (props) => {
         "Sorry, you don't have enough privileges to view this page."
       );
     }
-    if (props.errorCode == "checkSSOTrue") {
-      setErrorCode("Sign Out Is Not Complete!");
-      setErrorInfo(
-        <span>
-          Authentication to this instance of Ranger is managed externally(for
-          example,Apache Knox). You can still open this instance of Ranger from
-          the same web browser without re-authentication.To prevent additional
-          access to Ranger,
-          <strong>close all browser windows and exit the browser</strong>.
-        </span>
-      );
-    }
     if (props.errorCode == "404") {
       setErrorCode("Page not found (404).");
       setErrorInfo("Sorry, this page isn't here or has moved.");
@@ -97,11 +85,9 @@ export const ErrorPage = (props) => {
           >
             <i className="fa-fw fa fa-long-arrow-left"></i> Go back
           </Button>
-          {props.errorCode !== "checkSSOTrue" && (
-            <Button size="sm" onClick={() => navigate(getLandingPageURl())}>
-              Home
-            </Button>
-          )}
+          <Button size="sm" onClick={() => navigate(getLandingPageURl())}>
+            Home
+          </Button>
         </div>
       </div>
     </div>

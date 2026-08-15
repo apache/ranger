@@ -167,6 +167,57 @@ public class TestSessionMgr {
     }
 
     @Test
+    public void testProcessSuccessLogin_CreatesHealthCheckUserWhenSsoDisabled() {
+        Authentication authentication = mock(Authentication.class);
+        WebAuthenticationDetails details = mock(WebAuthenticationDetails.class);
+        when(authentication.getDetails()).thenReturn(details);
+        when(authentication.getName()).thenReturn(RangerBizUtil.HEALTHCHECK_USERNAME);
+        SecurityContext sc = SecurityContextHolder.createEmptyContext();
+        sc.setAuthentication(authentication);
+        SecurityContextHolder.setContext(sc);
+
+        XXPortalUser healthUser = new XXPortalUser();
+        healthUser.setId(42L);
+        healthUser.setLoginId(RangerBizUtil.HEALTHCHECK_USERNAME);
+
+        XXPortalUserDao portalDao = mock(XXPortalUserDao.class);
+        when(daoManager.getXXPortalUser()).thenReturn(portalDao);
+        when(portalDao.findByLoginId(RangerBizUtil.HEALTHCHECK_USERNAME)).thenReturn(null, healthUser);
+
+        when(bizUtil.isHealthCheckUser(RangerBizUtil.HEALTHCHECK_USERNAME)).thenReturn(true);
+
+        XXPortalUserRoleDao roleDao = mock(XXPortalUserRoleDao.class);
+        when(daoManager.getXXPortalUserRole()).thenReturn(roleDao);
+        when(roleDao.findByUserId(42L)).thenReturn(Collections.emptyList());
+
+        XXUserDao xxUserDao = mock(XXUserDao.class);
+        when(daoManager.getXXUser()).thenReturn(xxUserDao);
+        XXUser xUser = new XXUser();
+        xUser.setId(42L);
+        when(xxUserDao.findByUserName(RangerBizUtil.HEALTHCHECK_USERNAME)).thenReturn(xUser);
+
+        XXModuleDefDao moduleDefDao = mock(XXModuleDefDao.class);
+        when(daoManager.getXXModuleDef()).thenReturn(moduleDefDao);
+        when(moduleDefDao.findAccessibleModulesByUserId(42L, 42L)).thenReturn(Collections.emptyList());
+
+        when(httpUtil.getDeviceType(anyString())).thenReturn(RangerCommonEnums.DEVICE_UNKNOWN);
+
+        HttpSession httpSession = mock(HttpSession.class);
+        when(httpSession.getAttribute("auditLoginId")).thenReturn(null);
+        HttpServletRequest request = mock(HttpServletRequest.class);
+        when(request.getSession()).thenReturn(httpSession);
+        when(request.getRequestURI()).thenReturn("/service/actuator/health/readiness");
+
+        UserSessionBase ret = sessionMgr.processSuccessLogin(XXAuthSession.AUTH_TYPE_TRUSTED_PROXY, "probe", request);
+
+        verify(xUserMgr).createServiceConfigUserSynchronously(RangerBizUtil.HEALTHCHECK_USERNAME);
+        verify(xUserMgr, never()).createServiceConfigUser(anyString());
+        assertNotNull(ret);
+
+        SecurityContextHolder.clearContext();
+    }
+
+    @Test
     public void testProcessSuccessLogin_ExistingValidSession() {
         // Prepare existing user session in RangerContextHolder
         UserSessionBase existing = new UserSessionBase();
@@ -248,7 +299,6 @@ public class TestSessionMgr {
         UserSessionBase ret = sessionMgr.processSuccessLogin(XXAuthSession.AUTH_TYPE_TRUSTED_PROXY, "UA", request);
         assertNotNull(ret);
         assertEquals(21L, ret.getUserId());
-        assertTrue(ret.isSSOEnabled());
         assertTrue(ret.isSpnegoEnabled());
     }
 

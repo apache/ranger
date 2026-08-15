@@ -116,20 +116,17 @@ public class TestRangerAuthenticationEntryPoint {
     }
 
     @Test
-    public void testCommence_NonAjax_LocalLogin_setsAttributesAndCallsParent() throws IOException, ServletException {
+    public void testCommence_NonAjax_NotService_doesNotSetLocalLoginAttributes() throws IOException, ServletException {
         StringWriter localBuffer = new StringWriter();
         when(response.getWriter()).thenReturn(new PrintWriter(localBuffer));
         PropertiesUtil.getPropertiesMap().put("ranger.servlet.mapping.url.pattern", "service");
 
         HttpSession     session = Mockito.mock(HttpSession.class);
         ServletContext  context = Mockito.mock(ServletContext.class);
-        when(request.getSession()).thenReturn(session);
-        when(request.getServletContext()).thenReturn(context);
         when(request.getContextPath()).thenReturn("");
         when(request.getScheme()).thenReturn("http");
         when(request.getServerName()).thenReturn("localhost");
         when(request.getServerPort()).thenReturn(80);
-        when(session.getId()).thenReturn("sid");
 
         when(request.getHeader("X-Requested-With")).thenReturn(null);
         when(request.getRequestURI()).thenReturn("/locallogin");
@@ -137,8 +134,9 @@ public class TestRangerAuthenticationEntryPoint {
 
         entryPoint.commence(request, response, authException);
 
-        verify(session).setAttribute("locallogin", "true");
-        verify(context).setAttribute("sid", "locallogin");
+        // Knox SSO "locallogin" scaffolding has been removed; no locallogin session/context attributes should be set.
+        verify(session, never()).setAttribute(anyString(), anyString());
+        verify(context, never()).setAttribute(anyString(), anyString());
     }
 
     @Test
