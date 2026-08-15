@@ -39,14 +39,12 @@ import java.util.Properties;
  * environment variable.
  */
 public final class SpiffeIdentityResolver {
-    public static final String PROP_SPIFFE_VALUE = "authn.spiffe.value";
-    public static final String PROP_SPIFFE_FILE  = "authn.spiffe.file";
-    public static final String ENV_SPIFFE_ID     = "SPIFFE_ID";
-    public static final String DEFAULT_SPIFFE_IDENTITY_FILE =
-            "/var/run/secrets/spiffe.io/identity/spiffe";
+    private static final Logger LOG = LoggerFactory.getLogger(SpiffeIdentityResolver.class);
 
-    private static final Logger LOG =
-            LoggerFactory.getLogger(SpiffeIdentityResolver.class);
+    public static final String PROP_SPIFFE_VALUE            = "authn.spiffe.value";
+    public static final String PROP_SPIFFE_FILE             = "authn.spiffe.file";
+    public static final String ENV_SPIFFE_ID                = "SPIFFE_ID";
+    public static final String DEFAULT_SPIFFE_IDENTITY_FILE = "/var/run/secrets/spiffe.io/identity/spiffe";
 
     private SpiffeIdentityResolver() {
         // to block instantiation
@@ -60,58 +58,56 @@ public final class SpiffeIdentityResolver {
      * @return the resolved SPIFFE ID, or {@code null} when unavailable
      */
     public static String resolve(final Properties props, final String configPrefix) {
+        String ret;
+
         if (props == null || StringUtils.isBlank(configPrefix)) {
-            return null;
+            ret = null;
+        } else {
+            ret = StringUtils.trimToNull(props.getProperty(configPrefix + "." + PROP_SPIFFE_VALUE));
+    
+            if (ret == null) {
+                String filePath = StringUtils.trimToNull(props.getProperty(configPrefix + "." + PROP_SPIFFE_FILE));
+        
+                if (filePath == null) {
+                    filePath = DEFAULT_SPIFFE_IDENTITY_FILE;
+                }
+        
+                ret = readFirstLine(filePath);
+        
+                if (ret == null) {
+                    ret = StringUtils.trimToNull(System.getenv(ENV_SPIFFE_ID));
+                }
+            }
         }
 
-        String value = StringUtils.trimToNull(
-                props.getProperty(configPrefix + "." + PROP_SPIFFE_VALUE));
-
-        if (value != null) {
-            return value;
-        }
-
-        String filePath = StringUtils.trimToNull(
-                props.getProperty(configPrefix + "." + PROP_SPIFFE_FILE));
-
-        if (filePath == null) {
-            filePath = DEFAULT_SPIFFE_IDENTITY_FILE;
-        }
-
-        value = readFirstLine(filePath);
-
-        if (value != null) {
-            return value;
-        }
-
-        return StringUtils.trimToNull(System.getenv(ENV_SPIFFE_ID));
+        return ret;
     }
 
     private static String readFirstLine(final String filePath) {
-        if (StringUtils.isBlank(filePath)) {
-            return null;
-        }
+        String ret = null;
 
-        try {
-            Path path = Paths.get(filePath.trim());
+        if (StringUtils.isNotBlank(filePath)) {
+            try {
+                Path path = Paths.get(filePath.trim());
+    
+                if (Files.isRegularFile(path)) {
+                    List<String> lines = Files.readAllLines(path, StandardCharsets.UTF_8);
+        
+                    for (String line : lines) {
+                        String trimmed = StringUtils.trimToNull(line);
+        
+                        if (trimmed != null) {
+                            ret = trimmed;
 
-            if (!Files.isRegularFile(path)) {
-                return null;
-            }
-
-            List<String> lines = Files.readAllLines(path, StandardCharsets.UTF_8);
-
-            for (String line : lines) {
-                String trimmed = StringUtils.trimToNull(line);
-
-                if (trimmed != null) {
-                    return trimmed;
+                            break;
+                        }
+                    }
                 }
+            } catch (IOException ex) {
+                LOG.debug("Unable to read SPIFFE identity from file {}", filePath, ex);
             }
-        } catch (IOException ex) {
-            LOG.debug("Unable to read SPIFFE identity from file {}", filePath, ex);
         }
 
-        return null;
+        return ret;
     }
 }
