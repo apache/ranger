@@ -58,11 +58,9 @@ public final class SpiffeIdentityResolver {
      * @return the resolved SPIFFE ID, or {@code null} when unavailable
      */
     public static String resolve(final Properties props, final String configPrefix) {
-        String ret;
+        String ret = null;
 
-        if (props == null || StringUtils.isBlank(configPrefix)) {
-            ret = null;
-        } else {
+        if (props != null && StringUtils.isNotBlank(configPrefix)) {
             ret = StringUtils.trimToNull(props.getProperty(configPrefix + "." + PROP_SPIFFE_VALUE));
     
             if (ret == null) {
@@ -79,6 +77,9 @@ public final class SpiffeIdentityResolver {
                 }
             }
         }
+
+        LOG.debug("resolve(configPrefix={}): ret={}", configPrefix, ret);
+
 
         return ret;
     }
