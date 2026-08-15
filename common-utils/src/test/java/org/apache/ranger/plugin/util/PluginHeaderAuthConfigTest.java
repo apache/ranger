@@ -70,4 +70,33 @@ public class PluginHeaderAuthConfigTest {
     public void isHeaderAuthEnabledFalseForMissingPrefix() {
         assertFalse(PluginHeaderAuthConfig.isHeaderAuthEnabled(new Properties(), "ranger.ozone"));
     }
+
+    @Test
+    public void buildSpiffeAuthHeadersEmptyWhenHeaderNamesMisconfigured() {
+        Properties props = new Properties();
+        props.setProperty("ranger.ozone.authn.header.enabled", "true");
+        props.setProperty("ranger.ozone.authn.header.spiffe", ",");
+        props.setProperty("ranger.ozone.authn.spiffe.value", VALID_SPIFFE);
+
+        assertTrue(PluginHeaderAuthConfig.buildSpiffeAuthHeaders(props, "ranger.ozone").isEmpty());
+    }
+
+    @Test
+    public void buildSpiffeAuthHeadersEmptyWhenSpiffeIdUnresolved() {
+        Properties props = new Properties();
+        props.setProperty("ranger.ozone.authn.header.enabled", "true");
+        props.setProperty("ranger.ozone.authn.header.spiffe", "X-Spiffe-Id");
+
+        assertTrue(PluginHeaderAuthConfig.buildSpiffeAuthHeaders(props, "ranger.ozone").isEmpty());
+    }
+
+    @Test
+    public void buildSpiffeAuthHeadersEmptyWhenSpiffeIdMalformed() {
+        Properties props = new Properties();
+        props.setProperty("ranger.ozone.authn.header.enabled", "true");
+        props.setProperty("ranger.ozone.authn.header.spiffe", "X-Spiffe-Id");
+        props.setProperty("ranger.ozone.authn.spiffe.value", "not-a-spiffe-id");
+
+        assertTrue(PluginHeaderAuthConfig.buildSpiffeAuthHeaders(props, "ranger.ozone").isEmpty());
+    }
 }

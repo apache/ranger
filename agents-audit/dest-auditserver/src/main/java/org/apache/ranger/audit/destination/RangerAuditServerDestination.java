@@ -99,6 +99,8 @@ public class RangerAuditServerDestination extends AuditDestination {
         this.restClient.setMaxRetryAttempts(maxRetryAttempts);
         this.restClient.setRetryIntervalMs(retryIntervalMs);
 
+        // SPIFFE header auth is orthogonal to authn.type (JWT/Basic/Kerberos): when enabled,
+        // trusted headers are added in addition to whatever authType configured above.
         Map<String, String> spiffeHeaders = PluginHeaderAuthConfig.buildSpiffeAuthHeaders(props, propPrefix);
         if (!spiffeHeaders.isEmpty()) {
             this.restClient.setTrustedAuthHeaders(spiffeHeaders);

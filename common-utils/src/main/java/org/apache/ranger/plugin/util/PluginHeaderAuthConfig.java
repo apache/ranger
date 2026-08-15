@@ -107,7 +107,7 @@ public final class PluginHeaderAuthConfig {
         Map<String, String> headers = new LinkedHashMap<>();
 
         for (String headerName : headerNames) {
-            headers.put(headerName, spiffeId.trim());
+            headers.put(headerName, spiffeId);
         }
 
         return Collections.unmodifiableMap(headers);
