@@ -82,46 +82,46 @@ public final class PluginHeaderAuthConfig {
      * @return immutable header map; empty when auth is disabled or misconfigured
      */
     public static Map<String, String> buildTrustedAuthHeaders(final Properties props, final String configPrefix) {
-        if (!isHeaderAuthEnabled(props, configPrefix)) {
-            return Collections.emptyMap();
-        }
+        final Map<String, String> ret;
 
-        String              propertyPrefix = configPrefix + "." + PROP_HEADER_PREFIX;
-        Map<String, String> headers        = new LinkedHashMap<>();
-
-        for (String propertyName : sortedPropertyNames(props)) {
-            if (!propertyName.startsWith(propertyPrefix)) {
-                continue;
+        if (isHeaderAuthEnabled(props, configPrefix)) {
+            String              propertyPrefix = configPrefix + "." + PROP_HEADER_PREFIX;
+            Map<String, String> headers        = new LinkedHashMap<>();
+    
+            for (String propertyName : sortedPropertyNames(props)) {
+                if (!propertyName.startsWith(propertyPrefix)) {
+                    continue;
+                }
+    
+                String headerName = propertyName.substring(propertyPrefix.length());
+    
+                if (StringUtils.isBlank(headerName) || "enabled".equals(headerName)) {
+                    continue;
+                }
+    
+                String headerValue = resolveConfiguredValue(props.getProperty(propertyName));
+    
+                addConfiguredHeader(headers, configPrefix, headerName, headerValue);
             }
-
-            String headerName = propertyName.substring(propertyPrefix.length());
-
-            if (StringUtils.isBlank(headerName) || "enabled".equals(headerName)) {
-                continue;
+    
+            if (headers.isEmpty()) {
+                LOG.warn("Plugin header auth enabled for {} but no trusted headers could be resolved", configPrefix);
             }
-
-            String headerValue = resolveConfiguredValue(props.getProperty(propertyName));
-
-            addConfiguredHeader(headers, configPrefix, headerName, headerValue);
+    
+            ret = Collections.unmodifiableMap(headers);
+        } else {
+            ret = Collections.emptyMap();
         }
 
-        if (headers.isEmpty()) {
-            LOG.warn("Plugin header auth enabled for {} but no trusted headers could be resolved", configPrefix);
-        }
-
-        return Collections.unmodifiableMap(headers);
+        return ret;
     }
 
-    private static void addConfiguredHeader(final Map<String, String> headers,
-            final String configPrefix, final String headerName,
-            final String headerValue) {
+    private static void addConfiguredHeader(final Map<String, String> headers, final String configPrefix, final String headerName, final String headerValue) {
         if (StringUtils.isBlank(headerValue)) {
-            LOG.warn("Plugin header auth enabled for {} but trusted header {} "
-                    + "has no resolvable value", configPrefix, headerName);
-            return;
+            LOG.warn("Plugin header auth enabled for {} but trusted header {} has no resolvable value", configPrefix, headerName);
+        } else {
+            headers.put(headerName, headerValue);
         }
-
-        headers.put(headerName, headerValue);
     }
 
     private static String resolveConfiguredValue(final String valueSpec) {
@@ -159,8 +159,7 @@ public final class PluginHeaderAuthConfig {
                     }
                 }
             } catch (IOException ex) {
-                LOG.debug("Unable to read trusted header value from file {}",
-                        filePath, ex);
+                LOG.debug("Unable to read trusted header value from file {}", filePath, ex);
             }
         }
 
