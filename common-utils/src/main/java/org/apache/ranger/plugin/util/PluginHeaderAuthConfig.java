@@ -33,23 +33,35 @@ import java.util.Properties;
 /**
  * Outbound trusted-header auth for audit-server and other REST clients.
  *
- * <p>Legacy SPIFFE configuration (audit destination example):
+ * <p>When {@code authn.header.enabled=true}, trusted HTTP headers are added to every
+ * outbound REST request. Header names and values are resolved from configuration under
+ * a caller-supplied prefix (audit destination example below).
+ *
+ * <p>Legacy mode (no {@code authn.header.headers}): a single SPIFFE workload-identity
+ * header is built from {@code authn.header.spiffe} (HTTP header name, default
+ * {@code X-Spiffe-Id}) and a SPIFFE ID resolved by {@link SpiffeIdentityResolver}
+ * ({@code authn.spiffe.value}, {@code authn.spiffe.file}, or {@code SPIFFE_ID} env).
  * <pre>
  * xasecure.audit.destination.auditserver.authn.header.enabled=true
  * xasecure.audit.destination.auditserver.authn.header.spiffe=X-Spiffe-Id
  * xasecure.audit.destination.auditserver.authn.spiffe.value=spiffe://...
  * </pre>
  *
- * <p>Generic slot-based configuration:
+ * <p>Generic slot-based mode ({@code authn.header.headers} set): header names and
+ * values are read from {@code authn.header.{slot}} properties. Value specs support
+ * {@code file:}, {@code env:}, or a literal string.
  * <pre>
- * authn.header.enabled=true
- * authn.header.headers=spiffe,value
- * authn.header.spiffe=X-Spiffe-Id
- * authn.header.value=file:/path/to/spiffe-id.file
+ * xasecure.audit.destination.auditserver.authn.header.enabled=true
+ * xasecure.audit.destination.auditserver.authn.header.headers=spiffe,value
+ * xasecure.audit.destination.auditserver.authn.header.spiffe=X-Spiffe-Id
+ * xasecure.audit.destination.auditserver.authn.header.value=file:/path/to/spiffe-id.file
+ * # valid value specs for authn.header.{slot}.value (or the "value" slot):
+ * #   file:/path/to/spiffe-id.file
+ * #   env:SPIFFE_ID
+ * #   spiffe://trust-domain/ns/.../sa/...  (literal string)
  * </pre>
- * Value specs support {@code file:}, {@code env:}, or a literal string. Multiple
- * headers can be configured with {@code authn.header.{slot}} for the HTTP header
- * name and {@code authn.header.{slot}.value} for the value spec.
+ * Multiple headers can also be configured with {@code authn.header.{slot}} for the
+ * HTTP header name and {@code authn.header.{slot}.value} for the value spec.
  */
 public final class PluginHeaderAuthConfig {
     public static final String PROP_HEADER_AUTH_ENABLED   = "authn.header.enabled";
@@ -89,6 +101,9 @@ public final class PluginHeaderAuthConfig {
 
     /**
      * Builds trusted HTTP headers for outbound REST calls when header auth is enabled.
+     *
+     * <p>Uses legacy SPIFFE resolution when {@code authn.header.headers} is unset;
+     * otherwise resolves headers from configured slots (see class Javadoc).
      *
      * @param props        plugin or site configuration properties
      * @param configPrefix prefix such as {@code xasecure.audit.destination.auditserver}
