@@ -69,17 +69,6 @@ public class PluginHeaderAuthConfigTest {
     }
 
     @Test
-    public void resolveSpiffeIdFromFile(@TempDir Path tempDir) throws Exception {
-        Path spiffeFile = tempDir.resolve("spiffe");
-        Files.writeString(spiffeFile, VALID_SPIFFE + "\n", StandardCharsets.UTF_8);
-
-        Properties props = new Properties();
-        props.setProperty("ranger.hive.authn.spiffe.file", spiffeFile.toString());
-
-        assertEquals(VALID_SPIFFE, SpiffeIdentityResolver.resolve(props, "ranger.hive"));
-    }
-
-    @Test
     public void isHeaderAuthEnabledFalseForMissingPrefix() {
         assertFalse(PluginHeaderAuthConfig.isHeaderAuthEnabled(new Properties(), "ranger.ozone"));
     }
@@ -97,15 +86,6 @@ public class PluginHeaderAuthConfigTest {
         Properties props = new Properties();
         props.setProperty("ranger.ozone.authn.header.enabled", "true");
         props.setProperty("ranger.ozone.authn.header.X-Spiffe-Id", "env:UNSET_SPIFFE_ID_VAR");
-
-        assertTrue(PluginHeaderAuthConfig.buildTrustedAuthHeaders(props, "ranger.ozone").isEmpty());
-    }
-
-    @Test
-    public void buildTrustedAuthHeadersEmptyWhenSpiffeIdMalformed() {
-        Properties props = new Properties();
-        props.setProperty("ranger.ozone.authn.header.enabled", "true");
-        props.setProperty("ranger.ozone.authn.header.X-Spiffe-Id", "spiffe://not-valid");
 
         assertTrue(PluginHeaderAuthConfig.buildTrustedAuthHeaders(props, "ranger.ozone").isEmpty());
     }

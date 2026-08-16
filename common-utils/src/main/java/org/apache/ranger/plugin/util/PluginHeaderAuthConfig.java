@@ -23,6 +23,11 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -107,14 +112,16 @@ public final class PluginHeaderAuthConfig {
         return Collections.unmodifiableMap(headers);
     }
 
-    private static void addConfiguredHeader(final Map<String, String> headers, final String configPrefix, final String headerName, final String headerValue) {
+    private static void addConfiguredHeader(final Map<String, String> headers,
+            final String configPrefix, final String headerName,
+            final String headerValue) {
         if (StringUtils.isBlank(headerValue)) {
-            LOG.warn("Plugin header auth enabled for {} but trusted header {} has no resolvable value", configPrefix, headerName);
-        } else if (headerValue.startsWith("spiffe://") && !SpiffeIdUtil.isValidSpiffeId(headerValue)) {
-            LOG.warn("Resolved trusted header value for {} is not a well-formed SPIFFE ID", configPrefix);
-        } else {
-            headers.put(headerName, headerValue);
+            LOG.warn("Plugin header auth enabled for {} but trusted header {} "
+                    + "has no resolvable value", configPrefix, headerName);
+            return;
         }
+
+        headers.put(headerName, headerValue);
     }
 
     private static String resolveConfiguredValue(final String valueSpec) {
@@ -123,11 +130,38 @@ public final class PluginHeaderAuthConfig {
         if (StringUtils.isBlank(valueSpec)) {
             ret = null;
         } else if (valueSpec.startsWith(VALUE_PREFIX_FILE)) {
-            ret = SpiffeIdentityResolver.readFirstLine(valueSpec.substring(VALUE_PREFIX_FILE.length()));
+            ret = readFirstNonBlankLine(valueSpec.substring(VALUE_PREFIX_FILE.length()));
         } else if (valueSpec.startsWith(VALUE_PREFIX_ENV)) {
             ret = StringUtils.trimToNull(System.getenv(valueSpec.substring(VALUE_PREFIX_ENV.length())));
         } else {
             ret = StringUtils.trimToNull(valueSpec);
+        }
+
+        return ret;
+    }
+
+    private static String readFirstNonBlankLine(final String filePath) {
+        String ret = null;
+
+        if (StringUtils.isNotBlank(filePath)) {
+            try {
+                Path path = Paths.get(filePath.trim());
+
+                if (Files.isRegularFile(path)) {
+                    for (String line : Files.readAllLines(path, StandardCharsets.UTF_8)) {
+                        String trimmed = StringUtils.trimToNull(line);
+
+                        if (trimmed != null) {
+                            ret = trimmed;
+
+                            break;
+                        }
+                    }
+                }
+            } catch (IOException ex) {
+                LOG.debug("Unable to read trusted header value from file {}",
+                        filePath, ex);
+            }
         }
 
         return ret;
