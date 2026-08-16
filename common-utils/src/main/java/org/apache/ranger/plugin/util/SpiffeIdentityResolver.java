@@ -4,8 +4,8 @@
  * distributed with this work for additional information
  * regarding copyright ownership.  The ASF licenses this file
  * to you under the Apache License, Version 2.0 (the
- * "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
  * http://www.apache.org/licenses/LICENSE-2.0
  *
@@ -39,12 +39,14 @@ import java.util.Properties;
  * environment variable.
  */
 public final class SpiffeIdentityResolver {
-    private static final Logger LOG = LoggerFactory.getLogger(SpiffeIdentityResolver.class);
+    public static final String PROP_SPIFFE_VALUE = "authn.spiffe.value";
+    public static final String PROP_SPIFFE_FILE  = "authn.spiffe.file";
+    public static final String ENV_SPIFFE_ID     = "SPIFFE_ID";
+    public static final String DEFAULT_SPIFFE_IDENTITY_FILE =
+            "/var/run/secrets/spiffe.io/identity/spiffe";
 
-    public static final String PROP_SPIFFE_VALUE            = "authn.spiffe.value";
-    public static final String PROP_SPIFFE_FILE             = "authn.spiffe.file";
-    public static final String ENV_SPIFFE_ID                = "SPIFFE_ID";
-    public static final String DEFAULT_SPIFFE_IDENTITY_FILE = "/var/run/secrets/spiffe.io/identity/spiffe";
+    private static final Logger LOG =
+            LoggerFactory.getLogger(SpiffeIdentityResolver.class);
 
     private SpiffeIdentityResolver() {
         // to block instantiation
@@ -61,17 +63,19 @@ public final class SpiffeIdentityResolver {
         String ret = null;
 
         if (props != null && StringUtils.isNotBlank(configPrefix)) {
-            ret = StringUtils.trimToNull(props.getProperty(configPrefix + "." + PROP_SPIFFE_VALUE));
-    
+            ret = StringUtils.trimToNull(
+                    props.getProperty(configPrefix + "." + PROP_SPIFFE_VALUE));
+
             if (ret == null) {
-                String filePath = StringUtils.trimToNull(props.getProperty(configPrefix + "." + PROP_SPIFFE_FILE));
-        
+                String filePath = StringUtils.trimToNull(
+                        props.getProperty(configPrefix + "." + PROP_SPIFFE_FILE));
+
                 if (filePath == null) {
                     filePath = DEFAULT_SPIFFE_IDENTITY_FILE;
                 }
-        
+
                 ret = readFirstLine(filePath);
-        
+
                 if (ret == null) {
                     ret = StringUtils.trimToNull(System.getenv(ENV_SPIFFE_ID));
                 }
@@ -80,23 +84,22 @@ public final class SpiffeIdentityResolver {
 
         LOG.debug("resolve(configPrefix={}): ret={}", configPrefix, ret);
 
-
         return ret;
     }
 
-    private static String readFirstLine(final String filePath) {
+    static String readFirstLine(final String filePath) {
         String ret = null;
 
         if (StringUtils.isNotBlank(filePath)) {
             try {
                 Path path = Paths.get(filePath.trim());
-    
+
                 if (Files.isRegularFile(path)) {
                     List<String> lines = Files.readAllLines(path, StandardCharsets.UTF_8);
-        
+
                     for (String line : lines) {
                         String trimmed = StringUtils.trimToNull(line);
-        
+
                         if (trimmed != null) {
                             ret = trimmed;
 

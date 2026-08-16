@@ -30,27 +30,27 @@ public class RangerAuditServerDestinationTest {
     private static final String AUDIT_DEST_PREFIX = "xasecure.audit.destination.auditserver";
 
     @Test
-    public void buildSpiffeAuthHeadersUsesAuditDestinationPrefix() {
+    public void buildTrustedAuthHeadersUsesAuditDestinationPrefix() {
         Properties props = new Properties();
         props.setProperty(AUDIT_DEST_PREFIX + ".authn.header.enabled", "true");
         props.setProperty(AUDIT_DEST_PREFIX + ".authn.header.spiffe", "X-Spiffe-Id");
         props.setProperty(AUDIT_DEST_PREFIX + ".authn.spiffe.value",
                 "spiffe://example.com/ns/default/sa/hive");
 
-        Map<String, String> headers = PluginHeaderAuthConfig.buildSpiffeAuthHeaders(props, AUDIT_DEST_PREFIX);
+        Map<String, String> headers = PluginHeaderAuthConfig.buildTrustedAuthHeaders(props, AUDIT_DEST_PREFIX);
 
         assertEquals(1, headers.size());
         assertEquals("spiffe://example.com/ns/default/sa/hive", headers.get("X-Spiffe-Id"));
     }
 
     @Test
-    public void buildSpiffeAuthHeadersEmptyWhenAuditDestinationDisabled() {
+    public void buildTrustedAuthHeadersEmptyWhenAuditDestinationDisabled() {
         Properties props = new Properties();
         props.setProperty(AUDIT_DEST_PREFIX + ".authn.header.enabled", "false");
         props.setProperty(AUDIT_DEST_PREFIX + ".authn.spiffe.value",
                 "spiffe://example.com/ns/default/sa/hive");
 
-        Map<String, String> headers = PluginHeaderAuthConfig.buildSpiffeAuthHeaders(props, AUDIT_DEST_PREFIX);
+        Map<String, String> headers = PluginHeaderAuthConfig.buildTrustedAuthHeaders(props, AUDIT_DEST_PREFIX);
 
         assertTrue(headers.isEmpty());
     }
