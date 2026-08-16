@@ -87,27 +87,27 @@ public final class PluginHeaderAuthConfig {
         if (isHeaderAuthEnabled(props, configPrefix)) {
             String              propertyPrefix = configPrefix + "." + PROP_HEADER_PREFIX;
             Map<String, String> headers        = new LinkedHashMap<>();
-    
+
             for (String propertyName : sortedPropertyNames(props)) {
                 if (!propertyName.startsWith(propertyPrefix)) {
                     continue;
                 }
-    
+
                 String headerName = propertyName.substring(propertyPrefix.length());
-    
+
                 if (StringUtils.isBlank(headerName) || "enabled".equals(headerName)) {
                     continue;
                 }
-    
+
                 String headerValue = resolveConfiguredValue(props.getProperty(propertyName));
-    
+
                 addConfiguredHeader(headers, configPrefix, headerName, headerValue);
             }
-    
+
             if (headers.isEmpty()) {
                 LOG.warn("Plugin header auth enabled for {} but no trusted headers could be resolved", configPrefix);
             }
-    
+
             ret = Collections.unmodifiableMap(headers);
         } else {
             ret = Collections.emptyMap();
