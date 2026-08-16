@@ -68,7 +68,7 @@ public class TestRangerRESTClient {
     @Test
     public void setTrustedAuthHeadersAddsHeaderToOutboundRequest() throws Exception {
         AtomicReference<String> capturedSpiffeHeader = new AtomicReference<>();
-        HttpServer httpServer = HttpServer.create(new InetSocketAddress(0), 0);
+        HttpServer              httpServer           = HttpServer.create(new InetSocketAddress(0), 0);
 
         httpServer.createContext("/", exchange -> {
             List<String> values = exchange.getRequestHeaders().get("X-Spiffe-Id");
@@ -80,13 +80,14 @@ public class TestRangerRESTClient {
             exchange.sendResponseHeaders(200, -1);
             exchange.close();
         });
+
         httpServer.start();
 
         try {
-            String serverUrl = "http://localhost:" + httpServer.getAddress().getPort();
-            Configuration conf = new Configuration();
-            RangerRESTClient client = new RangerRESTClient(serverUrl, null, conf);
-            Map<String, String> headers = new LinkedHashMap<>();
+            String              serverUrl = "http://localhost:" + httpServer.getAddress().getPort();
+            Configuration       conf      = new Configuration();
+            RangerRESTClient    client    = new RangerRESTClient(serverUrl, null, conf);
+            Map<String, String> headers   = new LinkedHashMap<>();
 
             headers.put("X-Spiffe-Id", VALID_SPIFFE);
             client.setTrustedAuthHeaders(headers);
