@@ -32,9 +32,9 @@ public class RangerAuditServerDestinationTest {
     @Test
     public void buildTrustedAuthHeadersUsesAuditDestinationPrefix() {
         Properties props = new Properties();
+
         props.setProperty(AUDIT_DEST_PREFIX + ".authn.header.enabled", "true");
-        props.setProperty(AUDIT_DEST_PREFIX + ".authn.header.X-Spiffe-Id",
-                "spiffe://prod-cluster.k8s.example.com/ns/ranger/sa/hive");
+        props.setProperty(AUDIT_DEST_PREFIX + ".authn.header.X-Spiffe-Id", "spiffe://prod-cluster.k8s.example.com/ns/ranger/sa/hive");
 
         Map<String, String> headers = PluginHeaderAuthConfig.buildTrustedAuthHeaders(props, AUDIT_DEST_PREFIX);
 
@@ -45,9 +45,9 @@ public class RangerAuditServerDestinationTest {
     @Test
     public void buildTrustedAuthHeadersEmptyWhenAuditDestinationDisabled() {
         Properties props = new Properties();
+
         props.setProperty(AUDIT_DEST_PREFIX + ".authn.header.enabled", "false");
-        props.setProperty(AUDIT_DEST_PREFIX + ".authn.header.X-Spiffe-Id",
-                "spiffe://prod-cluster.k8s.example.com/ns/ranger/sa/hive");
+        props.setProperty(AUDIT_DEST_PREFIX + ".authn.header.X-Spiffe-Id", "spiffe://prod-cluster.k8s.example.com/ns/ranger/sa/hive");
 
         Map<String, String> headers = PluginHeaderAuthConfig.buildTrustedAuthHeaders(props, AUDIT_DEST_PREFIX);
 
