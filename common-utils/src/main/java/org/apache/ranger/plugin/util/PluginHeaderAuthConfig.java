@@ -46,14 +46,13 @@ import java.util.Properties;
  * </pre>
  */
 public final class PluginHeaderAuthConfig {
-    public static final String PROP_HEADER_AUTH_ENABLED = "authn.header.enabled";
+    private static final Logger LOG = LoggerFactory.getLogger(PluginHeaderAuthConfig.class);
+
     public static final String PROP_HEADER_PREFIX       = "authn.header.";
+    public static final String PROP_HEADER_AUTH_ENABLED = PROP_HEADER_PREFIX + "enabled";
 
     private static final String VALUE_PREFIX_FILE = "file:";
     private static final String VALUE_PREFIX_ENV  = "env:";
-
-    private static final Logger LOG =
-            LoggerFactory.getLogger(PluginHeaderAuthConfig.class);
 
     private PluginHeaderAuthConfig() {
         // to block instantiation
@@ -66,15 +65,8 @@ public final class PluginHeaderAuthConfig {
      * @param configPrefix property prefix for header-auth settings
      * @return {@code true} when header auth is enabled
      */
-    public static boolean isHeaderAuthEnabled(final Properties props,
-            final String configPrefix) {
-        if (props == null || StringUtils.isBlank(configPrefix)) {
-            return false;
-        }
-
-        return Boolean.parseBoolean(
-                props.getProperty(configPrefix + "." + PROP_HEADER_AUTH_ENABLED,
-                        "false"));
+    public static boolean isHeaderAuthEnabled(final Properties props, final String configPrefix) {
+        return props != null && StringUtils.isNotBlank(configPrefix) && Boolean.parseBoolean(props.getProperty(configPrefix + "." + PROP_HEADER_AUTH_ENABLED, "false"));
     }
 
     /**
@@ -84,14 +76,13 @@ public final class PluginHeaderAuthConfig {
      * @param configPrefix prefix such as {@code xasecure.audit.destination.auditserver}
      * @return immutable header map; empty when auth is disabled or misconfigured
      */
-    public static Map<String, String> buildTrustedAuthHeaders(final Properties props,
-            final String configPrefix) {
+    public static Map<String, String> buildTrustedAuthHeaders(final Properties props, final String configPrefix) {
         if (!isHeaderAuthEnabled(props, configPrefix)) {
             return Collections.emptyMap();
         }
 
-        String propertyPrefix = configPrefix + "." + PROP_HEADER_PREFIX;
-        Map<String, String> headers = new LinkedHashMap<>();
+        String              propertyPrefix = configPrefix + "." + PROP_HEADER_PREFIX;
+        Map<String, String> headers        = new LinkedHashMap<>();
 
         for (String propertyName : sortedPropertyNames(props)) {
             if (!propertyName.startsWith(propertyPrefix)) {
@@ -110,43 +101,31 @@ public final class PluginHeaderAuthConfig {
         }
 
         if (headers.isEmpty()) {
-            LOG.warn("Plugin header auth enabled for {} but no trusted headers "
-                    + "could be resolved", configPrefix);
+            LOG.warn("Plugin header auth enabled for {} but no trusted headers could be resolved", configPrefix);
         }
 
         return Collections.unmodifiableMap(headers);
     }
 
-    private static void addConfiguredHeader(final Map<String, String> headers,
-            final String configPrefix, final String headerName,
-            final String headerValue) {
+    private static void addConfiguredHeader(final Map<String, String> headers, final String configPrefix, final String headerName, final String headerValue) {
         if (StringUtils.isBlank(headerValue)) {
-            LOG.warn("Plugin header auth enabled for {} but trusted header {} "
-                    + "has no resolvable value", configPrefix, headerName);
-            return;
+            LOG.warn("Plugin header auth enabled for {} but trusted header {} has no resolvable value", configPrefix, headerName);
+        } else if (headerValue.startsWith("spiffe://") && !SpiffeIdUtil.isValidSpiffeId(headerValue)) {
+            LOG.warn("Resolved trusted header value for {} is not a well-formed SPIFFE ID", configPrefix);
+        } else {
+            headers.put(headerName, headerValue);
         }
-
-        if (headerValue.startsWith("spiffe://")
-                && !SpiffeIdUtil.isValidSpiffeId(headerValue)) {
-            LOG.warn("Resolved trusted header value for {} is not a "
-                    + "well-formed SPIFFE ID", configPrefix);
-            return;
-        }
-
-        headers.put(headerName, headerValue);
     }
 
     private static String resolveConfiguredValue(final String valueSpec) {
-        String ret = null;
+        final String ret;
 
         if (StringUtils.isBlank(valueSpec)) {
             ret = null;
         } else if (valueSpec.startsWith(VALUE_PREFIX_FILE)) {
-            ret = SpiffeIdentityResolver.readFirstLine(
-                    valueSpec.substring(VALUE_PREFIX_FILE.length()));
+            ret = SpiffeIdentityResolver.readFirstLine(valueSpec.substring(VALUE_PREFIX_FILE.length()));
         } else if (valueSpec.startsWith(VALUE_PREFIX_ENV)) {
-            ret = StringUtils.trimToNull(
-                    System.getenv(valueSpec.substring(VALUE_PREFIX_ENV.length())));
+            ret = StringUtils.trimToNull(System.getenv(valueSpec.substring(VALUE_PREFIX_ENV.length())));
         } else {
             ret = StringUtils.trimToNull(valueSpec);
         }
