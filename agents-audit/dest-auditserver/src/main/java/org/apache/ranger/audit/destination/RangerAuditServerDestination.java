@@ -102,9 +102,11 @@ public class RangerAuditServerDestination extends AuditDestination {
         // Trusted header auth is orthogonal to authn.type (JWT/Basic/Kerberos): when enabled,
         // trusted headers are added in addition to whatever authType configured above.
         Map<String, String> trustedHeaders = PluginHeaderAuthConfig.buildTrustedAuthHeaders(props, propPrefix);
+
         if (!trustedHeaders.isEmpty()) {
             this.restClient.setTrustedAuthHeaders(trustedHeaders);
-            LOG.debug("Trusted header authentication enabled for audit-server destination");
+
+            LOG.debug("Trusted authentication headers added for audit-server destination");
         }
 
         LOG.info("<== RangerAuditServerDestination:init()");
