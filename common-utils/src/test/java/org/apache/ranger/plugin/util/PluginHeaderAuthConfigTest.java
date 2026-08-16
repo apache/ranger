@@ -35,11 +35,10 @@ public class PluginHeaderAuthConfigTest {
             "spiffe://prod-cluster.k8s.example.com/ns/ranger/sa/om";
 
     @Test
-    public void buildTrustedAuthHeadersUsesConfiguredHeaderName() {
+    public void buildTrustedAuthHeadersUsesLiteralHeaderValue() {
         Properties props = new Properties();
         props.setProperty("ranger.ozone.authn.header.enabled", "true");
-        props.setProperty("ranger.ozone.authn.header.spiffe", "X-Spiffe-Id");
-        props.setProperty("ranger.ozone.authn.spiffe.value", VALID_SPIFFE);
+        props.setProperty("ranger.ozone.authn.header.X-Spiffe-Id", VALID_SPIFFE);
 
         Map<String, String> headers = PluginHeaderAuthConfig.buildTrustedAuthHeaders(props, "ranger.ozone");
 
@@ -47,15 +46,13 @@ public class PluginHeaderAuthConfigTest {
     }
 
     @Test
-    public void buildTrustedAuthHeadersUsesConfiguredHeaderSlots(@TempDir Path tempDir) throws Exception {
+    public void buildTrustedAuthHeadersUsesFileValueSpec(@TempDir Path tempDir) throws Exception {
         Path spiffeFile = tempDir.resolve("spiffe");
         Files.writeString(spiffeFile, VALID_SPIFFE + "\n", StandardCharsets.UTF_8);
 
         Properties props = new Properties();
         props.setProperty("ranger.ozone.authn.header.enabled", "true");
-        props.setProperty("ranger.ozone.authn.header.headers", "spiffe,value");
-        props.setProperty("ranger.ozone.authn.header.spiffe", "X-Spiffe-Id");
-        props.setProperty("ranger.ozone.authn.header.value", "file:" + spiffeFile);
+        props.setProperty("ranger.ozone.authn.header.X-Spiffe-Id", "file:" + spiffeFile);
 
         Map<String, String> headers = PluginHeaderAuthConfig.buildTrustedAuthHeaders(props, "ranger.ozone");
 
@@ -66,7 +63,7 @@ public class PluginHeaderAuthConfigTest {
     public void buildTrustedAuthHeadersEmptyWhenDisabled() {
         Properties props = new Properties();
         props.setProperty("ranger.ozone.authn.header.enabled", "false");
-        props.setProperty("ranger.ozone.authn.spiffe.value", VALID_SPIFFE);
+        props.setProperty("ranger.ozone.authn.header.X-Spiffe-Id", VALID_SPIFFE);
 
         assertTrue(PluginHeaderAuthConfig.buildTrustedAuthHeaders(props, "ranger.ozone").isEmpty());
     }
@@ -88,11 +85,9 @@ public class PluginHeaderAuthConfigTest {
     }
 
     @Test
-    public void buildTrustedAuthHeadersEmptyWhenHeaderNamesMisconfigured() {
+    public void buildTrustedAuthHeadersEmptyWhenNoHeadersConfigured() {
         Properties props = new Properties();
         props.setProperty("ranger.ozone.authn.header.enabled", "true");
-        props.setProperty("ranger.ozone.authn.header.spiffe", ",");
-        props.setProperty("ranger.ozone.authn.spiffe.value", VALID_SPIFFE);
 
         assertTrue(PluginHeaderAuthConfig.buildTrustedAuthHeaders(props, "ranger.ozone").isEmpty());
     }
@@ -101,7 +96,7 @@ public class PluginHeaderAuthConfigTest {
     public void buildTrustedAuthHeadersEmptyWhenSpiffeIdUnresolved() {
         Properties props = new Properties();
         props.setProperty("ranger.ozone.authn.header.enabled", "true");
-        props.setProperty("ranger.ozone.authn.header.spiffe", "X-Spiffe-Id");
+        props.setProperty("ranger.ozone.authn.header.X-Spiffe-Id", "env:UNSET_SPIFFE_ID_VAR");
 
         assertTrue(PluginHeaderAuthConfig.buildTrustedAuthHeaders(props, "ranger.ozone").isEmpty());
     }
@@ -110,8 +105,7 @@ public class PluginHeaderAuthConfigTest {
     public void buildTrustedAuthHeadersEmptyWhenSpiffeIdMalformed() {
         Properties props = new Properties();
         props.setProperty("ranger.ozone.authn.header.enabled", "true");
-        props.setProperty("ranger.ozone.authn.header.spiffe", "X-Spiffe-Id");
-        props.setProperty("ranger.ozone.authn.spiffe.value", "not-a-spiffe-id");
+        props.setProperty("ranger.ozone.authn.header.X-Spiffe-Id", "spiffe://not-valid");
 
         assertTrue(PluginHeaderAuthConfig.buildTrustedAuthHeaders(props, "ranger.ozone").isEmpty());
     }

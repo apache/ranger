@@ -34,43 +34,21 @@ import java.util.Properties;
  * Outbound trusted-header auth for audit-server and other REST clients.
  *
  * <p>When {@code authn.header.enabled=true}, trusted HTTP headers are added to every
- * outbound REST request. Header names and values are resolved from configuration under
- * a caller-supplied prefix (audit destination example below).
- *
- * <p>Legacy mode (no {@code authn.header.headers}): a single SPIFFE workload-identity
- * header is built from {@code authn.header.spiffe} (HTTP header name, default
- * {@code X-Spiffe-Id}) and a SPIFFE ID resolved by {@link SpiffeIdentityResolver}
- * ({@code authn.spiffe.value}, {@code authn.spiffe.file}, or {@code SPIFFE_ID} env).
+ * outbound REST request. Each header is configured as a property whose name is the
+ * HTTP header name under {@code authn.header} (audit destination example):
  * <pre>
  * xasecure.audit.destination.auditserver.authn.header.enabled=true
- * xasecure.audit.destination.auditserver.authn.header.spiffe=X-Spiffe-Id
- * xasecure.audit.destination.auditserver.authn.spiffe.value=spiffe://...
- * </pre>
- *
- * <p>Generic slot-based mode ({@code authn.header.headers} set): header names and
- * values are read from {@code authn.header.{slot}} properties. Value specs support
- * {@code file:}, {@code env:}, or a literal string.
- * <pre>
- * xasecure.audit.destination.auditserver.authn.header.enabled=true
- * xasecure.audit.destination.auditserver.authn.header.headers=spiffe,value
- * xasecure.audit.destination.auditserver.authn.header.spiffe=X-Spiffe-Id
- * xasecure.audit.destination.auditserver.authn.header.value=file:/path/to/spiffe-id.file
- * # valid value specs for authn.header.{slot}.value (or the "value" slot):
+ * xasecure.audit.destination.auditserver.authn.header.X-Spiffe-Id=file:/path/to/spiffe-id.file
+ * # valid value specs:
  * #   file:/path/to/spiffe-id.file
  * #   env:SPIFFE_ID
  * #   spiffe://trust-domain/ns/.../sa/...  (literal string)
  * </pre>
- * Multiple headers can also be configured with {@code authn.header.{slot}} for the
- * HTTP header name and {@code authn.header.{slot}.value} for the value spec.
  */
 public final class PluginHeaderAuthConfig {
-    public static final String PROP_HEADER_AUTH_ENABLED   = "authn.header.enabled";
-    public static final String PROP_HEADER_HEADERS        = "authn.header.headers";
-    public static final String PROP_HEADER_SPIFFE         = "authn.header.spiffe";
-    public static final String DEFAULT_SPIFFE_HEADER_NAME = "X-Spiffe-Id";
+    public static final String PROP_HEADER_AUTH_ENABLED = "authn.header.enabled";
+    public static final String PROP_HEADER_PREFIX       = "authn.header.";
 
-    private static final String SLOT_SPIFFE     = "spiffe";
-    private static final String SLOT_VALUE      = "value";
     private static final String VALUE_PREFIX_FILE = "file:";
     private static final String VALUE_PREFIX_ENV  = "env:";
 
@@ -102,9 +80,6 @@ public final class PluginHeaderAuthConfig {
     /**
      * Builds trusted HTTP headers for outbound REST calls when header auth is enabled.
      *
-     * <p>Uses legacy SPIFFE resolution when {@code authn.header.headers} is unset;
-     * otherwise resolves headers from configured slots (see class Javadoc).
-     *
      * @param props        plugin or site configuration properties
      * @param configPrefix prefix such as {@code xasecure.audit.destination.auditserver}
      * @return immutable header map; empty when auth is disabled or misconfigured
@@ -115,86 +90,28 @@ public final class PluginHeaderAuthConfig {
             return Collections.emptyMap();
         }
 
-        String headersConfig = getProperty(props, configPrefix, PROP_HEADER_HEADERS);
-
-        if (StringUtils.isBlank(headersConfig)) {
-            return buildLegacyTrustedHeaders(props, configPrefix);
-        }
-
-        return buildConfiguredTrustedHeaders(props, configPrefix, headersConfig);
-    }
-
-    private static Map<String, String> buildLegacyTrustedHeaders(final Properties props,
-            final String configPrefix) {
-        List<String> headerNames = SpiffeIdUtil.parseHeaderNames(
-                resolveSpiffeHeaderName(props, configPrefix));
-        String headerValue = SpiffeIdentityResolver.resolve(props, configPrefix);
-
-        return buildSingleTrustedHeader(configPrefix, headerNames, headerValue);
-    }
-
-    private static Map<String, String> buildConfiguredTrustedHeaders(final Properties props,
-            final String configPrefix, final String headersConfig) {
-        List<String> slots = parseHeaderSlots(headersConfig);
-
-        if (slots.isEmpty()) {
-            LOG.warn("Plugin header auth enabled for {} but {} is empty",
-                    configPrefix, PROP_HEADER_HEADERS);
-            return Collections.emptyMap();
-        }
-
+        String propertyPrefix = configPrefix + "." + PROP_HEADER_PREFIX;
         Map<String, String> headers = new LinkedHashMap<>();
 
-        if (slots.contains(SLOT_SPIFFE) && slots.contains(SLOT_VALUE)) {
-            addConfiguredHeader(headers, configPrefix,
-                    getSlotConfig(props, configPrefix, SLOT_SPIFFE),
-                    resolveConfiguredValue(getSlotConfig(props, configPrefix, SLOT_VALUE),
-                            props, configPrefix));
-        } else {
-            for (String slot : slots) {
-                if (SLOT_VALUE.equals(slot)) {
-                    continue;
-                }
-
-                String headerName = getSlotConfig(props, configPrefix, slot);
-                String valueSpec  = getSlotConfig(props, configPrefix, slot + ".value");
-
-                if (valueSpec == null) {
-                    valueSpec = getSlotConfig(props, configPrefix, SLOT_VALUE);
-                }
-
-                addConfiguredHeader(headers, configPrefix, headerName,
-                        resolveConfiguredValue(valueSpec, props, configPrefix));
+        for (String propertyName : sortedPropertyNames(props)) {
+            if (!propertyName.startsWith(propertyPrefix)) {
+                continue;
             }
+
+            String headerName = propertyName.substring(propertyPrefix.length());
+
+            if (StringUtils.isBlank(headerName) || "enabled".equals(headerName)) {
+                continue;
+            }
+
+            String headerValue = resolveConfiguredValue(props.getProperty(propertyName));
+
+            addConfiguredHeader(headers, configPrefix, headerName, headerValue);
         }
 
-        return Collections.unmodifiableMap(headers);
-    }
-
-    private static Map<String, String> buildSingleTrustedHeader(final String configPrefix,
-            final List<String> headerNames, final String headerValue) {
-        if (headerNames.isEmpty()) {
-            LOG.warn("Plugin header auth enabled for {} but no trusted header "
-                    + "name is configured", configPrefix);
-            return Collections.emptyMap();
-        }
-
-        if (StringUtils.isBlank(headerValue)) {
-            LOG.warn("Plugin header auth enabled for {} but no trusted header "
-                    + "value could be resolved", configPrefix);
-            return Collections.emptyMap();
-        }
-
-        if (!SpiffeIdUtil.isValidSpiffeId(headerValue)) {
-            LOG.warn("Resolved trusted header value for {} is not a well-formed "
-                    + "SPIFFE ID", configPrefix);
-            return Collections.emptyMap();
-        }
-
-        Map<String, String> headers = new LinkedHashMap<>();
-
-        for (String headerName : headerNames) {
-            headers.put(headerName, headerValue);
+        if (headers.isEmpty()) {
+            LOG.warn("Plugin header auth enabled for {} but no trusted headers "
+                    + "could be resolved", configPrefix);
         }
 
         return Collections.unmodifiableMap(headers);
@@ -203,36 +120,27 @@ public final class PluginHeaderAuthConfig {
     private static void addConfiguredHeader(final Map<String, String> headers,
             final String configPrefix, final String headerName,
             final String headerValue) {
-        if (StringUtils.isBlank(headerName)) {
-            LOG.warn("Plugin header auth enabled for {} but a trusted header "
-                    + "name slot is not configured", configPrefix);
-            return;
-        }
-
         if (StringUtils.isBlank(headerValue)) {
             LOG.warn("Plugin header auth enabled for {} but trusted header {} "
                     + "has no resolvable value", configPrefix, headerName);
             return;
         }
 
-        if (SpiffeIdUtil.isValidSpiffeId(headerValue)
-                || headerValue.startsWith("spiffe://")) {
-            if (!SpiffeIdUtil.isValidSpiffeId(headerValue)) {
-                LOG.warn("Resolved trusted header value for {} is not a "
-                        + "well-formed SPIFFE ID", configPrefix);
-                return;
-            }
+        if (headerValue.startsWith("spiffe://")
+                && !SpiffeIdUtil.isValidSpiffeId(headerValue)) {
+            LOG.warn("Resolved trusted header value for {} is not a "
+                    + "well-formed SPIFFE ID", configPrefix);
+            return;
         }
 
         headers.put(headerName, headerValue);
     }
 
-    private static String resolveConfiguredValue(final String valueSpec,
-            final Properties props, final String configPrefix) {
+    private static String resolveConfiguredValue(final String valueSpec) {
         String ret = null;
 
         if (StringUtils.isBlank(valueSpec)) {
-            ret = SpiffeIdentityResolver.resolve(props, configPrefix);
+            ret = null;
         } else if (valueSpec.startsWith(VALUE_PREFIX_FILE)) {
             ret = SpiffeIdentityResolver.readFirstLine(
                     valueSpec.substring(VALUE_PREFIX_FILE.length()));
@@ -246,39 +154,14 @@ public final class PluginHeaderAuthConfig {
         return ret;
     }
 
-    private static List<String> parseHeaderSlots(final String headersConfig) {
-        List<String> ret = new ArrayList<>();
+    private static List<String> sortedPropertyNames(final Properties props) {
+        List<String> names = new ArrayList<>();
 
-        for (String slot : headersConfig.split(",")) {
-            String trimmed = StringUtils.trimToNull(slot);
-
-            if (trimmed != null) {
-                ret.add(trimmed);
-            }
+        if (props != null) {
+            names.addAll(props.stringPropertyNames());
+            Collections.sort(names);
         }
 
-        return ret;
-    }
-
-    private static String getSlotConfig(final Properties props,
-            final String configPrefix, final String slot) {
-        return getProperty(props, configPrefix, "authn.header." + slot);
-    }
-
-    private static String getProperty(final Properties props,
-            final String configPrefix, final String propertySuffix) {
-        if (props == null || StringUtils.isBlank(configPrefix)) {
-            return null;
-        }
-
-        return StringUtils.trimToNull(
-                props.getProperty(configPrefix + "." + propertySuffix));
-    }
-
-    private static String resolveSpiffeHeaderName(final Properties props,
-            final String configPrefix) {
-        String headerName = getProperty(props, configPrefix, PROP_HEADER_SPIFFE);
-
-        return headerName != null ? headerName : DEFAULT_SPIFFE_HEADER_NAME;
+        return names;
     }
 }
