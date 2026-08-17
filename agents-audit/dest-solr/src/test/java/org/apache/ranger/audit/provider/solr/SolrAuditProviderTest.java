@@ -29,13 +29,14 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Properties;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
@@ -66,34 +67,44 @@ class SolrAuditProviderTest {
         event.setLogType("type");
         event.setEventId("id");
 
-        SolrAuditProvider spyProvider = spy(provider);
-        doReturn(true).when(spyProvider).log(any(AuthzAuditEvent.class));
+        UpdateResponse response = mock(UpdateResponse.class);
+        when(response.getStatus()).thenReturn(0);
+        when(mockSolrClient.add(any(Collection.class))).thenReturn(response);
 
-        boolean result = spyProvider.log(event);
+        boolean result = provider.log(event);
 
         assertTrue(result);
+        assertEquals(0, provider.lastFailTime);
+        verify(mockSolrClient, times(1)).add(any(Collection.class));
     }
 
     @Test
-    void testLogJSON_withValidJson_callsLog() {
-        AuthzAuditEvent event = new AuthzAuditEvent();
-        event.setAgentHostname("host");
-        event.setLogType("type");
-        event.setEventId("id");
+    void testLogJSON_withValidJson_callsLog() throws Exception {
         String json = "{\"agentHostname\":\"host\",\"logType\":\"type\",\"eventId\":\"id\"}";
 
-        // This will call MiscUtil.fromJson, which is static and not mockable.
-        // The result depends on the real implementation.
+        UpdateResponse response = mock(UpdateResponse.class);
+        when(response.getStatus()).thenReturn(0);
+        when(mockSolrClient.add(any(Collection.class))).thenReturn(response);
+
         boolean result = provider.logJSON(json);
-        assertTrue(result || !result);
+
+        assertTrue(result);
+        verify(mockSolrClient, times(1)).add(any(Collection.class));
     }
 
     @Test
-    void testLogJSON_withCollection_callsLogJSON() {
+    void testLogJSON_withCollection_callsLogJSON() throws Exception {
         String json = "{\"agentHostname\":\"host\",\"logType\":\"type\",\"eventId\":\"id\"}";
         Collection<String> events = Collections.singletonList(json);
+
+        UpdateResponse response = mock(UpdateResponse.class);
+        when(response.getStatus()).thenReturn(0);
+        when(mockSolrClient.add(any(Collection.class))).thenReturn(response);
+
         boolean result = provider.logJSON(events);
-        assertFalse(result); // As per implementation, always returns false
+
+        assertFalse(result);
+        verify(mockSolrClient, times(1)).add(any(Collection.class));
     }
 
     @Test
@@ -110,13 +121,21 @@ class SolrAuditProviderTest {
     }
 
     @Test
-    void testLog_withCollection() {
+    void testLog_withCollection() throws Exception {
         AuthzAuditEvent event = new AuthzAuditEvent();
+        event.setEventId("id");
+        event.setAgentHostname("host");
+        event.setLogType("RangerAudit");
         Collection<AuditEventBase> events = Collections.singletonList(event);
-        SolrAuditProvider spyProvider = spy(provider);
-        doReturn(true).when(spyProvider).log(any(AuditEventBase.class));
-        boolean result = spyProvider.log(events);
+
+        UpdateResponse response = mock(UpdateResponse.class);
+        when(response.getStatus()).thenReturn(0);
+        when(mockSolrClient.add(any(Collection.class))).thenReturn(response);
+
+        boolean result = provider.log(events);
+
         assertTrue(result);
+        verify(mockSolrClient, times(1)).add(any(Collection.class));
     }
 
     @Test
@@ -158,11 +177,12 @@ class SolrAuditProviderTest {
         event.setLogType("RangerAudit");
 
         UpdateResponse response = mock(UpdateResponse.class);
-        when(response.getStatus()).thenReturn(1); // Non-zero status
+        when(response.getStatus()).thenReturn(1);
         when(mockSolrClient.add(any(Collection.class))).thenReturn(response);
 
-        provider.log(event);
+        boolean result = provider.log(event);
 
+        assertTrue(result);
         assertTrue(provider.lastFailTime > 0);
     }
 
@@ -196,11 +216,15 @@ class SolrAuditProviderTest {
     }
 
     @Test
+    void testLogJSON_withInvalidJson_throwsNullPointerException() {
+        assertThrows(NullPointerException.class, () -> provider.logJSON("{invalid-json}"));
+    }
+
+    @Test
     void testStop_withException_swallowsException() throws Exception {
         doThrow(new IOException("Test exception")).when(mockSolrClient).close();
 
-        // Should not throw exception
-        provider.stop();
+        assertDoesNotThrow(() -> provider.stop());
 
         verify(mockSolrClient, times(1)).close();
         assertNull(provider.solrClient);

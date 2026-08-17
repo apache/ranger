@@ -62,7 +62,7 @@ class SolrAuditDestinationTest {
 
     @BeforeEach
     void setUp() throws Exception {
-        MockitoAnnotations.initMocks(this);
+        MockitoAnnotations.openMocks(this);
         destination = new SolrAuditDestination();
 
         // Inject mockSolrClient using reflection

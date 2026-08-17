@@ -28,6 +28,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Properties;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -35,6 +36,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
@@ -74,19 +76,17 @@ class KafkaAuditProviderTest {
         AuthzAuditEvent event = new AuthzAuditEvent();
         boolean result = provider.log(event);
         assertTrue(result);
+        verify(mockProducer, never()).send(any(ProducerRecord.class));
     }
 
     @Test
     void testLogJSON_withValidJson_callsLog() {
-        AuthzAuditEvent event = new AuthzAuditEvent();
-        event.setAgentHostname("host");
-        event.setLogType("type");
-        event.setEventId("id");
         String json = "{\"agentHostname\":\"host\",\"logType\":\"type\",\"eventId\":\"id\"}";
 
         boolean result = provider.logJSON(json);
 
-        assertTrue(result || !result);
+        assertTrue(result);
+        verify(mockProducer, times(1)).send(any(ProducerRecord.class));
     }
 
     @Test
@@ -94,7 +94,8 @@ class KafkaAuditProviderTest {
         String json = "{\"agentHostname\":\"host\",\"logType\":\"type\",\"eventId\":\"id\"}";
         Collection<String> events = Collections.singletonList(json);
         boolean result = provider.logJSON(events);
-        assertFalse(result); // As per implementation, always returns false
+        assertFalse(result);
+        verify(mockProducer, times(1)).send(any(ProducerRecord.class));
     }
 
     @Test
@@ -103,6 +104,7 @@ class KafkaAuditProviderTest {
         provider = new KafkaAuditProvider();
         provider.init(props);
         assertNotNull(provider.topic);
+        assertEquals("ranger_audits", provider.topic);
     }
 
     @Test
@@ -113,9 +115,11 @@ class KafkaAuditProviderTest {
     @Test
     void testLog_withCollection() {
         AuthzAuditEvent event = new AuthzAuditEvent();
+        event.setEventId("id");
         Collection<AuditEventBase> events = Collections.singletonList(event);
         boolean result = provider.log(events);
         assertTrue(result);
+        verify(mockProducer, times(1)).send(any(ProducerRecord.class));
     }
 
     @Test
@@ -137,7 +141,6 @@ class KafkaAuditProviderTest {
     void testLog_withExceptionThrown() {
         AuthzAuditEvent event = new AuthzAuditEvent();
 
-        // Set up the mock to throw an exception when send is called
         doThrow(new RuntimeException("Test exception")).when(mockProducer).send(any(ProducerRecord.class));
 
         boolean result = provider.log(event);
@@ -157,8 +160,7 @@ class KafkaAuditProviderTest {
     void testStop_withException() {
         doThrow(new RuntimeException("Test exception")).when(mockProducer).close();
 
-        // Should not throw exception
-        provider.stop();
+        assertDoesNotThrow(() -> provider.stop());
 
         verify(mockProducer, times(1)).close();
     }
@@ -167,31 +169,19 @@ class KafkaAuditProviderTest {
     void testLogJSON_withInvalidJson() {
         String invalidJson = "{invalid-json}";
 
-        // This depends on MiscUtil.fromJson implementation, but we expect it to handle invalid JSON
         boolean result = provider.logJSON(invalidJson);
 
-        // The actual result depends on MiscUtil implementation
-        // This is a placeholder assertion
-        assertTrue(result || !result);
+        assertTrue(result);
+        verify(mockProducer, times(1)).send(any(ProducerRecord.class));
     }
 
     @Test
-    void testStart() {
-        provider.start();
-    }
-
-    @Test
-    void testFlush() {
-        provider.flush();
-    }
-
-    @Test
-    void testWaitToComplete() {
-        provider.waitToComplete();
-    }
-
-    @Test
-    void testWaitToCompleteWithTimeout() {
-        provider.waitToComplete(1000);
+    void testLifecycleMethodsDoNotThrow() {
+        assertDoesNotThrow(() -> {
+            provider.start();
+            provider.flush();
+            provider.waitToComplete();
+            provider.waitToComplete(1000);
+        });
     }
 }

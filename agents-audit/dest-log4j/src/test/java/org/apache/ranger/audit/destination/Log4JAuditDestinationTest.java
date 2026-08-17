@@ -31,6 +31,7 @@ import java.util.Properties;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.anyString;
 import static org.mockito.Mockito.mock;
@@ -54,25 +55,30 @@ class Log4JAuditDestinationTest {
         mockLogger = mock(Logger.class);
         mockEvent = mock(AuditEventBase.class);
 
-        // Set static auditLogger field via reflection
         Field auditLoggerField = Log4JAuditDestination.class.getDeclaredField("auditLogger");
         auditLoggerField.setAccessible(true);
         auditLoggerField.set(null, mockLogger);
     }
 
     @Test
-    void testInit_UsesDefaultLoggerName() {
+    void testInit_UsesDefaultLoggerName() throws Exception {
         Properties props = new Properties();
         destination.init(props, "testPrefix");
-        // No exception means success, logger is set
+
+        Field auditLoggerField = Log4JAuditDestination.class.getDeclaredField("auditLogger");
+        auditLoggerField.setAccessible(true);
+        assertNotNull(auditLoggerField.get(null));
     }
 
     @Test
-    void testInit_UsesCustomLoggerName() {
+    void testInit_UsesCustomLoggerName() throws Exception {
         Properties props = new Properties();
         props.setProperty("testPrefix.logger", "custom.logger");
         destination.init(props, "testPrefix");
-        // No exception means success, logger is set
+
+        Field auditLoggerField = Log4JAuditDestination.class.getDeclaredField("auditLogger");
+        auditLoggerField.setAccessible(true);
+        assertNotNull(auditLoggerField.get(null));
     }
 
     @Test
@@ -92,8 +98,8 @@ class Log4JAuditDestinationTest {
     @Test
     void testLog_Event_InfoEnabled() {
         when(mockLogger.isInfoEnabled()).thenReturn(true);
-        // Can't mock MiscUtil.stringify, so just ensure no exception
         assertTrue(destination.log(mockEvent));
+        verify(mockLogger).info(anyString());
     }
 
     @Test
@@ -146,6 +152,7 @@ class Log4JAuditDestinationTest {
         when(mockLogger.isInfoEnabled()).thenReturn(true);
         List<AuditEventBase> events = Arrays.asList(mockEvent, mockEvent);
         assertTrue(destination.log(events));
+        verify(mockLogger, times(2)).info(anyString());
     }
 
     @Test

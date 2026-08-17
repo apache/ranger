@@ -69,7 +69,7 @@ class AmazonCloudWatchAuditDestinationTest {
 
     @BeforeEach
     void setUp() throws Exception {
-        MockitoAnnotations.initMocks(this);
+        MockitoAnnotations.openMocks(this);
 
         // Create the destination object and spy on it
         AmazonCloudWatchAuditDestination realDestination = new AmazonCloudWatchAuditDestination();
