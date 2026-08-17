@@ -42,14 +42,28 @@ import java.util.Set;
 import java.util.stream.Stream;
 
 class TestRangerResourceTrieCaseFolding {
-    private static final char DOTLESS_I = '\u0131'; // LATIN SMALL LETTER DOTLESS I
-    private static final char LONG_S    = '\u017F'; // LATIN SMALL LETTER LONG S
+    private static final char DOTLESS_I       = '\u0131'; // LATIN SMALL LETTER DOTLESS I
+    private static final char LONG_S          = '\u017F'; // LATIN SMALL LETTER LONG S
+    private static final char DOTTED_I        = '\u0130'; // LATIN CAPITAL LETTER I WITH DOT ABOVE
+    private static final char KELVIN_SIGN     = '\u212A'; // KELVIN SIGN
+    private static final char ANGSTROM_SIGN   = '\u212B'; // ANGSTROM SIGN
+    private static final char LATIN_A_RING    = '\u00E5'; // LATIN SMALL LETTER A WITH RING ABOVE
+    private static final char SHARP_S         = '\u00DF'; // LATIN SMALL LETTER SHARP S
+    private static final char CAPITAL_SHARP_S = '\u1E9E'; // LATIN CAPITAL LETTER SHARP S
 
     private static final RangerResourceDef TABLE_RESOURCE_DEF = getTableResourceDef();
 
     // folding sanity
     static Stream<Arguments> caseFoldingMismatchPairs() {
         return Stream.of(Arguments.of("i vs dotless-i", 'i', DOTLESS_I, true, false), Arguments.of("s vs long-s", 's', LONG_S, true, false), Arguments.of("I vs dotless-i", 'I', DOTLESS_I, true, false), Arguments.of("S vs long-s", 'S', LONG_S, true, false), Arguments.of("Sigma vs final-sigma", '\u03A3', '\u03C2', true, false), Arguments.of("ASCII self", 'a', 'A', true, true));
+    }
+
+    static Stream<Arguments> doubleFoldRequiredPairs() {
+        return Stream.of(Arguments.of("i vs dotted-I", 'i', DOTTED_I), Arguments.of("k vs kelvin-sign", 'k', KELVIN_SIGN), Arguments.of("K vs kelvin-sign", 'K', KELVIN_SIGN), Arguments.of("a-ring vs angstrom-sign", LATIN_A_RING, ANGSTROM_SIGN), Arguments.of("A-ring vs angstrom-sign", '\u00C5', ANGSTROM_SIGN), Arguments.of("sharp-s vs capital-sharp-s", SHARP_S, CAPITAL_SHARP_S));
+    }
+
+    static Stream<Arguments> doubleFoldBranchBoundaryCases() {
+        return Stream.of(Arguments.of("dotted-I vs i", "tablei", "table" + DOTTED_I, "tablej"), Arguments.of("kelvin-sign vs k", "fook", "foo" + KELVIN_SIGN, "foot"), Arguments.of("angstrom-sign vs a-ring", "table" + LATIN_A_RING, "table" + ANGSTROM_SIGN, "tableb"), Arguments.of("capital-sharp-s vs sharp-s", "table" + SHARP_S, "table" + CAPITAL_SHARP_S, "tablex"));
     }
 
     @ParameterizedTest(name = "{0} vs {1}: equalsIgnoreCase={2}, toLowerCaseEqual={3}")
@@ -62,6 +76,27 @@ class TestRangerResourceTrieCaseFolding {
             Assertions.assertTrue(StringUtils.equalsIgnoreCase(String.valueOf(c1), String.valueOf(c2)), label + ": pair must be equal under equalsIgnoreCase");
             Assertions.assertNotEquals(Character.toLowerCase(c1), Character.toLowerCase(c2), label + ": trie toLowerCase fold must not be assumed equivalent to equalsIgnoreCase");
         }
+    }
+
+    @ParameterizedTest(name = "{0}")
+    @MethodSource("doubleFoldRequiredPairs")
+    void testDoubleFoldRequired_singleUpperCaseInsufficient(String label, char c1, char c2) {
+        Assertions.assertTrue(StringUtils.equalsIgnoreCase(String.valueOf(c1), String.valueOf(c2)), label + ": matcher treats pair as equal");
+        Assertions.assertNotEquals(Character.toUpperCase(c1), Character.toUpperCase(c2), label + ": single toUpperCase would still split trie child keys");
+        Assertions.assertEquals(trieLookupFold(c1), trieLookupFold(c2), label + ": double-fold must produce a common trie lookup key");
+    }
+
+    @ParameterizedTest(name = "{0}")
+    @MethodSource("doubleFoldBranchBoundaryCases")
+    void testTrieFindsEvaluatorWhenSingleUpperCaseWouldMiss(String label, String policyName, String requestName, String siblingName) {
+        RangerResourceEvaluator                     evalPolicy  = evaluator(policyName, "policy-" + label);
+        RangerResourceEvaluator                     evalSibling = evaluator(siblingName, "sibling-" + label);
+        RangerResourceTrie<RangerResourceEvaluator> trie        = newTrie(evalPolicy, evalSibling);
+
+        Set<RangerResourceEvaluator> result = trie.getEvaluatorsForResource(requestName, ResourceElementMatchingScope.SELF);
+
+        assertContainsEvaluators(result, evalPolicy);
+        Assertions.assertFalse(containsOnly(result, evalSibling), label + ": request must not resolve only to the unrelated sibling branch");
     }
 
     // matcher baseline
@@ -79,6 +114,30 @@ class TestRangerResourceTrieCaseFolding {
 
         Assertions.assertTrue(matcher.isMatch("foo" + LONG_S, ResourceElementMatchingScope.SELF, null));
         Assertions.assertTrue(matcher.isMatch("foos", ResourceElementMatchingScope.SELF, null));
+    }
+
+    @Test
+    void testMatcherTreatsDottedIAsEqualToI() {
+        RangerResourceMatcher matcher = newMatcher("tablei");
+
+        Assertions.assertTrue(matcher.isMatch("table" + DOTTED_I, ResourceElementMatchingScope.SELF, null));
+        Assertions.assertTrue(matcher.isMatch("tablei", ResourceElementMatchingScope.SELF, null));
+    }
+
+    @Test
+    void testMatcherTreatsKelvinSignAsEqualToK() {
+        RangerResourceMatcher matcher = newMatcher("fook");
+
+        Assertions.assertTrue(matcher.isMatch("foo" + KELVIN_SIGN, ResourceElementMatchingScope.SELF, null));
+        Assertions.assertTrue(matcher.isMatch("fook", ResourceElementMatchingScope.SELF, null));
+    }
+
+    @Test
+    void testMatcherTreatsAngstromSignAsEqualToARing() {
+        RangerResourceMatcher matcher = newMatcher("table" + LATIN_A_RING);
+
+        Assertions.assertTrue(matcher.isMatch("table" + ANGSTROM_SIGN, ResourceElementMatchingScope.SELF, null));
+        Assertions.assertTrue(matcher.isMatch("table" + LATIN_A_RING, ResourceElementMatchingScope.SELF, null));
     }
 
     // trie lookup at branch boundaries
@@ -187,6 +246,10 @@ class TestRangerResourceTrieCaseFolding {
     }
 
     // helpers
+
+    private static char trieLookupFold(char ch) {
+        return Character.toLowerCase(Character.toUpperCase(ch));
+    }
 
     private static void assertContainsEvaluators(Set<RangerResourceEvaluator> result, RangerResourceEvaluator... expected) {
         Assertions.assertNotNull(result, "trie must return evaluators, not null");
