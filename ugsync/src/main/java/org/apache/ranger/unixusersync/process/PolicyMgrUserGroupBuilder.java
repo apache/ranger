@@ -747,14 +747,26 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
                     noOfModifiedGroups++;
                     groupNameMap.put(groupDN, groupName);
                 } else {
-                    if (MapUtils.isNotEmpty(curGroupAttrs) && !StringUtils.equalsIgnoreCase(groupDN, curGroupDN)) { // skip update
-                        LOG.debug("[{}]: SyncSource update skipped, current group DN = {} new user DN  = {}", groupName, curGroupDN, groupDN);
+                    boolean isLdapAdSync = StringUtils.equalsIgnoreCase(newSyncSource, "LDAP/AD")
+                            && MapUtils.isNotEmpty(curGroupAttrs);
 
-                        if (StringUtils.equalsIgnoreCase(curGroupAttrsStr, newGroupAttrsStr)) {
-                            groupNameMap.put(groupDN, groupName);
+                    if (isLdapAdSync) {
+                        // ALLOW the update. A DN change (like an OU move) is normal for LDAP/AD.
+                        LOG.debug("ALLOW UPDATE: LDAP/AD group moved. DN changed (Current: {}, New: {}) for {}.", curGroupDN, groupDN, groupName);
+                        // Notice there is NO continue; here, allowing it to fall through to the update logic below.
+                        if (!StringUtils.equalsIgnoreCase(groupDN, curGroupDN)) {
+                            groupNameMap.remove(curGroupDN);
                         }
+                    }
+                    else {
+                        if (MapUtils.isNotEmpty(curGroupAttrs) && !StringUtils.equalsIgnoreCase(groupDN, curGroupDN)) { // skip update
+                            LOG.debug("[{}]: SyncSource update skipped, current group DN = {} new user DN  = {}", groupName, curGroupDN, groupDN);
 
-                        continue;
+                            if (StringUtils.equalsIgnoreCase(curGroupAttrsStr, newGroupAttrsStr)) {
+                                groupNameMap.put(groupDN, groupName);
+                            }
+                            continue;
+                        }
                     }
 
                     if (StringUtils.isEmpty(curSyncSource) || (!StringUtils.equalsIgnoreCase(curGroupAttrsStr, newGroupAttrsStr) && StringUtils.equalsIgnoreCase(curSyncSource, newSyncSource))) { // update
@@ -838,15 +850,25 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
                     noOfModifiedGroups++;
                     userNameMap.put(userDN, userName);
                 } else {
-                    if (MapUtils.isNotEmpty(curUserAttrs) && !StringUtils.equalsIgnoreCase(userDN, curUserDN)) { // skip update
-                        // Same username with different DN already exists
-                        LOG.debug("[{}]: SyncSource update skipped, current user DN = {} new user DN  = {}", userName, curUserDN, userDN);
+                    boolean isLdapAdSync = StringUtils.equalsIgnoreCase(newSyncSource, "LDAP/AD")
+                            && MapUtils.isNotEmpty(curUserAttrs);
 
-                        if (StringUtils.equalsIgnoreCase(curUserAttrsStr, newUserAttrsStr)) {
-                            userNameMap.put(userDN, userName);
+                    if (isLdapAdSync) {
+                        // ALLOW the update. A DN change (like an OU move) is normal for LDAP/AD.
+                        LOG.debug("ALLOW UPDATE: LDAP/AD user moved. DN changed (Current: {}, New: {}) for {}.", curUserDN, userDN, userName);
+                        // Notice there is NO continue; here, allowing it to fall through to the update logic below.
+                        if (!StringUtils.equalsIgnoreCase(userDN, curUserDN)) {
+                            userNameMap.remove(curUserDN);
                         }
+                    } else {
+                        if (MapUtils.isNotEmpty(curUserAttrs) && !StringUtils.equalsIgnoreCase(userDN, curUserDN)) { // skip update
+                            LOG.debug("[{}]: SyncSource update skipped, current user DN = {} new user DN  = {}", userName, curUserDN, userDN);
 
-                        continue;
+                            if (StringUtils.equalsIgnoreCase(curUserAttrsStr, newUserAttrsStr)) {
+                                userNameMap.put(userDN, userName);
+                            }
+                            continue;
+                        }
                     }
 
                     if (StringUtils.isEmpty(curSyncSource) || (!StringUtils.equalsIgnoreCase(curUserAttrsStr, newUserAttrsStr) && StringUtils.equalsIgnoreCase(curSyncSource, newSyncSource))) { // update
@@ -1735,14 +1757,29 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
 
         deletedGroups = new HashMap<>();
 
+        Set<String> sourceGroupNames = new HashSet<>();
+        for (Map<String, String> attrs : sourceGroups.values()) {
+            String originalName = attrs.get(UgsyncCommonConstants.ORIGINAL_NAME);
+            if (StringUtils.isNotEmpty(originalName)) {
+                sourceGroupNames.add(groupNameTransform(originalName.trim()));
+            }
+        }
+
         // Check if the group from cache exists in the sourceGroups. If not, mark as deleted group.
-        for (XGroupInfo groupInfo : groupCache.values()) {
+        for (Map.Entry<String, XGroupInfo> entry : groupCache.entrySet()) {
+            String              groupName       = entry.getKey();
+            XGroupInfo          groupInfo       = entry.getValue();
             Map<String, String> groupOtherAttrs = groupInfo.getOtherAttrsMap();
             String              groupDN         = groupOtherAttrs != null ? groupOtherAttrs.get(UgsyncCommonConstants.FULL_NAME) : null;
 
             if (StringUtils.isNotEmpty(groupDN) && !sourceGroups.containsKey(groupDN)
                     && StringUtils.equalsIgnoreCase(groupOtherAttrs.get(UgsyncCommonConstants.SYNC_SOURCE), currentSyncSource) &&
                     StringUtils.equalsIgnoreCase(groupOtherAttrs.get(UgsyncCommonConstants.LDAP_URL), ldapUrl)) {
+                if (sourceGroupNames.contains(groupName)) {
+                    LOG.info("group {} with different DN exists. Skip and wait for it to be updated.", groupName);
+                    continue;
+                }
+
                 if (!ISHIDDEN.equals(groupInfo.getIsVisible())) {
                     groupInfo.setIsVisible(ISHIDDEN);
                     deletedGroups.put(groupInfo.getName(), groupInfo);
@@ -1850,14 +1887,29 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
 
         deletedUsers = new HashMap<>();
 
+        Set<String> sourceUserNames = new HashSet<>();
+        for (Map<String, String> attrs : sourceUsers.values()) {
+            String originalName = attrs.get(UgsyncCommonConstants.ORIGINAL_NAME);
+            if (StringUtils.isNotEmpty(originalName)) {
+                sourceUserNames.add(userNameTransform(originalName.trim()));
+            }
+        }
+
         // Check if the group from cache exists in the sourceGroups. If not, mark as deleted group.
-        for (XUserInfo userInfo : userCache.values()) {
+        for (Map.Entry<String, XUserInfo> entry : userCache.entrySet()) {
+            String               userName = entry.getKey();
+            XUserInfo           userInfo = entry.getValue();
             Map<String, String> userOtherAttrs = userInfo.getOtherAttrsMap();
             String              userDN         = userOtherAttrs != null ? userOtherAttrs.get(UgsyncCommonConstants.FULL_NAME) : null;
 
             if (StringUtils.isNotEmpty(userDN) && !sourceUsers.containsKey(userDN)
                     && StringUtils.equalsIgnoreCase(userOtherAttrs.get(UgsyncCommonConstants.SYNC_SOURCE), currentSyncSource)
                     && StringUtils.equalsIgnoreCase(userOtherAttrs.get(UgsyncCommonConstants.LDAP_URL), ldapUrl)) {
+                if (sourceUserNames.contains(userName)) {
+                    LOG.info("user {} with different DN exists. Skip and wait for it to be updated.", userName);
+                    continue;
+                }
+
                 if (!ISHIDDEN.equals(userInfo.getIsVisible())) {
                     userInfo.setIsVisible(ISHIDDEN);
                     deletedUsers.put(userInfo.getName(), userInfo);
