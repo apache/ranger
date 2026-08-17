@@ -2059,7 +2059,7 @@
 <div class="highlight"><span class="filename">Generate OpenPPG Key</span><pre><span></span><code><span class="c1"># create a key</span>
 gpg<span class="w"> </span>--gen-key
 
-<span class="c1"># If you have multiple keys present, select the key id you want to use, let&#39;s say it is - your_gpg_key_id then do:</span>
+<span class="c1"># If you have multiple keys present, select the key id you want to use, let's say it is - your_gpg_key_id then do:</span>
 <span class="nb">export</span><span class="w"> </span><span class="nv">CODESIGNINGKEY</span><span class="o">=</span>your_gpg_key_id
 
 gpg<span class="w"> </span>--list-keys<span class="w"> </span><span class="si">${</span><span class="nv">CODESIGNINGKEY</span><span class="si">}</span>
@@ -2074,7 +2074,7 @@ gpg<span class="w"> </span>--keyserver<span class="w"> </span>hkp://keyserver.ub
 gpg<span class="w"> </span>--list-sigs<span class="w"> </span><span class="nv">$CODESIGNINGKEY</span><span class="w"> </span>&gt;&gt;<span class="w"> </span>KEYS
 gpg<span class="w"> </span>--armor<span class="w"> </span>--export<span class="w"> </span><span class="nv">$CODESIGNINGKEY</span><span class="w"> </span>&gt;&gt;<span class="w"> </span>KEYS
 
-svn<span class="w"> </span>commit<span class="w"> </span>-m<span class="w"> </span><span class="s2">&quot;Adding key of XXXX to the KEYS&quot;</span><span class="w"> </span>
+svn<span class="w"> </span>commit<span class="w"> </span>-m<span class="w"> </span><span class="s2">"Adding key of XXXX to the KEYS"</span><span class="w"> </span>
 </code></pre></div>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
@@ -2084,7 +2084,7 @@ svn<span class="w"> </span>commit<span class="w"> </span>-m<span class="w"> </sp
 <span class="nb">cd</span><span class="w"> </span>ranger
 gpg<span class="w"> </span>--list-sigs<span class="w"> </span><span class="nv">$CODESIGNINGKEY</span><span class="w"> </span>&gt;&gt;<span class="w"> </span>KEYS
 gpg<span class="w"> </span>--armor<span class="w"> </span>--export<span class="w"> </span><span class="nv">$CODESIGNINGKEY</span><span class="w"> </span>&gt;&gt;<span class="w"> </span>KEYS
-svn<span class="w"> </span>commit<span class="w"> </span>-m<span class="w"> </span><span class="s2">&quot;Adding key of XXXX to the KEYS&quot;</span>
+svn<span class="w"> </span>commit<span class="w"> </span>-m<span class="w"> </span><span class="s2">"Adding key of XXXX to the KEYS"</span>
 </code></pre></div>
 <h2 id="pre-vote">Pre-Vote<a class="headerlink" href="#pre-vote" title="Permanent link">&para;</a></h2>
 <h4 id="create-a-parent-jira-for-the-release">Create a parent Jira for the release<a class="headerlink" href="#create-a-parent-jira-for-the-release" title="Permanent link">&para;</a></h4>
@@ -2103,8 +2103,8 @@ svn<span class="w"> </span>commit<span class="w"> </span>-m<span class="w"> </sp
 <li>Ensure that there is no <code>OPEN</code> Jira associated with the release.</li>
 </ul>
 <h4 id="update-the-versions">Update the versions<a class="headerlink" href="#update-the-versions" title="Permanent link">&para;</a></h4>
-<div class="highlight"><span class="filename">Update Versions</span><pre><span></span><code><span class="c1"># Use below command or use IDE to replace &quot;${RANGER_VERSION}-SNAPSHOT&quot; with &quot;${RANGER_VERSION}&quot;.</span>
-<span class="nb">export</span><span class="w"> </span><span class="nv">RANGER_VERSION</span><span class="o">=</span><span class="s2">&quot;2.7.0&quot;</span>
+<div class="highlight"><span class="filename">Update Versions</span><pre><span></span><code><span class="c1"># Use below command or use IDE to replace "${RANGER_VERSION}-SNAPSHOT" with "${RANGER_VERSION}".</span>
+<span class="nb">export</span><span class="w"> </span><span class="nv">RANGER_VERSION</span><span class="o">=</span><span class="s2">"2.7.0"</span>
 
 mvn<span class="w"> </span>versions:set<span class="w"> </span>-DnewVersion<span class="o">=</span><span class="si">${</span><span class="nv">RANGER_VERSION</span><span class="si">}</span><span class="w"> </span>-DgenerateBackupPoms<span class="o">=</span><span class="nb">false</span>
 
@@ -2115,17 +2115,17 @@ mvn<span class="w"> </span>versions:set<span class="w"> </span>-DnewVersion<span
 <span class="c1"># - ranger-trino-plugin-shim/pom.xml</span>
 </code></pre></div>
 <h4 id="commit-the-changes">Commit the changes<a class="headerlink" href="#commit-the-changes" title="Permanent link">&para;</a></h4>
-<p><div class="highlight"><span class="filename">Commit version changes to release branch</span><pre><span></span><code><span class="nb">export</span><span class="w"> </span><span class="nv">RANGER_VERSION</span><span class="o">=</span><span class="s2">&quot;2.7.0&quot;</span><span class="w"> </span><span class="c1"># Set to the version of Ranger being released.</span>
+<p><div class="highlight"><span class="filename">Commit version changes to release branch</span><pre><span></span><code><span class="nb">export</span><span class="w"> </span><span class="nv">RANGER_VERSION</span><span class="o">=</span><span class="s2">"2.7.0"</span><span class="w"> </span><span class="c1"># Set to the version of Ranger being released.</span>
 
-git<span class="w"> </span>commit<span class="w"> </span>-am<span class="w"> </span><span class="s2">&quot;RANGER-XXXX: Updated version from </span><span class="si">${</span><span class="nv">RANGER_VERSION</span><span class="si">}</span><span class="s2">-SNAPSHOT to </span><span class="si">${</span><span class="nv">RANGER_VERSION</span><span class="si">}</span><span class="s2">&quot;</span>
+git<span class="w"> </span>commit<span class="w"> </span>-am<span class="w"> </span><span class="s2">"RANGER-XXXX: Updated version from </span><span class="si">${</span><span class="nv">RANGER_VERSION</span><span class="si">}</span><span class="s2">-SNAPSHOT to </span><span class="si">${</span><span class="nv">RANGER_VERSION</span><span class="si">}</span><span class="s2">"</span>
 
 git<span class="w"> </span>push<span class="w"> </span>origin
 
 <span class="c1"># for ex: https://github.com/apache/ranger/commit/81f3d2f</span>
 </code></pre></div>
-<div class="highlight"><span class="filename">Tag the RC and Push</span><pre><span></span><code>git<span class="w"> </span>tag<span class="w"> </span>-a<span class="w"> </span>release-<span class="si">${</span><span class="nv">RANGER_VERSION</span><span class="si">}</span>-rc<span class="si">${</span><span class="nv">RANGER_RC</span><span class="si">}</span><span class="w"> </span>-m<span class="w"> </span><span class="s2">&quot;Ranger </span><span class="si">${</span><span class="nv">RANGER_VERSION</span><span class="si">}</span><span class="s2">-rc</span><span class="si">${</span><span class="nv">RANGER_RC</span><span class="si">}</span><span class="s2"> release&quot;</span>
+<div class="highlight"><span class="filename">Tag the RC and Push</span><pre><span></span><code>git<span class="w"> </span>tag<span class="w"> </span>-a<span class="w"> </span>release-<span class="si">${</span><span class="nv">RANGER_VERSION</span><span class="si">}</span>-rc<span class="si">${</span><span class="nv">RANGER_RC</span><span class="si">}</span><span class="w"> </span>-m<span class="w"> </span><span class="s2">"Ranger </span><span class="si">${</span><span class="nv">RANGER_VERSION</span><span class="si">}</span><span class="s2">-rc</span><span class="si">${</span><span class="nv">RANGER_RC</span><span class="si">}</span><span class="s2"> release"</span>
 
-<span class="c1"># example: git tag -a release-2.6.0-rc0 -m &quot;Ranger 2.6.0-rc0 release&quot;</span>
+<span class="c1"># example: git tag -a release-2.6.0-rc0 -m "Ranger 2.6.0-rc0 release"</span>
 
 <span class="c1"># and then push to the release branch like this</span>
 git<span class="w"> </span>push<span class="w"> </span>origin<span class="w"> </span>release-<span class="si">${</span><span class="nv">RANGER_VERSION</span><span class="si">}</span>-rc<span class="si">${</span><span class="nv">RANGER_RC</span><span class="si">}</span>
@@ -2179,7 +2179,7 @@ cp<span class="w"> </span>target/apache-ranger-<span class="si">${</span><span c
 cp<span class="w"> </span>target/apache-ranger-<span class="si">${</span><span class="nv">RANGER_VERSION</span><span class="si">}</span>.tar.gz.sha512<span class="w"> </span>ranger-dev/<span class="si">${</span><span class="nv">RANGER_VERSION</span><span class="si">}</span>-rc<span class="si">${</span><span class="nv">RANGER_RC</span><span class="si">}</span>/
 
 svn<span class="w"> </span>add<span class="w"> </span><span class="si">${</span><span class="nv">RANGER_VERSION</span><span class="si">}</span>-rc<span class="si">${</span><span class="nv">RANGER_RC</span><span class="si">}</span>
-svn<span class="w"> </span>commit<span class="w"> </span>-m<span class="w"> </span><span class="s2">&quot;RANGER-XXXX: Upload </span><span class="si">${</span><span class="nv">RANGER_VERSION</span><span class="si">}</span><span class="s2">-rc</span><span class="si">${</span><span class="nv">RANGER_RC</span><span class="si">}</span><span class="s2">&quot;</span><span class="w"> </span><span class="c1"># requires ASF authentication</span>
+svn<span class="w"> </span>commit<span class="w"> </span>-m<span class="w"> </span><span class="s2">"RANGER-XXXX: Upload </span><span class="si">${</span><span class="nv">RANGER_VERSION</span><span class="si">}</span><span class="s2">-rc</span><span class="si">${</span><span class="nv">RANGER_RC</span><span class="si">}</span><span class="s2">"</span><span class="w"> </span><span class="c1"># requires ASF authentication</span>
 </code></pre></div>
 <h2 id="vote">Vote<a class="headerlink" href="#vote" title="Permanent link">&para;</a></h2>
 <h4 id="send-the-voting-email-as-described-below">Send the voting email as described below<a class="headerlink" href="#send-the-voting-email-as-described-below" title="Permanent link">&para;</a></h4>
@@ -2234,7 +2234,7 @@ cp<span class="w"> </span>ranger-dev/<span class="si">${</span><span class="nv">
 
 svn<span class="w"> </span>add<span class="w"> </span><span class="si">${</span><span class="nv">RANGER_VERSION</span><span class="si">}</span>
 
-svn<span class="w"> </span>commit<span class="w"> </span>-m<span class="w"> </span><span class="s2">&quot;Uploading Apache Ranger </span><span class="si">${</span><span class="nv">RANGER_VERSION</span><span class="si">}</span><span class="s2"> release src artifacts&quot;</span><span class="w"> </span><span class="si">${</span><span class="nv">RANGER_VERSION</span><span class="si">}</span>
+svn<span class="w"> </span>commit<span class="w"> </span>-m<span class="w"> </span><span class="s2">"Uploading Apache Ranger </span><span class="si">${</span><span class="nv">RANGER_VERSION</span><span class="si">}</span><span class="s2"> release src artifacts"</span><span class="w"> </span><span class="si">${</span><span class="nv">RANGER_VERSION</span><span class="si">}</span>
 </code></pre></div>
 Now the <code>.tar.gz</code> artifact should have an associated <code>.asc</code> file, <code>.sha512</code> and <code>.sha256</code> file at the destination, so a total of 4 files.</p>
 <h3 id="publish-the-source-artifacts-to-maven-central">Publish the source artifacts to Maven Central<a class="headerlink" href="#publish-the-source-artifacts-to-maven-central" title="Permanent link">&para;</a></h3>
@@ -2283,22 +2283,22 @@ svn<span class="w"> </span>co<span class="w"> </span>https://dist.apache.org/rep
 cp<span class="w"> </span><span class="si">${</span><span class="nv">RELEASE_DIR</span><span class="si">}</span>/ranger/target/ranger-*<span class="w"> </span>.
 
 <span class="c1"># generate signature and checksums for all</span>
-<span class="k">for</span><span class="w"> </span>file<span class="w"> </span><span class="k">in</span><span class="w"> </span><span class="sb">`</span>find<span class="w"> </span>.<span class="w"> </span>-name<span class="w"> </span><span class="s2">&quot;ranger-*&quot;</span><span class="sb">`</span>
+<span class="k">for</span><span class="w"> </span>file<span class="w"> </span><span class="k">in</span><span class="w"> </span><span class="sb">`</span>find<span class="w"> </span>.<span class="w"> </span>-name<span class="w"> </span><span class="s2">"ranger-*"</span><span class="sb">`</span>
 <span class="k">do</span>
 <span class="w">  </span>gpg<span class="w"> </span>--armor<span class="w"> </span>--output<span class="w"> </span><span class="si">${</span><span class="nv">file</span><span class="si">}</span>.asc<span class="w"> </span>--detach-sig<span class="w"> </span><span class="si">${</span><span class="nv">file</span><span class="si">}</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>sha512sum<span class="w"> </span><span class="si">${</span><span class="nv">file</span><span class="si">}</span><span class="w"> </span>&gt;<span class="w"> </span><span class="si">${</span><span class="nv">file</span><span class="si">}</span>.sha512
 <span class="k">done</span>
 
 svn<span class="w"> </span>add<span class="w"> </span>ranger-*
-svn<span class="w"> </span>commit<span class="w"> </span>-m<span class="w"> </span><span class="s2">&quot;upload build artifacts for </span><span class="si">${</span><span class="nv">RANGER_RELEASE</span><span class="si">}</span><span class="s2"> release&quot;</span>
+svn<span class="w"> </span>commit<span class="w"> </span>-m<span class="w"> </span><span class="s2">"upload build artifacts for </span><span class="si">${</span><span class="nv">RANGER_RELEASE</span><span class="si">}</span><span class="s2"> release"</span>
 
 <span class="c1"># PMC Members may selectively move these artifacts to https://dist.apache.org/repos/dist/release/ranger/${RANGER_RELEASE} under respective directories</span>
 </code></pre></div>
 <h3 id="add-the-final-git-tag-and-push-it">Add the final git tag and push it<a class="headerlink" href="#add-the-final-git-tag-and-push-it" title="Permanent link">&para;</a></h3>
-<div class="highlight"><span class="filename">Add final release tag</span><pre><span></span><code>git<span class="w"> </span>checkout<span class="w"> </span><span class="s2">&quot;release-</span><span class="si">${</span><span class="nv">RANGER_VERSION</span><span class="si">}</span><span class="s2">-rc</span><span class="si">${</span><span class="nv">RANGER_RC</span><span class="si">}</span><span class="s2">&quot;</span>
+<div class="highlight"><span class="filename">Add final release tag</span><pre><span></span><code>git<span class="w"> </span>checkout<span class="w"> </span><span class="s2">"release-</span><span class="si">${</span><span class="nv">RANGER_VERSION</span><span class="si">}</span><span class="s2">-rc</span><span class="si">${</span><span class="nv">RANGER_RC</span><span class="si">}</span><span class="s2">"</span>
 
-git<span class="w"> </span>tag<span class="w"> </span>-a<span class="w"> </span><span class="s2">&quot;release-ranger-</span><span class="si">${</span><span class="nv">RANGER_VERSION</span><span class="si">}</span><span class="s2">&quot;</span><span class="w"> </span>-m<span class="w"> </span><span class="s2">&quot;Apache Ranger </span><span class="nv">$RANGER_VERSION</span><span class="s2">&quot;</span>
+git<span class="w"> </span>tag<span class="w"> </span>-a<span class="w"> </span><span class="s2">"release-ranger-</span><span class="si">${</span><span class="nv">RANGER_VERSION</span><span class="si">}</span><span class="s2">"</span><span class="w"> </span>-m<span class="w"> </span><span class="s2">"Apache Ranger </span><span class="nv">$RANGER_VERSION</span><span class="s2">"</span>
 
-git<span class="w"> </span>push<span class="w"> </span>origin<span class="w"> </span><span class="s2">&quot;release-ranger-</span><span class="si">${</span><span class="nv">RANGER_VERSION</span><span class="si">}</span><span class="s2">&quot;</span>
+git<span class="w"> </span>push<span class="w"> </span>origin<span class="w"> </span><span class="s2">"release-ranger-</span><span class="si">${</span><span class="nv">RANGER_VERSION</span><span class="si">}</span><span class="s2">"</span>
 </code></pre></div>
 <h3 id="create-a-sub-page-in-confluence">Create a sub-page in Confluence<a class="headerlink" href="#create-a-sub-page-in-confluence" title="Permanent link">&para;</a></h3>
 <p>Add a sub-page under Release Folders for this release and add links for the following:</p>
@@ -2359,7 +2359,7 @@ docker<span class="w"> </span>push<span class="w"> </span>apache/ranger-zk:<span
 <div class="highlight"><span class="filename">Update to SNAPSHOT version and Push</span><pre><span></span><code><span class="nv">NEXT_RANGER_VERSION</span><span class="o">=</span><span class="m">2</span>.7.0-SNAPSHOT
 mvn<span class="w"> </span>versions:set<span class="w"> </span>-DnewVersion<span class="o">=</span><span class="si">${</span><span class="nv">NEXT_RANGER_VERSION</span><span class="si">}</span>
 
-git<span class="w"> </span>commit<span class="w"> </span>-am<span class="w"> </span><span class="s2">&quot;RANGER-XXXX: Updated version from </span><span class="si">${</span><span class="nv">RANGER_VERSION</span><span class="si">}</span><span class="s2"> to </span><span class="si">${</span><span class="nv">NEXT_RANGER_VERSION</span><span class="si">}</span><span class="s2">&quot;</span>
+git<span class="w"> </span>commit<span class="w"> </span>-am<span class="w"> </span><span class="s2">"RANGER-XXXX: Updated version from </span><span class="si">${</span><span class="nv">RANGER_VERSION</span><span class="si">}</span><span class="s2"> to </span><span class="si">${</span><span class="nv">NEXT_RANGER_VERSION</span><span class="si">}</span><span class="s2">"</span>
 
 <span class="c1"># Also, manually update versions in:</span>
 <span class="c1"># - dev-support/ranger-docker/.env</span>
@@ -2368,10 +2368,10 @@ git<span class="w"> </span>commit<span class="w"> </span>-am<span class="w"> </s
 git<span class="w"> </span>push<span class="w"> </span>origin
 </code></pre></div>
 Now, update the previous release branch with newer SNAPSHOT version and commit it, something like this:</p>
-<div class="highlight"><span class="filename">Update to SNAPSHOT version and Push</span><pre><span></span><code><span class="nv">NEXT_RANGER_VERSION</span><span class="o">=</span><span class="s2">&quot;2.6.1-SNAPSHOT&quot;</span>
+<div class="highlight"><span class="filename">Update to SNAPSHOT version and Push</span><pre><span></span><code><span class="nv">NEXT_RANGER_VERSION</span><span class="o">=</span><span class="s2">"2.6.1-SNAPSHOT"</span>
 mvn<span class="w"> </span>versions:set<span class="w"> </span>-DnewVersion<span class="o">=</span><span class="si">${</span><span class="nv">NEXT_RANGER_VERSION</span><span class="si">}</span>
 
-git<span class="w"> </span>commit<span class="w"> </span>-am<span class="w"> </span><span class="s2">&quot;RANGER-XXXX: Updated version from </span><span class="si">${</span><span class="nv">RANGER_VERSION</span><span class="si">}</span><span class="s2"> to </span><span class="si">${</span><span class="nv">NEXT_RANGER_VERSION</span><span class="si">}</span><span class="s2">&quot;</span>
+git<span class="w"> </span>commit<span class="w"> </span>-am<span class="w"> </span><span class="s2">"RANGER-XXXX: Updated version from </span><span class="si">${</span><span class="nv">RANGER_VERSION</span><span class="si">}</span><span class="s2"> to </span><span class="si">${</span><span class="nv">NEXT_RANGER_VERSION</span><span class="si">}</span><span class="s2">"</span>
 
 <span class="c1"># Also, manually update versions in:</span>
 <span class="c1"># - dev-support/ranger-docker/.env</span>
