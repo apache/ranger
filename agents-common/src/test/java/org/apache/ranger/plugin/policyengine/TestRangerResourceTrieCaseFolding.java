@@ -20,14 +20,22 @@
 package org.apache.ranger.plugin.policyengine;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.ranger.authorization.hadoop.config.RangerPluginConfig;
 import org.apache.ranger.authorization.utils.TestStringUtil;
+import org.apache.ranger.plugin.model.RangerPolicy;
+import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItem;
+import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemAccess;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
+import org.apache.ranger.plugin.model.RangerServiceDef;
+import org.apache.ranger.plugin.model.RangerServiceDef.RangerAccessTypeDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerResourceDef;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest.ResourceElementMatchingScope;
 import org.apache.ranger.plugin.policyresourcematcher.RangerPolicyResourceMatcher;
 import org.apache.ranger.plugin.policyresourcematcher.RangerResourceEvaluator;
 import org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher;
 import org.apache.ranger.plugin.resourcematcher.RangerResourceMatcher;
+import org.apache.ranger.plugin.service.RangerBasePlugin;
+import org.apache.ranger.plugin.util.ServicePolicies;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -36,6 +44,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -52,6 +61,19 @@ class TestRangerResourceTrieCaseFolding {
     private static final char CAPITAL_SHARP_S = '\u1E9E'; // LATIN CAPITAL LETTER SHARP S
 
     private static final RangerResourceDef TABLE_RESOURCE_DEF = getTableResourceDef();
+
+    private static final String SERVICE_TYPE        = "hive";
+    private static final String SERVICE_NAME        = "test-hive";
+    private static final String APP_ID              = "test-app";
+    private static final String DATABASE_RESOURCE   = "database";
+    private static final String ACCESS              = "select";
+    private static final String USER                = "bob";
+    private static final String SIBLING_USER        = "carol";
+    private static final String INTERNAL_DB         = "internal";
+    private static final String INTERNAL_DB_VARIANT = DOTLESS_I + "nternal";
+    private static final String INTERNAL_DB_UPPER   = "INTERNAL";
+    private static final String SIBLING_DB          = "internet";
+    private static final String SIBLING_DB_VARIANT  = DOTLESS_I + "nternet";
 
     // folding sanity
     static Stream<Arguments> caseFoldingMismatchPairs() {
@@ -213,6 +235,36 @@ class TestRangerResourceTrieCaseFolding {
         Assertions.assertNotEquals(result, Collections.singleton(evalAllow), "DENY evaluator must not be omitted while only the broader ALLOW remains");
     }
 
+    @Test
+    void testPolicyEngineEvaluatesDotlessIVariantForInternalDatabase() {
+        RangerPluginConfig pluginConfig = pluginConfigForPolicyEngineTests();
+        RangerBasePlugin   plugin       = new RangerBasePlugin(pluginConfig, createServicePoliciesForPluginTests(), null, null);
+
+        Assertions.assertFalse(pluginConfig.getPolicyEngineOptions().disableTrieLookupPrefilter);
+
+        RangerAccessResult control = evaluate(plugin, USER, INTERNAL_DB);
+        RangerAccessResult upper   = evaluate(plugin, USER, INTERNAL_DB_UPPER);
+        RangerAccessResult variant = evaluate(plugin, USER, INTERNAL_DB_VARIANT);
+
+        Assertions.assertTrue(isAccessNotAllowed(control), "control: bob select on database=internal");
+        Assertions.assertTrue(isAccessNotAllowed(upper), "negative control: bob select on database=INTERNAL");
+        Assertions.assertTrue(isAccessNotAllowed(variant), "dotless-i variant: bob select on database=" + INTERNAL_DB_VARIANT);
+    }
+
+    @Test
+    void testPolicyEngineEvaluatesSiblingDotlessIVariantWhenTrieBranchSplits() {
+        RangerPluginConfig pluginConfig = pluginConfigForPolicyEngineTests();
+        RangerBasePlugin   plugin       = new RangerBasePlugin(pluginConfig, createServicePoliciesForPluginTests(), null, null);
+
+        Assertions.assertFalse(pluginConfig.getPolicyEngineOptions().disableTrieLookupPrefilter);
+
+        RangerAccessResult control = evaluate(plugin, SIBLING_USER, SIBLING_DB);
+        RangerAccessResult variant = evaluate(plugin, SIBLING_USER, SIBLING_DB_VARIANT);
+
+        Assertions.assertTrue(isAccessNotAllowed(control), "control: carol select on database=internet");
+        Assertions.assertTrue(isAccessNotAllowed(variant), "dotless-i variant: carol select on database=" + SIBLING_DB_VARIANT);
+    }
+
     // regression / edge cases
     @Test
     void testAsciiCaseFoldingStillWorks() {
@@ -287,6 +339,101 @@ class TestRangerResourceTrieCaseFolding {
         ret.setLevel(20);
         ret.setMatcher("org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher");
         ret.setMatcherOptions(TestStringUtil.mapFromStrings("wildCard", "true", "ignoreCase", "true"));
+        return ret;
+    }
+
+    private static RangerPluginConfig pluginConfigForPolicyEngineTests() {
+        RangerPolicyEngineOptions peOptions = new RangerPolicyEngineOptions();
+        peOptions.disablePolicyRefresher    = true;
+        peOptions.disableTagRetriever       = true;
+        peOptions.disableUserStoreRetriever = true;
+        peOptions.disableGdsInfoRetriever   = true;
+        return new RangerPluginConfig(SERVICE_TYPE, SERVICE_NAME, APP_ID, "cl1", "on-prem", peOptions);
+    }
+
+    private static RangerAccessResult evaluate(RangerBasePlugin plugin, String user, String database) {
+        Map<String, Object> resource = new HashMap<>();
+        resource.put(DATABASE_RESOURCE, database);
+
+        RangerAccessRequestImpl request = new RangerAccessRequestImpl();
+        request.setResource(new RangerAccessResourceImpl(resource));
+        request.setUser(user);
+        request.setAccessType(ACCESS);
+        request.setAction(ACCESS);
+        return plugin.isAccessAllowed(request);
+    }
+
+    private static boolean isAccessNotAllowed(RangerAccessResult result) {
+        boolean ret = result != null && result.getIsAccessDetermined() && !result.getIsAllowed();
+        return ret;
+    }
+
+    private static ServicePolicies createServicePoliciesForPluginTests() {
+        ServicePolicies servicePolicies = new ServicePolicies();
+        servicePolicies.setServiceName(SERVICE_NAME);
+        servicePolicies.setServiceDef(createServiceDefForPluginTests());
+        servicePolicies.setPolicyVersion(1L);
+        servicePolicies.setPolicies(Collections.unmodifiableList(Arrays.asList(broadAllowPolicy(), internalDatabasePolicy(), internetDatabasePolicy())));
+        return servicePolicies;
+    }
+
+    private static RangerPolicy internalDatabasePolicy() {
+        return databasePolicyForUser(100L, "policy-internal", INTERNAL_DB, USER);
+    }
+
+    private static RangerPolicy internetDatabasePolicy() {
+        return databasePolicyForUser(102L, "policy-internet", SIBLING_DB, SIBLING_USER);
+    }
+
+    private static RangerPolicy databasePolicyForUser(long id, String name, String dbValue, String user) {
+        RangerPolicy p = basePolicy(id, name);
+        p.setResources(Collections.singletonMap(DATABASE_RESOURCE, new RangerPolicyResource(dbValue, false, false)));
+
+        RangerPolicyItem item = new RangerPolicyItem();
+        item.setUsers(Collections.singletonList(user));
+        item.setAccesses(Collections.singletonList(new RangerPolicyItemAccess(ACCESS, Boolean.TRUE)));
+        p.setDenyPolicyItems(Collections.singletonList(item));
+        return p;
+    }
+
+    private static RangerPolicy broadAllowPolicy() {
+        RangerPolicy p = basePolicy(101L, "allow-all-db");
+        p.setResources(Collections.singletonMap(DATABASE_RESOURCE, new RangerPolicyResource("*", false, false)));
+
+        RangerPolicyItem item = new RangerPolicyItem();
+        item.setUsers(Arrays.asList(USER, SIBLING_USER));
+        item.setAccesses(Collections.singletonList(new RangerPolicyItemAccess(ACCESS, Boolean.TRUE)));
+        p.setPolicyItems(Collections.singletonList(item));
+        return p;
+    }
+
+    private static RangerPolicy basePolicy(long id, String name) {
+        RangerPolicy ret = new RangerPolicy();
+        ret.setId(id);
+        ret.setName(name);
+        ret.setService(SERVICE_NAME);
+        ret.setIsEnabled(true);
+        return ret;
+    }
+
+    private static RangerServiceDef createServiceDefForPluginTests() {
+        RangerResourceDef databaseResourceDef = new RangerResourceDef();
+        databaseResourceDef.setItemId(1L);
+        databaseResourceDef.setName(DATABASE_RESOURCE);
+        databaseResourceDef.setType("string");
+        databaseResourceDef.setLevel(10);
+        databaseResourceDef.setParent("");
+        databaseResourceDef.setMatcher("org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher");
+        databaseResourceDef.setMatcherOptions(TestStringUtil.mapFromStrings("wildCard", "true", "ignoreCase", "true"));
+
+        RangerAccessTypeDef accessTypeDef = new RangerAccessTypeDef();
+        accessTypeDef.setItemId(1L);
+        accessTypeDef.setName(ACCESS);
+
+        RangerServiceDef ret = new RangerServiceDef();
+        ret.setName(SERVICE_TYPE);
+        ret.setResources(Collections.singletonList(databaseResourceDef));
+        ret.setAccessTypes(Collections.singletonList(accessTypeDef));
         return ret;
     }
 
