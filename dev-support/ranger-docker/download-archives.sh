@@ -138,7 +138,6 @@ then
     downloadIfNotPresent kafka_2.12-${KAFKA_VERSION}.tgz        https://archive.apache.org/dist/kafka/${KAFKA_VERSION}
     downloadIfNotPresent knox-${KNOX_VERSION}.tar.gz            https://archive.apache.org/dist/knox/${KNOX_VERSION}
     extractOzoneIfNeeded
-    downloadIfNotPresent opensearch-${OPENSEARCH_VERSION}-linux-x64.tar.gz https://artifacts.opensearch.org/releases/bundle/opensearch/${OPENSEARCH_VERSION}
 else
   for arg in "$@"; do
     if [[ $arg == 'hadoop' ]]
@@ -163,7 +162,7 @@ else
       extractOzoneIfNeeded
     elif [[ $arg == 'opensearch' ]]
     then
-      downloadIfNotPresent opensearch-${OPENSEARCH_VERSION}-linux-x64.tar.gz https://artifacts.opensearch.org/releases/bundle/opensearch/${OPENSEARCH_VERSION}
+      : # OpenSearch is pulled as a Docker Hub image (opensearchproject/opensearch); no tarball needed
     else
       echo "Passed argument $arg is invalid!"
     fi

@@ -26,7 +26,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.Collection;
 import java.util.Collections;
@@ -47,13 +46,8 @@ public class TestAuditOpenSearchDispatcher {
     private AuditOpenSearchDispatcher dispatcher;
 
     @BeforeEach
-    void setUp() throws Exception {
-        Field unsafeField = sun.misc.Unsafe.class.getDeclaredField("theUnsafe");
-        unsafeField.setAccessible(true);
-        sun.misc.Unsafe unsafe = (sun.misc.Unsafe) unsafeField.get(null);
-        dispatcher = (AuditOpenSearchDispatcher) unsafe.allocateInstance(AuditOpenSearchDispatcher.class);
-
-        setField(dispatcher, "openSearchAuditDestination", openSearchAuditDestination);
+    void setUp() {
+        dispatcher = new AuditOpenSearchDispatcher(openSearchAuditDestination);
     }
 
     @Test
@@ -97,20 +91,5 @@ public class TestAuditOpenSearchDispatcher {
             }
             throw e;
         }
-    }
-
-    private void setField(Object target, String fieldName, Object value) throws Exception {
-        Class<?> clazz = target.getClass();
-        while (clazz != null) {
-            try {
-                Field field = clazz.getDeclaredField(fieldName);
-                field.setAccessible(true);
-                field.set(target, value);
-                return;
-            } catch (NoSuchFieldException e) {
-                clazz = clazz.getSuperclass();
-            }
-        }
-        throw new NoSuchFieldException(fieldName + " not found in class hierarchy");
     }
 }

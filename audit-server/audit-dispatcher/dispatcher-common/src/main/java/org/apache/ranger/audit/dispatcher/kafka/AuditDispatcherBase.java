@@ -59,6 +59,13 @@ public abstract class AuditDispatcherBase implements AuditDispatcher {
     protected String                              offsetCommitStrategy  = AuditServerConstants.DEFAULT_OFFSET_COMMIT_STRATEGY;
     protected long                                offsetCommitInterval  = AuditServerConstants.DEFAULT_OFFSET_COMMIT_INTERVAL_MS;
 
+    // Package-private: for unit tests only — skips Kafka/consumer initialisation.
+    AuditDispatcherBase() {
+        this.dispatcherGroupId = "test";
+        this.dispatcher        = null;
+        this.topicName         = null;
+    }
+
     public AuditDispatcherBase(Properties props, String propPrefix, String dispatcherGroupId) throws Exception {
         this.dispatcherGroupId = getDispatcherGroupId(props, propPrefix, dispatcherGroupId);
 

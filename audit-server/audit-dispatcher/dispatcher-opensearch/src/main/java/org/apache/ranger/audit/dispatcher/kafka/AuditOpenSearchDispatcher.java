@@ -51,6 +51,12 @@ public class AuditOpenSearchDispatcher extends AuditDispatcherBase {
         init(props, propPrefix);
     }
 
+    // Package-private: for unit tests only — bypasses Kafka/OpenSearch initialisation.
+    AuditOpenSearchDispatcher(final OpenSearchAuditDestination destination) {
+        super();
+        this.openSearchAuditDestination = destination;
+    }
+
     @Override
     protected final String getDispatcherName() {
         return "OPENSEARCH";

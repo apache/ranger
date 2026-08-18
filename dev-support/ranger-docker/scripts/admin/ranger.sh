@@ -33,6 +33,28 @@ then
     ${RANGER_SCRIPTS}/wait_for_testusers_keytab.sh
   fi
 
+  # Select audit store from RANGER_AUDIT_STORE env-var (mirrors RANGER_DB_TYPE pattern).
+  # Default is opensearch; set RANGER_AUDIT_STORE=solr to switch to Solr.
+  # Rewrites install.properties in-place so setup.sh picks up the right audit block.
+  if [ "${RANGER_AUDIT_STORE}" = "solr" ]; then
+    sed -i \
+      -e 's|^audit_store=opensearch|# audit_store=opensearch|' \
+      -e 's|^audit_opensearch_urls=|# audit_opensearch_urls=|' \
+      -e 's|^audit_opensearch_port=|# audit_opensearch_port=|' \
+      -e 's|^audit_opensearch_protocol=|# audit_opensearch_protocol=|' \
+      -e 's|^audit_opensearch_user=|# audit_opensearch_user=|' \
+      -e 's|^audit_opensearch_password=|# audit_opensearch_password=|' \
+      -e 's|^audit_opensearch_index=|# audit_opensearch_index=|' \
+      -e 's|^audit_opensearch_bootstrap_enabled=|# audit_opensearch_bootstrap_enabled=|' \
+      -e 's|^# audit_store=solr|audit_store=solr|' \
+      -e 's|^# audit_solr_urls=|audit_solr_urls=|' \
+      -e 's|^# audit_solr_collection_name=|audit_solr_collection_name=|' \
+      "${RANGER_HOME}/admin/install.properties"
+    echo "Audit store set to solr"
+  else
+    echo "Audit store set to opensearch (default)"
+  fi
+
   cd "${RANGER_HOME}"/admin || exit
   if ./setup.sh;
   then
