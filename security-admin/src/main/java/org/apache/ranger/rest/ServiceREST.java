@@ -1051,6 +1051,19 @@ public class ServiceREST {
 				perf = RangerPerfTracer.getPerfTracer(PERF_LOG, "ServiceREST.getServices()");
 			}
 			ret = svcStore.getServices(filter);
+
+			if (ret != null) {
+				UserSessionBase userSession = ContextUtil.getCurrentUserSession();
+				if (userSession != null && userSession.isSingleRoleUserSession()) {
+					List<RangerService> updateServiceList = new ArrayList<RangerService>();
+					for (RangerService rangerService : ret) {
+						if (rangerService != null) {
+							updateServiceList.add(hideCriticalServiceDetailsForRoleUser(rangerService));
+						}
+					}
+					ret = updateServiceList;
+				}
+			}
 		} catch(WebApplicationException excp) {
 			throw excp;
 		} catch(Throwable excp) {
