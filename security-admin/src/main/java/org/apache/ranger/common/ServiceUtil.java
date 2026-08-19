@@ -59,7 +59,6 @@ import org.apache.ranger.view.VXPermObj;
 import org.apache.ranger.view.VXPolicy;
 import org.apache.ranger.view.VXPolicyList;
 import org.apache.ranger.view.VXRepository;
-import org.apache.ranger.view.VXRepositoryList;
 import org.apache.ranger.view.VXResource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -754,22 +753,6 @@ public class ServiceUtil {
 		return searchCriteria;
 	}
 	
-	
-	public VXRepositoryList rangerServiceListToPublicObjectList(List<RangerService> serviceList) {
-
-		List<VXRepository> repoList = new ArrayList<VXRepository>();
-		for (RangerService service  : serviceList) {
-			VXRepository vXRepo = toVXRepository(service);
-
-			if(vXRepo != null) {
-				repoList.add(vXRepo);
-			}
-		}
-		VXRepositoryList vXRepositoryList = new VXRepositoryList(repoList);
-		return vXRepositoryList;
-	}
-	
-		
 	private VXDataObject vXDataObjectToPublicDataObject(VXDataObject publicDataObject, VXDataObject vXdataObject) {
 		
 		VXDataObject ret = publicDataObject;
