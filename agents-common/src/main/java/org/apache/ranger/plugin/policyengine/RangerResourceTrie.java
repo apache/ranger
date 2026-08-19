@@ -679,7 +679,7 @@ public class RangerResourceTrie<T extends RangerResourceEvaluator> {
     }
 
     private Character getLookupChar(char ch) {
-        return optIgnoreCase ? Character.toLowerCase(ch) : ch;
+        return optIgnoreCase ? Character.toLowerCase(Character.toUpperCase(ch)) : ch;
     }
 
     private Character getLookupChar(String str, int index) {
