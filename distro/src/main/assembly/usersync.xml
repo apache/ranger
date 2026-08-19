@@ -26,7 +26,6 @@
 		<moduleSet>
 			<useAllReactorProjects>true</useAllReactorProjects>
 			<includes>
-				<include>org.apache.ranger:unixauthservice</include>
 				<include>org.apache.ranger:unixusersync</include>
 			</includes>
 			<binaries>
@@ -127,19 +126,29 @@
 
 	<fileSets>
 		<fileSet>
+			<directory>../ugsync/target</directory>
+			<outputDirectory>dist</outputDirectory>
+			<includes>
+				<include>unixusersync-${project.version}.jar</include>
+			</includes>
+			<fileMode>644</fileMode>
+		</fileSet>
+		<fileSet>
+			<directory>../ugsync/target/lib</directory>
+			<outputDirectory>lib</outputDirectory>
+			<fileMode>644</fileMode>
+		</fileSet>
+		<fileSet>
 			<directoryMode>755</directoryMode>
 			<fileMode>644</fileMode>
 			<outputDirectory>conf.dist</outputDirectory>
-			<directory>../unixauthservice/conf.dist</directory>
-			<excludes>
-				<exclude>jaas.conf</exclude>
-			</excludes>
+			<directory>../ugsync/conf.dist</directory>
 		</fileSet>
 		<fileSet>
 			<directoryMode>755</directoryMode>
 			<fileMode>544</fileMode>
 			<outputDirectory></outputDirectory>
-			<directory>../unixauthservice/scripts</directory>
+			<directory>../ugsync/scripts</directory>
 			<excludes>
 				<exclude>*.properties</exclude>
 				<exclude>initd</exclude>
@@ -149,7 +158,7 @@
 			<directoryMode>755</directoryMode>
 			<fileMode>700</fileMode>
 			<outputDirectory></outputDirectory>
-			<directory>../unixauthservice/scripts</directory>
+			<directory>../ugsync/scripts</directory>
 			<includes>
 				<include>*.properties</include>
 			</includes>
@@ -158,34 +167,16 @@
 			<directoryMode>755</directoryMode>
 			<fileMode>644</fileMode>
 			<outputDirectory>conf.dist/cert</outputDirectory>
-			<directory>../unixauthservice/cert</directory>
+			<directory>../ugsync/cert</directory>
 		</fileSet>
 		<fileSet>
 			<directoryMode>755</directoryMode>
-			<fileMode>750</fileMode>
-			<outputDirectory>native</outputDirectory>
-			<directory>../unixauthnative/target</directory>
-			<includes>
-				<include>credValidator.*</include>
-			</includes>
-		</fileSet>
-		<fileSet>
-			<directoryMode>755</directoryMode>
-			<fileMode>750</fileMode>
-			<outputDirectory>native</outputDirectory>
-			<directory>../unixauthpam/target</directory>
-			<includes>
-				<include>pamCredValidator.*</include>
-			</includes>
-		</fileSet>
-		<fileSet>
-			<directoryMode>755</directoryMode>
+			<fileMode>444</fileMode>
 			<outputDirectory></outputDirectory>
 			<directory>${project.build.directory}</directory>
 			<includes>
 				<include>version</include>
 			</includes>
-			<fileMode>444</fileMode>
 		</fileSet>
 		<fileSet>
 			<outputDirectory></outputDirectory>
@@ -243,7 +234,7 @@
 	</fileSets>
 	<files>
 		<file>
-			<source>${project.parent.basedir}/unixauthservice/scripts/initd</source>
+			<source>${project.parent.basedir}/ugsync/scripts/initd</source>
 			<outputDirectory></outputDirectory>
 			<destName>ranger-usersync</destName>
 			<fileMode>755</fileMode>

@@ -176,9 +176,6 @@ def add_advanced_ranger_configurations(add_admin_or_usersync, ranger_service_pro
 			advanced_admin_properties['policymgr_external_url'] = ranger_service_properties_from_file['xa.webapp.url.root']
 			advanced_admin_properties['policymgr_http_enabled'] = ranger_service_properties_from_file['http.enabled']
 			advanced_admin_properties['authentication_method'] = get_authentication_method()
-                        advanced_admin_properties['remoteLoginEnabled'] = ranger_service_properties_from_file.get('remoteLoginEnabled','false')
-                        advanced_admin_properties['authServiceHostName'] = ranger_service_properties_from_file.get('authServiceHostName','localhost')
-                        advanced_admin_properties['authServicePort'] = ranger_service_properties_from_file.get('authServicePort','5151')
 			advanced_admin_properties['xa_ldap_url'] = ranger_service_properties_from_file['xa_ldap_url']
 			advanced_admin_properties['xa_ldap_userDNpattern'] = ranger_service_properties_from_file['xa_ldap_userDNpattern']
 			advanced_admin_properties['xa_ldap_groupSearchBase'] = ranger_service_properties_from_file['xa_ldap_groupSearchBase']
@@ -426,12 +423,10 @@ def get_additional_properties_for_admin(ranger_admin_properties_from_file):
 	ranger_webserver_properties_path = os.path.join(ranger_conf_path, 'ranger_webserver.properties')
 	ranger_ldap_properties_path = os.path.join(ranger_conf_path, 'xa_ldap.properties')
 	ranger_system_properties_path = os.path.join(ranger_conf_path, 'xa_system.properties')
-	ranger_unixauth_properties_path = os.path.join(ranger_conf_path, 'ranger_jaas', 'unixauth.properties')
         try:
 	    ranger_admin_properties_from_file = import_properties_from_file(ranger_webserver_properties_path, ranger_admin_properties_from_file)
 	    ranger_admin_properties_from_file = import_properties_from_file(ranger_ldap_properties_path, ranger_admin_properties_from_file)
 	    ranger_admin_properties_from_file = import_properties_from_file(ranger_system_properties_path, ranger_admin_properties_from_file)
-	    ranger_admin_properties_from_file = import_properties_from_file(ranger_unixauth_properties_path, ranger_admin_properties_from_file)
         except Exception, e:
             print "Error loading property files: ", str(e)
 
@@ -500,12 +495,14 @@ def get_additional_properties_for_admin(ranger_admin_properties_from_file):
 
 def get_additional_properties_for_usersync(ranger_usersync_properties_from_file):
 	ranger_conf_path = '/etc/ranger/usersync/conf'
-	unix_auth_properties_path = os.path.join(ranger_conf_path, 'unixauthservice.properties')
-	ranger_usersync_properties_from_file = import_properties_from_file(unix_auth_properties_path, ranger_usersync_properties_from_file)
-	if (('unix'.lower()) in str(ranger_usersync_properties_from_file['usergroupSync.source.impl.class']).lower()):
+	ranger_ugsync_default_site_xml_properties = os.path.join(ranger_conf_path, 'ranger-ugsync-default.xml')
+	ranger_ugsync_site_xml_properties = os.path.join(ranger_conf_path, 'ranger-ugsync-site.xml')
+	ranger_usersync_properties_from_file = import_properties_from_xml(ranger_ugsync_default_site_xml_properties, ranger_usersync_properties_from_file)
+	ranger_usersync_properties_from_file = import_properties_from_xml(ranger_ugsync_site_xml_properties, ranger_usersync_properties_from_file)
+	if (('unix'.lower()) in str(ranger_usersync_properties_from_file.get('ranger.usersync.source.impl.class', '')).lower()):
 		print('sync_source is unix')
 		ranger_usersync_properties_from_file['SYNC_SOURCE'] = 'unix'
-	if (('ldap'.lower()) in str(ranger_usersync_properties_from_file['usergroupSync.source.impl.class']).lower()):
+	if (('ldap'.lower()) in str(ranger_usersync_properties_from_file.get('ranger.usersync.source.impl.class', '')).lower()):
 		print('sync source is ldap')
 		ranger_usersync_properties_from_file['SYNC_SOURCE'] = 'ldap'
 	return ranger_usersync_properties_from_file

@@ -303,9 +303,6 @@ def add_advanced_ranger_configurations(add_admin_or_usersync, ranger_service_pro
 			advanced_ranger_admin_site_properties['ranger.jpa.audit.jdbc.user'] = ranger_service_properties_from_file.get('ranger.jpa.audit.jdbc.user','{{ranger_audit_db_user}}')
 			advanced_ranger_admin_site_properties['ranger.jpa.audit.jdbc.password'] = ranger_service_properties_from_file.get('ranger.jpa.audit.jdbc.password','_')
 			advanced_ranger_admin_site_properties['ranger.jpa.audit.jdbc.credential.alias'] = ranger_service_properties_from_file.get('ranger.jpa.audit.jdbc.credential.alias','rangeraudit')
-			advanced_ranger_admin_site_properties['ranger.unixauth.remote.login.enabled'] = ranger_service_properties_from_file.get('ranger.unixauth.remote.login.enabled','true')
-			advanced_ranger_admin_site_properties['ranger.unixauth.service.hostname'] = ranger_service_properties_from_file.get('ranger.unixauth.service.hostname','localhost')
-			advanced_ranger_admin_site_properties['ranger.unixauth.service.port'] = ranger_service_properties_from_file.get('ranger.unixauth.service.port','5151')
 			advanced_ranger_admin_site_properties['ranger.jpa.jdbc.dialect'] = ranger_service_properties_from_file.get('ranger.jpa.jdbc.dialect','{{jdbc_dialect}}')
 			advanced_ranger_admin_site_properties['ranger.jpa.audit.jdbc.dialect'] = ranger_service_properties_from_file.get('ranger.jpa.audit.jdbc.dialect','{{jdbc_dialect}')
 			advanced_ranger_admin_site_properties['ranger.audit.solr.zookeepers'] = ranger_service_properties_from_file.get('ranger.audit.solr.zookeepers','NONE')
@@ -344,13 +341,10 @@ def add_advanced_ranger_configurations(add_admin_or_usersync, ranger_service_pro
 			sys.exit(1)
 
 	elif (add_admin_or_usersync == 2):
-		advanced_user_sync_properties['ranger.usersync.port'] = ranger_service_properties_from_file['ranger.usersync.port']
-		advanced_user_sync_properties['ranger.usersync.ssl'] = ranger_service_properties_from_file['ranger.usersync.ssl']
 		advanced_user_sync_properties['ranger.usersync.keystore.file'] = ranger_service_properties_from_file['ranger.usersync.keystore.file']
 		advanced_user_sync_properties['ranger.usersync.keystore.password'] = ranger_service_properties_from_file.get('ranger.usersync.keystore.password','UnIx529p')
 		advanced_user_sync_properties['ranger.usersync.truststore.file'] = ranger_service_properties_from_file.get('ranger.usersync.truststore.file','/usr/hdp/current/ranger-usersync/conf/mytruststore.jks')
 		advanced_user_sync_properties['ranger.usersync.truststore.password'] = ranger_service_properties_from_file.get('ranger.usersync.truststore.password','changeit')
-		advanced_user_sync_properties['ranger.usersync.passwordvalidator.path'] = ranger_service_properties_from_file['ranger.usersync.passwordvalidator.path']
 		advanced_user_sync_properties['ranger.usersync.sink.impl.class'] = ranger_service_properties_from_file['ranger.usersync.sink.impl.class']
 		advanced_user_sync_properties['ranger.usersync.policymanager.baseURL'] = ranger_service_properties_from_file['ranger.usersync.policymanager.baseURL']
 		advanced_user_sync_properties['ranger.usersync.policymanager.maxrecordsperapicall'] = ranger_service_properties_from_file['ranger.usersync.policymanager.maxrecordsperapicall']

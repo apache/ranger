@@ -182,13 +182,6 @@ public class TestRangerAuthenticationProvider {
     }
 
     @Test
-    public void getUnixAuthentication_skipsWhenNoPassword() {
-        UsernamePasswordAuthenticationToken input  = new UsernamePasswordAuthenticationToken("u", "");
-        Authentication                      result = provider.getUnixAuthentication(input);
-        assertSame(input, result);
-    }
-
-    @Test
     public void getLdapAuthentication_skipsWhenNoPassword() throws Exception {
         UsernamePasswordAuthenticationToken input = new UsernamePasswordAuthenticationToken("u", "");
         Method                              m     = provider.getClass().getDeclaredMethod("getLdapAuthentication", Authentication.class);
