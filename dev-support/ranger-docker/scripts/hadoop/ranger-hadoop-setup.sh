@@ -42,26 +42,17 @@ cp ${RANGER_SCRIPTS}/hdfs-site.xml ${HADOOP_HOME}/etc/hadoop/hdfs-site.xml
 cp ${RANGER_SCRIPTS}/yarn-site.xml ${HADOOP_HOME}/etc/hadoop/yarn-site.xml
 
 mkdir -p /opt/hadoop/logs
-chown -R hdfs:hadoop /opt/hadoop/
 chmod g+w /opt/hadoop/logs
 # user logs directory permissions for NodeManager health
 mkdir -p ${HADOOP_HOME}/logs/userlogs
 chown -R yarn:hadoop ${HADOOP_HOME}/logs/userlogs
 chmod -R 777 ${HADOOP_HOME}/logs/userlogs
 
-# Install Tez JARs for YARN NodeManager
-echo "Installing Tez JARs for YARN NodeManager..."
+# Tez JARs are installed at image build time; ensure conf dir exists at runtime.
 if [ -d "/opt/tez" ]; then
-    echo "Copying Tez JARs to YARN lib directory..."
-    cp /opt/tez/lib/*.jar /opt/hadoop/share/hadoop/yarn/lib/ 2>/dev/null
-    cp /opt/tez/*.jar /opt/hadoop/share/hadoop/yarn/lib/ 2>/dev/null
-
-    # Set up Tez environment
     export TEZ_HOME=/opt/tez
     export TEZ_CONF_DIR=${TEZ_HOME}/conf
     mkdir -p ${TEZ_CONF_DIR}
-
-    echo "Tez JARs installed successfully for YARN NodeManager"
 else
     echo "WARNING: Tez directory not found at /opt/tez"
 fi
@@ -71,3 +62,13 @@ cd ${RANGER_HOME}/ranger-hdfs-plugin
 
 cd ${RANGER_HOME}/ranger-yarn-plugin
 ./enable-yarn-plugin.sh
+
+# Ownership for /opt/hadoop is set at image build time. Only fix paths modified here.
+chown hdfs:hadoop \
+    "${HADOOP_HOME}/etc/hadoop/hadoop-env.sh" \
+    "${HADOOP_HOME}/etc/hadoop/core-site.xml" \
+    "${HADOOP_HOME}/etc/hadoop/hdfs-site.xml" \
+    "${HADOOP_HOME}/etc/hadoop/yarn-site.xml" \
+    /opt/hadoop/logs
+chown -R hdfs:hadoop "${HADOOP_HOME}/etc/hadoop"
+chown -R yarn:hadoop "${HADOOP_HOME}/logs/userlogs"
