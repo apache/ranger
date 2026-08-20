@@ -116,11 +116,11 @@ public class RangerServiceService extends RangerServiceServiceBase<XXService, Ra
     }
 
     private Set<String> getPasswordConfigKeysByServiceDefId(Long serviceDefId) {
-        return ServiceDBStore.getPasswordConfigKeys(serviceDefId != null ? daoMgr.getXXServiceConfigDef().findByServiceDefId(serviceDefId) : null);
+        return ServiceDBStore.getPasswordConfigKeys(serviceDefId != null ? daoMgr.getXXServiceConfigDef().findConfigNamesByServiceDefIdAndType(serviceDefId, ServiceDBStore.CONFIG_TYPE_PASSWORD) : null);
     }
 
     private Set<String> getPasswordConfigKeysByServiceDefName(String serviceDefName) {
-        return ServiceDBStore.getPasswordConfigKeys(serviceDefName != null ? daoMgr.getXXServiceConfigDef().findByServiceDefName(serviceDefName) : null);
+        return ServiceDBStore.getPasswordConfigKeys(serviceDefName != null ? daoMgr.getXXServiceConfigDef().findConfigNamesByServiceDefNameAndType(serviceDefName, ServiceDBStore.CONFIG_TYPE_PASSWORD) : null);
     }
 
     @Override

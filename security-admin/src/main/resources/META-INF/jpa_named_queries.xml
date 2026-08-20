@@ -646,6 +646,15 @@
 				where obj.defId = svcDef.id and svcDef.name = :serviceDef order by obj.order</query>
 	</named-query>
 
+	<named-query name="XXServiceConfigDef.findConfigNamesByServiceDefIdAndType">
+		<query>select obj.name from XXServiceConfigDef obj
+				where obj.defId = :serviceDefId and obj.type = :configType order by obj.order</query>
+	</named-query>
+
+	<named-query name="XXServiceConfigDef.findConfigNamesByServiceDefNameAndType">
+		<query>select obj.name from XXServiceConfigDef obj, XXServiceDef svcDef
+				where obj.defId = svcDef.id and svcDef.name = :serviceDef and obj.type = :configType order by obj.order</query>
+	</named-query>
 
 	<!-- XXAccessTypeDef -->
 	<named-query name="XXAccessTypeDef.findByServiceDefId">

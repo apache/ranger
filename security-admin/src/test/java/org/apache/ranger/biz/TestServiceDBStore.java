@@ -1019,6 +1019,7 @@ public class TestServiceDBStore {
 
         Mockito.when(daoMgr.getXXServiceConfigDef()).thenReturn(xServiceConfigDefDao);
         Mockito.when(xServiceConfigDefDao.findByServiceDefName("nifi")).thenReturn(nifiPasswordDefs);
+        Mockito.when(xServiceConfigDefDao.findConfigNamesByServiceDefNameAndType("nifi", ServiceDBStore.CONFIG_TYPE_PASSWORD)).thenReturn(Arrays.asList(keyKeystorePwd, keyTruststorePwd));
 
         Mockito.when(svcService.create(rangerService)).thenReturn(rangerService);
         Mockito.when(daoMgr.getXXService()).thenReturn(xServiceDao);
@@ -1145,6 +1146,7 @@ public class TestServiceDBStore {
 
         Mockito.when(daoMgr.getXXServiceConfigDef()).thenReturn(xServiceConfigDefDao);
         Mockito.when(xServiceConfigDefDao.findByServiceDefName("nifi")).thenReturn(nifiPasswordDefs);
+        Mockito.when(xServiceConfigDefDao.findConfigNamesByServiceDefNameAndType("nifi", ServiceDBStore.CONFIG_TYPE_PASSWORD)).thenReturn(Arrays.asList(keyKeystorePwd, keyTruststorePwd));
 
         Mockito.when(daoMgr.getXXService()).thenReturn(xServiceDao);
         Mockito.when(xServiceDao.getById(Id)).thenReturn(xService);
@@ -1217,6 +1219,7 @@ public class TestServiceDBStore {
 
         Mockito.when(daoMgr.getXXServiceConfigDef()).thenReturn(xServiceConfigDefDao);
         Mockito.when(xServiceConfigDefDao.findByServiceDefName("nifi")).thenReturn(nifiPasswordDefs);
+        Mockito.when(xServiceConfigDefDao.findConfigNamesByServiceDefNameAndType("nifi", ServiceDBStore.CONFIG_TYPE_PASSWORD)).thenReturn(Arrays.asList(keyKeystorePwd, keyTruststorePwd));
 
         Mockito.when(daoMgr.getXXService()).thenReturn(xServiceDao);
         Mockito.when(xServiceDao.getById(Id)).thenReturn(xService);

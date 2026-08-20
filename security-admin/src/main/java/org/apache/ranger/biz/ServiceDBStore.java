@@ -4251,17 +4251,17 @@ public class ServiceDBStore extends AbstractServiceStore {
     }
 
     private Set<String> getPasswordConfigKeys(String serviceType) {
-        List<XXServiceConfigDef> svcConfDefList = serviceType != null ? daoMgr.getXXServiceConfigDef().findByServiceDefName(serviceType) : null;
-        return getPasswordConfigKeys(svcConfDefList);
+        List<String> passwordConfigNames = serviceType != null ? daoMgr.getXXServiceConfigDef().findConfigNamesByServiceDefNameAndType(serviceType, CONFIG_TYPE_PASSWORD) : null;
+        return getPasswordConfigKeys(passwordConfigNames);
     }
 
-    public static Set<String> getPasswordConfigKeys(List<XXServiceConfigDef> svcConfDefList) {
+    public static Set<String> getPasswordConfigKeys(List<String> passwordConfigNames) {
         Set<String> passwordConfigKeys = new HashSet<>();
         passwordConfigKeys.add(StringUtils.lowerCase(CONFIG_KEY_PASSWORD));
-        if (svcConfDefList != null) {
-            for (XXServiceConfigDef svcConfDef : svcConfDefList) {
-                if (StringUtils.equalsIgnoreCase(svcConfDef.getType(), CONFIG_TYPE_PASSWORD) && svcConfDef.getName() != null) {
-                    passwordConfigKeys.add(StringUtils.lowerCase(svcConfDef.getName()));
+        if (passwordConfigNames != null) {
+            for (String passwordConfigName : passwordConfigNames) {
+                if (passwordConfigName != null) {
+                    passwordConfigKeys.add(StringUtils.lowerCase(passwordConfigName));
                 }
             }
         }

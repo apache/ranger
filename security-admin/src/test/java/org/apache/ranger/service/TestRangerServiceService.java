@@ -32,7 +32,6 @@ import org.apache.ranger.db.XXServiceDefDao;
 import org.apache.ranger.db.XXServiceVersionInfoDao;
 import org.apache.ranger.entity.XXPortalUser;
 import org.apache.ranger.entity.XXService;
-import org.apache.ranger.entity.XXServiceConfigDef;
 import org.apache.ranger.entity.XXServiceConfigMap;
 import org.apache.ranger.entity.XXServiceDef;
 import org.apache.ranger.entity.XXServiceVersionInfo;
@@ -51,6 +50,7 @@ import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
@@ -168,7 +168,7 @@ public class TestRangerServiceService {
         Mockito.when(xServiceConfigMapDao.findByServiceId(xService.getId())).thenReturn(svcConfigMapList);
 
         Mockito.when(daoManager.getXXServiceConfigDef()).thenReturn(xServiceConfigDefDao);
-        Mockito.when(xServiceConfigDefDao.findByServiceDefId(xService.getType())).thenReturn(new ArrayList<>());
+        Mockito.when(xServiceConfigDefDao.findConfigNamesByServiceDefIdAndType(xService.getType(), ServiceDBStore.CONFIG_TYPE_PASSWORD)).thenReturn(new ArrayList<>());
 
         RangerService dbService = serviceService.populateViewBean(xService);
 
@@ -244,7 +244,7 @@ public class TestRangerServiceService {
         Mockito.when(xServiceConfigMapDao.findByServiceId(xService.getId())).thenReturn(svcConfigMapList);
 
         Mockito.when(daoManager.getXXServiceConfigDef()).thenReturn(xServiceConfigDefDao);
-        Mockito.when(xServiceConfigDefDao.findByServiceDefId(xService.getType())).thenReturn(new ArrayList<>());
+        Mockito.when(xServiceConfigDefDao.findConfigNamesByServiceDefIdAndType(xService.getType(), ServiceDBStore.CONFIG_TYPE_PASSWORD)).thenReturn(new ArrayList<>());
 
         RangerService dbService = serviceService.getPopulatedViewObject(xService);
 
@@ -317,14 +317,12 @@ public class TestRangerServiceService {
         Mockito.when(daoManager.getXXServiceConfigMap()).thenReturn(xServiceConfigMapDao);
         Mockito.when(xServiceConfigMapDao.findByServiceId(xService.getId())).thenReturn(svcConfigMapList);
 
-        /* the config item names the NiFi service-def declares with "type":"password" */
-        List<XXServiceConfigDef> nifiPasswordTypedDefs = new ArrayList<>();
-        nifiPasswordTypedDefs.add(configDef(keyKeystorePassword, "password"));
-        nifiPasswordTypedDefs.add(configDef(keyTruststorePassword, "password"));
-        nifiPasswordTypedDefs.add(configDef(keyUrl, "string"));
+        /* the config item names the NiFi service-def declares with "type":"password" -
+         * already filtered by type at the DB layer, so only those two names come back */
+        List<String> nifiPasswordTypedNames = Arrays.asList(keyKeystorePassword, keyTruststorePassword);
 
         Mockito.when(daoManager.getXXServiceConfigDef()).thenReturn(xServiceConfigDefDao);
-        Mockito.when(xServiceConfigDefDao.findByServiceDefId(xService.getType())).thenReturn(nifiPasswordTypedDefs);
+        Mockito.when(xServiceConfigDefDao.findConfigNamesByServiceDefIdAndType(xService.getType(), ServiceDBStore.CONFIG_TYPE_PASSWORD)).thenReturn(nifiPasswordTypedNames);
 
         RangerService        dbService = serviceService.getPopulatedViewObject(xService);
         Map<String, String>  configs   = dbService.getConfigs();
@@ -362,8 +360,7 @@ public class TestRangerServiceService {
         storedConfigMap.setConfigvalue(storedValue);
 
         Mockito.when(daoManager.getXXServiceConfigDef()).thenReturn(xServiceConfigDefDao);
-        Mockito.when(xServiceConfigDefDao.findByServiceDefName("nifi")).thenReturn(Collections.singletonList(configDef(configKey, "password")));
-
+        Mockito.when(xServiceConfigDefDao.findConfigNamesByServiceDefNameAndType("nifi", ServiceDBStore.CONFIG_TYPE_PASSWORD)).thenReturn(Collections.singletonList(configKey));
         Mockito.when(daoManager.getXXServiceConfigMap()).thenReturn(xServiceConfigMapDao);
         Mockito.when(xServiceConfigMapDao.findByServiceAndConfigKey(userId, configKey)).thenReturn(storedConfigMap);
 
@@ -382,13 +379,6 @@ public class TestRangerServiceService {
         xConfMap.setCreateTime(new Date());
         xConfMap.setUpdateTime(new Date());
         return xConfMap;
-    }
-
-    private XXServiceConfigDef configDef(String name, String type) {
-        XXServiceConfigDef def = new XXServiceConfigDef();
-        def.setName(name);
-        def.setType(type);
-        return def;
     }
 
     @Test
@@ -456,7 +446,7 @@ public class TestRangerServiceService {
         Mockito.when(xServiceConfigMapDao.findByServiceId(xService.getId())).thenReturn(svcConfigMapList);
 
         Mockito.when(daoManager.getXXServiceConfigDef()).thenReturn(xServiceConfigDefDao);
-        Mockito.when(xServiceConfigDefDao.findByServiceDefId(xService.getType())).thenReturn(new ArrayList<>());
+        Mockito.when(xServiceConfigDefDao.findConfigNamesByServiceDefIdAndType(xService.getType(), ServiceDBStore.CONFIG_TYPE_PASSWORD)).thenReturn(new ArrayList<>());
 
         List<RangerService> dbServiceList = serviceService.getAllServices();
         Assertions.assertNotNull(dbServiceList);
