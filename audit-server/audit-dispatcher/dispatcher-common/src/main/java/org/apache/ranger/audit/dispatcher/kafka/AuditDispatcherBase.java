@@ -102,7 +102,6 @@ public abstract class AuditDispatcherBase implements AuditDispatcher {
         topicName  = MiscUtil.getStringProperty(props, propPrefix + "." + AuditServerConstants.PROP_TOPIC_NAME, AuditServerConstants.DEFAULT_TOPIC);
     }
 
-
     AuditDispatcherBase(String dispatcherGroupId, KafkaConsumer<String, String> dispatcher, String topicName) {
         this.dispatcherGroupId = dispatcherGroupId;
         this.dispatcher        = dispatcher;
