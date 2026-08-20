@@ -118,11 +118,9 @@ jobs:
         run: |
           cd dev-support/ranger-docker
           export RANGER_DB_TYPE=postgres
-          # OpenSearch is the default audit index store; it is brought up only via the audit service.
           export AUDIT_INDEX_STORE=opensearch
           docker compose \
           -f docker-compose.ranger.yml \
-          -f docker-compose.ranger-kafka.yml \
           -f docker-compose.ranger-audit-service.yml \
           -f docker-compose.ranger-pdp.yml \
           -f docker-compose.ranger-usersync.yml \
@@ -133,11 +131,9 @@ jobs:
         run: |
           cd dev-support/ranger-docker
           export RANGER_DB_TYPE=postgres
-          # OpenSearch is the default audit index store; it is brought up only via the audit service.
           export AUDIT_INDEX_STORE=opensearch
           docker compose \
           -f docker-compose.ranger.yml \
-          -f docker-compose.ranger-kafka.yml \
           -f docker-compose.ranger-audit-service.yml \
           -f docker-compose.ranger-pdp.yml \
           -f docker-compose.ranger-usersync.yml \
@@ -237,7 +233,6 @@ jobs:
         run: |
           cd dev-support/ranger-docker
           export RANGER_DB_TYPE=postgres
-          # OpenSearch is an audit index store; it is brought up only via the audit service.
           export AUDIT_INDEX_STORE=opensearch
           docker compose \
           -f docker-compose.ranger.yml \
@@ -254,11 +249,9 @@ jobs:
           cd dev-support/ranger-docker
           ./scripts/ozone/ozone-plugin-docker-setup.sh
           export RANGER_DB_TYPE=postgres
-          # OpenSearch is an audit index store; it is brought up only via the audit service.
           export AUDIT_INDEX_STORE=opensearch
           docker compose \
           -f docker-compose.ranger.yml \
-          -f docker-compose.ranger-kafka.yml \
           -f docker-compose.ranger-audit-service.yml \
           -f docker-compose.ranger-hadoop.yml \
           -f docker-compose.ranger-hbase.yml \

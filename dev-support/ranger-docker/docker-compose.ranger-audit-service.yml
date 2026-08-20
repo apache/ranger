@@ -15,8 +15,6 @@
 # limitations under the License.
 
 # ---------------------------------------------------------------------------
-# One-stop audit service for the Ranger docker stack.
-#
 # Brings up the whole audit pipeline in the background whenever Ranger is
 # installed in docker:
 #
@@ -41,7 +39,6 @@
 #     # add HDFS fan-out only when hadoop is running:
 #     #   export COMPOSE_PROFILES=$AUDIT_INDEX_STORE,hdfs
 #     docker compose -f docker-compose.ranger.yml \
-#                    -f docker-compose.ranger-kafka.yml \
 #                    -f docker-compose.ranger-audit-service.yml up -d
 # ---------------------------------------------------------------------------
 
@@ -148,6 +145,11 @@ services:
         condition: service_started
     environment:
       - OPENSEARCH_JAVA_OPTS=-Xms512m -Xmx512m
+
+  ranger-kafka:
+    extends:
+      file: docker-compose.ranger-kafka.yml
+      service: ranger-kafka
 
   # -------------------------------------------------------------------------
   # Audit ingestor - always on. Receives audits from plugins and produces to Kafka.
@@ -267,6 +269,12 @@ services:
       - ./dist/keytabs/ranger-audit-dispatcher-opensearch:/etc/keytabs
       - ranger-audit-dispatcher-opensearch-logs:/var/log/ranger/audit-dispatcher/opensearch
       - ./scripts/audit-dispatcher/ranger-audit-dispatcher-opensearch-site.xml:/opt/ranger/audit-dispatcher/conf/ranger-audit-dispatcher-opensearch-site.xml
+
+  ranger-hadoop:
+    profiles: ["hdfs"]
+    extends:
+      file: docker-compose.ranger-hadoop.yml
+      service: ranger-hadoop
 
   # -------------------------------------------------------------------------
   # Optional additional destination: HDFS  (profile: hdfs)

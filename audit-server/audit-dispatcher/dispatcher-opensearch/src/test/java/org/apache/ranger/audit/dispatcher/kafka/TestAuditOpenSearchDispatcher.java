@@ -40,6 +40,9 @@ import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 public class TestAuditOpenSearchDispatcher {
+    private static final String TEST_DISPATCHER_GROUP = "test-dispatcher-group";
+    private static final String TEST_TOPIC            = "ranger_audits";
+
     @Mock
     private OpenSearchAuditDestination openSearchAuditDestination;
 
@@ -47,7 +50,7 @@ public class TestAuditOpenSearchDispatcher {
 
     @BeforeEach
     void setUp() {
-        dispatcher = new AuditOpenSearchDispatcher(openSearchAuditDestination);
+        dispatcher = new AuditOpenSearchDispatcher(openSearchAuditDestination, TEST_DISPATCHER_GROUP, null, TEST_TOPIC);
     }
 
     @Test

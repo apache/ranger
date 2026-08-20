@@ -25,7 +25,7 @@ docker compose -f docker-compose.ranger-build.yml up
    setup runs again:
    ~~~
    export AUDIT_INDEX_STORE=opensearch
-   docker compose -f docker-compose.ranger.yml -f docker-compose.ranger-kafka.yml -f docker-compose.ranger-audit-service.yml -f docker-compose.ranger-ozone.yml \
+   docker compose -f docker-compose.ranger.yml -f docker-compose.ranger-audit-service.yml -f docker-compose.ranger-ozone.yml \
      up -d --build --force-recreate ranger
    ~~~
    Works even if the DB already exists; setup re-runs on a fresh container.
@@ -40,7 +40,7 @@ service-def.
 ~~~
 ./scripts/ozone/ozone-plugin-docker-setup.sh
 export AUDIT_INDEX_STORE=opensearch
-docker compose -f docker-compose.ranger.yml -f docker-compose.ranger-kafka.yml -f docker-compose.ranger-audit-service.yml -f docker-compose.ranger-ozone.yml up -d
+docker compose -f docker-compose.ranger.yml -f docker-compose.ranger-audit-service.yml -f docker-compose.ranger-ozone.yml up -d
 ~~~
 
 Verify (after login):
