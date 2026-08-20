@@ -286,6 +286,8 @@ services:
     depends_on:
       ranger-kdc:
         condition: service_started
+      ranger-hadoop:
+        condition: service_healthy
       ranger-kafka:
         condition: service_healthy
       ranger-audit-ingestor:

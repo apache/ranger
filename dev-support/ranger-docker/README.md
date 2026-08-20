@@ -127,9 +127,8 @@ docker compose -f docker-compose.ranger.yml -f docker-compose.ranger-kafka.yml -
 ##### Also send audits to HDFS
 Audits fan out to `AUDIT_INDEX_STORE` **and** HDFS when the `hdfs` profile is enabled and the `ranger-hadoop` container is running (skipped otherwise):
 ~~~
-# add hdfs alongside the store profile (auto-detect hadoop is optional):
+# add hdfs alongside the store profile:
 export COMPOSE_PROFILES=$AUDIT_INDEX_STORE,hdfs
-# or: export COMPOSE_PROFILES=$AUDIT_INDEX_STORE$(docker ps --format '{{.Names}}' | grep -qx ranger-hadoop && echo ,hdfs)
 docker compose -f docker-compose.ranger.yml \
   -f docker-compose.ranger-kafka.yml \
   -f docker-compose.ranger-hadoop.yml \
