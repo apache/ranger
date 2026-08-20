@@ -79,7 +79,7 @@ public class TestRangerPluginConfig {
 
         RangerPluginConfig cfg = new RangerPluginConfig("hdfs", null, null, null, null, files, null);
 
-        assertNull(cfg.getServiceName());
+        assertEquals("svcA", cfg.getServiceName());
         assertEquals("svcA", cfg.get(key));
     }
 

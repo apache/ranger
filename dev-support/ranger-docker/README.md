@@ -34,7 +34,7 @@ Use Dockerfiles in this directory to create docker images and run them to build 
    ~~~
    chmod +x download-archives.sh
    # use a subset of the below to download specific services
-   ./download-archives.sh hadoop hive hbase kafka knox ozone opensearch
+   ./download-archives.sh hadoop hive hbase kafka knox ozone opensearch elasticsearch
    ~~~
 
 - Execute following commands to set environment variables to build Apache Ranger docker containers:
@@ -156,6 +156,41 @@ docker compose -f docker-compose.ranger.yml -f docker-compose.ranger-solr.yml up
 ~~~
 docker compose -f docker-compose.ranger.yml -f docker-compose.ranger-opensearch.yml up -d
 ~~~
+
+#### Bring up elasticsearch container (authorization plugin testing):
+~~~
+# Prerequisites: build Ranger artifacts and download the Elasticsearch archive
+mvn clean package -pl distro -am -DskipTests
+cp target/ranger-* dev-support/ranger-docker/dist/
+cd dev-support/ranger-docker
+./download-archives.sh elasticsearch
+
+export RANGER_DB_TYPE=postgres
+
+# Host port 9201 maps to container 9200 (avoids conflict with OpenSearch on 9200).
+# On Linux, ensure vm.max_map_count >= 262144 (e.g. sudo sysctl -w vm.max_map_count=262144).
+docker compose -f docker-compose.ranger.yml -f docker-compose.ranger-solr.yml \
+  -f docker-compose.ranger-elasticsearch.yml up -d --build
+~~~
+
+Elasticsearch starts with X-Pack Security enabled (native realm). Default credentials:
+
+- `elastic` / value of `ELASTICSEARCH_BOOTSTRAP_PASSWORD` in `.env` (default: `rangerR0cks!`)
+- `testuser_2` / same password (created automatically for authorization testing)
+
+Smoke tests after the container is healthy:
+
+~~~
+# Authenticated request (expect 200 or policy-based 403, not 401)
+curl -u elastic:rangerR0cks! http://localhost:9201/test-index/_search
+
+# Unauthenticated request (expect 401)
+curl http://localhost:9201/test-index/_search
+~~~
+
+Ranger Admin registers the `dev_elasticsearch` service automatically on first startup.
+The plugin polls policies from Ranger Admin; allow up to 30 seconds after startup for
+policy refresh before running authorization tests.
 
 #### OpenSearch audit flow (replace Solr for access audits)
 
