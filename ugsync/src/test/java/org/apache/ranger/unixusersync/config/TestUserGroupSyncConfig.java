@@ -30,6 +30,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -128,5 +129,22 @@ public class TestUserGroupSyncConfig {
         def.mkdirs();
         String p4 = cfg.getUserSyncMetricsFileName();
         assertNotNull(p4);
+    }
+
+    @Test
+    public void testF_isDnValidationEnabled_defaultsAndParses() {
+        UserGroupSyncConfig cfg = UserGroupSyncConfig.getInstance();
+
+        cfg.setProperty(UserGroupSyncConfig.UGSYNC_DN_VALIDATION_ENABLED, "true");
+        assertTrue(cfg.isDnValidationEnabled());
+
+        cfg.setProperty(UserGroupSyncConfig.UGSYNC_DN_VALIDATION_ENABLED, "TRUE");
+        assertTrue(cfg.isDnValidationEnabled());
+
+        cfg.setProperty(UserGroupSyncConfig.UGSYNC_DN_VALIDATION_ENABLED, "false");
+        assertFalse(cfg.isDnValidationEnabled());
+
+        cfg.setProperty(UserGroupSyncConfig.UGSYNC_DN_VALIDATION_ENABLED, "");
+        assertFalse(cfg.isDnValidationEnabled());
     }
 }
