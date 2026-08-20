@@ -215,6 +215,13 @@ services:
         condition: service_started
       ranger-kafka:
         condition: service_healthy
+      # Wait for ingestor before subscribing to ranger_audits. The ingestor creates
+      # the topic with the full partition count (AuditPartitioner); if the dispatcher
+      # starts first Kafka auto-creates the topic with one partition, the consumer
+      # is assigned only partition 0, and plugin audits on higher partitions are never
+      # consumed until a manual restart/rebalance.
+      ranger-audit-ingestor:
+        condition: service_healthy
       ranger-solr:
         condition: service_started
     environment:
@@ -242,6 +249,13 @@ services:
       ranger-kdc:
         condition: service_healthy
       ranger-kafka:
+        condition: service_healthy
+      # Wait for ingestor before subscribing to ranger_audits. The ingestor creates
+      # the topic with the full partition count (AuditPartitioner); if the dispatcher
+      # starts first Kafka auto-creates the topic with one partition, the consumer
+      # is assigned only partition 0, and plugin audits on higher partitions are never
+      # consumed until a manual restart/rebalance.
+      ranger-audit-ingestor:
         condition: service_healthy
       ranger-opensearch:
         condition: service_started

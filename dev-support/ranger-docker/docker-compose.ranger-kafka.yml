@@ -33,14 +33,24 @@ services:
       ranger-zk:
         condition: service_started
     healthcheck:
-      # The broker listens on SASL_PLAINTEXT/GSSAPI when KERBEROS_ENABLED=true, so the
-      # probe must authenticate. kafka-broker-api-versions.sh only negotiates API
-      # versions (no topic, no Ranger authorization needed) and returns non-zero if the
-      # broker is unreachable or auth fails. $$ escapes the var for the container shell.
-      test: [ "CMD-SHELL", "if [ \"$$KERBEROS_ENABLED\" = \"true\" ]; then kafka-broker-api-versions.sh --bootstrap-server ranger-kafka.rangernw:9092 --command-config /opt/kafka/config/kafka-client.properties > /dev/null 2>&1; else kafka-broker-api-versions.sh --bootstrap-server ranger-kafka.rangernw:9092 > /dev/null 2>&1; fi" ]
-      interval: 30s
-      timeout: 20s
-      retries: 5
+      # Readiness = broker reachable AND Ranger authorization ready. Both are required
+      # before the audit ingestor/dispatcher (which depend_on this service_healthy) start.
+      #
+      # 1) Broker reachability: the listener is SASL_PLAINTEXT/GSSAPI when KERBEROS_ENABLED=true,
+      #    so the probe must authenticate. kafka-broker-api-versions.sh only negotiates API
+      #    versions (no topic, no Ranger authz) and returns non-zero if the broker is
+      #    unreachable or auth fails.
+      # 2) Authorization readiness: RangerKafkaAuthorizer is fail-closed until the plugin
+      #    downloads the dev_kafka policies from Ranger admin (created by create-ranger-services.py,
+      #    a couple of minutes after startup). In that window even rangerauditserver is DENIED on
+      #    ranger_audits, so a consumer/producer starting too early gets TopicAuthorizationException
+      #    and the topic cannot be created. Gate on the plugin policy cache actually containing the
+      #    ranger_audit grant, so "service_healthy" means "authz for the audit pipeline is ready".
+      #    $$ escapes the var for the container shell.
+      test: [ "CMD-SHELL", "if [ \"$$KERBEROS_ENABLED\" = \"true\" ]; then kafka-broker-api-versions.sh --bootstrap-server ranger-kafka.rangernw:9092 --command-config /opt/kafka/config/kafka-client.properties > /dev/null 2>&1 || exit 1; else kafka-broker-api-versions.sh --bootstrap-server ranger-kafka.rangernw:9092 > /dev/null 2>&1 || exit 1; fi; grep -rq 'ranger_audit' /etc/ranger/dev_kafka/policycache/ 2>/dev/null" ]
+      interval: 15s
+      timeout: 15s
+      retries: 20
       start_period: 90s
     environment:
       KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092
