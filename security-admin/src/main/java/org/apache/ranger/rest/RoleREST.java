@@ -349,7 +349,17 @@ public class RoleREST {
         RangerRole ret;
 
         try {
+            UserSessionBase usb = ContextUtil.getCurrentUserSession();
+            String loggedInUser = usb != null ? usb.getLoginId() : null;
             ret = roleStore.getRole(id);
+            if (ret != null && !bizUtil.isUserRangerAdmin(loggedInUser)) {
+                try {
+                    ensureRoleAccess(loggedInUser, userMgr.getGroupsForUser(loggedInUser), ret);
+                } catch (Exception accessExcp) {
+                    LOG.error("User {} does not have permission to get details for role(id={})", loggedInUser, id);
+                    throw restErrorUtil.createRESTException("User doesn't have permissions to get details for role(id=" + id + ")");
+                }
+            }
         } catch (WebApplicationException excp) {
             throw excp;
         } catch (Throwable excp) {
@@ -869,6 +879,8 @@ public class RoleREST {
         RESTResponse ret = new RESTResponse();
 
         try {
+            bizUtil.blockAuditorRoleUser();
+
             validateUsersGroupsAndRoles(grantRoleRequest);
 
             String userName = grantRoleRequest.getGrantor();
@@ -884,8 +896,7 @@ public class RoleREST {
                  * else deny the operation
                  * This logic is implemented as part of getRoleIfAccessible(roleName, serviceName, userName, userGroups)
                  */
-                Set<String> userGroups   = CollectionUtils.isNotEmpty(grantRoleRequest.getGrantorGroups()) ? grantRoleRequest.getGrantorGroups() : userMgr.getGroupsForUser(userName);
-                RangerRole  existingRole = getRoleIfAccessible(roleName, serviceName, userName, userGroups);
+                RangerRole existingRole = getRoleIfAccessible(roleName, serviceName, userName, grantRoleRequest.getGrantorGroups());
 
                 if (existingRole == null) {
                     throw restErrorUtil.createRESTException("User doesn't have permissions to grant role " + roleName);
@@ -927,6 +938,8 @@ public class RoleREST {
         RESTResponse ret = new RESTResponse();
 
         try {
+            bizUtil.blockAuditorRoleUser();
+
             validateUsersGroupsAndRoles(revokeRoleRequest);
 
             String userName = revokeRoleRequest.getGrantor();
@@ -942,8 +955,7 @@ public class RoleREST {
                  * else deny the operation
                  * This logic is implemented as part of getRoleIfAccessible(roleName, serviceName, userName, userGroups)
                  */
-                Set<String> userGroups   = CollectionUtils.isNotEmpty(revokeRoleRequest.getGrantorGroups()) ? revokeRoleRequest.getGrantorGroups() : userMgr.getGroupsForUser(userName);
-                RangerRole  existingRole = getRoleIfAccessible(roleName, serviceName, userName, userGroups);
+                RangerRole existingRole = getRoleIfAccessible(roleName, serviceName, userName, revokeRoleRequest.getGrantorGroups());
 
                 if (existingRole == null) {
                     throw restErrorUtil.createRESTException("User doesn't have permissions to revoke role " + roleName);
@@ -987,6 +999,13 @@ public class RoleREST {
         LOG.debug("==> getUserRoles()");
 
         try {
+            UserSessionBase usb = ContextUtil.getCurrentUserSession();
+            String loggedInUser = usb != null ? usb.getLoginId() : null;
+            if (!StringUtil.equals(userName, loggedInUser) && !bizUtil.isUserRangerAdmin(loggedInUser)) {
+                LOG.error("User {} does not have permission to get roles for user {}", loggedInUser, userName);
+                throw restErrorUtil.createRESTException(HttpServletResponse.SC_FORBIDDEN, "User does not have permission for this operation", true);
+            }
+
             if (xUserService.getXUserByUserName(userName) == null) {
                 throw restErrorUtil.createRESTException(HttpServletResponse.SC_NOT_FOUND, "User:" + userName + " not found", false);
             }
@@ -1254,7 +1273,7 @@ public class RoleREST {
         }
     }
 
-    private RangerRole getRoleIfAccessible(String roleName, String serviceName, String userName, Set<String> userGroups) {
+    private RangerRole getRoleIfAccessible(String roleName, String serviceName, String userName, Set<String> callerAssertedGroups) {
         /* If userName (execUser) is not same as logged in user then check
          * If logged-in user is not ranger admin/service admin/service user, then deny the operation
          * effective User is execUser
@@ -1265,6 +1284,7 @@ public class RoleREST {
          */
         RangerRole      existingRole;
         String          effectiveUser;
+        Set<String>     userGroups;
         UserSessionBase usb          = ContextUtil.getCurrentUserSession();
         String          loggedInUser = usb != null ? usb.getLoginId() : null;
 
@@ -1276,8 +1296,19 @@ public class RoleREST {
             }
 
             effectiveUser = userName != null ? userName : loggedInUser;
+
+            /* effectiveUser differs from the logged-in caller only because the caller has already
+             * been confirmed above to be a trusted principal (ranger admin/service admin/service user)
+             * acting on behalf of effectiveUser, so it is safe to fall back to a caller-supplied group
+             * set for effectiveUser when Ranger has no synced group info for them yet. */
+            userGroups = CollectionUtils.isNotEmpty(callerAssertedGroups) ? callerAssertedGroups : userMgr.getGroupsForUser(effectiveUser);
         } else {
             effectiveUser = loggedInUser;
+
+            /* self-service case: an unprivileged, authenticated caller must never be able to assert
+             * their own group membership via request input for an authorization decision -- always
+             * resolve it server-side. */
+            userGroups = userMgr.getGroupsForUser(loggedInUser);
         }
 
         try {
