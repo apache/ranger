@@ -83,6 +83,11 @@
             </exclusions>
         </dependency>
         <dependency>
+         <groupId>org.jsoup</groupId>
+         <artifactId>jsoup</artifactId>
+         <version>1.17.2</version> 
+        </dependency>
+        <dependency>
             <groupId>com.google.inject</groupId>
             <artifactId>guice</artifactId>
             <version>${guice.version}</version>
@@ -206,11 +211,6 @@
             <groupId>javax.servlet</groupId>
             <artifactId>javax.servlet-api</artifactId>
             <version>${javax.servlet.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>net.htmlparser.jericho</groupId>
-            <artifactId>jericho-html</artifactId>
-            <version>${jericho.html.version}</version>
         </dependency>
         <!-- Transitive dependency for nimbus-jose-jwt.
          Please re-check this version when updating nimbus-jose-jwt.
