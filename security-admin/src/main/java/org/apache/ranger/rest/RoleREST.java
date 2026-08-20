@@ -482,6 +482,12 @@ public class RoleREST {
 			if (updateIfExists == null) {
 				updateIfExists = false;
 			}
+
+			// For role import, createNonExistUserGroupRole only creates missing nested roles.
+			// Missing users/groups are never created during import (RANGER-5730).
+			final Boolean createNonExistUserGroup = Boolean.FALSE;
+			final Boolean createNonExistRole      = Boolean.TRUE.equals(createNonExistUserGroupRole);
+
 			List<String> roleNameList = new ArrayList<String>();
 
 			roleNameList = getRoleNameList(request, roleNameList);
@@ -527,7 +533,7 @@ public class RoleREST {
 												}
 											}
 											else {
-												roleStore.updateRole(roleInJson, createNonExistUserGroupRole, true);
+												roleStore.updateRole(roleInJson, createNonExistUserGroup, createNonExistRole, true);
 												totalRoleUpdate++;
 											}
 										} catch (WebApplicationException excp) {
@@ -546,7 +552,7 @@ public class RoleREST {
 									ret.setStatusCode(RESTResponse.STATUS_SUCCESS);
 								} else if (!roleNameList.contains(roleNameInJson) && (!roleNameInJson.isEmpty())) {
 									try {
-										roleStore.createRole(roleInJson, createNonExistUserGroupRole, false);
+										roleStore.createRole(roleInJson, createNonExistUserGroup, createNonExistRole, false);
 									} catch (WebApplicationException excp) {
 										throw excp;
 									} catch (Throwable excp) {

@@ -1147,7 +1147,7 @@ public class TestRoleREST {
 
 		Mockito.when(searchUtil.getSearchFilter(request, roleService.sortFields)).thenReturn(filter);
 		Mockito.when(roleStore.getRoleNames(Mockito.any(SearchFilter.class))).thenReturn(roleList);
-		Mockito.when(roleStore.createRole(Mockito.any(RangerRole.class), eq(createNonExistUserGroupRole), eq(false)))
+		Mockito.when(roleStore.createRole(Mockito.any(RangerRole.class), eq(false), eq(createNonExistUserGroupRole), eq(false)))
 				.thenReturn(rangerRole);
 
 		RESTResponse resp = roleRest.importRolesFromFile(request, uploadedInputStream, fileDetail, updateIfExists,
@@ -1177,7 +1177,7 @@ public class TestRoleREST {
 
 		Mockito.when(searchUtil.getSearchFilter(request, roleService.sortFields)).thenReturn(filter);
 		Mockito.when(roleStore.getRoleNames(Mockito.any(SearchFilter.class))).thenReturn(roleList);
-		Mockito.when(roleStore.createRole(Mockito.any(RangerRole.class), eq(createNonExistUserGroupRole), eq(false)))
+		Mockito.when(roleStore.createRole(Mockito.any(RangerRole.class), eq(false), eq(createNonExistUserGroupRole), eq(false)))
 				.thenReturn(rangerRole);
 
 		RESTResponse resp = roleRest.importRolesFromFile(request, uploadedInputStream, fileDetail, updateIfExists,
@@ -1185,6 +1185,7 @@ public class TestRoleREST {
 		Assert.assertNotNull(resp);
 		Assert.assertEquals(resp.getStatusCode(), RESTResponse.STATUS_SUCCESS);
 		Assert.assertEquals(resp.getMsgDesc(), "Total Role Created = 6 , Total Role Unchanged = 1");
+		Mockito.verify(roleStore, Mockito.atLeastOnce()).createRole(Mockito.any(RangerRole.class), eq(false), eq(true), eq(false));
 	}
 
 	// import role with updateIfExists=true and createNonExistUserGroupRole=true
@@ -1208,9 +1209,9 @@ public class TestRoleREST {
 		Mockito.when(searchUtil.getSearchFilter(request, roleService.sortFields)).thenReturn(filter);
 		Mockito.when(roleStore.getRoleNames(Mockito.any(SearchFilter.class))).thenReturn(roleList);
 		Mockito.when(roleStore.getRole(Mockito.anyString())).thenReturn(rangerRole);
-		Mockito.when(roleStore.createRole(Mockito.any(RangerRole.class), eq(createNonExistUserGroupRole), eq(false)))
+		Mockito.when(roleStore.createRole(Mockito.any(RangerRole.class), eq(false), eq(createNonExistUserGroupRole), eq(false)))
 				.thenReturn(rangerRole);
-		Mockito.when(roleStore.updateRole(Mockito.any(RangerRole.class), eq(createNonExistUserGroupRole), eq(true)))
+		Mockito.when(roleStore.updateRole(Mockito.any(RangerRole.class), eq(false), eq(createNonExistUserGroupRole), eq(true)))
 				.thenReturn(rangerRole);
 
 		RESTResponse resp = roleRest.importRolesFromFile(request, uploadedInputStream, fileDetail, updateIfExists,
@@ -1219,6 +1220,8 @@ public class TestRoleREST {
 		Assert.assertEquals(resp.getStatusCode(), RESTResponse.STATUS_SUCCESS);
 		Assert.assertEquals(resp.getMsgDesc(),
 				"Total Role Created = 6 , Total Role Updated = 1 , Total Role Unchanged = 0");
+		Mockito.verify(roleStore, Mockito.atLeastOnce()).createRole(Mockito.any(RangerRole.class), eq(false), eq(true), eq(false));
+		Mockito.verify(roleStore, Mockito.atLeastOnce()).updateRole(Mockito.any(RangerRole.class), eq(false), eq(true), eq(true));
 	}
 
 	// import role throws exceptions
