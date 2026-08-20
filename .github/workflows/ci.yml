@@ -119,7 +119,8 @@ jobs:
           cd dev-support/ranger-docker
           export RANGER_DB_TYPE=postgres
           export AUDIT_INDEX_STORE=opensearch
-          docker compose \
+          export AUDIT_DESTINATIONS=audit-store-opensearch
+          docker compose --profile ${AUDIT_DESTINATIONS} \
           -f docker-compose.ranger.yml \
           -f docker-compose.ranger-audit-service.yml \
           -f docker-compose.ranger-pdp.yml \
@@ -132,7 +133,8 @@ jobs:
           cd dev-support/ranger-docker
           export RANGER_DB_TYPE=postgres
           export AUDIT_INDEX_STORE=opensearch
-          docker compose \
+          export AUDIT_DESTINATIONS=audit-store-opensearch
+          docker compose --profile ${AUDIT_DESTINATIONS} \
           -f docker-compose.ranger.yml \
           -f docker-compose.ranger-audit-service.yml \
           -f docker-compose.ranger-pdp.yml \
@@ -234,7 +236,8 @@ jobs:
           cd dev-support/ranger-docker
           export RANGER_DB_TYPE=postgres
           export AUDIT_INDEX_STORE=opensearch
-          docker compose \
+          export AUDIT_DESTINATIONS=audit-store-opensearch
+          docker compose --profile ${AUDIT_DESTINATIONS} \
           -f docker-compose.ranger.yml \
           -f docker-compose.ranger-kafka.yml \
           -f docker-compose.ranger-audit-service.yml \
@@ -250,7 +253,8 @@ jobs:
           ./scripts/ozone/ozone-plugin-docker-setup.sh
           export RANGER_DB_TYPE=postgres
           export AUDIT_INDEX_STORE=opensearch
-          docker compose \
+          export AUDIT_DESTINATIONS=audit-store-opensearch
+          docker compose --profile ${AUDIT_DESTINATIONS} \
           -f docker-compose.ranger.yml \
           -f docker-compose.ranger-audit-service.yml \
           -f docker-compose.ranger-hadoop.yml \

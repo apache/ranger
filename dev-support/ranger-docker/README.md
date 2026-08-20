@@ -83,48 +83,49 @@ export ENABLE_FILE_SYNC_SOURCE=true
 export RANGER_DB_TYPE=postgres
 
 # valid values for AUDIT_INDEX_STORE: opensearch (default) | solr
-# Drives audit-service profiles and Ranger Admin audit_store (via AUDIT_INDEX_STORE in ranger.sh)
+# Ranger Admin audit_store (via ranger.sh); set matching profile for compose:
 export AUDIT_INDEX_STORE=opensearch
-docker compose -f docker-compose.ranger.yml -f docker-compose.ranger-audit-service.yml -f docker-compose.ranger-usersync.yml -f docker-compose.ranger-tagsync.yml -f docker-compose.ranger-pdp.yml -f docker-compose.ranger-kms.yml up -d
+export AUDIT_DESTINATIONS=audit-store-${AUDIT_INDEX_STORE}
+docker compose --profile ${AUDIT_DESTINATIONS} -f docker-compose.ranger.yml -f docker-compose.ranger-kafka.yml -f docker-compose.ranger-audit-service.yml -f docker-compose.ranger-usersync.yml -f docker-compose.ranger-tagsync.yml -f docker-compose.ranger-pdp.yml -f docker-compose.ranger-kms.yml up -d
 
 # Ranger Admin can be accessed at http://localhost:6080 (admin/rangerR0cks!)
 ~~~
 #### Bring up hive container
 ~~~
-docker compose -f docker-compose.ranger.yml -f docker-compose.ranger-audit-service.yml -f docker-compose.ranger-hadoop.yml -f docker-compose.ranger-hive.yml up -d
+docker compose --profile ${AUDIT_DESTINATIONS} -f docker-compose.ranger.yml -f docker-compose.ranger-kafka.yml -f docker-compose.ranger-audit-service.yml -f docker-compose.ranger-hadoop.yml -f docker-compose.ranger-hive.yml up -d
 ~~~
 #### Bring up hbase container
 ~~~
-docker compose -f docker-compose.ranger.yml -f docker-compose.ranger-audit-service.yml -f docker-compose.ranger-hadoop.yml -f docker-compose.ranger-hbase.yml up -d
+docker compose --profile ${AUDIT_DESTINATIONS} -f docker-compose.ranger.yml -f docker-compose.ranger-kafka.yml -f docker-compose.ranger-audit-service.yml -f docker-compose.ranger-hadoop.yml -f docker-compose.ranger-hbase.yml up -d
 ~~~
 #### Bring up ozone containers
 ~~~
 ./scripts/ozone/ozone-plugin-docker-setup.sh
-docker compose -f docker-compose.ranger.yml -f docker-compose.ranger-audit-service.yml -f docker-compose.ranger-ozone.yml up -d
+docker compose --profile ${AUDIT_DESTINATIONS} -f docker-compose.ranger.yml -f docker-compose.ranger-kafka.yml -f docker-compose.ranger-audit-service.yml -f docker-compose.ranger-ozone.yml up -d
 ~~~
 
 #### Bring up trino container (requires docker build with jdk 11):
 ~~~
-docker compose -f docker-compose.ranger.yml -f docker-compose.ranger-audit-service.yml -f docker-compose.ranger-trino.yml up -d
+docker compose --profile ${AUDIT_DESTINATIONS} -f docker-compose.ranger.yml -f docker-compose.ranger-kafka.yml -f docker-compose.ranger-audit-service.yml -f docker-compose.ranger-trino.yml up -d
 ~~~
 
 
 #### Bring up all containers
 ~~~
 ./scripts/ozone/ozone-plugin-docker-setup.sh
-docker compose -f docker-compose.ranger.yml -f docker-compose.ranger-audit-service.yml -f docker-compose.ranger-usersync.yml -f docker-compose.ranger-tagsync.yml -f docker-compose.ranger-pdp.yml -f docker-compose.ranger-kms.yml -f docker-compose.ranger-hadoop.yml -f docker-compose.ranger-hbase.yml -f docker-compose.ranger-kafka.yml -f docker-compose.ranger-hive.yml -f docker-compose.ranger-knox.yml -f docker-compose.ranger-ozone.yml up -d
+docker compose --profile ${AUDIT_DESTINATIONS} -f docker-compose.ranger.yml -f docker-compose.ranger-kafka.yml -f docker-compose.ranger-audit-service.yml -f docker-compose.ranger-usersync.yml -f docker-compose.ranger-tagsync.yml -f docker-compose.ranger-pdp.yml -f docker-compose.ranger-kms.yml -f docker-compose.ranger-hadoop.yml -f docker-compose.ranger-hbase.yml -f docker-compose.ranger-hive.yml -f docker-compose.ranger-knox.yml -f docker-compose.ranger-ozone.yml up -d
 ~~~
           
 #### To rebuild specific images and start containers with the new image:
 ~~~
-docker compose -f docker-compose.ranger.yml -f docker-compose.ranger-audit-service.yml -f docker-compose.ranger-usersync.yml -f docker-compose.ranger-tagsync.yml -f docker-compose.ranger-kms.yml -f docker-compose.ranger-hadoop.yml -f docker-compose.ranger-hbase.yml -f docker-compose.ranger-hive.yml -f docker-compose.ranger-trino.yml -f docker-compose.ranger-knox.yml up -d --no-deps --force-recreate --build <service-1> <service-2>
+docker compose --profile ${AUDIT_DESTINATIONS} -f docker-compose.ranger.yml -f docker-compose.ranger-kafka.yml -f docker-compose.ranger-audit-service.yml -f docker-compose.ranger-usersync.yml -f docker-compose.ranger-tagsync.yml -f docker-compose.ranger-kms.yml -f docker-compose.ranger-hadoop.yml -f docker-compose.ranger-hbase.yml -f docker-compose.ranger-hive.yml -f docker-compose.ranger-trino.yml -f docker-compose.ranger-knox.yml up -d --no-deps --force-recreate --build <service-1> <service-2>
 ~~~
 
 ##### Also send audits to HDFS
-Audits fan out to `AUDIT_INDEX_STORE` **and** HDFS when the `hdfs` profile is enabled and the `ranger-hadoop` container is running (skipped otherwise):
+Audits fan out to `AUDIT_INDEX_STORE` **and** HDFS when the `audit-store-hdfs` profile is enabled and the `ranger-hadoop` container is running (skipped otherwise):
 ~~~
-# add hdfs alongside the store profile:
-export COMPOSE_PROFILES=$AUDIT_INDEX_STORE,hdfs
-docker compose -f docker-compose.ranger.yml \
+export AUDIT_DESTINATIONS=audit-store-${AUDIT_INDEX_STORE}
+docker compose --profile ${AUDIT_DESTINATIONS} --profile audit-store-hdfs \
+  -f docker-compose.ranger.yml \
   -f docker-compose.ranger-audit-service.yml up -d
 ~~~

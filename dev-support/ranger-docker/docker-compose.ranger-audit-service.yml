@@ -20,14 +20,15 @@
 #
 #     plugins -> ranger-audit-ingestor -> Kafka -> ranger-audit-dispatcher-* -> store
 #
-# The index store is chosen with a single variable, AUDIT_INDEX_STORE=solr|opensearch.
-# `.env` maps it to Compose profiles (COMPOSE_PROFILES=${AUDIT_INDEX_STORE}), so only
-# the matching store container and its dispatcher start - the two are never run at once.
+# The index store is chosen with AUDIT_INDEX_STORE (solr|opensearch) for Ranger Admin
+# and the matching Compose profile via AUDIT_DESTINATIONS (audit-store-solr |
+# audit-store-opensearch). Pass --profile ${AUDIT_DESTINATIONS} on the command line;
+# only the selected store container and its dispatcher start.
 # The Solr/OpenSearch stores are defined here and are never run standalone - only as
 # part of this audit service.
 #
-# HDFS is an optional, additional destination: when the `hdfs` profile is enabled
-# (and the ranger-hadoop container is up), audits fan out to AUDIT_INDEX_STORE + HDFS.
+# HDFS is an optional, additional destination: pass --profile audit-store-hdfs when
+# the ranger-hadoop container is up; audits fan out to AUDIT_INDEX_STORE + HDFS.
 # HDFS is skipped otherwise.
 #
 # The audit ingestor always runs. Both the ingestor and every dispatcher wait for
@@ -36,9 +37,11 @@
 # Used together with the core stack and Kafka, e.g.:
 #
 #     export AUDIT_INDEX_STORE=opensearch          # or solr
+#     export AUDIT_DESTINATIONS=audit-store-${AUDIT_INDEX_STORE}
 #     # add HDFS fan-out only when hadoop is running:
-#     #   export COMPOSE_PROFILES=$AUDIT_INDEX_STORE,hdfs
-#     docker compose -f docker-compose.ranger.yml \
+#     #   --profile audit-store-hdfs
+#     docker compose --profile ${AUDIT_DESTINATIONS} --profile audit-store-hdfs \
+#                    -f docker-compose.ranger.yml \
 #                    -f docker-compose.ranger-audit-service.yml up -d
 # ---------------------------------------------------------------------------
 
@@ -78,7 +81,7 @@ services:
   # service. Profiles ensure only the AUDIT_INDEX_STORE-selected store comes up.
   # -------------------------------------------------------------------------
   ranger-solr:
-    profiles: ["solr"]
+    profiles: ["audit-store-solr"]
     build:
       context: .
       dockerfile: Dockerfile.ranger-solr
@@ -125,7 +128,7 @@ services:
       - /opt/solr/server/solr/configsets/ranger_audits/
 
   ranger-opensearch:
-    profiles: ["opensearch"]
+    profiles: ["audit-store-opensearch"]
     image: opensearchproject/opensearch:${OPENSEARCH_VERSION}
     container_name: ranger-opensearch
     hostname: ranger-opensearch.rangernw
@@ -201,11 +204,11 @@ services:
       start_period: 60s
 
   # -------------------------------------------------------------------------
-  # Dispatcher: Solr  (profile: solr)
+  # Dispatcher: Solr  (profile: audit-store-solr)
   # -------------------------------------------------------------------------
   ranger-audit-dispatcher-solr:
     <<: *audit-dispatcher-common
-    profiles: ["solr"]
+    profiles: ["audit-store-solr"]
     image: ranger-audit-dispatcher-solr:latest
     container_name: ranger-audit-dispatcher-solr
     hostname: ranger-audit-dispatcher-solr.rangernw
@@ -236,11 +239,11 @@ services:
       - ./scripts/audit-dispatcher/ranger-audit-dispatcher-solr-site.xml:/opt/ranger/audit-dispatcher/conf/ranger-audit-dispatcher-solr-site.xml
 
   # -------------------------------------------------------------------------
-  # Dispatcher: OpenSearch  (profile: opensearch)
+  # Dispatcher: OpenSearch  (profile: audit-store-opensearch)
   # -------------------------------------------------------------------------
   ranger-audit-dispatcher-opensearch:
     <<: *audit-dispatcher-common
-    profiles: ["opensearch"]
+    profiles: ["audit-store-opensearch"]
     image: ranger-audit-dispatcher-opensearch:latest
     container_name: ranger-audit-dispatcher-opensearch
     hostname: ranger-audit-dispatcher-opensearch.rangernw
@@ -271,20 +274,20 @@ services:
       - ./scripts/audit-dispatcher/ranger-audit-dispatcher-opensearch-site.xml:/opt/ranger/audit-dispatcher/conf/ranger-audit-dispatcher-opensearch-site.xml
 
   ranger-hadoop:
-    profiles: ["hdfs"]
+    profiles: ["audit-store-hdfs"]
     extends:
       file: docker-compose.ranger-hadoop.yml
       service: ranger-hadoop
 
   # -------------------------------------------------------------------------
-  # Optional additional destination: HDFS  (profile: hdfs)
+  # Optional additional destination: HDFS  (profile: audit-store-hdfs)
   # Enable only when the ranger-hadoop container is running; audits then fan out
   # to AUDIT_INDEX_STORE + HDFS. No hard depends_on ranger-hadoop so that the
-  # solr/opensearch-only modes need not pull in the hadoop compose file.
+  # index-store-only modes need not pull in the hadoop compose file.
   # -------------------------------------------------------------------------
   ranger-audit-dispatcher-hdfs:
     <<: *audit-dispatcher-common
-    profiles: ["hdfs"]
+    profiles: ["audit-store-hdfs"]
     image: ranger-audit-dispatcher-hdfs:latest
     container_name: ranger-audit-dispatcher-hdfs
     hostname: ranger-audit-dispatcher-hdfs.rangernw
