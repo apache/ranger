@@ -48,8 +48,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.io.File;
+import java.net.InetAddress;
+import java.net.URI;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
@@ -204,11 +207,18 @@ public class ServiceMgr {
         // check if service configs contains localhost/127.0.0.1
         if (service != null && service.getConfigs() != null) {
             for (Map.Entry<String, String> entry : service.getConfigs().entrySet()) {
-                if (entry.getValue() != null && StringUtils.containsIgnoreCase(entry.getValue(), "localhost") || StringUtils.containsIgnoreCase(entry.getValue(), "127.0.0.1")) {
-                    URL url = getValidURL(entry.getValue());
-
-                    if ((url != null) && (url.getHost().equalsIgnoreCase("localhost") || url.getHost().equals("127.0.0.1"))) {
-                        throw new Exception("Invalid value for configuration " + entry.getKey() + ": host " + url.getHost() + " is not allowed");
+                String configValue = entry.getValue();
+                if (configValue != null && !configValue.trim().isEmpty()) {
+                    String host = extractHost(configValue);
+                    if (host != null) {
+                        if (isBlockedHost(host)) {
+                            throw new Exception("Invalid value for configuration " + entry.getKey() + ": host " + host + " is not allowed (blocked host detected)");
+                        }
+                    } else {
+                        String lowerVal = configValue.toLowerCase().trim();
+                        if (lowerVal.contains("localhost") || lowerVal.contains("127.0.0.1") || lowerVal.contains("0.0.0.0") || lowerVal.contains("::1")) {
+                            throw new Exception("Invalid value for configuration " + entry.getKey() + ": contains blocked keywords but could not be parsed securely.");
+                        }
                     }
                 }
             }
@@ -445,9 +455,100 @@ public class ServiceMgr {
         }
     }
 
-    private static URL getValidURL(String urlString) {
+    private static String extractHost(String urlString) {
         try {
-            return new URL(urlString);
+            String processedUrl = urlString.trim().replaceFirst("(?i)^jdbc:", "");
+            if (!processedUrl.contains("://")) {
+                processedUrl = "http://" + processedUrl;
+            }
+
+            processedUrl = processedUrl.replaceFirst("://([0-9a-fA-F:]+):(\\d+)(/.*)?$", "://[$1]:$2$3");
+
+            URI    uri  = new URI(processedUrl);
+            String host = uri.getHost();
+
+            if (host == null && uri.getAuthority() != null) {
+                host = uri.getAuthority();
+                // Strip credentials if present (e.g., user:pass@127.1)
+                if (host.contains("@")) {
+                    host = host.substring(host.lastIndexOf("@") + 1);
+                }
+
+                if (host.startsWith("[")) {
+                    int closeBracket = host.indexOf("]");
+                    int portColon    = host.indexOf(":", closeBracket);
+                    if (portColon > -1) {
+                        host = host.substring(0, portColon);
+                    }
+                } else if (host.contains(":")) {
+                    host = host.substring(0, host.indexOf(":"));
+                }
+            }
+
+            return host != null ? host.replaceAll("^\\[|\\]$", "") : null;
+        } catch (Exception e) {
+            LOG.debug("Failed to extract host from string: {}", urlString, e);
+            return null;
+        }
+    }
+
+    private static boolean isBlockedHost(String host) {
+        if (host == null || host.trim().isEmpty()) {
+            return false;
+        }
+        host = host.trim().toLowerCase();
+
+        // Expand POSIX shorthand IPs (e.g., 127.1 -> 127.0.0.1)
+        String normalizedIP = normalizePOSIXIp(host);
+        if (normalizedIP != null) {
+            host = normalizedIP;
+        }
+
+        try {
+            InetAddress addr = InetAddress.getByName(host);
+
+            return addr.isLoopbackAddress() || addr.isLinkLocalAddress() || addr.isAnyLocalAddress() || "localhost".equals(host);
+        } catch (UnknownHostException e) {
+            LOG.debug("Host could not be resolved, allowing by default: {}", host);
+            return false;
+        }
+    }
+
+    private static String normalizePOSIXIp(String host) {
+        String[] parts = host.split("\\.");
+        if (parts.length < 1 || parts.length > 4) {
+            return null;
+        }
+
+        try {
+            long[] vals = new long[parts.length];
+            for (int i = 0; i < parts.length; i++) {
+                String p = parts[i].trim();
+                if (p.isEmpty()) {
+                    return null;
+                }
+
+                int radix = (p.startsWith("0x") || p.startsWith("0X")) ? 16 : (p.startsWith("0") && p.length() > 1 ? 8 : 10);
+                vals[i] = Long.parseLong(p.replaceFirst("(?i)^0x", ""), radix);
+            }
+
+            long ip = 0;
+            switch (parts.length) {
+                case 1:
+                    ip = vals[0];
+                    break;
+                case 2:
+                    ip = (vals[0] << 24) | vals[1];
+                    break;
+                case 3:
+                    ip = (vals[0] << 24) | (vals[1] << 16) | vals[2];
+                    break;
+                case 4:
+                    ip = (vals[0] << 24) | (vals[1] << 16) | (vals[2] << 8) | vals[3];
+                    break;
+            }
+
+            return String.format("%d.%d.%d.%d", (ip >> 24) & 255, (ip >> 16) & 255, (ip >> 8) & 255, ip & 255);
         } catch (Exception e) {
             return null;
         }
