@@ -18,6 +18,7 @@ services:
       - ./scripts/hadoop/core-site.xml:/home/ranger/scripts/core-site.xml:ro
       - ./scripts/hadoop/hdfs-client-site.xml:/home/ranger/scripts/hdfs-site.xml:ro
       - ./scripts/kafka/kafka-server-jaas.conf:/home/ranger/scripts/kafka-server-jaas.conf
+      - ./scripts/kafka/kafka-client.properties:/opt/kafka/config/kafka-client.properties:ro
       - ./dist/version:/home/ranger/dist/version:ro
       - ./scripts/kafka/ranger-kafka-plugin-install.properties:/opt/ranger/ranger-kafka-plugin/install.properties
     stdin_open: true
@@ -31,10 +32,23 @@ services:
         condition: service_started
       ranger-zk:
         condition: service_started
+    healthcheck:
+      # The broker listens on SASL_PLAINTEXT/GSSAPI when KERBEROS_ENABLED=true, so the
+      # probe must authenticate. kafka-broker-api-versions.sh only negotiates API
+      # versions (no topic, no Ranger authorization needed) and returns non-zero if the
+      # broker is unreachable or auth fails. $$ escapes the var for the container shell.
+      test: [ "CMD-SHELL", "if [ \"$$KERBEROS_ENABLED\" = \"true\" ]; then kafka-broker-api-versions.sh --bootstrap-server ranger-kafka.rangernw:9092 --command-config /opt/kafka/config/kafka-client.properties > /dev/null 2>&1; else kafka-broker-api-versions.sh --bootstrap-server ranger-kafka.rangernw:9092 > /dev/null 2>&1; fi" ]
+      interval: 30s
+      timeout: 20s
+      retries: 5
+      start_period: 90s
     environment:
-      - KAFKA_VERSION
-      - KAFKA_PLUGIN_VERSION
-      - KERBEROS_ENABLED
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://ranger-kafka:9092,PLAINTEXT_HOST://localhost:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_VERSION: ${KAFKA_VERSION}
+      KAFKA_PLUGIN_VERSION: ${KAFKA_PLUGIN_VERSION}
+      KERBEROS_ENABLED: ${KERBEROS_ENABLED}
 
 networks:
   ranger:

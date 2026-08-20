@@ -38,7 +38,7 @@ services:
       ranger-kdc:
         condition: service_started
       ranger-kafka:
-        condition: service_started
+        condition: service_healthy
     ports:
       - "7081:7081"
       - "7182:7182"
