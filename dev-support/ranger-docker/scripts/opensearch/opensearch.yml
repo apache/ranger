@@ -27,8 +27,8 @@ transport.port: 9300
 discovery.type: single-node
 
 # Path settings
-path.data: /opt/opensearch/data
-path.logs: /opt/opensearch/logs
+path.data: /usr/share/opensearch/data
+path.logs: /usr/share/opensearch/logs
 
 # Memory settings
 bootstrap.memory_lock: false
@@ -48,6 +48,6 @@ http.cors.allow-headers: "X-Requested-With, Content-Type, Content-Length, Author
 # See opensearch-jaas.conf for Kerberos principal and keytab settings
 # JVM is configured with: -Djava.security.auth.login.config and -Djava.security.krb5.conf
 
-# Wire-compatible with ES 7 REST client used by Ranger Admin
-compatibility.override_main_response_version: true
+# Ranger Admin uses the Elasticsearch low-level REST client (raw HTTP) which does not
+# check server version — no compatibility override needed.
 

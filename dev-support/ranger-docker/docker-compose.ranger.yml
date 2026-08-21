@@ -36,6 +36,7 @@ services:
     environment:
       - RANGER_VERSION
       - RANGER_DB_TYPE
+      - AUDIT_INDEX_STORE
       - KERBEROS_ENABLED
       - DEBUG_ADMIN=${DEBUG_ADMIN:-false}
     command:
