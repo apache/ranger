@@ -97,7 +97,11 @@ jobs:
           mv ranger-*-usersync.tar.gz dev-support/ranger-docker/dist
           mv ranger-*-tagsync.tar.gz dev-support/ranger-docker/dist
           mv ranger-*-kms.tar.gz dev-support/ranger-docker/dist
-          mv ranger-*-solr-plugin.tar.gz dev-support/ranger-docker/dist
+          # Audit index stores are only brought up via the audit service, which
+          # also needs Kafka + the audit ingestor/dispatcher images.
+          mv ranger-*-kafka-plugin.tar.gz dev-support/ranger-docker/dist
+          mv ranger-*-audit-ingestor.tar.gz dev-support/ranger-docker/dist
+          mv ranger-*-audit-dispatcher.tar.gz dev-support/ranger-docker/dist
           mv version dev-support/ranger-docker/dist
           rm -f ranger-*.tar.gz # clean up workspace
 
@@ -107,15 +111,18 @@ jobs:
       - name: Download DB and Log4J connectors
         run: |
           cd dev-support/ranger-docker
-          ./download-archives.sh none
+          # Kafka archive is needed to build the ranger-kafka image (audit pipeline).
+          ./download-archives.sh kafka
       
       - name: Build all ranger-service images
         run: |
           cd dev-support/ranger-docker
           export RANGER_DB_TYPE=postgres
-          docker compose \
+          export AUDIT_INDEX_STORE=opensearch
+          export AUDIT_DESTINATIONS=audit-store-opensearch
+          docker compose --profile ${AUDIT_DESTINATIONS} \
           -f docker-compose.ranger.yml \
-          -f docker-compose.ranger-solr.yml \
+          -f docker-compose.ranger-audit-service.yml \
           -f docker-compose.ranger-pdp.yml \
           -f docker-compose.ranger-usersync.yml \
           -f docker-compose.ranger-tagsync.yml \
@@ -125,9 +132,11 @@ jobs:
         run: |
           cd dev-support/ranger-docker
           export RANGER_DB_TYPE=postgres
-          docker compose \
+          export AUDIT_INDEX_STORE=opensearch
+          export AUDIT_DESTINATIONS=audit-store-opensearch
+          docker compose --profile ${AUDIT_DESTINATIONS} \
           -f docker-compose.ranger.yml \
-          -f docker-compose.ranger-solr.yml \
+          -f docker-compose.ranger-audit-service.yml \
           -f docker-compose.ranger-pdp.yml \
           -f docker-compose.ranger-usersync.yml \
           -f docker-compose.ranger-tagsync.yml \
@@ -136,7 +145,7 @@ jobs:
       - name: Check status of containers and remove them
         run: |
           sleep 60
-          containers=(ranger ranger-zk ranger-solr ranger-postgres ranger-pdp ranger-usersync ranger-tagsync ranger-kms);
+          containers=(ranger ranger-zk ranger-opensearch ranger-postgres ranger-pdp ranger-usersync ranger-tagsync ranger-kms ranger-kafka ranger-audit-ingestor ranger-audit-dispatcher-opensearch);
           flag=true;
           for container in "${containers[@]}"; do
               if [[ $(docker inspect -f '{{.State.Running}}' $container 2>/dev/null) == "true" ]]; then
@@ -197,6 +206,10 @@ jobs:
         run: |
           mv ranger-*-admin.tar.gz dev-support/ranger-docker/dist
           mv ranger-*-plugin.tar.gz dev-support/ranger-docker/dist
+          # Audit index stores are only brought up via the audit service, which
+          # also needs the audit ingestor/dispatcher images.
+          mv ranger-*-audit-ingestor.tar.gz dev-support/ranger-docker/dist
+          mv ranger-*-audit-dispatcher.tar.gz dev-support/ranger-docker/dist
           mv version dev-support/ranger-docker/dist
           rm -f ranger-*.tar.gz # clean up workspace
 
@@ -216,18 +229,19 @@ jobs:
       - name: Verify plugin archives (download any cache misses)
         run: |
           cd dev-support/ranger-docker
-          ./download-archives.sh hadoop hive hbase kafka knox ozone opensearch
+          ./download-archives.sh hadoop hive hbase kafka knox ozone
 
       - name: Build all ranger-plugin images
         run: |
           cd dev-support/ranger-docker
           export RANGER_DB_TYPE=postgres
-          docker compose \
+          export AUDIT_INDEX_STORE=opensearch
+          export AUDIT_DESTINATIONS=audit-store-opensearch
+          docker compose --profile ${AUDIT_DESTINATIONS} \
           -f docker-compose.ranger.yml \
-          -f docker-compose.ranger-opensearch.yml \
+          -f docker-compose.ranger-audit-service.yml \
           -f docker-compose.ranger-hadoop.yml \
           -f docker-compose.ranger-hbase.yml \
-          -f docker-compose.ranger-kafka.yml \
           -f docker-compose.ranger-hive.yml \
           -f docker-compose.ranger-knox.yml \
           -f docker-compose.ranger-ozone.yml build
@@ -237,12 +251,13 @@ jobs:
           cd dev-support/ranger-docker
           ./scripts/ozone/ozone-plugin-docker-setup.sh
           export RANGER_DB_TYPE=postgres
-          docker compose \
+          export AUDIT_INDEX_STORE=opensearch
+          export AUDIT_DESTINATIONS=audit-store-opensearch
+          docker compose --profile ${AUDIT_DESTINATIONS} \
           -f docker-compose.ranger.yml \
-          -f docker-compose.ranger-opensearch.yml \
+          -f docker-compose.ranger-audit-service.yml \
           -f docker-compose.ranger-hadoop.yml \
           -f docker-compose.ranger-hbase.yml \
-          -f docker-compose.ranger-kafka.yml \
           -f docker-compose.ranger-hive.yml \
           -f docker-compose.ranger-knox.yml \
           -f docker-compose.ranger-ozone.yml up -d
@@ -266,7 +281,7 @@ jobs:
       - name: Check status of containers and remove them
         run: |
           sleep 60
-          containers=(ranger ranger-zk ranger-opensearch ranger-postgres ranger-hadoop ranger-hbase ranger-kafka ranger-hive ranger-knox ozone-om ozone-scm ozone-datanode);
+          containers=(ranger ranger-zk ranger-opensearch ranger-postgres ranger-hadoop ranger-hbase ranger-kafka ranger-hive ranger-knox ozone-om ozone-scm ozone-datanode ranger-audit-ingestor ranger-audit-dispatcher-opensearch);
           flag=true;
           for container in "${containers[@]}"; do
               if [[ $(docker inspect -f '{{.State.Running}}' $container 2>/dev/null) == "true" ]]; then
