@@ -52,7 +52,6 @@ public class AuditOpenSearchDispatcher extends AuditDispatcherBase {
         init(props, propPrefix);
     }
 
-
     AuditOpenSearchDispatcher(final OpenSearchAuditDestination destination, final String dispatcherGroupId, final KafkaConsumer<String, String> dispatcher, final String topicName) {
         super(dispatcherGroupId, dispatcher, topicName);
         this.openSearchAuditDestination = destination;
