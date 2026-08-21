@@ -79,6 +79,10 @@ cd dev-support/ranger-docker
 # To enable file based sync source for usersync do:
 export ENABLE_FILE_SYNC_SOURCE=true
 
+# Unix authentication service is disabled by default in docker (ENABLE_UNIX_AUTH=false).
+# To enable it (requires unix sync source, passwd backend, and UNIX auth in Ranger Admin):
+# export ENABLE_UNIX_AUTH=true
+
 # valid values for RANGER_DB_TYPE: mysql/postgres/oracle
 export RANGER_DB_TYPE=postgres
 

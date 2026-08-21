@@ -26,12 +26,15 @@ ARG TARGETARCH
 COPY ./dist/ranger-${RANGER_VERSION}-admin.tar.gz     /home/ranger/dist/
 COPY ./scripts/admin/ranger.sh                        ${RANGER_SCRIPTS}/
 COPY ./scripts/admin/create-ranger-services.py        ${RANGER_SCRIPTS}/
+COPY ./scripts/setup-ranger-shadow-group.sh           ${RANGER_SCRIPTS}/
 
 RUN    tar xvfz /home/ranger/dist/ranger-${RANGER_VERSION}-admin.tar.gz --directory=${RANGER_HOME} \
     && ln -s ${RANGER_HOME}/ranger-${RANGER_VERSION}-admin ${RANGER_HOME}/admin \
     && rm -f /home/ranger/dist/ranger-${RANGER_VERSION}-admin.tar.gz \
     && rm -f /opt/ranger/admin/install.properties \
     && mkdir -p /var/run/ranger /var/log/ranger /usr/share/java/ \
+    && chmod 755 ${RANGER_SCRIPTS}/setup-ranger-shadow-group.sh \
+    && ${RANGER_SCRIPTS}/setup-ranger-shadow-group.sh \
     && chown -R ranger:ranger ${RANGER_HOME}/admin/ ${RANGER_SCRIPTS}/ /var/run/ranger/ /var/log/ranger/ \
     && chmod 755 ${RANGER_SCRIPTS}/ranger.sh
 

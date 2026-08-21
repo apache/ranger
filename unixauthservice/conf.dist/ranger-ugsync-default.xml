@@ -93,4 +93,12 @@
 		<name>ranger.usersync.dest.ranger.session.cookie.name</name>
 		<value>RANGERADMINSESSIONID</value>
 	</property>
+	<property>
+		<name>ranger.usersync.unix.auth.enabled</name>
+		<value>false</value>
+	</property>
+	<property>
+		<name>ranger.usersync.unix.backend</name>
+		<value>nss</value>
+	</property>
 </configuration>

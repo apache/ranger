@@ -82,6 +82,7 @@ public class UnixAuthenticationService {
     private static final String UNIXAUTH_ACCOUNT_MAX_DELAY_MS_PARAM          = "ranger.usersync.unixauth.account.max.delay.ms";
 
     private static boolean enableUnixAuth;
+    private static String unixBackend;
 
     private final List<String> adminUserList = new ArrayList<>();
 
@@ -105,7 +106,6 @@ public class UnixAuthenticationService {
     }
 
     public static void main(String[] args) {
-        enableUnixAuth = Arrays.stream(args).anyMatch("-enableUnixAuth"::equalsIgnoreCase);
         UnixAuthenticationService service = new UnixAuthenticationService();
         service.userSyncHAInitializerImpl = UserSyncHAInitializerImpl.getInstance(UserGroupSyncConfig.getInstance().getUserGroupConfig());
         service.run();
@@ -113,10 +113,14 @@ public class UnixAuthenticationService {
 
     public void run() {
         try {
+            UserGroupSyncConfig config = UserGroupSyncConfig.getInstance();
+            enableUnixAuth = config.getUserSyncUnixAuth();
+            unixBackend = config.getUnixBackend();
+
             LOG.info("Starting User Sync Service!");
             startUnixUserGroupSyncProcess();
             Thread.sleep(5000);
-            if (enableUnixAuth) {
+            if (enableUnixAuth && "passwd".equalsIgnoreCase(unixBackend)) {
                 LOG.info("Enabling Unix Auth Service!");
                 init();
                 startService();

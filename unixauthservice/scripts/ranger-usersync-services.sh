@@ -127,7 +127,7 @@ if [ "${action}" == "START" ]; then
         fi
     fi
 	SLEEP_TIME_AFTER_START=5
-	nohup java -Dproc_rangerusersync -Duser=rangerusersync -Dhostname=${HOSTNAME} -Dservername=rangerusersync -Dranger.usersync.home=`pwd` -Dlogdir="${logdir}" -Dranger.usersync.log.dir="${RANGER_USERSYNC_LOG_DIR}" -Dlogback.configurationFile=file:${USERSYNC_CONF_DIR}/logback.xml -Djdk.tls.ephemeralDHKeySize=2048 -Dranger.usersync.webapp.dir="${RANGER_USERSYNC_WEBAPP}" -Dranger.usersync.service.host="${HOSTNAME}" -Dcatalina.base=${cdir}/ews -cp "${cp}" org.apache.ranger.authentication.server.RangerUserSyncServer -enableUnixAuth > ${RANGER_USERSYNC_LOG_DIR}/catalina.out 2>&1 &
+	nohup java -Dproc_rangerusersync -Duser=rangerusersync -Dhostname=${HOSTNAME} -Dservername=rangerusersync -Dranger.usersync.home=`pwd` -Dlogdir="${logdir}" -Dranger.usersync.log.dir="${RANGER_USERSYNC_LOG_DIR}" -Dlogback.configurationFile=file:${USERSYNC_CONF_DIR}/logback.xml -Djdk.tls.ephemeralDHKeySize=2048 -Dranger.usersync.webapp.dir="${RANGER_USERSYNC_WEBAPP}" -Dranger.usersync.service.host="${HOSTNAME}" -Dcatalina.base=${cdir}/ews -cp "${cp}" org.apache.ranger.authentication.server.RangerUserSyncServer > ${RANGER_USERSYNC_LOG_DIR}/catalina.out 2>&1 &
 	VALUE_OF_PID=$!
     echo "Starting Ranger Usersync Service"
     sleep $SLEEP_TIME_AFTER_START
