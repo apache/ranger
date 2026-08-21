@@ -1092,4 +1092,270 @@ public class TestPolicyMgrUserGroupBuilder {
             return null;
         }
     }
+
+    @Test
+    public void testAK_computeUserDelta_dnValidationEnabled_ouMoveUpdates() throws Exception {
+        PolicyMgrUserGroupBuilder builder = new PolicyMgrUserGroupBuilder();
+
+        String oldDn = "cn=john,ou=People,dc=example,dc=com";
+        String newDn = "cn=john,ou=Moved,dc=example,dc=com";
+
+        Map<String, XUserInfo> userCache = new HashMap<>();
+        XUserInfo              existing  = new XUserInfo();
+        existing.setName("john");
+        existing.setSyncSource("LDAP/AD");
+        Map<String, String> oldAttrs = new HashMap<>();
+        oldAttrs.put(UgsyncCommonConstants.ORIGINAL_NAME, "john");
+        oldAttrs.put(UgsyncCommonConstants.FULL_NAME, oldDn);
+        oldAttrs.put(UgsyncCommonConstants.SYNC_SOURCE, "LDAP/AD");
+        existing.setOtherAttrsMap(oldAttrs);
+        existing.setOtherAttributes(JsonUtils.objectToJson(oldAttrs));
+        userCache.put("john", existing);
+
+        setPrivate(builder, "userCache", userCache);
+        setPrivate(builder, "userNameMap", new HashMap<String, String>());
+        setPrivate(builder, "policyMgrUserName", "rangerusersync");
+        setPrivate(builder, "isStartupFlag", false);
+        setPrivate(builder, "isDnValidationEnabled", true);
+        setPrivate(builder, "isSyncSourceValidationEnabled", true);
+
+        Map<String, String> newAttrs = new HashMap<>();
+        newAttrs.put(UgsyncCommonConstants.ORIGINAL_NAME, "john");
+        newAttrs.put(UgsyncCommonConstants.FULL_NAME, newDn);
+        newAttrs.put(UgsyncCommonConstants.SYNC_SOURCE, "LDAP/AD");
+
+        Map<String, Map<String, String>> source = new HashMap<>();
+        source.put(newDn, newAttrs);
+
+        Method compute = PolicyMgrUserGroupBuilder.class.getDeclaredMethod("computeUserDelta", Map.class);
+        compute.setAccessible(true);
+        compute.invoke(builder, source);
+
+        Map<String, XUserInfo> deltaUsers  = getPrivate(builder, "deltaUsers", Map.class);
+        Map<String, String>    userNameMap = getPrivate(builder, "userNameMap", Map.class);
+
+        assertTrue(deltaUsers.containsKey("john"));
+        assertEquals("john", userNameMap.get(newDn));
+        assertFalse(userNameMap.containsKey(oldDn));
+    }
+
+    @Test
+    public void testAL_computeUserDelta_dnValidationDisabled_skipsOuMove() throws Exception {
+        PolicyMgrUserGroupBuilder builder = new PolicyMgrUserGroupBuilder();
+
+        String oldDn = "cn=john,ou=People,dc=example,dc=com";
+        String newDn = "cn=john,ou=Moved,dc=example,dc=com";
+
+        Map<String, XUserInfo> userCache = new HashMap<>();
+        XUserInfo              existing  = new XUserInfo();
+        existing.setName("john");
+        existing.setSyncSource("LDAP/AD");
+        Map<String, String> oldAttrs = new HashMap<>();
+        oldAttrs.put(UgsyncCommonConstants.ORIGINAL_NAME, "john");
+        oldAttrs.put(UgsyncCommonConstants.FULL_NAME, oldDn);
+        oldAttrs.put(UgsyncCommonConstants.SYNC_SOURCE, "LDAP/AD");
+        existing.setOtherAttrsMap(oldAttrs);
+        existing.setOtherAttributes(JsonUtils.objectToJson(oldAttrs));
+        userCache.put("john", existing);
+
+        setPrivate(builder, "userCache", userCache);
+        setPrivate(builder, "userNameMap", new HashMap<String, String>());
+        setPrivate(builder, "policyMgrUserName", "rangerusersync");
+        setPrivate(builder, "isStartupFlag", false);
+        setPrivate(builder, "isDnValidationEnabled", false);
+        setPrivate(builder, "isSyncSourceValidationEnabled", true);
+
+        Map<String, String> newAttrs = new HashMap<>();
+        newAttrs.put(UgsyncCommonConstants.ORIGINAL_NAME, "john");
+        newAttrs.put(UgsyncCommonConstants.FULL_NAME, oldDn);
+        newAttrs.put(UgsyncCommonConstants.SYNC_SOURCE, "LDAP/AD");
+
+        Map<String, Map<String, String>> source = new HashMap<>();
+        source.put(newDn, newAttrs);
+
+        Method compute = PolicyMgrUserGroupBuilder.class.getDeclaredMethod("computeUserDelta", Map.class);
+        compute.setAccessible(true);
+        compute.invoke(builder, source);
+
+        Map<String, XUserInfo> deltaUsers = getPrivate(builder, "deltaUsers", Map.class);
+        assertFalse(deltaUsers.containsKey("john"));
+    }
+
+    @Test
+    public void testAM_computeUserDelta_startupSyncSourceChange_dnValidationDisabled_skips() throws Exception {
+        PolicyMgrUserGroupBuilder builder = new PolicyMgrUserGroupBuilder();
+
+        String oldDn = "cn=john,ou=People,dc=example,dc=com";
+        String newDn = "cn=john,ou=Moved,dc=example,dc=com";
+
+        Map<String, XUserInfo> userCache = new HashMap<>();
+        XUserInfo              existing  = new XUserInfo();
+        existing.setName("john");
+        existing.setSyncSource("Unix");
+        Map<String, String> oldAttrs = new HashMap<>();
+        oldAttrs.put(UgsyncCommonConstants.ORIGINAL_NAME, "john");
+        oldAttrs.put(UgsyncCommonConstants.FULL_NAME, oldDn);
+        oldAttrs.put(UgsyncCommonConstants.SYNC_SOURCE, "Unix");
+        existing.setOtherAttrsMap(oldAttrs);
+        existing.setOtherAttributes(JsonUtils.objectToJson(oldAttrs));
+        userCache.put("john", existing);
+
+        setPrivate(builder, "userCache", userCache);
+        setPrivate(builder, "userNameMap", new HashMap<String, String>());
+        setPrivate(builder, "policyMgrUserName", "rangerusersync");
+        setPrivate(builder, "isStartupFlag", true);
+        setPrivate(builder, "isSyncSourceValidationEnabled", false);
+        setPrivate(builder, "isDnValidationEnabled", false);
+
+        Map<String, String> newAttrs = new HashMap<>();
+        newAttrs.put(UgsyncCommonConstants.ORIGINAL_NAME, "john");
+        newAttrs.put(UgsyncCommonConstants.FULL_NAME, newDn);
+        newAttrs.put(UgsyncCommonConstants.SYNC_SOURCE, "LDAP/AD");
+
+        Map<String, Map<String, String>> source = new HashMap<>();
+        source.put(newDn, newAttrs);
+
+        Method compute = PolicyMgrUserGroupBuilder.class.getDeclaredMethod("computeUserDelta", Map.class);
+        compute.setAccessible(true);
+        compute.invoke(builder, source);
+
+        Map<String, XUserInfo> deltaUsers = getPrivate(builder, "deltaUsers", Map.class);
+        assertFalse(deltaUsers.containsKey("john"));
+    }
+
+    @Test
+    public void testAN_computeGroupDelta_dnValidationEnabled_ouMoveUpdates() throws Exception {
+        UserGroupSyncConfig cfg = UserGroupSyncConfig.getInstance();
+        cfg.setProperty(UserGroupSyncConfig.UGSYNC_NAME_VALIDATION_ENABLED, "false");
+
+        PolicyMgrUserGroupBuilder builder = new PolicyMgrUserGroupBuilder();
+
+        String oldDn = "cn=engineering,ou=Groups,dc=example,dc=com";
+        String newDn = "cn=engineering,ou=Moved,dc=example,dc=com";
+
+        Map<String, XGroupInfo> groupCache = new HashMap<>();
+        XGroupInfo                existing   = new XGroupInfo();
+        existing.setName("engineering");
+        existing.setSyncSource("LDAP/AD");
+        Map<String, String> oldAttrs = new HashMap<>();
+        oldAttrs.put(UgsyncCommonConstants.ORIGINAL_NAME, "engineering");
+        oldAttrs.put(UgsyncCommonConstants.FULL_NAME, oldDn);
+        oldAttrs.put(UgsyncCommonConstants.SYNC_SOURCE, "LDAP/AD");
+        existing.setOtherAttrsMap(oldAttrs);
+        existing.setOtherAttributes(JsonUtils.objectToJson(oldAttrs));
+        groupCache.put("engineering", existing);
+
+        setPrivate(builder, "groupCache", groupCache);
+        setPrivate(builder, "groupNameMap", new HashMap<String, String>());
+        setPrivate(builder, "isStartupFlag", false);
+        setPrivate(builder, "isDnValidationEnabled", true);
+        setPrivate(builder, "isSyncSourceValidationEnabled", true);
+
+        Map<String, String> newAttrs = new HashMap<>();
+        newAttrs.put(UgsyncCommonConstants.ORIGINAL_NAME, "engineering");
+        newAttrs.put(UgsyncCommonConstants.FULL_NAME, newDn);
+        newAttrs.put(UgsyncCommonConstants.SYNC_SOURCE, "LDAP/AD");
+
+        Map<String, Map<String, String>> source = new HashMap<>();
+        source.put(newDn, newAttrs);
+
+        Method compute = PolicyMgrUserGroupBuilder.class.getDeclaredMethod("computeGroupDelta", Map.class);
+        compute.setAccessible(true);
+        compute.invoke(builder, source);
+
+        Map<String, XGroupInfo> deltaGroups  = getPrivate(builder, "deltaGroups", Map.class);
+        Map<String, String>     groupNameMap = getPrivate(builder, "groupNameMap", Map.class);
+
+        assertTrue(deltaGroups.containsKey("engineering"));
+        assertEquals("engineering", groupNameMap.get(newDn));
+        assertFalse(groupNameMap.containsKey(oldDn));
+    }
+
+    @Test
+    public void testAO_computeGroupDelta_dnValidationDisabled_skipsOuMove() throws Exception {
+        UserGroupSyncConfig cfg = UserGroupSyncConfig.getInstance();
+        cfg.setProperty(UserGroupSyncConfig.UGSYNC_NAME_VALIDATION_ENABLED, "false");
+
+        PolicyMgrUserGroupBuilder builder = new PolicyMgrUserGroupBuilder();
+
+        String oldDn = "cn=engineering,ou=Groups,dc=example,dc=com";
+        String newDn = "cn=engineering,ou=Moved,dc=example,dc=com";
+
+        Map<String, XGroupInfo> groupCache = new HashMap<>();
+        XGroupInfo                existing   = new XGroupInfo();
+        existing.setName("engineering");
+        existing.setSyncSource("LDAP/AD");
+        Map<String, String> oldAttrs = new HashMap<>();
+        oldAttrs.put(UgsyncCommonConstants.ORIGINAL_NAME, "engineering");
+        oldAttrs.put(UgsyncCommonConstants.FULL_NAME, oldDn);
+        oldAttrs.put(UgsyncCommonConstants.SYNC_SOURCE, "LDAP/AD");
+        existing.setOtherAttrsMap(oldAttrs);
+        existing.setOtherAttributes(JsonUtils.objectToJson(oldAttrs));
+        groupCache.put("engineering", existing);
+
+        setPrivate(builder, "groupCache", groupCache);
+        setPrivate(builder, "groupNameMap", new HashMap<String, String>());
+        setPrivate(builder, "isStartupFlag", false);
+        setPrivate(builder, "isDnValidationEnabled", false);
+        setPrivate(builder, "isSyncSourceValidationEnabled", true);
+
+        Map<String, String> newAttrs = new HashMap<>();
+        newAttrs.put(UgsyncCommonConstants.ORIGINAL_NAME, "engineering");
+        newAttrs.put(UgsyncCommonConstants.FULL_NAME, oldDn);
+        newAttrs.put(UgsyncCommonConstants.SYNC_SOURCE, "LDAP/AD");
+
+        Map<String, Map<String, String>> source = new HashMap<>();
+        source.put(newDn, newAttrs);
+
+        Method compute = PolicyMgrUserGroupBuilder.class.getDeclaredMethod("computeGroupDelta", Map.class);
+        compute.setAccessible(true);
+        compute.invoke(builder, source);
+
+        Map<String, XGroupInfo> deltaGroups = getPrivate(builder, "deltaGroups", Map.class);
+        assertFalse(deltaGroups.containsKey("engineering"));
+    }
+
+    @Test
+    public void testAP_computeGroupDelta_startupSyncSourceChange_dnValidationDisabled_skips() throws Exception {
+        UserGroupSyncConfig cfg = UserGroupSyncConfig.getInstance();
+        cfg.setProperty(UserGroupSyncConfig.UGSYNC_NAME_VALIDATION_ENABLED, "false");
+
+        PolicyMgrUserGroupBuilder builder = new PolicyMgrUserGroupBuilder();
+
+        String oldDn = "cn=engineering,ou=Groups,dc=example,dc=com";
+        String newDn = "cn=engineering,ou=Moved,dc=example,dc=com";
+
+        Map<String, XGroupInfo> groupCache = new HashMap<>();
+        XGroupInfo                existing   = new XGroupInfo();
+        existing.setName("engineering");
+        existing.setSyncSource("Unix");
+        Map<String, String> oldAttrs = new HashMap<>();
+        oldAttrs.put(UgsyncCommonConstants.ORIGINAL_NAME, "engineering");
+        oldAttrs.put(UgsyncCommonConstants.FULL_NAME, oldDn);
+        oldAttrs.put(UgsyncCommonConstants.SYNC_SOURCE, "Unix");
+        existing.setOtherAttrsMap(oldAttrs);
+        existing.setOtherAttributes(JsonUtils.objectToJson(oldAttrs));
+        groupCache.put("engineering", existing);
+
+        setPrivate(builder, "groupCache", groupCache);
+        setPrivate(builder, "groupNameMap", new HashMap<String, String>());
+        setPrivate(builder, "isStartupFlag", true);
+        setPrivate(builder, "isSyncSourceValidationEnabled", false);
+        setPrivate(builder, "isDnValidationEnabled", false);
+
+        Map<String, String> newAttrs = new HashMap<>();
+        newAttrs.put(UgsyncCommonConstants.ORIGINAL_NAME, "engineering");
+        newAttrs.put(UgsyncCommonConstants.FULL_NAME, newDn);
+        newAttrs.put(UgsyncCommonConstants.SYNC_SOURCE, "LDAP/AD");
+
+        Map<String, Map<String, String>> source = new HashMap<>();
+        source.put(newDn, newAttrs);
+
+        Method compute = PolicyMgrUserGroupBuilder.class.getDeclaredMethod("computeGroupDelta", Map.class);
+        compute.setAccessible(true);
+        compute.invoke(builder, source);
+
+        Map<String, XGroupInfo> deltaGroups = getPrivate(builder, "deltaGroups", Map.class);
+        assertFalse(deltaGroups.containsKey("engineering"));
+    }
 }

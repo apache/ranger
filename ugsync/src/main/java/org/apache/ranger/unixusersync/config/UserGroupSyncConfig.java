@@ -71,6 +71,7 @@ public class UserGroupSyncConfig {
     public static final  String UGSYNC_SERVER_HA_ENABLED_PARAM         = "ranger-ugsync.server.ha.enabled";
     public static final  String UGSYNC_NAME_VALIDATION_ENABLED         = "ranger.usersync.name.validation.enabled";
     public static final  String UGSYNC_SYNC_SOURCE_VALIDATION_ENABLED  = "ranger.usersync.syncsource.validation.enabled";
+    public static final  String UGSYNC_DN_VALIDATION_ENABLED           = "ranger.usersync.dn.validation.enabled";
     private static final Logger LOG                                    = LoggerFactory.getLogger(UserGroupSyncConfig.class);
     private static final String CORE_SITE_CONFIG_FILE                  = "core-site.xml";
     private static final String UGSYNC_SOURCE_CLASS_PARAM              = "ranger.usersync.source.impl.class";
@@ -180,6 +181,7 @@ public class UserGroupSyncConfig {
     private static final long    UGSYNC_INIT_SLEEP_TIME_IN_MILLIS_BETWEEN_CYCLE_MIN_VALUE_FOR_HA = 5_000L;
     private static final boolean DEFAULT_UGSYNC_NAME_VALIDATION_ENABLED                          = false;
     private static final boolean DEFAULT_UGSYNC_SYNC_SOURCE_VALIDATION_ENABLED                   = true;
+    private static final boolean DEFAULT_UGSYNC_DN_VALIDATION_ENABLED                            = false;
 
     private static final String SYNC_SOURCE                         = "ranger.usersync.sync.source";
     private static final String LGSYNC_PAGED_RESULTS_ENABLED        = "ranger.usersync.pagedresultsenabled";
@@ -1389,6 +1391,17 @@ public class UserGroupSyncConfig {
         }
 
         return isSyncSourceValidationEnabled;
+    }
+
+    public boolean isDnValidationEnabled() {
+        boolean isDnValidationEnabled = DEFAULT_UGSYNC_DN_VALIDATION_ENABLED;
+        String  val                   = prop.getProperty(UGSYNC_DN_VALIDATION_ENABLED);
+
+        if (StringUtils.isNotEmpty(val)) {
+            isDnValidationEnabled = Boolean.parseBoolean(val);
+        }
+
+        return isDnValidationEnabled;
     }
 
     public boolean isLargeGroupSyncEnabled() {

@@ -129,6 +129,7 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
     private boolean isRangerCookieEnabled;
     private boolean isUserSyncNameValidationEnabled;
     private boolean isSyncSourceValidationEnabled;
+    private boolean isDnValidationEnabled;
     private String  recordsToPullPerCall = "10";
     private String  currentSyncSource;
     private String  ldapUrl;
@@ -177,6 +178,7 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
     public synchronized void init() throws Throwable {
         isUserSyncNameValidationEnabled = config.isUserSyncNameValidationEnabled();
         isSyncSourceValidationEnabled   = config.isSyncSourceValidationEnabled();
+        isDnValidationEnabled           = config.isDnValidationEnabled();
         recordsToPullPerCall            = config.getMaxRecordsPerAPICall();
         policyMgrBaseUrl                = config.getPolicyManagerBaseURL();
         isMockRun                       = config.isMockRunEnabled();
@@ -738,6 +740,18 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
                 String              curGroupDN       = MapUtils.isEmpty(curGroupAttrs) ? groupName : curGroupAttrs.get(UgsyncCommonConstants.FULL_NAME);
                 String              newSyncSource    = newGroupAttrs.get(UgsyncCommonConstants.SYNC_SOURCE);
 
+                // Universal DN Validation Check (Executes first for both startup & runtime)
+                if (MapUtils.isNotEmpty(curGroupAttrs) && !StringUtils.equalsIgnoreCase(groupDN, curGroupDN)) {
+                    if (!isDnValidationEnabled) {
+                        LOG.info("[{}]: SyncSource update skipped due to DN mismatch and dnValidation disabled. Current DN = {} New DN = {}", groupName, curGroupDN, groupDN);
+
+                        if (StringUtils.equalsIgnoreCase(curGroupAttrsStr, newGroupAttrsStr)) {
+                            groupNameMap.put(groupDN, groupName);
+                        }
+                        continue; // Safely skip updates regardless of isStartupFlag
+                    }
+                }
+
                 if (isStartupFlag && !isSyncSourceValidationEnabled && (!StringUtils.equalsIgnoreCase(curSyncSource, newSyncSource))) {
                     LOG.debug("[{}]: SyncSource updated to {}, previous value: {}", groupName, newSyncSource, curSyncSource);
 
@@ -746,18 +760,14 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
                     deltaGroups.put(groupName, curGroup);
                     noOfModifiedGroups++;
                     groupNameMap.put(groupDN, groupName);
-                } else {
-                    if (MapUtils.isNotEmpty(curGroupAttrs) && !StringUtils.equalsIgnoreCase(groupDN, curGroupDN)) { // skip update
-                        LOG.debug("[{}]: SyncSource update skipped, current group DN = {} new user DN  = {}", groupName, curGroupDN, groupDN);
 
-                        if (StringUtils.equalsIgnoreCase(curGroupAttrsStr, newGroupAttrsStr)) {
-                            groupNameMap.put(groupDN, groupName);
-                        }
-
-                        continue;
+                    if (isDnValidationEnabled) {
+                        groupNameMap.remove(curGroupDN);
                     }
+                } else {
+                    boolean allowSyncSourceOverwrite = !isSyncSourceValidationEnabled && isDnValidationEnabled;
 
-                    if (StringUtils.isEmpty(curSyncSource) || (!StringUtils.equalsIgnoreCase(curGroupAttrsStr, newGroupAttrsStr) && StringUtils.equalsIgnoreCase(curSyncSource, newSyncSource))) { // update
+                    if (StringUtils.isEmpty(curSyncSource) || (!StringUtils.equalsIgnoreCase(curGroupAttrsStr, newGroupAttrsStr) && (StringUtils.equalsIgnoreCase(curSyncSource, newSyncSource) || allowSyncSourceOverwrite))) {
                         if (StringUtils.isEmpty(curSyncSource)) {
                             LOG.debug("[{}]: SyncSource updated to {}, previously empty", groupName, newSyncSource);
                         } else {
@@ -769,6 +779,10 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
                         deltaGroups.put(groupName, curGroup);
                         noOfModifiedGroups++;
                         groupNameMap.put(groupDN, groupName);
+
+                        if (isDnValidationEnabled) {
+                            groupNameMap.remove(curGroupDN);
+                        }
                     } else {
                         if (!StringUtils.equalsIgnoreCase(curSyncSource, newSyncSource)) {
                             LOG.debug("[{}]: Different sync source exists, update skipped!", groupName);
@@ -828,6 +842,17 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
                 String              curUserDN       = MapUtils.isEmpty(curUserAttrs) ? userName : curUserAttrs.get(UgsyncCommonConstants.FULL_NAME);
                 String              newSyncSource   = newUserAttrs.get(UgsyncCommonConstants.SYNC_SOURCE);
 
+                if (MapUtils.isNotEmpty(curUserAttrs) && !StringUtils.equalsIgnoreCase(userDN, curUserDN)) { // skip update
+                    if (!isDnValidationEnabled) {
+                        LOG.debug("[{}]: SyncSource update skipped, current user DN = {} new user DN = {}", userName, curUserDN, userDN);
+
+                        if (StringUtils.equalsIgnoreCase(curUserAttrsStr, newUserAttrsStr)) {
+                            userNameMap.put(userDN, userName);
+                        }
+                        continue;
+                    }
+                }
+
                 if (isStartupFlag && !isSyncSourceValidationEnabled && (!StringUtils.equalsIgnoreCase(curSyncSource, newSyncSource))) {
                     LOG.debug("[{}]: SyncSource updated to {}, previous value: {}", userName, newSyncSource, curSyncSource);
 
@@ -835,21 +860,16 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
 
                     curUser.setUserSource(SOURCE_EXTERNAL);
                     deltaUsers.put(userName, curUser);
-                    noOfModifiedGroups++;
+                    noOfModifiedUsers++; // corrected the variable name from groups to users
                     userNameMap.put(userDN, userName);
-                } else {
-                    if (MapUtils.isNotEmpty(curUserAttrs) && !StringUtils.equalsIgnoreCase(userDN, curUserDN)) { // skip update
-                        // Same username with different DN already exists
-                        LOG.debug("[{}]: SyncSource update skipped, current user DN = {} new user DN  = {}", userName, curUserDN, userDN);
 
-                        if (StringUtils.equalsIgnoreCase(curUserAttrsStr, newUserAttrsStr)) {
-                            userNameMap.put(userDN, userName);
-                        }
-
-                        continue;
+                    if (isDnValidationEnabled) {
+                        userNameMap.remove(curUserDN);
                     }
+                } else {
+                    boolean allowSyncSourceOverwrite = !isSyncSourceValidationEnabled && isDnValidationEnabled;
 
-                    if (StringUtils.isEmpty(curSyncSource) || (!StringUtils.equalsIgnoreCase(curUserAttrsStr, newUserAttrsStr) && StringUtils.equalsIgnoreCase(curSyncSource, newSyncSource))) { // update
+                    if (StringUtils.isEmpty(curSyncSource) || (!StringUtils.equalsIgnoreCase(curUserAttrsStr, newUserAttrsStr) && (StringUtils.equalsIgnoreCase(curSyncSource, newSyncSource) || allowSyncSourceOverwrite))) { // update
                         if (StringUtils.isEmpty(curSyncSource)) {
                             LOG.debug("[{}]: SyncSource updated to {}, previously empty", userName, newSyncSource);
                         } else {
@@ -862,6 +882,10 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
                         deltaUsers.put(userName, curUser);
                         noOfModifiedUsers++;
                         userNameMap.put(userDN, userName);
+
+                        if (isDnValidationEnabled) {
+                            userNameMap.remove(curUserDN);
+                        }
                     } else {
                         if (!StringUtils.equalsIgnoreCase(curSyncSource, newSyncSource)) {
                             LOG.debug("[{}]: Different sync source exists, update skipped!", userName);
@@ -1735,14 +1759,29 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
 
         deletedGroups = new HashMap<>();
 
+        Set<String> sourceGroupNames = new HashSet<>();
+        for (Map<String, String> attrs : sourceGroups.values()) {
+            String originalName = attrs.get(UgsyncCommonConstants.ORIGINAL_NAME);
+            if (StringUtils.isNotEmpty(originalName)) {
+                sourceGroupNames.add(groupNameTransform(originalName.trim()));
+            }
+        }
+
         // Check if the group from cache exists in the sourceGroups. If not, mark as deleted group.
-        for (XGroupInfo groupInfo : groupCache.values()) {
+        for (Map.Entry<String, XGroupInfo> entry : groupCache.entrySet()) {
+            String              groupName       = entry.getKey();
+            XGroupInfo          groupInfo       = entry.getValue();
             Map<String, String> groupOtherAttrs = groupInfo.getOtherAttrsMap();
             String              groupDN         = groupOtherAttrs != null ? groupOtherAttrs.get(UgsyncCommonConstants.FULL_NAME) : null;
 
             if (StringUtils.isNotEmpty(groupDN) && !sourceGroups.containsKey(groupDN)
                     && StringUtils.equalsIgnoreCase(groupOtherAttrs.get(UgsyncCommonConstants.SYNC_SOURCE), currentSyncSource) &&
                     StringUtils.equalsIgnoreCase(groupOtherAttrs.get(UgsyncCommonConstants.LDAP_URL), ldapUrl)) {
+                if (sourceGroupNames.contains(groupName)) {
+                    LOG.info("group {} with different DN exists. Skip and wait for it to be updated.", groupName);
+                    continue;
+                }
+
                 if (!ISHIDDEN.equals(groupInfo.getIsVisible())) {
                     groupInfo.setIsVisible(ISHIDDEN);
                     deletedGroups.put(groupInfo.getName(), groupInfo);
@@ -1850,14 +1889,29 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
 
         deletedUsers = new HashMap<>();
 
+        Set<String> sourceUserNames = new HashSet<>();
+        for (Map<String, String> attrs : sourceUsers.values()) {
+            String originalName = attrs.get(UgsyncCommonConstants.ORIGINAL_NAME);
+            if (StringUtils.isNotEmpty(originalName)) {
+                sourceUserNames.add(userNameTransform(originalName.trim()));
+            }
+        }
+
         // Check if the group from cache exists in the sourceGroups. If not, mark as deleted group.
-        for (XUserInfo userInfo : userCache.values()) {
+        for (Map.Entry<String, XUserInfo> entry : userCache.entrySet()) {
+            String               userName = entry.getKey();
+            XUserInfo           userInfo = entry.getValue();
             Map<String, String> userOtherAttrs = userInfo.getOtherAttrsMap();
             String              userDN         = userOtherAttrs != null ? userOtherAttrs.get(UgsyncCommonConstants.FULL_NAME) : null;
 
             if (StringUtils.isNotEmpty(userDN) && !sourceUsers.containsKey(userDN)
                     && StringUtils.equalsIgnoreCase(userOtherAttrs.get(UgsyncCommonConstants.SYNC_SOURCE), currentSyncSource)
                     && StringUtils.equalsIgnoreCase(userOtherAttrs.get(UgsyncCommonConstants.LDAP_URL), ldapUrl)) {
+                if (sourceUserNames.contains(userName)) {
+                    LOG.info("user {} with different DN exists. Skip and wait for it to be updated.", userName);
+                    continue;
+                }
+
                 if (!ISHIDDEN.equals(userInfo.getIsVisible())) {
                     userInfo.setIsVisible(ISHIDDEN);
                     deletedUsers.put(userInfo.getName(), userInfo);
