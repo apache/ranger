@@ -86,7 +86,7 @@ public class TestUserGroupSyncConfig {
         cfg.setProperty("ranger.usersync.ssl.keystore.type", "jks");
 
         // Touch properties using correct parameter keys and ensure returned
-        cfg.setProperty("ranger.usersync.keystore.password", "ksp");
+        cfg.setProperty("ranger.usersync.service.https.attrib.keystore.pass", "ksp");
         cfg.setProperty("ranger.usersync.truststore.password", "tsp");
         assertEquals("ksp", cfg.getSSLKeyStorePathPassword());
         assertEquals("tsp", cfg.getSSLTrustStorePathPassword());
