@@ -273,12 +273,6 @@ services:
       - ranger-audit-dispatcher-opensearch-logs:/var/log/ranger/audit-dispatcher/opensearch
       - ./scripts/audit-dispatcher/ranger-audit-dispatcher-opensearch-site.xml:/opt/ranger/audit-dispatcher/conf/ranger-audit-dispatcher-opensearch-site.xml
 
-  ranger-hadoop:
-    profiles: ["audit-store-hdfs"]
-    extends:
-      file: docker-compose.ranger-hadoop.yml
-      service: ranger-hadoop
-
   # -------------------------------------------------------------------------
   # Optional additional destination: HDFS  (profile: audit-store-hdfs)
   # Enable only when the ranger-hadoop container is running; audits then fan out

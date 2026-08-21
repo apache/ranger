@@ -229,7 +229,7 @@ jobs:
       - name: Verify plugin archives (download any cache misses)
         run: |
           cd dev-support/ranger-docker
-          ./download-archives.sh hadoop hive hbase kafka knox ozone opensearch
+          ./download-archives.sh hadoop hive hbase kafka knox ozone
 
       - name: Build all ranger-plugin images
         run: |
@@ -239,7 +239,6 @@ jobs:
           export AUDIT_DESTINATIONS=audit-store-opensearch
           docker compose --profile ${AUDIT_DESTINATIONS} \
           -f docker-compose.ranger.yml \
-          -f docker-compose.ranger-kafka.yml \
           -f docker-compose.ranger-audit-service.yml \
           -f docker-compose.ranger-hadoop.yml \
           -f docker-compose.ranger-hbase.yml \

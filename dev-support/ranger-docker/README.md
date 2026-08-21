@@ -122,10 +122,11 @@ docker compose --profile ${AUDIT_DESTINATIONS} -f docker-compose.ranger.yml -f d
 ~~~
 
 ##### Also send audits to HDFS
-Audits fan out to `AUDIT_INDEX_STORE` **and** HDFS when the `audit-store-hdfs` profile is enabled and the `ranger-hadoop` container is running (skipped otherwise):
+Audits fan out to `AUDIT_INDEX_STORE` **and** HDFS when the `audit-store-hdfs` profile is enabled:
 ~~~
 export AUDIT_DESTINATIONS=audit-store-${AUDIT_INDEX_STORE}
 docker compose --profile ${AUDIT_DESTINATIONS} --profile audit-store-hdfs \
   -f docker-compose.ranger.yml \
-  -f docker-compose.ranger-audit-service.yml up -d
+  -f docker-compose.ranger-audit-service.yml \
+  -f docker-compose.ranger-audit-destination-hdfs.yml up -d
 ~~~
