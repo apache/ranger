@@ -41,65 +41,65 @@ import java.util.Enumeration;
 import java.util.Properties;
 
 public class TagSyncConfig extends Configuration {
+    public static final  String TAGSYNC_ENABLED_PROP                                 = "ranger.tagsync.enabled";
+    public static final  String TAGSYNC_LOGDIR_PROP                                  = "ranger.tagsync.logdir";
+    public static final  String TAGSYNC_FILESOURCE_FILENAME_PROP                     = "ranger.tagsync.source.file.filename";
+    public static final  String TAGSYNC_RANGER_COOKIE_ENABLED_PROP                   = "ranger.tagsync.cookie.enabled";
+    public static final  String TAGSYNC_TAGADMIN_COOKIE_NAME_PROP                    = "ranger.tagsync.dest.ranger.session.cookie.name";
+    public static final  int    DEFAULT_TAGSYNC_ATLASREST_SOURCE_ENTITIES_BATCH_SIZE = 10000;
+    public static final  String TAGSYNC_KERBEROS_IDENTITY                            = "tagsync.kerberos.identity";
+    public static final  String TAGSYNC_SERVER_HA_ENABLED_PARAM                      = "ranger-tagsync.server.ha.enabled";
     private static final Logger LOG = LoggerFactory.getLogger(TagSyncConfig.class);
-
-    public static final String TAGSYNC_ENABLED_PROP = "ranger.tagsync.enabled";
-    public static final String TAGSYNC_LOGDIR_PROP = "ranger.tagsync.logdir";
-    public static final String TAGSYNC_FILESOURCE_FILENAME_PROP = "ranger.tagsync.source.file.filename";
-    public static final String TAGSYNC_RANGER_COOKIE_ENABLED_PROP = "ranger.tagsync.cookie.enabled";
-    public static final String TAGSYNC_TAGADMIN_COOKIE_NAME_PROP  = "ranger.tagsync.dest.ranger.session.cookie.name";
-    public static final  int  DEFAULT_TAGSYNC_ATLASREST_SOURCE_ENTITIES_BATCH_SIZE = 10000;
-    public static final String TAGSYNC_KERBEROS_IDENTITY = "tagsync.kerberos.identity";
-    public static final  String TAGSYNC_SERVER_HA_ENABLED_PARAM              = "ranger-tagsync.server.ha.enabled";
-    private static final String        CONFIG_FILE = "ranger-tagsync-site.xml";
-    private static final String DEFAULT_CONFIG_FILE = "ranger-tagsync-default.xml";
-    private static final String CORE_SITE_FILE = "core-site.xml";
-    private static final String TAGSYNC_TAGADMIN_REST_URL_PROP = "ranger.tagsync.dest.ranger.endpoint";
-    private static final String TAGSYNC_TAGADMIN_REST_SSL_CONFIG_FILE_PROP = "ranger.tagsync.dest.ranger.ssl.config.filename";
-    private static final String TAGSYNC_SINK_CLASS_PROP = "ranger.tagsync.dest.ranger.impl.class";
-    private static final String TAGSYNC_DEST_RANGER_PASSWORD_ALIAS      = "tagadmin.user.password";
-    private static final String TAGSYNC_SOURCE_ATLASREST_PASSWORD_ALIAS = "atlas.user.password";
-    private static final String TAGSYNC_TAGADMIN_USERNAME_PROP  = "ranger.tagsync.dest.ranger.username";
-    private static final String TAGSYNC_ATLASREST_USERNAME_PROP = "ranger.tagsync.source.atlasrest.username";
-    private static final String TAGSYNC_TAGADMIN_PASSWORD_PROP  = "ranger.tagsync.dest.ranger.password";
-    private static final String TAGSYNC_ATLASREST_PASSWORD_PROP = "ranger.tagsync.source.atlasrest.password";
-    private static final String TAGSYNC_TAGADMIN_CONNECTION_CHECK_INTERVAL_PROP = "ranger.tagsync.dest.ranger.connection.check.interval";
-    private static final String TAGSYNC_SOURCE_ATLAS_CUSTOM_RESOURCE_MAPPERS_PROP = "ranger.tagsync.atlas.custom.resource.mappers";
-    private static final String TAGSYNC_ATLASSOURCE_ENDPOINT_PROP = "ranger.tagsync.source.atlasrest.endpoint";
-    private static final String TAGSYNC_ATLAS_REST_SOURCE_DOWNLOAD_INTERVAL_PROP = "ranger.tagsync.source.atlasrest.download.interval.millis";
-    private static final String TAGSYNC_ATLAS_REST_SSL_CONFIG_FILE_PROP = "ranger.tagsync.source.atlasrest.ssl.config.filename";
-    private static final String TAGSYNC_FILESOURCE_MOD_TIME_CHECK_INTERVAL_PROP = "ranger.tagsync.source.file.check.interval.millis";
-    private static final String TAGSYNC_KEYSTORE_TYPE_PROP      = "ranger.keystore.file.type";
-    private static final String TAGSYNC_TAGADMIN_KEYSTORE_PROP  = "ranger.tagsync.keystore.filename";
-    private static final String TAGSYNC_ATLASREST_KEYSTORE_PROP = "ranger.tagsync.source.atlasrest.keystore.filename";
-    private static final String TAGSYNC_SOURCE_RETRY_INITIALIZATION_INTERVAL_PROP = "ranger.tagsync.source.retry.initialization.interval.millis";
-    private static final String DEFAULT_TAGADMIN_USERNAME  = "rangertagsync";
-    private static final String DEFAULT_ATLASREST_USERNAME = "admin";
-    private static final String DEFAULT_ATLASREST_PASSWORD = "admin";
-    private static final int  DEFAULT_TAGSYNC_TAGADMIN_CONNECTION_CHECK_INTERVAL   = 15000;
-    private static final long DEFAULT_TAGSYNC_ATLASREST_SOURCE_DOWNLOAD_INTERVAL   = 900000;
-    private static final long DEFAULT_TAGSYNC_FILESOURCE_MOD_TIME_CHECK_INTERVAL   = 60000;
-    private static final long DEFAULT_TAGSYNC_SOURCE_RETRY_INITIALIZATION_INTERVAL = 10000;
-    private static final long DEFAULT_TAGSYNC_HA_PASSIVE_SLEEP_INTERVAL            = 5000;
-    private static final String AUTH_TYPE                 = "hadoop.security.authentication";
-    private static final String NAME_RULES                = "hadoop.security.auth_to_local";
-    private static final String TAGSYNC_KERBEROS_PRICIPAL = "ranger.tagsync.kerberos.principal";
-    private static final String TAGSYNC_KERBEROS_KEYTAB   = "ranger.tagsync.kerberos.keytab";
-    private static final String TAGSYNC_METRICS_FILEPATH                          = "ranger.tagsync.metrics.filepath";
-    private static final String DEFAULT_TAGSYNC_METRICS_FILEPATH                  = "/tmp/";
-    private static final String TAGSYNC_METRICS_FILENAME                          = "ranger.tagsync.metrics.filename";
-    private static final String DEFAULT_TAGSYNC_METRICS_FILENAME                  = "ranger_tagsync_metric.json";
-    private static final String TAGSYNC_METRICS_FREQUENCY_TIME_IN_MILLIS_PARAM    = "ranger.tagsync.metrics.frequencytimeinmillis";
-    private static final long   DEFAULT_TAGSYNC_METRICS_FREQUENCY__TIME_IN_MILLIS = 10000L;
-    private static final String TAGSYNC_METRICS_ENABLED_PROP                      = "ranger.tagsync.metrics.enabled";
-    private static final int    DEFAULT_TAGSYNC_SINK_MAX_BATCH_SIZE = 1;
-    private static final String TAGSYNC_SINK_MAX_BATCH_SIZE_PROP    = "ranger.tagsync.dest.ranger.max.batch.size";
-    private static final String TAGSYNC_ATLASREST_SOURCE_ENTITIES_BATCH_SIZE = "ranger.tagsync.source.atlasrest.entities.batch.size";
+    private static final String CONFIG_FILE                                          = "ranger-tagsync-site.xml";
+    private static final String DEFAULT_CONFIG_FILE                                  = "ranger-tagsync-default.xml";
+    private static final String CORE_SITE_FILE                                       = "core-site.xml";
+    private static final String TAGSYNC_TAGADMIN_REST_URL_PROP                       = "ranger.tagsync.dest.ranger.endpoint";
+    private static final String TAGSYNC_TAGADMIN_REST_SSL_CONFIG_FILE_PROP           = "ranger.tagsync.dest.ranger.ssl.config.filename";
+    private static final String TAGSYNC_SINK_CLASS_PROP                              = "ranger.tagsync.dest.ranger.impl.class";
+    private static final String TAGSYNC_DEST_RANGER_PASSWORD_ALIAS                   = "tagadmin.user.password";
+    private static final String TAGSYNC_SOURCE_ATLASREST_PASSWORD_ALIAS              = "atlas.user.password";
+    private static final String TAGSYNC_TAGADMIN_USERNAME_PROP                       = "ranger.tagsync.dest.ranger.username";
+    private static final String TAGSYNC_ATLASREST_USERNAME_PROP                      = "ranger.tagsync.source.atlasrest.username";
+    private static final String TAGSYNC_TAGADMIN_PASSWORD_PROP                       = "ranger.tagsync.dest.ranger.password";
+    private static final String TAGSYNC_ATLASREST_PASSWORD_PROP                      = "ranger.tagsync.source.atlasrest.password";
+    private static final String TAGSYNC_TAGADMIN_CONNECTION_CHECK_INTERVAL_PROP      = "ranger.tagsync.dest.ranger.connection.check.interval";
+    private static final String TAGSYNC_SOURCE_ATLAS_CUSTOM_RESOURCE_MAPPERS_PROP    = "ranger.tagsync.atlas.custom.resource.mappers";
+    private static final String TAGSYNC_ATLASSOURCE_ENDPOINT_PROP                    = "ranger.tagsync.source.atlasrest.endpoint";
+    private static final String TAGSYNC_ATLAS_REST_SOURCE_DOWNLOAD_INTERVAL_PROP     = "ranger.tagsync.source.atlasrest.download.interval.millis";
+    private static final String TAGSYNC_ATLAS_REST_SSL_CONFIG_FILE_PROP              = "ranger.tagsync.source.atlasrest.ssl.config.filename";
+    private static final String TAGSYNC_FILESOURCE_MOD_TIME_CHECK_INTERVAL_PROP      = "ranger.tagsync.source.file.check.interval.millis";
+    private static final String TAGSYNC_KEYSTORE_TYPE_PROP                           = "ranger.keystore.file.type";
+    private static final String TAGSYNC_TAGADMIN_KEYSTORE_PROP                       = "ranger.tagsync.keystore.filename";
+    private static final String TAGSYNC_ATLASREST_KEYSTORE_PROP                      = "ranger.tagsync.source.atlasrest.keystore.filename";
+    private static final String TAGSYNC_SOURCE_RETRY_INITIALIZATION_INTERVAL_PROP    = "ranger.tagsync.source.retry.initialization.interval.millis";
+    private static final String DEFAULT_TAGADMIN_USERNAME                            = "rangertagsync";
+    private static final String DEFAULT_ATLASREST_USERNAME                           = "admin";
+    private static final String DEFAULT_ATLASREST_PASSWORD                           = "admin";
+    private static final int    DEFAULT_TAGSYNC_TAGADMIN_CONNECTION_CHECK_INTERVAL   = 15000;
+    private static final long   DEFAULT_TAGSYNC_ATLASREST_SOURCE_DOWNLOAD_INTERVAL   = 900000;
+    private static final long   DEFAULT_TAGSYNC_FILESOURCE_MOD_TIME_CHECK_INTERVAL   = 60000;
+    private static final long   DEFAULT_TAGSYNC_SOURCE_RETRY_INITIALIZATION_INTERVAL = 10000;
+    private static final long   DEFAULT_TAGSYNC_HA_PASSIVE_SLEEP_INTERVAL            = 5000;
+    private static final String AUTH_TYPE                                            = "hadoop.security.authentication";
+    private static final String NAME_RULES                                           = "hadoop.security.auth_to_local";
+    private static final String TAGSYNC_KERBEROS_PRICIPAL                            = "ranger.tagsync.kerberos.principal";
+    private static final String TAGSYNC_KERBEROS_KEYTAB                              = "ranger.tagsync.kerberos.keytab";
+    private static final String TAGSYNC_METRICS_FILEPATH                             = "ranger.tagsync.metrics.filepath";
+    private static final String DEFAULT_TAGSYNC_METRICS_FILEPATH                     = "/tmp/";
+    private static final String TAGSYNC_METRICS_FILENAME                             = "ranger.tagsync.metrics.filename";
+    private static final String DEFAULT_TAGSYNC_METRICS_FILENAME                     = "ranger_tagsync_metric.json";
+    private static final String TAGSYNC_METRICS_FREQUENCY_TIME_IN_MILLIS_PARAM       = "ranger.tagsync.metrics.frequencytimeinmillis";
+    private static final long   DEFAULT_TAGSYNC_METRICS_FREQUENCY__TIME_IN_MILLIS    = 10000L;
+    private static final String TAGSYNC_METRICS_ENABLED_PROP                         = "ranger.tagsync.metrics.enabled";
+    private static final int    DEFAULT_TAGSYNC_SINK_MAX_BATCH_SIZE                  = 1;
+    private static final String TAGSYNC_SINK_MAX_BATCH_SIZE_PROP                     = "ranger.tagsync.dest.ranger.max.batch.size";
+    private static final String TAGSYNC_ATLASREST_SOURCE_ENTITIES_BATCH_SIZE         = "ranger.tagsync.source.atlasrest.entities.batch.size";
+    private static final String SSL_POLICYMGR_CONFIG_FILE                            = "ranger-tagsync-policymgr-ssl.xml";
 
     private static TagSyncConfig instance;
     private static String        localHostname;
 
-    private Properties                 props;
+    private Properties props;
 
     private TagSyncConfig() {
         super(false);
@@ -450,7 +450,7 @@ public class TagSyncConfig extends Configuration {
     }
 
     public static int getSinkMaxBatchSize(Properties prop) {
-        int   ret              = DEFAULT_TAGSYNC_SINK_MAX_BATCH_SIZE;
+        int    ret             = DEFAULT_TAGSYNC_SINK_MAX_BATCH_SIZE;
         String maxBatchSizeStr = prop.getProperty(TAGSYNC_SINK_MAX_BATCH_SIZE_PROP);
 
         if (StringUtils.isNotEmpty(maxBatchSizeStr)) {
@@ -490,10 +490,8 @@ public class TagSyncConfig extends Configuration {
 
     @Override
     public String toString() {
-        StringBuilder sb = new StringBuilder();
-
-        sb.append("DEFAULT_CONFIG_FILE=").append(DEFAULT_CONFIG_FILE).append(", ")
-                .append("CONFIG_FILE=").append(CONFIG_FILE).append("\n\n");
+        String sb = "DEFAULT_CONFIG_FILE=" + DEFAULT_CONFIG_FILE + ", " +
+                "CONFIG_FILE=" + CONFIG_FILE + "\n\n";
 
         return sb + super.toString();
     }
@@ -549,6 +547,7 @@ public class TagSyncConfig extends Configuration {
         readConfigFile(CORE_SITE_FILE);
         readConfigFile(DEFAULT_CONFIG_FILE);
         readConfigFile(CONFIG_FILE);
+        readConfigFile(SSL_POLICYMGR_CONFIG_FILE);
 
         props = getProps();
 
@@ -562,6 +561,12 @@ public class TagSyncConfig extends Configuration {
             if (systemPropertyValue != null) {
                 props.setProperty(propertyName, systemPropertyValue);
             }
+        }
+
+        if (null != props.getProperty("xasecure.policymgr.clientssl.keystore.credential.file") &&
+                null != props.getProperty("xasecure.policymgr.clientssl.keystore")) {
+            props.setProperty("ranger.tagsync.credential.provider.path", props.getProperty("xasecure.policymgr.clientssl.keystore.credential.file"));
+            props.setProperty("ranger.tagsync.https.attrib.keystore.file", props.getProperty("xasecure.policymgr.clientssl.keystore"));
         }
     }
 
