@@ -75,6 +75,9 @@ pidf=${USERSYNC_PID_DIR_PATH}/${USERSYNC_PID_NAME}
 if [ -z "${UNIX_USERSYNC_USER}" ]; then
         UNIX_USERSYNC_USER=ranger
 fi
+if [ -z "${UNIX_USERSYNC_GROUP}" ]; then
+        UNIX_USERSYNC_GROUP=ranger
+fi
 
 INSTALL_ARGS="${cdir}/install.properties"
 RANGER_BASE_DIR=$(getInstallProperty 'ranger_base_dir')
@@ -92,7 +95,18 @@ if [ "${action}" == "START" ]; then
         	export PATH=$JAVA_HOME/bin:$PATH
 	fi
 
-	cp="${cdir}/dist/*:${cdir}/lib/*:${cdir}/conf:${RANGER_USERSYNC_HADOOP_CONF_DIR}/*"
+	if [ -z "${RANGER_USERSYNC_LOG_DIR}" ]; then
+        RANGER_USERSYNC_LOG_DIR=/var/log/ranger/usersync
+    fi
+
+    if [ ! -d "${RANGER_USERSYNC_LOG_DIR}" ]; then
+      mkdir -p "${RANGER_USERSYNC_LOG_DIR}"
+    fi
+    chown -R "${UNIX_USERSYNC_USER}:${UNIX_USERSYNC_GROUP}" "${RANGER_USERSYNC_LOG_DIR}"
+    chmod 755 "${RANGER_USERSYNC_LOG_DIR}"
+
+    RANGER_USERSYNC_WEBAPP=${cdir}/ews/webapp
+    cp="${cdir}/dist/*:${cdir}/conf:${RANGER_USERSYNC_WEBAPP}/WEB-INF/classes:${cdir}/ews/lib/*:${RANGER_USERSYNC_HADOOP_CONF_DIR}/*:${RANGER_USERSYNC_WEBAPP}/WEB-INF/lib/*:${JAVA_HOME}/lib/*"
 
 	cd ${cdir}
 	
@@ -113,9 +127,9 @@ if [ "${action}" == "START" ]; then
         fi
     fi
 	SLEEP_TIME_AFTER_START=5
-	nohup java -Dproc_rangerusersync -Djdk.tls.ephemeralDHKeySize=2048 -Dlogback.configurationFile=file:${USERSYNC_CONF_DIR}/logback.xml ${JAVA_OPTS} -Duser=${USER} -Dhostname=${HOSTNAME} -Dlogdir="${logdir}" -cp "${cp}" org.apache.ranger.authentication.UnixAuthenticationService -enableUnixAuth > ${logdir}/auth.log 2>&1 &
+	nohup java -Dproc_rangerusersync -Duser=rangerusersync -Dhostname=${HOSTNAME} -Dservername=rangerusersync -Dranger.usersync.home=`pwd` -Dlogdir="${logdir}" -Dranger.usersync.log.dir="${RANGER_USERSYNC_LOG_DIR}" -Dlogback.configurationFile=file:${USERSYNC_CONF_DIR}/logback.xml -Djdk.tls.ephemeralDHKeySize=2048 -Dranger.usersync.webapp.dir="${RANGER_USERSYNC_WEBAPP}" -Dranger.usersync.service.host="${HOSTNAME}" -Dcatalina.base=${cdir}/ews -cp "${cp}" org.apache.ranger.authentication.server.RangerUserSyncServer -enableUnixAuth > ${RANGER_USERSYNC_LOG_DIR}/catalina.out 2>&1 &
 	VALUE_OF_PID=$!
-    echo "Starting Apache Ranger Usersync Service"
+    echo "Starting Ranger Usersync Service"
     sleep $SLEEP_TIME_AFTER_START
     if ps -p $VALUE_OF_PID > /dev/null
     then
@@ -178,8 +192,8 @@ elif [ "${action}" == "RESTART" ]; then
 	${cdir}/ranger-usersync-services.sh start
 	exit;
 elif [ "${action}" == "VERSION" ]; then
-	cd ${cdir}/lib
-	java -cp ranger-util-*.jar org.apache.ranger.common.RangerVersionInfo
+	cd "${cdir}"
+	java -cp "${cdir}/ews/lib/ranger-util-*.jar" org.apache.ranger.common.RangerVersionInfo
 	exit
 else 
 	echo "Invalid argument [$1];"

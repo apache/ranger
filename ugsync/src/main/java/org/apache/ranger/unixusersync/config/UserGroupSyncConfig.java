@@ -245,6 +245,10 @@ public class UserGroupSyncConfig {
         return userGroupConfig;
     }
 
+    public Properties getProperties() {
+        return prop;
+    }
+
     public String getUserSyncFileSource() {
         return prop.getProperty(UGSYNC_SOURCE_FILE_PROC);
     }
