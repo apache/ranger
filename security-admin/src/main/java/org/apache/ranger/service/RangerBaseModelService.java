@@ -315,15 +315,7 @@ public abstract class RangerBaseModelService<T extends XXDBBase, V extends Range
 
     protected T populateEntityBeanForCreate(T entityObj, V vObj) {
         if (!populateExistingBaseFields) {
-            Long addedByUserId = ContextUtil.getCurrentUserId();
-
-            if (addedByUserId == null) {
-                XXPortalUser createdByUser = daoMgr.getXXPortalUser().findByLoginId(vObj.getCreatedBy());
-
-                if (createdByUser != null) {
-                    addedByUserId = createdByUser.getId();
-                }
-            }
+            Long addedByUserId = resolveUserId(vObj.getCreatedBy());
             entityObj.setCreateTime(DateUtil.getUTCDate());
             entityObj.setUpdateTime(entityObj.getCreateTime());
             entityObj.setAddedByUserId(addedByUserId);
@@ -358,14 +350,31 @@ public abstract class RangerBaseModelService<T extends XXDBBase, V extends Range
         }
 
         if (!populateExistingBaseFields) {
-            Long currentUserId = ContextUtil.getCurrentUserId();
+            Long updatedByUserId = resolveUserId(vObj.getUpdatedBy());
             ret.setUpdateTime(DateUtil.getUTCDate());
-            if (Objects.nonNull(currentUserId)) {
-                ret.setUpdatedByUserId(currentUserId);
+            if (Objects.nonNull(updatedByUserId)) {
+                ret.setUpdatedByUserId(updatedByUserId);
             }
         }
 
         return ret;
+    }
+
+    private Long resolveUserId(String userLoginId) {
+        Long userId = null;
+        if (Objects.equals(userLoginId, ContextUtil.getCurrentUserLoginId())) {
+            userId = ContextUtil.getCurrentUserId();
+        }
+        else if (!stringUtil.isEmpty(userLoginId)) {
+            XXPortalUser createdByUser = daoMgr.getXXPortalUser().findByLoginId(userLoginId);
+            if (createdByUser != null) {
+                userId = createdByUser.getId();
+            }
+        }
+        if (userId == null) {
+            userId = ContextUtil.getCurrentUserId();
+        }
+        return userId;
     }
 
     protected abstract void validateForCreate(V vObj);
