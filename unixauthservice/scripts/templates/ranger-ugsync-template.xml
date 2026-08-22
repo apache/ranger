@@ -319,4 +319,8 @@
         <name>ranger.usersync.service.host</name>
         <value></value>
     </property>
+	<property>
+		<name>ranger.usersync.unix.auth.enabled</name>
+		<value></value>
+	</property>
 </configuration>
