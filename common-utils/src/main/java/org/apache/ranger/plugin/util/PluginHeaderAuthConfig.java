@@ -28,10 +28,8 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
@@ -88,7 +86,7 @@ public final class PluginHeaderAuthConfig {
             String              propertyPrefix = configPrefix + "." + PROP_HEADER_PREFIX;
             Map<String, String> headers        = new LinkedHashMap<>();
 
-            for (String propertyName : sortedPropertyNames(props)) {
+            for (String propertyName : props.stringPropertyNames()) {
                 if (!propertyName.startsWith(propertyPrefix)) {
                     continue;
                 }
@@ -164,16 +162,5 @@ public final class PluginHeaderAuthConfig {
         }
 
         return ret;
-    }
-
-    private static List<String> sortedPropertyNames(final Properties props) {
-        List<String> names = new ArrayList<>();
-
-        if (props != null) {
-            names.addAll(props.stringPropertyNames());
-            Collections.sort(names);
-        }
-
-        return names;
     }
 }
