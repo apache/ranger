@@ -1,0 +1,828 @@
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one or more
+  contributor license agreements.  See the NOTICE file distributed with
+  this work for additional information regarding copyright ownership.
+  The ASF licenses this file to You under the Apache License, Version 2.0
+  (the "License"); you may not use this file except in compliance with
+  the License.  You may obtain a copy of the License at
+
+      http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+    <meta http-equiv=Content-Type content="text/html; charset=utf-8">
+    <title>Integrating Applications with Apache Ranger</title>
+    <style>
+     <!--
+      /* Font Definitions */
+      @font-face {font-family:Wingdings; panose-1:5 0 0 0 0 0 0 0 0 0;}
+      @font-face {font-family:"Cambria Math"; panose-1:2 4 5 3 5 4 6 3 2 4;}
+      @font-face {font-family:Calibri; panose-1:2 15 5 2 2 2 4 3 2 4;}
+      @font-face {font-family:"Calibri Light"; panose-1:2 15 3 2 2 2 4 3 2 4;}
+
+      /* Style Definitions */
+      p.MsoNormal, li.MsoNormal, div.MsoNormal
+             {margin:0in; font-size:12.0pt; font-family:"Calibri",sans-serif;}
+      pre.CodeBlock
+             {margin:0.12in 0.2in; padding:0.12in 0.14in; font-size:9.5pt; font-family:"Courier New",monospace;
+              line-height:1.35; background:#F3F3F3; border:1px solid windowtext; border-radius:4px;
+              white-space:pre-wrap; word-wrap:break-word; overflow-x:auto; tab-size:4;}
+      div.WordSection img
+             {border:1px solid windowtext;}
+     h1
+             {mso-style-link:"Heading 1 Char"; margin-top:12.0pt; margin-right:0in; margin-bottom:0in; margin-left:0in; page-break-after:avoid; font-size:16.0pt; font-family:"Calibri Light",sans-serif; color:#2F5496; font-weight:normal;}
+     h2
+             {mso-style-link:"Heading 1 Char"; margin-top:10.0pt; margin-right:0in; margin-bottom:0in; margin-left:0in; page-break-after:avoid; font-size:14.0pt; font-family:"Calibri Light",sans-serif; color:#2F5496; font-weight:normal;}
+     h3
+             {mso-style-link:"Heading 1 Char"; margin-top:8.0pt; margin-right:0in; margin-bottom:0in; margin-left:0in; page-break-after:avoid; font-size:13.0pt; font-family:"Calibri Light",sans-serif; color:#2F5496; font-weight:normal;}
+
+      p.MsoListParagraph, li.MsoListParagraph, div.MsoListParagraph
+             {margin-top:0in; margin-right:0in; margin-bottom:0in; margin-left:.5in; font-size:12.0pt; font-family:"Calibri",sans-serif;}
+      p.MsoListParagraphCxSpFirst, li.MsoListParagraphCxSpFirst, div.MsoListParagraphCxSpFirst
+             {margin-top:0in; margin-right:0in; margin-bottom:0in; margin-left:.5in; font-size:12.0pt; font-family:"Calibri",sans-serif;}
+      p.MsoListParagraphCxSpMiddle, li.MsoListParagraphCxSpMiddle, div.MsoListParagraphCxSpMiddle
+             {margin-top:0in; margin-right:0in; margin-bottom:0in; margin-left:.5in; font-size:12.0pt; font-family:"Calibri",sans-serif;}
+      p.MsoListParagraphCxSpLast, li.MsoListParagraphCxSpLast, div.MsoListParagraphCxSpLast
+             {margin-top:0in; margin-right:0in; margin-bottom:0in; margin-left:.5in; font-size:12.0pt; font-family:"Calibri",sans-serif;}
+      span.Heading1Char
+             {mso-style-name:"Heading 1 Char"; mso-style-link:"Heading 1"; font-family:"Calibri Light",sans-serif; color:#2F5496;}
+      span.FootnoteTextChar
+             {mso-style-name:"Footnote Text Char"; mso-style-link:"Footnote Text";}
+      .MsoChpDefault
+             {font-family:"Calibri",sans-serif;}
+
+      /* Page Definitions */
+      @page WordSection1
+             {size:8.5in 11.0in; margin:1.0in 1.0in 1.0in 1.0in;}
+      div.WordSection1
+             {page:WordSection1;}
+
+
+      /* List Definitions */
+      ol
+             {margin-bottom:0in;}
+      ul
+             {margin-bottom:0in;}
+     -->
+    </style>
+  </head>
+
+  <body lang=EN-US style='width:800px;word-wrap:break-word;align:center;margin:auto;border:ridge' >
+    <div style="margin-left:10pt;margin-right:10pt">
+      <h1 style="text-align:center">Integrating Applications with Apache Ranger</h1>
+      <p class=MsoNormal style='font:5.0pt "Times New Roman"'>&nbsp;</p>
+      <div style="text-align:center">
+        <p class=MsoNormal>Madhan Neethiraj, Apache Ranger committer</p>
+        <p class=MsoNormal>Aug 24, 2026</p>
+      </div>
+      <p class=MsoNormal>&nbsp;</p>
+
+      <div class=WordSection>
+        <h1>Introduction</h1>
+        <p class=MsoNormal>&nbsp;</p>
+        <p class=MsoNormal>
+            Apache Ranger provides a centralized framework for managing authorization policies and controlling access to resources in services such as HDFS, Ozone, HMS, Hive, Impala, Kafka, Solr, KMS, Atlas, Trino and Polaris. Enterprises use Ranger to address their data access governance needs, access auditing, delegated policy management by business users through an intuitive UI. This guide describes how an application can integrate with Apache Ranger to authorize access to its resources.
+        </p>
+        <p class=MsoNormal>&nbsp;</p>
+
+        <h2>Contents</h2>
+        <p class=MsoNormal>&nbsp;</p>
+        <p class=MsoNormal><a href="#s1">1. Apache Ranger</a></p>
+        <p class=MsoNormal><a href="#s2">2. Integration: Overview</a></p>
+        <p class=MsoNormal><a href="#s3">3. Integration: Service Definition</a></p>
+        <p class=MsoNormal><a href="#s4">4. Integration: Plugin</a></p>
+        <p class=MsoNormal><a href="#s5">5. Integration: PDP Server</a></p>
+        <p class=MsoNormal><a href="#s6">6. Policy Administration</a></p>
+        <p class=MsoNormal><a href="#references">References</a></p>
+        <p class=MsoNormal>&nbsp;</p>
+
+        <h1 id="s1">1. Apache Ranger</h1>
+        <p class=MsoNormal>&nbsp;</p>
+        <p class=MsoNormal>
+            Apache Ranger provides policy-based authorization for resources managed by applications. An application submits an authorization request identifying the user, resource, and requested access. Ranger evaluates the request against the applicable policies and returns an authorization decision.
+        </p>
+        <p class=MsoNormal>&nbsp;</p>
+        <p class=MsoNormal>
+            Apache Ranger provides centralized policy administration through APIs and UI. Policies can be managed by Ranger administrators, designated administrators for each application and users delegated to manage policies for a limited resource scope.
+        </p>
+        <p class=MsoNormal>&nbsp;</p>
+        <p class=MsoNormal>
+            Apache Ranger can audit access requests and authorization decisions. Audit records can include information such as the user, resource, requested access, authorization result, and request context.
+        </p>
+        <p class=MsoNormal>&nbsp;</p>
+        <p class=MsoNormal>
+            Apache Ranger policies can control access based on:
+        </p>
+        <p class=MsoNormal>&nbsp;</p>
+        <p class=MsoListParagraphCxSpFirst style='text-indent:-.25in'>1.<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;</span>resource names and resource hierarchies.</p>
+        <p class=MsoListParagraphCxSpMiddle style='text-indent:-.25in'>2.<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;</span>tags associated with resources.</p>
+        <p class=MsoListParagraphCxSpMiddle style='text-indent:-.25in'>3.<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;</span>attributes and groups associated with users.</p>
+        <p class=MsoListParagraphCxSpMiddle style='text-indent:-.25in'>4.<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;</span>attributes associated with resources.</p>
+        <p class=MsoListParagraphCxSpMiddle style='text-indent:-.25in'>5.<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;</span>request context and policy conditions.</p>
+        <p class=MsoNormal>&nbsp;</p>
+        <p class=MsoNormal>
+            Apache Ranger supports several types of data-access policies:
+        </p>
+        <p class=MsoNormal>&nbsp;</p>
+        <p class=MsoListParagraphCxSpFirst style='text-indent:-.25in'>1.<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;</span>Access policies determine whether a user is allowed or denied access to a resource.</p>
+        <p class=MsoListParagraphCxSpMiddle style='text-indent:-.25in'>2.<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;</span>Data masking policies determine how data should be masked when returned to an authorized user.</p>
+        <p class=MsoListParagraphCxSpMiddle style='text-indent:-.25in'>3.<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;</span>Row-filtering policies determine which rows of a dataset are visible to a user.</p>
+        <p class=MsoNormal>&nbsp;</p>
+        <p class=MsoNormal>
+            The application is responsible for enforcing the authorization, masking, and filtering decisions returned by Ranger. For more on Ranger policy concepts, see the <a href="policy_model.html">Apache Ranger Policy Model</a> blog.
+        </p>
+        <p class=MsoNormal>&nbsp;</p>
+        <h1 id="s2">2. Integration: Overview</h1>
+        <p class=MsoNormal>&nbsp;</p>
+        <p class=MsoNormal>
+            An application integrates with Ranger in three basic steps:
+        </p>
+        <p class=MsoNormal>&nbsp;</p>
+        <p class=MsoListParagraphCxSpFirst style='text-indent:-.25in'>1.<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;</span>Register the application&rsquo;s authorization model with Ranger.</p>
+        <p class=MsoListParagraphCxSpMiddle style='text-indent:-.25in'>2.<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;</span>Request authorization decisions from Ranger.</p>
+        <p class=MsoListParagraphCxSpMiddle style='text-indent:-.25in'>3.<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;</span>Enforce the decisions returned by Ranger.</p>
+        <p class=MsoNormal>&nbsp;</p>
+        <p class=MsoNormal>
+            The application&rsquo;s authorization model is represented by a Ranger service definition. A service definition describes the resources protected by the application, the access types that can be authorized, and optional data-masking and row-filtering capabilities. Ranger&rsquo;s service-definition model includes resources, access types, service configurations, context enrichers, custom conditions, data-mask definitions, and row-filter definitions.
+        </p>
+        <h2>2.1 Register Application’s Service Definition</h2>
+        <p class=MsoNormal>&nbsp;</p>
+        <p class=MsoNormal>The application defines its authorization model using a Ranger service definition.</p>
+        <p class=MsoNormal>&nbsp;</p>
+        <p class=MsoNormal>The service definition describes:</p>
+        <p class=MsoNormal>&nbsp;</p>
+        <p class=MsoListParagraphCxSpFirst style='text-indent:-.25in'><span style='font-family:Symbol'>-<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></span>resources</p>
+        <p class=MsoListParagraphCxSpMiddle style='text-indent:-.25in'><span style='font-family:Symbol'>-<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></span>access types</p>
+        <p class=MsoListParagraphCxSpMiddle style='text-indent:-.25in'><span style='font-family:Symbol'>-<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></span>data-masking capabilities</p>
+        <p class=MsoListParagraphCxSpMiddle style='text-indent:-.25in'><span style='font-family:Symbol'>-<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></span>row-filtering capabilities</p>
+        <p class=MsoListParagraphCxSpLast style='text-indent:-.25in'><span style='font-family:Symbol'>-<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></span>service configuration properties</p>
+        <p class=MsoNormal>&nbsp;</p>
+        <p class=MsoNormal>A service definition can be registered and managed through Apache Ranger’s service-definition APIs. Apache Ranger exposes APIs for creating, retrieving, updating, and deleting service definitions.</p>
+        <p class=MsoNormal>&nbsp;</p>
+        <p class=MsoNormal>For example, an application managing datasets might define:</p>
+        <p class=MsoNormal>&nbsp;</p>
+        <pre class=CodeBlock>Resources:
+    catalog
+    database
+    table
+    column
+
+Access types:
+    create
+    alter
+    drop
+    select
+    update
+        </pre>
+        <p class=MsoNormal>&nbsp;</p>
+        <p class=MsoNormal>Once the service definition is registered, administrators can create policies using these resources and access types.</p>
+        <p class=MsoNormal>&nbsp;</p>
+        <h2>2.2 Request Authorization Decisions</h2>
+        <p class=MsoNormal>&nbsp;</p>
+        <p class=MsoNormal>An application can obtain authorization decisions using either a Ranger plugin or the Ranger PDP APIs.</p>
+        <p class=MsoNormal>&nbsp;</p>
+        <h3>Ranger Plugin</h3>
+        <p class=MsoNormal>&nbsp;</p>
+        <p class=MsoNormal>Ranger plugin integration approach is typically used by Java applications. The plugin is embedded in the application and evaluates authorization requests locally using policies obtained from Ranger admin server. The plugin can generate audit events that are delivered to configured audit destinations.</p>
+        <p class=MsoNormal>&nbsp;</p>
+        <p class=MsoNormal align=center style='text-align:center'>
+          <img width=780 height=259 src="integrating_applications.files/image1.png" alt="Fig 1. Apache Ranger embedded plugin authorization flow">
+        </p>
+        <p class=MsoNormal align=center style='text-align:center'>Fig 1. Apache Ranger embedded plugin authorization flow</p>
+        <p class=MsoNormal>&nbsp;</p>
+        <h3>Ranger PDP</h3>
+        <p class=MsoNormal>&nbsp;</p>
+        <p class=MsoNormal>Apache Ranger PDP server provides authorization service that applications can invoke through REST APIs. This integration approach is suitable for:</p>
+        <p class=MsoNormal>&nbsp;</p>
+        <p class=MsoListParagraphCxSpFirst style='text-indent:-.25in'><span style='font-family:Symbol'>-<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></span>non-Java applications</p>
+        <p class=MsoListParagraphCxSpMiddle style='text-indent:-.25in'><span style='font-family:Symbol'>-<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></span>applications that do not want to embed Ranger libraries</p>
+        <p class=MsoListParagraphCxSpLast style='text-indent:-.25in'><span style='font-family:Symbol'>-<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></span>applications requiring a smaller client-side footprint</p>
+        <p class=MsoNormal>&nbsp;</p>
+        <p class=MsoNormal align=center style='text-align:center'>
+          <img width=780 height=231 src="integrating_applications.files/image2.png" alt="Fig 2. Apache Ranger PDP server authorization flow">
+        </p>
+        <p class=MsoNormal align=center style='text-align:center'>Fig 2. Apache Ranger PDP server authorization flow</p>
+        <p class=MsoNormal>&nbsp;</p>
+        <h2>2.3 Enforce the Authorization Decision</h2>
+        <p class=MsoNormal>&nbsp;</p>
+        <p class=MsoNormal>Ranger returns an authorization decision; it does not enforce the decision on behalf of the application. The application must ensure that a denied request does not proceed.</p>
+        <p class=MsoNormal>&nbsp;</p>
+        <h1 id="s3">3. Integration: Service Definition</h1>
+        <p class=MsoNormal>&nbsp;</p>
+        <p class=MsoNormal>A Ranger service definition describes the authorization model exposed by an application or service. It tells Ranger what resources can be protected, what operations can be authorized, and what additional authorization capabilities the service supports.</p>
+        <p class=MsoNormal>&nbsp;</p>
+        <p class=MsoNormal>The primary Java model is <a href="https://github.com/apache/ranger/blob/release-ranger-2.9.0/agents-common/src/main/java/org/apache/ranger/plugin/model/RangerServiceDef.java">RangerServiceDef</a>, containing definitions for resources, access types, service configurations, context enrichers, custom conditions, data masking, and row filtering. A service definition can be registered with Apache Ranger using the service-definition APIs. Ranger provides REST APIs to create, retrieve, update, and delete service definitions.</p>
+        <p class=MsoNormal>&nbsp;</p>
+        <p class=MsoNormal>A good way to design a service definition is to start with the application’s authorization model and then map that model to Apache Ranger concepts.</p>
+        <p class=MsoNormal>&nbsp;</p>
+        <p class=MsoNormal>Refer to following service-definitions for existing integrations, in JSON files, for details of available options:</p>
+        <p class=MsoNormal>&nbsp;</p>
+        <p class=MsoListParagraphCxSpFirst style='text-indent:-.25in'><span style='font-family:Symbol'>-<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></span><a href="https://github.com/apache/ranger/blob/master/agents-common/src/main/resources/service-defs/ranger-servicedef-hdfs.json">HDFS</a></p>
+        <p class=MsoListParagraphCxSpMiddle style='text-indent:-.25in'><span style='font-family:Symbol'>-<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></span><a href="https://github.com/apache/ranger/blob/master/agents-common/src/main/resources/service-defs/ranger-servicedef-ozone.json">Ozone</a></p>
+        <p class=MsoListParagraphCxSpMiddle style='text-indent:-.25in'><span style='font-family:Symbol'>-<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></span><a href="https://github.com/apache/ranger/blob/master/agents-common/src/main/resources/service-defs/ranger-servicedef-hive.json">Hive</a></p>
+        <p class=MsoListParagraphCxSpMiddle style='text-indent:-.25in'><span style='font-family:Symbol'>-<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></span><a href="https://github.com/apache/ranger/blob/master/agents-common/src/main/resources/service-defs/ranger-servicedef-trino.json">Trino</a></p>
+        <p class=MsoListParagraphCxSpLast style='text-indent:-.25in'><span style='font-family:Symbol'>-<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></span><a href="https://github.com/apache/ranger/blob/master/agents-common/src/main/resources/service-defs/ranger-servicedef-polaris.json">Polaris</a></p>
+        <p class=MsoNormal>&nbsp;</p>
+        <h2>3.1 Resources</h2>
+        <p class=MsoNormal>&nbsp;</p>
+        <p class=MsoNormal>A resource definition identifies a resource that can appear in a Ranger policy. For example, here are few resources in Apache Hive service definition:</p>
+        <p class=MsoNormal>&nbsp;</p>
+        <pre class=CodeBlock>"resources": [
+  {
+    "itemId":         1,
+    "name":           "database",
+    "parent":         "",
+    "matcherOptions": { "wildCard": true, "ignoreCase": true },
+    "label":          "Hive Database",
+    "isValidLeaf":    true
+  },
+  {
+    "itemId":         2,
+    "name":           "table",
+    "parent":         "database",
+    "matcherOptions": { "wildCard": true, "ignoreCase": true },
+    "label":          "Hive Table",
+    "isValidLeaf":    true
+  },
+  {
+    "itemId":         3,
+    "name":           "column",
+    "parent":         "table",
+    "matcherOptions": { "wildCard": true, "ignoreCase": true },
+    "label":          "Hive Column",
+    "isValidLeaf":    true
+  }
+]</pre>
+        <p class=MsoNormal>&nbsp;</p>
+        <h2>3.2 Access Types</h2>
+        <p class=MsoNormal>&nbsp;</p>
+        <p class=MsoNormal>Access types define the operations that can appear in a Ranger policy. For example, here are few access types in Apache Hive service definition:</p>
+        <p class=MsoNormal>&nbsp;</p>
+        <pre class=CodeBlock>"accessTypes": [
+  { "itemId": 1, "name": "select", "label": "Select" },
+  { "itemId": 2, "name": "update", "label": "Update" },
+  { "itemId": 3, "name": "create", "label": "Create" },
+  { "itemId": 4, "name": "drop",   "label": "Drop" },
+  { "itemId": 5, "name": "alter",  "label": "Alter" },
+  { "itemId": 6, "name": "all",    "label": "All",
+    "impliedGrants": [ "select", "update", "create", "drop", "alter" ]
+  }
+]</pre>
+        <p class=MsoNormal>&nbsp;</p>
+        <p class=MsoNormal>impliedGrants enable grouping of multiple accessTypes with a logical name, such as all in the example above. Reference to an accessTypes in policies are equivalent to referencing all its impliedGrants.</p>
+        <p class=MsoNormal>&nbsp;</p>
+        <h2>3.3 Data Masking</h2>
+        <p class=MsoNormal>&nbsp;</p>
+        <p class=MsoNormal>A service can expose data-masking capabilities through the dataMaskDef section in its service definition. This section defines:</p>
+        <p class=MsoNormal>&nbsp;</p>
+        <p class=MsoListParagraphCxSpFirst style='text-indent:-.25in'><span style='font-family:Symbol'>-<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></span>resources to which masking can apply</p>
+        <p class=MsoListParagraphCxSpFirst style='text-indent:-.25in'><span style='font-family:Symbol'>-<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></span>supported mask types</p>
+        <p class=MsoListParagraphCxSpLast style='text-indent:-.25in'><span style='font-family:Symbol'>-<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></span>access types for which masking is relevant</p>
+        <p class=MsoNormal>&nbsp;</p>
+        <p class=MsoNormal>For example, here is a sample dataMaskDef section from Apache Hive service definition:</p>
+        <p class=MsoNormal>&nbsp;</p>
+        <pre class=CodeBlock>"dataMaskDef": {
+  "resources": [
+    {
+      "name":           "database",
+      "matcherOptions": { "wildCard": "false" },
+      "uiHint":         "{ \"singleValue\":true }"
+    },
+    {
+      "name":           "table",
+      "matcherOptions": { "wildCard": "false" },
+      "uiHint":         "{ \"singleValue\":true }"
+    },
+    {
+      "name":           "column",
+      "matcherOptions": { "wildCard": "false" },
+      "uiHint":         "{ \"singleValue\":true }"
+    }
+  ],
+  "maskTypes": [
+    {
+      "itemId":      1,
+      "name":        "MASK",
+      "label":       "Redact",
+      "transformer": "mask({col})"
+    },
+    {
+      "itemId":      2,
+      "name":        "MASK_SHOW_LAST_4",
+      "label":       "Partial mask: show last 4",
+      "transformer": "mask_show_last_n({col}, 4, 'x', 'x', 'x', -1, '1')"
+    },
+    {
+      "itemId":      3,
+      "name":        "MASK_SHOW_FIRST_4",
+      "label":       "Partial mask: show first 4",
+      "transformer": "mask_show_first_n({col}, 4, 'x', 'x', 'x', -1, '1')"
+    },
+    {
+      "itemId":      4,
+      "name":        "MASK_HASH",
+      "label":       "Hash",
+      "transformer": "mask_hash({col})"
+    },
+    {
+      "itemId":      5,
+      "name":        "MASK_DATE_SHOW_YEAR",
+      "label":       "Date: show only year",
+      "transformer": "mask({col}, 'x', 'x', 'x', -1, '1', 1, 0, -1)"
+    },
+    {
+      "itemId": 6,
+      "name":   "MASK_NULL",
+      "label":  "Nullify"
+    },
+    {
+      "itemId": 7,
+      "name":   "MASK_NONE",
+      "label":  "Unmasked (retain original value)"
+    },
+    {
+      "itemId": 8,
+      "name":   "CUSTOM",
+      "label":  "Custom"
+    }
+  ],
+  "accessTypes": [
+    { "name": "select" }
+  ]
+}</pre>
+        <p class=MsoNormal>&nbsp;</p>
+        <h2>3.4 Row Filtering</h2>
+        <p class=MsoNormal>&nbsp;</p>
+        <p class=MsoNormal>A service can expose row-filtering capabilities through the rowFilterDef section in its service definition. This section defines:</p>
+        <p class=MsoNormal>&nbsp;</p>
+        <p class=MsoListParagraphCxSpFirst style='text-indent:-.25in'><span style='font-family:Symbol'>-<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></span>Resources to which row-filtering can apply</p>
+        <p class=MsoListParagraphCxSpLast style='text-indent:-.25in'><span style='font-family:Symbol'>-<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></span>Access types for which row-filtering is relevant</p>
+        <p class=MsoNormal>&nbsp;</p>
+        <p class=MsoNormal>For example, here is a sample rowFilterDef section from Apache Hive service definition:</p>
+        <p class=MsoNormal>&nbsp;</p>
+        <pre class=CodeBlock>"rowFilterDef": {
+  "resources": [
+    {
+      "name":           "database",
+      "matcherOptions": { "wildCard": "false" },
+      "uiHint":         "{ \"singleValue\":true }"
+    },
+    {
+      "name":           "table",
+      "matcherOptions": { "wildCard": "false" },
+      "uiHint":         "{ \"singleValue\":true }"
+    }
+  ],
+  "accessTypes": [
+    { "name": "select" }
+  ]
+}</pre>
+        <p class=MsoNormal>&nbsp;</p>
+        <h2>3.5 Service Configurations</h2>
+        <p class=MsoNormal>&nbsp;</p>
+        <p class=MsoNormal>A service definition can define configuration properties required to lookup resources in the application, for auto-completion in policy UI as users enter resource values. These configurations include the endpoint (JDBC, HTTP, ..) the application can be reached at, credentials to use while connecting to the application.</p>
+        <p class=MsoNormal>&nbsp;</p>
+        <pre class=CodeBlock>"configs": [
+  {
+    "itemId":    1,
+    "name":      "username",
+    "type":      "string",
+    "mandatory": true,
+    "label":     "Username"
+  },
+  {
+    "itemId":    2,
+    "name":      "password",
+    "type":      "password",
+    "mandatory": true,
+    "label":     "Password"
+  },
+  {
+    "itemId":       3,
+    "name":         "jdbc.driverClassName",
+    "type":         "string",
+    "mandatory":    true,
+    "defaultValue": "org.apache.hive.jdbc.HiveDriver"
+  },
+  {
+    "itemId":       4,
+    "name":         "jdbc.url",
+    "type":         "string",
+    "mandatory":    true,
+    "defaultValue": ""
+  }
+]</pre>
+        <p class=MsoNormal>&nbsp;</p>
+        <h1 id="s4">4. Integration: Plugin</h1>
+        <p class=MsoNormal>&nbsp;</p>
+        <p class=MsoNormal>Ranger plugin is the preferred integration mechanism for Java applications that want to perform authorization locally i.e. in-process. The core APIs, including following classes, are provided by Ranger libraries <a href="https://mvnrepository.com/artifact/org.apache.ranger/ranger-authz-api">org.apache.ranger:ranger-authz-api</a> and <a href="https://mvnrepository.com/artifact/org.apache.ranger/authz-embedded">org.apache.ranger:authz-embedded</a>.</p>
+        <p class=MsoNormal>&nbsp;</p>
+        <pre class=CodeBlock>org.apache.ranger.authz.api.RangerAuthorizer
+org.apache.ranger.authz.embedded.RangerEmbeddedAuthorizer
+org.apache.ranger.authz.model.RangerAccessContext
+org.apache.ranger.authz.model.RangerAccessInfo
+org.apache.ranger.authz.model.RangerAuthzRequest
+org.apache.ranger.authz.model.RangerAuthzResult
+org.apache.ranger.authz.model.RangerAuthzResult.AccessDecision
+org.apache.ranger.authz.model.RangerUserInfo</pre>
+        <p class=MsoNormal>&nbsp;</p>
+        <h2>4.1 Initializing the Plugin</h2>
+        <p class=MsoNormal>&nbsp;</p>
+        <p class=MsoNormal>Ranger plugin instance is typically created and initialized during initialization of the application. Here is an example of Polaris plugin initialization:</p>
+        <p class=MsoNormal>&nbsp;</p>
+        <pre class=CodeBlock>RangerAuthorizer authorizer = new RangerEmbeddedAuthorizer(properties);
+authorizer.init();</pre>
+        <p class=MsoNormal>&nbsp;</p>
+        <p class=MsoNormal>Ranger plugin downloads policies from Ranger admin server during initialization, builds a policy engine in-memory for faster evaluation. The plugin periodically polls the Ranger admin server, asynchronously, for any policy changes and keeps its policy engine updated.</p>
+        <p class=MsoNormal>&nbsp;</p>
+        <h2>4.2 Creating an Authorization Request</h2>
+        <p class=MsoNormal>&nbsp;</p>
+        <p class=MsoNormal>The application converts its native access request into a Ranger authorization request. For example:</p>
+        <p class=MsoNormal>&nbsp;</p>
+        <pre class=CodeBlock>String              table  = "table:sales/customers/accounts";
+RangerUserInfo      user   = new RangerUserInfo("alice");
+RangerAccessInfo    access = new RangerAccessInfo(table, "QUERY", "select");
+RangerAccessContext ctx    = new RangerAccessContext("trino", "sales_trino");
+RangerAuthzRequest request = new RangerAuthzRequest(user, access, ctx);</pre>
+        <p class=MsoNormal>&nbsp;</p>
+        <p class=MsoNormal>Notes:</p>
+        <p class=MsoNormal>&nbsp;</p>
+        <p class=MsoListParagraphCxSpFirst style='text-indent:-.25in'><span style='font-family:Symbol'>-<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></span><samp>alice</samp>, the username referenced must represent the authenticated caller of the application.</p>
+        <p class=MsoListParagraphCxSpMiddle style='text-indent:-.25in'><span style='font-family:Symbol'>-<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></span><samp>trino</samp>, the serviceType referenced is the name of the service-definition registered with Ranger.</p>
+        <p class=MsoListParagraphCxSpMiddle style='text-indent:-.25in'><span style='font-family:Symbol'>-<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></span><samp>select</samp>, the permission referenced must be one of accessTypes in the service-definition.</p>
+        <p class=MsoListParagraphCxSpLast style='text-indent:-.25in'><span style='font-family:Symbol'>-<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></span><samp>sales_trino</samp>, the serviceName referenced represents a deployment of the Trino application. Remember, Ranger can support multiple deployments of an application type, such as <samp>marketing_trino</samp>, <samp>support_trino</samp>, <samp>test_trino</samp> - each with a different set of policies, policy administrators.</p>
+        <p class=MsoNormal>&nbsp;</p>
+        <p class=MsoNormal>Additional information can be included in the authorization request, for example:</p>
+        <p class=MsoNormal>&nbsp;</p>
+        <p class=MsoNormal>Context can include the following:</p>
+        <p class=MsoNormal>&nbsp;</p>
+        <p class=MsoListParagraphCxSpFirst style='text-indent:-.25in'><span style='font-family:Symbol'>-<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></span>client IP</p>
+        <p class=MsoListParagraphCxSpMiddle style='text-indent:-.25in'><span style='font-family:Symbol'>-<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></span>client type</p>
+        <p class=MsoListParagraphCxSpMiddle style='text-indent:-.25in'><span style='font-family:Symbol'>-<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></span>request time</p>
+        <p class=MsoListParagraphCxSpLast style='text-indent:-.25in'><span style='font-family:Symbol'>-<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></span>cluster name</p>
+        <p class=MsoNormal>&nbsp;</p>
+        <p class=MsoNormal>User can include the following:</p>
+        <p class=MsoNormal>&nbsp;</p>
+        <p class=MsoListParagraphCxSpFirst style='text-indent:-.25in'><span style='font-family:Symbol'>-<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></span>groups the user belongs to</p>
+        <p class=MsoListParagraphCxSpLast style='text-indent:-.25in'><span style='font-family:Symbol'>-<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></span>user attributes, like department, location</p>
+        <p class=MsoNormal>&nbsp;</p>
+        <p class=MsoNormal>Resource can include the following:</p>
+        <p class=MsoNormal>&nbsp;</p>
+        <p class=MsoListParagraphCxSpFirst style='text-indent:-.25in'><span style='font-family:Symbol'>-<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></span>subResources, such as column names</p>
+        <p class=MsoListParagraphCxSpMiddle style='text-indent:-.25in'><span style='font-family:Symbol'>-<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></span>resource attributes, such as OWNER</p>
+        <p class=MsoListParagraphCxSpLast style='text-indent:-.25in'><span style='font-family:Symbol'>-<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></span>matchingScope, such as SELF, SELF_OR_ANY_CHILD, SELF_OR_ANY_DESCENDANT</p>
+        <p class=MsoNormal>&nbsp;</p>
+        <h2>4.3 Evaluating the Request</h2>
+        <p class=MsoNormal>&nbsp;</p>
+        <p class=MsoNormal>The plugin evaluates the request:</p>
+        <p class=MsoNormal>&nbsp;</p>
+        <pre class=CodeBlock>RangerAuthzResult result = authorizer.authorize(request);</pre>
+        <p class=MsoNormal>The result contains the authorization decision and additional information that can be used by the application or audit subsystem.</p>
+        <p class=MsoNormal>&nbsp;</p>
+        <p class=MsoNormal>When the result doesn’t allow the requested access, applications should treat it as an authorization failure and must enforce that decision before accessing the protected resource.</p>
+        <p class=MsoNormal>&nbsp;</p>
+        <pre class=CodeBlock>if (!AccessDecision.ALLOW.equals(result.getDecision())) {
+  throw new AccessDeniedException();
+}</pre>
+        <p class=MsoNormal>&nbsp;</p>
+        <p class=MsoNormal>When the result includes masking and/or row-filter expression, the application must include these into the query before executing.</p>
+        <p class=MsoNormal>&nbsp;</p>
+        <pre class=CodeBlock>RowFilterResult rowFilter = result.getPermissions("select").getRowFilter();
+if (rowFilter != null &amp;&amp; StringUtils.isNotBlank(rowFilter.getFilterExpr())) {
+  // application must include the returned filter expression into the query
+}
+DataMaskResult dataMask = result.getPermissions("select").getDataMask();
+if (dataMask != null &amp;&amp; StringUtils.isNotBlank(dataMask.getMaskType())) {
+  // application must apply the returned data mask expression into the query
+}</pre>
+        <p class=MsoNormal>&nbsp;</p>
+        <p class=MsoNormal>authorize() method is thread-safe, hence can be called from multiple threads simultaneously.</p>
+        <p class=MsoNormal>&nbsp;</p>
+        <h2>4.4 Plugin Configuration</h2>
+        <p class=MsoNormal>&nbsp;</p>
+        <p class=MsoNormal>Ranger plugin requires configuration identifying:</p>
+        <p class=MsoNormal>&nbsp;</p>
+        <p class=MsoListParagraphCxSpFirst style='text-indent:-.25in'><span style='font-family:Symbol'>-<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></span>Ranger Admin endpoint</p>
+        <p class=MsoListParagraphCxSpMiddle style='text-indent:-.25in'><span style='font-family:Symbol'>-<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></span>Policy refresh settings</p>
+        <p class=MsoListParagraphCxSpMiddle style='text-indent:-.25in'><span style='font-family:Symbol'>-<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></span>Authentication configuration</p>
+        <p class=MsoListParagraphCxSpLast style='text-indent:-.25in'><span style='font-family:Symbol'>-<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></span>Audit configuration</p>
+        <p class=MsoNormal>&nbsp;</p>
+        <p class=MsoNormal>Depending on the Ranger version and deployment configuration, the plugin's Ranger Admin client can use authentication mechanisms such as Basic authentication, JWT, or Kerberos, together with SSL/TLS.</p>
+        <p class=MsoNormal>&nbsp;</p>
+        <p class=MsoNormal>A typical deployment would include following configurations:</p>
+        <p class=MsoNormal>&nbsp;</p>
+        <pre class=CodeBlock>ranger.authz.service.sales_trino.policy.rest.url=https://ranger.example.com
+ranger.authz.service.sales_trino.policy.pollIntervalMs=30000
+ranger.authz.service.sales_trino.policy.cache.dir=/etc/trino/policy_cache
+# Choose the authentication mechanism appropriate for the deployment
+# Basic authentication
+ranger.authz.service.sales_trino.policy.rest.client.username=
+ranger.authz.service.sales_trino.policy.rest.client.password=</pre>
+        <p class=MsoNormal>&nbsp;</p>
+        <pre class=CodeBlock># JWT authentication
+ranger.authz.service.sales_trino.policy.rest.client.jwt.source=env|file|cred
+ranger.authz.service.sales_trino.policy.rest.client.jwt.env=TRINO_JWT
+ranger.authz.service.sales_trino.policy.rest.client.jwt.file=/etc/trino/trino.jwt
+ranger.authz.service.sales_trino.policy.rest.client.jwt.cred.file=
+ranger.authz.service.sales_trino.policy.rest.client.jwt.cred.alias=
+# Kerberos authentication
+ranger.authz.service.sales_trino.ugi.initialize=true
+ranger.authz.service.sales_trino.ugi.login.type=keytab
+ranger.authz.service.sales_trino.ugi.keytab.principal=trino@MYDOMAIN.COM
+ranger.authz.service.sales_trino.ugi.keytab.file=/etc/keytabs/trino.keytab</pre>
+        <p class=MsoNormal>&nbsp;</p>
+        <pre class=CodeBlock># audit configuration
+ranger.authz.audit.is.enabled=true
+ranger.authz.audit.destination.solr=true
+ranger.authz.audit.destination.solr.urls=
+ranger.authz.audit.destination.hdfs=true
+ranger.authz.audit.destination.hdfs.dir=</pre>
+        <p class=MsoNormal>&nbsp;</p>
+        <h2>4.5 Existing Authorizer Implementations</h2>
+        <p class=MsoNormal>&nbsp;</p>
+        <p class=MsoNormal>Several complete authorizer implementations are available in Apache Ranger repository and other application repositories. Here are a few that can be good references for anyone looking to use the Ranger plugin approach.</p>
+        <p class=MsoNormal>&nbsp;</p>
+        <p class=MsoNormal>API version note: Apache Ranger currently has two integration patterns in use. The newer authorization API introduced in Apache Ranger 2.9.0 uses authz-api/authz-embedded API shown in this guide. Polaris authorizer implementation uses this new API. Many existing Ranger plugins, including HDFS, Hive, HBase, Kafka, and Ozone, use the older ranger-plugins-common/RangerBasePlugin API.</p>
+        <p class=MsoNormal>&nbsp;</p>
+        <p class=MsoNormal>For new integrations, use the authorization API appropriate to the Ranger version being integrated with. The examples in this guide use the newer authz-api/authz-embedded API.</p>
+        <p class=MsoNormal>&nbsp;</p>
+        <table class=MsoTableGrid border=1 cellspacing=0 cellpadding=0 style='margin-left:30.35pt;border-collapse:collapse;border:none'>
+          <tr>
+            <td valign=top style='border:solid windowtext 1.0pt;padding:0in 5.4pt 0in 5.4pt;text-align:center'><p class=MsoNormal><b>Application</b></p></td>
+            <td valign=top style='border-top:solid windowtext 1.0pt;border-left:none;border-bottom:solid windowtext 1.0pt;border-right:solid windowtext 1.0pt;padding:0in 5.4pt 0in 5.4pt;text-align:center'><p class=MsoNormal><b>Implementation Classes</b></p></td>
+            <td valign=top style='border-top:solid windowtext 1.0pt;border-left:none;border-bottom:solid windowtext 1.0pt;border-right:solid windowtext 1.0pt;padding:0in 5.4pt 0in 5.4pt;text-align:center'><p class=MsoNormal><b>Notes</b></p></td>
+          </tr>
+          <tr>
+            <td valign=top style='border:solid windowtext 1.0pt;border-top:none;padding:0in 5.4pt 0in 5.4pt'><p class=MsoNormal>Polaris</p></td>
+            <td valign=top style='border-top:none;border-left:none;border-bottom:solid windowtext 1.0pt;border-right:solid windowtext 1.0pt;padding:0in 5.4pt 0in 5.4pt'><p class=MsoNormal><a href="https://github.com/apache/polaris/blob/main/extensions/auth/ranger/src/main/java/org/apache/polaris/extension/auth/ranger/RangerPolarisAuthorizer.java">RangerPolarisAuthorizer</a></p></td>
+            <td valign=top style='border-top:none;border-left:none;border-bottom:solid windowtext 1.0pt;border-right:solid windowtext 1.0pt;padding:0in 5.4pt 0in 5.4pt'><p class=MsoNormal>Iceberg catalog authorization</p></td>
+          </tr>
+          <tr>
+            <td valign=top style='border:solid windowtext 1.0pt;border-top:none;padding:0in 5.4pt 0in 5.4pt'><p class=MsoNormal>Trino</p></td>
+            <td valign=top style='border-top:none;border-left:none;border-bottom:solid windowtext 1.0pt;border-right:solid windowtext 1.0pt;padding:0in 5.4pt 0in 5.4pt'><p class=MsoNormal><a href="https://github.com/trinodb/trino/blob/master/plugin/trino-ranger/src/main/java/io/trino/plugin/ranger/RangerSystemAccessControl.java">RangerSystemAccessControl</a></p></td>
+            <td valign=top style='border-top:none;border-left:none;border-bottom:solid windowtext 1.0pt;border-right:solid windowtext 1.0pt;padding:0in 5.4pt 0in 5.4pt'><p class=MsoNormal>SQL engine authorization, column-masking, row-filtering</p></td>
+          </tr>
+          <tr>
+            <td valign=top style='border:solid windowtext 1.0pt;border-top:none;padding:0in 5.4pt 0in 5.4pt'><p class=MsoNormal>HDFS</p></td>
+            <td valign=top style='border-top:none;border-left:none;border-bottom:solid windowtext 1.0pt;border-right:solid windowtext 1.0pt;padding:0in 5.4pt 0in 5.4pt'><p class=MsoNormal><a href="https://github.com/apache/ranger/blob/master/hdfs-agent/src/main/java/org/apache/ranger/authorization/hadoop/RangerHdfsAuthorizer.java">RangerHdfsAuthorizer</a></p></td>
+            <td valign=top style='border-top:none;border-left:none;border-bottom:solid windowtext 1.0pt;border-right:solid windowtext 1.0pt;padding:0in 5.4pt 0in 5.4pt'><p class=MsoNormal>Authorize access to path resources</p></td>
+          </tr>
+          <tr>
+            <td valign=top style='border:solid windowtext 1.0pt;border-top:none;padding:0in 5.4pt 0in 5.4pt'><p class=MsoNormal>Ozone</p></td>
+            <td valign=top style='border-top:none;border-left:none;border-bottom:solid windowtext 1.0pt;border-right:solid windowtext 1.0pt;padding:0in 5.4pt 0in 5.4pt'><p class=MsoNormal><a href="https://github.com/apache/ranger/blob/master/plugin-ozone/src/main/java/org/apache/ranger/authorization/ozone/authorizer/RangerOzoneAuthorizer.java">RangerOzoneAuthorizer</a></p></td>
+            <td valign=top style='border-top:none;border-left:none;border-bottom:solid windowtext 1.0pt;border-right:solid windowtext 1.0pt;padding:0in 5.4pt 0in 5.4pt'><p class=MsoNormal>Relatively compact RangerBasePlugin integration</p></td>
+          </tr>
+          <tr>
+            <td valign=top style='border:solid windowtext 1.0pt;border-top:none;padding:0in 5.4pt 0in 5.4pt'><p class=MsoNormal>Hive</p></td>
+            <td valign=top style='border-top:none;border-left:none;border-bottom:solid windowtext 1.0pt;border-right:solid windowtext 1.0pt;padding:0in 5.4pt 0in 5.4pt'><p class=MsoNormal><a href="https://github.com/apache/ranger/blob/master/hive-agent/src/main/java/org/apache/ranger/authorization/hive/authorizer/RangerHiveAuthorizer.java">RangerHiveAuthorizer</a></p></td>
+            <td valign=top style='border-top:none;border-left:none;border-bottom:solid windowtext 1.0pt;border-right:solid windowtext 1.0pt;padding:0in 5.4pt 0in 5.4pt'><p class=MsoNormal>Authorize access to hierarchical resources, resource filtering, column masking, row filtering</p></td>
+          </tr>
+          <tr>
+            <td valign=top style='border:solid windowtext 1.0pt;border-top:none;padding:0in 5.4pt 0in 5.4pt'><p class=MsoNormal>HBase</p></td>
+            <td valign=top style='border-top:none;border-left:none;border-bottom:solid windowtext 1.0pt;border-right:solid windowtext 1.0pt;padding:0in 5.4pt 0in 5.4pt'><p class=MsoNormal><a href="https://github.com/apache/ranger/blob/master/hbase-agent/src/main/java/org/apache/ranger/authorization/hbase/RangerAuthorizationCoprocessor.java">RangerAuthorizationCoprocessor</a></p></td>
+            <td valign=top style='border-top:none;border-left:none;border-bottom:solid windowtext 1.0pt;border-right:solid windowtext 1.0pt;padding:0in 5.4pt 0in 5.4pt'><p class=MsoNormal>Authorize access to columnar data</p></td>
+          </tr>
+          <tr>
+            <td valign=top style='border:solid windowtext 1.0pt;border-top:none;padding:0in 5.4pt 0in 5.4pt'><p class=MsoNormal>Kafka</p></td>
+            <td valign=top style='border-top:none;border-left:none;border-bottom:solid windowtext 1.0pt;border-right:solid windowtext 1.0pt;padding:0in 5.4pt 0in 5.4pt'><p class=MsoNormal><a href="https://github.com/apache/ranger/blob/master/plugin-kafka/src/main/java/org/apache/ranger/authorization/kafka/authorizer/RangerKafkaAuthorizer.java">RangerKafkaAuthorizer</a></p></td>
+            <td valign=top style='border-top:none;border-left:none;border-bottom:solid windowtext 1.0pt;border-right:solid windowtext 1.0pt;padding:0in 5.4pt 0in 5.4pt'><p class=MsoNormal>Authorize event streaming in Kafka</p></td>
+          </tr>
+        </table>
+        <p class=MsoNormal>&nbsp;</p>
+        <h1 id="s5">5. Integration: PDP Server</h1>
+        <p class=MsoNormal>&nbsp;</p>
+        <p class=MsoNormal>Ranger PDP server provides a remote authorization model, using REST APIs, for applications that can’t or don’t prefer embedding a Ranger authorizer. For example:</p>
+        <p class=MsoNormal>&nbsp;</p>
+        <p class=MsoListParagraphCxSpFirst style='text-indent:-.25in'><span style='font-family:Symbol'>-<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></span>The application is not written in Java.</p>
+        <p class=MsoListParagraphCxSpMiddle style='text-indent:-.25in'><span style='font-family:Symbol'>-<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></span>Embedding Ranger plugin Java libraries is undesirable or not feasible.</p>
+        <p class=MsoListParagraphCxSpLast style='text-indent:-.25in'><span style='font-family:Symbol'>-<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></span>A small client-side footprint is preferred.</p>
+        <p class=MsoNormal>&nbsp;</p>
+        <p class=MsoNormal>The tradeoff is that each authorization request involves communication with the Ranger PDP server via REST APIs. Applications should therefore consider latency, availability, connection management, and timeout behavior. Unlike embedded plugin authorization, remote authorization introduces a network dependency into the authorization path. An application must define how it behaves when the PDP is unavailable or a request times out.</p>
+        <p class=MsoNormal>&nbsp;</p>
+        <p class=MsoNormal>A PDP communication failure is not an authorization decision. Applications should not treat failure to obtain a decision as an implicit allow. For protected operations, a fail-closed approach is generally appropriate unless the application has an explicitly designed alternative.</p>
+        <p class=MsoNormal>&nbsp;</p>
+        <p class=MsoNormal>Applications can use the supported PDP APIs appropriate to their implementation language.</p>
+        <p class=MsoNormal>&nbsp;</p>
+        <p class=MsoListParagraphCxSpFirst style='text-indent:-.25in'><span style='font-family:Symbol'>-<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></span>A non-Java application can use the REST APIs defined in <a href="https://github.com/apache/ranger/blob/master/pdp/src/main/java/org/apache/ranger/pdp/rest/RangerPdpREST.java">RangerPdpREST</a> directly.</p>
+        <p class=MsoListParagraphCxSpMiddle style='text-indent:-.25in'><span style='font-family:Symbol'>-<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></span>Java applications can use Java APIs in <a href="https://mvnrepository.com/artifact/org.apache.ranger/authz-remote">org.apache.ranger:authz-remote</a> library.</p>
+        <p class=MsoListParagraphCxSpLast style='text-indent:-.25in'><span style='font-family:Symbol'>-<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></span>Python applications can use Python APIs in <a href="https://pypi.org/project/apache-ranger/">apache-ranger</a> library.</p>
+        <p class=MsoNormal>&nbsp;</p>
+        <h2>5.1 PDP REST APIs</h2>
+        <p class=MsoNormal>&nbsp;</p>
+        <p class=MsoNormal>Applications that prefer a minimal footprint in using Ranger policies to authorize access should consider directly calling REST APIs provided by Ranger PDP server.  The PDP request contains essentially the same authorization information used by the embedded plugin:</p>
+        <p class=MsoNormal>&nbsp;</p>
+        <p class=MsoListParagraphCxSpFirst style='text-indent:-.25in'><span style='font-family:Symbol'>-<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></span>user</p>
+        <p class=MsoListParagraphCxSpMiddle style='text-indent:-.25in'><span style='font-family:Symbol'>-<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></span>resource</p>
+        <p class=MsoListParagraphCxSpMiddle style='text-indent:-.25in'><span style='font-family:Symbol'>-<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></span>permissions (access types defined in service definitions)</p>
+        <p class=MsoListParagraphCxSpLast style='text-indent:-.25in'><span style='font-family:Symbol'>-<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></span>context</p>
+        <p class=MsoNormal>&nbsp;</p>
+        <pre class=CodeBlock>For example:
+POST /v1/authorize
+{
+  "user": { "name": "alice" },
+  "access": {
+    "resource":    { "name": "table:sales/customers/accounts" },
+    "action":      "QUERY",
+    "permissions": [ "select" ]
+  },
+  "context": {
+    "serviceType": "trino",
+    "serviceName": "sales_trino"
+  }
+}</pre>
+        <p class=MsoNormal>&nbsp;</p>
+        <p class=MsoNormal>Response:</p>
+        <p class=MsoNormal>&nbsp;</p>
+        <pre class=CodeBlock>{
+  "decision": "ALLOW"
+}</pre>
+        <p class=MsoNormal>Ranger PDP server evaluates the request against the applicable Ranger policies and returns the authorization result. The exact wire format should follow the PDP API supported by the Ranger version being deployed.</p>
+        <p class=MsoNormal>&nbsp;</p>
+        <p class=MsoNormal>Note that only trusted users, as configured in PDP server, are allowed the following:</p>
+        <p class=MsoNormal>&nbsp;</p>
+        <p class=MsoListParagraphCxSpFirst style='text-indent:-.25in'>1.<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;</span>authorize for other users i.e, "user.name" is different from the caller</p>
+        <p class=MsoListParagraphCxSpMiddle style='text-indent:-.25in'>2.<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;</span>provide groups the user belongs to</p>
+        <p class=MsoListParagraphCxSpLast style='text-indent:-.25in'>3.<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;</span>provide attributes of the user or the resource</p>
+        <p class=MsoNormal>&nbsp;</p>
+        <p class=MsoNormal>This distinction is important because the PDP server must not blindly trust a caller to assert another user's identity, groups, or attributes. Such fields should only be accepted from callers that are explicitly trusted by the PDP configuration.</p>
+        <p class=MsoNormal>&nbsp;</p>
+        <h2>5.2 PDP Java APIs</h2>
+        <p class=MsoNormal>&nbsp;</p>
+        <p class=MsoNormal>Ranger PDP client Java APIs provide convenient wrappers over corresponding Ranger PDP REST APIs. These are provided by libraries <a href="https://mvnrepository.com/artifact/org.apache.ranger/ranger-authz-api">org.apache.ranger:ranger-authz-api</a> and <a href="https://mvnrepository.com/artifact/org.apache.ranger/authz-remote">org.apache.ranger:authz-remote</a>.</p>
+        <p class=MsoNormal>&nbsp;</p>
+        <p class=MsoNormal>These APIs look very similar to the APIs used in plugin integration detailed earlier - except for the authorizer initialization, as seen in the example below:</p>
+        <p class=MsoNormal>&nbsp;</p>
+        <pre class=CodeBlock>// initialize once during application startup
+RangerAuthorizer authorizer = new RangerRemoteAuthorizer(properties);</pre>
+        <p class=MsoNormal>&nbsp;</p>
+        <pre class=CodeBlock>authorizer.init();</pre>
+        <p class=MsoNormal>&nbsp;</p>
+        <pre class=CodeBlock>// authorize an access
+String              table  = "table:sales/customers/accounts";
+RangerUserInfo      user   = new RangerUserInfo("alice");
+RangerAccessInfo    access = new RangerAccessInfo(table, "QUERY", "select");
+RangerAccessContext ctx    = new RangerAccessContext("trino", "sales_trino");
+
+RangerAuthzRequest request = new RangerAuthzRequest(user, access, ctx);
+
+RangerAuthzResult result = authorizer.authorize(request);</pre>
+        <p class=MsoNormal>&nbsp;</p>
+        <pre class=CodeBlock>if (!AccessDecision.ALLOW.equals(result.getDecision())) {
+  throw new AccessDeniedException();
+}
+
+RowFilterResult rowFilter = result.getPermissions("select").getRowFilter();
+
+if (rowFilter != null &amp;&amp; StringUtils.isNotBlank(rowFilter.getFilterExpr())) {
+  // application must include the returned filter expression into the query
+}
+
+DataMaskResult dataMask = result.getPermissions("select").getDataMask();
+
+if (dataMask != null &amp;&amp; StringUtils.isNotBlank(dataMask.getMaskType())) {
+  // application must apply the returned data mask expression into the query
+}</pre>
+        <p class=MsoNormal>&nbsp;</p>
+        <p class=MsoNormal>Configurations to connect to Ranger PDP server, including authentication details, must be populated in properties referenced above:</p>
+        <p class=MsoNormal>&nbsp;</p>
+        <pre class=CodeBlock>ranger.authz.remote.pdp.url=https://ranger-pdp.example.com
+ranger.authz.remote.authn.type=jwt|kerberos|header
+ranger.authz.remote.authn.jwt.source=
+ranger.authz.remote.authn.jwt.env=
+ranger.authz.remote.authn.kerberos.principal=
+ranger.authz.remote.authn.kerberos.keytab=
+ranger.authz.remote.authn.header.&lt;trusted-header&gt;=</pre>
+        <p class=MsoNormal>&nbsp;</p>
+        <h2>5.3 PDP Python APIs</h2>
+        <p class=MsoNormal>&nbsp;</p>
+        <p class=MsoNormal>Ranger PDP Python APIs are provided by RangerPdpClient class in <a href="https://pypi.org/project/apache-ranger/">apache-ranger</a> library.</p>
+        <p class=MsoNormal>&nbsp;</p>
+        <p class=MsoNormal>Here is an example of PDP Python APIs to authorize access to Hive table:</p>
+        <p class=MsoNormal>&nbsp;</p>
+        <pre class=CodeBlock>from apache_ranger.client.ranger_pdp_client import RangerPDPClient
+from apache_ranger.model.ranger_authz import (
+RangerAccessContext,
+RangerAccessInfo,
+RangerAuthzRequest,
+RangerResourceInfo,
+RangerUserInfo,
+)
+from requests_kerberos import HTTPKerberosAuth</pre>
+        <p class=MsoNormal>&nbsp;</p>
+        <pre class=CodeBlock>pdp = RangerPDPClient("https://ranger-pdp.example.com", auth=HTTPKerberosAuth())</pre>
+        <p class=MsoNormal>&nbsp;</p>
+        <pre class=CodeBlock>user     = RangerUserInfo({"name": "alice"})
+resource = RangerResourceInfo({"name": "table:sales/customers/accounts"})
+access   = RangerAccessInfo({"resource":    resource,
+                             "action":      "QUERY",
+                             "permissions": [ "select" ]})
+
+ctx = RangerAccessContext({"serviceType": "trino", "serviceName": "sales_trino"})</pre>
+        <p class=MsoNormal>&nbsp;</p>
+        <pre class=CodeBlock>req = RangerAuthzRequest({"user": user, "access": access, "context": ctx })
+res = pdp.authorize(req)</pre>
+        <p class=MsoNormal>&nbsp;</p>
+        <pre class=CodeBlock>print(res.decision)</pre>
+        <p class=MsoNormal>&nbsp;</p>
+        <h1 id="s6">6. Policy Administration</h1>
+        <p class=MsoNormal>&nbsp;</p>
+        <p class=MsoNormal>Before an application can use Ranger policies, the Ranger service corresponding to the application must be registered and configured. This involves three administrative steps.</p>
+        <p class=MsoNormal>&nbsp;</p>
+        <h2>6.1 Register service definition</h2>
+        <p class=MsoNormal>&nbsp;</p>
+        <p class=MsoNormal>The application's service definition must first be registered with Ranger Admin. The service definition describes the application's authorization model, including:</p>
+        <p class=MsoNormal>&nbsp;</p>
+        <p class=MsoListParagraphCxSpFirst style='text-indent:-.25in'><span style='font-family:Symbol'>-<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></span>resources that can be protected</p>
+        <p class=MsoListParagraphCxSpMiddle style='text-indent:-.25in'><span style='font-family:Symbol'>-<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></span>access types</p>
+        <p class=MsoListParagraphCxSpMiddle style='text-indent:-.25in'><span style='font-family:Symbol'>-<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></span>data-masking capabilities</p>
+        <p class=MsoListParagraphCxSpMiddle style='text-indent:-.25in'><span style='font-family:Symbol'>-<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></span>row-filtering capabilities</p>
+        <p class=MsoListParagraphCxSpLast style='text-indent:-.25in'><span style='font-family:Symbol'>-<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></span>configuration properties used by the service</p>
+        <p class=MsoNormal>&nbsp;</p>
+        <p class=MsoNormal>Registering, updating, or deleting a service definition requires Ranger administrator privileges. Typically, the application/integration developer provides the service definition, while a Ranger administrator registers it in the Ranger Admin service. Another option is to include the service definition in Apache Ranger git repository, which will be loaded by Ranger admin service during its initialization.</p>
+        <p class=MsoNormal>&nbsp;</p>
+        <p class=MsoNormal>Once registered, the service definition becomes the template from which Ranger service instances can be created.</p>
+        <p class=MsoNormal>&nbsp;</p>
+        <h2>6.2 Create a Ranger service</h2>
+        <p class=MsoNormal>&nbsp;</p>
+        <p class=MsoNormal>A Ranger service represents a particular instance of an application or service for which policies are managed. For example, an application might have separate Ranger services for different environments:</p>
+        <p class=MsoNormal>&nbsp;</p>
+        <pre class=CodeBlock>Service definition: trino
+Services:           dev_trino, prod_trino, sales_trino, mktg_trino</pre>
+        <p class=MsoNormal>&nbsp;</p>
+        <p class=MsoNormal>Creating a Ranger service requires Ranger administrator privileges. When creating a service, the administrator provides application specific configurations, including the details required by Ranger admin to connect to the application for resource lookup. Following configurations can be used to specify list of users and groups whose members can create, update, delete, and read policies for the service:</p>
+        <p class=MsoNormal>&nbsp;</p>
+        <pre class=CodeBlock>service.admin.users
+service.admin.groups</pre>
+        <p class=MsoNormal>&nbsp;</p>
+        <h2>6.3 Delegated policy administration</h2>
+        <p class=MsoNormal>&nbsp;</p>
+        <p class=MsoNormal>Ranger supports delegated administration, which allows policy management privileges to be restricted to a subset of resources and permissions within a service. For example, consider prod_hive service containing resources from several business domains:</p>
+        <p class=MsoNormal>&nbsp;</p>
+        <pre class=CodeBlock>prod_hive
+  |
+  |--- finance
+  |     +-- payroll
+  |     +-- expenses
+  |
+  |___ hr
+  |     +-- employees
+  |     +-- benefits</pre>
+        <p class=MsoNormal>&nbsp;</p>
+        <p class=MsoNormal>A service administrator can create a policy with delegated-administration privileges for the contents of a database named finance, granting users in the finance-admin group permission to manage policies. Users in the finance-admin group can then create and modify policies for resources within their delegated resource and permissions scope only.</p>
+        <p class=MsoNormal>&nbsp;</p>
+        <h2>6.4 Roles</h2>
+        <p class=MsoNormal>&nbsp;</p>
+        <p class=MsoNormal>Ranger supports roles as a way to manage grants to a set of users and groups. A role can contain multiple users, groups or other roles. Roles are useful when the same set of permissions needs to be assigned to multiple users or groups without creating separate policies for each user.</p>
+        <p class=MsoNormal>&nbsp;</p>
+        <p class=MsoNormal>For example, a Ranger administrator can create roles and assign users and groups to roles:</p>
+        <p class=MsoNormal>&nbsp;</p>
+        <pre class=CodeBlock>sales-data-reader
+      |
+      +-- add group analysts
+      +-- add group reporting users
+
+sales-data-writer
+      |
+      +-- add group data-engineers</pre>
+        <p class=MsoNormal>&nbsp;</p>
+        <p class=MsoNormal>A user with service policy administrator privileges can grant permissions a role:</p>
+        <p class=MsoNormal>&nbsp;</p>
+        <pre class=CodeBlock>sales-data
+      |
+      +-- grant read  permission to sales-data-reader and sales-data-writer
+      +-- grant write permission to sales-data-writer</pre>
+        <p class=MsoNormal>&nbsp;</p>
+        <p class=MsoNormal>The application does not need to implement role evaluation itself. Ranger evaluates the roles associated with the requesting user when determining whether an access request is allowed.</p>
+        <p class=MsoNormal>&nbsp;</p>
+        <h2>6.5 Security Zones</h2>
+        <p class=MsoNormal>&nbsp;</p>
+        <p class=MsoNormal>For larger deployments, Ranger can also organize services and resources into <a href="https://cwiki.apache.org/confluence/display/RANGER/Introduction+of+Security+Zones+in+Ranger">security zones</a>. A security zone can provide an additional administrative boundary spanning resources, potentially across multiple services.</p>
+        <p class=MsoNormal>&nbsp;</p>
+        <p class=MsoNormal>Applications do not need to implement anything special for security-zone support; the important consideration is that the service definition and resource model expose the resources in a way that allows administrators to place them into the appropriate policy scope.</p>
+        <p class=MsoNormal>&nbsp;</p>
+        <h1 id="references">References</h1>
+        <p class=MsoListParagraphCxSpFirst style='text-indent:-.25in'>-<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;</span><a href="https://cwiki.apache.org/confluence/display/RANGER/Ranger+Client+Libraries">Apache Ranger: Java client libraries</a></p>
+        <p class=MsoListParagraphCxSpMiddle style='text-indent:-.25in'>-<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;</span><a href="https://pypi.org/project/apache-ranger/">Apache Ranger: Python client library</a></p>
+        <p class=MsoListParagraphCxSpMiddle style='text-indent:-.25in'>-<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;</span><a href="https://ranger.apache.org/apidocs/index.html">Apache Ranger: REST API documentation</a></p>
+        <p class=MsoListParagraphCxSpMiddle style='text-indent:-.25in'>-<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;</span><a href="https://cwiki.apache.org/confluence/display/RANGER/Introduction+of+Security+Zones+in+Ranger">Apache Ranger: security zones</a></p>
+        <p class=MsoListParagraphCxSpMiddle style='text-indent:-.25in'>-<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;</span><a href="https://cwiki.apache.org/confluence/pages/viewpage.action?pageId=65868896">Apache Ranger: row-filter and data-masking policies</a></p>
+        <p class=MsoListParagraphCxSpLast style='text-indent:-.25in'>-<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;</span><a href="policy_model.html">Apache Ranger Policy Model</a></p>
+        <p class=MsoNormal>&nbsp;</p>
+      </div>
+    </div>
+  </body>
+
+  <footer>
+    <div align=center >
+      <a href="/blogs.html">Apache Ranger&#8482; blogs</a>
+    </div>
+  </footer>
+</html>
