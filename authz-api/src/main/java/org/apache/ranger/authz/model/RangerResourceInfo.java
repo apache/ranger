@@ -39,6 +39,14 @@ public class RangerResourceInfo {
     public RangerResourceInfo() {
     }
 
+    public RangerResourceInfo(String name) {
+        this(name, null, null, null);
+    }
+
+    public RangerResourceInfo(String name, Set<String> subResources) {
+        this(name, subResources, null, null);
+    }
+
     public RangerResourceInfo(String name, Set<String> subResources, ResourceMatchScope nameMatchScope, Map<String, Object> attributes) {
         this.name           = name;
         this.subResources   = subResources;

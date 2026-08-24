@@ -23,6 +23,7 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 
+import java.util.Collections;
 import java.util.Objects;
 import java.util.Set;
 
@@ -35,6 +36,26 @@ public class RangerAccessInfo {
     private Set<String>        permissions;
 
     public RangerAccessInfo() {
+    }
+
+    public RangerAccessInfo(String resource, String action, String permission) {
+        this(new RangerResourceInfo(resource), action, Collections.singleton(permission));
+    }
+
+    public RangerAccessInfo(String resource, String action, Set<String> permissions) {
+        this(new RangerResourceInfo(resource), action, permissions);
+    }
+
+    public RangerAccessInfo(String resource, Set<String> subResources, String action, String permission) {
+        this(new RangerResourceInfo(resource, subResources), action, Collections.singleton(permission));
+    }
+
+    public RangerAccessInfo(String resource, Set<String> subResources, String action, Set<String> permissions) {
+        this(new RangerResourceInfo(resource, subResources), action, permissions);
+    }
+
+    public RangerAccessInfo(RangerResourceInfo resource, String action, String permission) {
+        this(resource, action, Collections.singleton(permission));
     }
 
     public RangerAccessInfo(RangerResourceInfo resource, String action, Set<String> permissions) {
