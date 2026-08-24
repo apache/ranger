@@ -2401,6 +2401,50 @@ public class TestUserMgr {
         });
     }
 
+    @Test
+    public void testIsUserDisabled_returnsTrueForDisabledLocalAccount() {
+        XXPortalUserDao userDao = Mockito.mock(XXPortalUserDao.class);
+
+        XXPortalUser user = new XXPortalUser();
+        user.setLoginId(userLoginID);
+        user.setStatus(RangerCommonEnums.STATUS_DISABLED);
+
+        Mockito.when(daoManager.getXXPortalUser()).thenReturn(userDao);
+        Mockito.when(userDao.findByLoginId(userLoginID)).thenReturn(user);
+
+        Assertions.assertTrue(userMgr.isUserDisabled(userLoginID));
+    }
+
+    @Test
+    public void testIsUserDisabled_returnsFalseForEnabledLocalAccount() {
+        XXPortalUserDao userDao = Mockito.mock(XXPortalUserDao.class);
+
+        XXPortalUser user = new XXPortalUser();
+        user.setLoginId(userLoginID);
+        user.setStatus(RangerCommonEnums.STATUS_ENABLED);
+
+        Mockito.when(daoManager.getXXPortalUser()).thenReturn(userDao);
+        Mockito.when(userDao.findByLoginId(userLoginID)).thenReturn(user);
+
+        Assertions.assertFalse(userMgr.isUserDisabled(userLoginID));
+    }
+
+    @Test
+    public void testIsUserDisabled_returnsFalseWhenNoLocalAccountExists() {
+        XXPortalUserDao userDao = Mockito.mock(XXPortalUserDao.class);
+
+        Mockito.when(daoManager.getXXPortalUser()).thenReturn(userDao);
+        Mockito.when(userDao.findByLoginId(userLoginID)).thenReturn(null);
+
+        Assertions.assertFalse(userMgr.isUserDisabled(userLoginID));
+    }
+
+    @Test
+    public void testIsUserDisabled_returnsFalseForBlankLoginId() {
+        Assertions.assertFalse(userMgr.isUserDisabled(""));
+        Assertions.assertFalse(userMgr.isUserDisabled(null));
+    }
+
     private VXPortalUser userProfile() {
         VXPortalUser userProfile = new VXPortalUser();
         userProfile.setEmailAddress("test@test.com");
