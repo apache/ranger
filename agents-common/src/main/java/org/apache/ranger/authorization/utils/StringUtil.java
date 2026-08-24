@@ -259,7 +259,7 @@ public class StringUtil {
 
     public static Date getUTCDateForLocalDate(Date date) {
         Calendar          local  = Calendar.getInstance();
-        int               offset = local.getTimeZone().getOffset(local.getTimeInMillis());
+        int               offset = local.getTimeZone().getOffset(date.getTime());
         GregorianCalendar utc    = new GregorianCalendar(gmtTimeZone);
 
         utc.setTimeInMillis(date.getTime());
