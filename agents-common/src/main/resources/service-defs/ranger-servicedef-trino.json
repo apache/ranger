@@ -226,11 +226,7 @@
     { "itemId": 2, "name": "password",                    "type": "password", "mandatory": false, "label": "Password" },
     { "itemId": 3, "name": "jdbc.driverClassName",        "type": "string",   "defaultValue": "io.trino.jdbc.TrinoDriver", "mandatory": true },
     { "itemId": 4, "name": "jdbc.url",                    "type": "string",   "defaultValue": "", "mandatory": true },
-    { "itemId": 5, "name": "ranger.plugin.audit.filters", "type": "string",   "defaultValue": "[{'accessResult':'DENIED','isAudited':true},{'isAudited':false,'resources':{'queryid':{'values':['*']}},'accessTypes':['execute']},{'isAudited':false,'resources':{'trinouser':{'values':['{USER}']}},'accessTypes':['impersonate']}]" },
-    { "itemId": 6, "name": "ranger.plugin.super.users",   "type": "string",   "defaultValue": "trino", "label": "Superusers",               "description":  "Superusers will have full access to all resources in this Trino instance" },
-    { "itemId": 7, "name": "ranger.plugin.super.groups",  "type": "string",   "defaultValue": "trino", "label": "Superuser groups",         "description":  "Users in superuser groups will have full access to all resources in this Trino instance" },
-    { "itemId": 8, "name": "service.admin.users",         "type": "string",   "defaultValue": "trino", "label": "Service admin users",      "description":  "Service admin users can create policies for any resource in this Trino instance" },
-    { "itemId": 9, "name": "service.admin.groups",        "type": "string",   "defaultValue": "trino", "label": "Service admin usergroups", "description":  "Users in service admin usergroups can create policies for any resource in this Trino instance" }
+    { "itemId": 5, "name": "ranger.plugin.audit.filters", "type": "string",   "defaultValue": "[{'accessResult':'DENIED','isAudited':true},{'isAudited':false,'resources':{'queryid':{'values':['*']}},'accessTypes':['execute']},{'isAudited':false,'resources':{'trinouser':{'values':['{USER}']}},'accessTypes':['impersonate']}]" }
   ],
   "dataMaskDef": {
     "accessTypes": [

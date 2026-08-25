@@ -992,6 +992,19 @@ public class ServiceREST {
             }
 
             ret = svcStore.getServices(filter);
+
+            if (ret != null) {
+                UserSessionBase userSession = ContextUtil.getCurrentUserSession();
+                if (userSession != null && userSession.isSingleRoleUserSession()) {
+                    List<RangerService> updateServiceList = new ArrayList<>(ret.size());
+                    for (RangerService rangerService : ret) {
+                        if (rangerService != null) {
+                            updateServiceList.add(hideCriticalServiceDetailsForRoleUser(rangerService));
+                        }
+                    }
+                    ret = updateServiceList;
+                }
+            }
         } catch (WebApplicationException excp) {
             throw excp;
         } catch (Throwable excp) {
@@ -3492,6 +3505,12 @@ public class ServiceREST {
                 RangerPolicy policy = entry.getValue();
 
                 if (policy != null) {
+                    if (isGdsPolicy(policy)) {
+                        LOG.warn("Skipping GDS policy '{}' during import - GDS policies must be managed via GDS APIs", policy.getName());
+
+                        continue;
+                    }
+
                     if (!CollectionUtils.isEmpty(serviceNameList)) {
                         for (String service : serviceNameList) {
                             if (StringUtils.isNotEmpty(service.trim()) && StringUtils.isNotEmpty(policy.getService().trim())) {
@@ -3837,7 +3856,7 @@ public class ServiceREST {
 
         if (!CollectionUtils.isEmpty(policyLists)) {
             for (RangerPolicy policy : policyLists) {
-                if (policy != null) {
+                if (policy != null && !isGdsPolicy(policy)) {
                     //set createTime & updateTime Time as null since exported policies dont need this
                     policy.setCreateTime(null);
                     policy.setUpdateTime(null);
@@ -3845,14 +3864,16 @@ public class ServiceREST {
                     orderedPolicies.put(policy.getId(), policy);
                 }
             }
-            if (!orderedPolicies.isEmpty()) {
-                policyLists.clear();
 
-                policyLists.addAll(orderedPolicies.values());
-            }
+            policyLists.clear();
+            policyLists.addAll(orderedPolicies.values());
         }
 
         return policyLists;
+    }
+
+    private boolean isGdsPolicy(RangerPolicy policy) {
+        return EMBEDDED_SERVICEDEF_GDS_NAME.equals(policy.getServiceType());
     }
 
     private void deletePoliciesProvidedInServiceMap(List<String> sourceServices, List<String> destinationServices, String zoneName) throws Exception {

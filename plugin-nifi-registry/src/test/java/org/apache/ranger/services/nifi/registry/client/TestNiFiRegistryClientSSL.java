@@ -27,6 +27,7 @@ import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLPeerUnverifiedException;
 import javax.net.ssl.SSLSession;
 import javax.net.ssl.SSLSessionContext;
+import javax.security.auth.x500.X500Principal;
 
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
@@ -315,6 +316,14 @@ public class TestNiFiRegistryClientSSL {
             // Format: [type, value] where type 2 = DNSName
             return Collections.singletonList(
                     Arrays.asList(2, sanHostname.toLowerCase()));
+        }
+
+        @Override
+        public X500Principal getSubjectX500Principal() {
+            // Deliberately does not match HOSTNAME/SAN values, so the Subject-CN fallback
+            // path in DefaultHostnameVerifier still correctly fails verification when
+            // there's no SAN to match against.
+            return new X500Principal("CN=" + (sanHostname != null ? sanHostname : "unknown.invalid"));
         }
 
         // Stub implementations for abstract methods

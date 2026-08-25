@@ -40,6 +40,26 @@ public interface RoleStore {
         return updateRole(role, createNonExistUserGroup);
     }
 
+    /**
+     * Create role with separate controls for creating missing users/groups vs nested roles.
+     * Default implementation combines the flags for stores that do not support the split.
+     */
+    default RangerRole createRole(RangerRole role, Boolean createNonExistUserGroup, Boolean createNonExistRole, Boolean isRefTableCleanupRequired) throws Exception {
+        boolean combined = Boolean.TRUE.equals(createNonExistUserGroup) || Boolean.TRUE.equals(createNonExistRole);
+
+        return createRole(role, combined, isRefTableCleanupRequired);
+    }
+
+    /**
+     * Update role with separate controls for creating missing users/groups vs nested roles.
+     * Default implementation combines the flags for stores that do not support the split.
+     */
+    default RangerRole updateRole(RangerRole role, Boolean createNonExistUserGroup, Boolean createNonExistRole, Boolean isRefTableCleanupRequired) throws Exception {
+        boolean combined = Boolean.TRUE.equals(createNonExistUserGroup) || Boolean.TRUE.equals(createNonExistRole);
+
+        return updateRole(role, combined, isRefTableCleanupRequired);
+    }
+
     void deleteRole(String roleName) throws Exception;
 
     void deleteRole(Long roleId) throws Exception;

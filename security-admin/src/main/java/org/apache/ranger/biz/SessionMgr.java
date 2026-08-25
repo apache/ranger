@@ -528,7 +528,7 @@ public class SessionMgr {
         boolean               ssoEnabled = session != null ? session.isSSOEnabled() : PropertiesUtil.getBooleanProperty("ranger.sso.enabled", false);
         XXPortalUser          gjUser     = daoManager.getXXPortalUser().findByLoginId(currentLoginId);
 
-        if (gjUser == null && ((request.getAttribute("spnegoEnabled") != null && (boolean) request.getAttribute("spnegoEnabled")) || (ssoEnabled))) {
+        if (gjUser == null && ((request.getAttribute("spnegoEnabled") != null && (boolean) request.getAttribute("spnegoEnabled")) || (ssoEnabled) || bizUtil.isHealthCheckUser(currentLoginId))) {
             logger.debug("User : {} doesn't exist in Ranger DB So creating user as it's SSO or Spnego authenticated", currentLoginId);
 
             if (bizUtil.isHealthCheckUser(currentLoginId)) {

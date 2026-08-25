@@ -458,7 +458,7 @@ public class KMS {
 
             checkNotEmpty(versionName, "versionName");
 
-            assertAccess(Type.GET, user, KMSOp.GET_KEY_VERSION, getClientIp(request));
+            assertAccess(Type.GET, user, KMSOp.GET_KEY_VERSION, KeyProvider.getBaseName(versionName), getClientIp(request));
 
             KeyVersion keyVersion = user.doAs((PrivilegedExceptionAction<KeyVersion>) () -> provider.getKeyVersion(versionName));
 

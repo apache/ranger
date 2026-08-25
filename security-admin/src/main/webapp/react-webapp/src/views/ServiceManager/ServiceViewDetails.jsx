@@ -29,7 +29,9 @@ import {
   pick,
   intersection,
   find,
-  sortBy
+  sortBy,
+  reject,
+  includes
 } from "lodash";
 import { ModalLoader } from "Components/CommonComponents";
 import { additionalServiceConfigs } from "Utils/XAEnums";
@@ -78,8 +80,13 @@ export const ServiceViewDetails = (props) => {
     let configs = {};
     let customConfigs = {};
 
-    let serviceDefConfigs = serviceDef?.configs?.filter(
-      (config) => config.name !== "ranger.plugin.audit.filters"
+    const excludedServiceConfig = [
+      "ranger.plugin.audit.filters",
+      ...map(additionalServiceConfigs, "name")
+    ];
+
+    let serviceDefConfigs = reject(serviceDef?.configs, (config) =>
+      includes(excludedServiceConfig, config.name)
     );
 
     serviceConfigs = omit(serviceConfigs, "ranger.plugin.audit.filters");
