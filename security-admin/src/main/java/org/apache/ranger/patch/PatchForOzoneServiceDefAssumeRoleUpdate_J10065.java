@@ -41,8 +41,8 @@ import java.util.List;
 import java.util.Map;
 
 @Component
-public class PatchForOzoneServiceDefAssumeRoleUpdate_J10066 extends BaseLoader {
-    private static final Logger logger = LoggerFactory.getLogger(PatchForOzoneServiceDefAssumeRoleUpdate_J10066.class);
+public class PatchForOzoneServiceDefAssumeRoleUpdate_J10065 extends BaseLoader {
+    private static final Logger logger = LoggerFactory.getLogger(PatchForOzoneServiceDefAssumeRoleUpdate_J10065.class);
 
     private static final String       OZONE_RESOURCE_ROLE                             = "role";
     private static final String       ACCESS_TYPE_ASSUME_ROLE                         = "assume_role";
@@ -64,7 +64,7 @@ public class PatchForOzoneServiceDefAssumeRoleUpdate_J10066 extends BaseLoader {
         logger.info("main()");
 
         try {
-            PatchForOzoneServiceDefAssumeRoleUpdate_J10066 loader = (PatchForOzoneServiceDefAssumeRoleUpdate_J10066) CLIUtil.getBean(PatchForOzoneServiceDefAssumeRoleUpdate_J10066.class);
+            PatchForOzoneServiceDefAssumeRoleUpdate_J10065 loader = (PatchForOzoneServiceDefAssumeRoleUpdate_J10065) CLIUtil.getBean(PatchForOzoneServiceDefAssumeRoleUpdate_J10065.class);
 
             loader.init();
 
@@ -89,7 +89,7 @@ public class PatchForOzoneServiceDefAssumeRoleUpdate_J10066 extends BaseLoader {
 
     @Override
     public void printStats() {
-        logger.info("PatchForOzoneServiceDefAssumeRoleUpdate_J10066 data ");
+        logger.info("PatchForOzoneServiceDefAssumeRoleUpdate_J10065 data ");
     }
 
     @Override
@@ -141,7 +141,7 @@ public class PatchForOzoneServiceDefAssumeRoleUpdate_J10066 extends BaseLoader {
     }
 
     private boolean updateOzoneServiceDef() throws Exception {
-        logger.info("==> PatchForOzoneServiceDefAssumeRoleUpdate_J10066.updateOzoneServiceDef()");
+        logger.info("==> PatchForOzoneServiceDefAssumeRoleUpdate_J10065.updateOzoneServiceDef()");
 
         RangerServiceDef embeddedOzoneServiceDef = EmbeddedServiceDefsUtil.instance().getEmbeddedServiceDef(EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_OZONE_NAME);
 
@@ -220,7 +220,7 @@ public class PatchForOzoneServiceDefAssumeRoleUpdate_J10066 extends BaseLoader {
             }
         }
 
-        logger.info("<== PatchForOzoneServiceDefAssumeRoleUpdate_J10066.updateOzoneServiceDef()");
+        logger.info("<== PatchForOzoneServiceDefAssumeRoleUpdate_J10065.updateOzoneServiceDef()");
 
         return true;
     }
