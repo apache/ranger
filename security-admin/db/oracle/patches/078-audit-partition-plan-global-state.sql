@@ -33,26 +33,29 @@ DECLARE
     v_user_count number := 0;
     v_role_count number := 0;
     v_xuser_count number := 0;
+    v_varchar_count number := 0;
     v_plan_json CLOB := '{"version":1,"topic":"ranger_audits","topicPartitionCount":9,"plugins":{},"buffer":{"partitions":[1,2,3,4,5,6,7,8,9]}}';
     sql_stmt VARCHAR2(4000);
 BEGIN
     SELECT count(*) INTO t_count FROM user_tables WHERE table_name = 'X_RANGER_GLOBAL_STATE';
     IF (t_count > 0) THEN
-        BEGIN
+        SELECT count(*) INTO v_varchar_count FROM user_tab_columns
+        WHERE table_name = 'X_RANGER_GLOBAL_STATE' AND column_name = 'APP_DATA' AND data_type = 'VARCHAR2';
+        IF (v_varchar_count > 0) THEN
             EXECUTE IMMEDIATE 'ALTER TABLE x_ranger_global_state MODIFY (app_data CLOB)';
-        EXCEPTION
-            WHEN OTHERS THEN
-                NULL;
-        END;
+        END IF;
 
         v_admin_id := getXportalUIdByLoginId('admin');
 
         SELECT count(*) INTO v_user_count FROM x_portal_user WHERE login_id = 'rangerauditserver';
         IF (v_user_count = 0) THEN
-            sql_stmt := 'INSERT INTO x_portal_user (id, create_time, update_time, first_name, last_name, pub_scr_name, login_id, password, email, status, user_src) VALUES (X_PORTAL_USER_SEQ.nextval, sys_extract_utc(systimestamp), sys_extract_utc(systimestamp), :1, NULL, :2, :3, :4, :5, 1, 0)';
-            EXECUTE IMMEDIATE sql_stmt USING 'rangerauditserver', 'rangerauditserver', 'rangerauditserver', '9c8f4e2b1a0d6e3f7b5c4a8291d0e6f3', 'rangerauditserver';
+            sql_stmt := 'INSERT INTO x_portal_user (id, create_time, update_time, first_name, last_name, pub_scr_name, login_id, password, email, status, user_src) VALUES (X_PORTAL_USER_SEQ.nextval, sys_extract_utc(systimestamp), sys_extract_utc(systimestamp), :1, NULL, :2, :3, :4, :5, 0, 0)';
+            EXECUTE IMMEDIATE sql_stmt USING 'rangerauditserver', 'rangerauditserver', 'rangerauditserver', '', 'rangerauditserver';
             COMMIT;
         END IF;
+
+        UPDATE x_portal_user SET status = 0, password = '' WHERE login_id = 'rangerauditserver';
+        COMMIT;
 
         v_audit_user_id := getXportalUIdByLoginId('rangerauditserver');
 

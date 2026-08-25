@@ -46,8 +46,10 @@ BEGIN
 
         IF NOT EXISTS (SELECT 1 FROM x_portal_user WHERE login_id = 'rangerauditserver') THEN
             INSERT INTO x_portal_user(create_time, update_time, added_by_id, upd_by_id, first_name, last_name, pub_scr_name, login_id, password, email, status, user_src, notes)
-            VALUES (UTC_TIMESTAMP(), UTC_TIMESTAMP(), NULL, NULL, 'rangerauditserver', '', 'rangerauditserver', 'rangerauditserver', '9c8f4e2b1a0d6e3f7b5c4a8291d0e6f3', 'rangerauditserver', 1, 0, NULL);
+            VALUES (UTC_TIMESTAMP(), UTC_TIMESTAMP(), NULL, NULL, 'rangerauditserver', '', 'rangerauditserver', 'rangerauditserver', '', 'rangerauditserver', 0, 0, NULL);
         END IF;
+
+        UPDATE x_portal_user SET status = 0, password = '' WHERE login_id = 'rangerauditserver';
 
         CALL getXportalUIdByLoginId('admin', adminID);
         CALL getXportalUIdByLoginId('rangerauditserver', auditServerID);

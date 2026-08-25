@@ -27,13 +27,15 @@ BEGIN
 
     IF EXISTS(SELECT * FROM SYS.SYSCOLUMNS WHERE tname = 'x_ranger_global_state' AND cname = 'state_name') THEN
         IF EXISTS(SELECT * FROM SYS.SYSCOLUMNS WHERE tname = 'x_ranger_global_state' AND cname = 'app_data' AND coltype = 'varchar') THEN
-            ALTER TABLE dbo.x_ranger_global_state MODIFY app_data LONG VARCHAR DEFAULT NULL;
+            ALTER TABLE dbo.x_ranger_global_state ALTER app_data LONG VARCHAR DEFAULT NULL NULL;
         END IF;
 
         IF NOT EXISTS(SELECT * FROM x_portal_user WHERE login_id = 'rangerauditserver') THEN
             INSERT INTO x_portal_user(create_time, update_time, added_by_id, upd_by_id, first_name, last_name, pub_scr_name, login_id, password, email, status, user_src, notes)
-            VALUES (CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, NULL, NULL, 'rangerauditserver', '', 'rangerauditserver', 'rangerauditserver', '9c8f4e2b1a0d6e3f7b5c4a8291d0e6f3', 'rangerauditserver', 1, 0, NULL);
+            VALUES (CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, NULL, NULL, 'rangerauditserver', '', 'rangerauditserver', 'rangerauditserver', '', 'rangerauditserver', 0, 0, NULL);
         END IF;
+
+        UPDATE x_portal_user SET status = 0, password = '' WHERE login_id = 'rangerauditserver';
 
         IF NOT EXISTS(SELECT * FROM x_portal_user_role WHERE user_id = getXportalUIdByLoginId('rangerauditserver') AND user_role = 'ROLE_ADMIN_AUDITOR') THEN
             INSERT INTO x_portal_user_role(create_time, update_time, added_by_id, upd_by_id, user_id, user_role, status)

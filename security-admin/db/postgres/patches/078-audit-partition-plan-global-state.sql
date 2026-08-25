@@ -37,8 +37,10 @@ BEGIN
 
         IF NOT EXISTS (SELECT 1 FROM x_portal_user WHERE login_id = 'rangerauditserver') THEN
             INSERT INTO x_portal_user(create_time, update_time, first_name, last_name, pub_scr_name, login_id, password, email, status)
-            VALUES (current_timestamp, current_timestamp, 'rangerauditserver', '', 'rangerauditserver', 'rangerauditserver', '9c8f4e2b1a0d6e3f7b5c4a8291d0e6f3', 'rangerauditserver', 1);
+            VALUES (current_timestamp, current_timestamp, 'rangerauditserver', '', 'rangerauditserver', 'rangerauditserver', '', 'rangerauditserver', 0);
         END IF;
+
+        UPDATE x_portal_user SET status = 0, password = '' WHERE login_id = 'rangerauditserver';
 
         SELECT getXportalUIdByLoginId('rangerauditserver') INTO v_audit_user_id;
 
