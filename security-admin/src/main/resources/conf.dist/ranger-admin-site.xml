@@ -379,6 +379,16 @@
 		<name>ranger.downloadpolicy.session.log.enabled</name>
 		<value>false</value>
 	</property>
+	<!-- User-store download Properties starts-->
+	<property>
+		<name>ranger.admin.userstore.include.usergroups.mappings</name>
+		<value>false</value>
+		<description>
+			When set to true, the user-store download API includes the user-to-group mappings (userGroupMapping) in the response payload,
+		</description>
+	</property>
+	<!-- User-store download Properties ends-->
+
 	<!-- Service user for KMS -->
     <property>
     	<name>ranger.kms.service.user.hdfs</name>
