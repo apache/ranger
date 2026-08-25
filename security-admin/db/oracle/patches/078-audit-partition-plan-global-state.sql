@@ -50,11 +50,11 @@ BEGIN
         SELECT count(*) INTO v_user_count FROM x_portal_user WHERE login_id = 'rangerauditserver';
         IF (v_user_count = 0) THEN
             sql_stmt := 'INSERT INTO x_portal_user (id, create_time, update_time, first_name, last_name, pub_scr_name, login_id, password, email, status, user_src) VALUES (X_PORTAL_USER_SEQ.nextval, sys_extract_utc(systimestamp), sys_extract_utc(systimestamp), :1, NULL, :2, :3, :4, :5, 0, 0)';
-            EXECUTE IMMEDIATE sql_stmt USING 'rangerauditserver', 'rangerauditserver', 'rangerauditserver', '', 'rangerauditserver';
+            EXECUTE IMMEDIATE sql_stmt USING 'rangerauditserver', 'rangerauditserver', 'rangerauditserver', ' ', 'rangerauditserver';
             COMMIT;
         END IF;
 
-        UPDATE x_portal_user SET status = 0, password = '' WHERE login_id = 'rangerauditserver';
+        UPDATE x_portal_user SET status = 0, password = ' ' WHERE login_id = 'rangerauditserver';
         COMMIT;
 
         v_audit_user_id := getXportalUIdByLoginId('rangerauditserver');

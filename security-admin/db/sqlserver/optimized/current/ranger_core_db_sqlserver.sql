@@ -3073,8 +3073,6 @@ ALTER TABLE [dbo].[x_policy_ref_user] WITH CHECK ADD CONSTRAINT [x_policy_ref_us
 REFERENCES [dbo].[x_user] ([id])
 ALTER TABLE [dbo].[x_policy_ref_user] CHECK CONSTRAINT [x_policy_ref_user_FK_user_id]
 
-ALTER TABLE [dbo].[x_policy_ref_user] CHECK CONSTRAINT [x_policy_ref_user_FK_upd_by]
-
 ALTER TABLE [dbo].[x_policy_ref_group] WITH CHECK ADD CONSTRAINT [x_policy_ref_group_FK_policy_id] FOREIGN KEY ([policy_id])
 REFERENCES [dbo].[x_policy] ([id])
 ALTER TABLE [dbo].[x_policy_ref_group] CHECK CONSTRAINT [x_policy_ref_group_FK_policy_id]
