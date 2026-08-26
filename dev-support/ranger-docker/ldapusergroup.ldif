@@ -1,0 +1,18 @@
+# 1. Base Structural Container
+dn: ou=People,dc=example,dc=com
+objectClass: organizationalUnit
+ou: People
+
+# 2. User Entry
+dn: cn=john,ou=People,dc=example,dc=com
+cn: john
+sn: doe
+objectClass: inetOrgPerson
+userPassword: password123
+uid: john
+
+# 3. Group Entry
+dn: cn=engineering,ou=People,dc=example,dc=com
+cn: engineering
+objectClass: groupOfNames
+member: cn=john,ou=People,dc=example,dc=com
