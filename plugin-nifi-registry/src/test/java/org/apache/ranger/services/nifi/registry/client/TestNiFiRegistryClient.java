@@ -32,6 +32,7 @@ import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLPeerUnverifiedException;
 import javax.net.ssl.SSLSession;
 import javax.net.ssl.SSLSessionContext;
+import javax.security.auth.x500.X500Principal;
 import javax.ws.rs.core.Response;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -287,6 +288,9 @@ public class TestNiFiRegistryClient {
             // Server cert (index 0): No SANs
             X509Certificate serverCert = Mockito.mock(X509Certificate.class);
             doReturn(null).when(serverCert).getSubjectAlternativeNames();
+            // Deliberately does not match HOSTNAME, so the Subject-CN fallback path in
+            // DefaultHostnameVerifier still correctly fails verification when there's no SAN.
+            doReturn(new X500Principal("CN=unknown.invalid")).when(serverCert).getSubjectX500Principal();
 
             // Intermediate cert (index 1): Has SAN with hostname
             X509Certificate intermediateCert = Mockito.mock(X509Certificate.class);
