@@ -39,9 +39,9 @@ BEGIN
         IF EXISTS (
             SELECT 1 FROM information_schema.columns
             WHERE table_schema = DATABASE() AND table_name = 'x_ranger_global_state'
-              AND column_name = 'app_data' AND data_type = 'varchar'
+              AND column_name = 'app_data' AND data_type IN ('varchar', 'text')
         ) THEN
-            ALTER TABLE x_ranger_global_state MODIFY app_data TEXT DEFAULT NULL;
+            ALTER TABLE x_ranger_global_state MODIFY app_data LONGTEXT DEFAULT NULL;
         END IF;
 
         IF NOT EXISTS (SELECT 1 FROM x_portal_user WHERE login_id = 'rangerauditserver') THEN

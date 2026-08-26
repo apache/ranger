@@ -597,7 +597,7 @@ CREATE TABLE IF NOT EXISTS `x_ranger_global_state`(
 `upd_by_id` bigint(20) NULL DEFAULT NULL,
 `version` bigint(20) NULL DEFAULT NULL,
 `state_name` varchar(255) NOT  NULL,
-`app_data` TEXT NULL DEFAULT NULL,
+`app_data` LONGTEXT NULL DEFAULT NULL,
 PRIMARY KEY (`id`),
 UNIQUE  KEY `x_ranger_global_state_UK_state_name`(`state_name`),
 CONSTRAINT `x_ranger_global_state_FK_added_by_id` FOREIGN KEY (`added_by_id`) REFERENCES `x_portal_user` (`id`),

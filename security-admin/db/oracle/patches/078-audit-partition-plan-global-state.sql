@@ -34,6 +34,7 @@ DECLARE
     v_role_count number := 0;
     v_xuser_count number := 0;
     v_varchar_count number := 0;
+    v_app_data_clob_count number := 0;
     v_plan_json CLOB := '{"version":1,"topic":"ranger_audits","topicPartitionCount":9,"plugins":{},"buffer":{"partitions":[1,2,3,4,5,6,7,8,9]}}';
     sql_stmt VARCHAR2(4000);
 BEGIN
@@ -42,7 +43,15 @@ BEGIN
         SELECT count(*) INTO v_varchar_count FROM user_tab_columns
         WHERE table_name = 'X_RANGER_GLOBAL_STATE' AND column_name = 'APP_DATA' AND data_type = 'VARCHAR2';
         IF (v_varchar_count > 0) THEN
-            EXECUTE IMMEDIATE 'ALTER TABLE x_ranger_global_state MODIFY (app_data CLOB)';
+            SELECT count(*) INTO v_app_data_clob_count FROM user_tab_columns
+            WHERE table_name = 'X_RANGER_GLOBAL_STATE' AND column_name = 'APP_DATA_CLOB';
+            IF (v_app_data_clob_count = 0) THEN
+                EXECUTE IMMEDIATE 'ALTER TABLE x_ranger_global_state ADD (app_data_clob CLOB)';
+                EXECUTE IMMEDIATE 'UPDATE x_ranger_global_state SET app_data_clob = app_data';
+                EXECUTE IMMEDIATE 'ALTER TABLE x_ranger_global_state DROP COLUMN app_data';
+                EXECUTE IMMEDIATE 'ALTER TABLE x_ranger_global_state RENAME COLUMN app_data_clob TO app_data';
+                COMMIT;
+            END IF;
         END IF;
 
         v_admin_id := getXportalUIdByLoginId('admin');
