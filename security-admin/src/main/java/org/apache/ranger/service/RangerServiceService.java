@@ -22,6 +22,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.thirdparty.com.google.common.base.Joiner;
@@ -79,10 +80,11 @@ public class RangerServiceService extends RangerServiceServiceBase<XXService, Ra
 		HashMap<String, String> configs = new HashMap<String, String>();
 		List<XXServiceConfigMap> svcConfigMapList = daoMgr.getXXServiceConfigMap()
 				.findByServiceId(xService.getId());
+		Set<String> passwordConfigKeys = getPasswordConfigKeysByServiceDefId(xService.getType());
 		for(XXServiceConfigMap svcConfMap : svcConfigMapList) {
 			String configValue = svcConfMap.getConfigvalue();
-			
-			if(StringUtils.equalsIgnoreCase(svcConfMap.getConfigkey(), ServiceDBStore.CONFIG_KEY_PASSWORD)) {
+
+			if (ServiceDBStore.isPasswordConfigKey(passwordConfigKeys, svcConfMap.getConfigkey())) {
 				configValue = ServiceDBStore.HIDDEN_PASSWORD_STR;
 			}
 			configs.put(svcConfMap.getConfigkey(), configValue);
@@ -108,43 +110,61 @@ public class RangerServiceService extends RangerServiceServiceBase<XXService, Ra
 
 	public Map<String, String> getConfigsWithDecryptedPassword(RangerService service) throws Exception  {
 		Map<String, String> configs = service.getConfigs();
-		
-		String pwd = configs.get(ServiceDBStore.CONFIG_KEY_PASSWORD);
-		if(!stringUtil.isEmpty(pwd) && ServiceDBStore.HIDDEN_PASSWORD_STR.equalsIgnoreCase(pwd)) {
-			XXServiceConfigMap pwdConfig = daoMgr.getXXServiceConfigMap().findByServiceAndConfigKey(service.getId(),
-					ServiceDBStore.CONFIG_KEY_PASSWORD);
 
-			if (pwdConfig != null) {
-				String encryptedPwd = pwdConfig.getConfigvalue();
-				if (encryptedPwd.contains(",")) {
-					PasswordUtils util = PasswordUtils.build(encryptedPwd);
-					String freeTextPasswordMetaData = Joiner.on(",").skipNulls().join(util.getCryptAlgo(),
-							new String(util.getEncryptKey()), new String(util.getSalt()), util.getIterationCount(),
-							PasswordUtils.needsIv(util.getCryptAlgo()) ? util.getIvAsString() : null);
-					String decryptedPwd = PasswordUtils.decryptPassword(encryptedPwd);
-					if (StringUtils
-							.equalsIgnoreCase(
-									freeTextPasswordMetaData + ","
-											+ PasswordUtils
-													.encryptPassword(freeTextPasswordMetaData + "," + decryptedPwd),
-									encryptedPwd)) {
-						configs.put(ServiceDBStore.CONFIG_KEY_PASSWORD, encryptedPwd); // XXX: method name is
-																						// getConfigsWithDecryptedPassword,
-																						// then why do we store the
-																						// encryptedPwd?
-					}
-				} else {
-					String decryptedPwd = PasswordUtils.decryptPassword(encryptedPwd);
-					if (StringUtils.equalsIgnoreCase(PasswordUtils.encryptPassword(decryptedPwd), encryptedPwd)) {
-						configs.put(ServiceDBStore.CONFIG_KEY_PASSWORD, encryptedPwd); // XXX: method name is
-																						// getConfigsWithDecryptedPassword,
-																						// then why do we store the
-																						// encryptedPwd?
+		if (configs == null) {
+			return configs;
+		}
+
+		Set<String> passwordConfigKeys = getPasswordConfigKeysByServiceDefName(service.getType());
+		for (String configKey : new ArrayList<>(configs.keySet())) {
+			if (!ServiceDBStore.isPasswordConfigKey(passwordConfigKeys, configKey)) {
+				continue;
+			}
+
+			String pwd = configs.get(configKey);
+			if (!stringUtil.isEmpty(pwd) && ServiceDBStore.HIDDEN_PASSWORD_STR.equalsIgnoreCase(pwd)) {
+				XXServiceConfigMap pwdConfig = daoMgr.getXXServiceConfigMap().findByServiceAndConfigKey(service.getId(), configKey);
+
+				if (pwdConfig != null) {
+					String encryptedPwd = pwdConfig.getConfigvalue();
+					if (encryptedPwd.contains(",")) {
+						PasswordUtils util = PasswordUtils.build(encryptedPwd);
+						String freeTextPasswordMetaData = Joiner.on(",").skipNulls().join(util.getCryptAlgo(),
+								new String(util.getEncryptKey()), new String(util.getSalt()), util.getIterationCount(),
+								PasswordUtils.needsIv(util.getCryptAlgo()) ? util.getIvAsString() : null);
+						String decryptedPwd = PasswordUtils.decryptPassword(encryptedPwd);
+						if (StringUtils
+								.equalsIgnoreCase(
+										freeTextPasswordMetaData + ","
+												+ PasswordUtils
+														.encryptPassword(freeTextPasswordMetaData + "," + decryptedPwd),
+										encryptedPwd)) {
+							configs.put(configKey, encryptedPwd); // XXX: method name is
+																	// getConfigsWithDecryptedPassword,
+																	// then why do we store the
+																	// encryptedPwd?
+						}
+					} else {
+						String decryptedPwd = PasswordUtils.decryptPassword(encryptedPwd);
+						if (StringUtils.equalsIgnoreCase(PasswordUtils.encryptPassword(decryptedPwd), encryptedPwd)) {
+							configs.put(configKey, encryptedPwd); // XXX: method name is
+																	// getConfigsWithDecryptedPassword,
+																	// then why do we store the
+																	// encryptedPwd?
+						}
 					}
 				}
 			}
 		}
 		return configs;
+	}
+
+	private Set<String> getPasswordConfigKeysByServiceDefId(Long serviceDefId) {
+		return ServiceDBStore.getPasswordConfigKeys(serviceDefId != null ? daoMgr.getXXServiceConfigDef().findConfigNamesByServiceDefIdAndType(serviceDefId, ServiceDBStore.CONFIG_TYPE_PASSWORD) : null);
+	}
+
+	private Set<String> getPasswordConfigKeysByServiceDefName(String serviceDefName) {
+		return ServiceDBStore.getPasswordConfigKeys(serviceDefName != null ? daoMgr.getXXServiceConfigDef().findConfigNamesByServiceDefNameAndType(serviceDefName, ServiceDBStore.CONFIG_TYPE_PASSWORD) : null);
 	}
 
 	@Override

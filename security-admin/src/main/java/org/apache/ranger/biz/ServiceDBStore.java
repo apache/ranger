@@ -371,6 +371,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 
 	public static final String HIDDEN_PASSWORD_STR = "*****";
 	public static final String CONFIG_KEY_PASSWORD = "password";
+	public static final String CONFIG_TYPE_PASSWORD = "password";
 	public static final String ACCESS_TYPE_DECRYPT_EEK    = "decrypteek";
 	public static final String ACCESS_TYPE_GENERATE_EEK   = "generateeek";
 	public static final String ACCESS_TYPE_GET_METADATA   = "getmetadata";
@@ -1574,6 +1575,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 		XXService xCreatedService = daoMgr.getXXService().getById(service.getId());
 
 		XXServiceConfigMapDao xConfMapDao = daoMgr.getXXServiceConfigMap();
+		Set<String> passwordConfigKeys = getPasswordConfigKeys(service.getType());
 		for (Entry<String, String> configMap : validConfigs.entrySet()) {
 			String configKey = configMap.getKey();
 			String configValue = configMap.getValue();
@@ -1593,7 +1595,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 				}
 			}
 
-			if (StringUtils.equalsIgnoreCase(configKey, CONFIG_KEY_PASSWORD)) {
+			if (isPasswordConfigKey(passwordConfigKeys, configKey)) {
 				Joiner joiner = Joiner.on(",").skipNulls();
 				String iv = PasswordUtils.generateIvIfNeeded(CRYPT_ALGO);
 
@@ -1749,11 +1751,12 @@ public class ServiceDBStore extends AbstractServiceStore {
 
 		XXService xUpdService = daoMgr.getXXService().getById(service.getId());
 
-		String oldPassword = null;
+		Set<String>          passwordConfigKeys = getPasswordConfigKeys(service.getType());
+		Map<String, String>  oldPasswordsByKey  = new HashMap<>();
 
 		for(XXServiceConfigMap dbConfigMap : dbConfigMaps) {
-			if(StringUtils.equalsIgnoreCase(dbConfigMap.getConfigkey(), CONFIG_KEY_PASSWORD)) {
-				oldPassword = dbConfigMap.getConfigvalue();
+			if (isPasswordConfigKey(passwordConfigKeys, dbConfigMap.getConfigkey())) {
+				oldPasswordsByKey.put(StringUtils.lowerCase(dbConfigMap.getConfigkey()), dbConfigMap.getConfigvalue());
 			}
 			daoMgr.getXXServiceConfigMap().remove(dbConfigMap);
 		}
@@ -1778,7 +1781,9 @@ public class ServiceDBStore extends AbstractServiceStore {
 				}
 			}
 
-			if (StringUtils.equalsIgnoreCase(configKey, CONFIG_KEY_PASSWORD)) {
+			if (isPasswordConfigKey(passwordConfigKeys, configKey)) {
+				String oldPassword = oldPasswordsByKey.get(StringUtils.lowerCase(configKey));
+
 				if (StringUtils.equalsIgnoreCase(configValue, HIDDEN_PASSWORD_STR)) {
 					if (oldPassword != null && oldPassword.contains(",")) {
 						PasswordUtils util = PasswordUtils.build(oldPassword);
@@ -3692,6 +3697,28 @@ public class ServiceDBStore extends AbstractServiceStore {
 			}
 		}
 		return ret;
+	}
+
+	private Set<String> getPasswordConfigKeys(String serviceType) {
+		List<String> passwordConfigNames = serviceType != null ? daoMgr.getXXServiceConfigDef().findConfigNamesByServiceDefNameAndType(serviceType, CONFIG_TYPE_PASSWORD) : null;
+		return getPasswordConfigKeys(passwordConfigNames);
+	}
+
+	public static Set<String> getPasswordConfigKeys(List<String> passwordConfigNames) {
+		Set<String> passwordConfigKeys = new HashSet<>();
+		passwordConfigKeys.add(StringUtils.lowerCase(CONFIG_KEY_PASSWORD));
+		if (passwordConfigNames != null) {
+			for (String passwordConfigName : passwordConfigNames) {
+				if (passwordConfigName != null) {
+					passwordConfigKeys.add(StringUtils.lowerCase(passwordConfigName));
+				}
+			}
+		}
+		return passwordConfigKeys;
+	}
+
+	public static boolean isPasswordConfigKey(Set<String> passwordConfigKeys, String configKey) {
+		return configKey != null && passwordConfigKeys.contains(StringUtils.lowerCase(configKey));
 	}
 
 	private Map<String, String> validateRequiredConfigParams(RangerService service, Map<String, String> configs) {
