@@ -152,7 +152,7 @@ public final class PartitionPlanAllocator {
             throw new PartitionPlanException("updatedBy is required");
         }
 
-        Map<String, List<String>> normalized = PolicyDownloadAuthUsersUtil.normalizeServiceAllowedUsers(serviceAllowedUsers);
+        Map<String, List<String>> normalized = ServiceAllowedUsersUtil.normalizeServiceAllowedUsers(serviceAllowedUsers);
         if (Objects.equals(current.getServiceAllowedUsers(), normalized)) {
             return current;
         }

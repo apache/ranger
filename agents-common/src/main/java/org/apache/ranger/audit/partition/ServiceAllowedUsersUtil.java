@@ -20,7 +20,6 @@
 package org.apache.ranger.audit.partition;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.ranger.plugin.model.RangerService;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -29,18 +28,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-/** Parses {@code policy.download.auth.users} service config for audit ingestor authorization. */
-public final class PolicyDownloadAuthUsersUtil {
-    public static final String CONFIG_NAME = "policy.download.auth.users";
-
-    private PolicyDownloadAuthUsersUtil() {
-    }
-
-    public static List<String> parseUsers(RangerService service) {
-        if (service == null || service.getConfigs() == null) {
-            return Collections.emptyList();
-        }
-        return parseUsers(service.getConfigs().get(CONFIG_NAME));
+/** Normalizes per-repo audit POST allow-lists stored in {@code PartitionPlan.serviceAllowedUsers}. */
+public final class ServiceAllowedUsersUtil {
+    private ServiceAllowedUsersUtil() {
     }
 
     public static List<String> parseUsers(String configValue) {

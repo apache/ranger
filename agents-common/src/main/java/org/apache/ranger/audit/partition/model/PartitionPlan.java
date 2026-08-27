@@ -47,7 +47,7 @@ public class PartitionPlan implements Serializable {
     private final String updatedBy;
     private final Map<String, PluginEntry> plugins;
     private final BufferEntry              buffer;
-    /** Per-repo audit POST allow-list ({@code policy.download.auth.users}); each listed repo needs ≥1 user. */
+    /** Per-repo audit POST allow-list ({@code service.admin.users}); each listed repo needs ≥1 user. */
     private final Map<String, List<String>>  serviceAllowedUsers;
 
     @JsonCreator

@@ -73,7 +73,7 @@ public final class PartitionPlanValidator {
 
     /**
      * When a service repo is listed in {@code serviceAllowedUsers}, it must have at least one
-     * allowed short username (from Admin {@code policy.download.auth.users}).
+     * allowed short username (from Admin {@code service.admin.users}).
      */
     public static void validateServiceAllowedUsers(Map<String, List<String>> serviceAllowedUsers) {
         if (serviceAllowedUsers == null || serviceAllowedUsers.isEmpty()) {
@@ -144,7 +144,7 @@ public final class PartitionPlanValidator {
             return List.of();
         }
         return rawUsers.stream()
-                .flatMap(user -> PolicyDownloadAuthUsersUtil.parseUsers(user).stream())
+                .flatMap(user -> ServiceAllowedUsersUtil.parseUsers(user).stream())
                 .collect(Collectors.toList());
     }
 
