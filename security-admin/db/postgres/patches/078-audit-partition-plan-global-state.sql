@@ -28,27 +28,12 @@ CREATE SEQUENCE IF NOT EXISTS x_audit_config_seq;
 ALTER SEQUENCE x_audit_config_seq OWNED BY x_audit_config.id;
 ALTER TABLE x_audit_config ALTER COLUMN id SET DEFAULT nextval('x_audit_config_seq'::regclass);
 
-CREATE OR REPLACE FUNCTION patch_audit_partition_plan_global_state()
+CREATE OR REPLACE FUNCTION patch_audit_config_global_state()
 RETURNS void AS $$
 DECLARE
-    v_column_is_varchar integer := 0;
-    v_admin_id bigint;
     v_audit_user_id bigint;
-    v_plan_json text := '{"version":1,"topic":"ranger_audits","topicPartitionCount":9,"plugins":{},"buffer":{"partitions":[1,2,3,4,5,6,7,8,9]}}';
 BEGIN
-    IF EXISTS (SELECT 1 FROM pg_class WHERE relname = 'x_ranger_global_state') THEN
-        SELECT count(*) INTO v_column_is_varchar
-        FROM pg_attribute
-        WHERE attrelid = (SELECT oid FROM pg_class WHERE relname = 'x_ranger_global_state')
-          AND attname = 'app_data'
-          AND atttypid = (SELECT oid FROM pg_type WHERE typname = 'varchar');
-
-        IF v_column_is_varchar > 0 THEN
-            ALTER TABLE x_ranger_global_state ALTER COLUMN app_data TYPE TEXT;
-        END IF;
-
-        SELECT getXportalUIdByLoginId('admin') INTO v_admin_id;
-
+    IF EXISTS (SELECT 1 FROM pg_class WHERE relname = 'x_portal_user') THEN
         IF NOT EXISTS (SELECT 1 FROM x_portal_user WHERE login_id = 'rangerauditserver') THEN
             INSERT INTO x_portal_user(create_time, update_time, first_name, last_name, pub_scr_name, login_id, password, email, status)
             VALUES (current_timestamp, current_timestamp, 'rangerauditserver', '', 'rangerauditserver', 'rangerauditserver', '', 'rangerauditserver', 0);
@@ -69,28 +54,27 @@ BEGIN
             INSERT INTO x_user(create_time, update_time, user_name, status, descr)
             VALUES (current_timestamp, current_timestamp, 'rangerauditserver', 0, 'Ranger audit server machine user');
         END IF;
+    END IF;
 
-        IF NOT EXISTS (SELECT 1 FROM x_ranger_global_state WHERE state_name = 'RangerAuditPartitionPlan') THEN
-            INSERT INTO x_ranger_global_state (create_time, update_time, added_by_id, upd_by_id, version, state_name, app_data)
-            VALUES (current_timestamp, current_timestamp, v_admin_id, v_admin_id, 1, 'RangerAuditPartitionPlan', v_plan_json);
-        END IF;
-
-        IF NOT EXISTS (SELECT 1 FROM x_audit_config WHERE cfg_name = 'ingestor.url') THEN
-            INSERT INTO x_audit_config (create_time, update_time, cfg_name, cfg_value, version)
-            VALUES (current_timestamp, current_timestamp, 'ingestor.url', 'https://ranger-audit-ingestor:8765', 1);
-        END IF;
-        IF NOT EXISTS (SELECT 1 FROM x_audit_config WHERE cfg_name = 'service.hive.allowed.users') THEN
-            INSERT INTO x_audit_config (create_time, update_time, cfg_name, cfg_value, version)
-            VALUES (current_timestamp, current_timestamp, 'service.hive.allowed.users', 'hive', 1);
-        END IF;
-        IF NOT EXISTS (SELECT 1 FROM x_audit_config WHERE cfg_name = 'topic-partitions') THEN
-            INSERT INTO x_audit_config (create_time, update_time, cfg_name, cfg_value, version)
-            VALUES (current_timestamp, current_timestamp, 'topic-partitions', '30', 1);
-        END IF;
+    IF NOT EXISTS (SELECT 1 FROM x_audit_config WHERE cfg_name = 'ingestor.url') THEN
+        INSERT INTO x_audit_config (create_time, update_time, cfg_name, cfg_value, version)
+        VALUES (current_timestamp, current_timestamp, 'ingestor.url', 'https://ranger-audit-ingestor:8765', 1);
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM x_audit_config WHERE cfg_name = 'service.hive.allowed.users') THEN
+        INSERT INTO x_audit_config (create_time, update_time, cfg_name, cfg_value, version)
+        VALUES (current_timestamp, current_timestamp, 'service.hive.allowed.users', 'hive', 1);
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM x_audit_config WHERE cfg_name = 'topic') THEN
+        INSERT INTO x_audit_config (create_time, update_time, cfg_name, cfg_value, version)
+        VALUES (current_timestamp, current_timestamp, 'topic', 'ranger_audits', 1);
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM x_audit_config WHERE cfg_name = 'RangerAuditPartitionPlan') THEN
+        INSERT INTO x_audit_config (create_time, update_time, cfg_name, cfg_value, version)
+        VALUES (current_timestamp, current_timestamp, 'RangerAuditPartitionPlan', '{"plugins":{},"buffer":{"partitions":[1,2,3,4,5,6,7,8,9]}}', 1);
     END IF;
 END;
 $$ LANGUAGE plpgsql;
 select 'delimiter end';
 
-select patch_audit_partition_plan_global_state();
+select patch_audit_config_global_state();
 select 'delimiter end';

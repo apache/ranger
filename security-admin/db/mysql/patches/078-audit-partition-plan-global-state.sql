@@ -23,14 +23,12 @@ END $$
 
 DELIMITER ;
 
-DROP PROCEDURE IF EXISTS patch_audit_partition_plan_global_state;
+DROP PROCEDURE IF EXISTS patch_audit_config_global_state;
 
 DELIMITER ;;
-CREATE PROCEDURE patch_audit_partition_plan_global_state()
+CREATE PROCEDURE patch_audit_config_global_state()
 BEGIN
-    DECLARE adminID BIGINT;
     DECLARE auditServerID BIGINT;
-    DECLARE planJson TEXT DEFAULT '{"version":1,"topic":"ranger_audits","topicPartitionCount":9,"plugins":{},"buffer":{"partitions":[1,2,3,4,5,6,7,8,9]}}';
 
     CREATE TABLE IF NOT EXISTS `x_audit_config`(
     `id` bigint(20) NOT NULL AUTO_INCREMENT,
@@ -44,17 +42,9 @@ BEGIN
     )ROW_FORMAT=DYNAMIC;
 
     IF EXISTS (
-        SELECT 1 FROM information_schema.columns
-        WHERE table_schema = DATABASE() AND table_name = 'x_ranger_global_state' AND column_name = 'state_name'
+        SELECT 1 FROM information_schema.tables
+        WHERE table_schema = DATABASE() AND table_name = 'x_portal_user'
     ) THEN
-        IF EXISTS (
-            SELECT 1 FROM information_schema.columns
-            WHERE table_schema = DATABASE() AND table_name = 'x_ranger_global_state'
-              AND column_name = 'app_data' AND data_type IN ('varchar', 'text')
-        ) THEN
-            ALTER TABLE x_ranger_global_state MODIFY app_data LONGTEXT DEFAULT NULL;
-        END IF;
-
         IF NOT EXISTS (SELECT 1 FROM x_portal_user WHERE login_id = 'rangerauditserver') THEN
             INSERT INTO x_portal_user(create_time, update_time, added_by_id, upd_by_id, first_name, last_name, pub_scr_name, login_id, password, email, status, user_src, notes)
             VALUES (UTC_TIMESTAMP(), UTC_TIMESTAMP(), NULL, NULL, 'rangerauditserver', '', 'rangerauditserver', 'rangerauditserver', '', 'rangerauditserver', 0, 0, NULL);
@@ -62,7 +52,6 @@ BEGIN
 
         UPDATE x_portal_user SET status = 0, password = '' WHERE login_id = 'rangerauditserver';
 
-        CALL getXportalUIdByLoginId('admin', adminID);
         CALL getXportalUIdByLoginId('rangerauditserver', auditServerID);
 
         IF auditServerID IS NOT NULL AND NOT EXISTS (
@@ -76,27 +65,26 @@ BEGIN
             INSERT INTO x_user(create_time, update_time, added_by_id, upd_by_id, user_name, descr, status)
             VALUES (UTC_TIMESTAMP(), UTC_TIMESTAMP(), NULL, NULL, 'rangerauditserver', 'Ranger audit server machine user', 0);
         END IF;
+    END IF;
 
-        IF NOT EXISTS (SELECT 1 FROM x_ranger_global_state WHERE state_name = 'RangerAuditPartitionPlan') THEN
-            INSERT INTO x_ranger_global_state (create_time, update_time, added_by_id, upd_by_id, version, state_name, app_data)
-            VALUES (UTC_TIMESTAMP(), UTC_TIMESTAMP(), adminID, adminID, 1, 'RangerAuditPartitionPlan', planJson);
-        END IF;
-
-        IF NOT EXISTS (SELECT 1 FROM x_audit_config WHERE cfg_name = 'ingestor.url') THEN
-            INSERT INTO x_audit_config (create_time, update_time, cfg_name, cfg_value, version)
-            VALUES (UTC_TIMESTAMP(), UTC_TIMESTAMP(), 'ingestor.url', 'https://ranger-audit-ingestor:8765', 1);
-        END IF;
-        IF NOT EXISTS (SELECT 1 FROM x_audit_config WHERE cfg_name = 'service.hive.allowed.users') THEN
-            INSERT INTO x_audit_config (create_time, update_time, cfg_name, cfg_value, version)
-            VALUES (UTC_TIMESTAMP(), UTC_TIMESTAMP(), 'service.hive.allowed.users', 'hive', 1);
-        END IF;
-        IF NOT EXISTS (SELECT 1 FROM x_audit_config WHERE cfg_name = 'topic-partitions') THEN
-            INSERT INTO x_audit_config (create_time, update_time, cfg_name, cfg_value, version)
-            VALUES (UTC_TIMESTAMP(), UTC_TIMESTAMP(), 'topic-partitions', '30', 1);
-        END IF;
+    IF NOT EXISTS (SELECT 1 FROM x_audit_config WHERE cfg_name = 'ingestor.url') THEN
+        INSERT INTO x_audit_config (create_time, update_time, cfg_name, cfg_value, version)
+        VALUES (UTC_TIMESTAMP(), UTC_TIMESTAMP(), 'ingestor.url', 'https://ranger-audit-ingestor:8765', 1);
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM x_audit_config WHERE cfg_name = 'service.hive.allowed.users') THEN
+        INSERT INTO x_audit_config (create_time, update_time, cfg_name, cfg_value, version)
+        VALUES (UTC_TIMESTAMP(), UTC_TIMESTAMP(), 'service.hive.allowed.users', 'hive', 1);
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM x_audit_config WHERE cfg_name = 'topic') THEN
+        INSERT INTO x_audit_config (create_time, update_time, cfg_name, cfg_value, version)
+        VALUES (UTC_TIMESTAMP(), UTC_TIMESTAMP(), 'topic', 'ranger_audits', 1);
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM x_audit_config WHERE cfg_name = 'RangerAuditPartitionPlan') THEN
+        INSERT INTO x_audit_config (create_time, update_time, cfg_name, cfg_value, version)
+        VALUES (UTC_TIMESTAMP(), UTC_TIMESTAMP(), 'RangerAuditPartitionPlan', '{"plugins":{},"buffer":{"partitions":[1,2,3,4,5,6,7,8,9]}}', 1);
     END IF;
 END;;
 
 DELIMITER ;
-CALL patch_audit_partition_plan_global_state();
-DROP PROCEDURE IF EXISTS patch_audit_partition_plan_global_state;
+CALL patch_audit_config_global_state();
+DROP PROCEDURE IF EXISTS patch_audit_config_global_state;

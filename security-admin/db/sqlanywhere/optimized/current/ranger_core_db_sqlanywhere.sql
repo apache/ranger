@@ -546,7 +546,7 @@ CREATE TABLE dbo.x_ranger_global_state(
 	upd_by_id bigint DEFAULT NULL NULL,
 	version bigint DEFAULT NULL NULL,
 	state_name varchar(255) NOT NULL,
-	app_data LONG VARCHAR DEFAULT NULL NULL,
+	app_data varchar(255) DEFAULT NULL NULL,
 	CONSTRAINT x_ranger_global_state_PK_id PRIMARY KEY CLUSTERED(id),
 	CONSTRAINT x_ranger_global_state_UK_state_name UNIQUE NONCLUSTERED(state_name)
 )
@@ -2311,13 +2311,13 @@ INSERT INTO x_ranger_global_state (create_time,update_time,added_by_id,upd_by_id
 GO
 INSERT INTO x_ranger_global_state (create_time,update_time,added_by_id,upd_by_id,version,state_name,app_data) VALUES (CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,getXportalUIdByLoginId('admin'),getXportalUIdByLoginId('admin'),1,'RangerSecurityZone','{"Version":"1"}');
 GO
-INSERT INTO x_ranger_global_state (create_time,update_time,added_by_id,upd_by_id,version,state_name,app_data) VALUES (CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,getXportalUIdByLoginId('admin'),getXportalUIdByLoginId('admin'),1,'RangerAuditPartitionPlan','{"version":1,"topic":"ranger_audits","topicPartitionCount":9,"plugins":{},"buffer":{"partitions":[1,2,3,4,5,6,7,8,9]}}');
-GO
 INSERT INTO x_audit_config (create_time,update_time,cfg_name,cfg_value,version) VALUES (CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,'ingestor.url','https://ranger-audit-ingestor:8765',1);
 GO
 INSERT INTO x_audit_config (create_time,update_time,cfg_name,cfg_value,version) VALUES (CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,'service.hive.allowed.users','hive',1);
 GO
-INSERT INTO x_audit_config (create_time,update_time,cfg_name,cfg_value,version) VALUES (CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,'topic-partitions','30',1);
+INSERT INTO x_audit_config (create_time,update_time,cfg_name,cfg_value,version) VALUES (CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,'topic','ranger_audits',1);
+GO
+INSERT INTO x_audit_config (create_time,update_time,cfg_name,cfg_value,version) VALUES (CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,'RangerAuditPartitionPlan','{"plugins":{},"buffer":{"partitions":[1,2,3,4,5,6,7,8,9]}}',1);
 GO
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('J10001',CURRENT_TIMESTAMP,'Ranger 1.0.0',CURRENT_TIMESTAMP,'localhost','Y');
 GO

@@ -23,8 +23,6 @@ END;
 GO
 
 BEGIN
-    DECLARE planJson LONG VARCHAR DEFAULT '{"version":1,"topic":"ranger_audits","topicPartitionCount":9,"plugins":{},"buffer":{"partitions":[1,2,3,4,5,6,7,8,9]}}';
-
     IF NOT EXISTS(SELECT * FROM SYS.SYSTABLE WHERE table_name = 'x_audit_config') THEN
         CREATE TABLE dbo.x_audit_config(
             id bigint IDENTITY NOT NULL,
@@ -38,11 +36,7 @@ BEGIN
         );
     END IF;
 
-    IF EXISTS(SELECT * FROM SYS.SYSCOLUMNS WHERE tname = 'x_ranger_global_state' AND cname = 'state_name') THEN
-        IF EXISTS(SELECT * FROM SYS.SYSCOLUMNS WHERE tname = 'x_ranger_global_state' AND cname = 'app_data' AND coltype = 'varchar') THEN
-            ALTER TABLE dbo.x_ranger_global_state ALTER app_data LONG VARCHAR DEFAULT NULL NULL;
-        END IF;
-
+    IF EXISTS(SELECT * FROM SYS.SYSTABLE WHERE table_name = 'x_portal_user') THEN
         IF NOT EXISTS(SELECT * FROM x_portal_user WHERE login_id = 'rangerauditserver') THEN
             INSERT INTO x_portal_user(create_time, update_time, added_by_id, upd_by_id, first_name, last_name, pub_scr_name, login_id, password, email, status, user_src, notes)
             VALUES (CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, NULL, NULL, 'rangerauditserver', '', 'rangerauditserver', 'rangerauditserver', '', 'rangerauditserver', 0, 0, NULL);
@@ -59,24 +53,23 @@ BEGIN
             INSERT INTO x_user(create_time, update_time, added_by_id, upd_by_id, user_name, descr, status)
             VALUES (CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, NULL, NULL, 'rangerauditserver', 'Ranger audit server machine user', 0);
         END IF;
+    END IF;
 
-        IF NOT EXISTS(SELECT * FROM x_ranger_global_state WHERE state_name = 'RangerAuditPartitionPlan') THEN
-            INSERT INTO x_ranger_global_state(create_time, update_time, added_by_id, upd_by_id, version, state_name, app_data)
-            VALUES (CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, getXportalUIdByLoginId('admin'), getXportalUIdByLoginId('admin'), 1, 'RangerAuditPartitionPlan', planJson);
-        END IF;
-
-        IF NOT EXISTS(SELECT * FROM x_audit_config WHERE cfg_name = 'ingestor.url') THEN
-            INSERT INTO x_audit_config(create_time, update_time, cfg_name, cfg_value, version)
-            VALUES (CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 'ingestor.url', 'https://ranger-audit-ingestor:8765', 1);
-        END IF;
-        IF NOT EXISTS(SELECT * FROM x_audit_config WHERE cfg_name = 'service.hive.allowed.users') THEN
-            INSERT INTO x_audit_config(create_time, update_time, cfg_name, cfg_value, version)
-            VALUES (CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 'service.hive.allowed.users', 'hive', 1);
-        END IF;
-        IF NOT EXISTS(SELECT * FROM x_audit_config WHERE cfg_name = 'topic-partitions') THEN
-            INSERT INTO x_audit_config(create_time, update_time, cfg_name, cfg_value, version)
-            VALUES (CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 'topic-partitions', '30', 1);
-        END IF;
+    IF NOT EXISTS(SELECT * FROM x_audit_config WHERE cfg_name = 'ingestor.url') THEN
+        INSERT INTO x_audit_config(create_time, update_time, cfg_name, cfg_value, version)
+        VALUES (CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 'ingestor.url', 'https://ranger-audit-ingestor:8765', 1);
+    END IF;
+    IF NOT EXISTS(SELECT * FROM x_audit_config WHERE cfg_name = 'service.hive.allowed.users') THEN
+        INSERT INTO x_audit_config(create_time, update_time, cfg_name, cfg_value, version)
+        VALUES (CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 'service.hive.allowed.users', 'hive', 1);
+    END IF;
+    IF NOT EXISTS(SELECT * FROM x_audit_config WHERE cfg_name = 'topic') THEN
+        INSERT INTO x_audit_config(create_time, update_time, cfg_name, cfg_value, version)
+        VALUES (CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 'topic', 'ranger_audits', 1);
+    END IF;
+    IF NOT EXISTS(SELECT * FROM x_audit_config WHERE cfg_name = 'RangerAuditPartitionPlan') THEN
+        INSERT INTO x_audit_config(create_time, update_time, cfg_name, cfg_value, version)
+        VALUES (CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 'RangerAuditPartitionPlan', '{"plugins":{},"buffer":{"partitions":[1,2,3,4,5,6,7,8,9]}}', 1);
     END IF;
 END
 GO
