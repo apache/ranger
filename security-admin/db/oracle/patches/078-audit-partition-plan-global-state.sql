@@ -119,6 +119,12 @@ BEGIN
             EXECUTE IMMEDIATE sql_stmt USING 'service.hive.allowed.users', 'hive';
             COMMIT;
         END IF;
+        SELECT count(*) INTO v_cfg_count FROM x_audit_config WHERE cfg_name = 'topic-partitions';
+        IF (v_cfg_count = 0) THEN
+            sql_stmt := 'INSERT INTO x_audit_config (id, create_time, update_time, cfg_name, cfg_value, version) VALUES (X_AUDIT_CONFIG_SEQ.nextval, sys_extract_utc(systimestamp), sys_extract_utc(systimestamp), :1, :2, 1)';
+            EXECUTE IMMEDIATE sql_stmt USING 'topic-partitions', '30';
+            COMMIT;
+        END IF;
     END IF;
 END;
 /

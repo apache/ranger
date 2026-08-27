@@ -90,6 +90,11 @@ BEGIN
         INSERT INTO x_audit_config (create_time, update_time, cfg_name, cfg_value, version)
         VALUES (CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 'service.hive.allowed.users', N'hive', 1);
     END;
+    IF NOT EXISTS(SELECT * FROM x_audit_config WHERE cfg_name = 'topic-partitions')
+    BEGIN
+        INSERT INTO x_audit_config (create_time, update_time, cfg_name, cfg_value, version)
+        VALUES (CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 'topic-partitions', N'30', 1);
+    END;
 END;
 GO
 EXIT

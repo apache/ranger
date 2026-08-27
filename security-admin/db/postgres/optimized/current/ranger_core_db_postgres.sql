@@ -2133,6 +2133,7 @@ INSERT INTO x_ranger_global_state (create_time,update_time,added_by_id,upd_by_id
 
 INSERT INTO x_audit_config (create_time,update_time,cfg_name,cfg_value,version) VALUES (current_timestamp,current_timestamp,'ingestor.url','https://ranger-audit-ingestor:8765',1);
 INSERT INTO x_audit_config (create_time,update_time,cfg_name,cfg_value,version) VALUES (current_timestamp,current_timestamp,'service.hive.allowed.users','hive',1);
+INSERT INTO x_audit_config (create_time,update_time,cfg_name,cfg_value,version) VALUES (current_timestamp,current_timestamp,'topic-partitions','30',1);
 
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('J10001',current_timestamp,'Ranger 1.0.0',current_timestamp,'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('J10002',current_timestamp,'Ranger 1.0.0',current_timestamp,'localhost','Y');

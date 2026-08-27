@@ -83,6 +83,10 @@ BEGIN
             INSERT INTO x_audit_config (create_time, update_time, cfg_name, cfg_value, version)
             VALUES (current_timestamp, current_timestamp, 'service.hive.allowed.users', 'hive', 1);
         END IF;
+        IF NOT EXISTS (SELECT 1 FROM x_audit_config WHERE cfg_name = 'topic-partitions') THEN
+            INSERT INTO x_audit_config (create_time, update_time, cfg_name, cfg_value, version)
+            VALUES (current_timestamp, current_timestamp, 'topic-partitions', '30', 1);
+        END IF;
     END IF;
 END;
 $$ LANGUAGE plpgsql;
