@@ -2199,8 +2199,7 @@ INSERT INTO x_ranger_global_state (id,create_time,update_time,added_by_id,upd_by
 
 INSERT INTO x_audit_config (id,create_time,update_time,cfg_name,cfg_value,version) VALUES (X_AUDIT_CONFIG_SEQ.nextval,sys_extract_utc(systimestamp),sys_extract_utc(systimestamp),'ingestor.url','https://ranger-audit-ingestor:8765',1);
 INSERT INTO x_audit_config (id,create_time,update_time,cfg_name,cfg_value,version) VALUES (X_AUDIT_CONFIG_SEQ.nextval,sys_extract_utc(systimestamp),sys_extract_utc(systimestamp),'service.hive.allowed.users','hive',1);
-INSERT INTO x_audit_config (id,create_time,update_time,cfg_name,cfg_value,version) VALUES (X_AUDIT_CONFIG_SEQ.nextval,sys_extract_utc(systimestamp),sys_extract_utc(systimestamp),'topic','ranger_audits',1);
-INSERT INTO x_audit_config (id,create_time,update_time,cfg_name,cfg_value,version) VALUES (X_AUDIT_CONFIG_SEQ.nextval,sys_extract_utc(systimestamp),sys_extract_utc(systimestamp),'RangerAuditPartitionPlan','{"plugins":{},"buffer":{"partitions":[1,2,3,4,5,6,7,8,9]}}',1);
+INSERT INTO x_audit_config (id,create_time,update_time,cfg_name,cfg_value,version) VALUES (X_AUDIT_CONFIG_SEQ.nextval,sys_extract_utc(systimestamp),sys_extract_utc(systimestamp),'audit.partition.plan','{"topic":"ranger_audits","plugins":{},"buffer":{"partitions":[1,2,3,4,5,6,7,8,9]}}',1);
 
 INSERT INTO x_db_version_h (id,version,inst_at,inst_by,updated_at,updated_by,active) VALUES (X_DB_VERSION_H_SEQ.nextval,'J10001',sys_extract_utc(systimestamp),'Ranger 1.0.0',sys_extract_utc(systimestamp),'localhost','Y');
 INSERT INTO x_db_version_h (id,version,inst_at,inst_by,updated_at,updated_by,active) VALUES (X_DB_VERSION_H_SEQ.nextval,'J10002',sys_extract_utc(systimestamp),'Ranger 1.0.0',sys_extract_utc(systimestamp),'localhost','Y');

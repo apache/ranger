@@ -75,13 +75,9 @@ BEGIN
         INSERT INTO x_audit_config (create_time, update_time, cfg_name, cfg_value, version)
         VALUES (UTC_TIMESTAMP(), UTC_TIMESTAMP(), 'service.hive.allowed.users', 'hive', 1);
     END IF;
-    IF NOT EXISTS (SELECT 1 FROM x_audit_config WHERE cfg_name = 'topic') THEN
+    IF NOT EXISTS (SELECT 1 FROM x_audit_config WHERE cfg_name = 'audit.partition.plan') THEN
         INSERT INTO x_audit_config (create_time, update_time, cfg_name, cfg_value, version)
-        VALUES (UTC_TIMESTAMP(), UTC_TIMESTAMP(), 'topic', 'ranger_audits', 1);
-    END IF;
-    IF NOT EXISTS (SELECT 1 FROM x_audit_config WHERE cfg_name = 'RangerAuditPartitionPlan') THEN
-        INSERT INTO x_audit_config (create_time, update_time, cfg_name, cfg_value, version)
-        VALUES (UTC_TIMESTAMP(), UTC_TIMESTAMP(), 'RangerAuditPartitionPlan', '{"plugins":{},"buffer":{"partitions":[1,2,3,4,5,6,7,8,9]}}', 1);
+        VALUES (UTC_TIMESTAMP(), UTC_TIMESTAMP(), 'audit.partition.plan', '{"topic":"ranger_audits","plugins":{},"buffer":{"partitions":[1,2,3,4,5,6,7,8,9]}}', 1);
     END IF;
 END;;
 

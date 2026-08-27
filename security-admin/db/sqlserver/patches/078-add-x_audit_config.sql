@@ -83,16 +83,10 @@ BEGIN
     VALUES (CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 'service.hive.allowed.users', N'hive', 1);
 END;
 GO
-IF NOT EXISTS(SELECT * FROM x_audit_config WHERE cfg_name = 'topic')
+IF NOT EXISTS(SELECT * FROM x_audit_config WHERE cfg_name = 'audit.partition.plan')
 BEGIN
     INSERT INTO x_audit_config (create_time, update_time, cfg_name, cfg_value, version)
-    VALUES (CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 'topic', N'ranger_audits', 1);
-END;
-GO
-IF NOT EXISTS(SELECT * FROM x_audit_config WHERE cfg_name = 'RangerAuditPartitionPlan')
-BEGIN
-    INSERT INTO x_audit_config (create_time, update_time, cfg_name, cfg_value, version)
-    VALUES (CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 'RangerAuditPartitionPlan', N'{"plugins":{},"buffer":{"partitions":[1,2,3,4,5,6,7,8,9]}}', 1);
+    VALUES (CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 'audit.partition.plan', N'{"topic":"ranger_audits","plugins":{},"buffer":{"partitions":[1,2,3,4,5,6,7,8,9]}}', 1);
 END;
 GO
 EXIT

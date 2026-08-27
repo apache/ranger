@@ -1898,8 +1898,7 @@ INSERT INTO x_ranger_global_state (create_time,update_time,added_by_id,upd_by_id
 
 INSERT INTO x_audit_config (create_time,update_time,cfg_name,cfg_value,version) VALUES (UTC_TIMESTAMP(),UTC_TIMESTAMP(),'ingestor.url','https://ranger-audit-ingestor:8765',1);
 INSERT INTO x_audit_config (create_time,update_time,cfg_name,cfg_value,version) VALUES (UTC_TIMESTAMP(),UTC_TIMESTAMP(),'service.hive.allowed.users','hive',1);
-INSERT INTO x_audit_config (create_time,update_time,cfg_name,cfg_value,version) VALUES (UTC_TIMESTAMP(),UTC_TIMESTAMP(),'topic','ranger_audits',1);
-INSERT INTO x_audit_config (create_time,update_time,cfg_name,cfg_value,version) VALUES (UTC_TIMESTAMP(),UTC_TIMESTAMP(),'RangerAuditPartitionPlan','{"plugins":{},"buffer":{"partitions":[1,2,3,4,5,6,7,8,9]}}',1);
+INSERT INTO x_audit_config (create_time,update_time,cfg_name,cfg_value,version) VALUES (UTC_TIMESTAMP(),UTC_TIMESTAMP(),'audit.partition.plan','{"topic":"ranger_audits","plugins":{},"buffer":{"partitions":[1,2,3,4,5,6,7,8,9]}}',1);
 
 END $$
 DELIMITER ;
