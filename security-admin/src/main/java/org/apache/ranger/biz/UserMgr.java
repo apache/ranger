@@ -1182,7 +1182,7 @@ public class UserMgr {
             return false;
         }
         XXPortalUser xXPortalUser = daoManager.getXXPortalUser().findByLoginId(loginId);
-        return xXPortalUser != null && xXPortalUser.getStatus() == RangerCommonEnums.STATUS_DISABLED;
+        return xXPortalUser != null && xXPortalUser.getStatus() != RangerCommonEnums.ACT_STATUS_ACTIVE;
     }
 
     @Transactional(readOnly = false, propagation = Propagation.REQUIRED)
