@@ -22,6 +22,8 @@ import org.apache.ranger.kms.dao.DaoManager;
 
 import java.io.IOException;
 
+import static org.apache.hadoop.crypto.key.RangerKeyStoreProvider.DBKS_SITE_XML;
+
 public class DBToKeySecure {
     private static final String ENCRYPTION_KEY           = "ranger.db.encrypt.key.password";
     private static final String KEYSECURE_MASTERKEY_NAME = "ranger.kms.keysecure.masterkey.name";
@@ -102,7 +104,8 @@ public class DBToKeySecure {
             String      mkPassword  = conf.get(ENCRYPTION_KEY);
 
             // Get Master Key from Ranger DB
-            RangerKMSMKI rangerMasterKey    = new RangerMasterKey(daoManager);
+            RangerKMSCryptoConfigManager kmsCryptoConfigApi = new RangerKMSCryptoConfigManager(DBKS_SITE_XML);
+            RangerKMSMKI rangerMasterKey    = new RangerMasterKey(daoManager, kmsCryptoConfigApi);
             String          mkey            = rangerMasterKey.getMasterKey(mkPassword);
             byte[]          key             = Base64.decode(mkey);
 

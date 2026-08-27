@@ -28,6 +28,8 @@ import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
 
+import static org.apache.hadoop.crypto.key.RangerKeyStoreProvider.DBKS_SITE_XML;
+
 public class DBToAzureKeyVault {
     private static final String AZURE_CLIENT_ID                 = "ranger.kms.azure.client.id";
     private static final String AZURE_CLIENT_SECRET             = "ranger.kms.azure.client.secret";
@@ -187,10 +189,11 @@ public class DBToAzureKeyVault {
             boolean      azureMKSuccess       = rangerKVKeyGenerator.generateMasterKey(mKeyPass);
 
             if (azureMKSuccess) {
-                dbStore = new RangerKeyStore(daoManager, conf, kvClient);
+                RangerKMSCryptoConfigManager kmsCryptoConfigApi = new RangerKMSCryptoConfigManager(DBKS_SITE_XML);
+                dbStore = new RangerKeyStore(daoManager, kmsCryptoConfigApi);
 
                 // Get Master Key from Ranger DB
-                RangerMasterKey        rangerMasterKey    = new RangerMasterKey(daoManager);
+                RangerMasterKey        rangerMasterKey    = new RangerMasterKey(daoManager, kmsCryptoConfigApi);
                 char[]                 mkey               = rangerMasterKey.getMasterKey(mKeyPass).toCharArray();
                 List<XXRangerKeyStore> rangerKeyStoreList = new ArrayList<>();
 
