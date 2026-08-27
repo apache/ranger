@@ -14,6 +14,20 @@
 -- limitations under the License.
 
 select 'delimiter start';
+CREATE TABLE IF NOT EXISTS x_audit_config (
+id BIGINT,
+create_time TIMESTAMP DEFAULT NULL NULL,
+update_time TIMESTAMP DEFAULT NULL NULL,
+cfg_name varchar(255) NOT NULL,
+cfg_value TEXT DEFAULT NULL NULL,
+version BIGINT DEFAULT NULL NULL,
+primary key (id),
+CONSTRAINT x_audit_config_UK_cfg_name UNIQUE (cfg_name)
+);
+CREATE SEQUENCE IF NOT EXISTS x_audit_config_seq;
+ALTER SEQUENCE x_audit_config_seq OWNED BY x_audit_config.id;
+ALTER TABLE x_audit_config ALTER COLUMN id SET DEFAULT nextval('x_audit_config_seq'::regclass);
+
 CREATE OR REPLACE FUNCTION patch_audit_partition_plan_global_state()
 RETURNS void AS $$
 DECLARE
@@ -59,6 +73,19 @@ BEGIN
         IF NOT EXISTS (SELECT 1 FROM x_ranger_global_state WHERE state_name = 'RangerAuditPartitionPlan') THEN
             INSERT INTO x_ranger_global_state (create_time, update_time, added_by_id, upd_by_id, version, state_name, app_data)
             VALUES (current_timestamp, current_timestamp, v_admin_id, v_admin_id, 1, 'RangerAuditPartitionPlan', v_plan_json);
+        END IF;
+
+        IF NOT EXISTS (SELECT 1 FROM x_audit_config WHERE cfg_name = 'ingestor.url') THEN
+            INSERT INTO x_audit_config (create_time, update_time, cfg_name, cfg_value, version)
+            VALUES (current_timestamp, current_timestamp, 'ingestor.url', 'https://ranger-audit-ingestor:8765', 1);
+        END IF;
+        IF NOT EXISTS (SELECT 1 FROM x_audit_config WHERE cfg_name = 'service.hive.allowed.users') THEN
+            INSERT INTO x_audit_config (create_time, update_time, cfg_name, cfg_value, version)
+            VALUES (current_timestamp, current_timestamp, 'service.hive.allowed.users', 'hive', 1);
+        END IF;
+        IF NOT EXISTS (SELECT 1 FROM x_audit_config WHERE cfg_name = 'topic-partitions') THEN
+            INSERT INTO x_audit_config (create_time, update_time, cfg_name, cfg_value, version)
+            VALUES (current_timestamp, current_timestamp, 'topic-partitions', '30', 1);
         END IF;
     END IF;
 END;

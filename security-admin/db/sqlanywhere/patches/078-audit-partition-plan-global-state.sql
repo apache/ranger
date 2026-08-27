@@ -25,6 +25,19 @@ GO
 BEGIN
     DECLARE planJson LONG VARCHAR DEFAULT '{"version":1,"topic":"ranger_audits","topicPartitionCount":9,"plugins":{},"buffer":{"partitions":[1,2,3,4,5,6,7,8,9]}}';
 
+    IF NOT EXISTS(SELECT * FROM SYS.SYSTABLE WHERE table_name = 'x_audit_config') THEN
+        CREATE TABLE dbo.x_audit_config(
+            id bigint IDENTITY NOT NULL,
+            create_time datetime DEFAULT NULL NULL,
+            update_time datetime DEFAULT NULL NULL,
+            cfg_name varchar(255) NOT NULL,
+            cfg_value LONG VARCHAR DEFAULT NULL NULL,
+            version bigint DEFAULT NULL NULL,
+            CONSTRAINT x_audit_config_PK_id PRIMARY KEY CLUSTERED(id),
+            CONSTRAINT x_audit_config_UK_cfg_name UNIQUE NONCLUSTERED(cfg_name)
+        );
+    END IF;
+
     IF EXISTS(SELECT * FROM SYS.SYSCOLUMNS WHERE tname = 'x_ranger_global_state' AND cname = 'state_name') THEN
         IF EXISTS(SELECT * FROM SYS.SYSCOLUMNS WHERE tname = 'x_ranger_global_state' AND cname = 'app_data' AND coltype = 'varchar') THEN
             ALTER TABLE dbo.x_ranger_global_state ALTER app_data LONG VARCHAR DEFAULT NULL NULL;
@@ -50,6 +63,19 @@ BEGIN
         IF NOT EXISTS(SELECT * FROM x_ranger_global_state WHERE state_name = 'RangerAuditPartitionPlan') THEN
             INSERT INTO x_ranger_global_state(create_time, update_time, added_by_id, upd_by_id, version, state_name, app_data)
             VALUES (CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, getXportalUIdByLoginId('admin'), getXportalUIdByLoginId('admin'), 1, 'RangerAuditPartitionPlan', planJson);
+        END IF;
+
+        IF NOT EXISTS(SELECT * FROM x_audit_config WHERE cfg_name = 'ingestor.url') THEN
+            INSERT INTO x_audit_config(create_time, update_time, cfg_name, cfg_value, version)
+            VALUES (CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 'ingestor.url', 'https://ranger-audit-ingestor:8765', 1);
+        END IF;
+        IF NOT EXISTS(SELECT * FROM x_audit_config WHERE cfg_name = 'service.hive.allowed.users') THEN
+            INSERT INTO x_audit_config(create_time, update_time, cfg_name, cfg_value, version)
+            VALUES (CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 'service.hive.allowed.users', 'hive', 1);
+        END IF;
+        IF NOT EXISTS(SELECT * FROM x_audit_config WHERE cfg_name = 'topic-partitions') THEN
+            INSERT INTO x_audit_config(create_time, update_time, cfg_name, cfg_value, version)
+            VALUES (CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 'topic-partitions', '30', 1);
         END IF;
     END IF;
 END

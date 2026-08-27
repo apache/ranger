@@ -958,6 +958,10 @@ IF (OBJECT_ID('x_ranger_global_state') IS NOT NULL)
 BEGIN
     DROP TABLE [dbo].[x_ranger_global_state]
 END
+IF (OBJECT_ID('x_audit_config') IS NOT NULL)
+BEGIN
+    DROP TABLE [dbo].[x_audit_config]
+END
 IF (OBJECT_ID('x_security_zone') IS NOT NULL)
 BEGIN
     DROP TABLE [dbo].[x_security_zone]
@@ -1572,6 +1576,26 @@ CREATE TABLE [dbo].[x_ranger_global_state](
 CONSTRAINT [x_ranger_global_state$x_ranger_global_state_UK_name] UNIQUE NONCLUSTERED
 (
 	[state_name] ASC
+)WITH (PAD_INDEX = OFF,STATISTICS_NORECOMPUTE = OFF,IGNORE_DUP_KEY = OFF,ALLOW_ROW_LOCKS = ON,ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+SET ANSI_NULLS ON
+SET QUOTED_IDENTIFIER ON
+SET ANSI_PADDING ON
+CREATE TABLE [dbo].[x_audit_config](
+	[id] [bigint] IDENTITY(1,1) NOT NULL,
+	[create_time] [datetime2] DEFAULT NULL NULL,
+	[update_time] [datetime2] DEFAULT NULL NULL,
+	[cfg_name] [varchar](255) NOT NULL,
+	[cfg_value] NVARCHAR(MAX) DEFAULT NULL NULL,
+	[version] [bigint] DEFAULT NULL NULL,
+	PRIMARY KEY CLUSTERED
+(
+	[id] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY],
+CONSTRAINT [x_audit_config$x_audit_config_UK_cfg_name] UNIQUE NONCLUSTERED
+(
+	[cfg_name] ASC
 )WITH (PAD_INDEX = OFF,STATISTICS_NORECOMPUTE = OFF,IGNORE_DUP_KEY = OFF,ALLOW_ROW_LOCKS = ON,ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
 ) ON [PRIMARY]
 GO
@@ -4546,6 +4570,10 @@ INSERT INTO x_ranger_global_state (create_time,update_time,added_by_id,upd_by_id
 INSERT INTO x_ranger_global_state (create_time,update_time,added_by_id,upd_by_id,version,state_name,app_data) VALUES (CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,dbo.getXportalUIdByLoginId('admin'),dbo.getXportalUIdByLoginId('admin'),1,'RangerUserStore','{"Version":"1"}');
 INSERT INTO x_ranger_global_state (create_time,update_time,added_by_id,upd_by_id,version,state_name,app_data) VALUES (CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,dbo.getXportalUIdByLoginId('admin'),dbo.getXportalUIdByLoginId('admin'),1,'RangerSecurityZone','{"Version":"1"}');
 INSERT INTO x_ranger_global_state (create_time,update_time,added_by_id,upd_by_id,version,state_name,app_data) VALUES (CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,dbo.getXportalUIdByLoginId('admin'),dbo.getXportalUIdByLoginId('admin'),1,'RangerAuditPartitionPlan',N'{"version":1,"topic":"ranger_audits","topicPartitionCount":9,"plugins":{},"buffer":{"partitions":[1,2,3,4,5,6,7,8,9]}}');
+
+INSERT INTO x_audit_config (create_time,update_time,cfg_name,cfg_value,version) VALUES (CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,'ingestor.url',N'https://ranger-audit-ingestor:8765',1);
+INSERT INTO x_audit_config (create_time,update_time,cfg_name,cfg_value,version) VALUES (CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,'service.hive.allowed.users',N'hive',1);
+INSERT INTO x_audit_config (create_time,update_time,cfg_name,cfg_value,version) VALUES (CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,'topic-partitions',N'30',1);
 
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('J10001',CURRENT_TIMESTAMP,'Ranger 1.0.0',CURRENT_TIMESTAMP,'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('J10002',CURRENT_TIMESTAMP,'Ranger 1.0.0',CURRENT_TIMESTAMP,'localhost','Y');

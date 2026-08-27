@@ -69,6 +69,7 @@ DROP TABLE IF EXISTS x_security_zone_ref_user CASCADE;
 DROP TABLE IF EXISTS x_security_zone_ref_role CASCADE;
 DROP TABLE IF EXISTS x_security_zone_ref_tag_srvc CASCADE;
 DROP TABLE IF EXISTS x_security_zone_ref_service CASCADE;
+DROP TABLE IF EXISTS x_audit_config CASCADE;
 DROP TABLE IF EXISTS x_ranger_global_state CASCADE;
 DROP TABLE IF EXISTS x_security_zone CASCADE;
 DROP TABLE IF EXISTS x_service CASCADE;
@@ -105,6 +106,7 @@ DROP SEQUENCE IF EXISTS x_sec_zone_ref_role_seq;
 DROP SEQUENCE IF EXISTS x_sec_zone_ref_resource_seq;
 DROP SEQUENCE IF EXISTS x_sec_zone_ref_service_seq;
 DROP SEQUENCE IF EXISTS x_sec_zone_ref_tag_srvc_SEQ;
+DROP SEQUENCE IF EXISTS x_audit_config_seq;
 DROP SEQUENCE IF EXISTS x_ranger_global_state_seq;
 DROP SEQUENCE IF EXISTS x_security_zone_seq;
 DROP SEQUENCE IF EXISTS x_policy_change_log_seq;
@@ -612,6 +614,18 @@ primary key (id),
 CONSTRAINT x_ranger_global_state_UK_state_name UNIQUE (state_name),
 CONSTRAINT x_ranger_global_state_FK_added_by_id FOREIGN KEY (added_by_id) REFERENCES x_portal_user (id),
 CONSTRAINT x_ranger_global_state_FK_upd_by_id FOREIGN KEY (upd_by_id) REFERENCES x_portal_user (id)
+);
+
+CREATE SEQUENCE x_audit_config_seq;
+CREATE TABLE x_audit_config (
+id BIGINT DEFAULT nextval('x_audit_config_seq'::regclass),
+create_time TIMESTAMP DEFAULT NULL NULL,
+update_time TIMESTAMP DEFAULT NULL NULL,
+cfg_name varchar(255) NOT NULL,
+cfg_value TEXT DEFAULT NULL NULL,
+version BIGINT DEFAULT NULL NULL,
+primary key (id),
+CONSTRAINT x_audit_config_UK_cfg_name UNIQUE (cfg_name)
 );
 
 CREATE SEQUENCE x_policy_seq;
@@ -2116,6 +2130,10 @@ INSERT INTO x_ranger_global_state (create_time,update_time,added_by_id,upd_by_id
 INSERT INTO x_ranger_global_state (create_time,update_time,added_by_id,upd_by_id,version,state_name,app_data) VALUES (current_timestamp,current_timestamp,getXportalUIdByLoginId('admin'),getXportalUIdByLoginId('admin'),1,'RangerUserStore','{"Version":"1"}');
 INSERT INTO x_ranger_global_state (create_time,update_time,added_by_id,upd_by_id,version,state_name,app_data) VALUES (current_timestamp,current_timestamp,getXportalUIdByLoginId('admin'),getXportalUIdByLoginId('admin'),1,'RangerSecurityZone','{"Version":"1"}');
 INSERT INTO x_ranger_global_state (create_time,update_time,added_by_id,upd_by_id,version,state_name,app_data) VALUES (current_timestamp,current_timestamp,getXportalUIdByLoginId('admin'),getXportalUIdByLoginId('admin'),1,'RangerAuditPartitionPlan','{"version":1,"topic":"ranger_audits","topicPartitionCount":9,"plugins":{},"buffer":{"partitions":[1,2,3,4,5,6,7,8,9]}}');
+
+INSERT INTO x_audit_config (create_time,update_time,cfg_name,cfg_value,version) VALUES (current_timestamp,current_timestamp,'ingestor.url','https://ranger-audit-ingestor:8765',1);
+INSERT INTO x_audit_config (create_time,update_time,cfg_name,cfg_value,version) VALUES (current_timestamp,current_timestamp,'service.hive.allowed.users','hive',1);
+INSERT INTO x_audit_config (create_time,update_time,cfg_name,cfg_value,version) VALUES (current_timestamp,current_timestamp,'topic-partitions','30',1);
 
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('J10001',current_timestamp,'Ranger 1.0.0',current_timestamp,'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('J10002',current_timestamp,'Ranger 1.0.0',current_timestamp,'localhost','Y');

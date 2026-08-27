@@ -32,6 +32,17 @@ BEGIN
     DECLARE auditServerID BIGINT;
     DECLARE planJson TEXT DEFAULT '{"version":1,"topic":"ranger_audits","topicPartitionCount":9,"plugins":{},"buffer":{"partitions":[1,2,3,4,5,6,7,8,9]}}';
 
+    CREATE TABLE IF NOT EXISTS `x_audit_config`(
+    `id` bigint(20) NOT NULL AUTO_INCREMENT,
+    `create_time` datetime NULL DEFAULT NULL,
+    `update_time` datetime NULL DEFAULT NULL,
+    `cfg_name` varchar(255) NOT NULL,
+    `cfg_value` LONGTEXT NULL DEFAULT NULL,
+    `version` bigint(20) NULL DEFAULT NULL,
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `x_audit_config_UK_cfg_name`(`cfg_name`)
+    )ROW_FORMAT=DYNAMIC;
+
     IF EXISTS (
         SELECT 1 FROM information_schema.columns
         WHERE table_schema = DATABASE() AND table_name = 'x_ranger_global_state' AND column_name = 'state_name'
@@ -69,6 +80,19 @@ BEGIN
         IF NOT EXISTS (SELECT 1 FROM x_ranger_global_state WHERE state_name = 'RangerAuditPartitionPlan') THEN
             INSERT INTO x_ranger_global_state (create_time, update_time, added_by_id, upd_by_id, version, state_name, app_data)
             VALUES (UTC_TIMESTAMP(), UTC_TIMESTAMP(), adminID, adminID, 1, 'RangerAuditPartitionPlan', planJson);
+        END IF;
+
+        IF NOT EXISTS (SELECT 1 FROM x_audit_config WHERE cfg_name = 'ingestor.url') THEN
+            INSERT INTO x_audit_config (create_time, update_time, cfg_name, cfg_value, version)
+            VALUES (UTC_TIMESTAMP(), UTC_TIMESTAMP(), 'ingestor.url', 'https://ranger-audit-ingestor:8765', 1);
+        END IF;
+        IF NOT EXISTS (SELECT 1 FROM x_audit_config WHERE cfg_name = 'service.hive.allowed.users') THEN
+            INSERT INTO x_audit_config (create_time, update_time, cfg_name, cfg_value, version)
+            VALUES (UTC_TIMESTAMP(), UTC_TIMESTAMP(), 'service.hive.allowed.users', 'hive', 1);
+        END IF;
+        IF NOT EXISTS (SELECT 1 FROM x_audit_config WHERE cfg_name = 'topic-partitions') THEN
+            INSERT INTO x_audit_config (create_time, update_time, cfg_name, cfg_value, version)
+            VALUES (UTC_TIMESTAMP(), UTC_TIMESTAMP(), 'topic-partitions', '30', 1);
         END IF;
     END IF;
 END;;

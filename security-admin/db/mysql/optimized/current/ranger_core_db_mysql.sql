@@ -70,6 +70,7 @@ DROP TABLE IF EXISTS `x_security_zone_ref_user`;
 DROP TABLE IF EXISTS `x_security_zone_ref_role`;
 DROP TABLE IF EXISTS `x_security_zone_ref_tag_srvc`;
 DROP TABLE IF EXISTS `x_security_zone_ref_service`;
+DROP TABLE IF EXISTS `x_audit_config`;
 DROP TABLE IF EXISTS `x_ranger_global_state`;
 DROP TABLE IF EXISTS `x_security_zone`;
 DROP TABLE IF EXISTS `x_service`;
@@ -602,6 +603,17 @@ PRIMARY KEY (`id`),
 UNIQUE  KEY `x_ranger_global_state_UK_state_name`(`state_name`),
 CONSTRAINT `x_ranger_global_state_FK_added_by_id` FOREIGN KEY (`added_by_id`) REFERENCES `x_portal_user` (`id`),
 CONSTRAINT `x_ranger_global_state_FK_upd_by_id` FOREIGN KEY (`upd_by_id`) REFERENCES `x_portal_user` (`id`)
+)ROW_FORMAT=DYNAMIC;
+
+CREATE TABLE IF NOT EXISTS `x_audit_config`(
+`id` bigint(20) NOT NULL AUTO_INCREMENT,
+`create_time` datetime NULL DEFAULT NULL,
+`update_time` datetime NULL DEFAULT NULL,
+`cfg_name` varchar(255) NOT NULL,
+`cfg_value` LONGTEXT NULL DEFAULT NULL,
+`version` bigint(20) NULL DEFAULT NULL,
+PRIMARY KEY (`id`),
+UNIQUE KEY `x_audit_config_UK_cfg_name`(`cfg_name`)
 )ROW_FORMAT=DYNAMIC;
 
 CREATE TABLE IF NOT EXISTS `x_security_zone_ref_service`(
@@ -1884,6 +1896,10 @@ INSERT INTO x_ranger_global_state (create_time,update_time,added_by_id,upd_by_id
 INSERT INTO x_ranger_global_state (create_time,update_time,added_by_id,upd_by_id,version,state_name,app_data) VALUES (UTC_TIMESTAMP(),UTC_TIMESTAMP(),adminID,adminID,1,'RangerUserStore','{"Version":"1"}');
 INSERT INTO x_ranger_global_state (create_time,update_time,added_by_id,upd_by_id,version,state_name,app_data) VALUES (UTC_TIMESTAMP(),UTC_TIMESTAMP(),adminID,adminID,1,'RangerSecurityZone','{"Version":"1"}');
 INSERT INTO x_ranger_global_state (create_time,update_time,added_by_id,upd_by_id,version,state_name,app_data) VALUES (UTC_TIMESTAMP(),UTC_TIMESTAMP(),adminID,adminID,1,'RangerAuditPartitionPlan','{"version":1,"topic":"ranger_audits","topicPartitionCount":9,"plugins":{},"buffer":{"partitions":[1,2,3,4,5,6,7,8,9]}}');
+
+INSERT INTO x_audit_config (create_time,update_time,cfg_name,cfg_value,version) VALUES (UTC_TIMESTAMP(),UTC_TIMESTAMP(),'ingestor.url','https://ranger-audit-ingestor:8765',1);
+INSERT INTO x_audit_config (create_time,update_time,cfg_name,cfg_value,version) VALUES (UTC_TIMESTAMP(),UTC_TIMESTAMP(),'service.hive.allowed.users','hive',1);
+INSERT INTO x_audit_config (create_time,update_time,cfg_name,cfg_value,version) VALUES (UTC_TIMESTAMP(),UTC_TIMESTAMP(),'topic-partitions','30',1);
 
 END $$
 DELIMITER ;
