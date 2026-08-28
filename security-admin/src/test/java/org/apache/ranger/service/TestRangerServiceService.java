@@ -17,18 +17,23 @@
 package org.apache.ranger.service;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.hadoop.thirdparty.com.google.common.base.Joiner;
 import org.apache.ranger.biz.RangerBizUtil;
+import org.apache.ranger.biz.ServiceDBStore;
 import org.apache.ranger.common.ContextUtil;
 import org.apache.ranger.common.JSONUtil;
 import org.apache.ranger.common.StringUtil;
 import org.apache.ranger.common.UserSessionBase;
 import org.apache.ranger.db.RangerDaoManager;
 import org.apache.ranger.db.XXPortalUserDao;
+import org.apache.ranger.db.XXServiceConfigDefDao;
 import org.apache.ranger.db.XXServiceConfigMapDao;
 import org.apache.ranger.db.XXServiceDao;
 import org.apache.ranger.db.XXServiceDefDao;
@@ -40,6 +45,7 @@ import org.apache.ranger.entity.XXServiceConfigMap;
 import org.apache.ranger.entity.XXServiceDef;
 import org.apache.ranger.entity.XXServiceVersionInfo;
 import org.apache.ranger.plugin.model.RangerService;
+import org.apache.ranger.plugin.util.PasswordUtils;
 
 import org.apache.ranger.security.context.RangerContextHolder;
 import org.apache.ranger.security.context.RangerSecurityContext;
@@ -174,6 +180,7 @@ public class TestRangerServiceService {
 		XXServiceDefDao xServiceDefDao = Mockito.mock(XXServiceDefDao.class);
 		XXService xService = xService();
 		String name = "fdfdfds";
+		XXServiceConfigDefDao xServiceConfigDefDao = Mockito.mock(XXServiceConfigDefDao.class);
 
 		List<XXServiceConfigMap> svcConfigMapList = new ArrayList<XXServiceConfigMap>();
 		XXServiceConfigMap xConfMap = new XXServiceConfigMap();
@@ -227,6 +234,9 @@ public class TestRangerServiceService {
 		Mockito.when(xServiceConfigMapDao.findByServiceId(xService.getId()))
 				.thenReturn(svcConfigMapList);
 
+		Mockito.when(daoManager.getXXServiceConfigDef()).thenReturn(xServiceConfigDefDao);
+		Mockito.when(xServiceConfigDefDao.findConfigNamesByServiceDefIdAndType(xService.getType(), ServiceDBStore.CONFIG_TYPE_PASSWORD)).thenReturn(new ArrayList<String>());
+
 		RangerService dbService = serviceService.populateViewBean(xService);
 
 		Assert.assertNotNull(dbService);
@@ -253,6 +263,7 @@ public class TestRangerServiceService {
 				.mock(XXServiceConfigMapDao.class);
 		XXPortalUserDao xPortalUserDao = Mockito.mock(XXPortalUserDao.class);
 		XXServiceDefDao xServiceDefDao = Mockito.mock(XXServiceDefDao.class);
+		XXServiceConfigDefDao xServiceConfigDefDao = Mockito.mock(XXServiceConfigDefDao.class);
 		XXService xService = xService();
 		String name = "fdfdfds";
 
@@ -307,6 +318,9 @@ public class TestRangerServiceService {
 		Mockito.when(xServiceConfigMapDao.findByServiceId(xService.getId()))
 				.thenReturn(svcConfigMapList);
 
+		Mockito.when(daoManager.getXXServiceConfigDef()).thenReturn(xServiceConfigDefDao);
+		Mockito.when(xServiceConfigDefDao.findConfigNamesByServiceDefIdAndType(xService.getType(), ServiceDBStore.CONFIG_TYPE_PASSWORD)).thenReturn(new ArrayList<String>());
+
 		RangerService dbService = serviceService
 				.getPopulatedViewObject(xService);
 
@@ -329,12 +343,130 @@ public class TestRangerServiceService {
 	}
 
 	@Test
+	public void test4aPopulateViewBeanMasksAllServiceDefTypePasswordConfigs() {
+		XXServiceConfigMapDao xServiceConfigMapDao = Mockito.mock(XXServiceConfigMapDao.class);
+		XXPortalUserDao       xPortalUserDao       = Mockito.mock(XXPortalUserDao.class);
+		XXServiceDefDao       xServiceDefDao       = Mockito.mock(XXServiceDefDao.class);
+		XXServiceConfigDefDao xServiceConfigDefDao = Mockito.mock(XXServiceConfigDefDao.class);
+		XXService             xService             = xService();
+
+		final String keyGenericPassword    = "password";
+		final String keyKeystorePassword   = "nifi.ssl.keystorePassword";
+		final String keyTruststorePassword = "nifi.ssl.truststorePassword";
+		final String keyUrl                = "nifi.url";
+
+		List<XXServiceConfigMap> svcConfigMapList = new ArrayList<XXServiceConfigMap>();
+		svcConfigMapList.add(configMap(keyGenericPassword, "s3cr3t-admin"));
+		svcConfigMapList.add(configMap(keyKeystorePassword, "s3cr3t-keystore"));
+		svcConfigMapList.add(configMap(keyTruststorePassword, "s3cr3t-truststore"));
+		svcConfigMapList.add(configMap(keyUrl, "https://nifi.example.com:8443/nifi-api"));
+
+		XXPortalUser tUser = new XXPortalUser();
+		tUser.setAddedByUserId(userId);
+		tUser.setCreateTime(new Date());
+		tUser.setEmailAddress("test@gmail.com");
+		tUser.setFirstName("nifi-prod");
+		tUser.setId(userId);
+		tUser.setLastName("nifi-prod");
+
+		XXServiceDef xServiceDef = new XXServiceDef();
+		xServiceDef.setAddedByUserId(userId);
+		xServiceDef.setCreateTime(new Date());
+		xServiceDef.setDescription("test");
+		xServiceDef.setGuid("1427365526516_835_0");
+		xServiceDef.setId(userId);
+
+		XXServiceVersionInfoDao xServiceVersionInfoDao = Mockito.mock(XXServiceVersionInfoDao.class);
+		XXServiceVersionInfo    serviceVersionInfo     = new XXServiceVersionInfo();
+		serviceVersionInfo.setServiceId(xService.getId());
+		serviceVersionInfo.setPolicyVersion(xService.getPolicyVersion());
+		serviceVersionInfo.setPolicyUpdateTime(xService.getPolicyUpdateTime());
+		serviceVersionInfo.setTagVersion(xService.getTagVersion());
+		serviceVersionInfo.setTagUpdateTime(xService.getTagUpdateTime());
+
+		Mockito.when(daoManager.getXXServiceVersionInfo()).thenReturn(xServiceVersionInfoDao);
+		Mockito.when(xServiceVersionInfoDao.findByServiceId(xService.getId())).thenReturn(serviceVersionInfo);
+
+		Mockito.when(daoManager.getXXPortalUser()).thenReturn(xPortalUserDao);
+		Mockito.when(xPortalUserDao.getById(userId)).thenReturn(tUser);
+
+		Mockito.when(daoManager.getXXServiceDef()).thenReturn(xServiceDefDao);
+		Mockito.when(xServiceDefDao.getById(xService.getType())).thenReturn(xServiceDef);
+
+		Mockito.when(daoManager.getXXServiceConfigMap()).thenReturn(xServiceConfigMapDao);
+		Mockito.when(xServiceConfigMapDao.findByServiceId(xService.getId())).thenReturn(svcConfigMapList);
+
+		/* the config item names the NiFi service-def declares with "type":"password" -
+		 * already filtered by type at the DB layer, so only those two names come back */
+		List<String> nifiPasswordTypedNames = Arrays.asList(keyKeystorePassword, keyTruststorePassword);
+
+		Mockito.when(daoManager.getXXServiceConfigDef()).thenReturn(xServiceConfigDefDao);
+		Mockito.when(xServiceConfigDefDao.findConfigNamesByServiceDefIdAndType(xService.getType(), ServiceDBStore.CONFIG_TYPE_PASSWORD)).thenReturn(nifiPasswordTypedNames);
+
+		RangerService       dbService = serviceService.getPopulatedViewObject(xService);
+		Map<String, String> configs   = dbService.getConfigs();
+
+		Assert.assertEquals("*****", configs.get(keyGenericPassword));
+		Assert.assertEquals("*****", configs.get(keyKeystorePassword));
+		Assert.assertEquals("*****", configs.get(keyTruststorePassword));
+		Assert.assertEquals("https://nifi.example.com:8443/nifi-api", configs.get(keyUrl));
+	}
+
+	@Test
+	public void test4bGetConfigsWithDecryptedPasswordResolvesMixedCaseKeys() throws Exception {
+		final String configKey  = "nifi.ssl.keystorePassword"; // mixed case, as NiFi's service-def declares it
+		final String plainValue = "s3cr3t-keystore";
+
+		String iv                = PasswordUtils.generateIvIfNeeded(ServiceDBStore.CRYPT_ALGO);
+		Joiner joiner            = Joiner.on(",").skipNulls();
+		String cryptConfigString = joiner.join(ServiceDBStore.CRYPT_ALGO, ServiceDBStore.ENCRYPT_KEY, ServiceDBStore.SALT, ServiceDBStore.ITERATION_COUNT, iv, plainValue);
+		String encryptedPwd      = PasswordUtils.encryptPassword(cryptConfigString);
+		String storedValue       = joiner.join(ServiceDBStore.CRYPT_ALGO, ServiceDBStore.ENCRYPT_KEY, ServiceDBStore.SALT, ServiceDBStore.ITERATION_COUNT, iv, encryptedPwd);
+
+		XXServiceConfigMapDao xServiceConfigMapDao = Mockito.mock(XXServiceConfigMapDao.class);
+		XXServiceConfigDefDao xServiceConfigDefDao = Mockito.mock(XXServiceConfigDefDao.class);
+
+		Map<String, String> configs = new HashMap<String, String>();
+		configs.put(configKey, ServiceDBStore.HIDDEN_PASSWORD_STR); // UI didn't change this field -> sentinel value
+
+		RangerService service = new RangerService();
+		service.setId(userId);
+		service.setType("nifi");
+		service.setConfigs(configs);
+
+		XXServiceConfigMap storedConfigMap = new XXServiceConfigMap();
+		storedConfigMap.setConfigkey(configKey);
+		storedConfigMap.setConfigvalue(storedValue);
+
+		Mockito.when(daoManager.getXXServiceConfigDef()).thenReturn(xServiceConfigDefDao);
+		Mockito.when(xServiceConfigDefDao.findConfigNamesByServiceDefNameAndType("nifi", ServiceDBStore.CONFIG_TYPE_PASSWORD)).thenReturn(Collections.singletonList(configKey));
+		Mockito.when(daoManager.getXXServiceConfigMap()).thenReturn(xServiceConfigMapDao);
+		Mockito.when(xServiceConfigMapDao.findByServiceAndConfigKey(userId, configKey)).thenReturn(storedConfigMap);
+
+		Mockito.when(stringUtil.isEmpty(Mockito.anyString())).thenReturn(false);
+
+		Map<String, String> result = serviceService.getConfigsWithDecryptedPassword(service);
+
+		Assert.assertEquals(storedValue, result.get(configKey));
+	}
+
+	private XXServiceConfigMap configMap(String key, String value) {
+		XXServiceConfigMap xConfMap = new XXServiceConfigMap();
+		xConfMap.setConfigkey(key);
+		xConfMap.setConfigvalue(value);
+		xConfMap.setCreateTime(new Date());
+		xConfMap.setUpdateTime(new Date());
+		return xConfMap;
+	}
+
+	@Test
 	public void test5GetAllServices() {
 		XXServiceDao xServiceDao = Mockito.mock(XXServiceDao.class);
 		XXPortalUserDao xPortalUserDao = Mockito.mock(XXPortalUserDao.class);
 		XXServiceConfigMapDao xServiceConfigMapDao = Mockito
 				.mock(XXServiceConfigMapDao.class);
 		XXServiceDefDao xServiceDefDao = Mockito.mock(XXServiceDefDao.class);
+		XXServiceConfigDefDao xServiceConfigDefDao = Mockito.mock(XXServiceConfigDefDao.class);
 
 		String name = "fdfdfds";
 
@@ -395,6 +527,9 @@ public class TestRangerServiceService {
 				xServiceConfigMapDao);
 		Mockito.when(xServiceConfigMapDao.findByServiceId(xService.getId()))
 				.thenReturn(svcConfigMapList);
+
+		Mockito.when(daoManager.getXXServiceConfigDef()).thenReturn(xServiceConfigDefDao);
+		Mockito.when(xServiceConfigDefDao.findConfigNamesByServiceDefIdAndType(xService.getType(), ServiceDBStore.CONFIG_TYPE_PASSWORD)).thenReturn(new ArrayList<String>());
 
 		List<RangerService> dbServiceList = serviceService.getAllServices();
 		Assert.assertNotNull(dbServiceList);
