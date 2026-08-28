@@ -71,13 +71,12 @@ public class HttpHeaderAuthNHandler implements PdpAuthNHandler {
         }
 
         for (String spiffeHeader : spiffeHeaders) {
-            String spiffeId       = request.getHeader(spiffeHeader);
-            String serviceAccount = SpiffeIdUtil.extractServiceAccount(spiffeId);
+            String spiffeId = StringUtils.trimToNull(request.getHeader(spiffeHeader));
 
-            if (StringUtils.isNotBlank(serviceAccount)) {
-                LOG.debug("authenticate(): service-account={} (from SPIFFE header {})", serviceAccount, spiffeHeader);
+            if (SpiffeIdUtil.isValidSpiffeId(spiffeId)) {
+                LOG.debug("authenticate(): spiffeId={} (from SPIFFE header {})", spiffeId, spiffeHeader);
 
-                return Result.authenticated(serviceAccount, AUTH_TYPE_SPIFFE);
+                return Result.authenticated(spiffeId, AUTH_TYPE_SPIFFE);
             } else if (StringUtils.isNotBlank(spiffeId)) {
                 LOG.warn("SPIFFE header '{}' value is not a well-formed SPIFFE ID", spiffeHeader);
             }

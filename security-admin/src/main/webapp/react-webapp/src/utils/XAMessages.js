@@ -36,6 +36,18 @@ export const RegexMessage = {
         </p>
       </>
     ),
+    userNameValidationMsgWithSpiffe: (
+      <>
+        <p className="pd-10 mb-0" style={{ fontSize: "small" }}>
+          1. User name should be start with alphabet / numeric / underscore /
+          non-us characters.
+          <br />
+          2. Allowed special character ,._-+/@=: and space.
+          <br />
+          3. Name length should be greater than one.
+        </p>
+      </>
+    ),
     passwordValidationInfoMessage:
       "Password should be minimum 8 characters ,at least one uppercase letter, one lowercase letter and one numeric. For FIPS environment password should be minimum 14 characters with atleast one uppercase letter, one special characters, one lowercase letter and one numeric.",
     emailValidationInfoMessage: (

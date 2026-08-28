@@ -25,7 +25,6 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class SpiffeIdUtilTest {
@@ -44,14 +43,12 @@ class SpiffeIdUtilTest {
         assertFalse(SpiffeIdUtil.isValidSpiffeId("   "));
         assertFalse(SpiffeIdUtil.isValidSpiffeId("not-a-spiffe-id"));
         assertFalse(SpiffeIdUtil.isValidSpiffeId("https://my-cluster/ns/n/sa/s"));   // wrong scheme
-        assertFalse(SpiffeIdUtil.isValidSpiffeId("spiffe://my-cluster/sa/service-sa")); // missing /ns/
-        assertFalse(SpiffeIdUtil.isValidSpiffeId("spiffe://my-cluster/ns/n"));       // missing /sa/
-        assertFalse(SpiffeIdUtil.isValidSpiffeId("spiffe://my-cluster/ns//sa/s"));   // empty namespace
+        assertFalse(SpiffeIdUtil.isValidSpiffeId("spiffe://my-cluster"));            // trust domain only, no path
+        assertFalse(SpiffeIdUtil.isValidSpiffeId("spiffe://my-cluster/"));           // trailing slash, empty path
+        assertFalse(SpiffeIdUtil.isValidSpiffeId("spiffe://my-cluster/ns//sa/s"));   // empty path segment
         assertFalse(SpiffeIdUtil.isValidSpiffeId("spiffe:///ns/n/sa/s"));            // empty trust domain
-        assertFalse(SpiffeIdUtil.isValidSpiffeId("spiffe://my-cluster/ns/n/sa/"));   // empty service account
+        assertFalse(SpiffeIdUtil.isValidSpiffeId("spiffe://my-cluster/ns/n/sa/"));   // empty trailing segment
         assertFalse(SpiffeIdUtil.isValidSpiffeId(VALID + "/"));                      // trailing slash
-        assertFalse(SpiffeIdUtil.isValidSpiffeId(VALID + "/extra"));                 // extra segment
-        assertFalse(SpiffeIdUtil.isValidSpiffeId("spiffe://my-cluster/sa/s/ns/n"));  // wrong order
     }
 
     @Test
@@ -61,9 +58,6 @@ class SpiffeIdUtilTest {
         assertFalse(SpiffeIdUtil.isValidSpiffeId("spiffe://my-cluster/ns/prod/sa/service\nsa"));  // embedded newline
         assertFalse(SpiffeIdUtil.isValidSpiffeId("spiffe://my-cluster/ns/prod/sa/svc@admin"));    // illegal char '@'
         assertFalse(SpiffeIdUtil.isValidSpiffeId("spiffe://My-Cluster/ns/prod/sa/service-sa"));   // trust domain must be lowercase per spec
-
-        assertNull(SpiffeIdUtil.extractServiceAccount("spiffe://my-cluster/ns/prod/sa/service sa"));
-        assertNull(SpiffeIdUtil.extractServiceAccount("spiffe://my-cluster/ns/prod/sa/service\nsa"));
     }
 
     @Test
@@ -74,73 +68,47 @@ class SpiffeIdUtilTest {
         assertFalse(SpiffeIdUtil.isValidSpiffeId("spiffe://my-cluster/ns/prod/sa/."));         // service-account '.'
         assertFalse(SpiffeIdUtil.isValidSpiffeId("spiffe://my-cluster/ns/prod/sa/.."));        // service-account '..'
 
-        assertNull(SpiffeIdUtil.extractServiceAccount("spiffe://my-cluster/ns/prod/sa/."));
-        assertNull(SpiffeIdUtil.extractServiceAccount("spiffe://my-cluster/ns/../sa/service-sa"));
-
         // Dots inside a segment (not a bare '.'/'..') remain valid.
         assertTrue(SpiffeIdUtil.isValidSpiffeId("spiffe://my-cluster/ns/prod/sa/svc.v1"));
-        assertEquals("svc.v1", SpiffeIdUtil.extractServiceAccount("spiffe://my-cluster/ns/..prod/sa/svc.v1"));
+        assertTrue(SpiffeIdUtil.isValidSpiffeId("spiffe://my-cluster/ns/..prod/sa/svc.v1"));
     }
 
     @Test
     void isValidSpiffeId_acceptsSpecAllowedCharacters() {
         // SPIFFE path segments are case-sensitive and allow letters (any case), digits, '.', '-', '_'.
         assertTrue(SpiffeIdUtil.isValidSpiffeId("spiffe://my-cluster.example.com/ns/service-namespace/sa/service-sa"));
-        assertEquals("Service-SA", SpiffeIdUtil.extractServiceAccount("spiffe://my-cluster/ns/Prod/sa/Service-SA")); // mixed case
-        assertEquals("svc_01", SpiffeIdUtil.extractServiceAccount("spiffe://cluster1/ns/ns_2/sa/svc_01"));           // underscore
-        assertEquals("svc-01", SpiffeIdUtil.extractServiceAccount("spiffe://cluster1/ns/ns-2/sa/svc-01"));           // hyphen/digits
+        assertTrue(SpiffeIdUtil.isValidSpiffeId("spiffe://my-cluster/ns/Prod/sa/Service-SA")); // mixed case
+        assertTrue(SpiffeIdUtil.isValidSpiffeId("spiffe://cluster1/ns/ns_2/sa/svc_01"));       // underscore
+        assertTrue(SpiffeIdUtil.isValidSpiffeId("spiffe://cluster1/ns/ns-2/sa/svc-01"));       // hyphen/digits
     }
 
     @Test
-    void extractServiceAccount_returnsSaOnlyForValidId() {
-        assertEquals("service-sa", SpiffeIdUtil.extractServiceAccount(VALID));
-        assertEquals("service-sa", SpiffeIdUtil.extractServiceAccount("  " + VALID + "  "));
-    }
-
-    @Test
-    void extractServiceAccount_returnsNullForMalformedId() {
-        assertNull(SpiffeIdUtil.extractServiceAccount(null));
-        assertNull(SpiffeIdUtil.extractServiceAccount(""));
-        assertNull(SpiffeIdUtil.extractServiceAccount("not-a-spiffe-id"));
-        assertNull(SpiffeIdUtil.extractServiceAccount("spiffe://my-cluster/sa/service-sa"));
-        assertNull(SpiffeIdUtil.extractServiceAccount("spiffe://my-cluster/ns/n/sa/"));
-        assertNull(SpiffeIdUtil.extractServiceAccount(VALID + "/extra"));
-    }
-
-    @Test
-    void extractServiceAccount_handlesRealisticProductionIds() {
+    void isValidSpiffeId_handlesRealisticProductionIds() {
         // Kubernetes trust domain with a DNS-style cluster name and typical namespace/service-account names.
-        assertEquals("nginx-ingress",
-                SpiffeIdUtil.extractServiceAccount("spiffe://prod-cluster.k8s.example.com/ns/ingress-nginx/sa/nginx-ingress"));
+        assertTrue(SpiffeIdUtil.isValidSpiffeId("spiffe://prod-cluster.k8s.example.com/ns/ingress-nginx/sa/nginx-ingress"));
 
         // Cloud/mesh style trust domain (e.g. the header value from the PR description).
-        assertEquals("service-sa",
-                SpiffeIdUtil.extractServiceAccount("spiffe://my-cluster/ns/service-namespace/sa/service-sa"));
+        assertTrue(SpiffeIdUtil.isValidSpiffeId("spiffe://my-cluster/ns/service-namespace/sa/service-sa"));
 
         // Istio-style default service account in an application namespace.
-        assertEquals("default",
-                SpiffeIdUtil.extractServiceAccount("spiffe://cluster.local/ns/payments/sa/default"));
+        assertTrue(SpiffeIdUtil.isValidSpiffeId("spiffe://cluster.local/ns/payments/sa/default"));
 
         // Namespace and service-account with digits and hyphens, as commonly generated by platforms.
-        assertEquals("spark-driver-01",
-                SpiffeIdUtil.extractServiceAccount("spiffe://data-plane.internal/ns/team-analytics-42/sa/spark-driver-01"));
-
-        assertTrue(SpiffeIdUtil.isValidSpiffeId("spiffe://prod-cluster.k8s.example.com/ns/ingress-nginx/sa/nginx-ingress"));
-        assertTrue(SpiffeIdUtil.isValidSpiffeId("spiffe://cluster.local/ns/payments/sa/default"));
+        assertTrue(SpiffeIdUtil.isValidSpiffeId("spiffe://data-plane.internal/ns/team-analytics-42/sa/spark-driver-01"));
     }
 
     @Test
-    void rejectsSpecValidButNonConformingSpiffeId() {
-        // These are well-formed SPIFFE IDs per the SPIFFE spec (valid scheme + trust domain + path),
-        // but they do not follow the expected spiffe://<trust-domain>/ns/<namespace>/sa/<service-account>
-        // layout, so Ranger must reject them.
-        String workloadPath = "spiffe://example.org/workload/frontend"; // arbitrary path, no /ns//sa/
-        String nsOnly       = "spiffe://example.org/ns/prod";           // has /ns/ but no /sa/ segment
-
-        assertFalse(SpiffeIdUtil.isValidSpiffeId(workloadPath));
-        assertFalse(SpiffeIdUtil.isValidSpiffeId(nsOnly));
-        assertNull(SpiffeIdUtil.extractServiceAccount(workloadPath));
-        assertNull(SpiffeIdUtil.extractServiceAccount(nsOnly));
+    void acceptsSpecValidNonSpireLayoutSpiffeId() {
+        // Well-formed SPIFFE IDs per the spec (valid scheme + trust domain + one or more path segments)
+        // that do not follow the SPIRE spiffe://<trust-domain>/ns/<namespace>/sa/<service-account>
+        // convention. Since the full SPIFFE ID is used as the principal, these must be accepted.
+        assertTrue(SpiffeIdUtil.isValidSpiffeId("spiffe://example.org/workload/frontend")); // arbitrary path
+        assertTrue(SpiffeIdUtil.isValidSpiffeId("spiffe://example.org/ns/prod"));           // /ns/ but no /sa/
+        assertTrue(SpiffeIdUtil.isValidSpiffeId("spiffe://my-cluster/sa/service-sa"));      // /sa/ but no /ns/
+        assertTrue(SpiffeIdUtil.isValidSpiffeId("spiffe://my-cluster/ns/n"));               // single-segment style
+        assertTrue(SpiffeIdUtil.isValidSpiffeId("spiffe://example.org/single"));            // single path segment
+        assertTrue(SpiffeIdUtil.isValidSpiffeId("spiffe://my-cluster/sa/s/ns/n"));          // segments in any order
+        assertTrue(SpiffeIdUtil.isValidSpiffeId(VALID + "/extra"));                         // additional trailing segment
     }
 
     @Test

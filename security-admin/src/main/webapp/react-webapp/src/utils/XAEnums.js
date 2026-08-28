@@ -584,6 +584,8 @@ export const RegexValidation = {
   NAME_VALIDATION: {
     regexExpressionForName:
       /^([A-Za-z0-9_]|[\u00C0-\u017F])([a-z0-9,._\-+/@= ]|[\u00C0-\u017F])+$/i,
+    regexExpressionForUserName:
+      /^([A-Za-z0-9_]|[\u00C0-\u017F])([a-z0-9,._\-+/@=: ]|[\u00C0-\u017F])+$/i,
     regexExpressionForFirstAndLastName:
       /^([A-Za-z0-9_]|[\u00C0-\u017F])([a-zA-Z0-9\s_. -@]|[\u00C0-\u017F])+$/i,
     regexForNameValidation: /^[a-zA-Z0-9_-][a-zA-Z0-9\s_-]{0,254}$/,
@@ -598,6 +600,15 @@ export const RegexValidation = {
         characters.
         <br />
         2. Allowed special character ,._-+/@= and space. <br />
+        3. Name length should be greater than one.
+      </>
+    ),
+    userNameValidationMessage: (
+      <>
+        1. Name should be start with alphabet / numeric / underscore / non-us
+        characters.
+        <br />
+        2. Allowed special character ,._-+/@=: and space. <br />
         3. Name length should be greater than one.
       </>
     ),
