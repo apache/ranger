@@ -31,6 +31,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 public class RangerURLResourceMatcherTest {
 
@@ -50,7 +52,12 @@ public class RangerURLResourceMatcherTest {
             { "///app/warehouse/file://data/emp.db",                 "hdfs://app/*",              true,  true,  false, "user" },
             { "hdfs:///app/warehouse/data/emp.db",                   "hdfs://app/*",              true,  true,  false, "user" },
             { "hdfs://///app/warehouse/data/emp.db",                 "hdfs://app/*",              true,  true,  false, "user" },
-            { "://apps/warehouse/data/emp.db",                       "hdfs://app/*",              true,  true,  false, "user" }
+            { "://apps/warehouse/data/emp.db",                       "hdfs://app/*",              true,  true,  false, "user" },
+            { "hdfs:///app/warehouse/data/emp.db",                   "hdfs:///app/warehouse/*",   true,  true,  true,  "user" },
+            { "file:///etc/ranger/data.txt",                         "file:///etc/ranger/*",      true,  true,  true,  "user" },
+            { "hdfs:///app/warehouse/data/emp.db",                   "hdfs:///other/*",           true,  true,  false, "user" },
+            { "hdfs:///app/warehouse/data/emp.db",                   "hdfs://app/warehouse/*",    true,  true,  false, "user" },
+            { "hdfs://app/warehouse/data/emp.db",                    "hdfs:///app/warehouse/*",   true,  true,  false, "user" }
     };
 
 
@@ -147,6 +154,78 @@ public class RangerURLResourceMatcherTest {
     String getMessage(Object[] row) {
         return String.format("Resource=%s, Policy=%s, optWildcard=%s, recursive=%s, result=%s",
                 (String)row[0], (String)row[1], (boolean)row[2], (boolean)row[3], (boolean)row[4]);
+    }
+
+    @Test
+    public void testIsPathURLType_DefaultFS_HDFS() {
+        // hdfs:///path - the canonical default-FS form; was incorrectly false
+        assertTrue(RangerURLResourceMatcher.isPathURLType("hdfs:///app/warehouse"));
+        assertTrue(RangerURLResourceMatcher.isPathURLType("hdfs:///app/warehouse/data"));
+        assertTrue(RangerURLResourceMatcher.isPathURLType("hdfs:///"));
+    }
+
+    @Test
+    public void testIsPathURLType_DefaultFS_LocalFile() {
+        assertTrue(RangerURLResourceMatcher.isPathURLType("file:///tmp"));
+        assertTrue(RangerURLResourceMatcher.isPathURLType("file:///var/log/app"));
+    }
+
+    @Test
+    public void testIsPathURLType_ExplicitAuthority() {
+        // Explicit authority - was already correct; must remain true
+        assertTrue(RangerURLResourceMatcher.isPathURLType("hdfs://nn1:8020/app/warehouse"));
+        assertTrue(RangerURLResourceMatcher.isPathURLType("hdfs://namenode/path"));
+    }
+
+    @Test
+    public void testIsPathURLType_NonPathURLs() {
+        assertFalse(RangerURLResourceMatcher.isPathURLType(null));
+        assertFalse(RangerURLResourceMatcher.isPathURLType(""));
+        assertFalse(RangerURLResourceMatcher.isPathURLType("mailto:user@example.com"));
+        assertFalse(RangerURLResourceMatcher.isPathURLType("hdfs:/path")); // single slash
+        assertFalse(RangerURLResourceMatcher.isPathURLType("just-a-string"));
+    }
+
+    @Test
+    public void testRecursiveMatch_DefaultFS_Enabled() {
+        // The core regression: recursive=true on hdfs:///.../* must match
+        Map<String, Object> evalContext = new HashMap<>();
+        RangerAccessRequestUtil.setCurrentUserInContext(evalContext, "user");
+        MatcherWrapper matcher = new MatcherWrapper("hdfs:///app/warehouse/*", true, true);
+        assertTrue("direct child", matcher.isMatch("hdfs:///app/warehouse/data", ResourceElementMatchingScope.SELF, evalContext));
+        assertTrue("nested child", matcher.isMatch("hdfs:///app/warehouse/data/x", ResourceElementMatchingScope.SELF, evalContext));
+        assertFalse("non-matching sibling", matcher.isMatch("hdfs:///app/other/data", ResourceElementMatchingScope.SELF, evalContext));
+    }
+
+    @Test
+    public void testRecursiveMatch_ExplicitAuthority_StillWorks() {
+        // Negative control: explicit-authority form was never broken
+        Map<String, Object> evalContext = new HashMap<>();
+        RangerAccessRequestUtil.setCurrentUserInContext(evalContext, "user");
+        MatcherWrapper matcher = new MatcherWrapper("hdfs://nn1:8020/app/warehouse/*", true, true);
+        assertTrue(matcher.isMatch("hdfs://nn1:8020/app/warehouse/data", ResourceElementMatchingScope.SELF, evalContext));
+        assertFalse(matcher.isMatch("hdfs://nn1:8020/app/other/data", ResourceElementMatchingScope.SELF, evalContext));
+    }
+
+    @Test
+    public void testRecursiveMatch_DefaultFS_DoesNotCrossMatchExplicitAuthority() {
+        // Must not cross-match: default-FS resource vs. a policy scoped to an
+        // explicit authority literally named "app", and vice versa.
+        Map<String, Object> evalContext = new HashMap<>();
+        RangerAccessRequestUtil.setCurrentUserInContext(evalContext, "user");
+        MatcherWrapper defaultFsPolicy    = new MatcherWrapper("hdfs:///app/warehouse/*", true, true);
+        MatcherWrapper explicitHostPolicy = new MatcherWrapper("hdfs://app/warehouse/*", true, true);
+        assertFalse(defaultFsPolicy.isMatch("hdfs://app/warehouse/data", ResourceElementMatchingScope.SELF, evalContext));
+        assertFalse(explicitHostPolicy.isMatch("hdfs:///app/warehouse/data", ResourceElementMatchingScope.SELF, evalContext));
+    }
+
+    @Test
+    public void testNonRecursiveMatch_DefaultFS_StillWorks() {
+        // Non-recursive was never broken; verify no regression
+        Map<String, Object> evalContext = new HashMap<>();
+        RangerAccessRequestUtil.setCurrentUserInContext(evalContext, "user");
+        MatcherWrapper matcher = new MatcherWrapper("hdfs:///app/warehouse/*", true, false);
+        assertTrue(matcher.isMatch("hdfs:///app/warehouse/data", ResourceElementMatchingScope.SELF, evalContext));
     }
 
     static class MatcherWrapper extends RangerURLResourceMatcher {
