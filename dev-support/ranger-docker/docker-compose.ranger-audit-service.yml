@@ -134,8 +134,8 @@ services:
     hostname: ranger-opensearch.rangernw
     volumes:
       - ./scripts/opensearch/opensearch.yml:/usr/share/opensearch/config/opensearch.yml
-      - ./opensearch-data:/usr/share/opensearch/data
-      - ./opensearch-logs:/usr/share/opensearch/logs
+      - opensearch-data:/usr/share/opensearch/data
+      - opensearch-logs:/usr/share/opensearch/logs
     networks:
       - ranger
     ports:
@@ -194,8 +194,8 @@ services:
       KAFKA_BOOTSTRAP_SERVERS: ranger-kafka.rangernw:9092
     volumes:
       - ./dist/keytabs/ranger-audit-ingestor:/etc/keytabs
-      - ./ranger-audit-ingestor-logs:/var/log/ranger/audit-ingestor
-      - ./ranger-audit-ingestor-spool:/var/log/ranger/audit-ingestor/audit
+      - ranger-audit-ingestor-logs:/var/log/ranger/audit-ingestor
+      - ranger-audit-ingestor-spool:/var/log/ranger/audit-ingestor/audit
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:7081/api/audit/health"]
       interval: 30s
@@ -235,7 +235,7 @@ services:
       SOLR_URL: http://ranger-solr.rangernw:8983/solr
     volumes:
       - ./dist/keytabs/ranger-audit-dispatcher-solr:/etc/keytabs
-      - ./ranger-audit-dispatcher-solr-logs:/var/log/ranger/audit-dispatcher/solr
+      - ranger-audit-dispatcher-solr-logs:/var/log/ranger/audit-dispatcher/solr
       - ./scripts/audit-dispatcher/ranger-audit-dispatcher-solr-site.xml:/opt/ranger/audit-dispatcher/conf/ranger-audit-dispatcher-solr-site.xml
 
   # -------------------------------------------------------------------------
@@ -270,7 +270,7 @@ services:
       OPENSEARCH_URL: http://ranger-opensearch.rangernw:9200
     volumes:
       - ./dist/keytabs/ranger-audit-dispatcher-opensearch:/etc/keytabs
-      - ./ranger-audit-dispatcher-opensearch-logs:/var/log/ranger/audit-dispatcher/opensearch
+      - ranger-audit-dispatcher-opensearch-logs:/var/log/ranger/audit-dispatcher/opensearch
       - ./scripts/audit-dispatcher/ranger-audit-dispatcher-opensearch-site.xml:/opt/ranger/audit-dispatcher/conf/ranger-audit-dispatcher-opensearch-site.xml
 
   # -------------------------------------------------------------------------
@@ -303,7 +303,7 @@ services:
       HDFS_NAMENODE: ranger-hadoop.rangernw:9000
     volumes:
       - ./dist/keytabs/ranger-audit-dispatcher-hdfs:/etc/keytabs
-      - ./ranger-audit-dispatcher-hdfs-logs:/var/log/ranger/audit-dispatcher/hdfs
+      - ranger-audit-dispatcher-hdfs-logs:/var/log/ranger/audit-dispatcher/hdfs
       - ./scripts/audit-dispatcher/ranger-audit-dispatcher-hdfs-site.xml:/opt/ranger/audit-dispatcher/conf/ranger-audit-dispatcher-hdfs-site.xml
 
 volumes:
