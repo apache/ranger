@@ -33,6 +33,9 @@ services:
       - RANGER_DB_TYPE
       - KERBEROS_ENABLED
       - JAVA_OPTS=--add-exports=java.xml.crypto/com.sun.org.apache.xml.internal.security.utils=ALL-UNNAMED
+      - RANGER_KMS_MAX_HEAP
+      - RANGER_JVM_METASPACE
+      - RANGER_JVM_MAX_METASPACE
     command:
       - /home/ranger/scripts/ranger-kms.sh
 

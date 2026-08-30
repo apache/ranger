@@ -32,7 +32,7 @@ XAPOLICYMGR_DIR=`(cd $realScriptDir/..; pwd)`
 XAPOLICYMGR_EWS_DIR=${XAPOLICYMGR_DIR}/ews
 RANGER_JAAS_LIB_DIR="${XAPOLICYMGR_EWS_DIR}/ranger_jaas"
 RANGER_JAAS_CONF_DIR="${XAPOLICYMGR_EWS_DIR}/webapp/WEB-INF/classes/conf/ranger_jaas"
-ranger_admin_max_heap_size=1g
+ranger_admin_max_heap_size=${RANGER_ADMIN_MAX_HEAP:-1g}
 
 if [ -f ${XAPOLICYMGR_DIR}/ews/webapp/WEB-INF/classes/conf/java_home.sh ]; then
         . ${XAPOLICYMGR_DIR}/ews/webapp/WEB-INF/classes/conf/java_home.sh
@@ -54,7 +54,7 @@ then
 	RANGER_ADMIN_LOG_DIR=${XAPOLICYMGR_EWS_DIR}/logs
 fi
 
-JAVA_OPTS=" ${JAVA_OPTS} -XX:MetaspaceSize=100m -XX:MaxMetaspaceSize=200m -Xmx${ranger_admin_max_heap_size} -Xms1g -Xloggc:${RANGER_ADMIN_LOG_DIR}/gc-worker.log -verbose:gc -XX:+PrintGCDetails"
+JAVA_OPTS=" ${JAVA_OPTS} -XX:MetaspaceSize=${RANGER_JVM_METASPACE:-100m} -XX:MaxMetaspaceSize=${RANGER_JVM_MAX_METASPACE:-200m} -Xmx${ranger_admin_max_heap_size} -Xms${ranger_admin_max_heap_size} -Xloggc:${RANGER_ADMIN_LOG_DIR}/gc-worker.log -verbose:gc -XX:+PrintGCDetails"
 if [[ ${JAVA_OPTS} != *"-Duser.timezone"* ]] ;then  export JAVA_OPTS=" ${JAVA_OPTS} -Duser.timezone=UTC" ;fi
 
 if [ -z "${RANGER_ADMIN_LOGBACK_CONF_FILE}" ]
