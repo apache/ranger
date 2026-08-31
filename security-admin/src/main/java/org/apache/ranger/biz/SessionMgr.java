@@ -62,6 +62,7 @@ import javax.servlet.http.HttpSession;
 
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
@@ -73,6 +74,11 @@ import java.util.concurrent.CopyOnWriteArraySet;
 @Transactional
 public class SessionMgr {
     static final Logger logger = LoggerFactory.getLogger(SessionMgr.class);
+
+    public static final String PROP_SESSION_LIMIT_CONCURRENCY      = "ranger.session.limit.concurrency";
+    public static final String SESSION_ATTR_CONCURRENT_EXPIRED     = "RANGER_CONCURRENT_SESSION_EXPIRED";
+    public static final String SESSION_ATTR_CONCURRENT_EXPIRED_SSO = "RANGER_CONCURRENT_SESSION_EXPIRED_SSO";
+    public static final String SESSION_ATTR_DOWNLOAD_ONLY          = "RANGER_SESSION_DOWNLOAD_ONLY";
 
     private static final Long SESSION_UPDATE_INTERVAL_IN_MILLIS = 30 * DateUtils.MILLIS_PER_MINUTE;
 
@@ -212,6 +218,18 @@ public class SessionMgr {
                     logger.debug("Login Success: loginId={}, sessionId={}, sessionId={}, requestId={}, epoch={}", currentLoginId, gjAuthSession.getId(), details.getSessionId(), details.getRemoteAddress(), cal.getTimeInMillis());
                 } else {
                     logger.debug("Login Success: loginId={}, sessionId={}, details is null, epoch={}", currentLoginId, gjAuthSession.getId(), cal.getTimeInMillis());
+                }
+            }
+
+            if (session != null) {
+                if (isPluginOrSecureDownloadRequest(httpRequest.getRequestURI())) {
+                    try {
+                        session.setAttribute(SESSION_ATTR_DOWNLOAD_ONLY, Boolean.TRUE);
+                    } catch (IllegalStateException e) {
+                        logger.debug("Could not mark download-only session", e);
+                    }
+                } else {
+                    enforceConcurrentSessionLimit(currentLoginId, session);
                 }
             }
         }
@@ -496,6 +514,142 @@ public class SessionMgr {
         }
 
         return null;
+    }
+
+    public static boolean isConcurrentSessionExpired(HttpSession session) {
+        if (session == null) {
+            return false;
+        }
+
+        try {
+            return Boolean.TRUE.equals(session.getAttribute(SESSION_ATTR_CONCURRENT_EXPIRED));
+        } catch (IllegalStateException e) {
+            return false;
+        }
+    }
+
+    public static boolean isConcurrentSessionExpiredSso(HttpSession session) {
+        if (session == null) {
+            return false;
+        }
+
+        try {
+            return Boolean.TRUE.equals(session.getAttribute(SESSION_ATTR_CONCURRENT_EXPIRED_SSO));
+        } catch (IllegalStateException e) {
+            return false;
+        }
+    }
+
+    /**
+     * When {@code ranger.session.limit.concurrency} is exceeded, expire the oldest UI sessions
+     * so the new login succeeds. SSO sessions are marked expired for Knox logout redirect.
+     */
+    protected void enforceConcurrentSessionLimit(String loginId, HttpSession currentSession) {
+        int limit = PropertiesUtil.getIntProperty(PROP_SESSION_LIMIT_CONCURRENCY, 0);
+
+        if (limit <= 0 || StringUtils.isBlank(loginId) || currentSession == null) {
+            return;
+        }
+
+        List<HttpSession> otherSessions = findActiveUiSessionsForUser(loginId, currentSession);
+
+        if (otherSessions.size() < limit) {
+            return;
+        }
+
+        otherSessions.sort(Comparator.comparingLong(session -> {
+            try {
+                return session.getCreationTime();
+            } catch (IllegalStateException e) {
+                return 0L;
+            }
+        }));
+
+        int toExpire = otherSessions.size() - limit + 1;
+
+        logger.info("Concurrent session limit {} exceeded for user {}; expiring {} older session(s)", limit, loginId, toExpire);
+
+        for (int i = 0; i < toExpire; i++) {
+            expireConcurrentSession(otherSessions.get(i));
+        }
+    }
+
+    static boolean isPluginOrSecureDownloadRequest(String uri) {
+        if (StringUtils.isEmpty(uri)) {
+            return false;
+        }
+
+        return uri.contains("/secure/policies/download/")
+                || uri.contains("/secure/download/")
+                || uri.contains("/plugins/policies/download/")
+                || uri.contains("/tags/download/")
+                || uri.contains("/roles/download/")
+                || uri.contains("/xusers/download/")
+                || uri.contains("/gds/download/");
+    }
+
+    private List<HttpSession> findActiveUiSessionsForUser(String loginId, HttpSession currentSession) {
+        CopyOnWriteArrayList<HttpSession> activeHttpSessions = RangerHttpSessionListener.getActiveSessionOnServer();
+        List<HttpSession>                 matching           = new ArrayList<>();
+
+        if (CollectionUtils.isEmpty(activeHttpSessions)) {
+            return matching;
+        }
+
+        for (HttpSession httpSession : activeHttpSessions) {
+            if (httpSession == null || httpSession == currentSession) {
+                continue;
+            }
+
+            try {
+                if (Boolean.TRUE.equals(httpSession.getAttribute(SESSION_ATTR_CONCURRENT_EXPIRED))) {
+                    continue;
+                }
+
+                if (Boolean.TRUE.equals(httpSession.getAttribute(SESSION_ATTR_DOWNLOAD_ONLY))) {
+                    continue;
+                }
+
+                if (httpSession.getAttribute(RangerSecurityContextFormationFilter.AKA_SC_SESSION_KEY) == null) {
+                    continue;
+                }
+
+                RangerSecurityContext securityContext = (RangerSecurityContext) httpSession.getAttribute(RangerSecurityContextFormationFilter.AKA_SC_SESSION_KEY);
+                UserSessionBase       userSession     = securityContext != null ? securityContext.getUserSession() : null;
+
+                if (userSession != null && loginId.equalsIgnoreCase(userSession.getLoginId())) {
+                    matching.add(httpSession);
+                }
+            } catch (IllegalStateException e) {
+                logger.debug("Skipping invalidated session while counting concurrent sessions", e);
+            }
+        }
+
+        return matching;
+    }
+
+    private void expireConcurrentSession(HttpSession httpSession) {
+        try {
+            RangerSecurityContext context     = (RangerSecurityContext) httpSession.getAttribute(RangerSecurityContextFormationFilter.AKA_SC_SESSION_KEY);
+            UserSessionBase       userSession = context != null ? context.getUserSession() : null;
+            boolean               ssoOrProxy  = userSession != null
+                    && (Boolean.TRUE.equals(userSession.isSSOEnabled()) || Boolean.TRUE.equals(userSession.isSpnegoEnabled()));
+
+            httpSession.setAttribute(SESSION_ATTR_CONCURRENT_EXPIRED, Boolean.TRUE);
+            httpSession.setAttribute(SESSION_ATTR_CONCURRENT_EXPIRED_SSO, ssoOrProxy);
+
+            if (context != null) {
+                context.setUserSession(null);
+            }
+
+            logger.info("Expired concurrent Ranger Admin session (ssoOrTrustedProxy={})", ssoOrProxy);
+
+            if (!ssoOrProxy) {
+                httpSession.invalidate();
+            }
+        } catch (IllegalStateException e) {
+            logger.debug("Session already invalidated while enforcing concurrent session limit", e);
+        }
     }
 
     protected boolean validateUserSession(UserSessionBase userSession, String currentLoginId) {

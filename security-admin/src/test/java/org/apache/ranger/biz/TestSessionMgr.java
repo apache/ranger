@@ -88,6 +88,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
@@ -129,6 +130,7 @@ public class TestSessionMgr {
     public void tearDownSuperUserConfig() {
         PropertiesUtil.getPropertiesMap().remove(RangerConstants.RANGER_ADMIN_SUPER_USERS);
         PropertiesUtil.getPropertiesMap().remove(RangerConstants.RANGER_ADMIN_SUPER_GROUPS);
+        PropertiesUtil.getPropertiesMap().remove(SessionMgr.PROP_SESSION_LIMIT_CONCURRENCY);
         RangerSuperUserConfig.resetForTests();
     }
 
@@ -729,5 +731,210 @@ public class TestSessionMgr {
         verify(xUserMgr, never()).getGroupsForUser(anyString());
 
         PropertiesUtil.getPropertiesMap().remove(RangerConstants.RANGER_ADMIN_SUPER_USERS);
+    }
+
+    @Test
+    public void testProcessSuccessLogin_LimitZeroDoesNotExpireOldestSession() {
+        RangerContextHolder.setSecurityContext(null);
+        PropertiesUtil.getPropertiesMap().put(SessionMgr.PROP_SESSION_LIMIT_CONCURRENCY, "0");
+
+        setupAuthentication("limitUser");
+
+        XXPortalUser portalUser = portalUser("limitUser", 70L);
+        stubPortalUserLookup(portalUser);
+        stubRolesAndPermissions(portalUser);
+        stubAuthSessionCreate(200L);
+        when(httpUtil.getDeviceType(anyString())).thenReturn(RangerCommonEnums.DEVICE_UNKNOWN);
+
+        HttpSession currentSession = mock(HttpSession.class);
+        when(currentSession.getAttribute("auditLoginId")).thenReturn(null);
+
+        HttpServletRequest request = mock(HttpServletRequest.class);
+        when(request.getSession()).thenReturn(currentSession);
+        when(request.getRequestURI()).thenReturn("/index.html");
+        when(request.getAttribute("spnegoEnabled")).thenReturn(null);
+
+        UserSessionBase ret = sessionMgr.processSuccessLogin(XXAuthSession.AUTH_TYPE_PASSWORD, "UA", request);
+
+        assertNotNull(ret);
+        assertEquals(70L, ret.getUserId());
+    }
+
+    @Test
+    public void testProcessSuccessLogin_LimitOneExpiresOldestFormLoginSession() {
+        RangerContextHolder.setSecurityContext(null);
+        PropertiesUtil.getPropertiesMap().put(SessionMgr.PROP_SESSION_LIMIT_CONCURRENCY, "1");
+
+        setupAuthentication("limitUser");
+
+        XXPortalUser portalUser = portalUser("limitUser", 71L);
+        stubPortalUserLookup(portalUser);
+        stubRolesAndPermissions(portalUser);
+        stubAuthSessionCreate(201L);
+        when(httpUtil.getDeviceType(anyString())).thenReturn(RangerCommonEnums.DEVICE_UNKNOWN);
+
+        HttpSession currentSession = mock(HttpSession.class);
+        when(currentSession.getAttribute("auditLoginId")).thenReturn(null);
+
+        HttpSession oldestSession = mockUiSession("limitUser", 71L, false, 1L);
+
+        HttpServletRequest request = mock(HttpServletRequest.class);
+        when(request.getSession()).thenReturn(currentSession);
+        when(request.getRequestURI()).thenReturn("/index.html");
+        when(request.getAttribute("spnegoEnabled")).thenReturn(null);
+
+        try (MockedStatic<RangerHttpSessionListener> mocked = Mockito.mockStatic(RangerHttpSessionListener.class)) {
+            CopyOnWriteArrayList<HttpSession> sessions = new CopyOnWriteArrayList<>();
+            sessions.add(oldestSession);
+            mocked.when(RangerHttpSessionListener::getActiveSessionOnServer).thenReturn(sessions);
+
+            UserSessionBase ret = sessionMgr.processSuccessLogin(XXAuthSession.AUTH_TYPE_PASSWORD, "UA", request);
+
+            assertNotNull(ret);
+            verify(oldestSession).setAttribute(SessionMgr.SESSION_ATTR_CONCURRENT_EXPIRED, Boolean.TRUE);
+            verify(oldestSession).setAttribute(SessionMgr.SESSION_ATTR_CONCURRENT_EXPIRED_SSO, false);
+            verify(oldestSession).invalidate();
+        }
+    }
+
+    @Test
+    public void testProcessSuccessLogin_LimitOneMarksOldestSsoSessionExpiredWithoutInvalidate() {
+        RangerContextHolder.setSecurityContext(null);
+        PropertiesUtil.getPropertiesMap().put(SessionMgr.PROP_SESSION_LIMIT_CONCURRENCY, "1");
+
+        setupAuthentication("ssoUser");
+
+        XXPortalUser portalUser = portalUser("ssoUser", 72L);
+        stubPortalUserLookup(portalUser);
+        stubRolesAndPermissions(portalUser);
+        stubAuthSessionCreate(202L);
+        when(httpUtil.getDeviceType(anyString())).thenReturn(RangerCommonEnums.DEVICE_UNKNOWN);
+
+        HttpSession currentSession = mock(HttpSession.class);
+        when(currentSession.getAttribute("auditLoginId")).thenReturn(null);
+
+        HttpSession oldestSession = mockUiSession("ssoUser", 72L, true, 1L);
+
+        HttpServletRequest request = mock(HttpServletRequest.class);
+        when(request.getSession()).thenReturn(currentSession);
+        when(request.getRequestURI()).thenReturn("/index.html");
+        when(request.getAttribute("spnegoEnabled")).thenReturn(Boolean.TRUE);
+
+        try (MockedStatic<RangerHttpSessionListener> mocked = Mockito.mockStatic(RangerHttpSessionListener.class)) {
+            CopyOnWriteArrayList<HttpSession> sessions = new CopyOnWriteArrayList<>();
+            sessions.add(oldestSession);
+            mocked.when(RangerHttpSessionListener::getActiveSessionOnServer).thenReturn(sessions);
+
+            UserSessionBase ret = sessionMgr.processSuccessLogin(XXAuthSession.AUTH_TYPE_TRUSTED_PROXY, "UA", request);
+
+            assertNotNull(ret);
+            assertTrue(ret.isSSOEnabled());
+            verify(oldestSession).setAttribute(SessionMgr.SESSION_ATTR_CONCURRENT_EXPIRED, Boolean.TRUE);
+            verify(oldestSession).setAttribute(SessionMgr.SESSION_ATTR_CONCURRENT_EXPIRED_SSO, true);
+            verify(oldestSession, never()).invalidate();
+        }
+    }
+
+    @Test
+    public void testProcessSuccessLogin_DownloadRequestDoesNotConsumeSessionQuota() {
+        RangerContextHolder.setSecurityContext(null);
+        PropertiesUtil.getPropertiesMap().put(SessionMgr.PROP_SESSION_LIMIT_CONCURRENCY, "1");
+
+        setupAuthentication("limitUser");
+
+        XXPortalUser portalUser = portalUser("limitUser", 73L);
+        stubPortalUserLookup(portalUser);
+        stubRolesAndPermissions(portalUser);
+        stubAuthSessionCreate(203L);
+        when(httpUtil.getDeviceType(anyString())).thenReturn(RangerCommonEnums.DEVICE_UNKNOWN);
+
+        HttpSession currentSession = mock(HttpSession.class);
+        when(currentSession.getAttribute("auditLoginId")).thenReturn(null);
+
+        HttpServletRequest request = mock(HttpServletRequest.class);
+        when(request.getSession()).thenReturn(currentSession);
+        when(request.getRequestURI()).thenReturn("/service/plugins/policies/download/hadoopdev");
+        when(request.getAttribute("spnegoEnabled")).thenReturn(null);
+
+        UserSessionBase ret = sessionMgr.processSuccessLogin(XXAuthSession.AUTH_TYPE_PASSWORD, "UA", request);
+
+        assertNotNull(ret);
+        verify(currentSession).setAttribute(SessionMgr.SESSION_ATTR_DOWNLOAD_ONLY, Boolean.TRUE);
+    }
+
+    @Test
+    public void testIsPluginOrSecureDownloadRequest() {
+        assertTrue(SessionMgr.isPluginOrSecureDownloadRequest("/service/plugins/policies/download/hadoopdev"));
+        assertTrue(SessionMgr.isPluginOrSecureDownloadRequest("/service/secure/policies/download/1"));
+        assertFalse(SessionMgr.isPluginOrSecureDownloadRequest("/index.html"));
+        assertFalse(SessionMgr.isPluginOrSecureDownloadRequest(null));
+        assertFalse(SessionMgr.isPluginOrSecureDownloadRequest(""));
+    }
+
+    private void setupAuthentication(String loginId) {
+        Authentication authentication = mock(Authentication.class);
+        WebAuthenticationDetails details = mock(WebAuthenticationDetails.class);
+        when(authentication.getDetails()).thenReturn(details);
+        when(authentication.getName()).thenReturn(loginId);
+        when(details.getSessionId()).thenReturn("httpSess1");
+        when(details.getRemoteAddress()).thenReturn("127.0.0.1");
+        SecurityContext sc = SecurityContextHolder.createEmptyContext();
+        sc.setAuthentication(authentication);
+        SecurityContextHolder.setContext(sc);
+    }
+
+    private XXPortalUser portalUser(String loginId, Long id) {
+        XXPortalUser portalUser = new XXPortalUser();
+        portalUser.setId(id);
+        portalUser.setLoginId(loginId);
+        return portalUser;
+    }
+
+    private void stubPortalUserLookup(XXPortalUser portalUser) {
+        XXPortalUserDao portalDao = mock(XXPortalUserDao.class);
+        when(daoManager.getXXPortalUser()).thenReturn(portalDao);
+        when(portalDao.findByLoginId(portalUser.getLoginId())).thenReturn(portalUser);
+    }
+
+    private void stubRolesAndPermissions(XXPortalUser portalUser) {
+        XXPortalUserRoleDao roleDao = mock(XXPortalUserRoleDao.class);
+        when(daoManager.getXXPortalUserRole()).thenReturn(roleDao);
+        when(roleDao.findByUserId(portalUser.getId())).thenReturn(Collections.emptyList());
+        XXUserDao xxUserDao = mock(XXUserDao.class);
+        when(daoManager.getXXUser()).thenReturn(xxUserDao);
+        XXUser xUser = new XXUser();
+        xUser.setId(portalUser.getId());
+        xUser.setName(portalUser.getLoginId());
+        when(xxUserDao.findByUserName(portalUser.getLoginId())).thenReturn(xUser);
+        XXModuleDefDao moduleDefDao = mock(XXModuleDefDao.class);
+        when(daoManager.getXXModuleDef()).thenReturn(moduleDefDao);
+        when(moduleDefDao.findAccessibleModulesByUserId(portalUser.getId(), portalUser.getId())).thenReturn(Collections.emptyList());
+    }
+
+    private void stubAuthSessionCreate(Long id) {
+        XXAuthSession created = new XXAuthSession();
+        created.setId(id);
+        XXAuthSessionDao authDao = mock(XXAuthSessionDao.class);
+        when(daoManager.getXXAuthSession()).thenReturn(authDao);
+        when(authDao.create(any(XXAuthSession.class))).thenReturn(created);
+    }
+
+    private HttpSession mockUiSession(String loginId, Long userId, boolean ssoEnabled, long creationTime) {
+        HttpSession httpSession = mock(HttpSession.class);
+        UserSessionBase userSession = new UserSessionBase();
+        XXPortalUser portalUser = portalUser(loginId, userId);
+        userSession.setXXPortalUser(portalUser);
+        userSession.setSSOEnabled(ssoEnabled);
+        RangerSecurityContext securityContext = new RangerSecurityContext();
+        securityContext.setUserSession(userSession);
+        when(httpSession.getAttribute(anyString())).thenAnswer(invocation -> {
+            String name = invocation.getArgument(0);
+            if (RangerSecurityContextFormationFilter.AKA_SC_SESSION_KEY.equals(name)) {
+                return securityContext;
+            }
+            return null;
+        });
+        lenient().when(httpSession.getCreationTime()).thenReturn(creationTime);
+        return httpSession;
     }
 }

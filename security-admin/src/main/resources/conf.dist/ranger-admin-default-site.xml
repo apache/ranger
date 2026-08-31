@@ -178,6 +178,16 @@
 		<name>ranger.admin.login.autolock.maxfailure</name>
 		<value>5</value>
 	</property>
+	<property>
+		<name>ranger.session.limit.concurrency</name>
+		<value>0</value>
+		<description>
+			Maximum number of concurrent Ranger Admin UI sessions per user.
+			When the limit is exceeded, the oldest session is expired so the new login succeeds.
+			0 or a negative value means no limit (default). Plugin policy/tag/role download
+			sessions do not count toward this limit.
+		</description>
+	</property>
 
 <!-- # anonymous access -->
 	<property>

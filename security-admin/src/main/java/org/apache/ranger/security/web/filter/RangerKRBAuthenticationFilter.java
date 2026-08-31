@@ -30,6 +30,7 @@ import org.apache.hadoop.security.authentication.util.KerberosName;
 import org.apache.hadoop.security.authorize.AuthorizationException;
 import org.apache.hadoop.security.authorize.ProxyUsers;
 import org.apache.hadoop.util.HttpExceptionUtils;
+import org.apache.ranger.biz.SessionMgr;
 import org.apache.ranger.biz.UserMgr;
 import org.apache.ranger.common.PropertiesUtil;
 import org.apache.ranger.common.RESTErrorUtil;
@@ -465,9 +466,17 @@ public class RangerKRBAuthenticationFilter extends RangerKrbFilter {
 
     @Override
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain filterChain) throws IOException, ServletException {
-        String             authtype     = PropertiesUtil.getProperty(RANGER_AUTH_TYPE);
-        HttpServletRequest httpRequest  = (HttpServletRequest) request;
-        Authentication     existingAuth = SecurityContextHolder.getContext().getAuthentication();
+        HttpServletRequest  httpRequest  = (HttpServletRequest) request;
+        HttpServletResponse httpResponse = (HttpServletResponse) response;
+        HttpSession         httpSession  = httpRequest.getSession(false);
+
+        if (SessionMgr.isConcurrentSessionExpired(httpSession)) {
+            handleConcurrentSessionExpiredRequest(httpRequest, httpResponse);
+            return;
+        }
+
+        String         authtype     = PropertiesUtil.getProperty(RANGER_AUTH_TYPE);
+        Authentication existingAuth = SecurityContextHolder.getContext().getAuthentication();
 
         if (isSpnegoEnable(authtype) && (existingAuth == null || !existingAuth.isAuthenticated())) {
             KerberosName.setRules(PropertiesUtil.getProperty(NAME_RULES, "DEFAULT"));
@@ -482,7 +491,7 @@ public class RangerKRBAuthenticationFilter extends RangerKrbFilter {
 
             try {
                 if (StringUtils.equals(httpRequest.getParameter("action"), RestUtil.TIMEOUT_ACTION)) {
-                    handleTimeoutRequest(httpRequest, (HttpServletResponse) response);
+                    handleTimeoutRequest(httpRequest, httpResponse);
                 } else {
                     super.doFilter(request, response, filterChain);
                 }
@@ -503,8 +512,6 @@ public class RangerKRBAuthenticationFilter extends RangerKrbFilter {
             }
 
             if (allowTrustedProxy && StringUtils.isNotEmpty(doAsUser) && existingAuth != null && existingAuth.isAuthenticated() && StringUtils.equals(action, RestUtil.TIMEOUT_ACTION)) {
-                HttpServletResponse httpResponse = (HttpServletResponse) response;
-
                 handleTimeoutRequest(httpRequest, httpResponse);
             } else {
                 filterChain.doFilter(request, response);
@@ -680,6 +687,30 @@ public class RangerKRBAuthenticationFilter extends RangerKrbFilter {
         }
 
         return conf;
+    }
+
+    private void handleConcurrentSessionExpiredRequest(HttpServletRequest httpRequest, HttpServletResponse httpResponse) throws IOException {
+        HttpSession httpSession = httpRequest.getSession(false);
+
+        if (SessionMgr.isConcurrentSessionExpiredSso(httpSession)) {
+            LOG.info("Concurrent session expired for SSO/Trusted Proxy user; redirecting to Knox login");
+            handleTimeoutRequest(httpRequest, httpResponse);
+            return;
+        }
+
+        LOG.info("Concurrent session expired; redirecting to Ranger login");
+
+        if (httpSession != null) {
+            try {
+                httpSession.invalidate();
+            } catch (IllegalStateException e) {
+                LOG.debug("Session already invalidated", e);
+            }
+        }
+
+        String loginPage = PropertiesUtil.getProperty("ranger.logout.success.page", "/login.jsp");
+
+        httpResponse.sendRedirect(httpRequest.getContextPath() + loginPage);
     }
 
     private void handleTimeoutRequest(HttpServletRequest httpRequest, HttpServletResponse httpResponse) throws IOException {
