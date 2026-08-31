@@ -50,7 +50,9 @@ for custom_env_script in `find ${RANGER_KMS_DIR}/ews/webapp/WEB-INF/classes/conf
         fi
 done
 
-JAVA_OPTS=" ${JAVA_OPTS}  -XX:MetaspaceSize=100m -XX:MaxMetaspaceSize=256m -Xmx${ranger_kms_max_heap_size} -Xms1g "
+ranger_kms_max_heap_size=${RANGER_KMS_MAX_HEAP:-${ranger_kms_max_heap_size}}
+
+JAVA_OPTS=" ${JAVA_OPTS}  -XX:MetaspaceSize=${RANGER_JVM_METASPACE:-100m} -XX:MaxMetaspaceSize=${RANGER_JVM_MAX_METASPACE:-256m} -Xmx${ranger_kms_max_heap_size} -Xms${ranger_kms_max_heap_size} "
 
 if [ "$JAVA_HOME" != "" ]; then
         export PATH=$JAVA_HOME/bin:$PATH
