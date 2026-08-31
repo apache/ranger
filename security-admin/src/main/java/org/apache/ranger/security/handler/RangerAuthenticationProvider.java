@@ -114,14 +114,14 @@ public class RangerAuthenticationProvider implements AuthenticationProvider {
                     authentication = getLdapAuthentication(authentication);
 
                     if (authentication != null && authentication.isAuthenticated()) {
-                        checkAccountNotDisabled(authentication.getName());
+                        blockNotActiveUser(authentication.getName());
 
                         return authentication;
                     } else {
                         authentication = getLdapBindAuthentication(authentication);
 
                         if (authentication != null && authentication.isAuthenticated()) {
-                            checkAccountNotDisabled(authentication.getName());
+                            blockNotActiveUser(authentication.getName());
 
                             return authentication;
                         }
@@ -130,14 +130,14 @@ public class RangerAuthenticationProvider implements AuthenticationProvider {
                     authentication = getADBindAuthentication(authentication);
 
                     if (authentication != null && authentication.isAuthenticated()) {
-                        checkAccountNotDisabled(authentication.getName());
+                        blockNotActiveUser(authentication.getName());
 
                         return authentication;
                     } else {
                         authentication = getADAuthentication(authentication);
 
                         if (authentication != null && authentication.isAuthenticated()) {
-                            checkAccountNotDisabled(authentication.getName());
+                            blockNotActiveUser(authentication.getName());
 
                             return authentication;
                         }
@@ -148,7 +148,7 @@ public class RangerAuthenticationProvider implements AuthenticationProvider {
                     authentication = (isPAMAuthEnabled ? getPamAuthentication(authentication) : getUnixAuthentication(authentication));
 
                     if (authentication != null && authentication.isAuthenticated()) {
-                        checkAccountNotDisabled(authentication.getName());
+                        blockNotActiveUser(authentication.getName());
 
                         return authentication;
                     }
@@ -156,7 +156,7 @@ public class RangerAuthenticationProvider implements AuthenticationProvider {
                     authentication = getPamAuthentication(authentication);
 
                     if (authentication != null && authentication.isAuthenticated()) {
-                        checkAccountNotDisabled(authentication.getName());
+                        blockNotActiveUser(authentication.getName());
 
                         return authentication;
                     }
@@ -714,8 +714,8 @@ public class RangerAuthenticationProvider implements AuthenticationProvider {
         return authentication;
     }
 
-    private void checkAccountNotDisabled(String userName) {
-        if (userName != null && userMgr.isUserDisabled(userName)) {
+    private void blockNotActiveUser(String userName) {
+        if (userName != null && userMgr.isUserNotActive(userName)) {
             logger.info("Authentication rejected - Ranger account for user [{}] is disabled", userName);
             throw new DisabledException(messages.getMessage("AbstractUserDetailsAuthenticationProvider.disabled", "User account is disabled"));
         }

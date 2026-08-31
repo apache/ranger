@@ -1177,7 +1177,7 @@ public class UserMgr {
         return roleList;
     }
 
-    public boolean isUserDisabled(String loginId) {
+    public boolean isUserNotActive(String loginId) {
         if (loginId == null || loginId.trim().isEmpty()) {
             return false;
         }

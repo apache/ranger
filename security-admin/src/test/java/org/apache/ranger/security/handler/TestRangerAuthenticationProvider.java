@@ -295,10 +295,10 @@ public class TestRangerAuthenticationProvider {
     }
 
     @Test
-    public void checkAccountNotDisabled_throwsDisabledException_whenLocalAccountDisabled() throws Exception {
+    public void blockActiveUser() throws Exception {
         String username = "erin";
-        when(userMgr.isUserDisabled(username)).thenReturn(true);
-        Method m = provider.getClass().getDeclaredMethod("checkAccountNotDisabled", String.class);
+        when(userMgr.isUserNotActive(username)).thenReturn(true);
+        Method m = provider.getClass().getDeclaredMethod("blockNotActiveUser", String.class);
         m.setAccessible(true);
         Exception thrown = null;
         try {
@@ -306,15 +306,15 @@ public class TestRangerAuthenticationProvider {
         } catch (java.lang.reflect.InvocationTargetException e) {
             thrown = (Exception) e.getCause();
         }
-        assertNotNull(thrown, "expected checkAccountNotDisabled to reject a disabled account");
+        assertNotNull(thrown, "expected blockNotActiveUser to reject a disabled account");
         assertTrue(thrown instanceof DisabledException);
     }
 
     @Test
-    public void checkAccountNotDisabled_allowsLogin_whenLocalAccountEnabledOrUnknown() throws Exception {
+    public void blockEnabledOrUnknown() throws Exception {
         String username = "frank";
-        when(userMgr.isUserDisabled(username)).thenReturn(false);
-        Method m = provider.getClass().getDeclaredMethod("checkAccountNotDisabled", String.class);
+        when(userMgr.isUserNotActive(username)).thenReturn(false);
+        Method m = provider.getClass().getDeclaredMethod("blockNotActiveUser", String.class);
         m.setAccessible(true);
         // should not throw
         m.invoke(provider, username);
@@ -333,7 +333,7 @@ public class TestRangerAuthenticationProvider {
         adProvider.userMgr    = userMgr;
         adProvider.sessionMgr = sessionMgr;
         adProvider.setRangerAuthenticationMethod("ACTIVE_DIRECTORY");
-        when(userMgr.isUserDisabled(username)).thenReturn(true);
+        when(userMgr.isUserNotActive(username)).thenReturn(true);
         UsernamePasswordAuthenticationToken input = new UsernamePasswordAuthenticationToken(username, "pw");
         DisabledException thrown = assertThrows(DisabledException.class, () -> adProvider.authenticate(input));
         assertNotNull(thrown);

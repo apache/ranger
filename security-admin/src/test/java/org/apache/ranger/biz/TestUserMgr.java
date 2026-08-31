@@ -2402,7 +2402,7 @@ public class TestUserMgr {
     }
 
     @Test
-    public void testIsUserDisabled_returnsTrueForDisabledLocalAccount() {
+    public void testIsUserDisabled_returnsTrueForNotActiveLocalAccount() {
         XXPortalUserDao userDao = Mockito.mock(XXPortalUserDao.class);
 
         XXPortalUser user = new XXPortalUser();
@@ -2412,11 +2412,11 @@ public class TestUserMgr {
         Mockito.when(daoManager.getXXPortalUser()).thenReturn(userDao);
         Mockito.when(userDao.findByLoginId(userLoginID)).thenReturn(user);
 
-        Assertions.assertTrue(userMgr.isUserDisabled(userLoginID));
+        Assertions.assertTrue(userMgr.isUserNotActive(userLoginID));
     }
 
     @Test
-    public void testIsUserDisabled_returnsFalseForEnabledLocalAccount() {
+    public void testIsUserNotActive_returnsFalseForEnabledLocalAccount() {
         XXPortalUserDao userDao = Mockito.mock(XXPortalUserDao.class);
 
         XXPortalUser user = new XXPortalUser();
@@ -2426,27 +2426,27 @@ public class TestUserMgr {
         Mockito.when(daoManager.getXXPortalUser()).thenReturn(userDao);
         Mockito.when(userDao.findByLoginId(userLoginID)).thenReturn(user);
 
-        Assertions.assertFalse(userMgr.isUserDisabled(userLoginID));
+        Assertions.assertFalse(userMgr.isUserNotActive(userLoginID));
     }
 
     @Test
-    public void testIsUserDisabled_returnsFalseWhenNoLocalAccountExists() {
+    public void testIsUserNotActive_returnsFalseWhenNoLocalAccountExists() {
         XXPortalUserDao userDao = Mockito.mock(XXPortalUserDao.class);
 
         Mockito.when(daoManager.getXXPortalUser()).thenReturn(userDao);
         Mockito.when(userDao.findByLoginId(userLoginID)).thenReturn(null);
 
-        Assertions.assertFalse(userMgr.isUserDisabled(userLoginID));
+        Assertions.assertFalse(userMgr.isUserNotActive(userLoginID));
     }
 
     @Test
-    public void testIsUserDisabled_returnsFalseForBlankLoginId() {
-        Assertions.assertFalse(userMgr.isUserDisabled(""));
-        Assertions.assertFalse(userMgr.isUserDisabled(null));
+    public void testIsUserNotActive_returnsFalseForBlankLoginId() {
+        Assertions.assertFalse(userMgr.isUserNotActive(""));
+        Assertions.assertFalse(userMgr.isUserNotActive(null));
     }
 
     @Test
-    public void testIsUserDisabled_returnsTrueForDeactivatedLocalAccount() {
+    public void testIsUserNotActive_returnsTrueForDeactivatedLocalAccount() {
         XXPortalUserDao userDao = Mockito.mock(XXPortalUserDao.class);
 
         XXPortalUser user = new XXPortalUser();
@@ -2456,11 +2456,11 @@ public class TestUserMgr {
         Mockito.when(daoManager.getXXPortalUser()).thenReturn(userDao);
         Mockito.when(userDao.findByLoginId(userLoginID)).thenReturn(user);
 
-        Assertions.assertTrue(userMgr.isUserDisabled(userLoginID));
+        Assertions.assertTrue(userMgr.isUserNotActive(userLoginID));
     }
 
     @Test
-    public void testIsUserDisabled_returnsTrueForNonActiveLocalAccountStatuses() {
+    public void testIsUserNotActive_returnsTrueForNonActiveLocalAccountStatuses() {
         XXPortalUserDao userDao = Mockito.mock(XXPortalUserDao.class);
         int[] nonActiveStatuses = {
                 RangerCommonEnums.ACT_STATUS_PENDING_APPROVAL,
@@ -2475,7 +2475,7 @@ public class TestUserMgr {
             user.setLoginId(userLoginID);
             user.setStatus(status);
             Mockito.when(userDao.findByLoginId(userLoginID)).thenReturn(user);
-            Assertions.assertTrue(userMgr.isUserDisabled(userLoginID), "status " + status + " should be treated as not able to log in");
+            Assertions.assertTrue(userMgr.isUserNotActive(userLoginID), "status " + status + " should be treated as not able to log in");
         }
     }
 
