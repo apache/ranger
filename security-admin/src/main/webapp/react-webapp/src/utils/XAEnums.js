@@ -363,6 +363,54 @@ export const ClassTypes = {
     modelName: "VXRole",
     type: "vXRole",
     tt: "lbl.ClassTypes_CLASS_TYPE_RANGER_ROLE"
+  },
+  CLASS_TYPE_RANGER_DATASET: {
+    value: 1062,
+    label: "Ranger Dataset",
+    rbkey: "xa.enum.ClassTypes.CLASS_TYPE_RANGER_DATASET",
+    modelName: "RangerDataset",
+    type: "vDataset",
+    tt: "lbl.ClassTypes_CLASS_TYPE_RANGER_DATASET"
+  },
+  CLASS_TYPE_RANGER_PROJECT: {
+    value: 1063,
+    label: "Ranger Project",
+    rbkey: "xa.enum.ClassTypes.CLASS_TYPE_RANGER_PROJECT",
+    modelName: "RangerProject",
+    type: "vProject",
+    tt: "lbl.ClassTypes_CLASS_TYPE_RANGER_PROJECT"
+  },
+  CLASS_TYPE_RANGER_DATA_SHARE: {
+    value: 1064,
+    label: "Ranger Data Share",
+    rbkey: "xa.enum.ClassTypes.CLASS_TYPE_RANGER_DATA_SHARE",
+    modelName: "RangerDataShare",
+    type: "vDataShare",
+    tt: "lbl.ClassTypes_CLASS_TYPE_RANGER_DATA_SHARE"
+  },
+  CLASS_TYPE_RANGER_SHARED_RESOURCE: {
+    value: 1065,
+    label: "Ranger Shared Resource",
+    rbkey: "xa.enum.ClassTypes.CLASS_TYPE_RANGER_SHARED_RESOURCE",
+    modelName: "RangerSharedResource",
+    type: "vSharedResource",
+    tt: "lbl.ClassTypes_CLASS_TYPE_RANGER_SHARED_RESOURCE"
+  },
+  CLASS_TYPE_RANGER_DATA_SHARE_IN_DATASET: {
+    value: 1066,
+    label: "Ranger DataShare in Dataset",
+    rbkey: "xa.enum.ClassTypes.CLASS_TYPE_RANGER_DATA_SHARE_IN_DATASET",
+    modelName: "RangerDataShareInDataset",
+    type: "vDataShareInDataset",
+    tt: "lbl.ClassTypes_CLASS_TYPE_RANGER_DATA_SHARE_IN_DATASET"
+  },
+  CLASS_TYPE_RANGER_DATASET_IN_PROJECT: {
+    value: 1067,
+    label: "Ranger Dataset in Project",
+    rbkey: "xa.enum.ClassTypes.CLASS_TYPE_RANGER_DATASET_IN_PROJECT",
+    modelName: "RangerDatasetInProject",
+    type: "vDatasetInProject",
+    tt: "lbl.ClassTypes_CLASS_TYPE_RANGER_DATASET_IN_PROJECT"
   }
 };
 
@@ -536,9 +584,11 @@ export const RegexValidation = {
   NAME_VALIDATION: {
     regexExpressionForName:
       /^([A-Za-z0-9_]|[\u00C0-\u017F])([a-z0-9,._\-+/@= ]|[\u00C0-\u017F])+$/i,
+    regexExpressionForUserName:
+      /^([A-Za-z0-9_]|[\u00C0-\u017F])([a-z0-9,._\-+/@=: ]|[\u00C0-\u017F])+$/i,
     regexExpressionForFirstAndLastName:
       /^([A-Za-z0-9_]|[\u00C0-\u017F])([a-zA-Z0-9\s_. -@]|[\u00C0-\u017F])+$/i,
-    regexforNameValidation: /^[a-zA-Z0-9_-][a-zA-Z0-9\s_-]{0,254}$/,
+    regexForNameValidation: /^[a-zA-Z0-9_-][a-zA-Z0-9\s_-]{0,254}$/,
     regexExpressionForSecondaryName:
       /^([A-Za-z0-9_]|[\u00C0-\u017F])([a-zA-Z0-9\s_. -@]|[\u00C0-\u017F])+$/i,
     regexforServiceNameValidation: /^[a-zA-Z0-9_-][a-zA-Z0-9_-]{0,254}$/,
@@ -553,7 +603,16 @@ export const RegexValidation = {
         3. Name length should be greater than one.
       </>
     ),
-    regexforNameValidationMessage:
+    userNameValidationMessage: (
+      <>
+        1. Name should be start with alphabet / numeric / underscore / non-us
+        characters.
+        <br />
+        2. Allowed special character ,._-+/@=: and space. <br />
+        3. Name length should be greater than one.
+      </>
+    ),
+    regexForNameValidationMessage:
       "Name should not start with space, it should be less than 256 characters and special characters are not allowed(except _ - and space).",
     secondaryNameValidationMessage: (
       <>
@@ -621,6 +680,22 @@ export const PathAssociateWithModule = {
     "/roles/create",
     "/roles/:roleId"
   ],
+  "Governed Data Sharing": [
+    "/gds/mydatasetlisting",
+    "/gds/datasetlisting",
+    "/gds/create",
+    "/gds/dataset/:datasetId/detail",
+    "/gds/dataset/:datasetId/fullview",
+    "/gds/dataset/:datasetId/accessGrant",
+    "/gds/mydatasharelisting",
+    "/gds/datasharelisting",
+    "/gds/datashare/create",
+    "/gds/request/list",
+    "/gds/request/detail/:requestId",
+    "/gds/datashare/:datashareId/detail",
+    "/gds/datashare/:datashareId/fullview",
+    "/gds/datashare/resource/:datashareId"
+  ],
   Permission: ["/permissions/models", "/permissions/:permissionId/edit"],
   Profile: ["/userprofile"],
   KnoxSignOut: ["/knoxSSOWarning"],
@@ -628,7 +703,11 @@ export const PathAssociateWithModule = {
   PageNotFound: ["/pageNotFound"],
   localLogin: ["/locallogin"],
   slashPath: ["/"],
-  Forbidden: ["/forbidden"]
+  Forbidden: ["/forbidden"],
+  CreateNewPolicyForm: ["/policymanager/create-policy"],
+  EditNewPolicyForm: [
+    "/service/:serviceId/policies/:policyId/new-policy-form-edit"
+  ]
 };
 
 /* Access */
@@ -637,13 +716,13 @@ export const DefStatus = {
   RecursiveStatus: {
     STATUS_RECURSIVE: {
       value: true,
-      label: "recursive",
+      label: "Recursive",
       rbkey: "xa.enum.RecursiveStatus.RECURSIVE",
       tt: "lbl.RecursiveStatus_RECURSIVE"
     },
     STATUS_NONRECURSIVE: {
       value: false,
-      label: "nonrecursive",
+      label: "Non-recursive",
       rbkey: "xa.enum.RecursiveStatus.NONRECURSIVE",
       tt: "lbl.RecursiveStatus_NONRECURSIVE"
     }
@@ -854,7 +933,35 @@ export const pluginStatusColumnInfoMsg = {
       "Latest update in tags are not yet downloaded (sync-up with Ranger).",
     activationTimeDelayMsg:
       "Latest update in tags are not yet active for enforcement."
+  },
+  GDS: {
+    title: "GDS (Time details)",
+    lastUpdated: "Last update time of GDS info.",
+    downloadTime: "Last GDS info download time (sync-up with Ranger).",
+    activeTime:
+      "Last time the downloaded GDS info became active for enforcement.",
+    downloadTimeDelayMsg:
+      "Latest update in GDS info is not yet downloaded (sync-up with Ranger).",
+    activationTimeDelayMsg:
+      "Latest update in GDS info is not yet active for enforcement."
+  },
+  Role: {
+    title: "Role (Time details)",
+    lastUpdated: "Last updated time of roles.",
+    downloadTime: "Last roles download time (sync-up with Ranger).",
+    activeTime: "Last time the downloaded roles became active for enforcement.",
+    downloadTimeDelayMsg:
+      "Latest update in roles are not yet downloaded (sync-up with Ranger).",
+    activationTimeDelayMsg:
+      "Latest update in roles are not yet active for enforcement."
   }
+};
+
+export const statusClassMap = {
+  REQUESTED: "badge bg-warning",
+  GRANTED: "badge bg-success",
+  ACTIVE: "badge bg-primary",
+  DENIED: "badge bg-danger"
 };
 
 export const additionalServiceConfigs = [

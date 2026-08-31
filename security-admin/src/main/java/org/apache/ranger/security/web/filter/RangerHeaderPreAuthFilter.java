@@ -110,8 +110,8 @@ public class RangerHeaderPreAuthFilter extends GenericFilterBean {
 
     /**
      * Resolves the principal from trusted headers. The username header (user identity) takes
-     * precedence; when it is absent, the SPIFFE header (service identity) is used and
-     * the trailing service-account segment of the SPIFFE ID becomes the principal.
+     * precedence; when it is absent, the SPIFFE header (service identity) is used and the
+     * full SPIFFE ID becomes the principal (SPIFFE IDs are used as usernames in Ranger).
      */
     private String resolvePrincipal(HttpServletRequest httpRequest) {
         String username = StringUtils.isNotBlank(userNameHeaderName) ? StringUtils.trimToNull(httpRequest.getHeader(userNameHeaderName)) : null;
@@ -121,13 +121,12 @@ public class RangerHeaderPreAuthFilter extends GenericFilterBean {
         }
 
         for (String spiffeHeaderName : spiffeHeaderNames) {
-            String spiffeId       = StringUtils.trimToNull(httpRequest.getHeader(spiffeHeaderName));
-            String serviceAccount = SpiffeIdUtil.extractServiceAccount(spiffeId);
+            String spiffeId = StringUtils.trimToNull(httpRequest.getHeader(spiffeHeaderName));
 
-            if (StringUtils.isNotBlank(serviceAccount)) {
-                LOG.debug("Resolved service-account '{}' from SPIFFE header '{}'", serviceAccount, spiffeHeaderName);
+            if (SpiffeIdUtil.isValidSpiffeId(spiffeId)) {
+                LOG.debug("Resolved SPIFFE ID '{}' from header '{}'", spiffeId, spiffeHeaderName);
 
-                return serviceAccount;
+                return spiffeId;
             } else if (StringUtils.isNotBlank(spiffeId)) {
                 LOG.warn("SPIFFE header '{}' value is not a well-formed SPIFFE ID", spiffeHeaderName);
             }

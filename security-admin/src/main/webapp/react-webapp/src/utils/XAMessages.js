@@ -36,9 +36,21 @@ export const RegexMessage = {
         </p>
       </>
     ),
-    passwordvalidationinfomessage:
-      "Password should be minimum 8 characters ,atleast one uppercase letter, one lowercase letter and one numeric. For FIPS environment password should be minimum 14 characters with atleast one uppercase letter, one special characters, one lowercase letter and one numeric.",
-    emailvalidationinfomessage: (
+    userNameValidationMsgWithSpiffe: (
+      <>
+        <p className="pd-10 mb-0" style={{ fontSize: "small" }}>
+          1. User name should be start with alphabet / numeric / underscore /
+          non-us characters.
+          <br />
+          2. Allowed special character ,._-+/@=: and space.
+          <br />
+          3. Name length should be greater than one.
+        </p>
+      </>
+    ),
+    passwordValidationInfoMessage:
+      "Password should be minimum 8 characters ,at least one uppercase letter, one lowercase letter and one numeric. For FIPS environment password should be minimum 14 characters with atleast one uppercase letter, one special characters, one lowercase letter and one numeric.",
+    emailValidationInfoMessage: (
       <>
         <p className="pd-10 mb-0" style={{ fontSize: "small" }}>
           1. Email address should be start with alphabet / numeric / underscore
@@ -50,10 +62,16 @@ export const RegexMessage = {
         </p>
       </>
     ),
-    policyConditionInfoIcon:
-      "1. JavaScript Condition Examples :\
-                      country_code == 'USA', time_range >= 900 time_range <= 1800 etc.\
-                      2. Dragging bottom-right corner of javascript condition editor(Textarea) can resizable",
+    policyConditionInfoIcon:(
+      <>
+        <span className="mb-0" style={{ fontSize: "small" }}>
+          1. Boolean expression Examples:
+          <br />
+            country_code == 'USA', time_range &gt;= 900 time_range &lt;= 1800 etc.
+          <br />
+          2. The condition editor (textarea) can be resized by dragging its bottom-right corner.
+        </span>
+      </>),
     firstNameValidationMsg: (
       <>
         <p className="pd-10 mb-0" style={{ fontSize: "small" }}>
