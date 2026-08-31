@@ -50,6 +50,10 @@ const INITIAL_STATE = {
   preventUnBlock: false
 };
 
+// SPIFFE IDs (e.g. spiffe://spiffe.example.com/ns/sales/sa/trino) contain ':', which is only permitted in usernames when the admin config `ranger.admin.spiffe.as.username.enabled` is enabled.
+const isSpiffeAsUsernameEnabled = () =>
+  getUserProfile()?.configProperties?.spiffeAsUsernameEnabled === "true";
+
 const PromptDialog = (props) => {
   const { isDirtyField, isUnblock } = props;
   usePrompt("Are you sure you want to leave", isDirtyField && !isUnblock);
@@ -342,12 +346,14 @@ function UserForm(props) {
     if (!values.name) {
       errors.name = "Required";
     } else {
-      if (
-        !RegexValidation.NAME_VALIDATION.regexExpressionForName.test(
-          values.name
-        )
-      ) {
-        errors.name = RegexValidation.NAME_VALIDATION.nameValidationMessage;
+      const spiffeEnabled = isSpiffeAsUsernameEnabled();
+      const userNameRegex = spiffeEnabled
+        ? RegexValidation.NAME_VALIDATION.regexExpressionForUserName
+        : RegexValidation.NAME_VALIDATION.regexExpressionForName;
+      if (!userNameRegex.test(values.name)) {
+        errors.name = spiffeEnabled
+          ? RegexValidation.NAME_VALIDATION.userNameValidationMessage
+          : RegexValidation.NAME_VALIDATION.nameValidationMessage;
       }
     }
     if (!values.password && !isEditView) {
@@ -467,7 +473,11 @@ function UserForm(props) {
                       <InfoIcon
                         css="input-box-info-icon"
                         position="right"
-                        message={RegexMessage.MESSAGE.userNameValidationMsg}
+                        message={
+                          isSpiffeAsUsernameEnabled()
+                            ? RegexMessage.MESSAGE.userNameValidationMsgWithSpiffe
+                            : RegexMessage.MESSAGE.userNameValidationMsg
+                        }
                       />
 
                       {meta.error && meta.touched && (
