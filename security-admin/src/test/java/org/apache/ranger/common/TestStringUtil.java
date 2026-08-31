@@ -179,7 +179,36 @@ public class TestStringUtil {
 		boolean value = stringUtil.isValidName(name);
 		Assert.assertTrue(value);
 	}
-	
+
+	@Test
+	public void testDefaultLoginIdRegExRejectsColon() {
+		// SPIFFE ID support is disabled by default, so ':' must not be a valid login-id character.
+		String spiffeId = "spiffe://spiffe.example.com/ns/sales/sa/trino";
+		Assert.assertFalse(stringUtil.validateString(StringUtil.VALIDATION_LOGINID, spiffeId));
+		Assert.assertFalse(stringUtil.validateString(StringUtil.VALIDATION_LOGINID, "user:name"));
+	}
+
+	@Test
+	public void testSpiffeLoginIdRegExAllowsSpiffeId() {
+		// SPIFFE IDs are used as service-account usernames in k8s deployments.
+		String spiffeId = "spiffe://spiffe.example.com/ns/sales/sa/trino";
+		Assert.assertTrue(stringUtil.validateString(StringUtil.VALIDATION_LOGINID_SPIFFE, spiffeId));
+		Assert.assertTrue(stringUtil.validateString(StringUtil.VALIDATION_LOGINID_SPIFFE, "user:name"));
+	}
+
+	@Test
+	public void testLoginIdRegExRejectsInvalidCharacter() {
+		Assert.assertFalse(stringUtil.validateString(StringUtil.VALIDATION_LOGINID, "user#name"));
+		Assert.assertFalse(stringUtil.validateString(StringUtil.VALIDATION_LOGINID_SPIFFE, "user#name"));
+	}
+
+	@Test
+	public void testGetLoginIdValidationRegExDefaultsToNonSpiffe() {
+		// With the config disabled (default), the effective regex is the non-SPIFFE one.
+		Assert.assertFalse(StringUtil.isSpiffeAsUsernameEnabled());
+		Assert.assertEquals(StringUtil.VALIDATION_LOGINID, StringUtil.getLoginIdValidationRegEx());
+	}
+
 	@Test
 	public void testIsValidNameNull(){
 		String name=null;

@@ -47,6 +47,10 @@ public class StringUtil implements Serializable {
 	static final public String VALIDATION_IP_ADDRESS = "[\\d\\.\\%\\:]*";
 	static final public String WILDCARD_ASTERISK = "*";
 
+	// When enabled, ':' is treated as a valid login-id character so that SPIFFE IDs (e.g. spiffe://spiffe.example.com/ns/sales/sa/trino) can be used as usernames.
+	public static final String PROP_SPIFFE_AS_USERNAME_ENABLED = "ranger.admin.spiffe.as.username.enabled";
+	public static final String VALIDATION_LOGINID_SPIFFE       = "^([A-Za-z0-9_]|[À-ſ])([a-z0-9,._\\-+/@=: ]|[À-ſ])+$";
+
 	static HashMap<String, Pattern> compiledRegEx = new HashMap<String, Pattern>();
 
 	String[] invalidNames = null;
@@ -265,6 +269,27 @@ public class StringUtil implements Serializable {
 		}
 
 		return false;
+	}
+
+	/**
+	 * Whether SPIFFE IDs are allowed as usernames. Controlled by the
+	 * {@link #PROP_SPIFFE_AS_USERNAME_ENABLED} config (disabled by default). When enabled,
+	 * the login-id validation allows the ':' character used in SPIFFE IDs.
+	 *
+	 * @return true if using SPIFFE IDs as usernames is enabled
+	 */
+	public static boolean isSpiffeAsUsernameEnabled() {
+		return PropertiesUtil.getBooleanProperty(PROP_SPIFFE_AS_USERNAME_ENABLED, false);
+	}
+
+	/**
+	 * Returns the login-id validation regex in effect. When using SPIFFE IDs as usernames
+	 * is enabled, ':' is treated as a valid character (see {@link #VALIDATION_LOGINID_SPIFFE}).
+	 *
+	 * @return the login-id validation regex
+	 */
+	public static String getLoginIdValidationRegEx() {
+		return isSpiffeAsUsernameEnabled() ? VALIDATION_LOGINID_SPIFFE : VALIDATION_LOGINID;
 	}
 
 }
