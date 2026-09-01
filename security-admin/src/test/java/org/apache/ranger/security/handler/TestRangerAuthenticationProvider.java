@@ -1,0 +1,335 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package org.apache.ranger.security.handler;
+
+import org.apache.ranger.biz.SessionMgr;
+import org.apache.ranger.biz.UserMgr;
+import org.apache.ranger.common.PropertiesUtil;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Test;
+import org.mockito.ArgumentCaptor;
+import org.springframework.security.authentication.DisabledException;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.User;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.ldap.authentication.LdapAuthenticator;
+import org.springframework.security.provisioning.JdbcUserDetailsManager;
+
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.atLeastOnce;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+/**
+ * Unit tests for RangerAuthenticationProvider.
+ */
+public class TestRangerAuthenticationProvider {
+    private RangerAuthenticationProvider provider;
+    private UserMgr                      userMgr;
+    private SessionMgr                   sessionMgr;
+    private JdbcUserDetailsManager       userDetailsManager;
+
+    @Before
+    public void setUp() throws Exception {
+        provider           = new RangerAuthenticationProvider();
+        userMgr            = mock(UserMgr.class);
+        sessionMgr         = mock(SessionMgr.class);
+        userDetailsManager = mock(JdbcUserDetailsManager.class);
+
+        provider.userMgr    = userMgr;
+        provider.sessionMgr = sessionMgr;
+        setPrivateField(provider, "userDetailsService", userDetailsManager);
+
+        PropertiesUtil.getPropertiesMap().clear();
+    }
+
+    @Test
+    public void supports_usernamePasswordToken() {
+        Assert.assertTrue(provider.supports(UsernamePasswordAuthenticationToken.class));
+        Assert.assertFalse(provider.supports(Authentication.class));
+    }
+
+    @Test
+    public void authenticate_jdbc_sha256_success() {
+        String username = "alice";
+        String rawPwd   = "pwd";
+        String encoded  = new RangerCustomPasswordEncoder(username, "SHA-256").encode(rawPwd);
+
+        when(sessionMgr.isLoginIdLocked(username)).thenReturn(false);
+        when(userDetailsManager.loadUserByUsername(username))
+                .thenReturn(User.withUsername(username).password(encoded).roles("USER").build());
+
+        UsernamePasswordAuthenticationToken input  = new UsernamePasswordAuthenticationToken(username, rawPwd);
+        Authentication                      result = provider.authenticate(input);
+
+        Assert.assertNotNull(result);
+        Assert.assertTrue(result.isAuthenticated());
+        Assert.assertEquals(username, ((UserDetails) result.getPrincipal()).getUsername());
+    }
+
+    @Test
+    public void authenticate_jdbc_md5_fallback_updatesPassword() {
+        String username = "bob";
+        String rawPwd   = "secret";
+        String md5Enc   = new RangerCustomPasswordEncoder(username, "MD5").encode(rawPwd);
+
+        when(sessionMgr.isLoginIdLocked(username)).thenReturn(false);
+        when(userDetailsManager.loadUserByUsername(username))
+                .thenReturn(User.withUsername(username).password(md5Enc).roles("USER").build());
+
+        PropertiesUtil.getPropertiesMap().put("ranger.sha256Password.update.disable", "false");
+
+        UsernamePasswordAuthenticationToken input = new UsernamePasswordAuthenticationToken(username, rawPwd);
+        try {
+            Authentication result = provider.authenticate(input);
+            Assert.assertNotNull(result);
+            Assert.assertTrue(result.isAuthenticated());
+        } finally {
+            ArgumentCaptor<String> userCaptor = ArgumentCaptor.forClass(String.class);
+            ArgumentCaptor<String> pwdCaptor  = ArgumentCaptor.forClass(String.class);
+            verify(userMgr, atLeastOnce()).updatePasswordInSHA256(userCaptor.capture(), pwdCaptor.capture(), eq(false));
+            Assert.assertEquals(username, userCaptor.getValue());
+            Assert.assertEquals(rawPwd, pwdCaptor.getValue());
+        }
+    }
+
+    @Test
+    public void getAuthenticationWithGrantedAuthority_usesRolesFromUserMgr() {
+        when(userMgr.getRolesByLoginId("carol")).thenReturn(Arrays.asList("ROLE_A", "ROLE_B"));
+
+        UsernamePasswordAuthenticationToken input =
+                new UsernamePasswordAuthenticationToken(
+                        new User("carol", "x", Collections.emptyList()),
+                        "x",
+                        Collections.singletonList(new SimpleGrantedAuthority("ROLE_PRE")));
+
+        Authentication out = provider.getAuthenticationWithGrantedAuthority(input);
+        Assert.assertTrue(out instanceof UsernamePasswordAuthenticationToken);
+        Collection<? extends GrantedAuthority> auths = out.getAuthorities();
+        Assert.assertEquals(2, auths.size());
+        Assert.assertTrue(auths.stream().anyMatch(a -> a.getAuthority().equals("ROLE_A")));
+        Assert.assertTrue(auths.stream().anyMatch(a -> a.getAuthority().equals("ROLE_B")));
+    }
+
+    @Test
+    public void settersAndGetters_work() {
+        provider.setRangerAuthenticationMethod("LDAP");
+        Assert.assertEquals("LDAP", provider.getRangerAuthenticationMethod());
+
+        LdapAuthenticator authenticator = mock(LdapAuthenticator.class);
+        provider.setAuthenticator(authenticator);
+        Assert.assertSame(authenticator, provider.getAuthenticator());
+
+        provider.setSsoEnabled(true);
+        Assert.assertTrue(provider.isSsoEnabled());
+    }
+
+    @Test
+    public void ssoEnabled_authenticateReturnsSameToken() {
+        provider.setSsoEnabled(true);
+        UsernamePasswordAuthenticationToken input  = new UsernamePasswordAuthenticationToken("u", "p");
+        Authentication                      result = provider.authenticate(input);
+        Assert.assertSame(input, result);
+    }
+
+    @Test
+    public void getADAuthentication_skipsWhenNoPassword() {
+        UsernamePasswordAuthenticationToken input  = new UsernamePasswordAuthenticationToken("u", "");
+        Authentication                      result = provider.getADAuthentication(input);
+        Assert.assertSame(input, result);
+    }
+
+    @Test
+    public void getPamAuthentication_skipsWhenNoPassword() {
+        UsernamePasswordAuthenticationToken input  = new UsernamePasswordAuthenticationToken("u", "");
+        Authentication                      result = provider.getPamAuthentication(input);
+        Assert.assertSame(input, result);
+    }
+
+    @Test
+    public void getUnixAuthentication_skipsWhenNoPassword() {
+        UsernamePasswordAuthenticationToken input  = new UsernamePasswordAuthenticationToken("u", "");
+        Authentication                      result = provider.getUnixAuthentication(input);
+        Assert.assertSame(input, result);
+    }
+
+    @Test
+    public void getLdapAuthentication_skipsWhenNoPassword() throws Exception {
+        UsernamePasswordAuthenticationToken input = new UsernamePasswordAuthenticationToken("u", "");
+        Method                              m     = provider.getClass().getDeclaredMethod("getLdapAuthentication", Authentication.class);
+        m.setAccessible(true);
+        Authentication result = (Authentication) m.invoke(provider, input);
+        Assert.assertSame(input, result);
+    }
+
+    @Test
+    public void getADBindAuthentication_skipsWhenNoPassword() throws Exception {
+        UsernamePasswordAuthenticationToken input = new UsernamePasswordAuthenticationToken("u", "");
+        Method                              m     = provider.getClass().getDeclaredMethod("getADBindAuthentication", Authentication.class);
+        m.setAccessible(true);
+        Authentication result = (Authentication) m.invoke(provider, input);
+        Assert.assertSame(input, result);
+    }
+
+    @Test
+    public void getLdapBindAuthentication_skipsWhenNoPassword() throws Exception {
+        UsernamePasswordAuthenticationToken input = new UsernamePasswordAuthenticationToken("u", "");
+        Method                              m     = provider.getClass().getDeclaredMethod("getLdapBindAuthentication", Authentication.class);
+        m.setAccessible(true);
+        Authentication result = (Authentication) m.invoke(provider, input);
+        Assert.assertSame(input, result);
+    }
+
+    @Test
+    public void getADAuthentication_withCredentials_handlesFailureGracefully() {
+        PropertiesUtil.getPropertiesMap().put("ranger.ldap.ad.url", "ldap://127.0.0.1:0");
+        PropertiesUtil.getPropertiesMap().put("ranger.ldap.ad.domain", "example.com");
+        UsernamePasswordAuthenticationToken input  = new UsernamePasswordAuthenticationToken("user", "pass");
+        Authentication                      result = provider.getADAuthentication(input);
+        Assert.assertNotNull(result);
+    }
+
+    @Test
+    public void getLdapAuthentication_withStartTlsAndGroupProps_handlesFailureGracefully() throws Exception {
+        PropertiesUtil.getPropertiesMap().put("ranger.ldap.url", "ldap://127.0.0.1:0");
+        PropertiesUtil.getPropertiesMap().put("ranger.ldap.user.dnpattern", "uid={0}");
+        PropertiesUtil.getPropertiesMap().put("ranger.ldap.group.searchbase", "ou=groups,dc=example,dc=com");
+        PropertiesUtil.getPropertiesMap().put("ranger.ldap.group.searchfilter", "(member={0})");
+        PropertiesUtil.getPropertiesMap().put("ranger.ldap.group.roleattribute", "cn");
+        PropertiesUtil.getPropertiesMap().put("ranger.ldap.starttls", "true");
+
+        Method m = provider.getClass().getDeclaredMethod("getLdapAuthentication", Authentication.class);
+        m.setAccessible(true);
+        UsernamePasswordAuthenticationToken input = new UsernamePasswordAuthenticationToken("user", "pass");
+        Authentication result = (Authentication) m.invoke(provider, input);
+        Assert.assertNotNull(result);
+    }
+
+    @Test
+    public void getADBindAuthentication_withEmptyFilter_usesDefaultAndHandlesFailure() throws Exception {
+        PropertiesUtil.getPropertiesMap().put("ranger.ldap.ad.url", "ldap://127.0.0.1:0");
+        PropertiesUtil.getPropertiesMap().put("ranger.ldap.ad.base.dn", "dc=example,dc=com");
+        PropertiesUtil.getPropertiesMap().put("ranger.ldap.ad.bind.dn", "cn=admin,dc=example,dc=com");
+        PropertiesUtil.getPropertiesMap().put("ranger.ldap.ad.bind.password", "secret");
+        PropertiesUtil.getPropertiesMap().put("ranger.ldap.ad.user.searchfilter", " ");
+
+        Method m = provider.getClass().getDeclaredMethod("getADBindAuthentication", Authentication.class);
+        m.setAccessible(true);
+        UsernamePasswordAuthenticationToken input = new UsernamePasswordAuthenticationToken("user", "pass");
+        Authentication result = (Authentication) m.invoke(provider, input);
+        Assert.assertNotNull(result);
+    }
+
+    @Test
+    public void getLdapBindAuthentication_withProps_handlesFailureGracefully() throws Exception {
+        PropertiesUtil.getPropertiesMap().put("ranger.ldap.url", "ldap://127.0.0.1:0");
+        PropertiesUtil.getPropertiesMap().put("ranger.ldap.user.dnpattern", "uid={0}");
+        PropertiesUtil.getPropertiesMap().put("ranger.ldap.group.searchbase", "ou=groups,dc=example,dc=com");
+        PropertiesUtil.getPropertiesMap().put("ranger.ldap.group.searchfilter", "(member={0})");
+        PropertiesUtil.getPropertiesMap().put("ranger.ldap.group.roleattribute", "cn");
+        PropertiesUtil.getPropertiesMap().put("ranger.ldap.base.dn", "dc=example,dc=com");
+        PropertiesUtil.getPropertiesMap().put("ranger.ldap.bind.dn", "cn=admin,dc=example,dc=com");
+        PropertiesUtil.getPropertiesMap().put("ranger.ldap.bind.password", "secret");
+        PropertiesUtil.getPropertiesMap().put("ranger.ldap.user.searchfilter", "(uid={0})");
+
+        Method m = provider.getClass().getDeclaredMethod("getLdapBindAuthentication", Authentication.class);
+        m.setAccessible(true);
+        UsernamePasswordAuthenticationToken input = new UsernamePasswordAuthenticationToken("user", "pass");
+        Authentication result = (Authentication) m.invoke(provider, input);
+        Assert.assertNotNull(result);
+    }
+
+    @Test
+    public void authenticate_activeDirectory_thenJdbc_successful() {
+        provider.setRangerAuthenticationMethod("ACTIVE_DIRECTORY");
+        String username = "dave";
+        String rawPwd   = "pw";
+        String encoded  = new RangerCustomPasswordEncoder(username, "SHA-256").encode(rawPwd);
+        when(sessionMgr.isLoginIdLocked(username)).thenReturn(false);
+        when(userDetailsManager.loadUserByUsername(username))
+                .thenReturn(User.withUsername(username).password(encoded).roles("USER").build());
+
+        UsernamePasswordAuthenticationToken input  = new UsernamePasswordAuthenticationToken(username, rawPwd);
+        Authentication                      result = provider.authenticate(input);
+
+        Assert.assertNotNull(result);
+        Assert.assertTrue(result.isAuthenticated());
+    }
+
+    @Test
+    public void blockActiveUser() throws Exception {
+        String username = "erin";
+        when(userMgr.isUserNotActive(username)).thenReturn(true);
+        Method m = provider.getClass().getDeclaredMethod("blockNotActiveUser", String.class);
+        m.setAccessible(true);
+        Exception thrown = null;
+        try {
+            m.invoke(provider, username);
+        } catch (java.lang.reflect.InvocationTargetException e) {
+            thrown = (Exception) e.getCause();
+        }
+        Assert.assertNotNull("expected blockNotActiveUser to reject a disabled account", thrown);
+        Assert.assertTrue(thrown instanceof DisabledException);
+    }
+
+    @Test
+    public void blockEnabledOrUnknown() throws Exception {
+        String username = "frank";
+        when(userMgr.isUserNotActive(username)).thenReturn(false);
+        Method m = provider.getClass().getDeclaredMethod("blockNotActiveUser", String.class);
+        m.setAccessible(true);
+        // should not throw
+        m.invoke(provider, username);
+    }
+
+    @Test
+    public void authenticate_activeDirectory_rejectsDisabledLocalAccount_evenWithValidDirectoryCredentials() {
+        String username = "gina";
+        RangerAuthenticationProvider adProvider = new RangerAuthenticationProvider() {
+            @Override
+            public Authentication getADAuthentication(Authentication authentication) {
+                List<GrantedAuthority> auths = Collections.singletonList(new SimpleGrantedAuthority("ROLE_USER"));
+                return new UsernamePasswordAuthenticationToken(new User(username, "pw", auths), "pw", auths);
+            }
+        };
+        adProvider.userMgr    = userMgr;
+        adProvider.sessionMgr = sessionMgr;
+        adProvider.setRangerAuthenticationMethod("ACTIVE_DIRECTORY");
+        when(userMgr.isUserNotActive(username)).thenReturn(true);
+        UsernamePasswordAuthenticationToken input = new UsernamePasswordAuthenticationToken(username, "pw");
+        DisabledException thrown = Assert.assertThrows(DisabledException.class, () -> adProvider.authenticate(input));
+        Assert.assertNotNull(thrown);
+    }
+
+    private static void setPrivateField(Object target, String fieldName, Object value) throws Exception {
+        Field f = target.getClass().getDeclaredField(fieldName);
+        f.setAccessible(true);
+        f.set(target, value);
+    }
+}

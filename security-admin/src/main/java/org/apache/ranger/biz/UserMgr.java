@@ -1345,6 +1345,14 @@ public class UserMgr {
 		return roleList;
 	}
 
+	public boolean isUserNotActive(String loginId) {
+		if (loginId == null || loginId.trim().isEmpty()) {
+			return false;
+		}
+		XXPortalUser xXPortalUser = daoManager.getXXPortalUser().findByLoginId(loginId);
+		return xXPortalUser != null && xXPortalUser.getStatus() != RangerCommonEnums.ACT_STATUS_ACTIVE;
+	}
+
 	/**
 	 * For config super users viewing their own profile, expose effective
 	 * admin roles and modules to the UI.
