@@ -19,14 +19,12 @@
 
 package org.apache.ranger.security.listener;
 
-import javax.servlet.annotation.WebListener;
 import javax.servlet.http.HttpSession;
 import javax.servlet.http.HttpSessionEvent;
 import javax.servlet.http.HttpSessionListener;
 
 import java.util.concurrent.CopyOnWriteArrayList;
 
-@WebListener
 public class RangerHttpSessionListener implements HttpSessionListener {
     private static final CopyOnWriteArrayList<HttpSession> listOfSession = new CopyOnWriteArrayList<>();
 

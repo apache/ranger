@@ -34,6 +34,7 @@ import org.apache.ranger.biz.SessionMgr;
 import org.apache.ranger.biz.UserMgr;
 import org.apache.ranger.common.PropertiesUtil;
 import org.apache.ranger.common.RESTErrorUtil;
+import org.apache.ranger.common.RangerConstants;
 import org.apache.ranger.util.RestUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -708,9 +709,17 @@ public class RangerKRBAuthenticationFilter extends RangerKrbFilter {
             }
         }
 
-        String loginPage = PropertiesUtil.getProperty("ranger.logout.success.page", "/login.jsp");
+        String loginPage   = PropertiesUtil.getProperty("ranger.logout.success.page", "/login.jsp");
+        String redirectUrl = httpRequest.getContextPath() + loginPage;
+        String ajaxHeader  = httpRequest.getHeader("X-Requested-With");
 
-        httpResponse.sendRedirect(httpRequest.getContextPath() + loginPage);
+        if ("XMLHttpRequest".equalsIgnoreCase(ajaxHeader)) {
+            httpResponse.setHeader("X-Frame-Options", "DENY");
+            httpResponse.setStatus(RangerConstants.SC_AUTHENTICATION_TIMEOUT);
+            httpResponse.setHeader("X-Rngr-Redirect-Url", redirectUrl);
+        } else {
+            httpResponse.sendRedirect(redirectUrl);
+        }
     }
 
     private void handleTimeoutRequest(HttpServletRequest httpRequest, HttpServletResponse httpResponse) throws IOException {

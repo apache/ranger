@@ -27,6 +27,7 @@ import org.apache.hadoop.security.authentication.util.Signer;
 import org.apache.ranger.biz.SessionMgr;
 import org.apache.ranger.biz.UserMgr;
 import org.apache.ranger.common.PropertiesUtil;
+import org.apache.ranger.common.RangerConstants;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.MethodOrderer;
@@ -174,6 +175,31 @@ public class TestRangerKRBAuthenticationFilter {
 
         verify(session, times(1)).invalidate();
         verify(res, times(1)).sendRedirect("/login.jsp");
+        verify(chain, never()).doFilter(any(ServletRequest.class), any(ServletResponse.class));
+    }
+
+    @Test
+    public void testDoFilter_concurrentSessionExpiredFormLogin_ajaxReturnsTimeout() throws Exception {
+        RangerKRBAuthenticationFilter filter = new RangerKRBAuthenticationFilter();
+
+        HttpServletRequest req = Mockito.mock(HttpServletRequest.class);
+        HttpServletResponse res = Mockito.mock(HttpServletResponse.class);
+        FilterChain chain = Mockito.mock(FilterChain.class);
+        HttpSession session = Mockito.mock(HttpSession.class);
+
+        when(req.getSession(false)).thenReturn(session);
+        when(session.getAttribute(SessionMgr.SESSION_ATTR_CONCURRENT_EXPIRED)).thenReturn(Boolean.TRUE);
+        when(session.getAttribute(SessionMgr.SESSION_ATTR_CONCURRENT_EXPIRED_SSO)).thenReturn(Boolean.FALSE);
+        when(req.getContextPath()).thenReturn("");
+        when(req.getHeader("X-Requested-With")).thenReturn("XMLHttpRequest");
+        doNothing().when(session).invalidate();
+
+        filter.doFilter(req, res, chain);
+
+        verify(session, times(1)).invalidate();
+        verify(res).setStatus(RangerConstants.SC_AUTHENTICATION_TIMEOUT);
+        verify(res).setHeader("X-Rngr-Redirect-Url", "/login.jsp");
+        verify(res, never()).sendRedirect(Mockito.anyString());
         verify(chain, never()).doFilter(any(ServletRequest.class), any(ServletResponse.class));
     }
 

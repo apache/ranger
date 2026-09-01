@@ -66,7 +66,9 @@ import java.util.Comparator;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CopyOnWriteArraySet;
 
@@ -79,6 +81,9 @@ public class SessionMgr {
     public static final String SESSION_ATTR_CONCURRENT_EXPIRED     = "RANGER_CONCURRENT_SESSION_EXPIRED";
     public static final String SESSION_ATTR_CONCURRENT_EXPIRED_SSO = "RANGER_CONCURRENT_SESSION_EXPIRED_SSO";
     public static final String SESSION_ATTR_DOWNLOAD_ONLY          = "RANGER_SESSION_DOWNLOAD_ONLY";
+    public static final String SESSION_ATTR_NON_UI                 = "RANGER_SESSION_NON_UI";
+    private static final String DEFAULT_BROWSER_USER_AGENTS        = "Mozilla,Opera,Chrome";
+    private static final ConcurrentHashMap<String, Object> CONCURRENT_SESSION_LOCKS = new ConcurrentHashMap<>();
 
     private static final Long SESSION_UPDATE_INTERVAL_IN_MILLIS = 30 * DateUtils.MILLIS_PER_MINUTE;
 
@@ -169,7 +174,7 @@ public class SessionMgr {
                                 gjAuthSession = storeAuthSession(gjAuthSession);
 
                                 session.setAttribute("auditLoginId", gjAuthSession.getId());
-                            } else if (!StringUtils.isEmpty(httpRequest.getRequestURI()) && !(httpRequest.getRequestURI().contains("/secure/policies/download/") || httpRequest.getRequestURI().contains("/secure/download/"))) {
+                            } else if (!StringUtils.isEmpty(httpRequest.getRequestURI()) && !isPluginOrSecureDownloadRequest(httpRequest.getRequestURI())) {
                                 gjAuthSession = storeAuthSession(gjAuthSession);
 
                                 session.setAttribute("auditLoginId", gjAuthSession.getId());
@@ -227,6 +232,12 @@ public class SessionMgr {
                         session.setAttribute(SESSION_ATTR_DOWNLOAD_ONLY, Boolean.TRUE);
                     } catch (IllegalStateException e) {
                         logger.debug("Could not mark download-only session", e);
+                    }
+                } else if (!isBrowserUserAgent(resolveUserAgent(userAgent, httpRequest))) {
+                    try {
+                        session.setAttribute(SESSION_ATTR_NON_UI, Boolean.TRUE);
+                    } catch (IllegalStateException e) {
+                        logger.debug("Could not mark non-UI session", e);
                     }
                 } else {
                     enforceConcurrentSessionLimit(currentLoginId, session);
@@ -543,6 +554,9 @@ public class SessionMgr {
     /**
      * When {@code ranger.session.limit.concurrency} is exceeded, expire the oldest UI sessions
      * so the new login succeeds. SSO sessions are marked expired for Knox logout redirect.
+     * The count is taken from this JVM's in-memory session list, not cluster-wide.
+     * Find-and-expire is serialized per loginId so two concurrent UI logins for the same user
+     * cannot both observe a count under the limit.
      */
     protected void enforceConcurrentSessionLimit(String loginId, HttpSession currentSession) {
         int limit = PropertiesUtil.getIntProperty(PROP_SESSION_LIMIT_CONCURRENCY, 0);
@@ -551,29 +565,38 @@ public class SessionMgr {
             return;
         }
 
-        List<HttpSession> otherSessions = findActiveUiSessionsForUser(loginId, currentSession);
+        Object lock = CONCURRENT_SESSION_LOCKS.computeIfAbsent(loginId.toLowerCase(Locale.ROOT), id -> new Object());
 
-        if (otherSessions.size() < limit) {
-            return;
-        }
+        synchronized (lock) {
+            List<HttpSession> otherSessions = findActiveUiSessionsForUser(loginId, currentSession);
 
-        otherSessions.sort(Comparator.comparingLong(session -> {
-            try {
-                return session.getCreationTime();
-            } catch (IllegalStateException e) {
-                return 0L;
+            if (otherSessions.size() < limit) {
+                return;
             }
-        }));
 
-        int toExpire = otherSessions.size() - limit + 1;
+            otherSessions.sort(Comparator.comparingLong(session -> {
+                try {
+                    return session.getCreationTime();
+                } catch (IllegalStateException e) {
+                    return 0L;
+                }
+            }));
 
-        logger.info("Concurrent session limit {} exceeded for user {}; expiring {} older session(s)", limit, loginId, toExpire);
+            int toExpire = otherSessions.size() - limit + 1;
 
-        for (int i = 0; i < toExpire; i++) {
-            expireConcurrentSession(otherSessions.get(i));
+            logger.info("Concurrent session limit {} exceeded for user {}; expiring {} older session(s)", limit, loginId, toExpire);
+
+            for (int i = 0; i < toExpire; i++) {
+                expireConcurrentSession(otherSessions.get(i));
+            }
         }
     }
 
+    /**
+     * Plugin and secure download URLs. Used both to skip x_auth_sess rows (unless
+     * {@code ranger.downloadpolicy.session.log.enabled} is true) and to exclude
+     * those sessions from the UI concurrent-session quota.
+     */
     static boolean isPluginOrSecureDownloadRequest(String uri) {
         if (StringUtils.isEmpty(uri)) {
             return false;
@@ -586,6 +609,34 @@ public class SessionMgr {
                 || uri.contains("/roles/download/")
                 || uri.contains("/xusers/download/")
                 || uri.contains("/gds/download/");
+    }
+
+    static boolean isBrowserUserAgent(String userAgent) {
+        if (StringUtils.isBlank(userAgent)) {
+            return false;
+        }
+
+        String agents = PropertiesUtil.getProperty("ranger.krb.browser-useragents-regex", DEFAULT_BROWSER_USER_AGENTS);
+
+        if (StringUtils.isBlank(agents)) {
+            agents = DEFAULT_BROWSER_USER_AGENTS;
+        }
+
+        for (String agentPrefix : agents.split(",")) {
+            if (StringUtils.isNotBlank(agentPrefix) && userAgent.toLowerCase().startsWith(agentPrefix.trim().toLowerCase())) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private static String resolveUserAgent(String userAgent, HttpServletRequest httpRequest) {
+        if (StringUtils.isNotBlank(userAgent)) {
+            return userAgent;
+        }
+
+        return httpRequest != null ? httpRequest.getHeader(HTTPUtil.USER_AGENT) : null;
     }
 
     private List<HttpSession> findActiveUiSessionsForUser(String loginId, HttpSession currentSession) {
@@ -606,7 +657,8 @@ public class SessionMgr {
                     continue;
                 }
 
-                if (Boolean.TRUE.equals(httpSession.getAttribute(SESSION_ATTR_DOWNLOAD_ONLY))) {
+                if (Boolean.TRUE.equals(httpSession.getAttribute(SESSION_ATTR_DOWNLOAD_ONLY))
+                        || Boolean.TRUE.equals(httpSession.getAttribute(SESSION_ATTR_NON_UI))) {
                     continue;
                 }
 

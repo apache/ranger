@@ -183,9 +183,12 @@
 		<value>0</value>
 		<description>
 			Maximum number of concurrent Ranger Admin UI sessions per user.
-			When the limit is exceeded, the oldest session is expired so the new login succeeds.
+			When the limit is exceeded, the oldest UI session is expired so the new login succeeds.
 			0 or a negative value means no limit (default). Plugin policy/tag/role download
-			sessions do not count toward this limit.
+			sessions and non-browser REST/API clients (for example scripted RangerClient or curl)
+			do not count toward this limit. Browser detection uses ranger.krb.browser-useragents-regex.
+			Enforcement is per Ranger Admin process using that node's in-memory session list.
+			In an HA or load-balanced deployment a user can hold up to this many UI sessions on each node.
 		</description>
 	</property>
 

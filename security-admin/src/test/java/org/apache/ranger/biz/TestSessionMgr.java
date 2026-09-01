@@ -75,6 +75,9 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
@@ -87,6 +90,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
@@ -754,7 +759,7 @@ public class TestSessionMgr {
         when(request.getRequestURI()).thenReturn("/index.html");
         when(request.getAttribute("spnegoEnabled")).thenReturn(null);
 
-        UserSessionBase ret = sessionMgr.processSuccessLogin(XXAuthSession.AUTH_TYPE_PASSWORD, "UA", request);
+        UserSessionBase ret = sessionMgr.processSuccessLogin(XXAuthSession.AUTH_TYPE_PASSWORD, "Mozilla/5.0", request);
 
         assertNotNull(ret);
         assertEquals(70L, ret.getUserId());
@@ -788,7 +793,7 @@ public class TestSessionMgr {
             sessions.add(oldestSession);
             mocked.when(RangerHttpSessionListener::getActiveSessionOnServer).thenReturn(sessions);
 
-            UserSessionBase ret = sessionMgr.processSuccessLogin(XXAuthSession.AUTH_TYPE_PASSWORD, "UA", request);
+            UserSessionBase ret = sessionMgr.processSuccessLogin(XXAuthSession.AUTH_TYPE_PASSWORD, "Mozilla/5.0", request);
 
             assertNotNull(ret);
             verify(oldestSession).setAttribute(SessionMgr.SESSION_ATTR_CONCURRENT_EXPIRED, Boolean.TRUE);
@@ -825,7 +830,7 @@ public class TestSessionMgr {
             sessions.add(oldestSession);
             mocked.when(RangerHttpSessionListener::getActiveSessionOnServer).thenReturn(sessions);
 
-            UserSessionBase ret = sessionMgr.processSuccessLogin(XXAuthSession.AUTH_TYPE_TRUSTED_PROXY, "UA", request);
+            UserSessionBase ret = sessionMgr.processSuccessLogin(XXAuthSession.AUTH_TYPE_TRUSTED_PROXY, "Mozilla/5.0", request);
 
             assertNotNull(ret);
             assertTrue(ret.isSSOEnabled());
@@ -845,7 +850,6 @@ public class TestSessionMgr {
         XXPortalUser portalUser = portalUser("limitUser", 73L);
         stubPortalUserLookup(portalUser);
         stubRolesAndPermissions(portalUser);
-        stubAuthSessionCreate(203L);
         when(httpUtil.getDeviceType(anyString())).thenReturn(RangerCommonEnums.DEVICE_UNKNOWN);
 
         HttpSession currentSession = mock(HttpSession.class);
@@ -856,10 +860,174 @@ public class TestSessionMgr {
         when(request.getRequestURI()).thenReturn("/service/plugins/policies/download/hadoopdev");
         when(request.getAttribute("spnegoEnabled")).thenReturn(null);
 
-        UserSessionBase ret = sessionMgr.processSuccessLogin(XXAuthSession.AUTH_TYPE_PASSWORD, "UA", request);
+        UserSessionBase ret = sessionMgr.processSuccessLogin(XXAuthSession.AUTH_TYPE_PASSWORD, "Mozilla/5.0", request);
 
         assertNotNull(ret);
         verify(currentSession).setAttribute(SessionMgr.SESSION_ATTR_DOWNLOAD_ONLY, Boolean.TRUE);
+    }
+
+    @Test
+    public void testProcessSuccessLogin_ApiRequestDoesNotConsumeSessionQuota() {
+        RangerContextHolder.setSecurityContext(null);
+        PropertiesUtil.getPropertiesMap().put(SessionMgr.PROP_SESSION_LIMIT_CONCURRENCY, "1");
+
+        setupAuthentication("limitUser");
+
+        XXPortalUser portalUser = portalUser("limitUser", 74L);
+        stubPortalUserLookup(portalUser);
+        stubRolesAndPermissions(portalUser);
+        stubAuthSessionCreate(204L);
+        when(httpUtil.getDeviceType(anyString())).thenReturn(RangerCommonEnums.DEVICE_UNKNOWN);
+
+        HttpSession currentSession = mock(HttpSession.class);
+        when(currentSession.getAttribute("auditLoginId")).thenReturn(null);
+
+        HttpServletRequest request = mock(HttpServletRequest.class);
+        when(request.getSession()).thenReturn(currentSession);
+        when(request.getRequestURI()).thenReturn("/service/public/v2/api/policies");
+        when(request.getAttribute("spnegoEnabled")).thenReturn(null);
+
+        UserSessionBase ret = sessionMgr.processSuccessLogin(XXAuthSession.AUTH_TYPE_PASSWORD, "curl/8.0", request);
+
+        assertNotNull(ret);
+        verify(currentSession).setAttribute(SessionMgr.SESSION_ATTR_NON_UI, Boolean.TRUE);
+        verify(currentSession, never()).setAttribute(eq(SessionMgr.SESSION_ATTR_CONCURRENT_EXPIRED), any());
+    }
+
+    @Test
+    public void testProcessSuccessLogin_LimitTwoExpiresOnlyOldestOfTwoExistingSessions() {
+        RangerContextHolder.setSecurityContext(null);
+        PropertiesUtil.getPropertiesMap().put(SessionMgr.PROP_SESSION_LIMIT_CONCURRENCY, "2");
+
+        setupAuthentication("limitUser");
+
+        XXPortalUser portalUser = portalUser("limitUser", 75L);
+        stubPortalUserLookup(portalUser);
+        stubRolesAndPermissions(portalUser);
+        stubAuthSessionCreate(205L);
+        when(httpUtil.getDeviceType(anyString())).thenReturn(RangerCommonEnums.DEVICE_UNKNOWN);
+
+        HttpSession currentSession = mock(HttpSession.class);
+        when(currentSession.getAttribute("auditLoginId")).thenReturn(null);
+
+        HttpSession oldestSession = mockUiSession("limitUser", 75L, false, 1L);
+        HttpSession newerSession  = mockUiSession("limitUser", 75L, false, 2L);
+
+        HttpServletRequest request = mock(HttpServletRequest.class);
+        when(request.getSession()).thenReturn(currentSession);
+        when(request.getRequestURI()).thenReturn("/index.html");
+        when(request.getAttribute("spnegoEnabled")).thenReturn(null);
+
+        try (MockedStatic<RangerHttpSessionListener> mocked = Mockito.mockStatic(RangerHttpSessionListener.class)) {
+            CopyOnWriteArrayList<HttpSession> sessions = new CopyOnWriteArrayList<>();
+            sessions.add(newerSession);
+            sessions.add(oldestSession);
+            mocked.when(RangerHttpSessionListener::getActiveSessionOnServer).thenReturn(sessions);
+
+            UserSessionBase ret = sessionMgr.processSuccessLogin(XXAuthSession.AUTH_TYPE_PASSWORD, "Mozilla/5.0", request);
+
+            assertNotNull(ret);
+            verify(oldestSession).setAttribute(SessionMgr.SESSION_ATTR_CONCURRENT_EXPIRED, Boolean.TRUE);
+            verify(oldestSession).invalidate();
+            verify(newerSession, never()).setAttribute(eq(SessionMgr.SESSION_ATTR_CONCURRENT_EXPIRED), any());
+            verify(newerSession, never()).invalidate();
+        }
+    }
+
+    @Test
+    public void testProcessSuccessLogin_DoesNotExpireOtherUsersSessions() {
+        RangerContextHolder.setSecurityContext(null);
+        PropertiesUtil.getPropertiesMap().put(SessionMgr.PROP_SESSION_LIMIT_CONCURRENCY, "1");
+
+        setupAuthentication("userB");
+
+        XXPortalUser portalUser = portalUser("userB", 76L);
+        stubPortalUserLookup(portalUser);
+        stubRolesAndPermissions(portalUser);
+        stubAuthSessionCreate(206L);
+        when(httpUtil.getDeviceType(anyString())).thenReturn(RangerCommonEnums.DEVICE_UNKNOWN);
+
+        HttpSession currentSession = mock(HttpSession.class);
+        when(currentSession.getAttribute("auditLoginId")).thenReturn(null);
+
+        HttpSession otherUserSession = mockUiSession("userA", 77L, false, 1L);
+
+        HttpServletRequest request = mock(HttpServletRequest.class);
+        when(request.getSession()).thenReturn(currentSession);
+        when(request.getRequestURI()).thenReturn("/index.html");
+        when(request.getAttribute("spnegoEnabled")).thenReturn(null);
+
+        try (MockedStatic<RangerHttpSessionListener> mocked = Mockito.mockStatic(RangerHttpSessionListener.class)) {
+            CopyOnWriteArrayList<HttpSession> sessions = new CopyOnWriteArrayList<>();
+            sessions.add(otherUserSession);
+            mocked.when(RangerHttpSessionListener::getActiveSessionOnServer).thenReturn(sessions);
+
+            UserSessionBase ret = sessionMgr.processSuccessLogin(XXAuthSession.AUTH_TYPE_PASSWORD, "Mozilla/5.0", request);
+
+            assertNotNull(ret);
+            assertEquals(76L, ret.getUserId());
+            verify(otherUserSession, never()).setAttribute(eq(SessionMgr.SESSION_ATTR_CONCURRENT_EXPIRED), any());
+            verify(otherUserSession, never()).invalidate();
+        }
+    }
+
+    @Test
+    public void testEnforceConcurrentSessionLimit_ConcurrentSameUserExpiresOldest() throws Exception {
+        PropertiesUtil.getPropertiesMap().put(SessionMgr.PROP_SESSION_LIMIT_CONCURRENCY, "1");
+
+        HttpSession oldestSession = mockUiSession("limitUser", 80L, false, 1L);
+        HttpSession sessionA      = mock(HttpSession.class);
+        HttpSession sessionB      = mock(HttpSession.class);
+
+        CopyOnWriteArrayList<HttpSession> active = RangerHttpSessionListener.getActiveSessionOnServer();
+        active.add(oldestSession);
+
+        CountDownLatch              start = new CountDownLatch(1);
+        CountDownLatch              done  = new CountDownLatch(2);
+        AtomicReference<Throwable>  error = new AtomicReference<>();
+
+        try {
+            Thread threadA = new Thread(() -> {
+                try {
+                    start.await();
+                    sessionMgr.enforceConcurrentSessionLimit("limitUser", sessionA);
+                } catch (Throwable t) {
+                    error.compareAndSet(null, t);
+                } finally {
+                    done.countDown();
+                }
+            });
+            Thread threadB = new Thread(() -> {
+                try {
+                    start.await();
+                    sessionMgr.enforceConcurrentSessionLimit("LimitUser", sessionB);
+                } catch (Throwable t) {
+                    error.compareAndSet(null, t);
+                } finally {
+                    done.countDown();
+                }
+            });
+
+            threadA.start();
+            threadB.start();
+            start.countDown();
+
+            assertTrue(done.await(5, TimeUnit.SECONDS));
+            assertNull(error.get());
+            verify(oldestSession, atLeastOnce()).invalidate();
+        } finally {
+            active.remove(oldestSession);
+        }
+    }
+
+    @Test
+    public void testIsBrowserUserAgent() {
+        assertTrue(SessionMgr.isBrowserUserAgent("Mozilla/5.0"));
+        assertTrue(SessionMgr.isBrowserUserAgent("Chrome/120.0"));
+        assertFalse(SessionMgr.isBrowserUserAgent("curl/8.0"));
+        assertFalse(SessionMgr.isBrowserUserAgent("Apache-HttpClient/4.5"));
+        assertFalse(SessionMgr.isBrowserUserAgent(null));
+        assertFalse(SessionMgr.isBrowserUserAgent(""));
     }
 
     @Test
