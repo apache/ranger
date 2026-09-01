@@ -42,6 +42,7 @@ import org.springframework.ldap.core.support.LdapContextSource;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.AuthenticationServiceException;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.authentication.LockedException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.authentication.jaas.DefaultJaasAuthenticationProvider;
@@ -115,10 +116,14 @@ public class RangerAuthenticationProvider implements AuthenticationProvider {
 			if ("LDAP".equalsIgnoreCase(rangerAuthenticationMethod)) {
 				authentication = getLdapAuthentication(authentication);
 				if (authentication!=null && authentication.isAuthenticated()) {
+					blockNotActiveUser(authentication.getName());
+
 					return authentication;
 				} else {
 					authentication=getLdapBindAuthentication(authentication);
 					if (authentication != null && authentication.isAuthenticated()) {
+						blockNotActiveUser(authentication.getName());
+
 						return authentication;
 					}
 				}
@@ -126,10 +131,14 @@ public class RangerAuthenticationProvider implements AuthenticationProvider {
 			if ("ACTIVE_DIRECTORY".equalsIgnoreCase(rangerAuthenticationMethod)) {
 				authentication = getADBindAuthentication(authentication);
 				if (authentication != null && authentication.isAuthenticated()) {
+					blockNotActiveUser(authentication.getName());
+
 					return authentication;
 				} else {
 					authentication = getADAuthentication(authentication);
 					if (authentication != null && authentication.isAuthenticated()) {
+						blockNotActiveUser(authentication.getName());
+
 						return authentication;
 					}
 				}
@@ -138,12 +147,16 @@ public class RangerAuthenticationProvider implements AuthenticationProvider {
                 boolean isPAMAuthEnabled = PropertiesUtil.getBooleanProperty("ranger.pam.authentication.enabled", false);
                 authentication= (isPAMAuthEnabled ? getPamAuthentication(authentication) : getUnixAuthentication(authentication));
 				if (authentication != null && authentication.isAuthenticated()) {
+					blockNotActiveUser(authentication.getName());
+
 					return authentication;
 				}
 			}
 			if ("PAM".equalsIgnoreCase(rangerAuthenticationMethod)) {
 				authentication = getPamAuthentication(authentication);
 				if (authentication != null && authentication.isAuthenticated()) {
+					blockNotActiveUser(authentication.getName());
+
 					return authentication;
 				}
 			}
@@ -654,7 +667,14 @@ public class RangerAuthenticationProvider implements AuthenticationProvider {
 		}
 		return authentication;
 	}
-	
+
+	private void blockNotActiveUser(String userName) {
+		if (userName != null && userMgr.isUserNotActive(userName)) {
+			logger.info("Authentication rejected - Ranger account for user [{}] is disabled", userName);
+			throw new DisabledException(messages.getMessage("AbstractUserDetailsAuthenticationProvider.disabled", "User account is disabled"));
+		}
+	}
+
 	private List<GrantedAuthority> getAuthorities(String username) {
 		Collection<String> roleList=userMgr.getRolesByLoginId(username);
 		final List<GrantedAuthority> grantedAuths = new ArrayList<>();
