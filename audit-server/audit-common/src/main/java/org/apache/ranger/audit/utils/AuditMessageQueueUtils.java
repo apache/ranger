@@ -27,6 +27,7 @@ import org.apache.kafka.clients.admin.DescribeTopicsResult;
 import org.apache.kafka.clients.admin.NewPartitions;
 import org.apache.kafka.clients.admin.NewTopic;
 import org.apache.kafka.clients.admin.TopicDescription;
+import org.apache.kafka.common.errors.TopicExistsException;
 import org.apache.ranger.audit.provider.MiscUtil;
 import org.apache.ranger.audit.server.AuditServerConstants;
 import org.slf4j.Logger;
@@ -39,6 +40,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
+import java.util.concurrent.ExecutionException;
 
 public class AuditMessageQueueUtils {
     private static final Logger LOG = LoggerFactory.getLogger(AuditMessageQueueUtils.class);
@@ -50,30 +52,13 @@ public class AuditMessageQueueUtils {
         LOG.info("==> AuditMessageQueueUtils:createAuditsTopicIfNotExists(propPrefix={})", propPrefix);
 
         String ret                  = null;
-        String topicName            = MiscUtil.getStringProperty(props, propPrefix + "." + AuditServerConstants.PROP_TOPIC_NAME, AuditServerConstants.DEFAULT_TOPIC);
-        String bootstrapServers     = MiscUtil.getStringProperty(props, propPrefix + "." + AuditServerConstants.PROP_BOOTSTRAP_SERVERS);
-        String securityProtocol     = MiscUtil.getStringProperty(props, propPrefix + "." + AuditServerConstants.PROP_SECURITY_PROTOCOL, AuditServerConstants.DEFAULT_SECURITY_PROTOCOL);
-        String saslMechanism        = MiscUtil.getStringProperty(props, propPrefix + "." + AuditServerConstants.PROP_SASL_MECHANISM, AuditServerConstants.DEFAULT_SASL_MECHANISM);
-        int    connMaxIdleTimeoutMS = MiscUtil.getIntProperty(props, propPrefix + "." + AuditServerConstants.PROP_CONN_MAX_IDEAL_MS, 10000);
-        int    partitions           = getPartitions(props, propPrefix);
-        short  replicationFactor    = (short) MiscUtil.getIntProperty(props, propPrefix + "." + AuditServerConstants.PROP_REPLICATION_FACTOR, AuditServerConstants.DEFAULT_REPLICATION_FACTOR);
-        int    reqTimeoutMS         = MiscUtil.getIntProperty(props, propPrefix + "." + AuditServerConstants.PROP_REQ_TIMEOUT_MS, 5000);
-        int    maxAttempts          = MiscUtil.getIntProperty(props, propPrefix + "." + AuditServerConstants.PROP_KAFKA_TOPIC_INIT_MAX_RETRIES, 10) + 1;
-        int    retryDelayMs         = MiscUtil.getIntProperty(props, propPrefix + "." + AuditServerConstants.PROP_KAFKA_TOPIC_INIT_RETRY_DELAY_MS, 3000);
+        String topicName         = MiscUtil.getStringProperty(props, propPrefix + "." + AuditServerConstants.PROP_TOPIC_NAME, AuditServerConstants.DEFAULT_TOPIC);
+        int    partitions        = getPartitions(props, propPrefix);
+        short  replicationFactor = (short) MiscUtil.getIntProperty(props, propPrefix + "." + AuditServerConstants.PROP_REPLICATION_FACTOR, AuditServerConstants.DEFAULT_REPLICATION_FACTOR);
+        int    maxAttempts       = MiscUtil.getIntProperty(props, propPrefix + "." + AuditServerConstants.PROP_KAFKA_TOPIC_INIT_MAX_RETRIES, 10) + 1;
+        int    retryDelayMs      = MiscUtil.getIntProperty(props, propPrefix + "." + AuditServerConstants.PROP_KAFKA_TOPIC_INIT_RETRY_DELAY_MS, 3000);
 
-        Map<String, Object> kafkaProp = new HashMap<>();
-
-        kafkaProp.put(AdminClientConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
-        kafkaProp.put("sasl.mechanism", saslMechanism);
-        kafkaProp.put(AdminClientConfig.SECURITY_PROTOCOL_CONFIG, securityProtocol);
-
-        if (securityProtocol != null && securityProtocol.toUpperCase().contains("SASL")) {
-            kafkaProp.put(AuditServerConstants.PROP_SASL_JAAS_CONFIG, getJAASConfig(props, propPrefix));
-            kafkaProp.put(AuditServerConstants.PROP_SASL_KERBEROS_SERVICE_NAME, AuditServerConstants.DEFAULT_SERVICE_NAME);
-        }
-
-        kafkaProp.put(AdminClientConfig.REQUEST_TIMEOUT_MS_CONFIG, reqTimeoutMS);
-        kafkaProp.put(AdminClientConfig.CONNECTIONS_MAX_IDLE_MS_CONFIG, connMaxIdleTimeoutMS);
+        Map<String, Object> kafkaProp = buildAdminClientConfig(props, propPrefix);
 
         for (int currentAttempt = 1; currentAttempt <= maxAttempts && ret == null; currentAttempt++) {
             try (AdminClient admin = AdminClient.create(kafkaProp)) {
@@ -92,7 +77,7 @@ public class AuditMessageQueueUtils {
                         LOG.info("Topic '{}' configs: {}", topicName, topicConfigs);
                     }
 
-                    admin.createTopics(Collections.singletonList(topic)).all().get();
+                    createTopicIgnoringAlreadyExists(admin, topic);
 
                     ret = topic.name();
 
@@ -141,6 +126,116 @@ public class AuditMessageQueueUtils {
         LOG.info("<== AuditMessageQueueUtils:createAuditsTopicIfNotExists(propPrefix={}) ret: {}", propPrefix, ret);
 
         return ret;
+    }
+
+    /**
+     * Create the compacted partition-plan registry topic if missing.
+     * Always exactly one partition ({@link AuditServerConstants#PARTITION_PLAN_TOPIC_PARTITION_COUNT});
+     * partition count is not configurable. A single partition is required so every plan version compacts
+     * under one key on one log end. Safe when multiple ingestor pods start together (concurrent topic creation).
+     */
+    public static String createPartitionPlanTopicIfNotExists(Properties props, String propPrefix) {
+        String planTopic         = MiscUtil.getStringProperty(props, propPrefix + "." + AuditServerConstants.PROP_PARTITION_PLAN_TOPIC, AuditServerConstants.DEFAULT_PARTITION_PLAN_TOPIC);
+        short  replicationFactor = (short) MiscUtil.getIntProperty(props, propPrefix + "." + AuditServerConstants.PROP_REPLICATION_FACTOR, AuditServerConstants.DEFAULT_REPLICATION_FACTOR);
+        int    planTopicPartitions = AuditServerConstants.PARTITION_PLAN_TOPIC_PARTITION_COUNT;
+        int    maxAttempts       = MiscUtil.getIntProperty(props, propPrefix + "." + AuditServerConstants.PROP_KAFKA_TOPIC_INIT_MAX_RETRIES, 10) + 1;
+        int    retryDelayMs      = MiscUtil.getIntProperty(props, propPrefix + "." + AuditServerConstants.PROP_KAFKA_TOPIC_INIT_RETRY_DELAY_MS, 3000);
+        Map<String, Object> adminConfig = buildAdminClientConfig(props, propPrefix);
+
+        for (int attempt = 1; attempt <= maxAttempts; attempt++) {
+            try (AdminClient admin = AdminClient.create(adminConfig)) {
+                Set<String> topicNames = admin.listTopics().names().get();
+                if (!topicNames.contains(planTopic)) {
+                    LOG.info("Creating partition plan topic '{}' with {} partition and replication factor {}", planTopic, planTopicPartitions, replicationFactor);
+                    NewTopic topic = new NewTopic(planTopic, planTopicPartitions, replicationFactor);
+                    topic.configs(Collections.singletonMap("cleanup.policy", AuditServerConstants.KAFKA_TOPIC_CLEANUP_POLICY_COMPACT));
+                    createTopicIgnoringAlreadyExists(admin, topic);
+                    AuditServerUtils.waitUntilTopicReady(admin, planTopic, Duration.ofSeconds(60));
+                    int partitionCount = describeTopicPartitionCount(admin, planTopic);
+                    LOG.info("Partition plan topic '{}' is ready with {} partition(s)", planTopic, partitionCount);
+                } else {
+                    int partitionCount = describeTopicPartitionCount(admin, planTopic);
+                    requirePlanTopicPartitionCount(planTopic, partitionCount, planTopicPartitions);
+                    LOG.info("Partition plan topic '{}' already exists with {} partition(s)", planTopic, partitionCount);
+                }
+                return planTopic;
+            } catch (Exception ex) {
+                if (attempt < maxAttempts) {
+                    LOG.warn("Failed to ensure partition plan topic on attempt {}/{}. Retrying in {} ms. Error: {}", attempt, maxAttempts, retryDelayMs, ex.getMessage());
+                    try {
+                        Thread.sleep(retryDelayMs);
+                    } catch (InterruptedException ie) {
+                        Thread.currentThread().interrupt();
+                        break;
+                    }
+                } else {
+                    LOG.error("Failed to create partition plan topic '{}' after {} attempts", planTopic, attempt, ex);
+                    throw new RuntimeException("Failed to create partition plan topic '" + planTopic + "' after " + attempt + " attempts", ex);
+                }
+            }
+        }
+        throw new RuntimeException("Failed to create partition plan topic '" + planTopic + "'");
+    }
+
+    /**
+     * Returns whether the compacted partition-plan registry topic already exists on the audit Kafka cluster.
+     * When the check fails (broker unreachable, ACL denied), returns {@code false} so callers can fall back
+     * to static XML {@code auth_to_local} rules until the plan topic is available.
+     */
+    public static boolean partitionPlanTopicExists(Properties props, String propPrefix) {
+        String planTopic = MiscUtil.getStringProperty(props, propPrefix + "." + AuditServerConstants.PROP_PARTITION_PLAN_TOPIC, AuditServerConstants.DEFAULT_PARTITION_PLAN_TOPIC);
+        Map<String, Object> adminConfig = buildAdminClientConfig(props, propPrefix);
+        try (AdminClient admin = AdminClient.create(adminConfig)) {
+            Set<String> topicNames = admin.listTopics().names().get();
+            boolean exists = topicNames.contains(planTopic);
+            LOG.debug("Partition plan topic '{}' exists: {}", planTopic, exists);
+            return exists;
+        } catch (Exception ex) {
+            LOG.warn("Could not determine whether partition plan topic '{}' exists: {}. Assuming it does not.", planTopic, ex.getMessage());
+            return false;
+        }
+    }
+
+    public static Map<String, Object> buildAdminClientConfig(Properties props, String propPrefix) {
+        String bootstrapServers     = MiscUtil.getStringProperty(props, propPrefix + "." + AuditServerConstants.PROP_BOOTSTRAP_SERVERS);
+        String securityProtocol     = MiscUtil.getStringProperty(props, propPrefix + "." + AuditServerConstants.PROP_SECURITY_PROTOCOL, AuditServerConstants.DEFAULT_SECURITY_PROTOCOL);
+        String saslMechanism        = MiscUtil.getStringProperty(props, propPrefix + "." + AuditServerConstants.PROP_SASL_MECHANISM, AuditServerConstants.DEFAULT_SASL_MECHANISM);
+        int    connMaxIdleTimeoutMS = MiscUtil.getIntProperty(props, propPrefix + "." + AuditServerConstants.PROP_CONN_MAX_IDEAL_MS, 10000);
+        int    reqTimeoutMS         = MiscUtil.getIntProperty(props, propPrefix + "." + AuditServerConstants.PROP_REQ_TIMEOUT_MS, 5000);
+
+        Map<String, Object> kafkaProp = new HashMap<>();
+        kafkaProp.put(AdminClientConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
+        kafkaProp.put("sasl.mechanism", saslMechanism);
+        kafkaProp.put(AdminClientConfig.SECURITY_PROTOCOL_CONFIG, securityProtocol);
+        if (securityProtocol != null && securityProtocol.toUpperCase().contains("SASL")) {
+            kafkaProp.put(AuditServerConstants.PROP_SASL_JAAS_CONFIG, getJAASConfig(props, propPrefix));
+            kafkaProp.put(AuditServerConstants.PROP_SASL_KERBEROS_SERVICE_NAME, AuditServerConstants.DEFAULT_SERVICE_NAME);
+        }
+        kafkaProp.put(AdminClientConfig.REQUEST_TIMEOUT_MS_CONFIG, reqTimeoutMS);
+        kafkaProp.put(AdminClientConfig.CONNECTIONS_MAX_IDLE_MS_CONFIG, connMaxIdleTimeoutMS);
+        return kafkaProp;
+    }
+
+    private static int describeTopicPartitionCount(AdminClient admin, String topicName) throws Exception {
+        TopicDescription topicDescription = admin.describeTopics(Collections.singletonList(topicName)).values().get(topicName).get();
+        return topicDescription.partitions().size();
+    }
+
+    private static void requirePlanTopicPartitionCount(String planTopic, int actualPartitions, int expectedPartitions) {
+        if (actualPartitions != expectedPartitions) {
+            throw new RuntimeException("Partition plan topic '" + planTopic + "' must have exactly " + expectedPartitions + " partition(s) for compacted registry semantics, but has " + actualPartitions);
+        }
+    }
+
+    private static void createTopicIgnoringAlreadyExists(AdminClient admin, NewTopic topic) throws Exception {
+        try {
+            admin.createTopics(Collections.singletonList(topic)).all().get();
+        } catch (ExecutionException ex) {
+            if (!(ex.getCause() instanceof TopicExistsException)) {
+                throw ex;
+            }
+            LOG.info("Topic '{}' already exists", topic.name());
+        }
     }
 
     public static String getJAASConfig(Properties props, String propPrefix) {
@@ -213,6 +308,22 @@ public class AuditMessageQueueUtils {
                 .logInfo(LOG);
 
         return jaasConfig;
+    }
+
+    /** Grows the audit topic partition count when the plan requires more partitions than exist today. */
+    public static void ensureTopicPartitionCount(Properties props, String propPrefix, String topicName, int requiredPartitions) {
+        LOG.info("Ensuring topic '{}' has at least {} partitions", topicName, requiredPartitions);
+        Map<String, Object> adminConfig = buildAdminClientConfig(props, propPrefix);
+        try (AdminClient admin = AdminClient.create(adminConfig)) {
+            updateExistingTopicPartitions(admin, topicName, requiredPartitions);
+            LOG.info("Topic '{}' partition count satisfied (required >= {})", topicName, requiredPartitions);
+        } catch (Exception e) {
+            LOG.error("Failed to ensure partition count for topic '{}' (required >= {})", topicName, requiredPartitions, e);
+            if (e instanceof RuntimeException) {
+                throw (RuntimeException) e;
+            }
+            throw new RuntimeException("Failed to ensure partition count for topic '" + topicName + "'", e);
+        }
     }
 
     private static String updateExistingTopicPartitions(AdminClient admin, String topicName, int partitions) {

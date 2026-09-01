@@ -244,7 +244,9 @@ public class AuditDelegationTokenFilter extends DelegationTokenAuthenticationFil
 
         // Skip authentication for anonymous/public endpoints (health check, status)
         // These are marked as permitAll() in Spring Security config
-        if (requestURI != null && (requestURI.endsWith("/api/audit/health") || requestURI.endsWith("/api/audit/status"))) {
+        if (requestURI != null && (requestURI.endsWith("/api/audit/health")
+                || requestURI.endsWith("/api/audit/status")
+                || requestURI.contains("/api/audit/partition-plan"))) {
             LOG.debug("Skipping authentication for public endpoint: {}", requestURI);
             filterChain.doFilter(request, response);
             return;

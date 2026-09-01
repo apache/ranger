@@ -62,6 +62,17 @@ public class AuditServerConstants {
     public static final String PROP_BUFFER_PARTITIONS                        = "kafka.topic.partitions.buffer";
     public static final String PROP_REPLICATION_FACTOR                       = "kafka.replication.factor";
 
+    // Dynamic partition plan (Kafka compacted registry topic)
+    public static final String PROP_PARTITION_PLAN_TOPIC                     = "kafka.partition.plan.topic";
+    public static final String PROP_PARTITION_PLAN_REFRESH_INTERVAL_MS       = "kafka.partition.plan.refresh.interval.ms";
+    public static final String PROP_PARTITION_PLAN_CONSUMER_POLL_TIMEOUT_MS  = "kafka.partition.plan.consumer.poll.timeout.ms";
+    public static final String PROP_PARTITION_PLAN_DYNAMIC_ENABLED           = "kafka.partition.plan.dynamic.enabled";
+    public static final String DEFAULT_PARTITION_PLAN_TOPIC                  = "ranger_audit_partition_plan";
+    public static final int    DEFAULT_PARTITION_PLAN_REFRESH_INTERVAL_MS    = 30000;
+    public static final int    DEFAULT_PARTITION_PLAN_CONSUMER_POLL_TIMEOUT_MS = 500;
+    public static final int    PARTITION_PLAN_TOPIC_PARTITION_COUNT          = 1;
+    public static final String KAFKA_TOPIC_CLEANUP_POLICY_COMPACT            = "compact";
+
     // Kafka producer tuning (ranger.audit.ingestor.kafka.producer.*)
     public static final String PROP_KAFKA_PRODUCER_PREFIX                    = "kafka.producer.";
     public static final String PROP_PRODUCER_BATCH_SIZE                        = "batch.size";
@@ -108,9 +119,9 @@ public class AuditServerConstants {
     public static final long   DEFAULT_OFFSET_COMMIT_INTERVAL_MS             = 30000; // 30 seconds
     public static final int    DEFAULT_MAX_POLL_RECORDS                      = 500;   // Kafka default batch size
 
-    // Default configured plugins: each gets allocated partitions from the topic
+    // Empty by default: operators opt in via XML (static) or REST (dynamic). See ranger-audit-ingestor-site.xml.
     public static final String DEFAULT_PARTITIONER_CLASS                     = "org.apache.ranger.audit.producer.kafka.AuditPartitioner";
-    public static final String DEFAULT_CONFIGURED_PLUGINS                    = "hdfs,yarn,knox,hiveServer2,hiveMetastore,kafka,hbaseRegional,hbaseMaster,solr,trino,ozone,kudu,nifi";
+    public static final String DEFAULT_CONFIGURED_PLUGINS                    = "";
     public static final short  DEFAULT_REPLICATION_FACTOR                    = 3;
     public static final int    DEFAULT_TOPIC_PARTITIONS                      = 10;
     public static final int    DEFAULT_PARTITIONS_PER_CONFIGURED_PLUGIN      = 3;
