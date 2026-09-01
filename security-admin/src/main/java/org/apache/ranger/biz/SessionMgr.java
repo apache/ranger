@@ -622,8 +622,10 @@ public class SessionMgr {
             agents = DEFAULT_BROWSER_USER_AGENTS;
         }
 
+        String userAgentLower = userAgent.toLowerCase(Locale.ROOT);
+
         for (String agentPrefix : agents.split(",")) {
-            if (StringUtils.isNotBlank(agentPrefix) && userAgent.toLowerCase().startsWith(agentPrefix.trim().toLowerCase())) {
+            if (StringUtils.isNotBlank(agentPrefix) && userAgentLower.startsWith(agentPrefix.trim().toLowerCase(Locale.ROOT))) {
                 return true;
             }
         }
