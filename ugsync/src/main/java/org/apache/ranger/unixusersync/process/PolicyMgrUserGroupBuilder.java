@@ -740,18 +740,6 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
                 String              curGroupDN       = MapUtils.isEmpty(curGroupAttrs) ? groupName : curGroupAttrs.get(UgsyncCommonConstants.FULL_NAME);
                 String              newSyncSource    = newGroupAttrs.get(UgsyncCommonConstants.SYNC_SOURCE);
 
-                // Universal DN Validation Check (Executes first for both startup & runtime)
-                if (MapUtils.isNotEmpty(curGroupAttrs) && !StringUtils.equalsIgnoreCase(groupDN, curGroupDN)) {
-                    if (!isDnValidationEnabled) {
-                        LOG.info("[{}]: SyncSource update skipped due to DN mismatch and dnValidation disabled. Current DN = {} New DN = {}", groupName, curGroupDN, groupDN);
-
-                        if (StringUtils.equalsIgnoreCase(curGroupAttrsStr, newGroupAttrsStr)) {
-                            groupNameMap.put(groupDN, groupName);
-                        }
-                        continue; // Safely skip updates regardless of isStartupFlag
-                    }
-                }
-
                 if (isStartupFlag && !isSyncSourceValidationEnabled && (!StringUtils.equalsIgnoreCase(curSyncSource, newSyncSource))) {
                     LOG.debug("[{}]: SyncSource updated to {}, previous value: {}", groupName, newSyncSource, curSyncSource);
 
@@ -764,6 +752,13 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
                     if (isDnValidationEnabled) {
                         groupNameMap.remove(curGroupDN);
                     }
+                } else if (MapUtils.isNotEmpty(curGroupAttrs) && !StringUtils.equalsIgnoreCase(groupDN, curGroupDN) && !isDnValidationEnabled) {
+                    LOG.debug("[{}]: SyncSource update skipped, current group DN = {} new group DN = {}", groupName, curGroupDN, groupDN);
+
+                    if (StringUtils.equalsIgnoreCase(curGroupAttrsStr, newGroupAttrsStr)) {
+                        groupNameMap.put(groupDN, groupName);
+                    }
+
                 } else {
                     boolean allowSyncSourceOverwrite = !isSyncSourceValidationEnabled && isDnValidationEnabled;
 
@@ -842,20 +837,8 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
                 String              curUserDN       = MapUtils.isEmpty(curUserAttrs) ? userName : curUserAttrs.get(UgsyncCommonConstants.FULL_NAME);
                 String              newSyncSource   = newUserAttrs.get(UgsyncCommonConstants.SYNC_SOURCE);
 
-                if (MapUtils.isNotEmpty(curUserAttrs) && !StringUtils.equalsIgnoreCase(userDN, curUserDN)) { // skip update
-                    if (!isDnValidationEnabled) {
-                        LOG.debug("[{}]: SyncSource update skipped, current user DN = {} new user DN = {}", userName, curUserDN, userDN);
-
-                        if (StringUtils.equalsIgnoreCase(curUserAttrsStr, newUserAttrsStr)) {
-                            userNameMap.put(userDN, userName);
-                        }
-                        continue;
-                    }
-                }
-
                 if (isStartupFlag && !isSyncSourceValidationEnabled && (!StringUtils.equalsIgnoreCase(curSyncSource, newSyncSource))) {
                     LOG.debug("[{}]: SyncSource updated to {}, previous value: {}", userName, newSyncSource, curSyncSource);
-
                     curUser = setOtherAttributes(curUser, newSyncSource, newUserAttrs, newUserAttrsStr);
 
                     curUser.setUserSource(SOURCE_EXTERNAL);
@@ -865,6 +848,11 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
 
                     if (isDnValidationEnabled) {
                         userNameMap.remove(curUserDN);
+                    }
+                } else if (MapUtils.isNotEmpty(curUserAttrs) && !StringUtils.equalsIgnoreCase(userDN, curUserDN) && !isDnValidationEnabled) {
+                    LOG.debug("[{}]: SyncSource update skipped, current user DN = {} new user DN = {}", userName, curUserDN, userDN);
+                    if (StringUtils.equalsIgnoreCase(curUserAttrsStr, newUserAttrsStr)) {
+                        userNameMap.put(userDN, userName);
                     }
                 } else {
                     boolean allowSyncSourceOverwrite = !isSyncSourceValidationEnabled && isDnValidationEnabled;

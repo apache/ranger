@@ -1182,7 +1182,7 @@ public class TestPolicyMgrUserGroupBuilder {
     }
 
     @Test
-    public void testAM_computeUserDelta_startupSyncSourceChange_dnValidationDisabled_skips() throws Exception {
+    public void testAM_computeUserDelta_startupSyncSourceChange_dnValidationDisabled_updates() throws Exception {
         PolicyMgrUserGroupBuilder builder = new PolicyMgrUserGroupBuilder();
 
         String oldDn = "cn=john,ou=People,dc=example,dc=com";
@@ -1219,8 +1219,11 @@ public class TestPolicyMgrUserGroupBuilder {
         compute.setAccessible(true);
         compute.invoke(builder, source);
 
-        Map<String, XUserInfo> deltaUsers = getPrivate(builder, "deltaUsers", Map.class);
-        assertFalse(deltaUsers.containsKey("john"));
+        Map<String, XUserInfo> deltaUsers  = getPrivate(builder, "deltaUsers", Map.class);
+        Map<String, String>    userNameMap = getPrivate(builder, "userNameMap", Map.class);
+
+        assertTrue(deltaUsers.containsKey("john"));
+        assertEquals("john", userNameMap.get(newDn));
     }
 
     @Test
@@ -1355,7 +1358,10 @@ public class TestPolicyMgrUserGroupBuilder {
         compute.setAccessible(true);
         compute.invoke(builder, source);
 
-        Map<String, XGroupInfo> deltaGroups = getPrivate(builder, "deltaGroups", Map.class);
-        assertFalse(deltaGroups.containsKey("engineering"));
+        Map<String, XGroupInfo> deltaGroups  = getPrivate(builder, "deltaGroups", Map.class);
+        Map<String, String>     groupNameMap = getPrivate(builder, "groupNameMap", Map.class);
+
+        assertTrue(deltaGroups.containsKey("engineering"));
+        assertEquals("engineering", groupNameMap.get(newDn));
     }
 }
