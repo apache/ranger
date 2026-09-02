@@ -69,6 +69,8 @@ import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CopyOnWriteArraySet;
 
+import static org.apache.ranger.security.web.filter.RangerHeaderPreAuthFilter.PROP_HEADER_AUTH_ENABLED;
+
 @Component
 @Transactional
 public class SessionMgr {
@@ -523,15 +525,17 @@ public class SessionMgr {
     }
 
     private void getSSOSpnegoAuthCheckForAPI(String currentLoginId, HttpServletRequest request) {
-        RangerSecurityContext context    = RangerContextHolder.getSecurityContext();
-        UserSessionBase       session    = context != null ? context.getUserSession() : null;
-        boolean               ssoEnabled = session != null ? session.isSSOEnabled() : PropertiesUtil.getBooleanProperty("ranger.sso.enabled", false);
-        XXPortalUser          gjUser     = daoManager.getXXPortalUser().findByLoginId(currentLoginId);
+        RangerSecurityContext context           = RangerContextHolder.getSecurityContext();
+        UserSessionBase       session           = context != null ? context.getUserSession() : null;
+        boolean               ssoEnabled        = session != null ? session.isSSOEnabled() : PropertiesUtil.getBooleanProperty("ranger.sso.enabled", false);
+        XXPortalUser          gjUser            = daoManager.getXXPortalUser().findByLoginId(currentLoginId);
 
-        if (gjUser == null && ((request.getAttribute("spnegoEnabled") != null && (boolean) request.getAttribute("spnegoEnabled")) || (ssoEnabled) || bizUtil.isHealthCheckUser(currentLoginId))) {
-            logger.debug("User : {} doesn't exist in Ranger DB So creating user as it's SSO or Spnego authenticated", currentLoginId);
+        boolean headerAuthEnabled = PropertiesUtil.getBooleanProperty(PROP_HEADER_AUTH_ENABLED, false);
 
-            if (bizUtil.isHealthCheckUser(currentLoginId)) {
+        if (gjUser == null && ((request.getAttribute("spnegoEnabled") != null && (boolean) request.getAttribute("spnegoEnabled")) || ssoEnabled || headerAuthEnabled || bizUtil.isHealthCheckUser(currentLoginId))) {
+            logger.debug("User : {} doesn't exist in Ranger DB So creating user as it's SSO, Spnego or header-auth authenticated", currentLoginId);
+
+            if (bizUtil.isHealthCheckUser(currentLoginId) || headerAuthEnabled) {
                 xUserMgr.createServiceConfigUserSynchronously(currentLoginId);
             } else {
                 xUserMgr.createServiceConfigUser(currentLoginId);

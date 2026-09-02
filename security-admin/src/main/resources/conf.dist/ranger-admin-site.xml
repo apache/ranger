@@ -333,6 +333,11 @@
 		<value></value>
 	</property>
 	<property>
+		<name>ranger.admin.authn.header.roles</name>
+		<value></value>
+		<description>Name of the HTTP header (e.g. X-Forwarded-Roles) carrying a comma-separated list of roles to assign to the authenticated user. Accepted values are role names RANGER_ROLE_ADMIN, RANGER_ROLE_AUDITOR, RANGER_ROLE_USER, RANGER_ROLE_KEY_ADMIN, and RANGER_ROLE_KEY_ADMIN_AUDITOR. Values that are not recognized are ignored.</description>
+	</property>
+	<property>
 		<name>ranger.admin.spiffe.as.username.enabled</name>
 		<value>false</value>
 		<description>When enabled, ':' is accepted as a valid character in usernames so that SPIFFE IDs (e.g. spiffe://spiffe.example.com/ns/sales/sa/trino) can be used as service-account usernames. Disabled by default.</description>
