@@ -112,6 +112,7 @@ public class UnixAuthenticationService {
     }
 
     public void run() {
+        boolean unixAuthServiceStarted = false;
         try {
             UserGroupSyncConfig config = UserGroupSyncConfig.getInstance();
             enableUnixAuth = config.getUserSyncUnixAuth();
@@ -123,6 +124,7 @@ public class UnixAuthenticationService {
             if (enableUnixAuth && "passwd".equalsIgnoreCase(unixBackend)) {
                 LOG.info("Enabling Unix Auth Service!");
                 init();
+                unixAuthServiceStarted = true;
                 startService();
             } else {
                 LOG.info("Unix Auth Service Disabled!");
@@ -130,10 +132,17 @@ public class UnixAuthenticationService {
         } catch (Throwable t) {
             LOG.error("ERROR: Service: {}", serviceName, t);
         } finally {
-            LOG.info("Service: {} - STOPPED", serviceName);
-            if (this.userSyncHAInitializerImpl != null) {
-                LOG.info("Stopping curator leader latch service as main thread is closing");
-                this.userSyncHAInitializerImpl.stop();
+            /*
+             * Stop Curator leader election only when the Unix Auth listener is shutting down.
+             * When Unix Auth is disabled, this main thread returns but UserGroupSync keeps running
+             * and still depends on HA; stopping the leader latch here would mark every node active.
+             */
+            if (unixAuthServiceStarted) {
+                LOG.info("Service: {} - STOPPED", serviceName);
+                if (this.userSyncHAInitializerImpl != null) {
+                    LOG.info("Stopping curator leader latch service as Unix Auth service is closing");
+                    this.userSyncHAInitializerImpl.stop();
+                }
             }
         }
     }
