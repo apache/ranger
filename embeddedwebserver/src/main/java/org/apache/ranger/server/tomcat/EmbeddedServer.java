@@ -51,6 +51,7 @@ import java.security.SecureRandom;
 import java.security.UnrecoverableKeyException;
 import java.security.cert.CertificateException;
 import java.util.Date;
+import java.util.Enumeration;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -164,8 +165,12 @@ public class EmbeddedServer {
             ssl.setScheme("https");
             ssl.setAttribute("SSLEnabled", "true");
             ssl.setAttribute("sslProtocol", EmbeddedServerUtil.getConfig("ranger.service.https.attrib.ssl.protocol", DEFAULT_SSL_PROTOCOL));
-            ssl.setAttribute("keystoreType", EmbeddedServerUtil.getConfig("ranger.keystore.file.type", RANGER_KEYSTORE_FILE_TYPE_DEFAULT));
-            ssl.setAttribute("truststoreType", EmbeddedServerUtil.getConfig("ranger.truststore.file.type", RANGER_TRUSTSTORE_FILE_TYPE_DEFAULT));
+
+            String keystoreType    = EmbeddedServerUtil.getConfig("ranger.keystore.file.type", RANGER_KEYSTORE_FILE_TYPE_DEFAULT);
+            ssl.setAttribute("keystoreType", keystoreType);
+
+            String truststoreType    = EmbeddedServerUtil.getConfig("ranger.truststore.file.type", RANGER_TRUSTSTORE_FILE_TYPE_DEFAULT);
+            ssl.setAttribute("truststoreType", truststoreType);
 
             String clientAuth = EmbeddedServerUtil.getConfig("ranger.service.https.attrib.clientAuth", "false");
 
@@ -176,6 +181,8 @@ public class EmbeddedServer {
             ssl.setAttribute("clientAuth", clientAuth);
 
             String providerPath    = EmbeddedServerUtil.getConfig("ranger.credential.provider.path");
+
+            // Resolve KeyStore & related properties
             String credentialAlias = EmbeddedServerUtil.getConfig("ranger.service.https.attrib.keystore.credential.alias", "keyStoreCredentialAlias");
             String keystorePass    = null;
 
@@ -189,7 +196,6 @@ public class EmbeddedServer {
 
             String keystoreFile    = getKeystoreFile();
             String keyAlias        = EmbeddedServerUtil.getConfig("ranger.service.https.attrib.keystore.keyalias", "rangeradmin");
-            String keystoreType    = EmbeddedServerUtil.getConfig("ranger.keystore.file.type", RANGER_KEYSTORE_FILE_TYPE_DEFAULT);
             String validationError = validateHttpsKeystore(keystoreFile, keystorePass, keyAlias, keystoreType);
 
             if (validationError != null) {
@@ -199,6 +205,32 @@ public class EmbeddedServer {
             ssl.setAttribute("keyAlias", keyAlias);
             ssl.setAttribute("keystorePass", keystorePass);
             ssl.setAttribute("keystoreFile", keystoreFile);
+
+            // Resolve TrustStore & related properties
+            String truststoreCredsAlias = EmbeddedServerUtil.getConfig("ranger.service.https.attrib.truststore.credential.alias");
+            String truststorePass  = null;
+
+            if (providerPath != null && truststoreCredsAlias != null) {
+                truststorePass = CredentialReader.getDecryptedString(providerPath.trim(), truststoreCredsAlias.trim(), EmbeddedServerUtil.getConfig("ranger.truststore.file.type", RANGER_TRUSTSTORE_FILE_TYPE_DEFAULT));
+            }
+
+            if (StringUtils.isBlank(truststorePass) || "none".equalsIgnoreCase(truststorePass.trim())) {
+                truststorePass = EmbeddedServerUtil.getConfig("ranger.service.https.attrib.truststore.pass");
+            }
+
+            String trustStoreFile = EmbeddedServerUtil.getConfig("ranger.service.https.attrib.truststore.file");
+
+            if (StringUtils.isNotBlank(trustStoreFile) && StringUtils.isNotBlank(truststorePass)) {
+                validationError = validateHttpsTruststore(trustStoreFile, truststorePass, truststoreType);
+
+                if (validationError != null) {
+                    LOG.warning("HTTPS configuration validation for trustStore failed: " + validationError + " TLS handshaking may fail if mTLS is enabled.");
+                }
+                ssl.setAttribute("truststorePass", truststorePass);
+                ssl.setAttribute("truststoreFile", trustStoreFile);
+            } else {
+                LOG.info("Truststore not configured for HTTPS connector. File=" + trustStoreFile + ", and  is trustStorePassword empty " + StringUtils.isBlank(truststorePass));
+            }
 
             String enabledProtocols        = EmbeddedServerUtil.getConfig("ranger.service.https.attrib.ssl.enabled.protocols", DEFAULT_ENABLED_PROTOCOLS);
 
@@ -543,6 +575,55 @@ public class EmbeddedServer {
             return "Keystore [" + keystoreFile + "] could not be loaded because its algorithm or certificate data is invalid.";
         } catch (IOException e) {
             return "Keystore [" + keystoreFile + "] could not be loaded. The file may be unreadable, its format may be invalid, or its password may be incorrect.";
+        }
+
+        return null;
+    }
+
+    static String validateHttpsTruststore(String trustStoreFile, String trustStorePass, String trustStoreType) {
+        if (StringUtils.isBlank(trustStoreFile)) {
+            return "TrustStore file is not configured. Check 'ranger.service.https.attrib.truststore.file'.";
+        }
+
+        if (StringUtils.isBlank(trustStorePass)) {
+            return "TrustStore password could not be resolved. Check 'ranger.service.https.attrib.truststore.credential.alias' or 'ranger.service.https.attrib.truststore.pass'.";
+        }
+
+        if (StringUtils.isBlank(trustStoreType)) {
+            return "Truststore type is not configured. Check 'ranger.truststore.file.type'.";
+        }
+
+        try (InputStream in = getFileInputStream(trustStoreFile)) {
+            if (in == null) {
+                return "Truststore file [" + trustStoreFile + "] was not found or is not readable. Check 'ranger.service.https.attrib.truststore.file'.";
+            }
+
+            KeyStore trustStore = KeyStore.getInstance(trustStoreType);
+
+            trustStore.load(in, trustStorePass.toCharArray());
+
+            if (trustStore.size() == 0) {
+                return "Truststore [" + trustStoreFile + "] contains no entries.";
+            }
+
+            int trustedCertCount = 0;
+
+            for (Enumeration<String> aliases = trustStore.aliases(); aliases.hasMoreElements(); ) {
+                String alias = aliases.nextElement();
+                if (trustStore.entryInstanceOf(alias, KeyStore.TrustedCertificateEntry.class)) {
+                    trustedCertCount++;
+                }
+            }
+
+            if (trustedCertCount == 0) {
+                return "Truststore [" + trustStoreFile + "] contains no trusted certificate entries.";
+            }
+        } catch (KeyStoreException e) {
+            return "Truststore [" + trustStoreFile + "] could not be inspected using type [" + trustStoreType + "]. Check 'ranger.truststore.file.type'.";
+        } catch (NoSuchAlgorithmException | CertificateException e) {
+            return "Truststore [" + trustStoreFile + "] could not be loaded because its algorithm or certificate data is invalid.";
+        } catch (IOException e) {
+            return "Truststore [" + trustStoreFile + "] could not be loaded. The file may be unreadable, its format may be invalid, or its password may be incorrect.";
         }
 
         return null;
