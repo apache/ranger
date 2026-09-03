@@ -546,10 +546,10 @@ public class SessionMgr {
                 RangerSecurityContext context    = RangerContextHolder.getSecurityContext();
                 UserSessionBase       session    = context != null ? context.getUserSession() : null;
                 boolean               ssoEnabled = session != null ? session.isSSOEnabled() : this.ssoEnabled;
-        
+
                 if (ssoEnabled || (request.getAttribute("spnegoEnabled") != null && (boolean) request.getAttribute("spnegoEnabled"))) {
                     logger.debug("User : {} doesn't exist in Ranger DB. Creating user as it's SSO or Spnego", currentLoginId);
-        
+
                     xUserMgr.createServiceConfigUser(currentLoginId);
                 }
             }
