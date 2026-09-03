@@ -168,11 +168,11 @@ public class RangerHeaderPreAuthFilter extends GenericFilterBean {
     private List<GrantedAuthority> getAuthorities(HttpServletRequest httpRequest, String username) {
         List<GrantedAuthority> ret = getAuthoritiesFromHeader(httpRequest);
 
-        if (ret.isEmpty()) {
+        if (ret == null || ret.isEmpty()) {
             ret = getAuthoritiesFromRanger(username);
         }
 
-        return ret;
+        return ret == null ? Collections.emptyList() : ret;
     }
 
     /**
@@ -183,12 +183,14 @@ public class RangerHeaderPreAuthFilter extends GenericFilterBean {
      * value is ignored.
      */
     private List<GrantedAuthority> getAuthoritiesFromHeader(HttpServletRequest httpRequest) {
-        List<GrantedAuthority> ret = new ArrayList<>();
+        List<GrantedAuthority> ret = null;
 
         if (StringUtils.isNotBlank(rolesHeaderName)) {
             String rolesHeaderValue = httpRequest.getHeader(rolesHeaderName);
 
             if (StringUtils.isNotBlank(rolesHeaderValue)) {
+                ret = new ArrayList<>();
+
                 for (String role : rolesHeaderValue.split(",")) {
                     String trimmedRole = StringUtils.trimToNull(role);
 
@@ -213,27 +215,27 @@ public class RangerHeaderPreAuthFilter extends GenericFilterBean {
      * or returns the value unchanged when it is already a recognized internal role name.
      */
     private String resolveRoleFromHeader(String headerRole) {
-        String rangerRole = EXTERNAL_ROLE_TO_RANGER_ROLE.get(headerRole);
+        String ret = EXTERNAL_ROLE_TO_RANGER_ROLE.get(headerRole);
 
-        if (rangerRole != null) {
-            return rangerRole;
+        if (ret == null) {
+            if (RangerConstants.VALID_USER_ROLE_LIST.contains(headerRole)) {
+                ret = headerRole;
+            }
         }
 
-        if (RangerConstants.VALID_USER_ROLE_LIST.contains(headerRole)) {
-            return headerRole;
-        }
-
-        return null;
+        return ret;
     }
 
     /**
      * Loads authorities from Ranger DB
      */
     private List<GrantedAuthority> getAuthoritiesFromRanger(String username) {
-        List<GrantedAuthority> ret      = new ArrayList<>();
+        List<GrantedAuthority> ret      = null;
         Collection<String>     roleList = userMgr.getRolesByLoginId(username);
 
-        if (roleList != null) {
+        if (roleList != null && !roleList.isEmpty()) {
+            ret = new ArrayList<>();
+
             for (String role : roleList) {
                 if (StringUtils.isNotBlank(role)) {
                     ret.add(new SimpleGrantedAuthority(role));
