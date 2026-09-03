@@ -100,8 +100,8 @@ public class SessionMgr {
     @Autowired
     StringUtil stringUtil;
 
-    boolean headerAuthEnabled;
     boolean ssoEnabled;
+    boolean headerAuthEnabled;
 
     public SessionMgr() {
         logger.debug("SessionManager created");
@@ -109,8 +109,8 @@ public class SessionMgr {
 
     @PostConstruct
     public void init() {
-            ssoEnabled        = PropertiesUtil.getBooleanProperty("ranger.sso.enabled", false);
-            headerAuthEnabled = PropertiesUtil.getBooleanProperty(PROP_HEADER_AUTH_ENABLED, false);
+        ssoEnabled        = PropertiesUtil.getBooleanProperty("ranger.sso.enabled", false);
+        headerAuthEnabled = PropertiesUtil.getBooleanProperty(PROP_HEADER_AUTH_ENABLED, false);
     }
 
     public UserSessionBase processSuccessLogin(int authType, String userAgent, HttpServletRequest httpRequest) {
