@@ -88,8 +88,10 @@ class AuditLayout extends Component {
         this.props.location.pathname == "/reports/audit/pluginStatus"
       ) {
         activeTabVal = "pluginStatus";
-      } else {
+      } else if (this.props.location.pathname == "/reports/audit/userSync") {
         activeTabVal = "userSync";
+      } else {
+        activeTabVal = "metric";
       }
     }
     return activeTabVal;
@@ -112,6 +114,7 @@ class AuditLayout extends Component {
           <Tab eventKey="agent" title="Plugins" />
           <Tab eventKey="pluginStatus" title="Plugin Status" />
           <Tab eventKey="userSync" title="User Sync" />
+          <Tab eventKey="metric" title="Metrics" />
         </Tabs>
         <Outlet
           context={{
