@@ -32,6 +32,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Base64;
 import java.util.List;
 import java.util.Map;
@@ -47,6 +48,10 @@ public class PasswordUtils {
     public static final int    DEFAULT_ITERATION_COUNT = 17;
     public static final byte[] DEFAULT_INITIAL_VECTOR  = new byte[16];
     private static final String LEN_SEPARATOR_STR = ":";
+    private static final String MSG_ENCRYPT_KEY_STILL_DEFAULT = "ranger.password.encryption.key is not set — it is still the default, publicly-known " +
+            "value that ships with every Ranger install (in source control and every tarball), so encrypting with it would protect nothing. Set " +
+            "ranger.password.encryption.key to a unique, secret value in ranger-admin-site.xml — the exact same value on every Admin node in this " +
+            "cluster — before service config passwords can be encrypted.";
 
     private final RangerSupportedCryptoAlgo cryptAlgo;
     private final int    iterationCount;
@@ -112,6 +117,15 @@ public class PasswordUtils {
         }
     }
 
+    private PasswordUtils(RangerSupportedCryptoAlgo cryptAlgo, char[] key, byte[] salt, int iterationCount, byte[] iv, String password) {
+        this.cryptAlgo = cryptAlgo;
+        this.encryptKey = key;
+        this.salt = salt;
+        this.iterationCount = iterationCount;
+        this.iv = iv;
+        this.password = password;
+    }
+
     public static String encryptPassword(String aPassword) throws IOException {
         return build(aPassword).encrypt();
     }
@@ -122,6 +136,101 @@ public class PasswordUtils {
 
     public static String decryptPassword(String aPassword) throws IOException {
         return build(aPassword).decrypt();
+    }
+
+    private static final String V2_FORMAT_PREFIX = "v2,";
+
+    public static boolean isV2Format(String storedValue) {
+        return storedValue != null && storedValue.startsWith(V2_FORMAT_PREFIX);
+    }
+
+    public static String getCryptAlgoV2(String storedValue) {
+        if (!isV2Format(storedValue)) {
+            throw new IllegalArgumentException("value is not in v2 format (missing '" + V2_FORMAT_PREFIX + "' prefix)");
+        }
+        return storedValue.substring(V2_FORMAT_PREFIX.length()).split(",", 3)[0];
+    }
+
+    public static boolean isLegacyFormat(String storedValue) {
+        if (StringUtils.isEmpty(storedValue) || isV2Format(storedValue) || !storedValue.contains(",")) {
+            return false;
+        }
+        String[] fields = storedValue.split(",", -1);
+        if (fields.length <= 4) {
+            return false;
+        }
+        try {
+            RangerSupportedCryptoAlgo.getValueOf(fields[0]);
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    public static void validateEncryptionKeyConfigured(char[] key) {
+        if (key == null || key.length == 0) {
+            throw new IllegalArgumentException("ranger.password.encryption.key is not set.");
+        }
+        if (Arrays.equals(key, DEFAULT_ENCRYPT_KEY.toCharArray())) {
+            throw new IllegalStateException(MSG_ENCRYPT_KEY_STILL_DEFAULT);
+        }
+    }
+
+    public static String encryptPasswordV2(String plainText, RangerSupportedCryptoAlgo cryptAlgo, char[] key, byte[] salt, int iterationCount) throws IOException {
+        if (key == null || key.length == 0) {
+            throw new IllegalArgumentException("encryptPasswordV2() requires a non-empty key");
+        }
+        try {
+            String ivStr = generateIvIfNeeded(cryptAlgo.getAlgoName());
+            byte[] ivBytes = ivStr != null ? Base64.getDecoder().decode(ivStr) : DEFAULT_INITIAL_VECTOR;
+            String password = new PasswordUtils(cryptAlgo, key, salt, iterationCount, ivBytes, plainText).encrypt();
+            List<String> fields = new ArrayList<>();
+            fields.add(cryptAlgo.getAlgoName());
+            fields.add(Base64.getEncoder().encodeToString(salt));
+            fields.add(String.valueOf(iterationCount));
+            if (ivStr != null) {
+                fields.add(ivStr);
+            }
+            fields.add(password);
+            return V2_FORMAT_PREFIX + String.join(",", fields);
+        } catch (NoSuchAlgorithmException e) {
+            throw new IOException("Unable to generate IV for v2 password encryption", e);
+        }
+    }
+
+    public static String decryptPasswordV2(String storedValue, char[] key) throws IOException {
+        if (key == null || key.length == 0) {
+            throw new IllegalArgumentException("decryptPasswordV2() requires a non-empty key — refusing to fall back to a default");
+        }
+        if (!isV2Format(storedValue)) {
+            throw new IllegalArgumentException("value is not in v2 format (missing '" + V2_FORMAT_PREFIX + "' prefix)");
+        }
+        String[] fields = Lists.newArrayList(Splitter.on(",").split(storedValue.substring(V2_FORMAT_PREFIX.length()))).toArray(new String[0]);
+        if (fields.length < 4) {
+            throw new IOException("Malformed v2 password value (expected at least 4 fields, found " + fields.length + ")");
+        }
+
+        int index = 0;
+        RangerSupportedCryptoAlgo cryptAlgo = RangerSupportedCryptoAlgo.getValueOf(fields[index++]);
+        byte[] salt = Base64.getDecoder().decode(fields[index++]);
+        int iterationCount = Integer.parseInt(fields[index++]);
+        byte[] iv;
+        if (needsIv(cryptAlgo.getAlgoName())) {
+            iv = Base64.getDecoder().decode(fields[index++]);
+        } else {
+            iv = DEFAULT_INITIAL_VECTOR;
+        }
+        StringBuilder cipherText = new StringBuilder(fields[index++]);
+        // defensive: a stray comma inside the ciphertext (shouldn't happen — Base64's alphabet
+        // has none) would otherwise silently truncate the value instead of failing loudly.
+        for (int i = index; i < fields.length; i++) {
+            cipherText.append(",").append(fields[i]);
+        }
+        String result = new PasswordUtils(cryptAlgo, key, salt, iterationCount, iv, cipherText.toString()).decrypt();
+        if (result == null) {
+            throw new IOException("decryptPasswordV2() failed — wrong key or corrupted value (decrypted output was not in the expected format)");
+        }
+        return result;
     }
 
     public static boolean needsIv(String cryptoAlgo) {
