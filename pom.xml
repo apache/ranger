@@ -93,11 +93,12 @@
         <fasterxml.jackson.databind.version>2.18.9</fasterxml.jackson.databind.version>
         <fasterxml.jackson.version>2.18.9</fasterxml.jackson.version>
         <fasterxml.woodstox.version>5.4.0</fasterxml.woodstox.version>
-        <gcp.protobuf-java.version>3.25.5</gcp.protobuf-java.version>
+        <gcp.protobuf-java.version>4.33.6</gcp.protobuf-java.version>
         <glassfish.hk2.version>2.6.1</glassfish.hk2.version>
         <google.auth.library.oauth2.http.version>1.14.0</google.auth.library.oauth2.http.version>
-        <google.cloud.kms>2.3.0</google.cloud.kms>
+        <google.cloud.kms>2.96.0</google.cloud.kms>
         <google.failureaccess.version>1.0.3</google.failureaccess.version>
+        <google.gax.version>2.81.0</google.gax.version>
         <google.guava.version>33.4.8-jre</google.guava.version>
         <google.re2j.version>1.2</google.re2j.version>
         <googlecode.log4jdbc.version>1.2</googlecode.log4jdbc.version>
@@ -187,8 +188,8 @@
         <noggit.version>0.8</noggit.version>
         <opensearch.client.java.version>3.9.0</opensearch.client.java.version>
         <opensearch.client.rest.version>2.19.6</opensearch.client.rest.version>
-        <orc.core.version>1.6.7</orc.core.version>
-        <orc.version>1.5.8</orc.version>
+        <orc.core.version>2.0.3</orc.core.version>
+        <orc.version>2.0.3</orc.version>
         <org.bouncycastle.bcpkix-jdk18on>1.84</org.bouncycastle.bcpkix-jdk18on>
         <org.bouncycastle.bcprov-jdk18on>1.84</org.bouncycastle.bcprov-jdk18on>
         <owasp-java-html-sanitizer.version>20211018.2</owasp-java-html-sanitizer.version>
@@ -202,7 +203,7 @@
         <presto.validation-api.version>2.0.1.Final</presto.validation-api.version>
         <presto.version>333</presto.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <protobuf-java.version>3.25.5</protobuf-java.version>
+        <protobuf-java.version>4.33.6</protobuf-java.version>
         <ratis-thirdparty.version>0.7.0</ratis-thirdparty.version>
         <ratis.version>2.1.0</ratis.version>
         <reload4j.version>1.2.19</reload4j.version>
