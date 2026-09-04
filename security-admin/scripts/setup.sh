@@ -1514,6 +1514,17 @@ do_authentication_setup(){
                         updatePropertyToFilePy $propertyName "${newPropertyValue}" $ldap_file
                 fi
         fi
+
+		if [ $authentication_method = "PAM" ] ; then
+			newPropertyValue='PAM'
+			pam_service="login"
+			config_file=$app_home/WEB-INF/classes/conf/ranger-admin-site.xml
+			if test -f $config_file; then
+				propertyName=ranger.authentication.method
+				newPropertyValue="${authentication_method}"
+				updatePropertyToFilePy $propertyName $newPropertyValue $config_file
+			fi
+		fi
 	
         log "[I] Finished setup based on user authentication method=$authentication_method";
 }
