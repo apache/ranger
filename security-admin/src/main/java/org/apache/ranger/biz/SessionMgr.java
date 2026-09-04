@@ -31,6 +31,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CopyOnWriteArraySet;
 
+import javax.annotation.PostConstruct;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 
@@ -72,6 +73,8 @@ import org.springframework.transaction.annotation.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import static org.apache.ranger.security.web.filter.RangerHeaderPreAuthFilter.PROP_HEADER_AUTH_ENABLED;
+
 @Component
 @Transactional
 public class SessionMgr {
@@ -103,9 +106,18 @@ public class SessionMgr {
 
 	@Autowired
 	StringUtil stringUtil;
-	
+
+	boolean ssoEnabled;
+	boolean headerAuthEnabled;
+
 	public SessionMgr() {
 		logger.debug("SessionManager created");
+	}
+
+	@PostConstruct
+	public void init() {
+		ssoEnabled        = PropertiesUtil.getBooleanProperty("ranger.sso.enabled", false);
+		headerAuthEnabled = PropertiesUtil.getBooleanProperty(PROP_HEADER_AUTH_ENABLED, false);
 	}
 
 	private static final Long SESSION_UPDATE_INTERVAL_IN_MILLIS = 30 * DateUtils.MILLIS_PER_MINUTE;
@@ -246,17 +258,24 @@ public class SessionMgr {
 	}
 
 	private void getSSOSpnegoAuthCheckForAPI(String currentLoginId, HttpServletRequest request) {
-
-		RangerSecurityContext context = RangerContextHolder.getSecurityContext();
-		UserSessionBase session = context != null ? context.getUserSession() : null;
-		boolean ssoEnabled = session != null ? session.isSSOEnabled() : PropertiesUtil.getBooleanProperty("ranger.sso.enabled", false);
-
 		XXPortalUser gjUser = daoManager.getXXPortalUser().findByLoginId(currentLoginId);
-		if (gjUser == null && ((request.getAttribute("spnegoEnabled") != null && (boolean)request.getAttribute("spnegoEnabled")) || (ssoEnabled))) {
-			if(logger.isDebugEnabled()){
-				logger.debug("User : "+currentLoginId+" doesn't exist in Ranger DB So creating user as it's SSO or Spnego authenticated");
+
+		if (gjUser == null) {
+			if (headerAuthEnabled) {
+				logger.debug("User : {} doesn't exist in Ranger DB. Creating user as it's header-auth authenticated", currentLoginId);
+
+				xUserMgr.createServiceConfigUserSynchronously(currentLoginId);
+			} else {
+				RangerSecurityContext context    = RangerContextHolder.getSecurityContext();
+				UserSessionBase       session    = context != null ? context.getUserSession() : null;
+				boolean               ssoEnabled = session != null ? session.isSSOEnabled() : this.ssoEnabled;
+
+				if (ssoEnabled || (request.getAttribute("spnegoEnabled") != null && (boolean) request.getAttribute("spnegoEnabled"))) {
+					logger.debug("User : {} doesn't exist in Ranger DB. Creating user as it's SSO or Spnego", currentLoginId);
+
+					xUserMgr.createServiceConfigUser(currentLoginId);
+				}
 			}
-			xUserMgr.createServiceConfigUser(currentLoginId);
 		}
 	}
 

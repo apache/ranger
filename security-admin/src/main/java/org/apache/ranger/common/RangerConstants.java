@@ -32,12 +32,8 @@ public class RangerConstants extends RangerCommonEnums {
 	// Default Roles
 	public final static String ROLE_SYS_ADMIN = "ROLE_SYS_ADMIN";
 	public final static String ROLE_ADMIN = "ROLE_ADMIN";
-	public final static String ROLE_INTEGRATOR = "ROLE_INTEGRATOR";
-	public final static String ROLE_DATA_ANALYST = "ROLE_DATA_ANALYST";
-	public final static String ROLE_BIZ_MGR = "ROLE_BIZ_MGR";
 	public final static String ROLE_KEY_ADMIN = "ROLE_KEY_ADMIN";
 	public final static String ROLE_USER = "ROLE_USER";
-	public final static String ROLE_ANON = "ROLE_ANON";
 	public final static String ROLE_OTHER = "ROLE_OTHER";
 	public final static String GROUP_PUBLIC = "public";
     public final static String ROLE_ADMIN_AUDITOR = "ROLE_ADMIN_AUDITOR";
