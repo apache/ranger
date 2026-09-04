@@ -68,6 +68,7 @@ public class TestRangerHeaderPreAuthFilter {
         PropertiesUtil.getPropertiesMap().remove(RangerHeaderPreAuthFilter.PROP_USERNAME_HEADER_NAME);
         PropertiesUtil.getPropertiesMap().remove(RangerHeaderPreAuthFilter.PROP_SPIFFE_HEADER_NAME);
         PropertiesUtil.getPropertiesMap().remove(RangerHeaderPreAuthFilter.PROP_REQUEST_ID_HEADER_NAME);
+        PropertiesUtil.getPropertiesMap().remove(RangerHeaderPreAuthFilter.PROP_ROLES_HEADER_NAME);
     }
 
     @Test
@@ -371,5 +372,202 @@ public class TestRangerHeaderPreAuthFilter {
         verify(chain).doFilter(request, response);
         verify(userMgr, never()).getRolesByLoginId(anyString());
         assertEquals(existingAuth, SecurityContextHolder.getContext().getAuthentication());
+    }
+
+    @Test
+    public void testDoFilter_enabled_withExternalRolesHeader_mapsToInternalRoles() throws Exception {
+        PropertiesUtil.getPropertiesMap().put(RangerHeaderPreAuthFilter.PROP_HEADER_AUTH_ENABLED, "true");
+        PropertiesUtil.getPropertiesMap().put(RangerHeaderPreAuthFilter.PROP_USERNAME_HEADER_NAME, "X-Forwarded-User");
+        PropertiesUtil.getPropertiesMap().put(RangerHeaderPreAuthFilter.PROP_ROLES_HEADER_NAME, "X-Forwarded-Roles");
+
+        RangerHeaderPreAuthFilter filter  = new RangerHeaderPreAuthFilter();
+        UserMgr                   userMgr = mock(UserMgr.class);
+
+        filter.userMgr = userMgr;
+        filter.initialize();
+
+        HttpServletRequest  request  = mock(HttpServletRequest.class);
+        HttpServletResponse response = mock(HttpServletResponse.class);
+
+        when(request.getHeader("X-Forwarded-User")).thenReturn("joeuser");
+        when(request.getHeader("X-Forwarded-Roles")).thenReturn("RANGER_ROLE_ADMIN, RANGER_ROLE_USER");
+
+        FilterChain chain = new FilterChain() {
+            @Override
+            public void doFilter(ServletRequest req, ServletResponse res) {
+                org.springframework.security.core.Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+
+                assertNotNull(auth);
+                assertTrue(auth instanceof RangerAuthenticationToken);
+                RangerAuthenticationToken rangerAuth = (RangerAuthenticationToken) auth;
+                assertEquals(XXAuthSession.AUTH_TYPE_TRUSTED_PROXY, rangerAuth.getAuthType());
+                assertEquals("joeuser", auth.getName());
+
+                Collection<?> authorities = auth.getAuthorities();
+                assertEquals(2, authorities.size());
+                assertTrue(authorities.stream().anyMatch(a -> "ROLE_SYS_ADMIN".equals(a.toString())));
+                assertTrue(authorities.stream().anyMatch(a -> "ROLE_USER".equals(a.toString())));
+            }
+        };
+
+        filter.doFilter(request, response, chain);
+
+        verify(userMgr, never()).getRolesByLoginId(anyString());
+    }
+
+    @Test
+    public void testDoFilter_enabled_withRolesHeader_setsAuthenticationFromHeaderRoles() throws Exception {
+        PropertiesUtil.getPropertiesMap().put(RangerHeaderPreAuthFilter.PROP_HEADER_AUTH_ENABLED, "true");
+        PropertiesUtil.getPropertiesMap().put(RangerHeaderPreAuthFilter.PROP_USERNAME_HEADER_NAME, "X-Forwarded-User");
+        PropertiesUtil.getPropertiesMap().put(RangerHeaderPreAuthFilter.PROP_ROLES_HEADER_NAME, "X-Forwarded-Roles");
+
+        RangerHeaderPreAuthFilter filter  = new RangerHeaderPreAuthFilter();
+        UserMgr                   userMgr = mock(UserMgr.class);
+
+        filter.userMgr = userMgr;
+        filter.initialize();
+
+        HttpServletRequest  request  = mock(HttpServletRequest.class);
+        HttpServletResponse response = mock(HttpServletResponse.class);
+
+        when(request.getHeader("X-Forwarded-User")).thenReturn("joeuser");
+        when(request.getHeader("X-Forwarded-Roles")).thenReturn("ROLE_SYS_ADMIN, ROLE_USER");
+
+        FilterChain chain = new FilterChain() {
+            @Override
+            public void doFilter(ServletRequest req, ServletResponse res) {
+                org.springframework.security.core.Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+
+                assertNotNull(auth);
+                assertTrue(auth instanceof RangerAuthenticationToken);
+                RangerAuthenticationToken rangerAuth = (RangerAuthenticationToken) auth;
+                assertEquals(XXAuthSession.AUTH_TYPE_TRUSTED_PROXY, rangerAuth.getAuthType());
+                assertEquals("joeuser", auth.getName());
+
+                Collection<?> authorities = auth.getAuthorities();
+                assertEquals(2, authorities.size());
+                assertTrue(authorities.stream().anyMatch(a -> "ROLE_SYS_ADMIN".equals(a.toString())));
+                assertTrue(authorities.stream().anyMatch(a -> "ROLE_USER".equals(a.toString())));
+            }
+        };
+
+        filter.doFilter(request, response, chain);
+
+        // roles came from the trusted header, so the Ranger DB must not be consulted
+        verify(userMgr, never()).getRolesByLoginId(anyString());
+    }
+
+    @Test
+    public void testDoFilter_enabled_rolesHeaderWithUnknownRoles_ignoresInvalidAndKeepsValid() throws Exception {
+        PropertiesUtil.getPropertiesMap().put(RangerHeaderPreAuthFilter.PROP_HEADER_AUTH_ENABLED, "true");
+        PropertiesUtil.getPropertiesMap().put(RangerHeaderPreAuthFilter.PROP_USERNAME_HEADER_NAME, "X-Forwarded-User");
+        PropertiesUtil.getPropertiesMap().put(RangerHeaderPreAuthFilter.PROP_ROLES_HEADER_NAME, "X-Forwarded-Roles");
+
+        RangerHeaderPreAuthFilter filter  = new RangerHeaderPreAuthFilter();
+        UserMgr                   userMgr = mock(UserMgr.class);
+
+        filter.userMgr = userMgr;
+        filter.initialize();
+
+        HttpServletRequest  request  = mock(HttpServletRequest.class);
+        HttpServletResponse response = mock(HttpServletResponse.class);
+
+        when(request.getHeader("X-Forwarded-User")).thenReturn("joeuser");
+        when(request.getHeader("X-Forwarded-Roles")).thenReturn("ROLE_ADMIN_AUDITOR, ROLE_BOGUS, , ROLE_USER");
+
+        FilterChain chain = new FilterChain() {
+            @Override
+            public void doFilter(ServletRequest req, ServletResponse res) {
+                org.springframework.security.core.Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+
+                assertNotNull(auth);
+
+                Collection<?> authorities = auth.getAuthorities();
+                assertEquals(2, authorities.size());
+                assertTrue(authorities.stream().anyMatch(a -> "ROLE_ADMIN_AUDITOR".equals(a.toString())));
+                assertTrue(authorities.stream().anyMatch(a -> "ROLE_USER".equals(a.toString())));
+            }
+        };
+
+        filter.doFilter(request, response, chain);
+
+        verify(userMgr, never()).getRolesByLoginId(anyString());
+    }
+
+    @Test
+    public void testDoFilter_enabled_rolesHeaderWithNoValidRoles_fallsBackToRangerDbRoles() throws Exception {
+        PropertiesUtil.getPropertiesMap().put(RangerHeaderPreAuthFilter.PROP_HEADER_AUTH_ENABLED, "true");
+        PropertiesUtil.getPropertiesMap().put(RangerHeaderPreAuthFilter.PROP_USERNAME_HEADER_NAME, "X-Forwarded-User");
+        PropertiesUtil.getPropertiesMap().put(RangerHeaderPreAuthFilter.PROP_ROLES_HEADER_NAME, "X-Forwarded-Roles");
+
+        RangerHeaderPreAuthFilter filter  = new RangerHeaderPreAuthFilter();
+        UserMgr                   userMgr = mock(UserMgr.class);
+
+        filter.userMgr = userMgr;
+        filter.initialize();
+
+        when(userMgr.getRolesByLoginId("joeuser")).thenReturn(Collections.singletonList("ROLE_USER"));
+
+        HttpServletRequest  request  = mock(HttpServletRequest.class);
+        HttpServletResponse response = mock(HttpServletResponse.class);
+
+        when(request.getHeader("X-Forwarded-User")).thenReturn("joeuser");
+        when(request.getHeader("X-Forwarded-Roles")).thenReturn("ROLE_BOGUS");
+
+        FilterChain chain = new FilterChain() {
+            @Override
+            public void doFilter(ServletRequest req, ServletResponse res) {
+                org.springframework.security.core.Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+
+                assertNotNull(auth);
+
+                Collection<?> authorities = auth.getAuthorities();
+                assertEquals(1, authorities.size());
+                assertTrue(authorities.stream().anyMatch(a -> "ROLE_USER".equals(a.toString())));
+            }
+        };
+
+        filter.doFilter(request, response, chain);
+
+        verify(userMgr).getRolesByLoginId("joeuser");
+    }
+
+    @Test
+    public void testDoFilter_enabled_rolesHeaderConfiguredButAbsent_fallsBackToRangerDbRoles() throws Exception {
+        PropertiesUtil.getPropertiesMap().put(RangerHeaderPreAuthFilter.PROP_HEADER_AUTH_ENABLED, "true");
+        PropertiesUtil.getPropertiesMap().put(RangerHeaderPreAuthFilter.PROP_USERNAME_HEADER_NAME, "X-Forwarded-User");
+        PropertiesUtil.getPropertiesMap().put(RangerHeaderPreAuthFilter.PROP_ROLES_HEADER_NAME, "X-Forwarded-Roles");
+
+        RangerHeaderPreAuthFilter filter  = new RangerHeaderPreAuthFilter();
+        UserMgr                   userMgr = mock(UserMgr.class);
+
+        filter.userMgr = userMgr;
+        filter.initialize();
+
+        when(userMgr.getRolesByLoginId("joeuser")).thenReturn(Arrays.asList("ROLE_SYS_ADMIN", "ROLE_USER"));
+
+        HttpServletRequest  request  = mock(HttpServletRequest.class);
+        HttpServletResponse response = mock(HttpServletResponse.class);
+
+        when(request.getHeader("X-Forwarded-User")).thenReturn("joeuser");
+        // roles header configured but not present in the request
+
+        FilterChain chain = new FilterChain() {
+            @Override
+            public void doFilter(ServletRequest req, ServletResponse res) {
+                org.springframework.security.core.Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+
+                assertNotNull(auth);
+
+                Collection<?> authorities = auth.getAuthorities();
+                assertEquals(2, authorities.size());
+                assertTrue(authorities.stream().anyMatch(a -> "ROLE_SYS_ADMIN".equals(a.toString())));
+                assertTrue(authorities.stream().anyMatch(a -> "ROLE_USER".equals(a.toString())));
+            }
+        };
+
+        filter.doFilter(request, response, chain);
+
+        verify(userMgr).getRolesByLoginId("joeuser");
     }
 }
