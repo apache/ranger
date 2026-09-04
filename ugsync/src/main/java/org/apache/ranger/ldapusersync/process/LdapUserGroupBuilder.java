@@ -506,13 +506,17 @@ public class LdapUserGroupBuilder implements UserGroupSource {
 
             DateFormat dateFormat = new SimpleDateFormat(DATE_FORMAT);
 
-            if (!groupUserTable.rowKeySet().isEmpty() || !config.isDeltaSyncEnabled() || (computeDeletes)) {
-                // Fix RANGER-1957: Perform full sync when there are updates to the groups or when incremental sync is not enabled
+            if (!groupUserTable.rowKeySet().isEmpty() || (config.isDeltaSyncEnabled() && (computeDeletes))) {
+                // Fix RANGER-1957: Perform full sync when there are updates to the groups or when computing deletes
                 deltaSyncUserTime      = 0;
                 deltaSyncUserTimeStamp = dateFormat.format(new Date(0));
             }
 
-            extendedUserSearchFilter = "(objectclass=" + userObjectClass + ")(|(uSNChanged>=" + deltaSyncUserTime + ")(modifyTimestamp>=" + deltaSyncUserTimeStamp + "Z))";
+            if (config.isDeltaSyncEnabled()) {
+                extendedUserSearchFilter = "(objectclass=" + userObjectClass + ")(|(uSNChanged>=" + deltaSyncUserTime + ")(modifyTimestamp>=" + deltaSyncUserTimeStamp + "Z))";
+            } else {
+                extendedUserSearchFilter = "(objectclass=" + userObjectClass + ")";
+            }
 
             if (userSearchFilter != null && !userSearchFilter.trim().isEmpty()) {
                 String customFilter = userSearchFilter.trim();
@@ -747,13 +751,17 @@ public class LdapUserGroupBuilder implements UserGroupSource {
                 extendedGroupSearchFilter = extendedGroupSearchFilter + customFilter;
             }
 
-            if (!config.isDeltaSyncEnabled() || (computeDeletes)) {
-                // Perform full sync when incremental sync is not enabled
+            if (config.isDeltaSyncEnabled() && (computeDeletes)) {
+                // Perform full sync when computing deletes
                 deltaSyncGroupTime      = 0;
                 deltaSyncGroupTimeStamp = dateFormat.format(new Date(0));
             }
 
-            extendedAllGroupsSearchFilter = "(&" + extendedGroupSearchFilter + "(|(uSNChanged>=" + deltaSyncGroupTime + ")(modifyTimestamp>=" + deltaSyncGroupTimeStamp + "Z)))";
+            if (config.isDeltaSyncEnabled()) {
+                extendedAllGroupsSearchFilter = "(&"  + extendedGroupSearchFilter + "(|(uSNChanged>=" + deltaSyncGroupTime + ")(modifyTimestamp>=" + deltaSyncGroupTimeStamp + "Z)))";
+            } else {
+                extendedAllGroupsSearchFilter = "(&"  + extendedGroupSearchFilter + ")";
+            }
 
             LOG.info("extendedAllGroupsSearchFilter = {}", extendedAllGroupsSearchFilter);
 

@@ -45,7 +45,7 @@ realScriptPath=`readlink -f $0`
 realScriptDir=`dirname $realScriptPath`
 cd $realScriptDir
 cdir=`pwd`
-ranger_usersync_max_heap_size=1g
+ranger_usersync_max_heap_size=${RANGER_USERSYNC_MAX_HEAP:-1g}
 
 for custom_env_script in `find ${cdir}/conf/ -name "ranger-usersync-env*"`; do
         if [ -f $custom_env_script ]; then
@@ -82,7 +82,7 @@ fi
 INSTALL_ARGS="${cdir}/install.properties"
 RANGER_BASE_DIR=$(getInstallProperty 'ranger_base_dir')
 
-JAVA_OPTS=" ${JAVA_OPTS} -XX:MetaspaceSize=100m -XX:MaxMetaspaceSize=200m -Xmx${ranger_usersync_max_heap_size} -Xms1g "
+JAVA_OPTS=" ${JAVA_OPTS} -XX:MetaspaceSize=${RANGER_JVM_METASPACE:-100m} -XX:MaxMetaspaceSize=${RANGER_JVM_MAX_METASPACE:-200m} -Xmx${ranger_usersync_max_heap_size} -Xms${ranger_usersync_max_heap_size} "
 
 if [ "${action}" == "START" ]; then
 
@@ -127,7 +127,7 @@ if [ "${action}" == "START" ]; then
         fi
     fi
 	SLEEP_TIME_AFTER_START=5
-	nohup java -Dproc_rangerusersync -Duser=rangerusersync -Dhostname=${HOSTNAME} -Dservername=rangerusersync -Dranger.usersync.home=`pwd` -Dlogdir="${logdir}" -Dranger.usersync.log.dir="${RANGER_USERSYNC_LOG_DIR}" -Dlogback.configurationFile=file:${USERSYNC_CONF_DIR}/logback.xml -Djdk.tls.ephemeralDHKeySize=2048 -Dranger.usersync.webapp.dir="${RANGER_USERSYNC_WEBAPP}" -Dranger.usersync.service.host="${HOSTNAME}" -Dcatalina.base=${cdir}/ews -cp "${cp}" org.apache.ranger.authentication.server.RangerUserSyncServer -enableUnixAuth > ${RANGER_USERSYNC_LOG_DIR}/catalina.out 2>&1 &
+	nohup java -Dproc_rangerusersync ${JAVA_OPTS} -Duser=rangerusersync -Dhostname=${HOSTNAME} -Dservername=rangerusersync -Dranger.usersync.home=`pwd` -Dlogdir="${logdir}" -Dranger.usersync.log.dir="${RANGER_USERSYNC_LOG_DIR}" -Dlogback.configurationFile=file:${USERSYNC_CONF_DIR}/logback.xml -Djdk.tls.ephemeralDHKeySize=2048 -Dranger.usersync.webapp.dir="${RANGER_USERSYNC_WEBAPP}" -Dranger.usersync.service.host="${HOSTNAME}" -Dcatalina.base=${cdir}/ews -cp "${cp}" org.apache.ranger.authentication.server.RangerUserSyncServer -enableUnixAuth > ${RANGER_USERSYNC_LOG_DIR}/catalina.out 2>&1 &
 	VALUE_OF_PID=$!
     echo "Starting Ranger Usersync Service"
     sleep $SLEEP_TIME_AFTER_START

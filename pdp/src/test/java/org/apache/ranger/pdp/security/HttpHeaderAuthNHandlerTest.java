@@ -77,11 +77,12 @@ public class HttpHeaderAuthNHandlerTest {
         handler.init(config);
 
         // Realistic production SPIFFE ID: DNS-style Kubernetes cluster trust domain + namespace/service-account.
-        HttpServletRequest     request = requestWithHeader("X-Spiffe-Id", "spiffe://prod-cluster.k8s.example.com/ns/ingress-nginx/sa/nginx-ingress");
-        PdpAuthNHandler.Result result  = handler.authenticate(request, null);
+        String                 spiffeId = "spiffe://prod-cluster.k8s.example.com/ns/ingress-nginx/sa/nginx-ingress";
+        HttpServletRequest     request  = requestWithHeader("X-Spiffe-Id", spiffeId);
+        PdpAuthNHandler.Result result   = handler.authenticate(request, null);
 
         assertEquals(PdpAuthNHandler.Result.Status.AUTHENTICATED, result.getStatus());
-        assertEquals("nginx-ingress", result.getUserName());
+        assertEquals(spiffeId, result.getUserName());
         assertEquals(HttpHeaderAuthNHandler.AUTH_TYPE_SPIFFE, result.getAuthType());
     }
 
@@ -118,13 +119,15 @@ public class HttpHeaderAuthNHandlerTest {
 
         Map<String, String> headers = new HashMap<>();
 
+        String spiffeId = "spiffe://my-cluster/ns/service-namespace/sa/service-sa";
+
         headers.put("X-Spiffe-Id", "not-a-spiffe-id");
-        headers.put("X-Workload-Id", "spiffe://my-cluster/ns/service-namespace/sa/service-sa");
+        headers.put("X-Workload-Id", spiffeId);
 
         PdpAuthNHandler.Result result = handler.authenticate(requestWithHeaders(headers), null);
 
         assertEquals(PdpAuthNHandler.Result.Status.AUTHENTICATED, result.getStatus());
-        assertEquals("service-sa", result.getUserName());
+        assertEquals(spiffeId, result.getUserName());
         assertEquals(HttpHeaderAuthNHandler.AUTH_TYPE_SPIFFE, result.getAuthType());
     }
 
@@ -145,7 +148,7 @@ public class HttpHeaderAuthNHandlerTest {
     }
 
     @Test
-    void testAuthenticate_specValidButNonConformingSpiffeHeaderSkips() {
+    void testAuthenticate_specValidNonSpireLayoutSpiffeHeaderAuthenticatesFullId() {
         HttpHeaderAuthNHandler handler = new HttpHeaderAuthNHandler();
         Properties             config  = new Properties();
 
@@ -153,12 +156,15 @@ public class HttpHeaderAuthNHandlerTest {
 
         handler.init(config);
 
-        // Valid SPIFFE ID per the SPIFFE spec, but not in the expected /ns/<ns>/sa/<sa> layout.
-        HttpServletRequest     request = requestWithHeader("X-Spiffe-Id", "spiffe://example.org/workload/frontend");
-        PdpAuthNHandler.Result result  = handler.authenticate(request, null);
+        // Valid SPIFFE ID per the SPIFFE spec that does not use the SPIRE /ns/<ns>/sa/<sa> layout;
+        // the full SPIFFE ID is used as the authenticated principal.
+        String                 spiffeId = "spiffe://example.org/workload/frontend";
+        HttpServletRequest     request  = requestWithHeader("X-Spiffe-Id", spiffeId);
+        PdpAuthNHandler.Result result   = handler.authenticate(request, null);
 
-        assertEquals(PdpAuthNHandler.Result.Status.SKIP, result.getStatus());
-        assertNull(result.getUserName());
+        assertEquals(PdpAuthNHandler.Result.Status.AUTHENTICATED, result.getStatus());
+        assertEquals(spiffeId, result.getUserName());
+        assertEquals(HttpHeaderAuthNHandler.AUTH_TYPE_SPIFFE, result.getAuthType());
     }
 
     @Test
