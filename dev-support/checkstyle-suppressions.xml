@@ -93,4 +93,5 @@
   <suppress files="PatchForAtlasPolicyUpdateForEntityRead_J10064" checks="TypeName"/>
   <suppress files="PatchForOzoneServiceDefPolicyConditionUpdate_J10066" checks="TypeName"/>
   <suppress files="PatchForOzoneServiceDefAssumeRoleUpdate_J10065" checks="TypeName"/>
+  <suppress files="PatchServicePasswordV2Migration_J10067" checks="TypeName"/>
 </suppressions>
