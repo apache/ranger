@@ -48,13 +48,14 @@ public class EmbeddedServiceDefsUtil {
 
 
 	// following servicedef list should be reviewed/updated whenever a new embedded service-def is added
-	public static final String DEFAULT_BOOTSTRAP_SERVICEDEF_LIST = "tag,hdfs,hbase,hive,kms,knox,storm,yarn,kafka,solr,atlas,nifi,nifi-registry,sqoop,kylin,elasticsearch,presto,trino,ozone,kudu,schema-registry,nestedstructure,polaris";
+	public static final String DEFAULT_BOOTSTRAP_SERVICEDEF_LIST = "tag,hdfs,hbase,hive,drill,kms,knox,storm,yarn,kafka,solr,atlas,nifi,nifi-registry,sqoop,kylin,elasticsearch,presto,trino,ozone,kudu,schema-registry,nestedstructure,polaris";
 	private static final String PROPERTY_SUPPORTED_SERVICE_DEFS = "ranger.supportedcomponents";
 	private Set<String> supportedServiceDefs;
 	public static final String EMBEDDED_SERVICEDEF_TAG_NAME  = "tag";
 	public static final String EMBEDDED_SERVICEDEF_HDFS_NAME  = "hdfs";
 	public static final String EMBEDDED_SERVICEDEF_HBASE_NAME = "hbase";
 	public static final String EMBEDDED_SERVICEDEF_HIVE_NAME  = "hive";
+	public static final String EMBEDDED_SERVICEDEF_DRILL_NAME = "drill";
 	public static final String EMBEDDED_SERVICEDEF_KMS_NAME   = "kms";
 	public static final String EMBEDDED_SERVICEDEF_KNOX_NAME  = "knox";
 	public static final String EMBEDDED_SERVICEDEF_STORM_NAME = "storm";
@@ -119,6 +120,7 @@ public class EmbeddedServiceDefsUtil {
 	private RangerServiceDef elasticsearchServiceDef;
 	private RangerServiceDef prestoServiceDef;
 	private RangerServiceDef trinoServiceDef;
+	private RangerServiceDef drillServiceDef;
 	private RangerServiceDef ozoneServiceDef;
 	private RangerServiceDef kuduServiceDef;
 	private RangerServiceDef nestedStructureServiveDef;
@@ -168,6 +170,7 @@ public class EmbeddedServiceDefsUtil {
 			abfsServiceDef = getOrCreateServiceDef(store, EMBEDDED_SERVICEDEF_ABFS_NAME);
 			elasticsearchServiceDef = getOrCreateServiceDef(store, EMBEDDED_SERVICEDEF_ELASTICSEARCH_NAME);
 			trinoServiceDef = getOrCreateServiceDef(store, EMBEDDED_SERVICEDEF_TRINO_NAME);
+			drillServiceDef = getOrCreateServiceDef(store, EMBEDDED_SERVICEDEF_DRILL_NAME);
 			prestoServiceDef = getOrCreateServiceDef(store, EMBEDDED_SERVICEDEF_PRESTO_NAME);
 			ozoneServiceDef = getOrCreateServiceDef(store, EMBEDDED_SERVICEDEF_OZONE_NAME);
 			kuduServiceDef = getOrCreateServiceDef(store, EMBEDDED_SERVICEDEF_KUDU_NAME);
@@ -250,6 +253,8 @@ public class EmbeddedServiceDefsUtil {
 	public long getAbfsServiceDefId() { return getId(abfsServiceDef); }
 
 	public long getTrinoServiceDefId() { return getId(trinoServiceDef); }
+
+	public long getDrillServiceDefId() { return getId(drillServiceDef); }
 
 	public long getPrestoServiceDefId() { return getId(prestoServiceDef); }
 
