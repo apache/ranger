@@ -1,0 +1,90 @@
+[
+  {
+    "comment": "filter resources tests for dev_hive"
+  },
+  {
+    "request": {
+      "requestId": "filter-resources: tbl1-r-user select",
+      "user":      { "name": "tbl1-r-user" },
+      "resources": [
+        { "name": "table:mydb/tbl1" },
+        { "name": "table:mydb/tbl2" },
+        { "name": "table:mydb/tbl3" },
+        { "name": "table:mydb2/tbl1" }
+      ],
+      "action": "select",
+      "permissions": [ "select" ],
+      "context":   { "serviceName": "dev_hive" }
+    },
+    "result": {
+      "requestId": "filter-resources: tbl1-r-user select",
+      "resources": [
+        { "name": "table:mydb/tbl1" }
+      ]
+    }
+  },
+  {
+    "request": {
+      "requestId": "filter-resources: all-tbl-r-user select",
+      "user":      { "name": "all-tbl-r-user" },
+      "resources": [
+        { "name": "table:mydb/tbl1" },
+        { "name": "table:mydb/tbl2" },
+        { "name": "table:mydb/tbl3" },
+        { "name": "table:mydb2/tbl1" }
+      ],
+      "action": "select",
+      "permissions": [ "select" ],
+      "context":   { "serviceName": "dev_hive" }
+    },
+    "result": {
+      "requestId": "filter-resources: all-tbl-r-user select",
+      "resources": [
+        { "name": "table:mydb/tbl1" },
+        { "name": "table:mydb/tbl2" },
+        { "name": "table:mydb/tbl3" }
+      ]
+    }
+  },
+  {
+    "request": {
+      "requestId": "filter-resources: tbl1-r-user select,update",
+      "user":      { "name": "tbl1-r-user" },
+      "resources": [
+        { "name": "table:mydb/tbl1" },
+        { "name": "table:mydb/tbl2" },
+        { "name": "table:mydb/tbl3" },
+        { "name": "table:mydb2/tbl1" }
+      ],
+      "action": "select",
+      "permissions": [ "select", "update" ],
+      "context":   { "serviceName": "dev_hive" }
+    },
+    "result": {
+      "requestId": "filter-resources: tbl1-r-user select,update",
+      "resources": [
+      ]
+    }
+  },
+  {
+    "request": {
+      "requestId": "filter-resources: tbl1-rw-user select,update",
+      "user":      { "name": "tbl1-rw-user" },
+      "resources": [
+        { "name": "table:mydb/tbl1" },
+        { "name": "table:mydb/tbl2" },
+        { "name": "table:mydb/tbl3" },
+        { "name": "table:mydb2/tbl1" }
+      ],
+      "action": "select",
+      "permissions": [ "select", "update" ],
+      "context":   { "serviceName": "dev_hive" }
+    },
+    "result": {
+      "requestId": "filter-resources: tbl1-rw-user select,update",
+      "resources": [
+        { "name": "table:mydb/tbl1" }
+      ]
+    }
+  }
+]

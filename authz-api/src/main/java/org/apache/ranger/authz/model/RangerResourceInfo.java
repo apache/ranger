@@ -121,12 +121,9 @@ public class RangerResourceInfo {
      * SELF: match policies for the requested resource only; this is the default
      *   - Example: name "database:db1" matches policies for "database:db1" but not "table:db1.tbl1"
      *   - Example: name "path:/d1/d2"  matches policies for "path:/d1/d2" but not "path:/d1/d2/f1"
-     * SELF_OR_ANY_CHILD: match policies for the requested resource and any of its direct child
-     *   - Example: name "path:/d1" matches policies for "path:/d1", "path:/d1/f1.txt", "path:/d1/f2.txt", "path:/d1/d2" but not "path:/d1/d2/f1.txt"
-     *   - Example: name "database:db1" matches policies for "database:db1", "table:db1.tbl1", "table:db1.tbl2" but not "column:db1.tbl1.col1"
-     * SELF_OR_ANY_DESCENDANT: match policies for the requested resource and any of its descendants
+q     * SELF_OR_ANY_DESCENDANT: match policies for the requested resource and any of its descendants
      *   - Example: name "path:/d1" matches policies for "path:/d1", "path:/d1/f1.txt", "path:/d1/d2/f1.txt", "path:/d1/d2/d3/f1.txt" but not "path:/d2/f1"
      *   - Example: name "database:db1" matches policies for "database:db1", "table:db1.tbl1", "column:db1.tbl1.col1" but not "database:db2"
      */
-    public enum ResourceMatchScope { SELF, SELF_OR_ANY_CHILD, SELF_OR_ANY_DESCENDANT }
+    public enum ResourceMatchScope { SELF, SELF_OR_ANY_DESCENDANT }
 }

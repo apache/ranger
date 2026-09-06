@@ -33,6 +33,7 @@ try:
     from apache_ranger.model.ranger_authz       import (
         RangerAccessContext, RangerAccessInfo, RangerAuthzRequest, RangerAuthzResult,
         RangerPermissionResult, RangerResourceInfo, RangerResultInfo, RangerUserInfo,
+        RangerFilterResourcesRequest, RangerFilterResourcesResult
     )
     from apache_ranger.model.ranger_gds         import (
         DatasetSummary, GdsPermission, GdsShareStatus, RangerDataset,
@@ -255,6 +256,36 @@ class TestPDPClient(unittest.TestCase):
             RangerAuthzRequest,
         )
         self.assertIsInstance(result, RangerAuthzResult)
+
+    def test_filter_resources_request_type_coercion(self):
+        req = {
+          "requestId":   "req-1",
+          "user":        {"name": "alice", "groups": ["analytics"]},
+          "resources":   [{"name": "table:default/sales", "subResources": ["column:id"]}],
+          "permissions": ["select"],
+          "action":      "QUERY" ,
+          "context":   {"serviceType": "hive", "serviceName": "dev_hive"}
+        }
+
+        request = RangerFilterResourcesRequest(req)
+        request.type_coerce_attrs()
+
+        self.assertIsInstance(request.user, RangerUserInfo)
+        self.assertIsInstance(request.resources[0], RangerResourceInfo)
+        self.assertIsInstance(request.context, RangerAccessContext)
+        self.assertEqual("alice", request.user.name)
+        self.assertEqual(["select"], request.permissions)
+
+    def test_filter_resources_result_type_coercion(self):
+        res = {
+          "requestId":   "req-1",
+          "resources":   [{"name": "table:default/sales", "subResources": ["column:id"]}]
+        }
+
+        result = RangerFilterResourcesResult(res)
+        result.type_coerce_attrs()
+
+        self.assertIsInstance(result.resources[0], RangerResourceInfo)
 
 
 if __name__ == '__main__':
