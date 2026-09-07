@@ -1030,7 +1030,15 @@ public class RangerBasePlugin {
     public void grantRole(GrantRevokeRoleRequest request, RangerAccessResultProcessor resultProcessor) throws Exception {
         LOG.debug("==> RangerBasePlugin.grantRole({})", request);
 
-        getAdminClient().grantRole(request);
+        boolean isSuccess = false;
+
+        try {
+            getAdminClient().grantRole(request);
+
+            isSuccess = true;
+        } finally {
+            auditGrantRevokeRole(request, "GRANT_ROLE", isSuccess, resultProcessor);
+        }
 
         LOG.debug("<== RangerBasePlugin.grantRole({})", request);
     }
@@ -1038,7 +1046,15 @@ public class RangerBasePlugin {
     public void revokeRole(GrantRevokeRoleRequest request, RangerAccessResultProcessor resultProcessor) throws Exception {
         LOG.debug("==> RangerBasePlugin.revokeRole({})", request);
 
-        getAdminClient().revokeRole(request);
+        boolean isSuccess = false;
+
+        try {
+            getAdminClient().revokeRole(request);
+
+            isSuccess = true;
+        } finally {
+            auditGrantRevokeRole(request, "REVOKE_ROLE", isSuccess, resultProcessor);
+        }
 
         LOG.debug("<== RangerBasePlugin.revokeRole({})", request);
     }
@@ -1263,6 +1279,7 @@ public class RangerBasePlugin {
             accessRequest.setAction(action);
             accessRequest.setClientIPAddress(request.getClientIPAddress());
             accessRequest.setClientType(request.getClientType());
+            accessRequest.setClusterName(request.getClusterName());
             accessRequest.setRequestData(request.getRequestData());
             accessRequest.setSessionId(request.getSessionId());
 
@@ -1271,6 +1288,34 @@ public class RangerBasePlugin {
 
             if (accessResult != null && accessResult.getIsAudited()) {
                 accessRequest.setAccessType(action);
+                accessResult.setIsAllowed(isSuccess);
+
+                if (!isSuccess) {
+                    accessResult.setPolicyId(-1);
+                }
+
+                resultProcessor.processResult(accessResult);
+            }
+        }
+    }
+
+    private void auditGrantRevokeRole(GrantRevokeRoleRequest request, String action, boolean isSuccess, RangerAccessResultProcessor resultProcessor) {
+        if (request != null && resultProcessor != null) {
+            RangerAccessRequestImpl accessRequest = new RangerAccessRequestImpl();
+
+            accessRequest.setResource(new RangerAccessResourceImpl(Collections.singletonMap("global", "*")));
+            accessRequest.setUser(request.getGrantor());
+            accessRequest.setAccessType("alter");
+            accessRequest.setAction(action);
+            accessRequest.setClientIPAddress(request.getClientIPAddress());
+            accessRequest.setClientType(request.getClientType());
+            accessRequest.setRequestData(request.getRequestData());
+            accessRequest.setSessionId(request.getSessionId());
+
+            // call isAccessAllowed() to determine if audit is enabled or not
+            RangerAccessResult accessResult = isAccessAllowed(accessRequest, null);
+
+            if (accessResult != null && accessResult.getIsAudited()) {
                 accessResult.setIsAllowed(isSuccess);
 
                 if (!isSuccess) {
