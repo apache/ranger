@@ -26,7 +26,7 @@ realScriptPath=`readlink -f $0`
 realScriptDir=`dirname $realScriptPath`
 cd $realScriptDir
 cdir=`pwd`
-ranger_tagsync_max_heap_size=1g
+ranger_tagsync_max_heap_size=${RANGER_TAGSYNC_MAX_HEAP:-1g}
 
 for custom_env_script in `find ${cdir}/conf/ -name "ranger-tagsync-env*"`; do
         if [ -f $custom_env_script ]; then
@@ -49,7 +49,7 @@ if [ -z "${UNIX_TAGSYNC_USER}" ]; then
         UNIX_TAGSYNC_USER=ranger
 fi
 
-JAVA_OPTS=" ${JAVA_OPTS} -XX:MetaspaceSize=100m -XX:MaxMetaspaceSize=200m -Xmx${ranger_tagsync_max_heap_size} -Xms1g "
+JAVA_OPTS=" ${JAVA_OPTS} -XX:MetaspaceSize=${RANGER_JVM_METASPACE:-100m} -XX:MaxMetaspaceSize=${RANGER_JVM_MAX_METASPACE:-200m} -Xmx${ranger_tagsync_max_heap_size} -Xms${ranger_tagsync_max_heap_size} "
 
 if [ "${action}" == "START" ]; then
 

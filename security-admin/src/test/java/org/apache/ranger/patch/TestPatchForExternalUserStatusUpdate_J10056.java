@@ -35,9 +35,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.transaction.PlatformTransactionManager;
-import org.springframework.transaction.TransactionDefinition;
-import org.springframework.transaction.support.SimpleTransactionStatus;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
@@ -74,10 +71,8 @@ public class TestPatchForExternalUserStatusUpdate_J10056 {
             Mockito.when(daoMgr.getXXPortalUser()).thenReturn(xxPortalUserDao);
             Mockito.when(xxPortalUserDao.findByUserSourceAndStatus(Mockito.anyInt(), Mockito.anyInt()))
                     .thenReturn(Collections.emptyList());
-            PlatformTransactionManager txManager = Mockito.mock(PlatformTransactionManager.class);
 
             setIfPresent(patch, "daoManager", daoMgr);
-            setIfPresent(patch, "txManager", txManager);
             setIfPresent(patch, "svcDBStore", svcStore);
             setIfPresent(patch, "jsonUtil", new JSONUtil());
             setIfPresent(patch, "policyService", Mockito.mock(RangerPolicyService.class));
@@ -91,61 +86,25 @@ public class TestPatchForExternalUserStatusUpdate_J10056 {
     }
 
     @Test
-    public void testExecLoad_UpdatesUsersViaTransaction() {
+    public void testExecLoad_DoesNotReactivateDisabledExternalUsers() {
         PatchForExternalUserStatusUpdate_J10056 patch = new PatchForExternalUserStatusUpdate_J10056();
 
         RangerDaoManager daoMgr = Mockito.mock(RangerDaoManager.class);
         XXPortalUserDao xxPortalUserDao = Mockito.mock(XXPortalUserDao.class);
         Mockito.when(daoMgr.getXXPortalUser()).thenReturn(xxPortalUserDao);
 
-        // One disabled external user
         XXPortalUser user = new XXPortalUser();
         user.setLoginId("u1");
         user.setStatus(RangerCommonEnums.ACT_STATUS_DISABLED);
         Mockito.when(xxPortalUserDao.findByUserSourceAndStatus(Mockito.anyInt(), Mockito.anyInt()))
                 .thenReturn(Collections.singletonList(user));
 
-        // Mock tx template execute path via PlatformTransactionManager
-        PlatformTransactionManager txManager = Mockito.mock(PlatformTransactionManager.class);
         setIfPresent(patch, "daoManager", daoMgr);
-        setIfPresent(patch, "txManager", txManager);
-        Mockito.when(txManager.getTransaction(Mockito.any(TransactionDefinition.class)))
-                .thenReturn(new SimpleTransactionStatus());
-
-        // Capture update invocation executed inside lambda
-        Mockito.doAnswer(inv -> null).when(xxPortalUserDao).update(Mockito.any(XXPortalUser.class), Mockito.eq(true));
 
         patch.execLoad();
 
-        // status should be set to ACTIVE before dao.update
-        Assertions.assertEquals(RangerCommonEnums.ACT_STATUS_ACTIVE, user.getStatus());
-        Mockito.verify(xxPortalUserDao, Mockito.times(1)).update(Mockito.any(XXPortalUser.class), Mockito.eq(true));
-    }
-
-    @Test
-    public void testExecLoad_TransactionThrowsRuntime() {
-        PatchForExternalUserStatusUpdate_J10056 patch = new PatchForExternalUserStatusUpdate_J10056();
-
-        RangerDaoManager daoMgr = Mockito.mock(RangerDaoManager.class);
-        XXPortalUserDao xxPortalUserDao = Mockito.mock(XXPortalUserDao.class);
-        Mockito.when(daoMgr.getXXPortalUser()).thenReturn(xxPortalUserDao);
-        XXPortalUser user = new XXPortalUser();
-        user.setLoginId("u2");
-        user.setStatus(RangerCommonEnums.ACT_STATUS_DISABLED);
-        Mockito.when(xxPortalUserDao.findByUserSourceAndStatus(Mockito.anyInt(), Mockito.anyInt()))
-                .thenReturn(Collections.singletonList(user));
-
-        PlatformTransactionManager txManager = Mockito.mock(PlatformTransactionManager.class);
-        setIfPresent(patch, "daoManager", daoMgr);
-        setIfPresent(patch, "txManager", txManager);
-        Mockito.when(txManager.getTransaction(Mockito.any(TransactionDefinition.class)))
-                .thenReturn(new SimpleTransactionStatus());
-
-        // Simulate dao.update throwing
-        Mockito.doThrow(new RuntimeException("db fail")).when(xxPortalUserDao).update(Mockito.any(XXPortalUser.class),
-                Mockito.eq(true));
-
-        Assertions.assertThrows(RuntimeException.class, patch::execLoad);
+        Assertions.assertEquals(RangerCommonEnums.ACT_STATUS_DISABLED, user.getStatus());
+        Mockito.verify(xxPortalUserDao, Mockito.never()).update(Mockito.any(XXPortalUser.class), Mockito.eq(true));
     }
 
     @Test
@@ -157,7 +116,6 @@ public class TestPatchForExternalUserStatusUpdate_J10056 {
         Mockito.when(xxPortalUserDao.findByUserSourceAndStatus(Mockito.anyInt(), Mockito.anyInt()))
                 .thenReturn(Collections.emptyList());
         setIfPresent(patch, "daoManager", daoMgr);
-        setIfPresent(patch, "txManager", Mockito.mock(PlatformTransactionManager.class));
 
         patch.execLoad();
 
@@ -177,7 +135,6 @@ public class TestPatchForExternalUserStatusUpdate_J10056 {
                     }
                 });
         setIfPresent(patch, "daoManager", daoMgr);
-        setIfPresent(patch, "txManager", Mockito.mock(PlatformTransactionManager.class));
 
         patch.execLoad();
 

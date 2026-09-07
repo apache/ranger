@@ -45,7 +45,11 @@ function doLogin() {
 	}
 
 	var regexEmail = /^([a-zA-Z0-9_\.\-\+])+\@(([a-zA-Z0-9\-])+\.)+([a-zA-Z0-9]{2,4})+$/;
-	var regexPlain = /^([A-Za-z0-9_]|[\u00C0-\u017F])([a-z0-9,._\-+/@= ]|[\u00C0-\u017F])+$/i;
+	// ':' is only accepted in usernames (for SPIFFE IDs) when the admin config ranger.admin.spiffe.as.username.enabled is turned on.
+	var spiffeAsUsername = (typeof window !== 'undefined' && window.rangerSpiffeAsUsernameEnabled === true);
+	var regexPlain = spiffeAsUsername
+		? /^([A-Za-z0-9_]|[\u00C0-\u017F])([a-z0-9,._\-+/@=: ]|[\u00C0-\u017F])+$/i
+		: /^([A-Za-z0-9_]|[\u00C0-\u017F])([a-z0-9,._\-+/@= ]|[\u00C0-\u017F])+$/i;
 	
 	if(!regexPlain.test(userName)){
 		if(!regexEmail.test(userName)){

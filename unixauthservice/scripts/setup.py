@@ -212,11 +212,11 @@ def updatePropertyInJCKSFile(jcksFileName, propName, value):
     fn = jcksFileName
     if (value == ''):
         value = ' '
-    cmd = "java -cp './lib/*' %s create '%s' -value '%s' -provider jceks://file%s 2>&1" % (
+    cmd = "java -cp './ews/lib/*' %s create '%s' -value '%s' -provider jceks://file%s 2>&1" % (
     credUpdateClassName, propName, value, fn)
     ret = os.system(cmd)
     if (ret != 0):
-        print("ERROR: Unable update the JCKSFile(%s) for aliasName (%s)" % (fn, propName))
+        print("ERROR: Unable to update the JCKSFile(%s) for aliasName (%s)" % (fn, propName))
         sys.exit(1)
     return ret
 
@@ -256,7 +256,8 @@ def convertInstallPropsToXML(props):
             #	if (key.startswith("ranger.usersync.ldap") or key.startswith("ranger.usersync.group") or key.startswith("ranger.usersync.paged")):
             #		del ret[key]
         elif (syncSource == SYNC_SOURCE_LDAP):
-            ret['ranger.usersync.ldap.deltasync'] = "true"
+            if ('ranger.usersync.ldap.deltasync' not in ret or len(str(ret['ranger.usersync.ldap.deltasync'])) == 0):
+                ret['ranger.usersync.ldap.deltasync'] = "true"
             ldapPass = ret[SYNC_LDAP_BIND_PASSWORD_KEY]
             password_validation(ldapPass, SYNC_LDAP_BIND_PASSWORD_KEY)
             ret['ranger.usersync.source.impl.class'] = 'org.apache.ranger.ldapusersync.process.LdapUserGroupBuilder'

@@ -143,7 +143,7 @@ def main(argv):
 
 	if SYNC_LDAP_BIND_KEYSTOREPATH != "" or SYNC_POLICY_MGR_ALIAS != "" or SYNC_POLICY_MGR_USERNAME != "" or SYNC_POLICY_MGR_PASSWORD != "":
 		log("[I] Storing policymgr usersync password in credential store:","info")
-		cmd="%s -cp lib/* org.apache.ranger.credentialapi.buildks create %s -value %s  -provider jceks://file%s" %(JAVA_BIN,SYNC_POLICY_MGR_ALIAS,SYNC_POLICY_MGR_PASSWORD,SYNC_LDAP_BIND_KEYSTOREPATH)
+		cmd="%s -cp ews/lib/* org.apache.ranger.credentialapi.buildks create %s -value %s  -provider jceks://file%s" %(JAVA_BIN,SYNC_POLICY_MGR_ALIAS,SYNC_POLICY_MGR_PASSWORD,SYNC_LDAP_BIND_KEYSTOREPATH)
 		ret=subprocess.call(shlex.split(cmd))
 		if ret == 0:
 			cmd="chown %s:%s %s" %(unix_user,unix_group,SYNC_LDAP_BIND_KEYSTOREPATH)

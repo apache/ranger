@@ -25,6 +25,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.security.SecureClientLogin;
 import org.apache.http.HttpStatus;
 import org.apache.ranger.authorization.utils.JsonUtils;
+import org.apache.ranger.metrics.MetricCacheUtil;
 import org.apache.ranger.ugsyncutil.model.GroupUserInfo;
 import org.apache.ranger.ugsyncutil.model.UgsyncAuditInfo;
 import org.apache.ranger.ugsyncutil.model.UsersGroupRoleAssignments;
@@ -130,6 +131,7 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
     private boolean isUserSyncNameValidationEnabled;
     private boolean isSyncSourceValidationEnabled;
     private boolean isDnValidationEnabled;
+    private MetricCacheUtil metricCacheUtil = MetricCacheUtil.getInstance();
     private String  recordsToPullPerCall = "10";
     private String  currentSyncSource;
     private String  ldapUrl;
@@ -253,6 +255,9 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
 
         int noOfCachedUsers  = userCache.size();
         int noOfCachedGroups = groupCache.size();
+        metricCacheUtil.incrementMetric(MetricCacheUtil.MetricType.CACHE, MetricCacheUtil.NO_OF_CACHED_USERS, Long.valueOf(noOfCachedUsers));
+        metricCacheUtil.incrementMetric(MetricCacheUtil.MetricType.CACHE, MetricCacheUtil.NO_OF_CACHED_GROUPS, Long.valueOf(noOfCachedGroups));
+        metricCacheUtil.incrementMetric(MetricCacheUtil.MetricType.CACHE, MetricCacheUtil.NO_OF_CACHED_GROUPS_USERS, Long.valueOf(groupUsersCache.size()));
 
         switch (ugsyncAuditInfo.getSyncSource()) {
             case "LDAP/AD":
@@ -292,6 +297,9 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
         noOfModifiedUsers    = 0;
         noOfModifiedGroups   = 0;
         computeRolesForUsers = new HashSet<>();
+        metricCacheUtil.incrementMetric(MetricCacheUtil.MetricType.SYNCSOURCE, MetricCacheUtil.NO_OF_CACHED_USERS, Long.valueOf(sourceUsers.size()));
+        metricCacheUtil.incrementMetric(MetricCacheUtil.MetricType.SYNCSOURCE, MetricCacheUtil.NO_OF_CACHED_GROUPS, Long.valueOf(sourceGroups.size()));
+        metricCacheUtil.incrementMetric(MetricCacheUtil.MetricType.SYNCSOURCE, MetricCacheUtil.NO_OF_CACHED_GROUPS_USERS, Long.valueOf(sourceGroupUsers.size()));
 
         if (!isStartupFlag && computeDeletes) {
             LOG.info("Computing deleted users/groups");
@@ -1076,12 +1084,15 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
                 try {
                     ret            = Integer.parseInt(response);
                     uploadedCount += pageSize;
+                    metricCacheUtil.incrementMetric(MetricCacheUtil.MetricType.API, MetricCacheUtil.ADD_USER_COUNT_SUCCESS, 1L);
                 } catch (NumberFormatException e) {
                     LOG.error("Failed to addOrUpdateUsers {}", uploadedCount, e);
+                    metricCacheUtil.incrementMetric(MetricCacheUtil.MetricType.API, MetricCacheUtil.ADD_USER_COUNT_FAIL, 1L);
                     throw e;
                 }
             } else {
                 LOG.error("Failed to addOrUpdateUsers {}", uploadedCount);
+                metricCacheUtil.incrementMetric(MetricCacheUtil.MetricType.API, MetricCacheUtil.ADD_USER_COUNT_FAIL, 1L);
                 throw new Exception("Failed to addOrUpdateUsers" + uploadedCount);
             }
 
@@ -1108,6 +1119,7 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
                 }
             } catch (Throwable t) {
                 LOG.error("Failed to get response, Error is : ", t);
+                checkFailureApis(uri);
                 throw t;
             } finally {
                 if (clientRes != null) {
@@ -1180,12 +1192,15 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
                 try {
                     ret            = Integer.parseInt(response);
                     uploadedCount += pageSize;
+                    metricCacheUtil.incrementMetric(MetricCacheUtil.MetricType.API, MetricCacheUtil.ADD_GROUP_COUNT_SUCCESS, 1L);
                 } catch (NumberFormatException e) {
                     LOG.error("Failed to addOrUpdateGroups {}", uploadedCount, e);
+                    metricCacheUtil.incrementMetric(MetricCacheUtil.MetricType.API, MetricCacheUtil.ADD_GROUP_COUNT_FAIL, 1L);
                     throw e;
                 }
             } else {
                 LOG.error("Failed to addOrUpdateGroups {}", uploadedCount);
+                metricCacheUtil.incrementMetric(MetricCacheUtil.MetricType.API, MetricCacheUtil.ADD_GROUP_COUNT_FAIL, 1L);
                 throw new Exception("Failed to addOrUpdateGroups " + uploadedCount);
             }
 
@@ -1249,12 +1264,15 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
                 try {
                     ret            = Integer.parseInt(response);
                     uploadedCount += pageSize;
+                    metricCacheUtil.incrementMetric(MetricCacheUtil.MetricType.API, MetricCacheUtil.GROUP_USER_COUNT_SUCCESS, 1L);
                 } catch (NumberFormatException e) {
                     LOG.error("Failed to addOrUpdateGroupUsers {}", uploadedCount, e);
+                    metricCacheUtil.incrementMetric(MetricCacheUtil.MetricType.API, MetricCacheUtil.GROUP_USER_COUNT_FAIL, 1L);
                     throw e;
                 }
             } else {
                 LOG.error("Failed to addOrUpdateGroupUsers {}", uploadedCount);
+                metricCacheUtil.incrementMetric(MetricCacheUtil.MetricType.API, MetricCacheUtil.GROUP_USER_COUNT_FAIL, 1L);
                 throw new Exception("Failed to addOrUpdateGroupUsers " + uploadedCount);
             }
 
@@ -1387,28 +1405,43 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
 
         checkStatus();
 
-        String         response  = null;
-        Response clientRes = null;
+        String response = null;
 
         if (isRangerCookieEnabled) {
             response = cookieBasedUploadEntity(userInfo, PM_AUDIT_INFO_URI);
         } else {
             try {
-                clientRes = ldapUgSyncClient.post(PM_AUDIT_INFO_URI, null, userInfo);
+                Response clientRes = ldapUgSyncClient.post(PM_AUDIT_INFO_URI, null, userInfo);
 
                 if (clientRes != null) {
                     response = clientRes.readEntity(String.class);
                 }
             } catch (Throwable t) {
                 LOG.error("Failed to get response, Error is : ", t);
+                metricCacheUtil.incrementMetric(MetricCacheUtil.MetricType.API, MetricCacheUtil.AUDIT_COUNT_FAIL, 1L);
+                LOG.debug("<== PolicyMgrUserGroupBuilder.getUserGroupAuditInfo()");
+                return;
             }
         }
 
         LOG.debug("REST response from {} : {}", PM_AUDIT_INFO_URI, response);
 
-        JsonUtils.jsonToObject(response, UgsyncAuditInfo.class);
+        if (StringUtils.isNotEmpty(response)) {
+            try {
+                JsonUtils.jsonToObject(response, UgsyncAuditInfo.class);
+                metricCacheUtil.incrementMetric(MetricCacheUtil.MetricType.API, MetricCacheUtil.AUDIT_COUNT_SUCCESS, 1L);
+                LOG.debug("AuditInfo Creation successful ");
+            } catch (Exception e) {
+                LOG.error("Failed to parse audit info response", e);
+                metricCacheUtil.incrementMetric(MetricCacheUtil.MetricType.API, MetricCacheUtil.AUDIT_COUNT_FAIL, 1L);
+            }
+        } else {
+            LOG.error("Failed to post audit info - empty response from {}", PM_AUDIT_INFO_URI);
+            if (!isRangerCookieEnabled) {
+                metricCacheUtil.incrementMetric(MetricCacheUtil.MetricType.API, MetricCacheUtil.AUDIT_COUNT_FAIL, 1L);
+            }
+        }
 
-        LOG.debug("AuditInfo Creation successful ");
         LOG.debug("<== PolicyMgrUserGroupBuilder.getUserGroupAuditInfo()");
     }
 
@@ -1454,6 +1487,7 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
             clientResp = ldapUgSyncClient.post(apiURL, null, obj, sessionId);
         } catch (Throwable t) {
             LOG.error("Failed to get response, Error is : ", t);
+            checkFailureApis(apiURL);
         }
 
         if (clientResp != null) {
@@ -1462,9 +1496,11 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
                 clientResp = Response.status(HttpStatus.SC_NOT_FOUND).entity("Resource not found.").build();
                 sessionId           = null;
                 isValidRangerCookie = false;
+                checkFailureApis(apiURL);
             } else if (clientResp.getStatus() == HttpStatus.SC_UNAUTHORIZED) {
                 sessionId           = null;
                 isValidRangerCookie = false;
+                checkFailureApis(apiURL);
             } else if (clientResp.getStatus() == HttpStatus.SC_NO_CONTENT || clientResp.getStatus() == HttpStatus.SC_OK) {
                 Collection<NewCookie> respCookieList = clientResp.getCookies().values();
                 for (NewCookie cookie : respCookieList) {
@@ -1503,13 +1539,16 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
             clientResp = ldapUgSyncClient.post(apiURL, null, obj);
         } catch (Throwable t) {
             LOG.error("Failed to get response, Error is : ", t);
+            checkFailureApis(apiURL);
         }
 
         if (clientResp != null) {
             if (!(clientResp.toString().contains(apiURL))) {
                 clientResp = Response.status(HttpStatus.SC_NOT_FOUND).entity("Resource not found.").build();
+                checkFailureApis(apiURL);
             } else if (clientResp.getStatus() == HttpStatus.SC_UNAUTHORIZED) {
                 LOG.warn("Credentials response from ranger is 401.");
+                checkFailureApis(apiURL);
             } else if (clientResp.getStatus() == HttpStatus.SC_OK || clientResp.getStatus() == HttpStatus.SC_NO_CONTENT) {
                 cookieList = clientResp.getCookies().values();
                 for (NewCookie cookie : cookieList) {
@@ -1832,6 +1871,7 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
                 }
             } catch (Throwable t) {
                 LOG.error("Failed to get response, Error is : ", t);
+                metricCacheUtil.incrementMetric(MetricCacheUtil.MetricType.API, MetricCacheUtil.DELETE_GROUP_COUNT_FAIL, 1L);
             }
         }
 
@@ -1840,12 +1880,15 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
         if (response != null) {
             try {
                 ret = Integer.parseInt(response);
+                metricCacheUtil.incrementMetric(MetricCacheUtil.MetricType.API, MetricCacheUtil.DELETE_GROUP_COUNT_SUCCESS, 1L);
             } catch (NumberFormatException e) {
                 LOG.error("Failed to update deleted groups", e);
+                metricCacheUtil.incrementMetric(MetricCacheUtil.MetricType.API, MetricCacheUtil.DELETE_GROUP_COUNT_FAIL, 1L);
                 throw e;
             }
         } else {
             LOG.error("Failed to update deleted groups ");
+            metricCacheUtil.incrementMetric(MetricCacheUtil.MetricType.API, MetricCacheUtil.DELETE_GROUP_COUNT_FAIL, 1L);
             throw new Exception("Failed to update deleted groups ");
         }
 
@@ -1960,6 +2003,7 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
                 }
             } catch (Throwable t) {
                 LOG.error("Failed to get response, Error is : ", t);
+                metricCacheUtil.incrementMetric(MetricCacheUtil.MetricType.API, MetricCacheUtil.DELETE_USER_COUNT_FAIL, 1L);
             }
         }
 
@@ -1968,12 +2012,15 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
         if (response != null) {
             try {
                 ret = Integer.parseInt(response);
+                metricCacheUtil.incrementMetric(MetricCacheUtil.MetricType.API, MetricCacheUtil.DELETE_USER_COUNT_SUCCESS, 1L);
             } catch (NumberFormatException e) {
                 LOG.error("Failed to update deleted users", e);
+                metricCacheUtil.incrementMetric(MetricCacheUtil.MetricType.API, MetricCacheUtil.DELETE_USER_COUNT_FAIL, 1L);
                 throw e;
             }
         } else {
             LOG.error("Failed to update deleted users ");
+            metricCacheUtil.incrementMetric(MetricCacheUtil.MetricType.API, MetricCacheUtil.DELETE_USER_COUNT_FAIL, 1L);
             throw new Exception("Failed to update deleted users ");
         }
 
@@ -1987,6 +2034,22 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
         if (!UserGroupSyncConfig.isUgsyncServiceActive()) {
             LOG.error(ERR_MSG_FOR_INACTIVE_SERVER);
             throw new RuntimeException(ERR_MSG_FOR_INACTIVE_SERVER);
+        }
+    }
+
+    private void checkFailureApis(String apiURL) {
+        if (apiURL.equalsIgnoreCase(PM_ADD_GROUPS_URI)) {
+            metricCacheUtil.incrementMetric(MetricCacheUtil.MetricType.API, MetricCacheUtil.ADD_GROUP_COUNT_FAIL, 1L);
+        } else if (apiURL.equalsIgnoreCase(PM_ADD_GROUP_USER_LIST_URI)) {
+            metricCacheUtil.incrementMetric(MetricCacheUtil.MetricType.API, MetricCacheUtil.GROUP_USER_COUNT_FAIL, 1L);
+        } else if (apiURL.equalsIgnoreCase(PM_ADD_USERS_URI)) {
+            metricCacheUtil.incrementMetric(MetricCacheUtil.MetricType.API, MetricCacheUtil.ADD_USER_COUNT_FAIL, 1L);
+        } else if (apiURL.equalsIgnoreCase(PM_AUDIT_INFO_URI)) {
+            metricCacheUtil.incrementMetric(MetricCacheUtil.MetricType.API, MetricCacheUtil.AUDIT_COUNT_FAIL, 1L);
+        } else if (apiURL.equalsIgnoreCase(PM_UPDATE_DELETED_USERS_URI)) {
+            metricCacheUtil.incrementMetric(MetricCacheUtil.MetricType.API, MetricCacheUtil.DELETE_USER_COUNT_FAIL, 1L);
+        } else if (apiURL.equalsIgnoreCase(PM_UPDATE_DELETED_GROUPS_URI)) {
+            metricCacheUtil.incrementMetric(MetricCacheUtil.MetricType.API, MetricCacheUtil.DELETE_GROUP_COUNT_FAIL, 1L);
         }
     }
 

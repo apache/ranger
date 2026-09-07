@@ -38,6 +38,7 @@ services:
       - ./dist/ranger-${OZONE_PLUGIN_VERSION}-ozone-plugin:/opt/hadoop/ranger-ozone-plugin
       - ./dist/keytabs/om:/etc/keytabs
       - ./scripts/kdc/krb5.conf:/etc/krb5.conf:ro
+      - ./scripts/ozone/ozone-service-start.sh:/opt/ozone-service-start.sh:ro
     networks:
       - ranger
     ports:
@@ -60,8 +61,9 @@ services:
       RANGER_KERBEROS_ENABLED: ${KERBEROS_ENABLED}
     env_file:
       - ./scripts/ozone/docker-config
+    restart: on-failure:3
     # Do not pass KERBEROS_ENABLED: Ozone libexec/entrypoint.sh waits for krb5:8081.
-    command: bash -c "unset KERBEROS_ENABLED; source /opt/hadoop/ranger-ozone-plugin/ranger-ozone-setup.sh && (test -f /data/metadata/om/current/VERSION || /opt/hadoop/bin/ozone om --init) && exec /opt/hadoop/bin/ozone om"
+    command: bash -c "unset KERBEROS_ENABLED; export OZONE_KEYTAB_NAME=om.keytab; bash /opt/ozone-service-start.sh bash -c 'source /opt/hadoop/ranger-ozone-plugin/ranger-ozone-setup.sh && (test -f /data/metadata/om/current/VERSION || /opt/hadoop/bin/ozone om --init) && exec /opt/hadoop/bin/ozone om'"
   scm:
     image: ${OZONE_RUNNER_IMAGE}:${OZONE_RUNNER_VERSION}
     container_name: ozone-scm

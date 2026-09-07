@@ -59,13 +59,33 @@ def appendTextElement(name, value):
 
 def get_ranger_classpath():
 	global conf_dict
-	cp = [ os.path.join(conf_dict["INSTALL_DIR"],"dist","*"), os.path.join(conf_dict["INSTALL_DIR"],"lib","*"), os.path.join(conf_dict["INSTALL_DIR"], 'conf')]
+	install_dir = conf_dict["INSTALL_DIR"]
+	webapp = os.path.join(install_dir, "ews", "webapp")
+	cp = [
+		os.path.join(install_dir, "dist", "*"),
+		os.path.join(install_dir, "conf"),
+		os.path.join(webapp, "WEB-INF", "classes"),
+		os.path.join(install_dir, "ews", "lib", "*"),
+		os.path.join(webapp, "WEB-INF", "lib", "*"),
+	]
 	class_path = get_class_path(cp)
 	return class_path
 
 def get_jdk_options():
     global conf_dict
-    return [os.getenv('RANGER_PROPERTIES', ''), "-Dlogdir="+os.getenv("RANGER_LOG_DIR")]
+    install_dir = conf_dict["INSTALL_DIR"]
+    webapp = os.path.join(install_dir, "ews", "webapp")
+    log_dir = os.getenv("RANGER_USERSYNC_LOG_DIR", "/var/log/ranger/usersync")
+    ranger_log_dir = os.getenv("RANGER_LOG_DIR", os.path.join(install_dir, "logs"))
+    return [
+        os.getenv('RANGER_PROPERTIES', ''),
+        "-Dlogdir=" + ranger_log_dir,
+        "-Dranger.usersync.log.dir=" + log_dir,
+        "-Dranger.usersync.webapp.dir=" + webapp,
+        "-Dcatalina.base=" + os.path.join(install_dir, "ews"),
+        "-Dranger.usersync.home=" + install_dir,
+        "-Dlogback.configurationFile=file:" + os.path.join(install_dir, "conf", "logback.xml"),
+    ]
 
 def init_variables():
 	global  INSTALL_DIR,RANGER_USERSYNC_HOME, conf_dict
@@ -99,8 +119,8 @@ if service_entry:
 		init_variables()
 		jdk_options = get_jdk_options()
 		class_path = get_ranger_classpath()
-		java_class = 'org.apache.ranger.authentication.UnixAuthenticationService'
-		class_arguments = ''
+		java_class = 'org.apache.ranger.authentication.server.RangerUserSyncServer'
+		class_arguments = '-enableUnixAuth'
 
 		dom = getDOMImplementation()
 		xmlDoc = dom.createDocument(None, 'service', None)

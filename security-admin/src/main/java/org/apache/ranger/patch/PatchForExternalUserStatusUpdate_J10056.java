@@ -26,21 +26,13 @@ import org.apache.ranger.util.CLIUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.PlatformTransactionManager;
-import org.springframework.transaction.TransactionDefinition;
-import org.springframework.transaction.support.TransactionTemplate;
 
 import java.util.List;
 
 @Component
 public class PatchForExternalUserStatusUpdate_J10056 extends BaseLoader {
     private static final Logger logger = LoggerFactory.getLogger(PatchForExternalUserStatusUpdate_J10056.class);
-
-    @Autowired
-    @Qualifier(value = "transactionManager")
-    PlatformTransactionManager txManager;
 
     @Autowired
     private RangerDaoManager daoManager;
@@ -84,26 +76,17 @@ public class PatchForExternalUserStatusUpdate_J10056 extends BaseLoader {
         XXPortalUserDao    dao           = this.daoManager.getXXPortalUser();
         List<XXPortalUser> xXPortalUsers = dao.findByUserSourceAndStatus(RangerCommonEnums.USER_EXTERNAL, RangerCommonEnums.ACT_STATUS_DISABLED);
 
-        if (CollectionUtils.isNotEmpty(xXPortalUsers)) {
-            for (XXPortalUser xxPortalUser : xXPortalUsers) {
-                if (xxPortalUser != null) {
-                    xxPortalUser.setStatus(RangerCommonEnums.ACT_STATUS_ACTIVE);
+        if (CollectionUtils.isEmpty(xXPortalUsers)) {
+            return;
+        }
 
-                    TransactionTemplate txTemplate = new TransactionTemplate(txManager);
+        // Do not bulk-reactivate external disabled users. Disabled is a valid administrative state (see XUserREST.modifyUserActiveStatus),
+        // and this patch cannot distinguish accounts left disabled by an old usersync bug from accounts disabled on purpose.
+        logger.warn("updateExternalUserStatus(): Skipping automatic reactivation of {} external disabled user(s). Re-enable affected accounts explicitly via Ranger Admin if required.", xXPortalUsers.size());
 
-                    txTemplate.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
-
-                    try {
-                        txTemplate.execute(status -> {
-                            dao.update(xxPortalUser, true);
-
-                            return null;
-                        });
-                    } catch (Throwable ex) {
-                        logger.error("updateExternalUserStatus(): Failed to update DB for user: {}", xxPortalUser.getLoginId(), ex);
-                        throw new RuntimeException(ex);
-                    }
-                }
+        for (XXPortalUser xxPortalUser : xXPortalUsers) {
+            if (xxPortalUser != null) {
+                logger.warn("updateExternalUserStatus(): Left unchanged (loginId={})", xxPortalUser.getLoginId());
             }
         }
     }

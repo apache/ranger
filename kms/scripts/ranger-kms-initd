@@ -65,14 +65,23 @@ start)
 		exit 1
 	else
 		echo "Starting Apache Ranger KMS."
-		/bin/su --login  $LINUX_USER -c "${BIN_PATH}/${MOD_NAME} start"
+		if [ -n "${LINUX_USER}" ]; then
+			# -m preserves environment (e.g. RANGER_KMS_MAX_HEAP).
+			/bin/su -m "${LINUX_USER}" -c "${BIN_PATH}/${MOD_NAME} start"
+		else
+			"${BIN_PATH}/${MOD_NAME}" start
+		fi
 	fi
 	;;
 stop)
 	if [ "${pid}" != "" ]
 	then
 		echo "Stopping Apache Ranger KMS."
-		/bin/su --login  $LINUX_USER -c "${BIN_PATH}/${MOD_NAME} stop"
+		if [ -n "${LINUX_USER}" ]; then
+			/bin/su -m "${LINUX_USER}" -c "${BIN_PATH}/${MOD_NAME} stop"
+		else
+			"${BIN_PATH}/${MOD_NAME}" stop
+		fi
 	else
 		echo "Ranger KMS Service is NOT running"
 		exit 1
@@ -82,11 +91,19 @@ restart)
 	if [ "${pid}" != "" ]
 	then
 		echo "Stopping Apache Ranger KMS."
-		/bin/su --login  $LINUX_USER -c "${BIN_PATH}/${MOD_NAME} stop"
+		if [ -n "${LINUX_USER}" ]; then
+			/bin/su -m "${LINUX_USER}" -c "${BIN_PATH}/${MOD_NAME} stop"
+		else
+			"${BIN_PATH}/${MOD_NAME}" stop
+		fi
 		sleep 10
 	fi
 	echo "Starting Apache Ranger KMS."
-	/bin/su --login  $LINUX_USER -c "${BIN_PATH}/${MOD_NAME} start"
+	if [ -n "${LINUX_USER}" ]; then
+		/bin/su -m "${LINUX_USER}" -c "${BIN_PATH}/${MOD_NAME} start"
+	else
+		"${BIN_PATH}/${MOD_NAME}" start
+	fi
 	;;
 status)
 	if [ "${pid}" != "" ]

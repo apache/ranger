@@ -60,6 +60,8 @@ import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.security.UnrecoverableKeyException;
 import java.security.cert.CertificateException;
+import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
@@ -143,6 +145,7 @@ public class RangerRESTClient {
     private volatile Client       cookieAuthClient;
     private          JwtProvider  jwtProvider;
     private volatile String       authHeader;
+    private volatile Map<String, String> trustedAuthHeaders = Collections.emptyMap();
 
     public RangerRESTClient(String url, String sslConfigFileName, Configuration config) {
         this(url, sslConfigFileName, config, getPropertyPrefix(config));
@@ -213,6 +216,19 @@ public class RangerRESTClient {
 
     public void setRetryIntervalMs(int retryIntervalMs) {
         this.retryIntervalMs = retryIntervalMs;
+    }
+
+    /**
+     * Trusted HTTP headers for SPIFFE or other header-based auth.
+     * Applied to every REST request from this client.
+     */
+    public void setTrustedAuthHeaders(Map<String, String> headers) {
+        if (headers == null || headers.isEmpty()) {
+            trustedAuthHeaders = Collections.emptyMap();
+        } else {
+            trustedAuthHeaders = Collections.unmodifiableMap(new LinkedHashMap<>(headers));
+        }
+        resetClient();
     }
 
     public void setBasicAuthInfo(String username, String password) {
@@ -494,7 +510,15 @@ public class RangerRESTClient {
             builder = builder.cookie(sessionId);
         }
 
+        applyTrustedAuthHeaders(builder);
+
         return builder;
+    }
+
+    private void applyTrustedAuthHeaders(Invocation.Builder builder) {
+        for (Map.Entry<String, String> entry : trustedAuthHeaders.entrySet()) {
+            builder.header(entry.getKey(), entry.getValue());
+        }
     }
 
     private Response performRequest(HttpMethod method, String relativeUrl, Map<String, String> params, Object requestBody, Cookie sessionId) throws Exception {

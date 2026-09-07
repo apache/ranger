@@ -21,6 +21,7 @@ package org.apache.ranger.kms.metrics;
 import org.apache.ranger.kms.metrics.collector.KMSMetricsCollector;
 import org.apache.ranger.kms.metrics.source.KMSMetricSource;
 import org.apache.ranger.metrics.RangerMetricsSystemWrapper;
+import org.apache.ranger.metrics.source.RangerMetricsContainerSource;
 import org.apache.ranger.metrics.wrapper.RangerMetricsSourceWrapper;
 import org.apache.ranger.plugin.util.JsonUtilsV2;
 import org.slf4j.Logger;
@@ -74,6 +75,7 @@ public class KMSMetricWrapper {
         List<RangerMetricsSourceWrapper> sourceWrappers = new ArrayList<>();
 
         sourceWrappers.add(new RangerMetricsSourceWrapper("KMSMetricSource", "KMS metrics", KMSMetrics.KMS_METRICS_CONTEXT, kmsMetricSource));
+        sourceWrappers.add(new RangerMetricsSourceWrapper("RangerContainer", "Ranger web container metric source (RangerMetricsContainerSource)", KMSMetrics.KMS_METRICS_CONTEXT, new RangerMetricsContainerSource(KMSMetrics.KMS_METRICS_CONTEXT)));
 
         rangerMetricsSystemWrapper.init(KMSMetrics.KMS_METRICS_CONTEXT, sourceWrappers, null);
 

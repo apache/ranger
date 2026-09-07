@@ -34,9 +34,13 @@ services:
     environment:
       - RANGER_VERSION
       - RANGER_DB_TYPE
+      - AUDIT_INDEX_STORE
       - KERBEROS_ENABLED
       - DEBUG_ADMIN=${DEBUG_ADMIN:-false}
       - JAVA_OPTS
+      - RANGER_ADMIN_MAX_HEAP
+      - RANGER_JVM_METASPACE
+      - RANGER_JVM_MAX_METASPACE
     command:
       - /home/ranger/scripts/ranger.sh
 

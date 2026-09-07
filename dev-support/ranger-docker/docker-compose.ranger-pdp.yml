@@ -52,6 +52,9 @@ services:
       - PDP_VERSION
       - KERBEROS_ENABLED
       - DEBUG_PDP=${DEBUG_PDP:-false}
+      - RANGER_PDP_MAX_HEAP
+      - RANGER_JVM_METASPACE
+      - RANGER_JVM_MAX_METASPACE
 
 networks:
   ranger:

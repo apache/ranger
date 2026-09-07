@@ -299,4 +299,24 @@
 		<name>ranger-ugsync.server.ha.https.port</name>
 		<value></value>
 	</property>
+    <property>
+        <name>ranger.usersync.service.http.port</name>
+        <value></value>
+    </property>
+    <property>
+        <name>ranger.usersync.service.https.port</name>
+        <value></value>
+    </property>
+    <property>
+        <name>ranger.usersync.service.https.attrib.keystore.keyalias</name>
+        <value></value>
+    </property>
+    <property>
+        <name>ranger.usersync.service.https.attrib.keystore.credential.alias</name>
+        <value></value>
+    </property>
+    <property>
+        <name>ranger.usersync.service.host</name>
+        <value></value>
+    </property>
 </configuration>

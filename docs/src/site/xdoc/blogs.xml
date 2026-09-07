@@ -58,6 +58,16 @@
             Posted on Dec 10, 2023 by Madhan Neethiraj, Apache Ranger committer
         </div>
     </li>
+    <p/>
+    <li>
+        <p>
+            <a href="blogs/integrating_applications.html" target="_blank">Integrating applications with Apache Ranger</a>
+        </p>
+        Describes how applications can integrate with Apache Ranger through service definitions, embedded plugins, and the PDP server.<br/>
+        <div style="font-size: 90%;color: #999;">
+            Posted on Aug 24, 2026 by Madhan Neethiraj, Apache Ranger committer
+        </div>
+    </li>
 </ul>
 </section>
 </body>

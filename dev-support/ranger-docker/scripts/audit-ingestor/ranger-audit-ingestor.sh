@@ -56,8 +56,8 @@ export JAVA_HOME=${JAVA_HOME:-/opt/java/openjdk}
 export PATH=$JAVA_HOME/bin:$PATH
 export AUDIT_SERVER_LOG_DIR=${AUDIT_SERVER_LOG_DIR}
 
-# Set heap size (support both old and new env var names)
-AUDIT_SERVER_HEAP="${AUDIT_INGESTOR_HEAP:-${AUDIT_SERVER_HEAP:--Xms512m -Xmx2g}}"
+# Heap from RANGER_AUDIT_INGESTOR_MAX_HEAP (set in .env / docker compose).
+AUDIT_SERVER_HEAP="-Xms${RANGER_AUDIT_INGESTOR_MAX_HEAP} -Xmx${RANGER_AUDIT_INGESTOR_MAX_HEAP}"
 export AUDIT_SERVER_HEAP
 
 # Set JVM options including logback configuration (support both old and new env var names)
@@ -68,7 +68,7 @@ if [ -z "$AUDIT_SERVER_OPTS" ] && [ -z "$AUDIT_INGESTOR_OPTS" ]; then
   AUDIT_SERVER_OPTS="${AUDIT_SERVER_OPTS} -Djava.net.preferIPv4Stack=true -server"
   AUDIT_SERVER_OPTS="${AUDIT_SERVER_OPTS} -XX:+UseG1GC -XX:MaxGCPauseMillis=200"
   AUDIT_SERVER_OPTS="${AUDIT_SERVER_OPTS} -XX:InitiatingHeapOccupancyPercent=35"
-  AUDIT_SERVER_OPTS="${AUDIT_SERVER_OPTS} -XX:ConcGCThreads=4 -XX:ParallelGCThreads=8"
+  AUDIT_SERVER_OPTS="${AUDIT_SERVER_OPTS} -XX:ConcGCThreads=2 -XX:ParallelGCThreads=2"
 else
   AUDIT_SERVER_OPTS="${AUDIT_INGESTOR_OPTS:-${AUDIT_SERVER_OPTS}}"
 fi
@@ -125,6 +125,14 @@ export RANGER_CLASSPATH
 
 echo "[INFO] Starting Ranger Audit Ingestor Service (refactored module)..."
 echo "[INFO] Webapp dir: ${WEBAPP_DIR}"
+
+# Create the log file up front so the `tail` below always has something to open.
+# Without this there is a startup race on a fresh volume: the background `java`
+# redirect has not created catalina.out yet when `tail` runs, so `tail -f` exits
+# (status 1) on the missing file and, being PID 1, takes the whole container down
+# with it - long before the JVM has finished starting.
+touch ${AUDIT_SERVER_LOG_DIR}/catalina.out
+
 java ${AUDIT_SERVER_HEAP} ${AUDIT_SERVER_OPTS} \
   -Daudit.config=${AUDIT_SERVER_CONF_DIR}/ranger-audit-ingestor-site.xml \
   -cp "${RANGER_CLASSPATH}" \
@@ -136,5 +144,8 @@ echo $PID > ${AUDIT_SERVER_LOG_DIR}/ranger-audit-ingestor.pid
 
 echo "[INFO] Ranger Audit Ingestor started with PID: $PID"
 
-# Keep the container running by tailing logs
-tail -f ${AUDIT_SERVER_LOG_DIR}/catalina.out 2>/dev/null
+# Stream logs and keep the container tied to the JVM lifecycle. `tail -F` (retry)
+# survives log rotation / a not-yet-created file, and `wait $PID` makes the
+# container exit with the JVM's exit code instead of outliving a dead process.
+tail -F ${AUDIT_SERVER_LOG_DIR}/catalina.out 2>/dev/null &
+wait $PID

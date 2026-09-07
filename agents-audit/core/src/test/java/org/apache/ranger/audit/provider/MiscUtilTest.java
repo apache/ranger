@@ -29,6 +29,7 @@ import java.lang.reflect.Field;
 import java.nio.file.Path;
 import java.security.PrivilegedAction;
 import java.security.PrivilegedExceptionAction;
+import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
@@ -125,8 +126,9 @@ class MiscUtilTest {
     void testGetFormattedTime() {
         long timestamp = 1609459200000L; // 2021-01-01 00:00:00 UTC
 
-        // Test with valid format
-        assertEquals("2021-01-01", MiscUtil.getFormattedTime(timestamp, "yyyy-MM-dd"));
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+        String expected = sdf.format(timestamp);
+        assertEquals(expected, MiscUtil.getFormattedTime(timestamp, "yyyy-MM-dd"));
 
         // Test with invalid format
         assertNull(MiscUtil.getFormattedTime(timestamp, "invalid"));

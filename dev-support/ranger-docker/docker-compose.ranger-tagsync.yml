@@ -30,6 +30,9 @@ services:
       - DEBUG_TAGSYNC=${DEBUG_TAGSYNC:-false}
       - KERBEROS_ENABLED
       - JAVA_OPTS
+      - RANGER_TAGSYNC_MAX_HEAP
+      - RANGER_JVM_METASPACE
+      - RANGER_JVM_MAX_METASPACE
 
 networks:
   ranger:

@@ -18,6 +18,7 @@
 package org.apache.ranger.biz;
 
 import org.apache.commons.collections.ListUtils;
+import org.apache.hadoop.thirdparty.com.google.common.base.Joiner;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
@@ -124,6 +125,7 @@ import org.apache.ranger.plugin.policyresourcematcher.RangerPolicyResourceMatche
 import org.apache.ranger.plugin.service.RangerBaseService;
 import org.apache.ranger.plugin.store.PList;
 import org.apache.ranger.plugin.store.ServicePredicateUtil;
+import org.apache.ranger.plugin.util.PasswordUtils;
 import org.apache.ranger.plugin.util.RangerPolicyDeltaUtil;
 import org.apache.ranger.plugin.util.RangerPurgeResult;
 import org.apache.ranger.plugin.util.SearchFilter;
@@ -156,6 +158,7 @@ import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
@@ -980,6 +983,296 @@ public class TestServiceDBStore {
         Assertions.assertEquals(dbRangerService.getType(), rangerService.getType());
         Assertions.assertEquals(dbRangerService.getVersion(), rangerService.getVersion());
         Mockito.verify(daoMgr).getXXUser();
+    }
+
+    @Test
+    public void test20aCreateServiceEncryptsAllServiceDefTypePasswordConfigs() throws Exception {
+        final String keyKeystorePwd = "nifi.ssl.keystorePassword";
+        final String keyTruststorePwd = "nifi.ssl.truststorePassword";
+        final String keyUrl = "nifi.url";
+        final String plainKeystorePwd = "s3cr3t-keystore";
+        final String plainTruststorePwd = "s3cr3t-truststore";
+        final String plainUrl = "https://nifi.example.com:8443/nifi-api";
+
+        XXServiceDao xServiceDao = Mockito.mock(XXServiceDao.class);
+        XXServiceConfigMapDao xServiceConfigMapDao = Mockito.mock(XXServiceConfigMapDao.class);
+        XXUserDao xUserDao = Mockito.mock(XXUserDao.class);
+        XXServiceConfigDefDao xServiceConfigDefDao = Mockito.mock(XXServiceConfigDefDao.class);
+        XXService xService = Mockito.mock(XXService.class);
+
+        Map<String, String> configs = new HashMap<>();
+        configs.put(keyKeystorePwd, plainKeystorePwd);
+        configs.put(keyTruststorePwd, plainTruststorePwd);
+        configs.put(keyUrl, plainUrl);
+
+        RangerService rangerService = new RangerService();
+        rangerService.setId(Id);
+        rangerService.setName("nifi-svc");
+        rangerService.setType("nifi");
+        rangerService.setConfigs(configs);
+        rangerService.setIsEnabled(true);
+
+        List<XXServiceConfigDef> nifiPasswordDefs = Arrays.asList(
+                serviceConfigDef(keyKeystorePwd, "password"),
+                serviceConfigDef(keyTruststorePwd, "password"),
+                serviceConfigDef(keyUrl, "string"));
+
+        Mockito.when(daoMgr.getXXServiceConfigDef()).thenReturn(xServiceConfigDefDao);
+        Mockito.when(xServiceConfigDefDao.findByServiceDefName("nifi")).thenReturn(nifiPasswordDefs);
+        Mockito.when(xServiceConfigDefDao.findConfigNamesByServiceDefNameAndType("nifi", ServiceDBStore.CONFIG_TYPE_PASSWORD)).thenReturn(Arrays.asList(keyKeystorePwd, keyTruststorePwd));
+
+        Mockito.when(svcService.create(rangerService)).thenReturn(rangerService);
+        Mockito.when(daoMgr.getXXService()).thenReturn(xServiceDao);
+        Mockito.when(xServiceDao.getById(rangerService.getId())).thenReturn(xService);
+        Mockito.when(daoMgr.getXXServiceConfigMap()).thenReturn(xServiceConfigMapDao);
+        Mockito.when(daoMgr.getXXUser()).thenReturn(xUserDao);
+
+        Mockito.when(svcService.getPopulatedViewObject(xService)).thenReturn(rangerService);
+        Mockito.when(rangerAuditFields.populateAuditFields(Mockito.any(XXServiceConfigMap.class), Mockito.any(XXService.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+        ServiceDBStore spy = Mockito.spy(serviceDBStore);
+        Mockito.doNothing().when(spy).createDefaultPolicies(rangerService);
+
+        spy.createService(rangerService);
+
+        ArgumentCaptor<XXServiceConfigMap> captor = ArgumentCaptor.forClass(XXServiceConfigMap.class);
+        Mockito.verify(xServiceConfigMapDao, Mockito.times(3)).create(captor.capture());
+
+        Map<String, String> persisted = new HashMap<>();
+        for (XXServiceConfigMap m : captor.getAllValues()) {
+            persisted.put(m.getConfigkey(), m.getConfigvalue());
+        }
+
+        Assertions.assertNotEquals(plainKeystorePwd, persisted.get(keyKeystorePwd), "keystore password must be encrypted, not stored in cleartext");
+        Assertions.assertNotEquals(plainTruststorePwd, persisted.get(keyTruststorePwd), "truststore password must be encrypted, not stored in cleartext");
+        Assertions.assertTrue(persisted.get(keyKeystorePwd).contains(","), "encrypted value should carry the padded crypt-param prefix");
+        Assertions.assertTrue(persisted.get(keyTruststorePwd).contains(","), "encrypted value should carry the padded crypt-param prefix");
+        Assertions.assertEquals(plainUrl, persisted.get(keyUrl), "non-secret config must be stored verbatim");
+    }
+
+    @Test
+    public void test20aLiteralPasswordKeyStillEncryptedOnCreate() throws Exception {
+        final String keyPassword = "password";
+        final String keyUrl = "jdbc.url";
+        final String plainPassword = "s3cr3t";
+        final String plainUrl = "jdbc:hive2://localhost:10000";
+
+        XXServiceDao xServiceDao = Mockito.mock(XXServiceDao.class);
+        XXServiceConfigMapDao xServiceConfigMapDao = Mockito.mock(XXServiceConfigMapDao.class);
+        XXUserDao xUserDao = Mockito.mock(XXUserDao.class);
+        XXServiceConfigDefDao xServiceConfigDefDao = Mockito.mock(XXServiceConfigDefDao.class);
+        XXService xService = Mockito.mock(XXService.class);
+
+        Map<String, String> configs = new HashMap<>();
+        configs.put(keyPassword, plainPassword);
+        configs.put(keyUrl, plainUrl);
+
+        RangerService rangerService = new RangerService();
+        rangerService.setId(Id);
+        rangerService.setName("hive-svc");
+        rangerService.setType("hive");
+        rangerService.setConfigs(configs);
+        rangerService.setIsEnabled(true);
+
+        // no type="password" declarations at all for this service-def - only the literal key
+        // "password" should still get encrypted.
+        Mockito.when(daoMgr.getXXServiceConfigDef()).thenReturn(xServiceConfigDefDao);
+        Mockito.when(xServiceConfigDefDao.findByServiceDefName("hive")).thenReturn(Collections.emptyList());
+
+        Mockito.when(svcService.create(rangerService)).thenReturn(rangerService);
+        Mockito.when(daoMgr.getXXService()).thenReturn(xServiceDao);
+        Mockito.when(xServiceDao.getById(rangerService.getId())).thenReturn(xService);
+        Mockito.when(daoMgr.getXXServiceConfigMap()).thenReturn(xServiceConfigMapDao);
+        Mockito.when(daoMgr.getXXUser()).thenReturn(xUserDao);
+
+        Mockito.when(svcService.getPopulatedViewObject(xService)).thenReturn(rangerService);
+        Mockito.when(rangerAuditFields.populateAuditFields(Mockito.any(XXServiceConfigMap.class), Mockito.any(XXService.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+        ServiceDBStore spy = Mockito.spy(serviceDBStore);
+        Mockito.doNothing().when(spy).createDefaultPolicies(rangerService);
+
+        spy.createService(rangerService);
+
+        ArgumentCaptor<XXServiceConfigMap> captor = ArgumentCaptor.forClass(XXServiceConfigMap.class);
+        Mockito.verify(xServiceConfigMapDao, Mockito.times(2)).create(captor.capture());
+
+        Map<String, String> persisted = new HashMap<>();
+        for (XXServiceConfigMap m : captor.getAllValues()) {
+            persisted.put(m.getConfigkey(), m.getConfigvalue());
+        }
+
+        Assertions.assertNotEquals(plainPassword, persisted.get(keyPassword), "the legacy literal 'password' key must still be encrypted, not stored in cleartext");
+        Assertions.assertTrue(persisted.get(keyPassword).contains(","), "encrypted value should carry the padded crypt-param prefix");
+        Assertions.assertEquals(plainUrl, persisted.get(keyUrl), "non-secret config must be stored verbatim");
+    }
+
+    @Test
+    public void test20bUpdateServicePreservesPerKeyEncryptedValueOnHiddenSentinel() throws Exception {
+        final String keyKeystorePwd = "nifi.ssl.keystorePassword";
+        final String keyTruststorePwd = "nifi.ssl.truststorePassword";
+
+        String oldKeystoreEncrypted = encryptForStorage("old-keystore-secret");
+        String oldTruststoreEncrypted = encryptForStorage("old-truststore-secret");
+        Assertions.assertNotEquals(oldKeystoreEncrypted, oldTruststoreEncrypted, "test fixture sanity check");
+
+        XXServiceDao xServiceDao = Mockito.mock(XXServiceDao.class);
+        XXService xService = Mockito.mock(XXService.class);
+        XXServiceConfigMapDao xServiceConfigMapDao = Mockito.mock(XXServiceConfigMapDao.class);
+        XXServiceConfigDefDao xServiceConfigDefDao = Mockito.mock(XXServiceConfigDefDao.class);
+        XXUserDao xUserDao = Mockito.mock(XXUserDao.class);
+
+        Map<String, String> configs = new HashMap<>();
+        configs.put(keyKeystorePwd, ServiceDBStore.HIDDEN_PASSWORD_STR);
+        configs.put(keyTruststorePwd, ServiceDBStore.HIDDEN_PASSWORD_STR);
+
+        RangerService rangerService = new RangerService();
+        rangerService.setId(Id);
+        rangerService.setName("nifi-svc");
+        rangerService.setType("nifi");
+        rangerService.setConfigs(configs);
+        rangerService.setIsEnabled(true);
+
+        RangerService existing = new RangerService();
+        existing.setId(Id);
+        existing.setName("nifi-svc");
+        existing.setType("nifi");
+        existing.setIsEnabled(true);
+
+        List<XXServiceConfigDef> nifiPasswordDefs = Arrays.asList(
+                serviceConfigDef(keyKeystorePwd, "password"),
+                serviceConfigDef(keyTruststorePwd, "password"));
+
+        Mockito.when(daoMgr.getXXServiceConfigDef()).thenReturn(xServiceConfigDefDao);
+        Mockito.when(xServiceConfigDefDao.findByServiceDefName("nifi")).thenReturn(nifiPasswordDefs);
+        Mockito.when(xServiceConfigDefDao.findConfigNamesByServiceDefNameAndType("nifi", ServiceDBStore.CONFIG_TYPE_PASSWORD)).thenReturn(Arrays.asList(keyKeystorePwd, keyTruststorePwd));
+
+        Mockito.when(daoMgr.getXXService()).thenReturn(xServiceDao);
+        Mockito.when(xServiceDao.getById(Id)).thenReturn(xService);
+        Mockito.when(svcService.getPopulatedViewObject(xService)).thenReturn(existing).thenReturn(rangerService);
+
+        List<XXServiceConfigMap> dbConfigMaps = Arrays.asList(
+                storedConfigMap(keyKeystorePwd, oldKeystoreEncrypted),
+                storedConfigMap(keyTruststorePwd, oldTruststoreEncrypted));
+
+        Mockito.when(daoMgr.getXXServiceConfigMap()).thenReturn(xServiceConfigMapDao);
+        Mockito.when(xServiceConfigMapDao.findByServiceId(Id)).thenReturn(dbConfigMaps);
+        Mockito.when(daoMgr.getXXUser()).thenReturn(xUserDao);
+
+        Mockito.when(svcService.update(rangerService)).thenReturn(rangerService);
+        Mockito.when(rangerAuditFields.populateAuditFields(Mockito.any(XXServiceConfigMap.class), Mockito.any(XXService.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+        RangerService result = serviceDBStore.updateService(rangerService, null);
+        Assertions.assertNotNull(result);
+
+        ArgumentCaptor<XXServiceConfigMap> captor = ArgumentCaptor.forClass(XXServiceConfigMap.class);
+        Mockito.verify(xServiceConfigMapDao, Mockito.times(2)).create(captor.capture());
+
+        Map<String, String> persisted = new HashMap<>();
+        for (XXServiceConfigMap m : captor.getAllValues()) {
+            persisted.put(m.getConfigkey(), m.getConfigvalue());
+        }
+
+        Assertions.assertEquals(oldKeystoreEncrypted, persisted.get(keyKeystorePwd), "old keystore password must be preserved when the client sends the hidden sentinel");
+        Assertions.assertEquals(oldTruststoreEncrypted, persisted.get(keyTruststorePwd), "old truststore password must be preserved when the client sends the hidden sentinel");
+        Assertions.assertNotEquals(oldTruststoreEncrypted, persisted.get(keyKeystorePwd), "keystore's old value must not be swapped with truststore's");
+        Assertions.assertNotEquals(oldKeystoreEncrypted, persisted.get(keyTruststorePwd), "truststore's old value must not be swapped with keystore's");
+    }
+
+    @Test
+    public void test20cUpdateServiceReEncryptsChangedKeyAndPreservesOtherOnHiddenSentinel() throws Exception {
+        final String keyKeystorePwd = "nifi.ssl.keystorePassword";
+        final String keyTruststorePwd = "nifi.ssl.truststorePassword";
+        final String newKeystorePwd = "brand-new-keystore-secret";
+
+        String oldKeystoreEncrypted = encryptForStorage("old-keystore-secret");
+        String oldTruststoreEncrypted = encryptForStorage("old-truststore-secret");
+
+        XXServiceDao xServiceDao = Mockito.mock(XXServiceDao.class);
+        XXService xService = Mockito.mock(XXService.class);
+        XXServiceConfigMapDao xServiceConfigMapDao = Mockito.mock(XXServiceConfigMapDao.class);
+        XXServiceConfigDefDao xServiceConfigDefDao = Mockito.mock(XXServiceConfigDefDao.class);
+        XXUserDao xUserDao = Mockito.mock(XXUserDao.class);
+
+        Map<String, String> configs = new HashMap<>();
+        configs.put(keyKeystorePwd, newKeystorePwd);                       // changed
+        configs.put(keyTruststorePwd, ServiceDBStore.HIDDEN_PASSWORD_STR); // untouched
+
+        RangerService rangerService = new RangerService();
+        rangerService.setId(Id);
+        rangerService.setName("nifi-svc");
+        rangerService.setType("nifi");
+        rangerService.setConfigs(configs);
+        rangerService.setIsEnabled(true);
+
+        RangerService existing = new RangerService();
+        existing.setId(Id);
+        existing.setName("nifi-svc");
+        existing.setType("nifi");
+        existing.setIsEnabled(true);
+
+        List<XXServiceConfigDef> nifiPasswordDefs = Arrays.asList(
+                serviceConfigDef(keyKeystorePwd, "password"),
+                serviceConfigDef(keyTruststorePwd, "password"));
+
+        Mockito.when(daoMgr.getXXServiceConfigDef()).thenReturn(xServiceConfigDefDao);
+        Mockito.when(xServiceConfigDefDao.findByServiceDefName("nifi")).thenReturn(nifiPasswordDefs);
+        Mockito.when(xServiceConfigDefDao.findConfigNamesByServiceDefNameAndType("nifi", ServiceDBStore.CONFIG_TYPE_PASSWORD)).thenReturn(Arrays.asList(keyKeystorePwd, keyTruststorePwd));
+
+        Mockito.when(daoMgr.getXXService()).thenReturn(xServiceDao);
+        Mockito.when(xServiceDao.getById(Id)).thenReturn(xService);
+        Mockito.when(svcService.getPopulatedViewObject(xService)).thenReturn(existing).thenReturn(rangerService);
+
+        List<XXServiceConfigMap> dbConfigMaps = Arrays.asList(
+                storedConfigMap(keyKeystorePwd, oldKeystoreEncrypted),
+                storedConfigMap(keyTruststorePwd, oldTruststoreEncrypted));
+
+        Mockito.when(daoMgr.getXXServiceConfigMap()).thenReturn(xServiceConfigMapDao);
+        Mockito.when(xServiceConfigMapDao.findByServiceId(Id)).thenReturn(dbConfigMaps);
+        Mockito.when(daoMgr.getXXUser()).thenReturn(xUserDao);
+
+        Mockito.when(svcService.update(rangerService)).thenReturn(rangerService);
+        Mockito.when(rangerAuditFields.populateAuditFields(Mockito.any(XXServiceConfigMap.class), Mockito.any(XXService.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+        RangerService result = serviceDBStore.updateService(rangerService, null);
+        Assertions.assertNotNull(result);
+
+        ArgumentCaptor<XXServiceConfigMap> captor = ArgumentCaptor.forClass(XXServiceConfigMap.class);
+        Mockito.verify(xServiceConfigMapDao, Mockito.times(2)).create(captor.capture());
+
+        Map<String, String> persisted = new HashMap<>();
+        for (XXServiceConfigMap m : captor.getAllValues()) {
+            persisted.put(m.getConfigkey(), m.getConfigvalue());
+        }
+
+        Assertions.assertNotEquals(oldKeystoreEncrypted, persisted.get(keyKeystorePwd), "changed keystore password must be freshly re-encrypted, not left as the old value");
+        Assertions.assertNotEquals(newKeystorePwd, persisted.get(keyKeystorePwd), "keystore password must be encrypted, not stored in cleartext");
+        Assertions.assertEquals(oldTruststoreEncrypted, persisted.get(keyTruststorePwd), "untouched truststore password must keep its old encrypted value");
+    }
+
+    private XXServiceConfigDef serviceConfigDef(String name, String type) {
+        XXServiceConfigDef def = new XXServiceConfigDef();
+        def.setName(name);
+        def.setType(type);
+        return def;
+    }
+
+    private XXServiceConfigMap storedConfigMap(String key, String value) {
+        XXServiceConfigMap m = new XXServiceConfigMap();
+        m.setConfigkey(key);
+        m.setConfigvalue(value);
+        return m;
+    }
+
+    private String encryptForStorage(String plainValue) throws Exception {
+        String iv                = PasswordUtils.generateIvIfNeeded(ServiceDBStore.CRYPT_ALGO);
+        Joiner joiner            = Joiner.on(",").skipNulls();
+        String cryptConfigString = joiner.join(ServiceDBStore.CRYPT_ALGO, ServiceDBStore.ENCRYPT_KEY, ServiceDBStore.SALT, ServiceDBStore.ITERATION_COUNT, iv, plainValue);
+        String encryptedPwd      = PasswordUtils.encryptPassword(cryptConfigString);
+        return joiner.join(ServiceDBStore.CRYPT_ALGO, ServiceDBStore.ENCRYPT_KEY, ServiceDBStore.SALT, ServiceDBStore.ITERATION_COUNT, iv, encryptedPwd);
     }
 
     @Test

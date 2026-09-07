@@ -162,11 +162,16 @@ public class RangerHSM implements RangerKMSMKI {
     public boolean setExternalKeyAsMK(String password, byte[] key) {
         if (myStore != null) {
             try {
-                Key aesKey = new SecretKeySpec(key, MK_CIPHER);
+                if (!myStore.containsAlias(mkAlias)) {
+                    Key aesKey = new SecretKeySpec(key, MK_CIPHER);
 
-                myStore.setKeyEntry(mkAlias, aesKey, password.toCharArray(), (java.security.cert.Certificate[]) null);
+                    myStore.setKeyEntry(mkAlias, aesKey, password.toCharArray(), (java.security.cert.Certificate[]) null);
 
-                return true;
+                    return true;
+                }
+                else {
+                    logger.warn("Master key with alias '{}' already exists in HSM, returning.", mkAlias);
+                }
             } catch (KeyStoreException e) {
                 logger.error("setMasterKey : Exception while setting Master Key, Error - {} ", e.getMessage());
             }

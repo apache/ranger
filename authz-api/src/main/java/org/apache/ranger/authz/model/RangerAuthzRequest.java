@@ -37,6 +37,10 @@ public class RangerAuthzRequest {
     public RangerAuthzRequest() {
     }
 
+    public RangerAuthzRequest(String userName, String resource, String permission, String serviceType, String serviceName) {
+        this(null, new RangerUserInfo(userName), new RangerAccessInfo(resource, permission, permission), new RangerAccessContext(serviceType, serviceName));
+    }
+
     public RangerAuthzRequest(RangerUserInfo user, RangerAccessInfo access, RangerAccessContext context) {
         this(null, user, access, context);
     }
