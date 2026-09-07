@@ -870,11 +870,12 @@ public class TestGdsDBStore {
     }
 
     @Test
-    public void testGetSharedResource() {
+    public void testGetSharedResource() throws Exception {
         RangerSharedResource resource = createTestSharedResource();
         resource.setId(ID);
 
         when(sharedResourceService.read(ID)).thenReturn(resource);
+        mockViewPermissionOnParentDataShare();
 
         RangerSharedResource result = gdsDBStore.getSharedResource(ID);
 
@@ -884,7 +885,37 @@ public class TestGdsDBStore {
     }
 
     @Test
-    public void testSearchSharedResources() {
+    public void testGetSharedResourceWithoutPermission() throws Exception {
+        RangerSharedResource resource = createTestSharedResource();
+        resource.setId(ID);
+
+        when(sharedResourceService.read(ID)).thenReturn(resource);
+        mockNoViewPermissionOnParentDataShare();
+        when(bizUtil.isAuditAdmin()).thenReturn(false);
+        when(restErrorUtil.create403RESTException(anyString())).thenReturn(new WebApplicationException(403));
+
+        assertThrows(WebApplicationException.class, () -> gdsDBStore.getSharedResource(ID));
+
+        verify(restErrorUtil).create403RESTException(GdsDBStore.NOT_AUTHORIZED_TO_VIEW_SHARED_RESOURCE);
+    }
+
+    @Test
+    public void testGetSharedResourceAsAuditor() throws Exception {
+        RangerSharedResource resource = createTestSharedResource();
+        resource.setId(ID);
+
+        when(sharedResourceService.read(ID)).thenReturn(resource);
+        when(bizUtil.isAuditAdmin()).thenReturn(true);
+
+        RangerSharedResource result = gdsDBStore.getSharedResource(ID);
+
+        assertNotNull(result);
+        assertEquals(ID, result.getId());
+        verify(sharedResourceService).read(ID);
+    }
+
+    @Test
+    public void testSearchSharedResources() throws Exception {
         SearchFilter filter = new SearchFilter();
         filter.setParam(SearchFilter.RESOURCE_CONTAINS, "test-subresource");
         filter.setMaxRows(10);
@@ -894,6 +925,7 @@ public class TestGdsDBStore {
         RangerSharedResourceList resourceList = createSharedResourceList(resources);
 
         when(sharedResourceService.searchSharedResources(any(SearchFilter.class))).thenReturn(resourceList);
+        mockViewPermissionOnParentDataShare();
 
         PList<RangerSharedResource> result = gdsDBStore.searchSharedResources(filter);
 
@@ -902,7 +934,7 @@ public class TestGdsDBStore {
     }
 
     @Test
-    public void testSearchSharedResources_WithResourceFilter() {
+    public void testSearchSharedResources_WithResourceFilter() throws Exception {
         SearchFilter filter = new SearchFilter();
         filter.setParam(SearchFilter.RESOURCE_CONTAINS, "test-resource");
         filter.setMaxRows(10);
@@ -910,12 +942,14 @@ public class TestGdsDBStore {
 
         RangerSharedResource resource = new RangerSharedResource();
         resource.setId(1L);
+        resource.setDataShareId(ID);
         resource.setResource(new HashMap<>());
         resource.getResource().put("path", new RangerPolicyResource("test-resource-path"));
 
         RangerSharedResourceList resourceList = new RangerSharedResourceList(Arrays.asList(resource));
 
         when(sharedResourceService.searchSharedResources(any(SearchFilter.class))).thenReturn(resourceList);
+        mockViewPermissionOnParentDataShare();
 
         PList<RangerSharedResource> result = gdsDBStore.searchSharedResources(filter);
 
@@ -924,7 +958,7 @@ public class TestGdsDBStore {
     }
 
     @Test
-    public void testSearchSharedResources_WithSubResourceFilter() {
+    public void testSearchSharedResources_WithSubResourceFilter() throws Exception {
         SearchFilter filter = new SearchFilter();
         filter.setParam(SearchFilter.RESOURCE_CONTAINS, "test-subresource");
         filter.setMaxRows(10);
@@ -932,12 +966,14 @@ public class TestGdsDBStore {
 
         RangerSharedResource resource = new RangerSharedResource();
         resource.setId(1L);
+        resource.setDataShareId(ID);
         resource.setResource(new HashMap<>());
         resource.setSubResource(new RangerPolicyResource("test-subresource-value"));
 
         RangerSharedResourceList resourceList = new RangerSharedResourceList(Arrays.asList(resource));
 
         when(sharedResourceService.searchSharedResources(any(SearchFilter.class))).thenReturn(resourceList);
+        mockViewPermissionOnParentDataShare();
 
         PList<RangerSharedResource> result = gdsDBStore.searchSharedResources(filter);
 
@@ -1016,11 +1052,12 @@ public class TestGdsDBStore {
     }
 
     @Test
-    public void testGetDataShareInDataset() {
+    public void testGetDataShareInDataset() throws Exception {
         RangerDataShareInDataset dataShareInDataset = createTestDataShareInDataset();
         dataShareInDataset.setId(ID);
 
         when(dataShareInDatasetService.read(ID)).thenReturn(dataShareInDataset);
+        mockViewPermissionOnDataShareInDatasetParents();
 
         RangerDataShareInDataset result = gdsDBStore.getDataShareInDataset(ID);
 
@@ -1030,12 +1067,43 @@ public class TestGdsDBStore {
     }
 
     @Test
-    public void testSearchDataShareInDatasets() {
+    public void testGetDataShareInDatasetWithoutPermission() throws Exception {
+        RangerDataShareInDataset dataShareInDataset = createTestDataShareInDataset();
+        dataShareInDataset.setId(ID);
+
+        when(dataShareInDatasetService.read(ID)).thenReturn(dataShareInDataset);
+        mockNoViewPermissionOnDataShareInDatasetParents();
+        when(bizUtil.isAuditAdmin()).thenReturn(false);
+        when(restErrorUtil.create403RESTException(anyString())).thenReturn(new WebApplicationException(403));
+
+        assertThrows(WebApplicationException.class, () -> gdsDBStore.getDataShareInDataset(ID));
+
+        verify(restErrorUtil).create403RESTException(GdsDBStore.NOT_AUTHORIZED_TO_VIEW_DATA_SHARE_IN_DATASET);
+    }
+
+    @Test
+    public void testGetDataShareInDatasetAsAuditor() throws Exception {
+        RangerDataShareInDataset dataShareInDataset = createTestDataShareInDataset();
+        dataShareInDataset.setId(ID);
+
+        when(dataShareInDatasetService.read(ID)).thenReturn(dataShareInDataset);
+        when(bizUtil.isAuditAdmin()).thenReturn(true);
+
+        RangerDataShareInDataset result = gdsDBStore.getDataShareInDataset(ID);
+
+        assertNotNull(result);
+        assertEquals(ID, result.getId());
+        verify(dataShareInDatasetService).read(ID);
+    }
+
+    @Test
+    public void testSearchDataShareInDatasets() throws Exception {
         SearchFilter filter = new SearchFilter();
         List<RangerDataShareInDataset> items = Arrays.asList(createTestDataShareInDataset());
         RangerDataShareInDatasetList itemList = createDataShareInDatasetList(items);
 
         when(dataShareInDatasetService.searchDataShareInDatasets(any(SearchFilter.class))).thenReturn(itemList);
+        mockViewPermissionOnDataShareInDatasetParents();
 
         PList<RangerDataShareInDataset> result = gdsDBStore.searchDataShareInDatasets(filter);
 
@@ -1131,11 +1199,12 @@ public class TestGdsDBStore {
     }
 
     @Test
-    public void testGetDatasetInProject() {
+    public void testGetDatasetInProject() throws Exception {
         RangerDatasetInProject datasetInProject = createTestDatasetInProject();
         datasetInProject.setId(ID);
 
         when(datasetInProjectService.read(ID)).thenReturn(datasetInProject);
+        mockViewPermissionOnDatasetInProjectParents();
 
         RangerDatasetInProject result = gdsDBStore.getDatasetInProject(ID);
 
@@ -1145,12 +1214,43 @@ public class TestGdsDBStore {
     }
 
     @Test
-    public void testSearchDatasetInProjects() {
+    public void testGetDatasetInProjectWithoutPermission() throws Exception {
+        RangerDatasetInProject datasetInProject = createTestDatasetInProject();
+        datasetInProject.setId(ID);
+
+        when(datasetInProjectService.read(ID)).thenReturn(datasetInProject);
+        mockNoViewPermissionOnDatasetInProjectParents();
+        when(bizUtil.isAuditAdmin()).thenReturn(false);
+        when(restErrorUtil.create403RESTException(anyString())).thenReturn(new WebApplicationException(403));
+
+        assertThrows(WebApplicationException.class, () -> gdsDBStore.getDatasetInProject(ID));
+
+        verify(restErrorUtil).create403RESTException(GdsDBStore.NOT_AUTHORIZED_TO_VIEW_DATASET_IN_PROJECT);
+    }
+
+    @Test
+    public void testGetDatasetInProjectAsAuditor() throws Exception {
+        RangerDatasetInProject datasetInProject = createTestDatasetInProject();
+        datasetInProject.setId(ID);
+
+        when(datasetInProjectService.read(ID)).thenReturn(datasetInProject);
+        when(bizUtil.isAuditAdmin()).thenReturn(true);
+
+        RangerDatasetInProject result = gdsDBStore.getDatasetInProject(ID);
+
+        assertNotNull(result);
+        assertEquals(ID, result.getId());
+        verify(datasetInProjectService).read(ID);
+    }
+
+    @Test
+    public void testSearchDatasetInProjects() throws Exception {
         SearchFilter filter = new SearchFilter();
         List<RangerDatasetInProject> items = Arrays.asList(createTestDatasetInProject());
         RangerDatasetInProjectList itemList = createDatasetInProjectList(items);
 
         when(datasetInProjectService.searchDatasetInProjects(any(SearchFilter.class))).thenReturn(itemList);
+        mockViewPermissionOnDatasetInProjectParents();
 
         PList<RangerDatasetInProject> result = gdsDBStore.searchDatasetInProjects(filter);
 
@@ -3133,6 +3233,62 @@ public class TestGdsDBStore {
         dataShare.setAcl(new RangerGdsObjectACL());
         dataShare.setIsEnabled(true);
         return dataShare;
+    }
+
+    private void mockViewPermissionOnParentDataShare() {
+        RangerDataShare dataShare = createTestDataShare();
+        dataShare.setId(ID);
+
+        when(dataShareService.read(ID)).thenReturn(dataShare);
+        when(validator.hasPermission(dataShare.getAcl(), GdsPermission.VIEW)).thenReturn(true);
+    }
+
+    private void mockNoViewPermissionOnParentDataShare() {
+        RangerDataShare dataShare = createTestDataShare();
+        dataShare.setId(ID);
+
+        when(dataShareService.read(ID)).thenReturn(dataShare);
+        when(validator.hasPermission(dataShare.getAcl(), GdsPermission.VIEW)).thenReturn(false);
+    }
+
+    private void mockViewPermissionOnDataShareInDatasetParents() {
+        RangerDataShare dataShare = createTestDataShare();
+        dataShare.setId(ID);
+
+        when(dataShareService.read(ID)).thenReturn(dataShare);
+        when(validator.hasPermission(dataShare.getAcl(), GdsPermission.VIEW)).thenReturn(true);
+    }
+
+    private void mockNoViewPermissionOnDataShareInDatasetParents() {
+        RangerDataShare dataShare = createTestDataShare();
+        dataShare.setId(ID);
+        RangerDataset dataset = createTestDataset();
+        dataset.setId(ID);
+
+        when(dataShareService.read(ID)).thenReturn(dataShare);
+        when(datasetService.read(ID)).thenReturn(dataset);
+        when(validator.hasPermission(dataShare.getAcl(), GdsPermission.VIEW)).thenReturn(false);
+        when(validator.hasPermission(dataset.getAcl(), GdsPermission.VIEW)).thenReturn(false);
+    }
+
+    private void mockViewPermissionOnDatasetInProjectParents() {
+        RangerDataset dataset = createTestDataset();
+        dataset.setId(ID);
+
+        when(datasetService.read(ID)).thenReturn(dataset);
+        when(validator.hasPermission(dataset.getAcl(), GdsPermission.VIEW)).thenReturn(true);
+    }
+
+    private void mockNoViewPermissionOnDatasetInProjectParents() {
+        RangerDataset dataset = createTestDataset();
+        dataset.setId(ID);
+        RangerProject project = createTestProject();
+        project.setId(ID);
+
+        when(datasetService.read(ID)).thenReturn(dataset);
+        when(projectService.read(ID)).thenReturn(project);
+        when(validator.hasPermission(dataset.getAcl(), GdsPermission.VIEW)).thenReturn(false);
+        when(validator.hasPermission(project.getAcl(), GdsPermission.VIEW)).thenReturn(false);
     }
 
     private RangerSharedResource createTestSharedResource() {
