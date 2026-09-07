@@ -70,7 +70,7 @@ kafka = RangerService({'name': 'dev_kafka', 'type': 'kafka',
                                    'default-policy.5.resource.cluster': '*,dummy',
                                    'default-policy.5.policyItem.1.users': 'rangerauditserver',
                                    'default-policy.5.policyItem.1.accessTypes': 'configure,describe,alter,create,idempotent_write,describe_configs,alter_configs',
-                                   'ranger.plugin.audit.filters': "[{'accessResult': 'DENIED', 'isAudited': true},{'resources':{'topic':{'values':['ATLAS_ENTITIES']}},'users':['rangertagsync'],'actions':['create','consume','describe'],'isAudited':false},{'resources':{'consumergroup':{'values':['ranger_entities_consumer']}},'users':['rangertagsync'],'actions':['consume'],'isAudited':false},{'users':['rangerauditserver'],'isAudited':false}]",
+                                   'ranger.plugin.audit.filters': "[{'accessResult': 'DENIED', 'isAudited': true},{'resources':{'topic':{'values':['ATLAS_ENTITIES']}},'users':['rangertagsync'],'actions':['create','consume','describe'],'isAudited':false},{'resources':{'consumergroup':{'values':['ranger_entities_consumer']}},'users':['rangertagsync'],'actions':['consume'],'isAudited':false},{'users':['kafka'],'isAudited':false},{'users':['rangerauditserver'],'isAudited':false}]",
                                    'userstore.download.auth.users': 'kafka',
                                    'ranger.plugin.kafka.policy.refresh.synchronous':'true'}})
 
