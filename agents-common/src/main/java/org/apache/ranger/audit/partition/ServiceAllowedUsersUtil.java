@@ -24,6 +24,7 @@ import org.apache.commons.lang3.StringUtils;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -37,11 +38,12 @@ public final class ServiceAllowedUsersUtil {
         if (StringUtils.isBlank(configValue)) {
             return Collections.emptyList();
         }
-        return Arrays.stream(configValue.split(","))
+        LinkedHashSet<String> users = Arrays.stream(configValue.split(","))
                 .map(String::trim)
                 .filter(StringUtils::isNotBlank)
                 .filter(user -> !"*".equals(user))
-                .collect(Collectors.toList());
+                .collect(Collectors.toCollection(LinkedHashSet::new));
+        return List.copyOf(users);
     }
 
     public static Map<String, List<String>> normalizeServiceAllowedUsers(Map<String, List<String>> serviceAllowedUsers) {
@@ -53,10 +55,12 @@ public final class ServiceAllowedUsersUtil {
             if (StringUtils.isBlank(entry.getKey())) {
                 continue;
             }
-            List<String> users = entry.getValue() == null ? Collections.emptyList()
-                    : entry.getValue().stream()
-                            .flatMap(user -> parseUsers(user).stream())
-                            .collect(Collectors.toList());
+            LinkedHashSet<String> users = new LinkedHashSet<>();
+            if (entry.getValue() != null) {
+                entry.getValue().stream()
+                        .flatMap(user -> parseUsers(user).stream())
+                        .forEach(users::add);
+            }
             if (users.isEmpty()) {
                 continue;
             }

@@ -52,6 +52,22 @@ public class ServiceAllowedUsersUtilTest {
     }
 
     @Test
+    public void testParseUsersDedupesWhilePreservingOrder() {
+        assertIterableEquals(List.of("hive", "hive2"), ServiceAllowedUsersUtil.parseUsers("hive,hive2,hive"));
+    }
+
+    @Test
+    public void testNormalizeServiceAllowedUsersDedupesAcrossListElements() {
+        Map<String, List<String>> input = new LinkedHashMap<>();
+        input.put("dev_hive", List.of("hive,hive2", "hive2,hive3"));
+
+        Map<String, List<String>> normalized = ServiceAllowedUsersUtil.normalizeServiceAllowedUsers(input);
+
+        assertEquals(1, normalized.size());
+        assertIterableEquals(List.of("hive", "hive2", "hive3"), normalized.get("dev_hive"));
+    }
+
+    @Test
     public void testNormalizeServiceAllowedUsersSkipsNullListElements() {
         Map<String, List<String>> input = new LinkedHashMap<>();
         input.put("dev_hive", java.util.Arrays.asList("hive", null));
