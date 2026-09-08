@@ -17,33 +17,25 @@
  * under the License.
  */
 
-package org.apache.ranger.entity;
+package org.apache.ranger.entity.view;
 
-import org.apache.ranger.common.AppConstants;
+import org.apache.ranger.common.DateUtil;
 
-import javax.persistence.Cacheable;
 import javax.persistence.Column;
 import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
 import javax.persistence.Id;
-import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 
 import java.util.Date;
-import java.util.Objects;
 
 @Entity
-@Cacheable
-@Table(name = "x_plugin_info")
-public class XXPluginInfo implements java.io.Serializable {
+@Table(name = "vx_plugin_info")
+public class VXXPluginInfo implements java.io.Serializable {
     private static final long serialVersionUID = 1L;
 
     @Id
-    @SequenceGenerator(name = "X_PLUGIN_INFO_SEQ", sequenceName = "X_PLUGIN_INFO_SEQ", allocationSize = 1)
-    @GeneratedValue(strategy = GenerationType.AUTO, generator = "X_PLUGIN_INFO_SEQ")
     @Column(name = "id")
     protected Long id;
 
@@ -58,6 +50,9 @@ public class XXPluginInfo implements java.io.Serializable {
     @Column(name = "service_name")
     protected String serviceName;
 
+    @Column(name = "service_type")
+    protected String serviceType;
+
     @Column(name = "app_type")
     protected String appType;
 
@@ -69,6 +64,9 @@ public class XXPluginInfo implements java.io.Serializable {
 
     @Column(name = "info")
     protected String info;
+
+    @Column(name = "is_tag_service_enable")
+    protected Boolean isTagServiceEnabled;
 
     @Column(name = "policy_download_time")
     protected Long policyDownloadTime;
@@ -103,84 +101,36 @@ public class XXPluginInfo implements java.io.Serializable {
     @Column(name = "cluster_name")
     protected String clusterName;
 
-    /**
-     * Default constructor. This will set all the attributes to default value.
-     */
-    public XXPluginInfo() {
-    }
+    @Column(name = "latest_policy_version")
+    protected Long latestPolicyVersion;
 
-    public static boolean equals(Object object1, Object object2) {
-        if (object1 == object2) {
-            return true;
-        } else if ((object1 == null) || (object2 == null)) {
-            return false;
-        }
+    @Temporal(TemporalType.TIMESTAMP)
+    @Column(name = "last_policy_update_time", nullable = false)
+    protected Date lastPolicyUpdateTime = DateUtil.getUTCDate();
 
-        return object1.equals(object2);
-    }
+    @Column(name = "latest_tag_version")
+    protected Long latestTagVersion;
 
-    @Override
-    public int hashCode() {
-        return super.hashCode();
-    }
+    @Temporal(TemporalType.TIMESTAMP)
+    @Column(name = "last_tag_update_time", nullable = false)
+    protected Date lastTagUpdateTime = DateUtil.getUTCDate();
 
-    /**
-     * Checks for all attributes except referenced db objects
-     *
-     * @return true if all attributes match
-     */
-    @Override
-    public boolean equals(Object obj) {
-        if (this == obj) {
-            return true;
-        } else if (obj == null) {
-            return false;
-        } else if (getClass() != obj.getClass()) {
-            return false;
-        }
+    @Column(name = "latest_gds_version")
+    protected Long latestGdsVersion;
 
-        XXPluginInfo other = (XXPluginInfo) obj;
+    @Temporal(TemporalType.TIMESTAMP)
+    @Column(name = "last_gds_update_time", nullable = false)
+    protected Date lastGdsUpdateTime = DateUtil.getUTCDate();
 
-        return Objects.equals(id, other.id) &&
-                Objects.equals(createTime, other.createTime) &&
-                Objects.equals(updateTime, other.updateTime) &&
-                Objects.equals(serviceName, other.serviceName) &&
-                Objects.equals(hostName, other.hostName) &&
-                Objects.equals(appType, other.appType) &&
-                Objects.equals(ipAddress, other.ipAddress) &&
-                Objects.equals(info, other.info);
-    }
+    @Column(name = "latest_role_version")
+    protected Long latestRoleVersion;
 
-    /**
-     * This return the bean content in string format
-     *
-     * @return formatedStr
-     */
-    @Override
-    public String toString() {
-        String str = "XXPluginInfo={";
-        str += "id={" + id + "} ";
-        str += "createTime={" + createTime + "} ";
-        str += "updateTime={" + updateTime + "} ";
-        str += "serviceName={" + serviceName + "} ";
-        str += "hostName={" + hostName + "} ";
-        str += "appType={" + appType + "} ";
-        str += "ipAddress={" + ipAddress + "} ";
-        str += "info={" + info + "} ";
-        str += "}";
-        return str;
-    }
-
-    public int getMyClassType() {
-        return AppConstants.CLASS_TYPE_NONE;
-    }
-
-    public String getMyDisplayValue() {
-        return null;
-    }
+    @Temporal(TemporalType.TIMESTAMP)
+    @Column(name = "last_role_update_time", nullable = false)
+    protected Date lastRoleUpdateTime = DateUtil.getUTCDate();
 
     public Long getId() {
-        return this.id;
+        return id;
     }
 
     public void setId(Long id) {
@@ -188,7 +138,7 @@ public class XXPluginInfo implements java.io.Serializable {
     }
 
     public Date getCreateTime() {
-        return this.createTime;
+        return createTime;
     }
 
     public void setCreateTime(Date createTime) {
@@ -196,7 +146,7 @@ public class XXPluginInfo implements java.io.Serializable {
     }
 
     public Date getUpdateTime() {
-        return this.updateTime;
+        return updateTime;
     }
 
     public void setUpdateTime(Date updateTime) {
@@ -204,15 +154,23 @@ public class XXPluginInfo implements java.io.Serializable {
     }
 
     public String getServiceName() {
-        return this.serviceName;
+        return serviceName;
     }
 
     public void setServiceName(String serviceName) {
         this.serviceName = serviceName;
     }
 
+    public String getServiceType() {
+        return serviceType;
+    }
+
+    public void setServiceType(String serviceType) {
+        this.serviceType = serviceType;
+    }
+
     public String getAppType() {
-        return this.appType;
+        return appType;
     }
 
     public void setAppType(String appType) {
@@ -220,7 +178,7 @@ public class XXPluginInfo implements java.io.Serializable {
     }
 
     public String getHostName() {
-        return this.hostName;
+        return hostName;
     }
 
     public void setHostName(String hostName) {
@@ -228,7 +186,7 @@ public class XXPluginInfo implements java.io.Serializable {
     }
 
     public String getIpAddress() {
-        return this.ipAddress;
+        return ipAddress;
     }
 
     public void setIpAddress(String ipAddress) {
@@ -236,11 +194,19 @@ public class XXPluginInfo implements java.io.Serializable {
     }
 
     public String getInfo() {
-        return this.info;
+        return info;
     }
 
     public void setInfo(String info) {
         this.info = info;
+    }
+
+    public Boolean getIsTagServiceEnabled() {
+        return isTagServiceEnabled;
+    }
+
+    public void setIsTagServiceEnabled(Boolean isTagServiceEnabled) {
+        this.isTagServiceEnabled = isTagServiceEnabled;
     }
 
     public Long getPolicyDownloadTime() {
@@ -329,5 +295,98 @@ public class XXPluginInfo implements java.io.Serializable {
 
     public void setClusterName(String clusterName) {
         this.clusterName = clusterName;
+    }
+
+    public Long getLatestPolicyVersion() {
+        return latestPolicyVersion;
+    }
+
+    public void setLatestPolicyVersion(Long latestPolicyVersion) {
+        this.latestPolicyVersion = latestPolicyVersion;
+    }
+
+    public Date getLastPolicyUpdateTime() {
+        return lastPolicyUpdateTime;
+    }
+
+    public void setLastPolicyUpdateTime(Date lastPolicyUpdateTime) {
+        this.lastPolicyUpdateTime = lastPolicyUpdateTime;
+    }
+
+    public Long getLatestTagVersion() {
+        return latestTagVersion;
+    }
+
+    public void setLatestTagVersion(Long latestTagVersion) {
+        this.latestTagVersion = latestTagVersion;
+    }
+
+    public Date getLastTagUpdateTime() {
+        return lastTagUpdateTime;
+    }
+
+    public void setLastTagUpdateTime(Date lastTagUpdateTime) {
+        this.lastTagUpdateTime = lastTagUpdateTime;
+    }
+
+    public Long getLatestGdsVersion() {
+        return latestGdsVersion;
+    }
+
+    public void setLatestGdsVersion(Long latestGdsVersion) {
+        this.latestGdsVersion = latestGdsVersion;
+    }
+
+    public Date getLastGdsUpdateTime() {
+        return lastGdsUpdateTime;
+    }
+
+    public void setLastGdsUpdateTime(Date lastGdsUpdateTime) {
+        this.lastGdsUpdateTime = lastGdsUpdateTime;
+    }
+
+    public Long getLatestRoleVersion() {
+        return latestRoleVersion;
+    }
+
+    public void setLatestRoleVersion(Long latestRoleVersion) {
+        this.latestRoleVersion = latestRoleVersion;
+    }
+
+    public Date getLastRoleUpdateTime() {
+        return lastRoleUpdateTime;
+    }
+
+    public void setLastRoleUpdateTime(Date lastRoleUpdateTime) {
+        this.lastRoleUpdateTime = lastRoleUpdateTime;
+    }
+
+    @Override
+    public String toString() {
+        String str = "VXXPluginInfo={";
+        str += "id={" + id + "} ";
+        str += "createTime={" + createTime + "} ";
+        str += "updateTime={" + updateTime + "} ";
+        str += "serviceName={" + serviceName + "} ";
+        str += "hostName={" + hostName + "} ";
+        str += "appType={" + appType + "} ";
+        str += "ipAddress={" + ipAddress + "} ";
+        str += "serviceType={" + serviceType + "} ";
+        str += "isTagServiceEnabled={" + isTagServiceEnabled + "} ";
+        str += "clusterName={" + clusterName + "} ";
+        str += "}";
+        return str;
+    }
+
+    public static boolean equals(Object object1, Object object2) {
+        boolean ret = false;
+
+        if (object1 == object2) {
+            ret = true;
+        } else if ((object1 != null) && (object2 != null)) {
+            ret = object1.equals(object2);
+        }
+
+        return ret;
     }
 }

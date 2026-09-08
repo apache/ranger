@@ -14,6 +14,7 @@
 -- limitations under the License.
 
 DROP VIEW IF EXISTS `vx_principal`;
+DROP VIEW IF EXISTS `vx_plugin_info`;
 DROP TABLE IF EXISTS `x_rms_mapping_provider`;
 DROP TABLE IF EXISTS `x_rms_resource_mapping`;
 DROP TABLE IF EXISTS `x_rms_notification`;
@@ -1236,6 +1237,17 @@ CREATE TABLE IF NOT EXISTS `x_plugin_info`(
 `host_name` varchar(255) NOT NULL,
 `ip_address` varchar(64) NOT NULL,
 `info` varchar(1024) NOT NULL,
+`policy_download_time` bigint(20) DEFAULT NULL,
+`policy_activation_time` bigint(20) DEFAULT NULL,
+`tag_download_time` bigint(20) DEFAULT NULL,
+`tag_activation_time` bigint(20) DEFAULT NULL,
+`gds_download_time` bigint(20) DEFAULT NULL,
+`gds_activation_time` bigint(20) DEFAULT NULL,
+`role_download_time` bigint(20) DEFAULT NULL,
+`role_activation_time` bigint(20) DEFAULT NULL,
+`userstore_download_time` bigint(20) DEFAULT NULL,
+`userstore_activation_time` bigint(20) DEFAULT NULL,
+`cluster_name` varchar(255) DEFAULT NULL,
  PRIMARY KEY (`id`),
  UNIQUE KEY `x_plugin_info_UK`(`service_name`, `host_name`, `app_type`),
  KEY `x_plugin_info_IDX_service_name`(`service_name`),
@@ -1516,7 +1528,42 @@ CREATE INDEX x_policy_label_label_id ON x_policy_label(id);
 CREATE INDEX x_policy_label_label_name ON x_policy_label(label_name);
 CREATE INDEX x_policy_label_label_map_id ON x_policy_label_map(id);
 
+CREATE INDEX x_plugin_info_IDX_policy_download_time ON x_plugin_info(policy_download_time);
+CREATE INDEX x_plugin_info_IDX_policy_activation_time ON x_plugin_info(policy_activation_time);
+CREATE INDEX x_plugin_info_IDX_tag_download_time ON x_plugin_info(tag_download_time);
+CREATE INDEX x_plugin_info_IDX_tag_activation_time ON x_plugin_info(tag_activation_time);
+CREATE INDEX x_plugin_info_IDX_gds_download_time ON x_plugin_info(gds_download_time);
+CREATE INDEX x_plugin_info_IDX_gds_activation_time ON x_plugin_info(gds_activation_time);
+CREATE INDEX x_plugin_info_IDX_role_download_time ON x_plugin_info(role_download_time);
+CREATE INDEX x_plugin_info_IDX_role_activation_time ON x_plugin_info(role_activation_time);
+CREATE INDEX x_plugin_info_IDX_userstore_download_time ON x_plugin_info(userstore_download_time);
+CREATE INDEX x_plugin_info_IDX_userstore_activation_time ON x_plugin_info(userstore_activation_time);
+CREATE INDEX x_plugin_info_IDX_cluster_name ON x_plugin_info(cluster_name);
+CREATE INDEX x_service_version_info_IDX_policy_update_time ON x_service_version_info(policy_update_time);
+CREATE INDEX x_service_version_info_IDX_tag_update_time ON x_service_version_info(tag_update_time);
+CREATE INDEX x_service_version_info_IDX_role_update_time ON x_service_version_info(role_update_time);
+CREATE INDEX x_service_version_info_IDX_gds_update_time ON x_service_version_info(gds_update_time);
+
 CREATE VIEW vx_principal as (SELECT u.user_name AS principal_name, 0 AS principal_type, u.status status, u.is_visible is_visible, u.other_attributes other_attributes, u.create_time create_time, u.update_time update_time, u.added_by_id added_by_id, u.upd_by_id upd_by_id FROM x_user u) UNION (SELECT g.group_name principal_name, 1 AS principal_type, g.status status, g.is_visible is_visible, g.other_attributes other_attributes, g.create_time create_time, g.update_time update_time, g.added_by_id added_by_id, g.upd_by_id upd_by_id FROM x_group g) UNION (SELECT r.name principal_name, 2 AS principal_name, 1 status, 1 is_visible, null other_attributes, r.create_time create_time, r.update_time update_time, r.added_by_id added_by_id, r.upd_by_id upd_by_id FROM x_role r);
+
+CREATE VIEW vx_plugin_info AS (
+    SELECT
+        xpi.id, xpi.create_time, xpi.update_time, xpi.service_name,
+        xsd.name AS service_type, xpi.app_type, xpi.host_name, xpi.ip_address, xpi.info, x_ts.is_enabled AS is_tag_service_enable,
+        xpi.policy_download_time, xpi.policy_activation_time, xpi.tag_download_time, xpi.tag_activation_time,
+        xpi.gds_download_time, xpi.gds_activation_time, xpi.role_download_time, xpi.role_activation_time,
+        xpi.userstore_download_time, xpi.userstore_activation_time, xpi.cluster_name,
+        xsvi.policy_update_time AS last_policy_update_time, xsvi.policy_version AS latest_policy_version,
+        xsvi.tag_update_time AS last_tag_update_time, xsvi.tag_version AS latest_tag_version,
+        xsvi.gds_update_time AS last_gds_update_time, xsvi.gds_version AS latest_gds_version,
+        xsvi.role_update_time AS last_role_update_time, xsvi.role_version AS latest_role_version
+    FROM
+        x_plugin_info xpi
+        LEFT OUTER JOIN x_service xs ON xs.name = xpi.service_name
+        LEFT OUTER JOIN x_service_version_info xsvi ON xsvi.service_id = xs.id
+        LEFT OUTER JOIN x_service_def xsd ON xsd.id = xs.`type`
+        LEFT OUTER JOIN x_service x_ts ON x_ts.id = xs.tag_service
+);
 
 DELIMITER $$
 DROP PROCEDURE if exists getXportalUIdByLoginId$$
@@ -1953,6 +2000,7 @@ INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('075',UTC_TIMESTAMP(),'Ranger 3.0.0',UTC_TIMESTAMP(),'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('076',UTC_TIMESTAMP(),'Ranger 3.0.0',UTC_TIMESTAMP(),'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('077',UTC_TIMESTAMP(),'Ranger 3.0.0',UTC_TIMESTAMP(),'localhost','Y');
+INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('078',UTC_TIMESTAMP(),'Ranger 3.0.0',UTC_TIMESTAMP(),'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('DB_PATCHES',UTC_TIMESTAMP(),'Ranger 1.0.0',UTC_TIMESTAMP(),'localhost','Y');
 
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('J10001',UTC_TIMESTAMP(),'Ranger 1.0.0',UTC_TIMESTAMP(),'localhost','Y');
@@ -2007,4 +2055,5 @@ INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('J10064',UTC_TIMESTAMP(),'Ranger 3.0.0',UTC_TIMESTAMP(),'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('J10065',UTC_TIMESTAMP(),'Ranger 3.0.0',UTC_TIMESTAMP(),'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('J10066',UTC_TIMESTAMP(),'Ranger 3.0.0',UTC_TIMESTAMP(),'localhost','Y');
+INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('J10067',UTC_TIMESTAMP(),'Ranger 3.0.0',UTC_TIMESTAMP(),'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('JAVA_PATCHES',UTC_TIMESTAMP(),'Ranger 1.0.0',UTC_TIMESTAMP(),'localhost','Y');
