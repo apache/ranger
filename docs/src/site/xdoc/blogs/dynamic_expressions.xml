@@ -1,0 +1,569 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one or more
+  contributor license agreements.  See the NOTICE file distributed with
+  this work for additional information regarding copyright ownership.
+  The ASF licenses this file to You under the Apache License, Version 2.0
+  (the "License"); you may not use this file except in compliance with
+  the License.  You may obtain a copy of the License at
+
+      http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+<document>
+  <head>
+    <link href="../css/custom.css" rel="stylesheet"/>
+  </head>
+  <body>
+    <section name="Apache Ranger - Dynamic Expressions">
+<div class="ranger-blog-post">
+<div class="ranger-blog__header">
+        <p class="ranger-blog__back"><a href="../blogs.html">&larr; All blogs</a></p>
+<p class="ranger-blog__meta">Madhan Neethiraj, Apache Ranger committer &middot; Dec 12, 2023</p>
+      </div>
+<div class="ranger-blog__body">
+        <h1>Introduction</h1>
+
+        <p>
+            Apache Ranger policy model offers a rich set of features that help security administrators handle various
+            access
+            and governance requirements with ease. These features include:
+        </p>
+
+
+
+        <div class="ranger-blog__list-group">
+
+        <p class="ranger-blog__list-item">1. Consistent model to authorize access data in large number of services</p>
+
+            <p class="ranger-blog__list-item">2. Ability to dynamically apply data masking and row-filtering</p>
+
+            <p class="ranger-blog__list-item">3. Delegated access control administration</p>
+
+            <p class="ranger-blog__list-item">4. Ability to explicitly deny access</p>
+
+            <p class="ranger-blog__list-item">5. Use of wildcards in resource names in access policies</p>
+
+            <p class="ranger-blog__list-item">6. Role-based access control (RBAC)</p>
+
+            <p class="ranger-blog__list-item">7. Tag-based access control (TBAC), based on tags associated with resources</p>
+
+            <p class="ranger-blog__list-item">8. Attribute-based access control (ABAC), based on attributes of users, groups and tags</p>
+        </div>
+        <p>
+            In addition to above, Apache Ranger policies can use various attributes available in the access context to
+            authorize the access - attributes including resource owner, time of access, tags associated with the
+            accessed
+            resource, attributes of user/groups/tags, groups/roles the user belongs to. This document explores use cases
+            that can leverage such attributes in policies using dynamic expressions.
+        </p>
+
+        <h2>Contents</h2>
+        <p><a href="#s1">1. Dynamic expressions</a></p>
+        <p><a href="#s2">2. Supported expressions</a></p>
+
+        <h1 id="s1">Dynamic expressions</h1>
+
+        <p>
+            Apache Ranger policy engine evaluates dynamic expressions specified in policies using the script engine
+            included in the JVM, in a sandboxed environment. Dynamic expressions can be used in Apache Ranger policies
+            in
+            following contexts:
+        </p>
+
+        <h2>Policy conditions</h2>
+        <p>
+            Expressions can used in policy conditions to decide whether to evaluate the policy or a policy-item. These
+            expressions should evaluate to a boolean value i.e., <code>true</code>
+            or <code>false</code>. Examples:
+        </p>
+
+
+        <p>Condition for highly sensitive data (level >= 10)</p>
+
+        <p class="ranger-blog-code-line">TAG.sensitiveLevel >= 10</p>
+
+
+        <p>Condition to check if the user has appropriate level of clearance to access sensitive data</p>
+
+        <p class="ranger-blog-code-line">USER.allowedSensitiveLevel >= TAG.sensitiveLevel</p>
+
+
+        <p>Condition to check if the user belongs to group <code>finance</code> and is in role <code>analyst</code></p>
+
+        <p class="ranger-blog-code-line">IS_IN_GROUP('finance') AND IS_IN_ROLE('analyst')</p>
+
+
+        <h2>Row filters</h2>
+        <p>
+            Expressions can be used to set up row-filters with dynamic values. To distinguish expressions from the rest
+            of the row-filter text, they should be enclosed within delimiters <code>${{</code>
+            and <code>}}</code>. Examples:
+        </p>
+
+
+        <p>Row-filter expression to restrict users to access only rows belonging to their department:</p>
+
+        <p class="ranger-blog-code-line">dept_code == ${{USER.department}}</p>
+
+
+        <p>Row-filter expression to restrict users to access only rows from data sources specified in user attribute named <code>allowedSources</code>:</p>
+
+        <p class="ranger-blog-code-line">data_source in (${{USER.allowedSources}})</p>
+
+
+        <h2>Resource names</h2>
+        <p>
+            Use of expressions in resource names can help reduce the number of policies, which in
+            turn makes it easier to manage policies. Examples:
+        </p>
+
+
+        <p>Policy resource for home directory of the user:</p>
+
+        <p class="ranger-blog-code-line">/home/${{REQ.user}}</p>
+
+
+        <p>Policy resource for directory of user's department:</p>
+
+        <p class="ranger-blog-code-line">/data/dept/${{USER.dept}}</p>
+
+
+        <p>Policy resource for database of user's department:</p>
+
+        <p class="ranger-blog-code-line">db_${{USER.dept}}</p>
+
+
+        <h1 id="s2">Supported expressions</h1>
+        <table class="ranger-blog-table--expressions">
+            <tr>
+              <td>
+                <p><b>Variable/Function name</b></p>
+              </td>
+              <td>
+                <p><b>Description</b></p>
+              </td>
+              <td>
+                <p><b>Example values</b></p>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <p>GET_TAG_NAMES()</p>
+              </td>
+              <td>
+                <p>Names of tags associated with the resource, as a CSV (comma separated values) string</p>
+              </td>
+              <td>
+                <p class="ranger-blog-code-line"><code>PII,FINANCE</code></p>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <p>GET_TAG_ATTR_NAMES()</p>
+              </td>
+              <td>
+                <p>Names of attributes in all tags associated with the resource, as a CSV string</p>
+              </td>
+              <td>
+                <p class="ranger-blog-code-line"><code>piiType,sensitiveLevel</code></p>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <p>GET_TAG_ATTR(attrName)</p>
+              </td>
+              <td>
+                <p>Value of the given attribute in tags associated with the resource, as a CSV string</p>
+              </td>
+              <td>
+                <p class="ranger-blog-code-line"><code>email</code></p>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <p>GET_UG_NAMES()</p>
+              </td>
+              <td>
+                <p>Names of groups the user belongs to, as a CSV string</p>
+              </td>
+              <td>
+                <p class="ranger-blog-code-line"><code>managers,finance-admins</code></p>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <p>GET_UG_ATTR_NAMES()</p>
+              </td>
+              <td>
+                <p>Names of all attributes in groups the user belongs to, as a CSV string</p>
+              </td>
+              <td>
+                <p class="ranger-blog-code-line"><code>attr1,attr2</code></p>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <p>GET_UG_ATTR(attrName)</p>
+              </td>
+              <td>
+                <p>Value of the given attribute in groups the user belongs to, as a CSV string</p>
+              </td>
+              <td>
+                <p class="ranger-blog-code-line"><code>val1</code></p>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <p>GET_UR_NAMES()</p>
+              </td>
+              <td>
+                <p>Names of roles assigned to the user,  as a CSV string</p>
+              </td>
+              <td>
+                <p class="ranger-blog-code-line"><code>analyst,dba</code></p>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <p>GET_USER_ATTR_NAMES()</p>
+              </td>
+              <td>
+                <p>Names of all attributes of the user, as a CSV string</p>
+              </td>
+              <td>
+                <p class="ranger-blog-code-line"><code>allowedSensitiveLevel, allowedSources</code></p>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <p>GET_USER_ATTR(attrName)</p>
+              </td>
+              <td>
+                <p>Value of the given attribute associated with the user</p>
+              </td>
+              <td>
+                <p class="ranger-blog-code-line"><code>10</code></p>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <p>HAS_TAG(tagName)</p>
+              </td>
+              <td>
+                <p>Is the given tag associated with the resource?</p>
+              </td>
+              <td>
+                <p class="ranger-blog-code-line"><code>true</code></p>
+                <p class="ranger-blog-code-line"><code>false</code></p>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <p>HAS_ANY_TAG</p>
+              </td>
+              <td>
+                <p>Is any tag associated with the resource?</p>
+              </td>
+              <td>
+                <p class="ranger-blog-code-line"><code>true</code></p>
+                <p class="ranger-blog-code-line"><code>false</code></p>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <p>HAS_NO_TAG</p>
+              </td>
+              <td>
+                <p>Are not tags associated with the resource?</p>
+              </td>
+              <td>
+                <p class="ranger-blog-code-line"><code>true</code></p>
+                <p class="ranger-blog-code-line"><code>false</code></p>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <p>HAS_USER_ATTR(attrName)</p>
+              </td>
+              <td>
+                <p>Does the user have the given attribute?</p>
+              </td>
+              <td>
+                <p class="ranger-blog-code-line"><code>true</code></p>
+                <p class="ranger-blog-code-line"><code>false</code></p>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <p>HAS_UG_ATTR(attrName)</p>
+              </td>
+              <td>
+                <p>Does any group associated with the user have the specified attribute?</p>
+              </td>
+              <td>
+                <p class="ranger-blog-code-line"><code>true</code></p>
+                <p class="ranger-blog-code-line"><code>false</code></p>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <p>HAS_TAG_ATTR(attrName)</p>
+              </td>
+              <td>
+                <p>Does any tag associated with the resource have the specified attribute?</p>
+              </td>
+              <td>
+                <p class="ranger-blog-code-line"><code>true</code></p>
+                <p class="ranger-blog-code-line"><code>false</code></p>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <p>IS_IN_GROUP(groupName)</p>
+              </td>
+              <td>
+                <p>Does the user belong to the specified group?</p>
+              </td>
+              <td>
+                <p class="ranger-blog-code-line"><code>true</code></p>
+                <p class="ranger-blog-code-line"><code>false</code></p>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <p>IS_IN_ROLE(roleName)</p>
+              </td>
+              <td>
+                <p>Is the user assigned to the specified role?</p>
+              </td>
+              <td>
+                <p class="ranger-blog-code-line"><code>true</code></p>
+                <p class="ranger-blog-code-line"><code>false</code></p>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <p>IS_IN_ANY_GROUP</p>
+              </td>
+              <td>
+                <p>Does the user belong to any group?</p>
+              </td>
+              <td>
+                <p class="ranger-blog-code-line"><code>true</code></p>
+                <p class="ranger-blog-code-line"><code>false</code></p>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <p>IS_IN_ANY_ROLE</p>
+              </td>
+              <td>
+                <p>Is any role assigned to the user?</p>
+              </td>
+              <td>
+                <p class="ranger-blog-code-line"><code>true</code></p>
+                <p class="ranger-blog-code-line"><code>false</code></p>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <p>IS_NOT_IN_ANY_GROUP</p>
+              </td>
+              <td>
+                <p>Does the user belong to no group?</p>
+              </td>
+              <td>
+                <p class="ranger-blog-code-line"><code>true</code></p>
+                <p class="ranger-blog-code-line"><code>false</code></p>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <p>IS_NOT_IN_ANY_ROLE</p>
+              </td>
+              <td>
+                <p>Is the user associated with no roles?</p>
+              </td>
+              <td>
+                <p class="ranger-blog-code-line"><code>true</code></p>
+                <p class="ranger-blog-code-line"><code>false</code></p>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <p>REQ</p>
+              </td>
+              <td>
+                <p>Request details, as a map</p>
+              </td>
+              <td>
+                <p class="ranger-blog-code-line"><code>{</code></p>
+                <p class="ranger-blog-code-line"><code> &quot;accessType&quot;:  &quot;select&quot;,</code></p>
+                <p class="ranger-blog-code-line"><code> &quot;clientIPAddress&quot;: &quot;10.120.27.49&quot;,</code></p>
+                <p class="ranger-blog-code-line"><code> &quot;clusterType&quot;: &quot;etl&quot;,</code></p>
+                <p class="ranger-blog-code-line"><code> &quot;clusterName&quot;: &quot;etl-e1&quot;,</code></p>
+                <p class="ranger-blog-code-line"><code> &quot;accessType&quot;:  &quot;select&quot;,</code></p>
+                <p class="ranger-blog-code-line"><code> &quot;user&quot;:        &quot;scott&quot;,</code></p>
+                <p class="ranger-blog-code-line"><code> &quot;userGroups&quot;:  [ &quot;g1&quot; ],</code></p>
+                <p class="ranger-blog-code-line"><code> &quot;userRoles&quot;:   [ &quot;r1&quot; ],</code></p>
+                <p class="ranger-blog-code-line"><code>}</code></p>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <p>RES</p>
+              </td>
+              <td>
+                <p>Resource details, as a map</p>
+              </td>
+              <td>
+                <p class="ranger-blog-code-line"><code>{</code></p>
+                <p class="ranger-blog-code-line"><code>  &quot;database&quot;:   &quot;db1&quot;,</code></p>
+                <p class="ranger-blog-code-line"><code>  &quot;table&quot;:      &quot;tbl1&quot;,</code></p>
+                <p class="ranger-blog-code-line"><code>  &quot;Column&quot;:     &quot;col1&quot;,</code></p>
+                <p class="ranger-blog-code-line"><code>  &quot;_ownerUser&quot;: &quot;jane&quot;</code></p>
+                <p class="ranger-blog-code-line"><code>}</code></p>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <p>TAG</p>
+              </td>
+              <td>
+                <p>Current tag, as a map.</p>
+                <p>This is available only in tag-based policies.</p>
+              </td>
+              <td>
+                <p class="ranger-blog-code-line"><code>{</code></p>
+                <p class="ranger-blog-code-line"><code> &quot;_type&quot;: &quot;SENSITIVE&quot;,</code></p>
+                <p class="ranger-blog-code-line"><code> &quot;sensitiveLevel&quot;: 10</code></p>
+                <p class="ranger-blog-code-line"><code>}</code></p>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <p>TAGNAMES</p>
+              </td>
+              <td>
+                <p>Names of tags associated with the resource, as a list </p>
+              </td>
+              <td>
+                <p class="ranger-blog-code-line"><code>[ &quot;PII&quot;, &quot;SENSITIVE&quot; ]</code></p>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <p>TAGS</p>
+              </td>
+              <td>
+                <p>All tags associated with the resource, as a map</p>
+              </td>
+              <td>
+                <p class="ranger-blog-code-line"><code>{</code></p>
+                <p class="ranger-blog-code-line"><code> &quot;SENSITIVE&quot;: {</code></p>
+                <p class="ranger-blog-code-line"><code>  &quot;_type&quot;, &quot;SENSITIVE&quot;,</code></p>
+                <p class="ranger-blog-code-line"><code>  &quot;level&quot;: 10</code></p>
+                <p class="ranger-blog-code-line"><code> },</code></p>
+                <p class="ranger-blog-code-line"><code> &quot;PII&quot;: {</code></p>
+                <p class="ranger-blog-code-line"><code>  &quot;_type&quot;,   &quot;PII&quot;,</code></p>
+                <p class="ranger-blog-code-line"><code>  &quot;piiType&quot;: &quot;email&quot;</code></p>
+                <p class="ranger-blog-code-line"><code> }</code></p>
+                <p class="ranger-blog-code-line"><code>}</code></p>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <p>UGNAMES</p>
+              </td>
+              <td>
+                <p>Names of groups the user belongs to, as a list</p>
+              </td>
+              <td>
+                <p class="ranger-blog-code-line"><code>[ &quot;g1&quot; ]</code></p>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <p>URNAMES</p>
+              </td>
+              <td>
+                <p>Names of roles the user is assigned to, as a list</p>
+              </td>
+              <td>
+                <p class="ranger-blog-code-line"><code>[ &quot;r1&quot; ]</code></p>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <p>USER</p>
+              </td>
+              <td>
+                <p>Current user</p>
+              </td>
+              <td>
+                <p class="ranger-blog-code-line"><code>{</code></p>
+                <p class="ranger-blog-code-line"><code> &quot;_name&quot;: &quot;scott&quot;,</code></p>
+                <p class="ranger-blog-code-line"><code> &quot;allowedSensitiveLevel&quot;: 10</code></p>
+                <p class="ranger-blog-code-line"><code>}</code></p>
+              </td>
+            </tr>
+          </table><p>
+        Most functions listed in the table above take optional parameters, to make it easier to handle use cases that require special handling.
+    </p>
+
+
+
+    <h2>Default value</h2>
+    <p>
+        A function call can include a default value as an optional parameter, which will be returned when there is no
+        value available. For example, consider the following expression:
+    </p><p class="ranger-blog-code-line">USER.allowedSensitiveLevel >= TAG.sensitiveLevel</p>
+
+    <p>
+        When the user doesn’t have an attribute named <code>allowedSensitiveLevel</code>, the expression will always evaluate to
+        false since <code>USER.allowedSensitiveLevel</code> would evaluate to <code>null</code>. To handle such cases, consider the following
+        alternate expression which would use <code>0</code> as the value instead of <code>null</code>:
+    </p><p class="ranger-blog-code-line">GET_USER_ATTR('allowedSensitiveLevel', 0) >= TAG.sensitiveLevel</p>
+
+    <p>
+        Here is another example of using default value in function calls:
+    </p><p class="ranger-blog-code-line">dept_code in  (${{GET_UG_ATTR('deptCode', -1)}})</p>
+
+
+
+    <h2>Separator</h2>
+    <p>
+        Functions that return a CSV string, like GET_TAG_NAMES(), can include following optional parameters:
+    </p>
+
+    <p class="ranger-blog__list-item">optional #1. default value: value to return when no value is available</p>
+
+        <p class="ranger-blog__list-item">optional #2. separator: string to use as the separator between values</p><p>
+        Here is an example of using optional parameters:
+    </p>
+
+    <p class="ranger-blog-code-line">GET_TAG_NAMES('', '|') == 'tag1|tag2|tag3'</p>
+
+    <h2>Quotes</h2>
+    <p>
+        Each function that returns a CSV string has another version with _Q appended to the function name; this version
+        surrounds each value within quotes. For example, consider the following row-filter expression:
+    </p>
+
+    <p class="ranger-blog-code-line">location_state IN (${{GET_UG_ATTR_Q('state')}})</p><p>
+        The expression can evaluate to the following, if the user belongs to groups having an attribute named state:
+    </p>
+
+    <p class="ranger-blog-code-line">location_state IN ('CA','OR','WA')</p>
+
+</div>
+</div>
+    </section>
+  </body>
+</document>

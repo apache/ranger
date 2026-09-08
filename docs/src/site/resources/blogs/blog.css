@@ -1,0 +1,512 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+:root {
+  --blog-bg: #f4f6f9;
+  --blog-surface: #ffffff;
+  --blog-text: #1e293b;
+  --blog-muted: #64748b;
+  --blog-heading: #0f172a;
+  --blog-accent: #1d6f5c;
+  --blog-accent-hover: #155e4d;
+  --blog-border: #e2e8f0;
+  --blog-code-bg: #f1f5f9;
+  --blog-table-bg: #ffffff;
+  --blog-table-header-bg: #f1f5f9;
+  --blog-table-border: #94a3b8;
+  --blog-table-stripe: #f8fafc;
+  --blog-max-width: 46rem;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --blog-bg: #0f1419;
+    --blog-surface: #1a2332;
+    --blog-text: #e2e8f0;
+    --blog-muted: #94a3b8;
+    --blog-heading: #f8fafc;
+    --blog-accent: #5fffd7;
+    --blog-accent-hover: #7bffe0;
+    --blog-border: #334155;
+    --blog-code-bg: #0f172a;
+    --blog-table-bg: #243044;
+    --blog-table-header-bg: #2f3f56;
+    --blog-table-border: #64748b;
+    --blog-table-stripe: #1f2d40;
+  }
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+/* Blog posts rendered inside the Maven site skin */
+.ranger-blog-post {
+  max-width: var(--blog-max-width);
+  margin: 0 auto;
+  padding: 0 0 1.5rem;
+  color: var(--blog-text);
+  font-size: 1.0625rem;
+  line-height: 1.75;
+  word-wrap: break-word;
+}
+
+/* Section h2 from XDoc is the blog post title (one title only) */
+.body-content .section:has(> .ranger-blog-post) > h2 {
+  max-width: var(--blog-max-width);
+  margin: 0 auto 0.75rem;
+  padding: 0;
+  border: none;
+  font-size: clamp(1.65rem, 4vw, 2.2rem);
+  font-weight: 700;
+  line-height: 1.25;
+  letter-spacing: -0.02em;
+  color: var(--blog-heading);
+  text-align: left;
+}
+
+.body-content .section:has(> .ranger-blog-post) > h2 + .ranger-blog-post {
+  margin-top: 0;
+}
+
+.ranger-blog__back {
+  margin: 0 0 1.25rem;
+  font-size: 0.875rem;
+}
+
+.ranger-blog__back a {
+  color: var(--blog-muted);
+  text-decoration: none;
+}
+
+.ranger-blog__back a:hover {
+  color: var(--blog-accent);
+}
+
+.ranger-blog__title {
+  margin: 0 0 0.75rem;
+  font-size: clamp(1.65rem, 4vw, 2.2rem);
+  font-weight: 700;
+  line-height: 1.25;
+  letter-spacing: -0.02em;
+  color: var(--blog-heading);
+  text-align: left;
+}
+
+.ranger-blog__meta {
+  margin: 0 0 2rem;
+  padding-bottom: 1.25rem;
+  border-bottom: 1px solid var(--blog-border);
+  font-size: 0.9375rem;
+  color: var(--blog-muted);
+}
+
+.ranger-blog__body h1 {
+  margin: 2.25rem 0 0.85rem;
+  font-size: 1.45rem;
+  font-weight: 600;
+  line-height: 1.3;
+  color: var(--blog-heading);
+  page-break-after: auto;
+}
+
+.ranger-blog__body h1:first-child {
+  margin-top: 0;
+}
+
+.ranger-blog__body h2 {
+  margin: 1.75rem 0 0.65rem;
+  font-size: 1.2rem;
+  font-weight: 600;
+  line-height: 1.35;
+  color: var(--blog-heading);
+}
+
+.ranger-blog__body h3 {
+  margin: 1.35rem 0 0.5rem;
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--blog-heading);
+}
+
+.ranger-blog__body p {
+  margin: 0 0 0.65rem;
+  font-size: inherit;
+  font-family: inherit;
+  line-height: 1.65;
+  text-align: left;
+}
+
+.ranger-blog__body p:empty,
+.ranger-blog__body p:has(> br:only-child):not(.ranger-blog-code-line) {
+  display: none;
+  margin: 0;
+  padding: 0;
+  line-height: 0;
+}
+
+.ranger-blog__list-item {
+  margin: 0 0 0.35rem;
+  padding-left: 2.25rem;
+  text-indent: -0.25in;
+  text-align: left;
+  font-size: inherit;
+  font-family: inherit;
+}
+
+/* Intro feature lists in dynamic_expressions */
+.ranger-blog__body .ranger-blog__list-group .ranger-blog__list-item {
+  margin-left: 0.5in;
+}
+
+/* Nested sub-lists (a., b., c., …) */
+.ranger-blog__list-item--nested {
+  margin-left: 1.0in;
+}
+
+/* Policy-style list lines that should stay on one row */
+.ranger-blog__list-item--nowrap {
+  white-space: nowrap;
+  overflow-x: auto;
+}
+
+.ranger-blog-post a {
+  color: var(--blog-accent);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.ranger-blog-post a:hover {
+  color: var(--blog-accent-hover);
+}
+
+.ranger-blog-post img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  margin: 1.25rem auto;
+  border: 1px solid var(--blog-border);
+  border-radius: 8px;
+}
+
+.ranger-blog-caption,
+.ranger-blog-post p[style*="text-align:center"] {
+  text-align: center !important;
+}
+
+.ranger-blog-caption:not(:has(img)),
+.ranger-blog-post p[style*="text-align:center"]:not(:has(img)) {
+  font-size: 0.875rem;
+  color: var(--blog-muted);
+  margin-top: -0.35rem;
+  margin-bottom: 1.25rem;
+}
+
+.ranger-blog-post pre.ranger-blog-pre,
+.ranger-blog-post pre {
+  margin: 1.1rem 0;
+  padding: 1rem 1.15rem;
+  font-size: 0.8125rem;
+  line-height: 1.55;
+  font-family: "Cascadia Code", "SF Mono", Consolas, "Courier New", monospace;
+  background: var(--blog-code-bg);
+  border: 1px solid var(--blog-border);
+  border-radius: 8px;
+  overflow-x: auto;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
+.ranger-blog-post hr {
+  margin: 2rem 0;
+  border: none;
+  border-top: 1px solid var(--blog-border);
+}
+
+/* Tables */
+.ranger-blog-post table {
+  width: 100% !important;
+  max-width: 100%;
+  margin: 1.25rem 0 1.5rem !important;
+  margin-left: 0 !important;
+  border-collapse: collapse;
+  border: 1px solid var(--blog-table-border);
+  border-radius: 8px;
+  background: var(--blog-table-bg);
+  font-size: 0.9rem;
+  line-height: 1.5;
+  table-layout: auto;
+}
+
+.ranger-blog-post table.ranger-blog-table--expressions {
+  border-collapse: collapse;
+}
+
+/* Column 1: function names — shrink to content, single line */
+.ranger-blog-post table.ranger-blog-table--expressions td:nth-child(1),
+.ranger-blog-post table.ranger-blog-table--expressions th:nth-child(1) {
+  width: 1% !important;
+  white-space: nowrap;
+}
+
+/* Column 2: descriptions — use remaining space */
+.ranger-blog-post table.ranger-blog-table--expressions td:nth-child(2),
+.ranger-blog-post table.ranger-blog-table--expressions th:nth-child(2) {
+  width: auto !important;
+  white-space: normal;
+}
+
+/* Column 3: examples / JSON — fit content, don't stretch across the row */
+.ranger-blog-post table.ranger-blog-table--expressions td:nth-child(3),
+.ranger-blog-post table.ranger-blog-table--expressions th:nth-child(3) {
+  width: 1% !important;
+  max-width: 20rem;
+  white-space: normal;
+}
+
+.ranger-blog-post table.ranger-blog-table--expressions td:nth-child(3) p.ranger-blog-code-line {
+  white-space: pre !important;
+  overflow-x: auto;
+  padding: 0.1rem 0.35rem !important;
+  margin: 0 !important;
+  background: transparent !important;
+  border: none !important;
+  border-radius: 0;
+  line-height: 1.4 !important;
+}
+
+.ranger-blog-post table td,
+.ranger-blog-post table th {
+  border: 1px solid var(--blog-table-border) !important;
+  padding: 0.55rem 0.7rem !important;
+  background-color: var(--blog-table-bg) !important;
+  color: var(--blog-text) !important;
+  vertical-align: top;
+  word-wrap: break-word;
+  overflow-wrap: anywhere;
+}
+
+/* Left columns: shrink to content; avoid wrapping where practical */
+.ranger-blog-post table:not(.ranger-blog-table--expressions) td:not(:last-child),
+.ranger-blog-post table:not(.ranger-blog-table--expressions) th:not(:last-child) {
+  width: 1% !important;
+  white-space: nowrap;
+}
+
+/* Rightmost column: use all remaining width */
+.ranger-blog-post table td:last-child,
+.ranger-blog-post table th:last-child {
+  width: auto !important;
+  white-space: normal;
+}
+
+/* Service | Resource | Permission table: widen middle column for nested tables */
+.ranger-blog-post table.ranger-blog-table--resource td:nth-child(1),
+.ranger-blog-post table.ranger-blog-table--resource th:nth-child(1),
+.ranger-blog-post table.ranger-blog-table--resource td:nth-child(3),
+.ranger-blog-post table.ranger-blog-table--resource th:nth-child(3) {
+  width: 1% !important;
+  white-space: nowrap;
+}
+
+.ranger-blog-post table.ranger-blog-table--resource td:nth-child(2),
+.ranger-blog-post table.ranger-blog-table--resource th:nth-child(2) {
+  width: auto !important;
+  min-width: 16rem;
+  white-space: normal;
+}
+
+.ranger-blog-post table.ranger-blog-table--resource td:nth-child(2) table {
+  width: auto;
+  min-width: 100%;
+  margin: 0.25rem 0 !important;
+}
+
+.ranger-blog-post table.ranger-blog-table--resource td:nth-child(2) table td {
+  white-space: nowrap !important;
+  width: auto !important;
+}
+
+.ranger-blog-post table.ranger-blog-table--resource td:nth-child(2) table td:first-child {
+  width: 1% !important;
+}
+
+/* Header row styling for column-header tables only (direct rows, not nested tables) */
+.ranger-blog-post table:not(.ranger-blog-table--kv) > tr:first-child > td,
+.ranger-blog-post table:not(.ranger-blog-table--kv) > tr:first-child > th {
+  background-color: var(--blog-table-header-bg) !important;
+  color: var(--blog-heading) !important;
+  font-weight: 600;
+}
+
+/* Key-value tables: every row uses the same cell styling */
+.ranger-blog-post table.ranger-blog-table--kv td {
+  font-weight: normal;
+  color: var(--blog-text) !important;
+}
+
+.ranger-blog-post table.ranger-blog-table--kv samp {
+  font-family: inherit;
+  font-size: inherit;
+  font-weight: inherit;
+}
+
+.ranger-blog-post table > tr:nth-child(even) > td {
+  background-color: var(--blog-table-stripe) !important;
+}
+
+.ranger-blog-post table > tr:nth-child(even) > td p {
+  background: transparent !important;
+}
+
+.ranger-blog-post table p {
+  margin: 0 !important;
+  line-height: 1.45 !important;
+  color: inherit !important;
+}
+
+.ranger-blog-post table p.ranger-blog-code-line,
+.ranger-blog-post table span[style*="Courier New"] {
+  font-family: "Cascadia Code", "SF Mono", Consolas, "Courier New", monospace !important;
+  font-size: 0.8125rem !important;
+  background: transparent !important;
+  border: none !important;
+  padding: 0 !important;
+  white-space: normal !important;
+}
+
+.ranger-blog-post table b,
+.ranger-blog-post table strong {
+  color: var(--blog-heading);
+  font-weight: 600;
+}
+
+/* Nested tables inside cells */
+.ranger-blog-post table table {
+  margin: 0.35rem 0 !important;
+  font-size: 0.85rem;
+  border-radius: 4px;
+}
+
+.ranger-blog-post #ftn1 p,
+.ranger-blog-post #ftn2 p {
+  font-size: 0.875rem;
+  color: var(--blog-muted);
+}
+
+.ranger-blog__footer {
+  max-width: var(--blog-max-width);
+  margin: 0 auto;
+  padding: 0 1.25rem 2rem;
+  text-align: center;
+  font-size: 0.875rem;
+}
+
+.ranger-blog__footer a {
+  color: var(--blog-muted);
+  text-decoration: none;
+}
+
+.ranger-blog__footer a:hover {
+  color: var(--blog-accent);
+}
+
+/* Blog index (blogs.html) */
+.ranger-blog-index {
+  max-width: 52rem;
+  margin: 0 auto;
+  padding: 1rem 0 2rem;
+}
+
+.ranger-blog-index__intro {
+  margin: 0 0 2rem;
+  font-size: 1.05rem;
+  line-height: 1.65;
+  color: var(--blog-muted);
+}
+
+.ranger-blog-index__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 1rem;
+}
+
+.ranger-blog-index__card {
+  margin: 0;
+  padding: 1.25rem 1.5rem;
+  background: var(--blog-surface);
+  border: 1px solid var(--blog-border);
+  border-radius: 10px;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.ranger-blog-index__card:hover {
+  border-color: var(--blog-accent);
+  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.08);
+}
+
+.ranger-blog-index__card a {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--blog-heading);
+  text-decoration: none;
+}
+
+.ranger-blog-index__card a:hover {
+  color: var(--blog-accent);
+}
+
+.ranger-blog-index__summary {
+  margin: 0.5rem 0 0;
+  font-size: 0.9375rem;
+  line-height: 1.55;
+  color: var(--blog-text);
+}
+
+.ranger-blog-index__meta {
+  margin: 0.75rem 0 0;
+  font-size: 0.8125rem;
+  color: var(--blog-muted);
+}
+
+.ranger-blog-post code {
+  font-family: "Cascadia Code", "SF Mono", Consolas, "Courier New", monospace;
+  font-size: 0.9em;
+  background: var(--blog-code-bg);
+  padding: 0.1em 0.35em;
+  border-radius: 4px;
+  border: 1px solid var(--blog-border);
+}
+
+/* Inline code snippets */
+.ranger-blog-code-line,
+.ranger-blog-post p[style*="Courier New"] {
+  font-family: "Cascadia Code", "SF Mono", Consolas, "Courier New", monospace !important;
+  font-size: 0.85rem !important;
+  line-height: 1.5 !important;
+  background: var(--blog-code-bg);
+  padding: 0.75rem 1rem;
+  border-radius: 6px;
+  border: 1px solid var(--blog-border);
+  overflow-x: auto;
+  white-space: pre-wrap;
+  word-break: break-word;
+  margin-left: 0 !important;
+  text-indent: 0 !important;
+}
