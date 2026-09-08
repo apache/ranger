@@ -421,6 +421,112 @@ public class TestLdapUserGroupBuilder extends AbstractLdapTestUnit {
     }
 
     @Test
+    void testUG_getUsers_ad_filter_uses_uSNChanged_only() throws Throwable {
+        resetConfig();
+        configureMinimalLdapConfig();
+        UserGroupSyncConfig cfg = UserGroupSyncConfig.getInstance();
+        cfg.setProperty("ranger.usersync.ldap.deltasync", "true");
+        cfg.setProperty("ranger.usersync.ldap.deltasync.server.type", "ad");
+
+        LdapUserGroupBuilder b = new LdapUserGroupBuilder();
+        b.init();
+
+        Field fGroupEnabled = LdapUserGroupBuilder.class.getDeclaredField("groupSearchEnabled");
+        fGroupEnabled.setAccessible(true);
+        fGroupEnabled.setBoolean(b, false);
+
+        Field gutF      = LdapUserGroupBuilder.class.getDeclaredField("groupUserTable");
+        Field srcUsersF = LdapUserGroupBuilder.class.getDeclaredField("sourceUsers");
+        Field srcGroupsF = LdapUserGroupBuilder.class.getDeclaredField("sourceGroups");
+        gutF.setAccessible(true);
+        srcUsersF.setAccessible(true);
+        srcGroupsF.setAccessible(true);
+        gutF.set(b, HashBasedTable.create());
+        srcUsersF.set(b, new HashMap<>());
+        srcGroupsF.set(b, new HashMap<>());
+
+        final String userDn = "cn=User1000,ou=people,dc=example,dc=com";
+        Attributes attrs = new BasicAttributes(true);
+        attrs.put(new BasicAttribute("cn", "User1000"));
+        attrs.put(new BasicAttribute("uSNChanged", "2001"));
+
+        class TestSearchResult extends SearchResult {
+            private final String nameInNs;
+
+            TestSearchResult(String name, Attributes a, String nameInNs) {
+                super(name, null, a);
+                this.nameInNs = nameInNs;
+            }
+
+            @Override
+            public String getNameInNamespace() {
+                return nameInNs;
+            }
+        }
+
+        final SearchResult sr = new TestSearchResult(userDn, attrs, userDn);
+
+        class SingleEnum implements NamingEnumeration<SearchResult> {
+            private boolean consumed;
+
+            @Override
+            public SearchResult next() {
+                consumed = true;
+                return sr;
+            }
+
+            @Override
+            public boolean hasMore() {
+                return !consumed;
+            }
+
+            @Override
+            public void close() {}
+
+            @Override
+            public boolean hasMoreElements() {
+                return hasMore();
+            }
+
+            @Override
+            public SearchResult nextElement() {
+                return next();
+            }
+        }
+
+        try (MockedConstruction<InitialLdapContext> mocked = Mockito.mockConstruction(InitialLdapContext.class, (mock, ctx) -> {
+            Mockito.when(mock.search(Mockito.anyString(), Mockito.anyString(), Mockito.any(SearchControls.class)))
+                    .thenReturn(new SingleEnum());
+            Mockito.when(mock.getResponseControls()).thenReturn(null);
+        })) {
+            Method getUsers = LdapUserGroupBuilder.class.getDeclaredMethod("getUsers", boolean.class);
+            getUsers.setAccessible(true);
+            getUsers.invoke(b, false);
+
+            Field extFilF = LdapUserGroupBuilder.class.getDeclaredField("extendedUserSearchFilter");
+            extFilF.setAccessible(true);
+            String ext = (String) extFilF.get(b);
+            assertTrue(ext.contains("uSNChanged>="), ext);
+            assertFalse(ext.contains("modifyTimestamp>="), ext);
+        }
+    }
+
+    @Test
+    void testUF_init_loads_deltaSyncServerType() throws Throwable {
+        resetConfig();
+        configureMinimalLdapConfig();
+        UserGroupSyncConfig cfg = UserGroupSyncConfig.getInstance();
+        cfg.setProperty("ranger.usersync.ldap.deltasync.server.type", "ad");
+
+        LdapUserGroupBuilder b = new LdapUserGroupBuilder();
+        b.init();
+
+        Field f = LdapUserGroupBuilder.class.getDeclaredField("deltaSyncServerType");
+        f.setAccessible(true);
+        assertEquals("ad", f.get(b));
+    }
+
+    @Test
     public void testV_getUsers_processes_user_and_group_memberships() throws Throwable {
         resetConfig();
         configureMinimalLdapConfig();
