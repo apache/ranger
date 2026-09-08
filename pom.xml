@@ -731,6 +731,8 @@
                         <exclude>**/docs/src/site/resources/ranger-logo.svg</exclude>
                         <exclude>**/docs/src/site/resources/override-banner.js</exclude>
                         <exclude>**/docs/src/site/resources/smooth-scroll.js</exclude>
+                        <exclude>**/docs/src/site/resources/js/jquery.min.js</exclude>
+                        <exclude>**/docs/src/site/resources/js/html5.js</exclude>
                         <exclude>**/importRole/*.json</exclude>
                         <exclude>mkdocs/docs/assets/**</exclude>
                         <exclude>mkdocs/requirements.txt</exclude>
