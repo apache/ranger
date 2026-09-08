@@ -65,6 +65,14 @@ export const PLUGIN_STATUS_INITIAL_STATE = {
   ...INITIAL_STATE
 };
 
+export const METRICS_INITIAL_STATE = {
+  ...INITIAL_STATE,
+  showMetricModal: false,
+  metricData: null,
+  showMetricGraphModal: false,
+  metricGraphData: null
+};
+
 export const USERSYNC_INITIAL_STATE = {
   ...INITIAL_STATE,
   showSyncTableModal: false,
@@ -120,6 +128,18 @@ export const reducer = (state, action) => {
         ...state,
         showSessionModal: action.showSessionModal,
         sessionId: action.sessionId
+      };
+    case ACTIONS.SHOW_METRIC_MODAL:
+      return {
+        ...state,
+        showMetricModal: action.showMetricModal,
+        metricData: action.metricData
+      };
+    case ACTIONS.SHOW_METRIC_GRAPH_MODAL:
+      return {
+        ...state,
+        showMetricGraphModal: action.showMetricGraphModal,
+        metricGraphData: action.metricGraphData
       };
     case ACTIONS.SHOW_SYNC_TABLE_MODAL:
       return {

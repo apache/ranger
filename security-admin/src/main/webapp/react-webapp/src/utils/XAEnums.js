@@ -657,7 +657,8 @@ export const PathAssociateWithModule = {
     "/reports/audit/agent",
     "/reports/audit/pluginStatus",
     "/reports/audit/userSync",
-    "/reports/audit/eventlog/:eventId"
+    "/reports/audit/eventlog/:eventId",
+    "/reports/audit/metric"
   ],
   "Security Zone": [
     "/zones/zone/list",
