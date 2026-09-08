@@ -35,6 +35,7 @@ import org.apache.ranger.authz.model.RangerAuthzResult.PermissionResult;
 import org.apache.ranger.authz.model.RangerAuthzResult.PolicyInfo;
 import org.apache.ranger.authz.model.RangerAuthzResult.ResultInfo;
 import org.apache.ranger.authz.model.RangerAuthzResult.RowFilterResult;
+import org.apache.ranger.authz.model.RangerResourceInfo;
 import org.apache.ranger.authz.model.RangerResourcePermissions;
 import org.apache.ranger.authz.model.RangerResourcePermissionsRequest;
 import org.apache.ranger.authz.model.RangerUserInfo;
@@ -95,6 +96,10 @@ class RangerAuthzPlugin {
         RangerAuthzResult       ret           = new RangerAuthzResult(request.getRequestId(), new HashMap<>(permissions.size()));
         RangerAccessResource    resource      = getResource(access.getResource().getName(), access.getResource().getAttributes());
         RangerAccessRequestImpl accessRequest = new RangerAccessRequestImpl(resource, null, userInfo.getName(), userInfo.getGroups(), userInfo.getRoles());
+
+        if (RangerResourceInfo.ResourceMatchScope.SELF_OR_ANY_DESCENDANT.equals(access.getResource().getNameMatchScope())) {
+            accessRequest.setResourceMatchingScope(RangerAccessRequest.ResourceMatchingScope.SELF_OR_DESCENDANTS);
+        }
 
         initializeRequest(accessRequest, access, context);
 
@@ -219,7 +224,11 @@ class RangerAuthzPlugin {
         Map<String, Object> resourceMap = getResourceAsMap(resource);
         Object              ownerName   = attributes != null ? attributes.get(RangerAccessRequestUtil.KEY_OWNER) : null;
 
-        return new RangerAccessResourceImpl(resourceMap, ownerName != null ? ownerName.toString() : null);
+        RangerAccessResourceImpl ret = new RangerAccessResourceImpl(resourceMap, ownerName != null ? ownerName.toString() : null);
+
+        ret.setServiceDef(plugin.getServiceDef());
+
+        return ret;
     }
 
     private RangerAccessResource getSubResource(RangerAccessResource parent, String subResourceName) {
@@ -231,7 +240,11 @@ class RangerAuthzPlugin {
             elements.put(parts[0], parts.length > 1 ? parts[1] : "");
         }
 
-        return new RangerAccessResourceImpl(elements, parent.getOwnerUser());
+        RangerAccessResourceImpl ret = new RangerAccessResourceImpl(elements, parent.getOwnerUser());
+
+        ret.setServiceDef(plugin.getServiceDef());
+
+        return ret;
     }
 
     private void initializeRequest(RangerAccessRequestImpl request, RangerAccessInfo access, RangerAccessContext context) {

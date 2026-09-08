@@ -28,8 +28,11 @@ import org.apache.ranger.authz.model.RangerAccessInfo;
 import org.apache.ranger.authz.model.RangerAuthzRequest;
 import org.apache.ranger.authz.model.RangerAuthzResult;
 import org.apache.ranger.authz.model.RangerAuthzResult.AccessDecision;
+import org.apache.ranger.authz.model.RangerFilterResourcesRequest;
+import org.apache.ranger.authz.model.RangerFilterResourcesResult;
 import org.apache.ranger.authz.model.RangerMultiAuthzRequest;
 import org.apache.ranger.authz.model.RangerMultiAuthzResult;
+import org.apache.ranger.authz.model.RangerResourceInfo;
 import org.apache.ranger.authz.model.RangerResourcePermissions;
 import org.apache.ranger.authz.model.RangerResourcePermissionsRequest;
 import org.slf4j.Logger;
@@ -37,6 +40,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
@@ -115,6 +119,27 @@ public class RangerEmbeddedAuthorizer extends RangerAuthorizer {
         RangerAuthzPlugin plugin = getOrCreatePlugin(request.getContext().getServiceName(), request.getContext().getServiceType());
 
         return plugin.getResourcePermissions(request);
+    }
+
+    @Override
+    public RangerFilterResourcesResult filterResources(RangerFilterResourcesRequest request) throws RangerAuthzException {
+        validateRequest(request);
+
+        RangerAuthzPlugin        plugin           = getOrCreatePlugin(request.getContext().getServiceName(), request.getContext().getServiceType());
+        String                   requestId        = request.getRequestId();
+        List<RangerResourceInfo> allowedResources = new ArrayList<>();
+
+        for (RangerResourceInfo resource : request.getResources()) {
+            RangerAccessInfo   access = new RangerAccessInfo(resource, request.getAction(), request.getPermissions());
+            RangerAuthzRequest req    = new RangerAuthzRequest(requestId, request.getUser(), access, request.getContext());
+            RangerAuthzResult  res    = authorize(req, plugin, null);
+
+            if (res != null && AccessDecision.ALLOW.equals(res.getDecision())) {
+                allowedResources.add(resource);
+            }
+        }
+
+        return new RangerFilterResourcesResult(requestId, allowedResources);
     }
 
     public RangerAuthzResult authorize(RangerAuthzRequest request, RangerAuthzAuditHandler auditHandler) throws RangerAuthzException {

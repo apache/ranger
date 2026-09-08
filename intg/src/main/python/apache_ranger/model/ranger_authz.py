@@ -33,7 +33,6 @@ class RangerUserInfo(RangerBase):
 
 class RangerResourceInfo(RangerBase):
     SCOPE_SELF                   = "SELF"
-    SCOPE_SELF_OR_ANY_CHILD      = "SELF_OR_ANY_CHILD"
     SCOPE_SELF_OR_ANY_DESCENDANT = "SELF_OR_ANY_DESCENDANT"
 
     def __init__(self, attrs=None):
@@ -247,6 +246,38 @@ class RangerResourcePermissions(RangerBase):
         self.users    = _coerce_principal_permissions(self.users)
         self.groups   = _coerce_principal_permissions(self.groups)
         self.roles    = _coerce_principal_permissions(self.roles)
+
+
+class RangerFilterResourcesRequest(RangerBase):
+    def __init__(self, attrs=None):
+        attrs = non_null(attrs, {})
+        RangerBase.__init__(self, attrs)
+
+        self.requestId   = attrs.get("requestId")
+        self.user        = attrs.get("user")
+        self.resources   = attrs.get("resources")
+        self.permissions = attrs.get("permissions")
+        self.action      = attrs.get("action")
+        self.context     = attrs.get("context")
+
+    def type_coerce_attrs(self):
+        super(RangerFilterResourcesRequest, self).type_coerce_attrs()
+        self.user      = type_coerce(self.user, RangerUserInfo)
+        self.resources = type_coerce_list(self.resources, RangerResourceInfo)
+        self.context   = type_coerce(self.context, RangerAccessContext)
+
+
+class RangerFilterResourcesResult(RangerBase):
+    def __init__(self, attrs=None):
+        attrs = non_null(attrs, {})
+        RangerBase.__init__(self, attrs)
+
+        self.requestId = attrs.get("requestId")
+        self.resources = attrs.get("resources")
+
+    def type_coerce_attrs(self):
+        super(RangerFilterResourcesResult, self).type_coerce_attrs()
+        self.resources = type_coerce_list(self.resources, RangerResourceInfo)
 
 
 def _coerce_principal_permissions(value):
