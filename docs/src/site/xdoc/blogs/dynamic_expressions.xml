@@ -16,9 +16,6 @@
   limitations under the License.
 -->
 <document>
-  <head>
-    <link href="../css/custom.css" rel="stylesheet"/>
-  </head>
   <body>
     <section name="Apache Ranger - Dynamic Expressions">
 <div class="ranger-blog-post">
