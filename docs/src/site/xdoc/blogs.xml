@@ -17,58 +17,49 @@
 -->
 <document>
 <body>
-<section name="Apache Ranger&#8482; blogs">
-<ul>
-    <li>
-        <p>
-            <a href="blogs/policy_model.html" target="_blank">Apache Ranger Policy Model</a>
-        </p>
-        Apache Ranger provides a rich and extensible policy model to support access control, data masking, row-filters, RBAC, ABAC and TBAC. This blog highlights key features of the policy model along with few examples.<br/>
-        <div style="font-size: 90%;color: #999;">
-            Posted on Mar 08, 2022 by Madhan Neethiraj, Apache Ranger committer
-        </div>
+<section name="Apache Ranger blogs">
+<div class="ranger-blog-index">
+  <p class="ranger-blog-index__intro">
+    Technical articles from the Apache Ranger community on policy models, access control patterns, and integration guides.
+  </p>
+  <ul class="ranger-blog-index__list">
+    <li class="ranger-blog-index__card">
+      <a href="blogs/integrating_applications.html">Integrating applications with Apache Ranger</a>
+      <p class="ranger-blog-index__summary">
+        How applications integrate with Apache Ranger through service definitions, embedded plugins, and the PDP server.
+      </p>
+      <p class="ranger-blog-index__meta">Madhan Neethiraj &middot; Aug 24, 2026</p>
     </li>
-    <p/>
-    <li>
-        <p>
-            <a href="blogs/adventures_in_abac_1.html" target="_blank">Adventures in attribute-based access control (ABAC) - part 1</a>
-        </p>
-        Explores choices for setting up access control based on sensitivity level and content of the data, and attributes of the user.<br/>
-        <div style="font-size: 90%;color: #999;">
-            Posted on Apr 29, 2023 by Barbara Eckman, Comcast
-        </div>
+    <li class="ranger-blog-index__card">
+      <a href="blogs/dynamic_expressions.html">Dynamic expressions</a>
+      <p class="ranger-blog-index__summary">
+        Using dynamic expressions and context attributes in Apache Ranger policies.
+      </p>
+      <p class="ranger-blog-index__meta">Madhan Neethiraj &middot; Dec 10, 2023</p>
     </li>
-    <p/>
-    <li>
-        <p>
-            <a href="blogs/adventures_in_abac_2.html" target="_blank">Adventures in attribute-based access control (ABAC) - part 2</a>
-        </p>
-        Explores use of attribute based access control to address more advanced use cases.<br/>
-        <div style="font-size: 90%;color: #999;">
-            Posted on Oct 15, 2023 by Barbara Eckman, Comcast
-        </div>
+    <li class="ranger-blog-index__card">
+      <a href="blogs/adventures_in_abac_2.html">Adventures in attribute-based access control (ABAC) - part 2</a>
+      <p class="ranger-blog-index__summary">
+        Advanced ABAC use cases for complex access control constraints.
+      </p>
+      <p class="ranger-blog-index__meta">Barbara Eckman &middot; Oct 15, 2023</p>
     </li>
-    <p/>
-    <li>
-        <p>
-            <a href="blogs/dynamic_expressions.html" target="_blank">Dynamic expressions</a>
-        </p>
-        Explores use of dynamic expressions using context attributes in Apache Ranger policies.<br/>
-        <div style="font-size: 90%;color: #999;">
-            Posted on Dec 10, 2023 by Madhan Neethiraj, Apache Ranger committer
-        </div>
+    <li class="ranger-blog-index__card">
+      <a href="blogs/adventures_in_abac_1.html">Adventures in attribute-based access control (ABAC) - part 1</a>
+      <p class="ranger-blog-index__summary">
+        Access control approaches based on data sensitivity and user attributes.
+      </p>
+      <p class="ranger-blog-index__meta">Barbara Eckman &middot; Apr 29, 2023</p>
     </li>
-    <p/>
-    <li>
-        <p>
-            <a href="blogs/integrating_applications.html" target="_blank">Integrating applications with Apache Ranger</a>
-        </p>
-        Describes how applications can integrate with Apache Ranger through service definitions, embedded plugins, and the PDP server.<br/>
-        <div style="font-size: 90%;color: #999;">
-            Posted on Aug 24, 2026 by Madhan Neethiraj, Apache Ranger committer
-        </div>
+    <li class="ranger-blog-index__card">
+      <a href="blogs/policy_model.html">Apache Ranger policy model</a>
+      <p class="ranger-blog-index__summary">
+        Key features of the Ranger policy model for access control, masking, row-filters, RBAC, ABAC, and TBAC.
+      </p>
+      <p class="ranger-blog-index__meta">Madhan Neethiraj &middot; Mar 08, 2022</p>
     </li>
-</ul>
+  </ul>
+</div>
 </section>
 </body>
 </document>
