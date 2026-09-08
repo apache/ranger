@@ -42,7 +42,7 @@ BEGIN
         [cfg_value] NVARCHAR(MAX) DEFAULT NULL NULL,
         [version] [bigint] DEFAULT NULL NULL,
         PRIMARY KEY CLUSTERED ([id] ASC),
-        CONSTRAINT [x_audit_config_UK_cfg_name] UNIQUE NONCLUSTERED ([cfg_name] ASC)
+        CONSTRAINT [x_audit_config$x_audit_config_UK_cfg_name] UNIQUE NONCLUSTERED ([cfg_name] ASC)
     ) ON [PRIMARY];
 END;
 GO
