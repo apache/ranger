@@ -287,6 +287,34 @@ class TestPDPClient(unittest.TestCase):
 
         self.assertIsInstance(result.resources[0], RangerResourceInfo)
 
+    def test_filter_resources(self):
+        req = {
+          "requestId":   "req-1",
+          "user":        {"name": "alice", "groups": ["analytics"]},
+          "resources":   [{"name": "table:default/sales", "subResources": ["column:id"]}],
+          "permissions": ["select"],
+          "action":      "QUERY" ,
+          "context":   {"serviceType": "hive", "serviceName": "dev_hive"}
+        }
+        res = {
+          "requestId":   "req-1",
+          "resources":   [{"name": "table:default/sales", "subResources": ["column:id"]}]
+        }
+
+        client                      = RangerPDPClient(self.PDP_URL, auth=None)
+        client.client_http.call_api = Mock(return_value=res)
+        result                      = client.filter_resources(req)
+
+        client.client_http.call_api.assert_called_once()
+
+        api          = client.client_http.call_api.call_args.args[0]
+        request_data = client.client_http.call_api.call_args.kwargs["request_data"]
+
+        self.assertEqual(RangerPDPClient.URI_FILTER_RESOURCES, api.path)
+        self.assertEqual(HttpMethod.POST, api.method)
+        self.assertIsInstance(request_data, RangerFilterResourcesRequest)
+        self.assertIsInstance(result, RangerFilterResourcesResult)
+
 
 if __name__ == '__main__':
     unittest.main()
