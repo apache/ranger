@@ -27,6 +27,8 @@ import org.apache.ranger.authz.api.RangerAuthzException;
 import org.apache.ranger.authz.model.RangerAccessInfo;
 import org.apache.ranger.authz.model.RangerAuthzRequest;
 import org.apache.ranger.authz.model.RangerAuthzResult;
+import org.apache.ranger.authz.model.RangerFilterResourcesRequest;
+import org.apache.ranger.authz.model.RangerFilterResourcesResult;
 import org.apache.ranger.authz.model.RangerMultiAuthzRequest;
 import org.apache.ranger.authz.model.RangerMultiAuthzResult;
 import org.apache.ranger.authz.model.RangerResourceInfo;
@@ -253,6 +255,50 @@ public class RangerPdpREST {
         return ret;
     }
 
+    /**
+     * Returns the effective permissions for a resource, broken down by user/group/role.
+     *
+     * @param request wrapper containing the resource info and access context
+     * @return {@code 200 OK} with {@link RangerResourcePermissions}, or {@code 400} / {@code 500} on error
+     */
+    @POST
+    @Path("/filterResources")
+    public Response filterResources(RangerFilterResourcesRequest request, @Context HttpServletRequest httpRequest) {
+        long     startNanos = System.nanoTime();
+        Response ret        = null;
+
+        try {
+            String caller      = getAuthenticatedUser(httpRequest);
+            String serviceName = getServiceName(request);
+
+            LOG.debug("==> filterResources(caller={}, serviceName={})", caller, serviceName);
+
+            ret = validateCaller(caller, serviceName);
+
+            if (isStatusOk(ret)) {
+                try {
+                    RangerFilterResourcesResult result = authorizer.filterResources(request);
+
+                    ret = Response.ok(result).build();
+                } catch (RangerAuthzException e) {
+                    LOG.warn("filterResources(): validation error; caller={}", caller, e);
+
+                    ret = badRequest(e);
+                } catch (Exception e) {
+                    LOG.error("filterResources(): unexpected error; caller={}", caller, e);
+
+                    ret = serverError();
+                }
+            }
+
+            LOG.debug("<== filterResources(caller={}, serviceName={}): ret={}", caller, serviceName, ret != null ? ret.getStatus() : null);
+        } finally {
+            recordRequestMetrics(ret, startNanos, httpRequest);
+        }
+
+        return ret;
+    }
+
     private String getAuthenticatedUser(HttpServletRequest httpRequest) {
         Object user = httpRequest.getAttribute(RangerPdpConstants.ATTR_AUTHENTICATED_USER);
 
@@ -268,6 +314,10 @@ public class RangerPdpREST {
     }
 
     private static String getServiceName(RangerResourcePermissionsRequest request) {
+        return request != null && request.getContext() != null ? request.getContext().getServiceName() : null;
+    }
+
+    private static String getServiceName(RangerFilterResourcesRequest request) {
         return request != null && request.getContext() != null ? request.getContext().getServiceName() : null;
     }
 

@@ -1,0 +1,68 @@
+[
+  {
+    "comment": "filter resources tests for dev_s3"
+  },
+  {
+    "request": {
+      "requestId": "filter-resources: path1-r-user read",
+      "user":      { "name": "path1-r-user" },
+      "resources": [
+        { "name": "path:mybucket/data/path1/file1.orc" },
+        { "name": "path:mybucket/data/path1/file2.orc" },
+        { "name": "path:mybucket/data/path2/file1.orc" },
+        { "name": "path:mybucket/data/path2/file2.orc" }
+      ],
+      "action": "read",
+      "permissions": [ "read" ],
+      "context":   { "serviceName": "dev_s3" }
+    },
+    "result": {
+      "requestId": "filter-resources: path1-r-user read",
+      "resources": [
+        { "name": "path:mybucket/data/path1/file1.orc" },
+        { "name": "path:mybucket/data/path1/file2.orc" }
+      ]
+    }
+  },
+  {
+    "request": {
+      "requestId": "filter-resources: path2-r-user read",
+      "user":      { "name": "path2-r-user" },
+      "resources": [
+        { "name": "path:mybucket/data/path1/file1.orc" },
+        { "name": "path:mybucket/data/path1/file2.orc" },
+        { "name": "path:mybucket/data/path2/file1.orc" },
+        { "name": "path:mybucket/data/path2/file2.orc" }
+      ],
+      "action": "read",
+      "permissions": [ "read" ],
+      "context":   { "serviceName": "dev_s3" }
+    },
+    "result": {
+      "requestId": "filter-resources: path2-r-user read",
+      "resources": [
+        { "name": "path:mybucket/data/path2/file1.orc" },
+        { "name": "path:mybucket/data/path2/file2.orc" }
+      ]
+    }
+  },
+  {
+    "request": {
+      "requestId": "filter-resources: path1-r-user bucket list",
+      "user":      { "name": "path1-r-user" },
+      "resources": [
+        { "name": "bucket:mybucket", "nameMatchScope": "SELF_OR_ANY_DESCENDANT" },
+        { "name": "bucket:mybucket2", "nameMatchScope": "SELF_OR_ANY_DESCENDANT" }
+      ],
+      "action": "list",
+      "permissions": [ "read" ],
+      "context":   { "serviceName": "dev_s3" }
+    },
+    "result": {
+      "requestId": "filter-resources: path1-r-user bucket list",
+      "resources": [
+        { "name": "bucket:mybucket", "nameMatchScope": "SELF_OR_ANY_DESCENDANT" }
+      ]
+    }
+  }
+]
