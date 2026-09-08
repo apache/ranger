@@ -766,7 +766,6 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
                     if (StringUtils.equalsIgnoreCase(curGroupAttrsStr, newGroupAttrsStr)) {
                         groupNameMap.put(groupDN, groupName);
                     }
-
                 } else {
                     boolean allowSyncSourceOverwrite = !isSyncSourceValidationEnabled && isDnValidationEnabled;
 
