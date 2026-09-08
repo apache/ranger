@@ -49,6 +49,8 @@ public abstract class RangerGdsValidationDataProvider {
 
     public abstract boolean isAdminUser();
 
+    public abstract boolean isAuditUser();
+
     public abstract boolean isServiceAdmin(String name);
 
     public abstract boolean isZoneAdmin(String zoneName);
