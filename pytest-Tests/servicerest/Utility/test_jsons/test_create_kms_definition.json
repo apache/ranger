@@ -1,0 +1,171 @@
+{
+    "id": 1,
+    "isEnabled": true,
+    "version": 1,
+    "name": "kms_{random_str}",
+    "displayName": "kms_{random_str}",
+    "implClass": "org.apache.ranger.services.kms.RangerServiceKMS",
+    "label": "KMS Repository",
+    "description": "KMS Repository",
+    "options": {
+        "enableDenyAndExceptionsInPolicies": "true",
+        "enableTagBasedPolicies": "true",
+        "ui.pages": "encryption",
+        "security.allowed.roles": "keyadmin"
+    },
+    "configs": [
+        {
+            "itemId": 1,
+            "name": "provider",
+            "type": "string",
+            "subType": "",
+            "mandatory": true,
+            "validationRegEx": "",
+            "validationMessage": "",
+            "uiHint": "",
+            "label": "KMS URL"
+        },
+        {
+            "itemId": 2,
+            "name": "username",
+            "type": "string",
+            "subType": "",
+            "mandatory": true,
+            "validationRegEx": "",
+            "validationMessage": "",
+            "uiHint": "",
+            "label": "Username"
+        },
+        {
+            "itemId": 3,
+            "name": "password",
+            "type": "password",
+            "subType": "",
+            "mandatory": true,
+            "validationRegEx": "",
+            "validationMessage": "",
+            "uiHint": "",
+            "label": "Password"
+        },
+        {
+            "itemId": 4,
+            "name": "ranger.plugin.audit.filters",
+            "type": "string",
+            "subType": "",
+            "mandatory": false,
+            "defaultValue": "[ {'accessResult': 'DENIED', 'isAudited': true}, {'users':['keyadmin'] ,'isAudited':false} ]",
+            "validationRegEx": "",
+            "validationMessage": "",
+            "uiHint": "",
+            "label": "Ranger Default Audit Filters"
+        }
+    ],
+    "resources": [
+        {
+            "itemId": 1,
+            "name": "keyname",
+            "type": "string",
+            "level": 10,
+            "parent": "",
+            "mandatory": true,
+            "lookupSupported": true,
+            "recursiveSupported": false,
+            "excludesSupported": false,
+            "matcher": "org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
+            "matcherOptions": {
+                "wildCard": "true",
+                "ignoreCase": "false"
+            },
+            "validationRegEx": "",
+            "validationMessage": "",
+            "uiHint": "",
+            "label": "Key Name",
+            "description": "Key Name",
+            "accessTypeRestrictions": [],
+            "isValidLeaf": true
+        }
+    ],
+    "accessTypes": [
+        {
+            "itemId": 1,
+            "name": "create",
+            "label": "Create",
+            "impliedGrants": []
+        },
+        {
+            "itemId": 2,
+            "name": "delete",
+            "label": "Delete",
+            "impliedGrants": []
+        },
+        {
+            "itemId": 3,
+            "name": "rollover",
+            "label": "Rollover",
+            "impliedGrants": []
+        },
+        {
+            "itemId": 4,
+            "name": "get",
+            "label": "Get",
+            "impliedGrants": []
+        },
+        {
+            "itemId": 5,
+            "name": "getkeys",
+            "label": "Get Keys",
+            "impliedGrants": []
+        },
+        {
+            "itemId": 6,
+            "name": "getmetadata",
+            "label": "Get Metadata",
+            "impliedGrants": []
+        },
+        {
+            "itemId": 7,
+            "name": "setkeymaterial",
+            "label": "Set Key Material",
+            "impliedGrants": []
+        },
+        {
+            "itemId": 8,
+            "name": "generateeek",
+            "label": "Generate EEK",
+            "impliedGrants": []
+        },
+        {
+            "itemId": 9,
+            "name": "decrypteek",
+            "label": "Decrypt EEK",
+            "impliedGrants": []
+        }
+    ],
+    "policyConditions": [
+        {
+            "itemId": 1,
+            "name": "_expression",
+            "evaluator": "org.apache.ranger.plugin.conditionevaluator.RangerScriptConditionEvaluator",
+            "evaluatorOptions": {
+                "ui.isMultiline": "true",
+                "engineName": "JavaScript"
+            },
+            "validationRegEx": "",
+            "validationMessage": "",
+            "uiHint": "{ \"isMultiline\":true }",
+            "label": "Enter boolean expression",
+            "description": "Boolean expression"
+        }
+    ],
+    "contextEnrichers": [],
+    "enums": [],
+    "dataMaskDef": {
+        "maskTypes": [],
+        "accessTypes": [],
+        "resources": []
+    },
+    "rowFilterDef": {
+        "accessTypes": [],
+        "resources": []
+    }
+}

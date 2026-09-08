@@ -1,0 +1,58 @@
+{
+    "service": "dev_kms",
+    "name": "KMS Policy - {random_str}",
+    "policyType": 0,
+    "policyPriority": 0,
+    "description": "KMS policy for key - {random_str}",
+    "isAuditEnabled": true,
+    "resources": {
+        "keyname": {
+            "values": [
+                "{random_str}"
+            ],
+            "isExcludes": false,
+            "isRecursive": false
+        }
+    },
+    "policyItems": [
+        {
+            "accesses": [
+                {
+                    "type": "GetMetadata",
+                    "isAllowed": true
+                },
+                {
+                    "type": "GenerateEEK",
+                    "isAllowed": true
+                },
+                {
+                    "type": "DecryptEEK",
+                    "isAllowed": true
+                }
+            ],
+            "users": [
+                "keyadmin"
+            ],
+            "groups": [],
+            "roles": [],
+            "conditions": [],
+            "delegateAdmin": true
+        }
+    ],
+    "denyPolicyItems": [],
+    "allowExceptions": [],
+    "denyExceptions": [],
+    "dataMaskPolicyItems": [],
+    "rowFilterPolicyItems": [],
+    "serviceType": "kms",
+    "options": {},
+    "validitySchedules": [],
+    "policyLabels": [
+        "{random_str}"
+    ],
+    "zoneName": "",
+    "isDenyAllElse": false,
+    "additionalResources": [],
+    "conditions": [],
+    "isEnabled": true
+}
