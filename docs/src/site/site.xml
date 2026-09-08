@@ -44,7 +44,7 @@ under the License.
 <body>
     <head>
         <![CDATA[
-        <link href="css/custom.css" rel="stylesheet"/>
+        <link href="/css/custom.css" rel="stylesheet"/>
         ]]>
     </head>
     <menu name="Overview">
@@ -129,11 +129,12 @@ under the License.
 <custom>
     <reflowSkin>
         <theme>bootswatch-flatly</theme>
+        <localResources>true</localResources>
         <highlightJs>true</highlightJs>
         <brand>
             <name>
             <![CDATA[
-                <img src="ranger-logo.svg" alt="Apache Ranger" width=250px; height=100px;>
+                <img src="/ranger-logo.svg" alt="Apache Ranger" width=250px; height=100px;>
             ]]>
             </name>
             <href>https://ranger.apache.org</href>
@@ -154,8 +155,8 @@ under the License.
         </bottomDescription>
         <skipGenerationDate>true</skipGenerationDate>
         <endContent>
-            <script src="override-banner.js"></script>
-            <script src="smooth-scroll.js"></script>
+            <script src="/override-banner.js"></script>
+            <script src="/smooth-scroll.js"></script>
         </endContent>
     </reflowSkin>
 </custom>

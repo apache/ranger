@@ -32,29 +32,31 @@
   --blog-max-width: 46rem;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --blog-bg: #0f1419;
-    --blog-surface: #1a2332;
-    --blog-text: #e2e8f0;
-    --blog-muted: #94a3b8;
-    --blog-heading: #f8fafc;
-    --blog-accent: #5fffd7;
-    --blog-accent-hover: #7bffe0;
-    --blog-border: #334155;
-    --blog-code-bg: #0f172a;
-    --blog-table-bg: #243044;
-    --blog-table-header-bg: #2f3f56;
-    --blog-table-border: #64748b;
-    --blog-table-stripe: #1f2d40;
-  }
-}
-
 *, *::before, *::after {
   box-sizing: border-box;
 }
 
-/* Blog posts rendered inside the Maven site skin */
+/* Match the light Ranger site skin regardless of OS dark-mode preference */
+.project-ranger .ranger-blog-post,
+.project-ranger .ranger-blog-index,
+.project-ranger .body-content .section:has(> .ranger-blog-post) > h2 {
+  color: #1e293b;
+}
+
+.project-ranger .ranger-blog__body h1,
+.project-ranger .ranger-blog__body h2,
+.project-ranger .ranger-blog__body h3,
+.project-ranger .body-content .section:has(> .ranger-blog-post) > h2 {
+  color: #0f172a;
+}
+
+.project-ranger .ranger-blog-post p,
+.project-ranger .ranger-blog-post li,
+.project-ranger .ranger-blog-post td,
+.project-ranger .ranger-blog-post th {
+  color: #1e293b;
+}
+
 .ranger-blog-post {
   max-width: var(--blog-max-width);
   margin: 0 auto;
