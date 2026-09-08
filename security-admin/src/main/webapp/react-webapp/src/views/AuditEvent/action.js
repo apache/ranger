@@ -26,6 +26,8 @@ export const ACTIONS = {
   SHOW_POLICY_MODAL: "show-policy-modal",
   SHOW_ROW_MODAL: "show-row-modal",
   SHOW_SESSION_MODAL: "show-session-modal",
+  SHOW_METRIC_MODAL: "show-metric-modal",
+  SHOW_METRIC_GRAPH_MODAL: "show-metric-graph-modal",
   SHOW_SYNC_TABLE_MODAL: "show-sync-table-modal",
   SET_SECURITY_ZONES: "set-security-zones"
 };

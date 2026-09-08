@@ -538,6 +538,17 @@ export const SideBarBody = (props) => {
                       User Sync
                     </NavLink>
                   </li>
+                  <li className="list-group-item">
+                    <NavLink
+                      to="/reports/audit/metric"
+                      onClick={() => {
+                        props.closeCollapse();
+                      }}
+                      className="list-group-item"
+                    >
+                      Metrics
+                    </NavLink>
+                  </li>
                 </React.Fragment>
               )}
             </ul>

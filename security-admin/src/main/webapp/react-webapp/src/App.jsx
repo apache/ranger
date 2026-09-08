@@ -84,6 +84,7 @@ const PluginStatusLogs = lazy(
 const UserSyncLogs = lazy(
   () => import("Views/AuditEvent/UserSync/UserSyncLogs")
 );
+const MetricsLogs = lazy(() => import("Views/AuditEvent/Metrics/MetricsLogs"));
 const PolicyListingTabView = lazy(
   () => import("Views/PolicyListing/PolicyListingTabView")
 );
@@ -343,6 +344,7 @@ export default class App extends Component {
                     <Route path="agent" element={<PluginsLogs />} />
                     <Route path="pluginStatus" element={<PluginStatusLogs />} />
                     <Route path="userSync" element={<UserSyncLogs />} />
+                    <Route path="metric" element={<MetricsLogs />} />
                   </Route>
                   {/* AUDIT LOGS DETAILS VIEW */}
                   <Route
