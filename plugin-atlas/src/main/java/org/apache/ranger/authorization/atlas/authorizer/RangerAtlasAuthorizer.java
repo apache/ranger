@@ -46,6 +46,7 @@ import org.apache.ranger.plugin.util.RangerPerfTracer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.lang.reflect.Method;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -55,6 +56,8 @@ import java.util.ListIterator;
 import java.util.Map;
 import java.util.Set;
 
+import static org.apache.ranger.services.atlas.RangerServiceAtlas.ACCESS_TYPE_POST_NOTIFICATION;
+import static org.apache.ranger.services.atlas.RangerServiceAtlas.ACCESS_TYPE_SERVICE_NOTIFICATION_POST;
 import static org.apache.ranger.services.atlas.RangerServiceAtlas.ACCESS_TYPE_TYPE_READ;
 import static org.apache.ranger.services.atlas.RangerServiceAtlas.ENTITY_NOT_CLASSIFIED;
 import static org.apache.ranger.services.atlas.RangerServiceAtlas.RESOURCE_CLASSIFICATION;
@@ -70,6 +73,7 @@ import static org.apache.ranger.services.atlas.RangerServiceAtlas.RESOURCE_ENTIT
 import static org.apache.ranger.services.atlas.RangerServiceAtlas.RESOURCE_ENTITY_LABEL;
 import static org.apache.ranger.services.atlas.RangerServiceAtlas.RESOURCE_ENTITY_OWNER;
 import static org.apache.ranger.services.atlas.RangerServiceAtlas.RESOURCE_ENTITY_TYPE;
+import static org.apache.ranger.services.atlas.RangerServiceAtlas.RESOURCE_NOTIFICATION_TOPIC;
 import static org.apache.ranger.services.atlas.RangerServiceAtlas.RESOURCE_RELATIONSHIP_TYPE;
 import static org.apache.ranger.services.atlas.RangerServiceAtlas.RESOURCE_SERVICE;
 import static org.apache.ranger.services.atlas.RangerServiceAtlas.RESOURCE_TYPE_CATEGORY;
@@ -126,8 +130,16 @@ public class RangerAtlasAuthorizer implements AtlasAuthorizer {
             }
 
             String                   action         = request.getAction() != null ? request.getAction().getType() : null;
-            RangerAccessResourceImpl rangerResource = new RangerAccessResourceImpl(Collections.singletonMap(RESOURCE_SERVICE, "*"));
-            RangerAccessRequestImpl  rangerRequest  = new RangerAccessRequestImpl(rangerResource, action, request.getUser(), request.getUserGroups(), null);
+            RangerAccessResourceImpl rangerResource;
+
+            if (isPostNotificationAction(action)) {
+                action         = ACCESS_TYPE_POST_NOTIFICATION;
+                rangerResource = new RangerAccessResourceImpl(Collections.singletonMap(RESOURCE_NOTIFICATION_TOPIC, getNotificationTopic(request)));
+            } else {
+                rangerResource = new RangerAccessResourceImpl(Collections.singletonMap(RESOURCE_SERVICE, "*"));
+            }
+
+            RangerAccessRequestImpl rangerRequest = new RangerAccessRequestImpl(rangerResource, action, request.getUser(), request.getUserGroups(), null);
 
             rangerRequest.setClientIPAddress(request.getClientIPAddress());
             rangerRequest.setAccessTime(request.getAccessTime());
@@ -351,6 +363,42 @@ public class RangerAtlasAuthorizer implements AtlasAuthorizer {
         RangerBasePlugin plugin = atlasPlugin;
 
         return plugin != null ? plugin.getServiceDef() : null;
+    }
+
+    private boolean isPostNotificationAction(String action) {
+        return ACCESS_TYPE_POST_NOTIFICATION.equals(action) || ACCESS_TYPE_SERVICE_NOTIFICATION_POST.equals(action);
+    }
+
+    private String getNotificationTopic(AtlasAccessRequest request) {
+        String topic = invokeStringGetter(request, "getTopicName");
+
+        if (StringUtils.isBlank(topic)) {
+            topic = invokeStringGetter(request, "getTopic");
+        }
+
+        return StringUtils.isNotBlank(topic) ? topic : "*";
+    }
+
+    private String invokeStringGetter(Object target, String methodName) {
+        if (target == null) {
+            return null;
+        }
+
+        try {
+            Method method = target.getClass().getMethod(methodName);
+
+            if (method.getReturnType() == String.class) {
+                Object value = method.invoke(target);
+
+                return value != null ? value.toString() : null;
+            }
+        } catch (NoSuchMethodException ignored) {
+            // Atlas 2.4 AtlasAdminAccessRequest has no topic accessor
+        } catch (Exception e) {
+            LOG.debug("Failed to invoke {} on {}", methodName, target.getClass().getName(), e);
+        }
+
+        return null;
     }
 
     private boolean isAccessAllowed(AtlasEntityAccessRequest request, RangerAtlasAuditHandler auditHandler) {

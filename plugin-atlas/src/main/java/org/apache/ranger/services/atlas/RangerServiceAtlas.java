@@ -79,12 +79,15 @@ public class RangerServiceAtlas extends RangerBaseService {
     public static final String RESOURCE_END_TWO_ENTITY_TYPE           = "end-two-entity-type";
     public static final String RESOURCE_END_TWO_ENTITY_CLASSIFICATION = "end-two-entity-classification";
     public static final String RESOURCE_END_TWO_ENTITY_ID             = "end-two-entity";
+    public static final String RESOURCE_NOTIFICATION_TOPIC            = "notification-topic";
     public static final String SEARCH_FEATURE_POLICY_NAME             = "Allow users to manage favorite searches";
     public static final String ACCESS_TYPE_ENTITY_READ                = "entity-read";
     public static final String ACCESS_TYPE_TYPE_READ                  = "type-read";
     public static final String ACCESS_TYPE_ENTITY_CREATE              = "entity-create";
     public static final String ACCESS_TYPE_ENTITY_UPDATE              = "entity-update";
     public static final String ACCESS_TYPE_ENTITY_DELETE              = "entity-delete";
+    public static final String ACCESS_TYPE_POST_NOTIFICATION          = "post-notification";
+    public static final String ACCESS_TYPE_SERVICE_NOTIFICATION_POST  = "service-notification-post";
     public static final String ADMIN_USERNAME_DEFAULT                 = "admin";
     public static final String TAGSYNC_USERNAME_DEFAULT               = "rangertagsync";
     public static final String ENTITY_TYPE_USER_PROFILE               = "__AtlasUserProfile";
@@ -265,6 +268,7 @@ public class RangerServiceAtlas extends RangerBaseService {
 
     private static class AtlasServiceClient extends BaseClient {
         private static final String[] TYPE_CATEGORIES = new String[] {"classification", "enum", "entity", "relationship", "struct", "business_metadata"};
+        private static final String[] NOTIFICATION_TOPICS = new String[] {"ATLAS_HOOK", "ATLAS_ENTITIES"};
 
         private Map<String, List<String>> typesDef = new HashMap<>();
 
@@ -386,6 +390,12 @@ public class RangerServiceAtlas extends RangerBaseService {
                     }
                 }
                 break;
+
+                case RESOURCE_NOTIFICATION_TOPIC:
+                    for (String topic : NOTIFICATION_TOPICS) {
+                        addIfStartsWithAndNotExcluded(ret, topic, userInput, currentValues);
+                    }
+                    break;
 
                 default: {
                     ret.add(lookupContext.getResourceName());
