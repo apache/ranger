@@ -891,7 +891,6 @@ public class TestGdsDBStore {
 
         when(sharedResourceService.read(ID)).thenReturn(resource);
         mockNoViewPermissionOnParentDataShare();
-        when(bizUtil.isAuditAdmin()).thenReturn(false);
         when(restErrorUtil.create403RESTException(anyString())).thenReturn(new WebApplicationException(403));
 
         assertThrows(WebApplicationException.class, () -> gdsDBStore.getSharedResource(ID));
@@ -905,7 +904,7 @@ public class TestGdsDBStore {
         resource.setId(ID);
 
         when(sharedResourceService.read(ID)).thenReturn(resource);
-        when(bizUtil.isAuditAdmin()).thenReturn(true);
+        when(validator.hasPermission(any(), eq(GdsPermission.VIEW))).thenReturn(true);
 
         RangerSharedResource result = gdsDBStore.getSharedResource(ID);
 
@@ -1073,7 +1072,6 @@ public class TestGdsDBStore {
 
         when(dataShareInDatasetService.read(ID)).thenReturn(dataShareInDataset);
         mockNoViewPermissionOnDataShareInDatasetParents();
-        when(bizUtil.isAuditAdmin()).thenReturn(false);
         when(restErrorUtil.create403RESTException(anyString())).thenReturn(new WebApplicationException(403));
 
         assertThrows(WebApplicationException.class, () -> gdsDBStore.getDataShareInDataset(ID));
@@ -1087,7 +1085,7 @@ public class TestGdsDBStore {
         dataShareInDataset.setId(ID);
 
         when(dataShareInDatasetService.read(ID)).thenReturn(dataShareInDataset);
-        when(bizUtil.isAuditAdmin()).thenReturn(true);
+        when(validator.hasPermission(any(), eq(GdsPermission.VIEW))).thenReturn(true);
 
         RangerDataShareInDataset result = gdsDBStore.getDataShareInDataset(ID);
 
@@ -1220,7 +1218,6 @@ public class TestGdsDBStore {
 
         when(datasetInProjectService.read(ID)).thenReturn(datasetInProject);
         mockNoViewPermissionOnDatasetInProjectParents();
-        when(bizUtil.isAuditAdmin()).thenReturn(false);
         when(restErrorUtil.create403RESTException(anyString())).thenReturn(new WebApplicationException(403));
 
         assertThrows(WebApplicationException.class, () -> gdsDBStore.getDatasetInProject(ID));
@@ -1234,7 +1231,7 @@ public class TestGdsDBStore {
         datasetInProject.setId(ID);
 
         when(datasetInProjectService.read(ID)).thenReturn(datasetInProject);
-        when(bizUtil.isAuditAdmin()).thenReturn(true);
+        when(validator.hasPermission(any(), eq(GdsPermission.VIEW))).thenReturn(true);
 
         RangerDatasetInProject result = gdsDBStore.getDatasetInProject(ID);
 

@@ -1932,25 +1932,22 @@ public class GdsDBStore extends AbstractGdsStore {
     }
 
     private void enforceViewOnSharedResource(RangerSharedResource sharedResource) {
-        if (!bizUtil.isAuditAdmin()) {
-            RangerDataShare dataShare = getCachedDataShare(sharedResource.getDataShareId(), new HashMap<>());
+        RangerDataShare     dataShare = getCachedDataShare(sharedResource.getDataShareId(), new HashMap<>());
+        RangerGdsObjectACL  acl       = dataShare != null ? dataShare.getAcl() : null;
 
-            if (dataShare == null || !hasViewPermission(dataShare.getAcl())) {
-                throw restErrorUtil.create403RESTException(NOT_AUTHORIZED_TO_VIEW_SHARED_RESOURCE);
-            }
+        if (!hasViewPermission(acl)) {
+            throw restErrorUtil.create403RESTException(NOT_AUTHORIZED_TO_VIEW_SHARED_RESOURCE);
         }
     }
 
     private boolean hasViewOnDataShare(Long dataShareId, Map<Long, RangerDataShare> dataShareCache) {
-        boolean         ret       = bizUtil.isAuditAdmin();
-        RangerDataShare dataShare = null;
+        boolean         ret       = false;
+        RangerDataShare dataShare = getCachedDataShare(dataShareId, dataShareCache);
 
-        if (!ret) {
-            dataShare = getCachedDataShare(dataShareId, dataShareCache);
-
-            if (dataShare != null) {
-                ret = hasViewPermission(dataShare.getAcl());
-            }
+        if (dataShare != null) {
+            ret = hasViewPermission(dataShare.getAcl());
+        } else {
+            ret = hasViewPermission(null);
         }
 
         return ret;
@@ -1977,43 +1974,33 @@ public class GdsDBStore extends AbstractGdsStore {
     }
 
     private boolean hasViewOnDataset(Long datasetId, Map<Long, RangerDataset> datasetCache) {
-        boolean       ret     = bizUtil.isAuditAdmin();
-        RangerDataset dataset = null;
+        boolean       ret     = false;
+        RangerDataset dataset = getCachedDataset(datasetId, datasetCache);
 
-        if (!ret) {
-            dataset = getCachedDataset(datasetId, datasetCache);
-
-            if (dataset != null) {
-                ret = hasViewPermission(dataset.getAcl());
-            }
+        if (dataset != null) {
+            ret = hasViewPermission(dataset.getAcl());
+        } else {
+            ret = hasViewPermission(null);
         }
 
         return ret;
     }
 
     private boolean hasViewOnProject(Long projectId, Map<Long, RangerProject> projectCache) {
-        boolean       ret     = bizUtil.isAuditAdmin();
-        RangerProject project = null;
+        boolean       ret     = false;
+        RangerProject project = getCachedProject(projectId, projectCache);
 
-        if (!ret) {
-            project = getCachedProject(projectId, projectCache);
-
-            if (project != null) {
-                ret = hasViewPermission(project.getAcl());
-            }
+        if (project != null) {
+            ret = hasViewPermission(project.getAcl());
+        } else {
+            ret = hasViewPermission(null);
         }
 
         return ret;
     }
 
     private boolean hasViewPermission(RangerGdsObjectACL acl) {
-        boolean ret = bizUtil.isAuditAdmin();
-
-        if (!ret) {
-            ret = validator.hasPermission(acl, GdsPermission.VIEW);
-        }
-
-        return ret;
+        return validator.hasPermission(acl, GdsPermission.VIEW);
     }
 
     private RangerDataShare getCachedDataShare(Long dataShareId, Map<Long, RangerDataShare> dataShareCache) {
