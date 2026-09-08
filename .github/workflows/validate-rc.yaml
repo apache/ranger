@@ -1,0 +1,217 @@
+# Licensed to the Apache Software Foundation (ASF) under one or more
+# contributor license agreements.  See the NOTICE file distributed with
+# this work for additional information regarding copyright ownership.
+# The ASF licenses this file to You under the Apache License, Version 2.0
+# (the "License"); you may not use this file except in compliance with
+# the License.  You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+
+# This workflow will build a Java project with Maven, and cache/restore any dependencies to improve the workflow execution time
+# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-java-with-maven
+
+# This workflow uses actions that are not certified by GitHub.
+# They are provided by a third-party and are governed by
+# separate terms of service, privacy policy, and support
+# documentation.
+
+name: Validate Release Candidate
+
+on:
+  push:
+  pull_request:
+    branches: [ "master" ]
+
+env:
+  MAVEN_OPTS: -Dhttp.keepAlive=false -Dmaven.wagon.http.pool=false -Dmaven.wagon.http.retryHandler.class=standard -Dmaven.wagon.http.retryHandler.count=3
+
+jobs:
+  build-8:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - name: Cache for maven dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.m2/repository/*/*/*
+            !~/.m2/repository/org/apache/ranger
+          key: maven-repo-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            maven-repo-
+
+      - name: Set up JDK 8
+        uses: actions/setup-java@v4
+        with:
+          java-version: '8'
+          distribution: 'temurin'
+
+      - name: build (8)
+        run: mvn -T 8 clean verify --no-transfer-progress -B -V
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: target-8
+          path: target/*
+  
+  docker-build:
+    strategy:
+      fail-fast: false
+      matrix:
+        arg: [postgres, mysql, oracle]
+    needs:
+      - build-8
+    runs-on: ubuntu-22.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download build-8 artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: target-8
+      
+      - name: Copy artifacts for docker build
+        run: |
+          cp ranger-*.tar.gz dev-support/ranger-docker/dist
+          cp version dev-support/ranger-docker/dist
+
+      - name: Cache downloaded archives
+        uses: actions/cache@v4
+        with:
+          path: dev-support/ranger-docker/downloads
+          key: ${{ runner.os }}-ranger-downloads-${{ hashFiles('dev-support/ranger-docker/.env') }}
+          restore-keys: |
+            ${{ runner.os }}-ranger-downloads-
+
+      - name: Run download-archives.sh
+        run: |
+          cd dev-support/ranger-docker
+          ./download-archives.sh hadoop hive hbase kafka knox ozone
+      
+      - name: Clean up Docker space
+        run: docker system prune --all --force --volumes
+      
+      - name: Build all ranger-service images
+        run: |
+          cd dev-support/ranger-docker
+          docker compose -f docker-compose.ranger-base.yml build
+          export DOCKER_BUILDKIT=1
+          export COMPOSE_DOCKER_CLI_BUILD=1
+          export RANGER_DB_TYPE=${{ matrix.arg }}
+          docker compose \
+          -f docker-compose.ranger-${RANGER_DB_TYPE}.yml \
+          -f docker-compose.ranger.yml \
+          -f docker-compose.ranger-usersync.yml \
+          -f docker-compose.ranger-tagsync.yml \
+          -f docker-compose.ranger-kms.yml \
+          -f docker-compose.ranger-hadoop.yml \
+          -f docker-compose.ranger-hbase.yml \
+          -f docker-compose.ranger-kafka.yml \
+          -f docker-compose.ranger-hive.yml \
+          -f docker-compose.ranger-knox.yml \
+          -f docker-compose.ranger-ozone.yml build
+
+      - name: Bring up containers
+        run: |
+          cd dev-support/ranger-docker
+          ./scripts/ozone-plugin-docker-setup.sh
+          export RANGER_DB_TYPE=${{ matrix.arg }}
+          docker compose \
+          -f docker-compose.ranger-${RANGER_DB_TYPE}.yml \
+          -f docker-compose.ranger.yml \
+          -f docker-compose.ranger-usersync.yml \
+          -f docker-compose.ranger-tagsync.yml \
+          -f docker-compose.ranger-kms.yml \
+          -f docker-compose.ranger-hadoop.yml \
+          -f docker-compose.ranger-hbase.yml \
+          -f docker-compose.ranger-kafka.yml \
+          -f docker-compose.ranger-hive.yml \
+          -f docker-compose.ranger-knox.yml \
+          -f docker-compose.ranger-ozone.yml up -d
+
+      - name: Check containers are running
+        run: |
+          sleep 60
+          containers=(ranger ranger-zk ranger-solr ranger-${{ matrix.arg }} ranger-usersync ranger-tagsync ranger-kms ranger-hadoop ranger-hbase ranger-kafka ranger-hive ranger-knox ozone-om ozone-scm ozone-datanode);
+          flag=true;
+          for container in "${containers[@]}"; do
+              if [[ $(docker inspect -f '{{.State.Running}}' $container 2>/dev/null) == "true" ]]; then
+                  echo "Container $container is running!";
+              else
+                  flag=false;
+                  echo "Container $container is NOT running!";
+              fi
+          done
+          echo "CONTAINER_SUCCESS=${flag}" >> $GITHUB_ENV
+
+      - name: Check Ranger Services have started
+        run: |
+          services=(Usersync Tagsync KMS)
+          for service in "${services[@]}"; do
+              service_lower=$(echo "$service" | tr '[:upper:]' '[:lower:]')
+              docker logs ranger-${service_lower} | grep "Apache Ranger ${service} Service with pid [0-9]* has started"
+              if [ $? != 0 ]; then
+                  echo "Ranger ${service} service failed to start!";
+              fi
+          done
+          docker logs ranger | grep "Apache Ranger Admin Service with pid [0-9]* has started"
+          if [ $? != 0 ]; then
+              echo "Ranger Admin service failed to start!";
+          fi
+      
+      - name: Check plugins have been installed
+        run: |
+          services=(kms hive hbase kafka knox)
+          for service in "${services[@]}"; do
+              docker logs ranger-${service} | grep "Ranger Plugin for ${service} has been enabled"
+              if [ $? != 0 ]; then
+                  echo "Plugin Installation failure for ${service}";
+              fi
+          done
+
+      - name: Review ranger service container logs
+        run: |
+          docker exec ranger cat /var/log/ranger/ranger-admin-ranger.example.com-ranger.log
+          docker exec ranger-usersync cat /var/log/ranger/usersync/usersync-ranger-usersync.example.com-.log
+          docker exec ranger-tagsync cat /var/log/ranger/tagsync/tagsync-ranger-tagsync.example.com-.log
+          docker exec ranger-kms cat /var/log/ranger/kms/ranger-kms-ranger-kms.example.com-root.log
+      
+      - name: Run REST API calls
+        run: |
+          python3 -m pip install apache-ranger
+          python3 <<EOF
+          from apache_ranger.client.ranger_client           import *
+          from apache_ranger.utils                          import *
+          from apache_ranger.model.ranger_user_mgmt         import *
+          from apache_ranger.client.ranger_user_mgmt_client import *
+          ranger_url  = 'http://localhost:6080'
+          ranger_auth = ('admin', 'rangerR0cks!')
+          ranger    = RangerClient(ranger_url, ranger_auth)
+          user_mgmt = RangerUserMgmtClient(ranger)
+          # check users in groups
+          print(user_mgmt.get_users_in_group('hadoop'))
+          print(user_mgmt.get_users_in_group('ranger'))
+          print(user_mgmt.get_users_in_group('knox'))
+          # check all users
+          print(user_mgmt.find_users())
+          EOF
+
+      - name: Remove containers
+        run: |
+          flag=${CONTAINER_SUCCESS}
+          if [[ $flag == true ]]; then
+              echo "All required containers are up and running";
+              docker stop $(docker ps -q) && docker rm $(docker ps -aq);
+          else
+              docker stop $(docker ps -q) && docker rm $(docker ps -aq);
+              exit 1;
+          fi
