@@ -970,7 +970,7 @@ public class TestGdsREST {
     }
 
     @Test
-    public void testGetSharedResource() {
+    public void testGetSharedResource() throws Exception {
         Long resourceId = 1L;
         RangerGds.RangerSharedResource expected = createSharedResource();
         expected.setId(resourceId);
@@ -985,7 +985,7 @@ public class TestGdsREST {
     }
 
     @Test
-    public void testGetSharedResourceException() {
+    public void testGetSharedResourceException() throws Exception {
         when(gdsStore.getSharedResource(Mockito.anyLong())).thenThrow(new RuntimeException("err"));
         when(restErrorUtil.createRESTException(anyString())).thenThrow(new WebApplicationException());
 
@@ -993,7 +993,7 @@ public class TestGdsREST {
     }
 
     @Test
-    public void testGetSharedResourceNotFound() {
+    public void testGetSharedResourceNotFound() throws Exception {
         Long resourceId = 1L;
 
         when(gdsStore.getSharedResource(resourceId)).thenReturn(null);
@@ -1096,7 +1096,7 @@ public class TestGdsREST {
     }
 
     @Test
-    public void testGetDataShareInDataset() {
+    public void testGetDataShareInDataset() throws Exception {
         Long id = 1L;
         RangerGds.RangerDataShareInDataset expected = createDataShareInDataset(1L);
         expected.setId(id);
@@ -1111,7 +1111,7 @@ public class TestGdsREST {
     }
 
     @Test
-    public void testGetDataShareInDatasetException() {
+    public void testGetDataShareInDatasetException() throws Exception {
         when(gdsStore.getDataShareInDataset(Mockito.anyLong())).thenThrow(new RuntimeException("err"));
         when(restErrorUtil.createRESTException(anyString())).thenThrow(new WebApplicationException());
 
@@ -1234,7 +1234,7 @@ public class TestGdsREST {
     }
 
     @Test
-    public void testGetDatasetInProject() {
+    public void testGetDatasetInProject() throws Exception {
         Long id = 1L;
         RangerGds.RangerDatasetInProject expected = createDatasetInProject();
         expected.setId(id);
@@ -1249,7 +1249,7 @@ public class TestGdsREST {
     }
 
     @Test
-    public void testGetDatasetInProjectException() {
+    public void testGetDatasetInProjectException() throws Exception {
         when(gdsStore.getDatasetInProject(Mockito.anyLong())).thenThrow(new RuntimeException("err"));
         when(restErrorUtil.createRESTException(anyString())).thenThrow(new WebApplicationException());
         assertThrows(WebApplicationException.class, () -> gdsREST.getDatasetInProject(1L));
