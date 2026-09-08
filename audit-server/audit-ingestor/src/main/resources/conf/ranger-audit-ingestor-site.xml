@@ -249,6 +249,21 @@
                RULE:[2:$1/$2@$0]([ndj]n/.*@.*|hdfs/.*@.*)s/.*/hdfs/
                RULE:[2:$1/$2@$0]([rn]m/.*@.*|yarn/.*@.*)s/.*/yarn/
                RULE:[2:$1/$2@$0](jhs/.*@.*)s/.*/mapred/
+               RULE:[2:$1/$2@$0](hive/.*@.*)s/.*/hive/
+               RULE:[2:$1/$2@$0](hbase/.*@.*)s/.*/hbase/
+               RULE:[2:$1/$2@$0](kafka/.*@.*)s/.*/kafka/
+               RULE:[2:$1/$2@$0](knox/.*@.*)s/.*/knox/
+               RULE:[2:$1/$2@$0](rangerkms/.*@.*)s/.*/rangerkms/
+               RULE:[2:$1/$2@$0](trino/.*@.*)s/.*/trino/
+               RULE:[2:$1/$2@$0](ozone/.*@.*)s/.*/ozone/
+               RULE:[2:$1/$2@$0](om/.*@.*)s/.*/om/
+               RULE:[2:$1/$2@$0](scm/.*@.*)s/.*/scm/
+               RULE:[2:$1/$2@$0](dn/.*@.*)s/.*/dn/
+               RULE:[2:$1/$2@$0](solr/.*@.*)s/.*/solr/
+               RULE:[2:$1/$2@$0](rangertagsync/.*@.*)s/.*/rangertagsync/
+               RULE:[2:$1/$2@$0](atlas/.*@.*)s/.*/atlas/
+               RULE:[2:$1/$2@$0](kudu/.*@.*)s/.*/kudu/
+               RULE:[2:$1/$2@$0](nifi/.*@.*)s/.*/nifi/
                RULE:[1:$1@$0](.*@.*)s/@.*//
                DEFAULT
         </value>
@@ -265,6 +280,21 @@
             - RULE:[2:$1/$2@$0]([ndj]n/.*@.*|hdfs/.*@.*)s/.*/hdfs/     # nn,dn,jn,hdfs/* -> hdfs (dev_hdfs)
             - RULE:[2:$1/$2@$0]([rn]m/.*@.*|yarn/.*@.*)s/.*/yarn/      # rm,nm,yarn/* -> yarn (dev_yarn)
             - RULE:[2:$1/$2@$0](jhs/.*@.*)s/.*/mapred/                 # jhs/* -> mapred
+            - RULE:[2:$1/$2@$0](hive/.*@.*)s/.*/hive/                  # hive/* -> hive (dev_hive)
+            - RULE:[2:$1/$2@$0](hbase/.*@.*)s/.*/hbase/                # hbase/* -> hbase (dev_hbase)
+            - RULE:[2:$1/$2@$0](kafka/.*@.*)s/.*/kafka/                # kafka/* -> kafka (dev_kafka)
+            - RULE:[2:$1/$2@$0](knox/.*@.*)s/.*/knox/                  # knox/* -> knox (dev_knox)
+            - RULE:[2:$1/$2@$0](rangerkms/.*@.*)s/.*/rangerkms/        # rangerkms/* -> rangerkms (dev_kms)
+            - RULE:[2:$1/$2@$0](trino/.*@.*)s/.*/trino/                # trino/* -> trino (dev_trino)
+            - RULE:[2:$1/$2@$0](ozone/.*@.*)s/.*/ozone/                # ozone/* -> ozone (dev_ozone)
+            - RULE:[2:$1/$2@$0](om/.*@.*)s/.*/om/                      # om/* -> om (dev_ozone)
+            - RULE:[2:$1/$2@$0](scm/.*@.*)s/.*/scm/                    # scm/* -> scm (dev_ozone)
+            - RULE:[2:$1/$2@$0](dn/.*@.*)s/.*/dn/                      # dn/* -> dn (dev_ozone)
+            - RULE:[2:$1/$2@$0](solr/.*@.*)s/.*/solr/                  # solr/* -> solr (dev_solr)
+            - RULE:[2:$1/$2@$0](rangertagsync/.*@.*)s/.*/rangertagsync/  # rangertagsync/* -> rangertagsync (dev_tag)
+            - RULE:[2:$1/$2@$0](atlas/.*@.*)s/.*/atlas/                # atlas/* -> atlas (dev_atlas)
+            - RULE:[2:$1/$2@$0](kudu/.*@.*)s/.*/kudu/                  # kudu/* -> kudu (dev_kudu)
+            - RULE:[2:$1/$2@$0](nifi/.*@.*)s/.*/nifi/                  # nifi/* -> nifi (dev_nifi)
             - RULE:[1:$1@$0](.*@.*)s/@.*//                             # user@REALM -> user
             - DEFAULT
         ]]></description>
@@ -322,12 +352,27 @@
 
     <property>
         <name>ranger.audit.ingestor.kafka.configured.plugins</name>
-        <value>hdfs,yarn,knox,hiveServer2,hiveMetastore,kafka,hbaseRegional,hbaseMaster,solr,trino,ozone,kudu,nifi</value>
+        <value></value>
         <description>
-            Comma-separated list of configured plugin IDs.
-            If set: Uses AuditPartitioner with auto-calculated partitions (sum of plugin allocations + buffer).
-            If empty/not set: Uses Kafka default hash-based partitioner with topic.partitions value.
-            Each plugin receives dedicated partitions based on topic.partitions.per.configured.plugin (default: 3).
+            Comma-separated plugin IDs (agentId / Kafka record key) that receive dedicated partition ranges in static mode.
+            Leave empty by default; add only the plugins you deploy.
+
+            Empty (recommended greenfield):
+              - Static mode: Kafka default hash partitioner using kafka.topic.partitions below.
+              - Dynamic mode (kafka.partition.plan.dynamic.enabled=true): first bootstrap plan uses all
+                kafka.topic.partitions as buffer; unknown plugins auto-onboard on first successful
+                POST /api/audit/access after Kerberos and service allowlist checks pass.
+
+            Non-empty (static / bootstrap seed):
+              - Uses AuditPartitioner: total partitions = sum(per-plugin counts) + kafka.topic.partitions.buffer.
+              - Append new plugin IDs only; never reorder existing entries (partition ranges are contiguous).
+              - Dynamic mode: seeds the initial plan from this list when ranger_audit_partition_plan is empty;
+                runtime changes use GET/PATCH /api/audit/partition-plan (no authentication), not XML edits.
+
+            Example plugin IDs (pick what you run): hdfs, yarn, knox, hiveServer2, hiveMetastore, kafka,
+            hbaseRegional, hbaseMaster, solr, trino, ozone, kudu, nifi.
+            Per-plugin partition count: kafka.topic.partitions.per.configured.plugin (default 3), overridable via
+            kafka.plugin.partition.overrides.{pluginId}.
         </description>
     </property>
 
@@ -349,8 +394,8 @@
             Number of buffer partitions reserved for unconfigured plugins.
             Used ONLY when configured.plugins is set (for plugin-based partitioning).
             Total = (sum of plugin partitions) + (buffer partitions).
-            Example: 7 plugins × 3 + 9 buffer = 30 total.
-            Ignored when configured.plugins is empty.
+            Example: 2 plugins × 3 + 9 buffer = 15 total.
+            Ignored when configured.plugins is empty (hash-based or dynamic buffer-only bootstrap).
         </description>
     </property>
 
@@ -400,6 +445,36 @@
             Must not exceed the number of available Kafka brokers.
         </description>
     </property>
+
+    <!--
+      Dynamic partition plan (Kafka compacted registry). Shipped disabled — legacy XML routing is the default.
+      When dynamic.enabled=true: runtime routing changes via REST only (not XML edits).
+    -->
+    <property>
+        <name>ranger.audit.ingestor.kafka.partition.plan.dynamic.enabled</name>
+        <value>false</value>
+        <description>
+            false or absent = legacy XML AuditPartitioner at startup (today's behavior).
+            true = Kafka registry + REST + PartitionPlanWatcher.
+        </description>
+    </property>
+    <!-- Optional when dynamic.enabled=true (defaults: topic=ranger_audit_partition_plan, refresh=30000 ms, consumer poll=500 ms):
+    <property>
+        <name>ranger.audit.ingestor.kafka.partition.plan.topic</name>
+        <value>ranger_audit_partition_plan</value>
+        <description>Compacted topic storing PartitionPlan JSON. Default ranger_audit_partition_plan if unset.</description>
+    </property>
+    <property>
+        <name>ranger.audit.ingestor.kafka.partition.plan.refresh.interval.ms</name>
+        <value>30000</value>
+        <description>Background watcher sleep between plan refresh cycles (milliseconds).</description>
+    </property>
+    <property>
+        <name>ranger.audit.ingestor.kafka.partition.plan.consumer.poll.timeout.ms</name>
+        <value>500</value>
+        <description>Kafka consumer poll timeout when draining the compacted plan topic (milliseconds). Default 500.</description>
+    </property>
+    -->
 
     <property>
         <name>ranger.audit.ingestor.kafka.security.protocol</name>
