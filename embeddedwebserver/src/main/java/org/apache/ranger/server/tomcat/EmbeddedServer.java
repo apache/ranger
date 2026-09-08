@@ -169,8 +169,7 @@ public class EmbeddedServer {
             String keystoreType    = EmbeddedServerUtil.getConfig("ranger.keystore.file.type", RANGER_KEYSTORE_FILE_TYPE_DEFAULT);
             ssl.setAttribute("keystoreType", keystoreType);
 
-            String truststoreType    = EmbeddedServerUtil.getConfig("ranger.truststore.file.type", RANGER_TRUSTSTORE_FILE_TYPE_DEFAULT);
-            ssl.setAttribute("truststoreType", truststoreType);
+            ssl.setAttribute("truststoreType", EmbeddedServerUtil.getConfig("ranger.truststore.file.type", RANGER_TRUSTSTORE_FILE_TYPE_DEFAULT));
 
             String clientAuth = EmbeddedServerUtil.getConfig("ranger.service.https.attrib.clientAuth", "false");
 
@@ -221,7 +220,7 @@ public class EmbeddedServer {
             String trustStoreFile = EmbeddedServerUtil.getConfig("ranger.service.https.attrib.truststore.file");
 
             if (StringUtils.isNotBlank(trustStoreFile) && StringUtils.isNotBlank(truststorePass)) {
-                validationError = validateHttpsTruststore(trustStoreFile, truststorePass, truststoreType);
+                validationError = validateHttpsTruststore(trustStoreFile, truststorePass, keystoreType);
 
                 if (validationError != null) {
                     LOG.warning("HTTPS configuration validation for trustStore failed: " + validationError + " TLS handshaking may fail if mTLS is enabled.");
