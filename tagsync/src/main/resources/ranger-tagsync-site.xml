@@ -42,6 +42,26 @@
 		<value>false</value>
 	</property>
 	<property>
+		<name>ranger.tagsync.source.metadataregistry</name>
+		<value>false</value>
+	</property>
+	<property>
+		<name>ranger.tagsync.source.metadataregistry.kafka.bootstrap.servers</name>
+		<value>localhost:9092</value>
+	</property>
+	<property>
+		<name>ranger.tagsync.source.metadataregistry.kafka.topic</name>
+		<value>udf.governance</value>
+	</property>
+	<property>
+		<name>ranger.tagsync.source.metadataregistry.kafka.group.id</name>
+		<value>ranger_metadataregistry_consumer</value>
+	</property>
+	<property>
+		<name>ranger.tagsync.metadataregistry.custom.resource.mappers</name>
+		<value />
+	</property>
+	<property>
 		<name>ranger.tagsync.source.atlasrest.endpoint</name>
 		<value>http://localhost:21000</value>
 	</property>
