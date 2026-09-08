@@ -122,10 +122,13 @@ public class GdsDBStore extends AbstractGdsStore {
 
     public static final String RESOURCE_NAME_DATASET_ID = "dataset-id";
     public static final String RESOURCE_NAME_PROJECT_ID = "project-id";
-    public static final String NOT_AUTHORIZED_FOR_DATASET_POLICIES     = "User is not authorized to manage policies for this dataset";
-    public static final String NOT_AUTHORIZED_TO_VIEW_DATASET_POLICIES = "User is not authorized to view policies for this dataset";
-    public static final String NOT_AUTHORIZED_FOR_PROJECT_POLICIES     = "User is not authorized to manage policies for this dataset";
-    public static final String NOT_AUTHORIZED_TO_VIEW_PROJECT_POLICIES = "User is not authorized to view policies for this dataset";
+    public static final String NOT_AUTHORIZED_FOR_DATASET_POLICIES          = "User is not authorized to manage policies for this dataset";
+    public static final String NOT_AUTHORIZED_TO_VIEW_DATASET_POLICIES      = "User is not authorized to view policies for this dataset";
+    public static final String NOT_AUTHORIZED_FOR_PROJECT_POLICIES          = "User is not authorized to manage policies for this dataset";
+    public static final String NOT_AUTHORIZED_TO_VIEW_PROJECT_POLICIES      = "User is not authorized to view policies for this dataset";
+    public static final String NOT_AUTHORIZED_TO_VIEW_SHARED_RESOURCE       = "User is not authorized to view this shared resource";
+    public static final String NOT_AUTHORIZED_TO_VIEW_DATA_SHARE_IN_DATASET = "User is not authorized to view this data share in dataset association";
+    public static final String NOT_AUTHORIZED_TO_VIEW_DATASET_IN_PROJECT    = "User is not authorized to view this dataset in project association";
     public static final String GDS_POLICY_NAME_TIMESTAMP_SEP           = "@";
 
     public static final String LABELS                                  = "labelCounts";
@@ -747,12 +750,14 @@ public class GdsDBStore extends AbstractGdsStore {
     }
 
     @Override
-    public RangerSharedResource getSharedResource(Long sharedResourceId) {
+    public RangerSharedResource getSharedResource(Long sharedResourceId) throws Exception {
         LOG.debug("==> getSharedResource({})", sharedResourceId);
 
         RangerSharedResource ret = sharedResourceService.read(sharedResourceId);
 
-        // TODO: enforce RangerSharedResource.acl
+        if (ret != null) {
+            enforceViewOnSharedResource(ret);
+        }
 
         LOG.debug("<== getSharedResource({}): ret={}", sharedResourceId, ret);
 
@@ -775,9 +780,13 @@ public class GdsDBStore extends AbstractGdsStore {
 
         RangerSharedResourceList   result          = sharedResourceService.searchSharedResources(filter);
         List<RangerSharedResource> sharedResources = new ArrayList<>();
+        Map<Long, RangerDataShare> dataShareCache  = new HashMap<>();
 
         for (RangerSharedResource sharedResource : result.getList()) {
-            // TODO: enforce RangerSharedResource.acl
+            if (!hasViewOnDataShare(sharedResource.getDataShareId(), dataShareCache)) {
+                continue;
+            }
+
             boolean includeResource = true;
 
             if (StringUtils.isNotEmpty(resourceContains)) {
@@ -865,10 +874,14 @@ public class GdsDBStore extends AbstractGdsStore {
     }
 
     @Override
-    public RangerDataShareInDataset getDataShareInDataset(Long dataShareInDatasetId) {
+    public RangerDataShareInDataset getDataShareInDataset(Long dataShareInDatasetId) throws Exception {
         LOG.debug("==> getDataShareInDataset({})", dataShareInDatasetId);
 
         RangerDataShareInDataset ret = dataShareInDatasetService.read(dataShareInDatasetId);
+
+        if (ret != null && !hasViewOnDataShareInDataset(ret, new HashMap<>(), new HashMap<>())) {
+            throw restErrorUtil.create403RESTException(NOT_AUTHORIZED_TO_VIEW_DATA_SHARE_IN_DATASET);
+        }
 
         LOG.debug("<== getDataShareInDataset({}): ret={}", dataShareInDatasetId, ret);
 
@@ -884,9 +897,13 @@ public class GdsDBStore extends AbstractGdsStore {
 
         List<RangerDataShareInDataset> dataShareInDatasets = new ArrayList<>();
         RangerDataShareInDatasetList   result              = dataShareInDatasetService.searchDataShareInDatasets(filter);
+        Map<Long, RangerDataShare>     dataShareCache      = new HashMap<>();
+        Map<Long, RangerDataset>       datasetCache        = new HashMap<>();
 
         for (RangerDataShareInDataset dataShareInDataset : result.getList()) {
-            // TODO: enforce RangerSharedResource.acl
+            if (!hasViewOnDataShareInDataset(dataShareInDataset, dataShareCache, datasetCache)) {
+                continue;
+            }
 
             dataShareInDatasets.add(dataShareInDataset);
         }
@@ -967,12 +984,14 @@ public class GdsDBStore extends AbstractGdsStore {
     }
 
     @Override
-    public RangerDatasetInProject getDatasetInProject(Long datasetInProjectId) {
+    public RangerDatasetInProject getDatasetInProject(Long datasetInProjectId) throws Exception {
         LOG.debug("==> getDatasetInProject({})", datasetInProjectId);
 
         RangerDatasetInProject ret = datasetInProjectService.read(datasetInProjectId);
 
-        // TODO: enforce RangerDatasetInProject.acl
+        if (ret != null && !hasViewOnDatasetInProject(ret, new HashMap<>(), new HashMap<>())) {
+            throw restErrorUtil.create403RESTException(NOT_AUTHORIZED_TO_VIEW_DATASET_IN_PROJECT);
+        }
 
         LOG.debug("<== getDatasetInProject({}): ret={}", datasetInProjectId, ret);
 
@@ -988,9 +1007,13 @@ public class GdsDBStore extends AbstractGdsStore {
 
         List<RangerDatasetInProject> datasetInProjects = new ArrayList<>();
         RangerDatasetInProjectList   result            = datasetInProjectService.searchDatasetInProjects(filter);
+        Map<Long, RangerDataset>     datasetCache      = new HashMap<>();
+        Map<Long, RangerProject>     projectCache      = new HashMap<>();
 
         for (RangerDatasetInProject datasetInProject : result.getList()) {
-            // TODO: enforce RangerDatasetInProject.acl
+            if (!hasViewOnDatasetInProject(datasetInProject, datasetCache, projectCache)) {
+                continue;
+            }
 
             datasetInProjects.add(datasetInProject);
         }
@@ -1906,6 +1929,144 @@ public class GdsDBStore extends AbstractGdsStore {
         List<T> subList = startIndex < list.size() ? list.subList(startIndex, Math.min(startIndex + maxEntries, list.size())) : Collections.emptyList();
 
         return new PList<>(subList, startIndex, maxEntries, list.size(), subList.size(), sortType, sortBy);
+    }
+
+    private void enforceViewOnSharedResource(RangerSharedResource sharedResource) {
+        RangerDataShare     dataShare = getCachedDataShare(sharedResource.getDataShareId(), new HashMap<>());
+        RangerGdsObjectACL  acl       = dataShare != null ? dataShare.getAcl() : null;
+
+        if (!hasViewPermission(acl)) {
+            throw restErrorUtil.create403RESTException(NOT_AUTHORIZED_TO_VIEW_SHARED_RESOURCE);
+        }
+    }
+
+    private boolean hasViewOnDataShare(Long dataShareId, Map<Long, RangerDataShare> dataShareCache) {
+        boolean         ret       = false;
+        RangerDataShare dataShare = getCachedDataShare(dataShareId, dataShareCache);
+
+        if (dataShare != null) {
+            ret = hasViewPermission(dataShare.getAcl());
+        } else {
+            ret = hasViewPermission(null);
+        }
+
+        return ret;
+    }
+
+    private boolean hasViewOnDataShareInDataset(RangerDataShareInDataset dataShareInDataset, Map<Long, RangerDataShare> dataShareCache, Map<Long, RangerDataset> datasetCache) {
+        boolean ret = hasViewOnDataShare(dataShareInDataset.getDataShareId(), dataShareCache);
+
+        if (!ret) {
+            ret = hasViewOnDataset(dataShareInDataset.getDatasetId(), datasetCache);
+        }
+
+        return ret;
+    }
+
+    private boolean hasViewOnDatasetInProject(RangerDatasetInProject datasetInProject, Map<Long, RangerDataset> datasetCache, Map<Long, RangerProject> projectCache) {
+        boolean ret = hasViewOnDataset(datasetInProject.getDatasetId(), datasetCache);
+
+        if (!ret) {
+            ret = hasViewOnProject(datasetInProject.getProjectId(), projectCache);
+        }
+
+        return ret;
+    }
+
+    private boolean hasViewOnDataset(Long datasetId, Map<Long, RangerDataset> datasetCache) {
+        boolean       ret     = false;
+        RangerDataset dataset = getCachedDataset(datasetId, datasetCache);
+
+        if (dataset != null) {
+            ret = hasViewPermission(dataset.getAcl());
+        } else {
+            ret = hasViewPermission(null);
+        }
+
+        return ret;
+    }
+
+    private boolean hasViewOnProject(Long projectId, Map<Long, RangerProject> projectCache) {
+        boolean       ret     = false;
+        RangerProject project = getCachedProject(projectId, projectCache);
+
+        if (project != null) {
+            ret = hasViewPermission(project.getAcl());
+        } else {
+            ret = hasViewPermission(null);
+        }
+
+        return ret;
+    }
+
+    private boolean hasViewPermission(RangerGdsObjectACL acl) {
+        return validator.hasPermission(acl, GdsPermission.VIEW);
+    }
+
+    private RangerDataShare getCachedDataShare(Long dataShareId, Map<Long, RangerDataShare> dataShareCache) {
+        RangerDataShare ret = null;
+
+        if (dataShareId != null) {
+            ret = dataShareCache.get(dataShareId);
+
+            if (ret == null) {
+                try {
+                    ret = dataShareService.read(dataShareId);
+                } catch (Exception excp) {
+                    LOG.debug("getCachedDataShare({}) failed", dataShareId, excp);
+                }
+
+                if (ret != null) {
+                    dataShareCache.put(dataShareId, ret);
+                }
+            }
+        }
+
+        return ret;
+    }
+
+    private RangerDataset getCachedDataset(Long datasetId, Map<Long, RangerDataset> datasetCache) {
+        RangerDataset ret = null;
+
+        if (datasetId != null) {
+            ret = datasetCache.get(datasetId);
+
+            if (ret == null) {
+                try {
+                    ret = datasetService.read(datasetId);
+                } catch (Exception excp) {
+                    LOG.debug("getCachedDataset({}) failed", datasetId, excp);
+                }
+
+                if (ret != null) {
+                    datasetCache.put(datasetId, ret);
+                }
+            }
+        }
+
+        return ret;
+    }
+
+    private RangerProject getCachedProject(Long projectId, Map<Long, RangerProject> projectCache) {
+        RangerProject ret = null;
+
+        if (projectId != null) {
+            ret = projectCache.get(projectId);
+
+            if (ret == null) {
+                try {
+                    ret = projectService.read(projectId);
+                } catch (Exception excp) {
+                    LOG.debug("getCachedProject({}) failed", projectId, excp);
+                }
+
+                if (ret != null) {
+                    projectCache.put(projectId, ret);
+                }
+            }
+        }
+
+        return ret;
     }
 
     private GdsPermission getGdsPermissionFromFilter(SearchFilter filter) {

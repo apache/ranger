@@ -37,6 +37,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Answers.CALLS_REAL_METHODS;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 @TestMethodOrder(MethodOrderer.MethodName.class)
@@ -88,6 +89,27 @@ public class TestRangerSafenetKeySecure {
 
         boolean result = secure.setExternalKeyAsMK("pass", "mockKey".getBytes());
         assertFalse(result);
+    }
+
+    @Test
+    public void testSetMasterKey_WithAliasCheck() throws Exception {
+        RangerSafenetKeySecure secure = mock(RangerSafenetKeySecure.class, CALLS_REAL_METHODS);
+
+        KeyStore dummyKeystore = mock(KeyStore.class);
+
+        Field storeField = RangerSafenetKeySecure.class.getDeclaredField("myStore");
+        storeField.setAccessible(true);
+        storeField.set(secure, dummyKeystore);
+
+        Field aliasField = RangerSafenetKeySecure.class.getDeclaredField("alias");
+        aliasField.setAccessible(true);
+        aliasField.set(secure, "RANGERMK");
+
+        when(dummyKeystore.containsAlias("RANGERMK")).thenReturn(true);
+        assertFalse(secure.setExternalKeyAsMK("pass", "mockKey".getBytes()));
+
+        when(dummyKeystore.containsAlias("RANGERMK")).thenReturn(false);
+        assertTrue(secure.setExternalKeyAsMK("pass", "mockKey".getBytes()));
     }
 
     @Test

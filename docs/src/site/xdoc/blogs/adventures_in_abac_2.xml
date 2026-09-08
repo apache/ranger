@@ -1,0 +1,180 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one or more
+  contributor license agreements.  See the NOTICE file distributed with
+  this work for additional information regarding copyright ownership.
+  The ASF licenses this file to You under the Apache License, Version 2.0
+  (the "License"); you may not use this file except in compliance with
+  the License.  You may obtain a copy of the License at
+
+      http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+<document>
+  <body>
+    <section name="Adventures in attribute-based access control (ABAC) - Part 2">
+<div class="ranger-blog-post">
+<div class="ranger-blog__header">
+        <p class="ranger-blog__back"><a href="../blogs.html">&larr; All blogs</a></p>
+<p class="ranger-blog__meta">Barbara Eckman, Ph.D., Distinguished Architect, Comcast &middot; Oct 15, 2023</p>
+      </div>
+<div class="ranger-blog__body">
+        <h1>Introduction</h1>
+
+        <p>
+          Previously in <a href="./adventures_in_abac_1.html">Part 1</a> of this series we examined an increasingly
+          complex series of use cases involving role membership and row filtering. While built-in Apache Ranger™
+          TBAC, RBAC, and row-filter based access policies are powerful, they may not be sufficient for complex access
+          control constraints. As the numbers of row filters that must be simultaneously enforced rises, the number of
+          roles and row filter conditions increases combinatorially and rapidly becomes difficult to manage.
+        </p><p>
+          This post introduces the principles of Attribute-based Access Control (ABAC) and shows how they enable us to
+          avoid this potentially mushrooming complexity.  Let’s recall the final use case from part 1.
+        </p>
+
+        <h2>Contents</h2>
+        <p><a href="#s1">1. Recap: GlobalSalesPartners table row filters</a></p>
+        <p><a href="#s2">2. ABAC Principles</a></p>
+        <p><a href="#s3">3. Welcome to Attribute Based Access Control (ABAC)!</a></p>
+        <p><a href="#s4">4. GlobalSalesPartners Row-Filters Using ABAC</a></p>
+        <p><a href="#s5">5. ABAC in Tag-Based Policies</a></p>
+
+        <h1 id="s1">Recap: GlobalSalesPartners table row filters</h1>
+        <p>
+          The GlobalSalesPartners table includes info on which business partner (“ABC” or “XYZ”) produced the data, as
+          well as the salesRegion where the sale occurred.
+        </p>
+        <p class="ranger-blog-caption">
+            <img width="780" height="180" id="Picture 6" src="adventures_in_abac_2.files/table_globalsalespartners.jpg" alt="Table USSales" />
+        </p><p>Recall our favorite users:</p>
+
+        <table>
+          <tr>
+            <td><p><b>User</b></p></td>
+            <td><p><b>Region</b></p></td>
+            <td><p><b>Partner</b></p></td>
+          </tr>
+          <tr>
+            <td><p>Bob</p></td>
+            <td><p>US</p></td>
+            <td><p>ABC</p></td>
+          </tr>
+          <tr>
+            <td><p>Celestine</p></td>
+            <td><p>EMEA</p></td>
+            <td><p>ABC, XYZ</p></td>
+          </tr>
+        </table><p>Row-filter policies from part 1:</p>
+
+        <p class="ranger-blog__list-item ranger-blog__list-item--nowrap">1.Users in salesRegion.US role have access to rows where salesRegion = &ldquo;US&rdquo;</p>
+        <p class="ranger-blog__list-item ranger-blog__list-item--nowrap">2.Users in salesRegion.EMEA role have access to rows where salesRegion = &ldquo;EMEA&rdquo;</p>
+        <p class="ranger-blog__list-item ranger-blog__list-item--nowrap">3.Users in salesPartner.ABC role have access to rows where salesPartner = &ldquo;ABC&rdquo;</p>
+        <p class="ranger-blog__list-item ranger-blog__list-item--nowrap">4.Users in salesPartner.XYZ role has access to rows where salesPartner = &ldquo;XYZ&rdquo;</p><p class="ranger-blog-caption">
+          <img width="700" height="800" border="1" id="policy_table_ussales_rib" src="adventures_in_abac_2.files/fig1-policy_globalsalespartners_row_filter_sr_sp.jpg" alt="Fig 1. Apache Ranger&#8482; Table GlobalSalesPartners: row-filter policy to restrict access based on sales region and sales partner" />
+        </p><p class="ranger-blog-caption">Fig 1. Apache Ranger&#8482; Table GlobalSalesPartners: row-filter policy to restrict access based on sales region and sales partner</p><p>
+          We noted previously that as the numbers of salesRegions and salesPartners rise, the number of
+          roles and row filter conditions increases combinatorially, and rapidly becomes difficult to manage.
+        </p>
+
+        <h1 id="s2">ABAC Principles</h1>
+        <p>
+          But what if Ranger policy engine had direct access to Bob‘s sales partners, and Bob‘s sales region, without
+          reference to any roles he might be a member of? Then a row filter could be expressed this way, assuming Bob
+          has access to data from only one sales region and sales partner
+        </p>
+
+        <p class="ranger-blog-code-line">&lt;partner attribute value in row&gt; == &lt;Bob&rsquo;s partner&gt; AND<br />&lt;sales region value in row&gt; == &lt;Bob&rsquo;s region&gt;</p>
+
+        <p>Now assume this can be generalized to work for all users:</p>
+
+        <p class="ranger-blog-code-line">&lt;partner attribute value in row&gt; == $USER.partner AND<br />&lt;sales region value in row&gt; == $USER.region</p>
+
+        <h1 id="s3">Welcome to Attribute Based Access Control (ABAC)!</h1>
+        <p>
+          In RBAC, the role to which a user is assigned membership is the central method of expressing what the user
+          should be allowed access to. Bob is in the role partner.ABC, along with, say, Sarah and Thomas and Srikanth
+          and Joon. Thus, all these users have access to partner ABC’s data.
+        </p><p>
+          In ABAC, the central method of expressing what the user should be allowed to have access to is the value of
+          the user’s attributes. Bob’s partner attribute value equals “ABC”, along with the partner attribute of Sarah
+          and Thomas and Srikanth and Joon. Just as in the RBAC case, all these users have access to partner ABC’s data.
+        </p><p>
+          But how do we program this in Apache Ranger? Apache Ranger uses a user-store, populated with users and their
+          attributes typically loaded from LDAP, SCIM, Azure Active Directory (AAD), Okta, etc., by Apache Ranger
+          usersync. If an attribute named partner is added to a user’s record on the identity provider, then that
+          information will be gathered as part of the usersync and can be referenced within a Ranger policy condition
+          as $USER.partner.
+        </p><h1 id="s4">GlobalSalesPartners Row-Filters Using ABAC</h1>
+        <p>
+          Assume that the UserStore has been populated with salesRegion and salesPartner attributes for Bob and
+          Celestine as follows:
+        </p><table>
+          <tr>
+            <td><p><b>User</b></p></td>
+            <td><p><b>salesRegion</b></p></td>
+            <td><p><b>salesPartner</b></p></td>
+          </tr>
+          <tr>
+            <td><p>Bob</p></td>
+            <td><p>US</p></td>
+            <td><p>ABC</p></td>
+          </tr>
+          <tr>
+            <td><p>Celestine</p></td>
+            <td><p>EMEA</p></td>
+            <td><p>XYZ</p></td>
+          </tr>
+        </table><p>
+          With ABAC, the 8 row filter conditions from the previous blog post become a single condition, matching the
+          users’ partners and regions with the value in the salesPartner and salesRegion columns:
+        </p><p class="ranger-blog-caption">
+          <img width="700" height="380" border="1" id="Picture 23" src="adventures_in_abac_2.files/fig2-policy_globalsalespartners_row_filter_abac.jpg" alt="Fig 2. Apache Ranger&#8482; Table GlobalSalesPartners: ABAC-based row-filter policy to restrict access based on sales region and sales partner" />
+        </p><p class="ranger-blog-caption">Fig 2. Apache Ranger&#8482; Table GlobalSalesPartners: ABAC-based row-filter policy to restrict access based on sales region and sales partner</p><p>
+          This policy works for all users, not just those with salesRegion or salesPartner access like Bob’s or Celestine’s.
+        </p>
+
+        <h1 id="s5">ABAC in Tag-Based Policies</h1>
+        <p>
+          Next, consider tables representing a single sales region, like USSales from blog post Part 1.
+        </p><table>
+          <tr>
+            <td><p><b>Resource</b></p></td>
+            <td><p><b>Tag</b></p></td>
+            <td><p><b>Tag Attribute</b></p></td>
+          </tr>
+          <tr>
+            <td><p>Table: USSales</p></td>
+            <td><p>salesRegion</p></td>
+            <td><p>value=”US”</p></td>
+          </tr>
+        </table><p>
+          Allow only users in the salesRegion.US role to access resources tagged with salesRegion.value = ”US”.  Create
+          a role-based (RBAC) tag policy that allows access to tagged tables based on the role membership of the user:
+        </p><p class="ranger-blog-caption">
+          <img width="700" height="380" border="1" id="Picture 23" src="adventures_in_abac_2.files/fig3-policy_tag_based_on_user_role.jpg" alt="Fig 3. Apache Ranger&#8482; Tag-based policy allowing access to tagged tables based on the user’s role membership" />
+        </p><p class="ranger-blog-caption">Fig 3. Apache Ranger&#8482; Tag-based policy allowing access to tagged tables based on the user’s role membership</p><p>
+          Using the RBAC method, we need to create a policy condition for each of the salesRegion.* roles.  Depending on
+          how many salesRegions a company defines, this could get large.  And if they are continually being added or
+          subtracted, the policy has to be commensurately updated.
+        </p><p>
+          Let’s use ABAC to greatly simplify this process, by creating a tag policy that allows table access to any user
+          whose salesRegion attribute matches the attribute of the salesRegion tag:
+        </p>
+
+        <p class="ranger-blog-caption">
+          <img width="700" height="380" border="1" id="Picture 23" src="adventures_in_abac_2.files/fig4-policy_tag_policy_abac.jpg" alt="Fig 3. Apache Ranger&#8482; ABAC-based tag policy to allow access to tables based on the value of the user’s attribute." />
+        </p><p class="ranger-blog-caption">Fig 4. Apache Ranger&#8482; ABAC-based tag policy to allow access to tables based on the value of the user’s attribute.</p><p>
+          As we have seen, ABAC makes policy creation and maintenance much easier!  But what if the custodians of your
+          Identity Provider are too busy to keep up with managing the additional attributes you need for ABAC?  Is there
+          another way to populate the UserStore?  Yes! Check out Part 3 of this blog series to find out how you can
+          retrieve UserStore entries from a variety of alternative sources!
+        </p></div>
+</div>
+    </section>
+  </body>
+</document>

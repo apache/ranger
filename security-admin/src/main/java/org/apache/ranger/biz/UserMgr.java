@@ -1177,6 +1177,14 @@ public class UserMgr {
         return roleList;
     }
 
+    public boolean isUserNotActive(String loginId) {
+        if (loginId == null || loginId.trim().isEmpty()) {
+            return false;
+        }
+        XXPortalUser xXPortalUser = daoManager.getXXPortalUser().findByLoginId(loginId);
+        return xXPortalUser != null && xXPortalUser.getStatus() != RangerCommonEnums.ACT_STATUS_ACTIVE;
+    }
+
     @Transactional(readOnly = false, propagation = Propagation.REQUIRED)
     public XXPortalUser updateOldUserName(String userLoginId, String newUserName, String currentPassword) {
         if (userLoginId == null || newUserName == null || userLoginId.trim().isEmpty() || newUserName.trim().isEmpty()) {

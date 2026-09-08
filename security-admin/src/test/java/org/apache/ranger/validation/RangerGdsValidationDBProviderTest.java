@@ -278,6 +278,10 @@ public class RangerGdsValidationDBProviderTest {
         assertTrue(provider.isAdminUser());
         assertFalse(provider.isAdminUser());
 
+        when(bizUtil.isAuditAdmin()).thenReturn(true, false);
+        assertTrue(provider.isAuditUser());
+        assertFalse(provider.isAuditUser());
+
         // isServiceAdmin path where service found and populated
         XXService xService = new XXService();
         xService.setName("svc");

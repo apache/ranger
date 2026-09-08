@@ -256,7 +256,8 @@ def convertInstallPropsToXML(props):
             #	if (key.startswith("ranger.usersync.ldap") or key.startswith("ranger.usersync.group") or key.startswith("ranger.usersync.paged")):
             #		del ret[key]
         elif (syncSource == SYNC_SOURCE_LDAP):
-            ret['ranger.usersync.ldap.deltasync'] = "true"
+            if ('ranger.usersync.ldap.deltasync' not in ret or len(str(ret['ranger.usersync.ldap.deltasync'])) == 0):
+                ret['ranger.usersync.ldap.deltasync'] = "true"
             ldapPass = ret[SYNC_LDAP_BIND_PASSWORD_KEY]
             password_validation(ldapPass, SYNC_LDAP_BIND_PASSWORD_KEY)
             ret['ranger.usersync.source.impl.class'] = 'org.apache.ranger.ldapusersync.process.LdapUserGroupBuilder'

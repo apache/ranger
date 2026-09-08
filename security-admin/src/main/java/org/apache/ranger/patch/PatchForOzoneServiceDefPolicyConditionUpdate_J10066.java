@@ -22,6 +22,7 @@ import org.apache.ranger.biz.ServiceDBStore;
 import org.apache.ranger.common.JSONUtil;
 import org.apache.ranger.common.RangerValidatorFactory;
 import org.apache.ranger.db.RangerDaoManager;
+import org.apache.ranger.entity.XXPolicyConditionDef;
 import org.apache.ranger.entity.XXServiceDef;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.model.validation.RangerServiceDefValidator;
@@ -33,12 +34,15 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
 @Component
-public class PatchForOzoneServiceDefPolicyConditionUpdate_J10065 extends BaseLoader {
-    private static final Logger logger = LoggerFactory.getLogger(PatchForOzoneServiceDefPolicyConditionUpdate_J10065.class);
+public class PatchForOzoneServiceDefPolicyConditionUpdate_J10066 extends BaseLoader {
+    private static final Logger logger = LoggerFactory.getLogger(PatchForOzoneServiceDefPolicyConditionUpdate_J10066.class);
+
+    private static final String POLICY_CONDITION_ACTION_MATCHES = "action-matches";
 
     @Autowired
     RangerDaoManager daoMgr;
@@ -52,13 +56,10 @@ public class PatchForOzoneServiceDefPolicyConditionUpdate_J10065 extends BaseLoa
     @Autowired
     RangerValidatorFactory validatorFactory;
 
-    @Autowired
-    ServiceDBStore svcStore;
-
     public static void main(String[] args) {
         logger.info("main()");
         try {
-            PatchForOzoneServiceDefPolicyConditionUpdate_J10065 loader = (PatchForOzoneServiceDefPolicyConditionUpdate_J10065) CLIUtil.getBean(PatchForOzoneServiceDefPolicyConditionUpdate_J10065.class);
+            PatchForOzoneServiceDefPolicyConditionUpdate_J10066 loader = (PatchForOzoneServiceDefPolicyConditionUpdate_J10066) CLIUtil.getBean(PatchForOzoneServiceDefPolicyConditionUpdate_J10066.class);
             loader.init();
             while (loader.isMoreToProcess()) {
                 loader.load();
@@ -78,19 +79,19 @@ public class PatchForOzoneServiceDefPolicyConditionUpdate_J10065 extends BaseLoa
 
     @Override
     public void printStats() {
-        logger.info("PatchForOzoneServiceDefPolicyConditionUpdate_J10065");
+        logger.info("PatchForOzoneServiceDefPolicyConditionUpdate_J10066");
     }
 
     @Override
     public void execLoad() {
-        logger.info("==> PatchForOzoneServiceDefPolicyConditionUpdate_J10065.execLoad()");
+        logger.info("==> PatchForOzoneServiceDefPolicyConditionUpdate_J10066.execLoad()");
         try {
             updateOzoneServiceDef();
         } catch (Exception e) {
-            logger.error("Error while applying PatchForOzoneServiceDefPolicyConditionUpdate_J10065", e);
-            throw new RuntimeException("PatchForOzoneServiceDefPolicyConditionUpdate_J10065 failed", e);
+            logger.error("Error while applying PatchForOzoneServiceDefPolicyConditionUpdate_J10066", e);
+            throw new RuntimeException("PatchForOzoneServiceDefPolicyConditionUpdate_J10066 failed", e);
         }
-        logger.info("<== PatchForOzoneServiceDefPolicyConditionUpdate_J10065.execLoad()");
+        logger.info("<== PatchForOzoneServiceDefPolicyConditionUpdate_J10066.execLoad()");
     }
 
     private void updateOzoneServiceDef() {
@@ -117,6 +118,28 @@ public class PatchForOzoneServiceDefPolicyConditionUpdate_J10065 extends BaseLoa
                 return;
             }
 
+            XXPolicyConditionDef existingActionMatches = daoMgr.getXXPolicyConditionDef().findByServiceDefIdAndName(
+                    xXServiceDefObj.getId(), POLICY_CONDITION_ACTION_MATCHES);
+
+            if (existingActionMatches != null) {
+                logger.info("Ozone service-definition already has {} in DB. No patching needed.", POLICY_CONDITION_ACTION_MATCHES);
+                return;
+            }
+
+            RangerServiceDef.RangerPolicyConditionDef embeddedActionMatchesCondition = null;
+
+            for (RangerServiceDef.RangerPolicyConditionDef policyCondition : embeddedPolicyConditions) {
+                if (POLICY_CONDITION_ACTION_MATCHES.equals(policyCondition.getName())) {
+                    embeddedActionMatchesCondition = policyCondition;
+                    break;
+                }
+            }
+
+            if (embeddedActionMatchesCondition == null) {
+                logger.error("Policy condition {} is missing from embedded Ozone service-definition.", POLICY_CONDITION_ACTION_MATCHES);
+                return;
+            }
+
             Map<String, String> serviceDefOptionsPreUpdate = null;
             final String        jsonStrPreUpdate           = xXServiceDefObj.getDefOptions();
 
@@ -131,13 +154,37 @@ public class PatchForOzoneServiceDefPolicyConditionUpdate_J10065 extends BaseLoa
                 return;
             }
 
-            dbOzoneServiceDef.setPolicyConditions(embeddedPolicyConditions);
+            List<RangerServiceDef.RangerPolicyConditionDef> updatedPolicyConditions = dbOzoneServiceDef.getPolicyConditions() == null
+                    ? new ArrayList<>()
+                    : new ArrayList<>(dbOzoneServiceDef.getPolicyConditions());
 
-            final RangerServiceDefValidator validator = validatorFactory.getServiceDefValidator(svcStore);
+            updatedPolicyConditions.removeIf(c -> POLICY_CONDITION_ACTION_MATCHES.equals(c.getName()));
+
+            RangerServiceDef.RangerPolicyConditionDef actionMatchesCondition = new RangerServiceDef.RangerPolicyConditionDef(
+                    embeddedActionMatchesCondition.getItemId(),
+                    embeddedActionMatchesCondition.getName(),
+                    embeddedActionMatchesCondition.getEvaluator(),
+                    embeddedActionMatchesCondition.getEvaluatorOptions(),
+                    embeddedActionMatchesCondition.getValidationRegEx(),
+                    embeddedActionMatchesCondition.getValidationMessage(),
+                    embeddedActionMatchesCondition.getUiHint(),
+                    embeddedActionMatchesCondition.getLabel(),
+                    embeddedActionMatchesCondition.getDescription(),
+                    embeddedActionMatchesCondition.getRbKeyLabel(),
+                    embeddedActionMatchesCondition.getRbKeyDescription(),
+                    embeddedActionMatchesCondition.getRbKeyValidationMessage());
+
+            actionMatchesCondition.setItemId(nextPolicyConditionItemId(updatedPolicyConditions));
+
+            updatedPolicyConditions.add(actionMatchesCondition);
+
+            dbOzoneServiceDef.setPolicyConditions(updatedPolicyConditions);
+
+            final RangerServiceDefValidator validator = validatorFactory.getServiceDefValidator(svcDBStore);
 
             validator.validate(dbOzoneServiceDef, Action.UPDATE);
 
-            svcStore.updateServiceDef(dbOzoneServiceDef);
+            svcDBStore.updateServiceDef(dbOzoneServiceDef);
 
             xXServiceDefObj = daoMgr.getXXServiceDef().findByName(ozoneServiceDefName);
 
@@ -163,5 +210,21 @@ public class PatchForOzoneServiceDefPolicyConditionUpdate_J10065 extends BaseLoa
             logger.error("Error while updating ozone service-def policy conditions", e);
             throw new RuntimeException("Failed to update ozone service-def policy conditions", e);
         }
+    }
+
+    private long nextPolicyConditionItemId(List<RangerServiceDef.RangerPolicyConditionDef> policyConditions) {
+        long maxItemId = 0L;
+
+        if (policyConditions != null) {
+            for (RangerServiceDef.RangerPolicyConditionDef policyCondition : policyConditions) {
+                Long itemId = policyCondition.getItemId();
+
+                if (itemId != null && itemId > maxItemId) {
+                    maxItemId = itemId;
+                }
+            }
+        }
+
+        return maxItemId + 1;
     }
 }

@@ -24,9 +24,9 @@ Use Dockerfiles in this directory to create docker images and run them to build 
 ### Environment Setup
 
 - Ensure that you have recent version of Docker installed from [docker.io](http://www.docker.io) (as of this writing: Engine v24.0.5, Compose v2.20.2).
-   Make sure to configure docker with at least 8gb of memory.
+   Make sure to configure docker with at least 4gb of memory for the full stack (Ranger core services default to 256 MB JVM heap each; see `.env`).
 
-- Update environment variables in ```.env``` file, if necessary
+- Update environment variables in ```.env``` file, if necessary. JVM heap per service is controlled by `RANGER_*_MAX_HEAP` variables; docker compose passes them into each container and upstream start scripts read them when building `JAVA_OPTS`. Non-docker installs keep upstream defaults (typically `1g`) when these variables are unset.
 
 - Set ```dev-support/ranger-docker``` as your working directory.
 

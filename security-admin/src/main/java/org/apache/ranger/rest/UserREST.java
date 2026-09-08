@@ -274,6 +274,7 @@ public class UserREST {
             long                inactivityTimeout = PropertiesUtil.getLongProperty("ranger.service.inactivity.timeout", 15 * 60);
 
             configProperties.put("inactivityTimeout", Long.toString(inactivityTimeout));
+            configProperties.put("spiffeAsUsernameEnabled", Boolean.toString(StringUtil.isSpiffeAsUsernameEnabled()));
 
             VXPortalUser userProfile = userManager.getUserProfileByLoginId();
 

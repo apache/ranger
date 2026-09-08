@@ -45,7 +45,7 @@ then
   fi
 fi
 
-cd ${RANGER_HOME}/usersync && ./start.sh
+cd ${RANGER_HOME}/usersync && ./ranger-usersync-services.sh start
 
 RANGER_USERSYNC_PID=`ps -ef  | grep -v grep | grep -i "org.apache.ranger.authentication.server.RangerUserSyncServer" | awk '{print $2}'`
 

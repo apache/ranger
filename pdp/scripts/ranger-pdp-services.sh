@@ -29,7 +29,7 @@ realScriptDir=$(dirname "$realScriptPath")
 cd "$realScriptDir" || exit 1
 cdir=$(pwd)
 
-ranger_pdp_max_heap_size=${RANGER_PDP_MAX_HEAP_SIZE:-1g}
+ranger_pdp_max_heap_size=${RANGER_PDP_MAX_HEAP:-${RANGER_PDP_MAX_HEAP_SIZE:-1g}}
 
 for custom_env_script in $(find "${cdir}/conf/" -name "ranger-pdp-env*" 2>/dev/null); do
     if [ -f "$custom_env_script" ]; then
@@ -51,7 +51,7 @@ if [ -z "${UNIX_PDP_USER}" ]; then
     UNIX_PDP_USER=ranger
 fi
 
-JAVA_OPTS=" ${JAVA_OPTS} -XX:MetaspaceSize=100m -XX:MaxMetaspaceSize=200m -Xmx${ranger_pdp_max_heap_size} -Xms256m"
+JAVA_OPTS=" ${JAVA_OPTS} -XX:MetaspaceSize=${RANGER_JVM_METASPACE:-100m} -XX:MaxMetaspaceSize=${RANGER_JVM_MAX_METASPACE:-200m} -Xmx${ranger_pdp_max_heap_size} -Xms${ranger_pdp_max_heap_size}"
 
 if [ "${action}" == "START" ]; then
 
