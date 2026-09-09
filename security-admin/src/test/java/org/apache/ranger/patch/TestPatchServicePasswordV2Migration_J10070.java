@@ -37,11 +37,11 @@ import java.util.List;
 
 /**
  * @description Unit tests for PatchServicePasswordV2Migration_J10067, covering the gaps flagged in
- * review: the up-front config validation (see {@link PatchServicePasswordV2Migration_J10067#validateMigrationConfig()})
+ * review: the up-front config validation (see {@link PatchServicePasswordV2Migration_J10070#validateMigrationConfig()})
  * and the "already-v2 row is a no-op" idempotency guarantee.
  */
 @ExtendWith(MockitoExtension.class)
-public class TestPatchServicePasswordV2Migration_J10067 {
+public class TestPatchServicePasswordV2Migration_J10070 {
     @Test
     public void testMigrateServicePasswordsToV2_DefaultKeyConfig_FailsFastBeforeTouchingAnyRow() {
         // No test in this suite (or anywhere else in this module) overrides
@@ -52,7 +52,7 @@ public class TestPatchServicePasswordV2Migration_J10067 {
         Assertions.assertEquals(PasswordUtils.DEFAULT_ENCRYPT_KEY, ServiceDBStore.ENCRYPT_KEY,
                 "test precondition: this suite never configures a real encryption key");
 
-        PatchServicePasswordV2Migration_J10067 patch = new PatchServicePasswordV2Migration_J10067();
+        PatchServicePasswordV2Migration_J10070 patch = new PatchServicePasswordV2Migration_J10070();
         RangerDaoManager daoMgr = Mockito.mock(RangerDaoManager.class);
 
         patch.daoMgr = daoMgr;
@@ -73,7 +73,7 @@ public class TestPatchServicePasswordV2Migration_J10067 {
         try (MockedStatic<PasswordUtils> pwdUtilsMock = Mockito.mockStatic(PasswordUtils.class, Mockito.CALLS_REAL_METHODS)) {
             pwdUtilsMock.when(() -> PasswordUtils.validateEncryptionKeyConfigured(Mockito.any())).thenAnswer(invocation -> null);
 
-            PatchServicePasswordV2Migration_J10067 patch = new PatchServicePasswordV2Migration_J10067();
+            PatchServicePasswordV2Migration_J10070 patch = new PatchServicePasswordV2Migration_J10070();
 
             RangerDaoManager daoMgr = Mockito.mock(RangerDaoManager.class);
             XXServiceConfigMapDao xServiceConfigMapDao = Mockito.mock(XXServiceConfigMapDao.class);
@@ -121,10 +121,12 @@ public class TestPatchServicePasswordV2Migration_J10067 {
         try (MockedStatic<PasswordUtils> pwdUtilsMock = Mockito.mockStatic(PasswordUtils.class, Mockito.CALLS_REAL_METHODS)) {
             pwdUtilsMock.when(() -> PasswordUtils.validateEncryptionKeyConfigured(Mockito.any())).thenAnswer(invocation -> null);
 
-            PatchServicePasswordV2Migration_J10067 patch = new PatchServicePasswordV2Migration_J10067();
+            PatchServicePasswordV2Migration_J10070 patch = new PatchServicePasswordV2Migration_J10070();
 
             RangerDaoManager daoMgr = Mockito.mock(RangerDaoManager.class);
             XXServiceConfigMapDao xServiceConfigMapDao = Mockito.mock(XXServiceConfigMapDao.class);
+            XXServiceDao xServiceDao = Mockito.mock(XXServiceDao.class);
+            XXServiceConfigDefDao xServiceConfigDefDao = Mockito.mock(XXServiceConfigDefDao.class);
 
             patch.daoMgr = daoMgr;
 
@@ -136,16 +138,72 @@ public class TestPatchServicePasswordV2Migration_J10067 {
 
             List<XXServiceConfigMap> allConfigMaps = Collections.singletonList(configMap);
 
+            XXService xService = new XXService();
+            xService.setId(101L);
+            xService.setName("svc2");
+            xService.setType(10L);
+
             Mockito.when(daoMgr.getXXServiceConfigMap()).thenReturn(xServiceConfigMapDao);
             Mockito.when(xServiceConfigMapDao.getAll()).thenReturn(allConfigMaps);
 
+            Mockito.when(daoMgr.getXXService()).thenReturn(xServiceDao);
+            Mockito.when(xServiceDao.getById(101L)).thenReturn(xService);
+
+            Mockito.when(daoMgr.getXXServiceConfigDef()).thenReturn(xServiceConfigDefDao);
+            Mockito.when(xServiceConfigDefDao.findConfigNamesByServiceDefIdAndType(10L, ServiceDBStore.CONFIG_TYPE_PASSWORD))
+                    .thenReturn(Collections.singletonList("password"));
+
             patch.migrateServicePasswordsToV2();
 
-            // Never even reached the per-row XXService lookup - rejected up front by the
-            // isLegacyFormat()/isV2Format() classification, before any DAO calls for this row.
-            Mockito.verify(daoMgr, Mockito.never()).getXXService();
+            // The row IS looked up now (that's the point of the reordering fix) but must never be
+            // decrypted/re-encrypted/written - it doesn't look like either recognized format.
             Mockito.verify(xServiceConfigMapDao, Mockito.never()).update(Mockito.any(XXServiceConfigMap.class));
             Assertions.assertEquals("plaintext,password,with,commas", configMap.getConfigvalue());
+            Assertions.assertEquals(1, patch.notEncryptedCount, "the plaintext-with-comma row must be counted as not-encrypted, not silently dropped");
+        }
+    }
+
+    @Test
+    public void testMigrateServicePasswordsToV2_GenuinelyPlaintextPasswordField_WarnedNotSkippedSilently() throws Exception {
+        try (MockedStatic<PasswordUtils> pwdUtilsMock = Mockito.mockStatic(PasswordUtils.class, Mockito.CALLS_REAL_METHODS)) {
+            pwdUtilsMock.when(() -> PasswordUtils.validateEncryptionKeyConfigured(Mockito.any())).thenAnswer(invocation -> null);
+
+            PatchServicePasswordV2Migration_J10070 patch = new PatchServicePasswordV2Migration_J10070();
+
+            RangerDaoManager daoMgr = Mockito.mock(RangerDaoManager.class);
+            XXServiceConfigMapDao xServiceConfigMapDao = Mockito.mock(XXServiceConfigMapDao.class);
+            XXServiceDao xServiceDao = Mockito.mock(XXServiceDao.class);
+            XXServiceConfigDefDao xServiceConfigDefDao = Mockito.mock(XXServiceConfigDefDao.class);
+
+            patch.daoMgr = daoMgr;
+
+            XXServiceConfigMap configMap = new XXServiceConfigMap();
+            configMap.setId(3L);
+            configMap.setServiceId(102L);
+            configMap.setConfigkey("password");
+            configMap.setConfigvalue("aPlaintextPasswordWithNoCommaAtAll");
+
+            XXService xService = new XXService();
+            xService.setId(102L);
+            xService.setName("svc3");
+            xService.setType(11L);
+
+            Mockito.when(daoMgr.getXXServiceConfigMap()).thenReturn(xServiceConfigMapDao);
+            Mockito.when(xServiceConfigMapDao.getAll()).thenReturn(Collections.singletonList(configMap));
+
+            Mockito.when(daoMgr.getXXService()).thenReturn(xServiceDao);
+            Mockito.when(xServiceDao.getById(102L)).thenReturn(xService);
+
+            Mockito.when(daoMgr.getXXServiceConfigDef()).thenReturn(xServiceConfigDefDao);
+            Mockito.when(xServiceConfigDefDao.findConfigNamesByServiceDefIdAndType(11L, ServiceDBStore.CONFIG_TYPE_PASSWORD))
+                    .thenReturn(Collections.singletonList("password"));
+
+            patch.migrateServicePasswordsToV2();
+
+            Mockito.verify(xServiceConfigMapDao, Mockito.never()).update(Mockito.any(XXServiceConfigMap.class));
+            Assertions.assertEquals("aPlaintextPasswordWithNoCommaAtAll", configMap.getConfigvalue());
+            Assertions.assertEquals(1, patch.notEncryptedCount);
+            Assertions.assertEquals(0, patch.migratedCount);
         }
     }
 }

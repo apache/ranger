@@ -53,6 +53,10 @@ public class PasswordUtils {
             "ranger.password.encryption.key to a unique, secret value in ranger-admin-site.xml — the exact same value on every Admin node in this " +
             "cluster — before service config passwords can be encrypted.";
 
+    private static final String V2_FORMAT_PREFIX = "v2,";
+    private static final String LEGACY_ENV_KEY_OVERRIDE_NAME  = "lEncryptKey";
+    private static final String LEGACY_ENV_SALT_OVERRIDE_NAME = "ENCRYPT_SALT";
+
     private final RangerSupportedCryptoAlgo cryptAlgo;
     private final int    iterationCount;
     private final char[] encryptKey;
@@ -138,10 +142,20 @@ public class PasswordUtils {
         return build(aPassword).decrypt();
     }
 
-    private static final String V2_FORMAT_PREFIX = "v2,";
-
     public static boolean isV2Format(String storedValue) {
-        return storedValue != null && storedValue.startsWith(V2_FORMAT_PREFIX);
+        if (storedValue == null || !storedValue.startsWith(V2_FORMAT_PREFIX)) {
+            return false;
+        }
+        String[] fields = storedValue.substring(V2_FORMAT_PREFIX.length()).split(",", 2);
+        if (fields.length == 0 || StringUtils.isEmpty(fields[0])) {
+            return false;
+        }
+        try {
+            RangerSupportedCryptoAlgo.getValueOf(fields[0]);
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
     }
 
     public static String getCryptAlgoV2(String storedValue) {
@@ -173,6 +187,18 @@ public class PasswordUtils {
         }
         if (Arrays.equals(key, DEFAULT_ENCRYPT_KEY.toCharArray())) {
             throw new IllegalStateException(MSG_ENCRYPT_KEY_STILL_DEFAULT);
+        }
+    }
+
+    public static void checkNoLegacyEnvKeyOverride() {
+        Map<String, String> env = System.getenv();
+        if (env.get(LEGACY_ENV_KEY_OVERRIDE_NAME) != null || env.get(LEGACY_ENV_SALT_OVERRIDE_NAME) != null) {
+            throw new IllegalStateException("This node has the legacy '" + LEGACY_ENV_KEY_OVERRIDE_NAME + "' and/or '" + LEGACY_ENV_SALT_OVERRIDE_NAME +
+                    "' environment variable set, which silently overrides the key/salt used by legacy (v1) password encryption. The v2 format and this " +
+                    "migration intentionally do not honor this override — they use only ranger.password.encryption.key — so migrating now would decrypt " +
+                    "existing data under the env-var key but re-encrypt it under the configured property, silently changing which secret protects it. " +
+                    "Confirm whether this environment variable is actually relied on before proceeding: if it is, reconcile ranger.password.encryption.key " +
+                    "to match it first; if it is unused/vestigial, unset it, then re-run this migration.");
         }
     }
 
@@ -216,6 +242,9 @@ public class PasswordUtils {
         int iterationCount = Integer.parseInt(fields[index++]);
         byte[] iv;
         if (needsIv(cryptAlgo.getAlgoName())) {
+            if (fields.length < 5) {
+                throw new IOException("Malformed v2 password value (algorithm " + cryptAlgo.getAlgoName() + " requires an IV; expected at least 5 fields, found " + fields.length + ")");
+            }
             iv = Base64.getDecoder().decode(fields[index++]);
         } else {
             iv = DEFAULT_INITIAL_VECTOR;

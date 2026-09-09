@@ -357,6 +357,44 @@ public class PasswordUtilsTest {
         assertFalse(PasswordUtils.isLegacyFormat("PBEWithMD5AndDES,key,salt,4"));
     }
 
+    @Test
+    public void testIsV2FormatRejectsBarePrefixWithoutRealAlgorithm() {
+        assertFalse(PasswordUtils.isV2Format("v2,"), "prefix alone, no fields at all, must not count as v2");
+        assertFalse(PasswordUtils.isV2Format("v2,notARealAlgorithm,rest,of,value"), "a made-up algorithm name must not count as v2");
+        assertFalse(PasswordUtils.isV2Format("v2,thisIsJustAPlaintextPasswordThatHappensToStartWithTheV2Prefix"));
+    }
+
+    @Test
+    public void testIsV2FormatAcceptsRealAlgorithmAfterPrefix() throws Exception {
+        String storedValue = PasswordUtils.encryptPasswordV2("secretPasswordNoOneWillEverKnow", RangerSupportedCryptoAlgo.PBEWITHMD5ANDDES,
+                "operator-configured-key-2026".toCharArray(), "f77aLYLo".getBytes(), 1000);
+        assertTrue(PasswordUtils.isV2Format(storedValue));
+    }
+
+    @Test
+    public void testDecryptV2WithIvAlgorithmAndTooFewFieldsThrowsIOException() {
+        // PBEWITHHMACSHA512ANDAES_128 needs an IV (5 fields: algo, salt, iter, iv, cipherText) —
+        // this value only has 4, mimicking corruption/truncation that dropped the IV field.
+        String malformedValue = "v2,PBEWITHHMACSHA512ANDAES_128,c29tZXNhbHQ=,1000,someciphertext";
+        IOException ex = assertThrows(IOException.class, () -> PasswordUtils.decryptPasswordV2(malformedValue, "operator-configured-key-2026".toCharArray()),
+                "a truncated IV-requiring value must fail with IOException, never an unhandled ArrayIndexOutOfBoundsException");
+        assertTrue(ex.getMessage().contains("IV"), "the error should point at the missing IV field");
+    }
+
+    @Test
+    public void testDecryptV2WithIvAlgorithmAndFullFieldsRoundTrips() throws Exception {
+        char[] key = "operator-configured-key-2026".toCharArray();
+        String storedValue = PasswordUtils.encryptPasswordV2("secretPasswordNoOneWillEverKnow", RangerSupportedCryptoAlgo.PBEWITHHMACSHA512ANDAES_128,
+                key, "f77aLYLo".getBytes(), 1000);
+        assertEquals("secretPasswordNoOneWillEverKnow", PasswordUtils.decryptPasswordV2(storedValue, key));
+    }
+
+    @Test
+    public void testCheckNoLegacyEnvKeyOverrideDoesNotThrowWhenUnset() {
+        assertDoesNotThrow(PasswordUtils::checkNoLegacyEnvKeyOverride,
+                "in a normal environment (neither lEncryptKey nor ENCRYPT_SALT set), this must not throw");
+    }
+
     private String join(String... strings) {
         return Joiner.on(",").skipNulls().join(strings);
     }

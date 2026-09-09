@@ -56,7 +56,7 @@ import java.util.List;
  * continue, rather than failing startup outright. A hard failure would guarantee the mismatch is
  * never missed, but risks turning a legitimate transient state (e.g. a deliberate key-rotation
  * window someone is midway through) into an outage. Kept as fail-open/warn-only to match this
- * fix's overall risk posture (see PatchServicePasswordV2Migration_J10067's per-row fail-soft
+ * fix's overall risk posture (see PatchServicePasswordV2Migration_J10070's per-row fail-soft
  * choice for the same reasoning) - worth a second opinion before this ships, not a unilateral call.
  * <p>
  * Looks up one v2-format row via a targeted, indexed-friendly {@code configvalue LIKE 'v2,%'}
@@ -117,7 +117,7 @@ public class PasswordEncryptionKeyConsistencyChecker {
      * (ServiceDBStore.createService()/updateService()) does not refuse a default key today, so
      * making startup itself fail here would not stop those writes anyway, only make the
      * misconfiguration harder to fix (an Admin that won't start can't have its config corrected
-     * through its own UI/API). PatchServicePasswordV2Migration_J10067 is the one place in this fix
+     * through its own UI/API). PatchServicePasswordV2Migration_J10070 is the one place in this fix
      * that DOES hard-refuse on a default/unset key (see PasswordUtils.validateEncryptionKeyConfigured())
      * - that migration is a deliberate, one-time, operator-triggered action with no legacy fallback
      * to preserve, unlike an interactive service create/update call.

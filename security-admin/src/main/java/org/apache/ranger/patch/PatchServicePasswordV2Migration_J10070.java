@@ -76,8 +76,8 @@ import java.util.Set;
  * rows that don't match either recognized format are counted as notEncrypted and left alone.
  */
 @Component
-public class PatchServicePasswordV2Migration_J10067 extends BaseLoader {
-    private static final Logger logger = LoggerFactory.getLogger(PatchServicePasswordV2Migration_J10067.class);
+public class PatchServicePasswordV2Migration_J10070 extends BaseLoader {
+    private static final Logger logger = LoggerFactory.getLogger(PatchServicePasswordV2Migration_J10070.class);
 
     @Autowired
     RangerDaoManager daoMgr;
@@ -90,14 +90,14 @@ public class PatchServicePasswordV2Migration_J10067 extends BaseLoader {
     int orphanedCount;
     int failedCount;
 
-    public PatchServicePasswordV2Migration_J10067() {
+    public PatchServicePasswordV2Migration_J10070() {
     }
 
     public static void main(String[] args) {
         logger.info("main()");
 
         try {
-            PatchServicePasswordV2Migration_J10067 loader = (PatchServicePasswordV2Migration_J10067) CLIUtil.getBean(PatchServicePasswordV2Migration_J10067.class);
+            PatchServicePasswordV2Migration_J10070 loader = (PatchServicePasswordV2Migration_J10070) CLIUtil.getBean(PatchServicePasswordV2Migration_J10070.class);
             loader.init();
             while (loader.isMoreToProcess()) {
                 loader.load();
@@ -129,19 +129,6 @@ public class PatchServicePasswordV2Migration_J10067 extends BaseLoader {
         for (XXServiceConfigMap configMap : allConfigMaps) {
             lineCount++;
 
-            String configValue = configMap.getConfigvalue();
-            boolean isV2 = PasswordUtils.isV2Format(configValue);
-
-            if (!isV2 && !PasswordUtils.isLegacyFormat(configValue)) {
-                // Neither format is recognized — plaintext, some other unrelated config value, or
-                // (previously, under the old ".contains(\",\")" heuristic) a plaintext value that
-                // merely happened to contain a comma. isLegacyFormat() requires the first field to
-                // actually name a supported crypto algorithm, so a stray comma alone no longer
-                // routes a row into decrypt/re-encrypt/failedCount below.
-                notEncryptedCount++;
-                continue;
-            }
-
             // Everything below is per-row and deliberately inside one try/catch, not just the
             // crypto/write step at the bottom - a row-specific DAO lookup failure here (e.g. a
             // transient issue resolving this row's XXService or its service-def's password config
@@ -165,6 +152,17 @@ public class PatchServicePasswordV2Migration_J10067 extends BaseLoader {
 
                 if (!ServiceDBStore.isPasswordConfigKey(passwordConfigKeys, configMap.getConfigkey())) {
                     notPasswordCount++;
+                    continue;
+                }
+
+                String configValue = configMap.getConfigvalue();
+                boolean isV2 = PasswordUtils.isV2Format(configValue);
+
+                if (!isV2 && !PasswordUtils.isLegacyFormat(configValue)) {
+                    logger.warn("Password-type config key [{}] on service [{}] (id={}) does not look encrypted (neither legacy nor v2 format) — it may be " +
+                                    "stored in plaintext. Left unchanged by this migration; investigate and re-save the service config to encrypt it.",
+                            configMap.getConfigkey(), xService.getName(), xService.getId());
+                    notEncryptedCount++;
                     continue;
                 }
 
@@ -196,7 +194,7 @@ public class PatchServicePasswordV2Migration_J10067 extends BaseLoader {
 
         setMoreToProcess(false);
 
-        logger.info("Password v1->v2 migration complete: migrated={}, alreadyV2={}, notPasswordConfig={}, notEncrypted={}, orphaned={}, failed={} (total rows seen={})",
+        logger.info("Password v1->v2 migration complete: migrated={}, alreadyV2={}, notPasswordConfig={}, notEncryptedOrPlaintext={}, orphaned={}, failed={} (total rows seen={})",
                 migratedCount, alreadyV2Count, notPasswordCount, notEncryptedCount, orphanedCount, failedCount, lineCount);
     }
 
@@ -213,6 +211,7 @@ public class PatchServicePasswordV2Migration_J10067 extends BaseLoader {
      */
     private static void validateMigrationConfig() {
         PasswordUtils.validateEncryptionKeyConfigured(ServiceDBStore.ENCRYPT_KEY.toCharArray());
+        PasswordUtils.checkNoLegacyEnvKeyOverride();
 
         RangerSupportedCryptoAlgo.getValueOf(ServiceDBStore.CRYPT_ALGO); // throws if not a supported algorithm name
     }
