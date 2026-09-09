@@ -69,7 +69,6 @@ public class UserGroupSyncConfig {
     public static final  String UGSYNC_TEST_RUN_PROP                   = "ranger.usersync.policymanager.testrun";
     /* Other Configs */
     public static final  String UGSYNC_SERVER_HA_ENABLED_PARAM         = "ranger-ugsync.server.ha.enabled";
-    public static final  String UGSYNC_LDAP_DELTASYNC_SERVER_TYPE      = "ranger.usersync.ldap.deltasync.server.type";
     public static final  String UGSYNC_NAME_VALIDATION_ENABLED         = "ranger.usersync.name.validation.enabled";
     public static final  String UGSYNC_SYNC_SOURCE_VALIDATION_ENABLED  = "ranger.usersync.syncsource.validation.enabled";
     private static final Logger LOG                                    = LoggerFactory.getLogger(UserGroupSyncConfig.class);
@@ -804,18 +803,6 @@ public class UserGroupSyncConfig {
         }
 
         return groupSearchFirstEnabled;
-    }
-
-    public String getDeltaSyncServerType() {
-        String val = prop.getProperty(UGSYNC_LDAP_DELTASYNC_SERVER_TYPE);
-        if (val == null || val.trim().isEmpty()) {
-            return "";
-        } else if (val.trim().equalsIgnoreCase("ldap")) {
-            return "ldap";
-        } else if (val.trim().equalsIgnoreCase("ad")) {
-            return "ad";
-        }
-        return "";
     }
 
     /* Used only for unit testing */

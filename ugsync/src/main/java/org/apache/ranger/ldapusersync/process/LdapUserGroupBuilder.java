@@ -122,7 +122,6 @@ public class LdapUserGroupBuilder implements UserGroupSource {
     private String         groupNameAttribute;
     private String         groupCloudIdAttribute;
     private String         currentSyncSource;
-    private String         deltaSyncServerType;
     private String[]       userSearchBase;
     private String[]       groupSearchBase;
     private Set<String>    groupNameSet;
@@ -377,7 +376,6 @@ public class LdapUserGroupBuilder implements UserGroupSource {
         currentSyncSource           = config.getCurrentSyncSource();
         userSearchEnabled           = config.isUserSearchEnabled();
         groupSearchEnabled          = config.isGroupSearchEnabled();
-        deltaSyncServerType         = config.getDeltaSyncServerType();
         ldapUrl                     = config.getLdapUrl();
         ldapBindDn                  = config.getLdapBindDn();
         ldapBindPassword            = config.getLdapBindPassword();
@@ -515,19 +513,13 @@ public class LdapUserGroupBuilder implements UserGroupSource {
             }
 
             if (config.isDeltaSyncEnabled()) {
-                if ("ad".equalsIgnoreCase(deltaSyncServerType)) {
-                    extendedUserSearchFilter = "(objectclass=" + userObjectClass + ")(uSNChanged>=" + deltaSyncUserTime + ")";
-                } else if ("ldap".equalsIgnoreCase(deltaSyncServerType)) {
-                    extendedUserSearchFilter = "(objectclass=" + userObjectClass + ")(modifyTimestamp>=" + deltaSyncUserTimeStamp + "Z)";
-                } else {
-                    extendedUserSearchFilter = "(objectclass=" + userObjectClass + ")(|(uSNChanged>=" + deltaSyncUserTime + ")(modifyTimestamp>=" + deltaSyncUserTimeStamp + "Z))";
-                }
+                extendedUserSearchFilter = "(objectclass=" + userObjectClass + ")" + getDeltaSyncFilter(deltaSyncUserTime, deltaSyncUserTimeStamp);
             } else {
                 extendedUserSearchFilter = "(objectclass=" + userObjectClass + ")";
             }
 
-            LOG.debug("custom userSearchFilter = {}, deltaSyncServerType = {}, extendedUserSearchFilter = {}", userSearchFilter, deltaSyncServerType, extendedUserSearchFilter);
-
+            LOG.debug("custom userSearchFilter = {}, extendedUserSearchFilter = {}", userSearchFilter, extendedUserSearchFilter);
+            LOG.info("extendedUserSearchFilter = {}", extendedUserSearchFilter);
             if (userSearchFilter != null && !userSearchFilter.trim().isEmpty()) {
                 String customFilter = userSearchFilter.trim();
 
@@ -768,18 +760,12 @@ public class LdapUserGroupBuilder implements UserGroupSource {
             }
 
             if (config.isDeltaSyncEnabled()) {
-                if ("ad".equalsIgnoreCase(deltaSyncServerType)) {
-                    extendedAllGroupsSearchFilter = "(&" + extendedGroupSearchFilter + "(uSNChanged>=" + deltaSyncGroupTime + "))";
-                } else if ("ldap".equalsIgnoreCase(deltaSyncServerType)) {
-                    extendedAllGroupsSearchFilter = "(&" + extendedGroupSearchFilter + "(modifyTimestamp>=" + deltaSyncGroupTimeStamp + "Z))";
-                } else {
-                    extendedAllGroupsSearchFilter = "(&" + extendedGroupSearchFilter + "(|(uSNChanged>=" + deltaSyncGroupTime + ")(modifyTimestamp>=" + deltaSyncGroupTimeStamp + "Z)))";
-                }
+                extendedAllGroupsSearchFilter = "(&" + extendedGroupSearchFilter + getDeltaSyncFilter(deltaSyncGroupTime, deltaSyncGroupTimeStamp) + ")";
             } else {
                 extendedAllGroupsSearchFilter = "(&"  + extendedGroupSearchFilter + ")";
             }
 
-            LOG.debug("custom groupSearchFilter = {}, deltaSyncServerType = {}, extendedGroupSearchFilter = {}", groupSearchFilter, deltaSyncServerType, extendedGroupSearchFilter);
+            LOG.debug("custom groupSearchFilter = {}, extendedGroupSearchFilter = {}", groupSearchFilter, extendedGroupSearchFilter);
             LOG.info("extendedAllGroupsSearchFilter = {}", extendedAllGroupsSearchFilter);
 
             for (int ou = 0; ou < groupSearchBase.length; ou++) {
@@ -924,6 +910,21 @@ public class LdapUserGroupBuilder implements UserGroupSource {
         LOG.debug("highestdeltaSyncGroupTime = {}", highestdeltaSyncGroupTime);
 
         return highestdeltaSyncGroupTime;
+    }
+
+    private String getDeltaSyncFilter(long usnChangedTime, String modifyTimestamp) {
+        String result     = "";
+        String serverType = config.getProperty("ranger.usersync.ldap.deltasync.server.type", "").trim();
+
+        if (serverType.equalsIgnoreCase("ad")) {
+            result = "(uSNChanged>=" + usnChangedTime + ")";
+        } else if (serverType.equalsIgnoreCase("ldap")) {
+            result = "(modifyTimestamp>=" + modifyTimestamp + "Z)";
+        } else {
+            result = "(|(uSNChanged>=" + usnChangedTime + ")(modifyTimestamp>=" + modifyTimestamp + "Z))";
+        }
+
+        return result;
     }
 
     private void goUpGroupHierarchy(Set<String> groups, int groupHierarchyLevels, String groupSName) {

@@ -512,21 +512,6 @@ public class TestLdapUserGroupBuilder extends AbstractLdapTestUnit {
     }
 
     @Test
-    void testUF_init_loads_deltaSyncServerType() throws Throwable {
-        resetConfig();
-        configureMinimalLdapConfig();
-        UserGroupSyncConfig cfg = UserGroupSyncConfig.getInstance();
-        cfg.setProperty("ranger.usersync.ldap.deltasync.server.type", "ad");
-
-        LdapUserGroupBuilder b = new LdapUserGroupBuilder();
-        b.init();
-
-        Field f = LdapUserGroupBuilder.class.getDeclaredField("deltaSyncServerType");
-        f.setAccessible(true);
-        assertEquals("ad", f.get(b));
-    }
-
-    @Test
     public void testV_getUsers_processes_user_and_group_memberships() throws Throwable {
         resetConfig();
         configureMinimalLdapConfig();
