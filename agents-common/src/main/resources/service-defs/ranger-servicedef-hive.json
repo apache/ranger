@@ -198,7 +198,7 @@
     ],
     "resources": [
       { "name": "database", "matcherOptions": { "wildCard": "false" }, "lookupSupported": true, "mandatory": true, "uiHint": "{ \"singleValue\":true }" },
-      { "name": "table",    "matcherOptions": { "wildCard": "false" }, "lookupSupported": true, "mandatory": true, "uiHint": "{ \"singleValue\":true }" }
+      { "name": "table",    "matcherOptions": { "wildCard": "true" }, "lookupSupported": true, "mandatory": true, "uiHint": "" }
     ]
   }
 }
