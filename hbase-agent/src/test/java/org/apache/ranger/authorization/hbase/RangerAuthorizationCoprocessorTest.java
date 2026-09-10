@@ -45,7 +45,9 @@ import org.apache.hadoop.hbase.client.RegionInfo;
 import org.apache.hadoop.hbase.client.Result;
 import org.apache.hadoop.hbase.client.Scan;
 import org.apache.hadoop.hbase.client.SnapshotDescription;
+import org.apache.hadoop.hbase.client.SnapshotType;
 import org.apache.hadoop.hbase.client.TableDescriptor;
+import org.apache.hadoop.hbase.client.TableDescriptorBuilder;
 import org.apache.hadoop.hbase.coprocessor.MasterCoprocessorEnvironment;
 import org.apache.hadoop.hbase.coprocessor.ObserverContext;
 import org.apache.hadoop.hbase.coprocessor.RegionCoprocessorEnvironment;
@@ -127,6 +129,7 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -2877,5 +2880,31 @@ public class RangerAuthorizationCoprocessorTest {
 
         // cleanup
         pf.set(null, null);
+    }
+
+    @Test
+    public void test116_preSnapshotHooks_skipPermissionCheckWhenTableDescriptorNull() throws Exception {
+        RangerAuthorizationCoprocessor cp = spy(new RangerAuthorizationCoprocessor());
+        ObserverContext<MasterCoprocessorEnvironment> ctx = mock(ObserverContext.class);
+        SnapshotDescription snapshot = new SnapshotDescription("snap", TableName.valueOf("nonexistent"), SnapshotType.FLUSH);
+
+        cp.preSnapshot(ctx, snapshot, null);
+        cp.preCloneSnapshot(ctx, snapshot, null);
+        cp.preRestoreSnapshot(ctx, snapshot, null);
+
+        verify(cp, never()).requirePermission(any(ObserverContext.class), anyString(), any(byte[].class), any(Permission.Action.class));
+    }
+
+    @Test
+    public void test117_preSnapshotHooks_checkPermissionWhenTableDescriptorPresent() throws Exception {
+        RangerAuthorizationCoprocessor cp = spy(new RangerAuthorizationCoprocessor());
+        doNothing().when(cp).requirePermission(any(ObserverContext.class), anyString(), any(byte[].class), any(Permission.Action.class));
+        ObserverContext<MasterCoprocessorEnvironment> ctx = mock(ObserverContext.class);
+        SnapshotDescription snapshot = new SnapshotDescription("snap", TableName.valueOf("t"), SnapshotType.FLUSH);
+        TableDescriptor tableDescriptor = TableDescriptorBuilder.newBuilder(TableName.valueOf("t")).build();
+
+        cp.preSnapshot(ctx, snapshot, tableDescriptor);
+
+        verify(cp).requirePermission(any(ObserverContext.class), eq("snapshot"), any(byte[].class), any(Permission.Action.class));
     }
 }

@@ -319,16 +319,31 @@ public class RangerAuthorizationCoprocessor implements AccessControlService.Inte
 
     @Override
     public void preSnapshot(ObserverContext<MasterCoprocessorEnvironment> ctx, SnapshotDescription snapshot, TableDescriptor hTableDescriptor) throws IOException {
+        if (hTableDescriptor == null) {
+            // HBase can call this hook with a null table descriptor when the table does not exist (HBASE-29361); the operation fails in HBase anyway
+            return;
+        }
+
         requirePermission(ctx, "snapshot", hTableDescriptor.getTableName().getName(), Permission.Action.ADMIN);
     }
 
     @Override
     public void preCloneSnapshot(ObserverContext<MasterCoprocessorEnvironment> ctx, SnapshotDescription snapshot, TableDescriptor hTableDescriptor) throws IOException {
+        if (hTableDescriptor == null) {
+            // HBase can call this hook with a null table descriptor when the table does not exist (HBASE-29361); the operation fails in HBase anyway
+            return;
+        }
+
         requirePermission(ctx, "cloneSnapshot", hTableDescriptor.getTableName().getName(), Permission.Action.ADMIN);
     }
 
     @Override
     public void preRestoreSnapshot(ObserverContext<MasterCoprocessorEnvironment> ctx, SnapshotDescription snapshot, TableDescriptor hTableDescriptor) throws IOException {
+        if (hTableDescriptor == null) {
+            // HBase can call this hook with a null table descriptor when the table does not exist (HBASE-29361); the operation fails in HBase anyway
+            return;
+        }
+
         requirePermission(ctx, "restoreSnapshot", hTableDescriptor.getTableName().getName(), Permission.Action.ADMIN);
     }
 
