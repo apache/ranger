@@ -300,13 +300,4 @@ public abstract class RangerAbstractContextEnricher implements RangerContextEnri
 
         return ret;
     }
-
-    @Override
-    protected void finalize() throws Throwable {
-        try {
-            cleanup();
-        } finally {
-            super.finalize();
-        }
-    }
 }
