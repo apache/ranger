@@ -43,6 +43,7 @@ import static org.apache.ranger.authz.api.RangerAuthzApiErrorCode.INVALID_RESOUR
 import static org.apache.ranger.authz.model.RangerResourceInfo.ResourceMatchScope.SELF;
 import static org.apache.ranger.authz.model.RangerResourceInfo.ResourceMatchScope.SELF_OR_ANY_DESCENDANT;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertSame;
 
 public class TestAuthzException {
     @Test
@@ -67,5 +68,28 @@ public class TestAuthzException {
         assertEquals("AUTHZ-400-00-015: invalid resource \"mytype:myresource\" - unknown type \"mytype\"", new RangerAuthzException(INVALID_RESOURCE_TYPE_NOT_VALID, "mytype:myresource", "mytype").getMessage());
         assertEquals("AUTHZ-400-00-016: invalid resource - empty", new RangerAuthzException(INVALID_RESOURCE_EMPTY_VALUE).getMessage());
         assertEquals("AUTHZ-400-00-017: invalid resource \"mytype:myresource\" - does not match template \"{res1}/{res2}\"", new RangerAuthzException(INVALID_RESOURCE_VALUE, "mytype:myresource", "{res1}/{res2}").getMessage());
+    }
+
+    @Test
+    void testConstructors_positive_causeAndParamsPreserveErrorCode() {
+        RuntimeException     cause     = new RuntimeException("boom");
+        RangerAuthzException withCause = new RangerAuthzException(AUTHORIZER_CREATION_FAILED, cause);
+
+        assertSame(AUTHORIZER_CREATION_FAILED, withCause.getErrorCode());
+        assertSame(cause, withCause.getCause());
+
+        RangerAuthzException withCauseAndParam = new RangerAuthzException(AUTHORIZER_CREATION_FAILED, cause, "MyImpl");
+
+        assertSame(AUTHORIZER_CREATION_FAILED, withCauseAndParam.getErrorCode());
+        assertSame(cause, withCauseAndParam.getCause());
+        assertEquals(AUTHORIZER_CREATION_FAILED.getFormattedMessage("MyImpl"), withCauseAndParam.getMessage());
+    }
+
+    @Test
+    void testConstructors_negative_plainCodeMatchesGetErrorCode() {
+        RangerAuthzException ex = new RangerAuthzException(INVALID_REQUEST_USER_INFO_MISSING);
+
+        assertSame(INVALID_REQUEST_USER_INFO_MISSING, ex.getErrorCode());
+        assertEquals(INVALID_REQUEST_USER_INFO_MISSING.getFormattedMessage(), ex.getMessage());
     }
 }
