@@ -194,11 +194,30 @@
   },
   "rowFilterDef": {
     "accessTypes": [
-      { "name": "select" }
+      {
+        "name": "select"
+      }
     ],
     "resources": [
-      { "name": "database", "matcherOptions": { "wildCard": "false" }, "lookupSupported": true, "mandatory": true, "uiHint": "{ \"singleValue\":true }" },
-      { "name": "table",    "matcherOptions": { "wildCard": "true" }, "lookupSupported": true, "mandatory": true, "uiHint": "" }
+      {
+        "name": "database",
+        "matcherOptions": {
+          "wildCard": "false"
+        },
+        "lookupSupported": true,
+        "mandatory": true,
+        "uiHint": "{ \"singleValue\":true }"
+      },
+      {
+        "name": "table",
+        "matcherOptions": {
+          "wildCard": "true"
+        },
+        "lookupSupported": true,
+        "mandatory": true,
+        "uiHint": "",
+        "description": "Hive Table. Wildcard patterns (e.g. *) are supported. When xasecure.hive.block.update.if.rowfilter.columnmask.specified is true (default), users subject to a row filter cannot UPDATE or ALTER matching tables; assign wildcard row-filter policies to read-only roles or set that property to false in ranger-hive-security.xml."
+      }
     ]
   }
 }

@@ -94,4 +94,12 @@
 			Skip recursive permission check for URIs.
 		</description>
 	</property>
+
+	<property>
+		<name>xasecure.hive.block.update.if.rowfilter.columnmask.specified</name>
+		<value>true</value>
+		<description>
+			When true (default), Hive blocks UPDATE and ALTER on tables/views for users who have a row-filter or column-masking policy on that resource. Wildcard row-filter policies (e.g. table orders_*) can match many tables in a database, so affected users may be unable to UPDATE or ALTER any matched table. Assign wildcard row-filter policies to read-only roles, or set this property to false to allow DML/DDL on row-filtered tables.
+		</description>
+	</property>
 </configuration>
