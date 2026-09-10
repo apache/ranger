@@ -73,7 +73,9 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
@@ -91,7 +93,6 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
@@ -975,9 +976,10 @@ public class TestSessionMgr {
     public void testEnforceConcurrentSessionLimit_ConcurrentSameUserExpiresOldest() throws Exception {
         PropertiesUtil.getPropertiesMap().put(SessionMgr.PROP_SESSION_LIMIT_CONCURRENCY, "1");
 
-        HttpSession oldestSession = mockUiSession("limitUser", 80L, false, 1L);
-        HttpSession sessionA      = mock(HttpSession.class);
-        HttpSession sessionB      = mock(HttpSession.class);
+        CountDownLatch concurrentExpiredReads = new CountDownLatch(2);
+        HttpSession    oldestSession          = mockUiSession("limitUser", 80L, false, 1L, concurrentExpiredReads);
+        HttpSession    sessionA               = mock(HttpSession.class);
+        HttpSession    sessionB               = mock(HttpSession.class);
 
         CopyOnWriteArrayList<HttpSession> active = RangerHttpSessionListener.getActiveSessionOnServer();
         active.add(oldestSession);
@@ -1014,7 +1016,8 @@ public class TestSessionMgr {
 
             assertTrue(done.await(5, TimeUnit.SECONDS));
             assertNull(error.get());
-            verify(oldestSession, atLeastOnce()).invalidate();
+            verify(oldestSession, times(1)).setAttribute(SessionMgr.SESSION_ATTR_CONCURRENT_EXPIRED, Boolean.TRUE);
+            verify(oldestSession, times(1)).invalidate();
         } finally {
             active.remove(oldestSession);
         }
@@ -1088,6 +1091,10 @@ public class TestSessionMgr {
     }
 
     private HttpSession mockUiSession(String loginId, Long userId, boolean ssoEnabled, long creationTime) {
+        return mockUiSession(loginId, userId, ssoEnabled, creationTime, null);
+    }
+
+    private HttpSession mockUiSession(String loginId, Long userId, boolean ssoEnabled, long creationTime, CountDownLatch concurrentExpiredReads) {
         HttpSession httpSession = mock(HttpSession.class);
         UserSessionBase userSession = new UserSessionBase();
         XXPortalUser portalUser = portalUser(loginId, userId);
@@ -1095,13 +1102,39 @@ public class TestSessionMgr {
         userSession.setSSOEnabled(ssoEnabled);
         RangerSecurityContext securityContext = new RangerSecurityContext();
         securityContext.setUserSession(userSession);
+        Map<String, Object> attributes = new ConcurrentHashMap<>();
+        attributes.put(RangerSecurityContextFormationFilter.AKA_SC_SESSION_KEY, securityContext);
         when(httpSession.getAttribute(anyString())).thenAnswer(invocation -> {
             String name = invocation.getArgument(0);
-            if (RangerSecurityContextFormationFilter.AKA_SC_SESSION_KEY.equals(name)) {
-                return securityContext;
+
+            Object value = attributes.get(name);
+
+            if (concurrentExpiredReads != null
+                    && SessionMgr.SESSION_ATTR_CONCURRENT_EXPIRED.equals(name)
+                    && value == null) {
+                concurrentExpiredReads.countDown();
+
+                try {
+                    concurrentExpiredReads.await(250, TimeUnit.MILLISECONDS);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                }
             }
-            return null;
+
+            return value;
         });
+        lenient().doAnswer(invocation -> {
+            String name  = invocation.getArgument(0);
+            Object value = invocation.getArgument(1);
+
+            if (value == null) {
+                attributes.remove(name);
+            } else {
+                attributes.put(name, value);
+            }
+
+            return null;
+        }).when(httpSession).setAttribute(anyString(), any());
         lenient().when(httpSession.getCreationTime()).thenReturn(creationTime);
         return httpSession;
     }
