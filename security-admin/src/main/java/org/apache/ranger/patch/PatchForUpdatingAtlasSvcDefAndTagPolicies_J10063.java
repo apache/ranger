@@ -97,6 +97,7 @@ public class PatchForUpdatingAtlasSvcDefAndTagPolicies_J10063 extends BaseLoader
         try {
             if (updateAtlasServiceDef()) {
                 disableAtlasAccessForTagPolicies();
+                updateTagServiceDef();
             }
         } catch (Exception e) {
             logger.error("Error while updateTagServiceDef()data.", e);
@@ -262,5 +263,52 @@ public class PatchForUpdatingAtlasSvcDefAndTagPolicies_J10063 extends BaseLoader
             }
         }
         return ret;
+    }
+
+    private void updateTagServiceDef() throws Exception {
+        logger.info("==> PatchForUpdatingAtlasSvcDefAndTagPolicies_J10063.updateTagServiceDef()");
+        RangerServiceDef embeddedTagServiceDef;
+        RangerServiceDef dbTagServiceDef;
+        XXServiceDef     xXServiceDefObj;
+
+        embeddedTagServiceDef = EmbeddedServiceDefsUtil.instance().getEmbeddedServiceDef(EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_TAG_NAME);
+
+        if (embeddedTagServiceDef != null) {
+            xXServiceDefObj = daoMgr.getXXServiceDef().findByName(EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_TAG_NAME);
+
+            if (xXServiceDefObj != null) {
+                dbTagServiceDef = svcStore.getServiceDefByName(EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_TAG_NAME);
+
+                if (dbTagServiceDef != null && CollectionUtils.isNotEmpty(dbTagServiceDef.getAccessTypes())) {
+                    List<RangerServiceDef.RangerAccessTypeDef> accessTypesToRemove = new ArrayList<>();
+
+                    for (RangerServiceDef.RangerAccessTypeDef accessTypeDef : dbTagServiceDef.getAccessTypes()) {
+                        if (accessTypeDef != null) {
+                            final String accessTypeName = accessTypeDef.getName();
+
+                            String[] svcDefAccType  = accessTypeName.split(":");
+                            String   serviceDefName = svcDefAccType.length > 0 ? svcDefAccType[0] : null;
+
+                            if (serviceDefName != null && serviceDefName.equals(EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_ATLAS_NAME)) {
+                                logger.info("==> PatchForUpdatingAtlasSvcDefAndTagPolicies_J10063.updateTagServiceDef() found atlas access type to remove: {}", accessTypeName);
+                                accessTypesToRemove.add(accessTypeDef);
+                            }
+                        }
+                    }
+
+                    if (!accessTypesToRemove.isEmpty()) {
+                        dbTagServiceDef.getAccessTypes().removeAll(accessTypesToRemove);
+
+                        svcStore.updateServiceDef(dbTagServiceDef);
+                    }
+                }
+            } else {
+                logger.error("Tag service-definition does not exist in the Ranger DAO.");
+            }
+        } else {
+            logger.error("The embedded Tag service-definition does not exist.");
+        }
+
+        logger.info("<== PatchForUpdatingAtlasSvcDefAndTagPolicies_J10063.updateTagServiceDef()");
     }
 }
