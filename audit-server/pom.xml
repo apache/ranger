@@ -157,7 +157,7 @@
             <dependency>
                 <groupId>org.apache.hive</groupId>
                 <artifactId>hive-storage-api</artifactId>
-                <version>${hive.version}</version>
+                <version>${hive.storage-api.version}</version>
             </dependency>
 
             <dependency>
