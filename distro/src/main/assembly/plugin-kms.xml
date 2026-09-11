@@ -60,6 +60,10 @@
           <include>org.apache.commons:commons-configuration2:jar:${commons.configuration.version}</include>
           <include>org.apache.hadoop:hadoop-common:jar:${hadoop.version}</include>
           <include>com.google.code.gson:gson</include>
+          <include>com.sun.jersey:jersey-bundle:jar:${jersey-bundle.version}</include>
+          <include>com.fasterxml.jackson.jaxrs:jackson-jaxrs-base</include>
+          <include>com.fasterxml.jackson.jaxrs:jackson-jaxrs-json-provider</include>
+          <include>com.fasterxml.jackson.module:jackson-module-jaxb-annotations</include>
           <include>org.eclipse.jetty:jetty-client:jar:${jetty-client.version}</include>
           <include>commons-collections:commons-collections</include>
           <include>commons-logging:commons-logging:jar:${commons.logging.version}</include>
@@ -75,6 +79,19 @@
           <include>io.airlift:aircompressor:jar:${aircompressor.version}</include>
           <include>org.apache.hadoop.thirdparty:hadoop-shaded-guava:jar:${hadoop-shaded-guava.version}</include>
         </includes>
+        <excludes>
+          <exclude>com.fasterxml.jackson.core:*</exclude>
+          <exclude>com.fasterxml.jackson.jaxrs:*</exclude>
+          <exclude>com.fasterxml.jackson.module:*</exclude>
+          <exclude>com.fasterxml.jackson.dataformat:*</exclude>
+          <exclude>org.glassfish.jersey.core:*</exclude>
+          <exclude>org.glassfish.jersey.ext:*</exclude>
+          <exclude>org.glassfish.jersey.inject:*</exclude>
+          <exclude>org.glassfish.jersey.media:*</exclude>
+          <exclude>org.glassfish.hk2:*</exclude>
+          <exclude>javax.ws.rs:javax.ws.rs-api</exclude>
+          <exclude>jakarta.ws.rs:jakarta.ws.rs-api</exclude>
+        </excludes>
       </binaries>
     </moduleSet>
 
