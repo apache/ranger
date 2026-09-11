@@ -27,7 +27,7 @@ RUN tar xvfz /home/ranger/dist/ranger-${TAGSYNC_VERSION}-tagsync.tar.gz --direct
     ln -s ${RANGER_HOME}/ranger-${TAGSYNC_VERSION}-tagsync ${RANGER_HOME}/tagsync && \
     rm -f /home/ranger/dist/ranger-${TAGSYNC_VERSION}-tagsync.tar.gz && \
     rm -f ${RANGER_HOME}/tagsync/install.properties && \
-    mkdir -p /opt/ranger/tagsync/data /var/run/ranger /var/log/ranger/tagsync /etc/ranger && \
+    mkdir -p /opt/ranger/tagsync/data /var/run/ranger /var/log/ranger/tagsync /etc/ranger/tagsync/conf && \
     cp -f ${RANGER_SCRIPTS}/ranger-tagsync-install.properties ${RANGER_HOME}/tagsync/install.properties && \
     mkdir /etc/init.d || true && \
     mkdir /etc/rc2.d  || true && \

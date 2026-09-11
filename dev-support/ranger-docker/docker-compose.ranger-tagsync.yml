@@ -22,6 +22,9 @@ services:
     tty: true
     networks:
       - ranger
+    ports:
+      - "8180:8180"
+      - "8185:8185"
     depends_on:
       ranger:
         condition: service_started

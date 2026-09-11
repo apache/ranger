@@ -61,7 +61,8 @@ if [ ! -d $logdir ]; then
 	chmod 777 $logdir
 fi
 
-cp="${cdir}/conf:${cdir}/dist/*:${cdir}/lib/*"
+RANGER_TAGSYNC_WEBAPP=${cdir}/ews/webapp
+cp="${cdir}/conf:${RANGER_TAGSYNC_WEBAPP}/WEB-INF/classes:${RANGER_TAGSYNC_WEBAPP}/WEB-INF/lib/*:${cdir}/ews/lib/*"
 
 cd ${cdir}
 umask 0077

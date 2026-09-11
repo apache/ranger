@@ -21,6 +21,7 @@ package org.apache.ranger.tagsync.model;
 
 import org.apache.ranger.authorization.utils.JsonUtils;
 import org.apache.ranger.plugin.util.ServiceTags;
+import org.apache.ranger.tagsync.metrics.source.RangerTagSyncMetricsSourceTags;
 import org.apache.ranger.tagsync.process.TagSyncConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -69,6 +70,12 @@ public abstract class AbstractTagSource implements TagSource {
                 ServiceTags uploaded = tagSink.upload(toUpload);
                 if (LOG.isDebugEnabled()) {
                     LOG.debug("Uploaded serviceTags={}", JsonUtils.objectToJson(uploaded));
+                }
+                if (!uploaded.getTags().isEmpty()) {
+                    RangerTagSyncMetricsSourceTags.updateTotalUploads();
+                    if (LOG.isDebugEnabled()) {
+                        LOG.debug("current total_upload count = " + RangerTagSyncMetricsSourceTags.getTotalUploads());
+                    }
                 }
             }
         } catch (Exception exception) {
