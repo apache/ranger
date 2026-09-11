@@ -140,7 +140,7 @@ class TestOpenSearchAuditDestination {
         event.setEventId("test-1");
         event.setUser("user1");
 
-        java.util.Collection<org.apache.ranger.audit.model.AuditEventBase> events = java.util.List.of(event);
+        java.util.Collection<org.apache.ranger.audit.model.AuditEventBase> events = java.util.Collections.singletonList(event);
         boolean result = destination.log(events);
 
         assertFalse(result);

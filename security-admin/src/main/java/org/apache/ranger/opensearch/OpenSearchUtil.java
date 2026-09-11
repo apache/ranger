@@ -200,15 +200,25 @@ public class OpenSearchUtil {
         Map<String, Object> query = new LinkedHashMap<>();
         Map<String, Object> bool  = new HashMap<>();
 
-        bool.put("must", mustClauses.isEmpty() ? List.of(Map.of("match_all", Map.of())) : mustClauses);
-        query.put("query", Map.of("bool", bool));
+        if (mustClauses.isEmpty()) {
+            Map<String, Object> matchAll = new HashMap<>();
+            matchAll.put("match_all", new HashMap<>());
+            bool.put("must", Collections.singletonList(matchAll));
+        } else {
+            bool.put("must", mustClauses);
+        }
+        query.put("query", Collections.singletonMap("bool", bool));
         query.put("from", searchCriteria.getStartIndex());
         query.put("size", searchCriteria.getMaxRows());
 
         String[] sortResolved = resolveSortField(searchCriteria, sortFields);
 
         if (sortResolved != null) {
-            query.put("sort", List.of(Map.of(sortResolved[0], Map.of("order", sortResolved[1]))));
+            Map<String, Object> orderMap = new HashMap<>();
+            orderMap.put("order", sortResolved[1]);
+            Map<String, Object> sortEntry = new HashMap<>();
+            sortEntry.put(sortResolved[0], orderMap);
+            query.put("sort", Collections.singletonList(sortEntry));
         }
 
         try {
@@ -223,7 +233,11 @@ public class OpenSearchUtil {
             Map<String, Object> inner = buildClause(fieldName.substring(1), dataType, searchType, paramValue);
 
             if (inner != null) {
-                return Map.of("bool", Map.of("must_not", List.of(inner)));
+                Map<String, Object> mustNotBool = new HashMap<>();
+                mustNotBool.put("must_not", Collections.singletonList(inner));
+                Map<String, Object> boolClause = new HashMap<>();
+                boolClause.put("bool", mustNotBool);
+                return boolClause;
             }
         } else if (paramValue instanceof Collection) {
             Collection<?> valueList = (Collection<?>) paramValue;
@@ -231,19 +245,25 @@ public class OpenSearchUtil {
             if (!valueList.isEmpty()) {
                 String queryString = valueList.stream().map(v -> "(" + escapeLucene(v.toString().trim().toLowerCase()) + ")").collect(Collectors.joining(" OR "));
 
-                return Map.of("query_string", Map.of("query", queryString, "default_field", fieldName));
+                Map<String, Object> queryStringBody = new HashMap<>();
+                queryStringBody.put("query", queryString);
+                queryStringBody.put("default_field", fieldName);
+                return Collections.singletonMap("query_string", queryStringBody);
             }
         } else if (searchType == SearchField.SEARCH_TYPE.PARTIAL) {
             String value = paramValue.toString().trim();
 
             if (!value.isEmpty()) {
-                return Map.of("query_string", Map.of("query", "*" + escapeLucene(value.toLowerCase()) + "*", "default_field", fieldName));
+                Map<String, Object> partialQuery = new HashMap<>();
+                partialQuery.put("query", "*" + escapeLucene(value.toLowerCase()) + "*");
+                partialQuery.put("default_field", fieldName);
+                return Collections.singletonMap("query_string", partialQuery);
             }
         } else {
             String value = paramValue.toString().trim();
 
             if (!value.isEmpty()) {
-                return Map.of("match_phrase", Map.of(fieldName, escapeLucene(value.toLowerCase())));
+                return Collections.singletonMap("match_phrase", Collections.singletonMap(fieldName, escapeLucene(value.toLowerCase())));
             }
         }
 
@@ -263,7 +283,7 @@ public class OpenSearchUtil {
             rangeParams.put("lte", DATE_FORMAT.get().format(toDate));
         }
 
-        return Map.of("range", Map.of(fieldName, rangeParams));
+        return Collections.singletonMap("range", Collections.singletonMap(fieldName, rangeParams));
     }
 
     private String[] resolveSortField(SearchCriteria searchCriteria, List<SortField> sortFields) {

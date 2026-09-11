@@ -171,7 +171,9 @@ public class OpenSearchAuditDestination extends AuditDestination {
                     indexProps.put("_index", index);
                     indexProps.put("_id", id);
 
-                    bulk.append(MAPPER.writeValueAsString(Map.of("index", indexProps))).append('\n');
+                    Map<String, Object> indexAction = new HashMap<>();
+                    indexAction.put("index", indexProps);
+                    bulk.append(MAPPER.writeValueAsString(indexAction)).append('\n');
                     bulk.append(MAPPER.writeValueAsString(doc)).append('\n');
                 }
 
