@@ -64,9 +64,6 @@
           <include>com.fasterxml.jackson.core:jackson-core</include>
           <include>com.fasterxml.jackson.core:jackson-databind</include>
           <include>com.fasterxml.jackson.core:jackson-annotations</include>
-          <include>com.fasterxml.jackson.jaxrs:jackson-jaxrs-base</include>
-          <include>com.fasterxml.jackson.jaxrs:jackson-jaxrs-json-provider</include>
-          <include>com.fasterxml.jackson.module:jackson-module-jaxb-annotations</include>
           <include>commons-codec:commons-codec</include>
           <include>commons-collections:commons-collections</include>
           <include>commons-io:commons-io</include>
@@ -92,8 +89,6 @@
           <include>com.ibm.icu:icu4j</include>
         </includes>
         <excludes>
-          <exclude>com.fasterxml.jackson.jaxrs:*</exclude>
-          <exclude>com.fasterxml.jackson.module:*</exclude>
           <exclude>com.fasterxml.jackson.dataformat:*</exclude>
           <exclude>org.glassfish.jersey.core:*</exclude>
           <exclude>org.glassfish.jersey.ext:*</exclude>

@@ -311,13 +311,10 @@
                         <outputDirectory>ews/webapp/WEB-INF/lib/ranger-kms-plugin-impl</outputDirectory>
                         <unpack>false</unpack>
                         <includes>
-                            <include>com.fasterxml.jackson.core:jackson-annotations:jar:${fasterxml.jackson.version}</include>
-                            <include>com.fasterxml.jackson.core:jackson-core:jar:${fasterxml.jackson.version}</include>
-                            <include>com.fasterxml.jackson.core:jackson-databind:jar:${fasterxml.jackson.version}</include>
-                            <include>com.fasterxml.jackson.jaxrs:jackson-jaxrs-base:jar:${fasterxml.jackson.version}</include>
-                            <include>com.fasterxml.jackson.jaxrs:jackson-jaxrs-json-provider:jar:${fasterxml.jackson.version}</include>
-                            <include>com.fasterxml.jackson.module:jackson-module-jaxb-annotations:jar:${fasterxml.jackson.version}</include>
-                            <include>jakarta.ws.rs:jakarta.ws.rs-api</include>
+                            <include>com.sun.jersey:jersey-bundle:jar:${jersey-bundle.version}</include>
+                            <include>com.fasterxml.jackson.jaxrs:jackson-jaxrs-base</include>
+                            <include>com.fasterxml.jackson.jaxrs:jackson-jaxrs-json-provider</include>
+                            <include>com.fasterxml.jackson.module:jackson-module-jaxb-annotations</include>
                             <include>javax.inject:javax.inject</include>
                             <include>org.apache.commons:commons-configuration2:jar:${commons.configuration.version}</include>
                             <include>org.apache.commons:commons-collections4:jar:${commons.collections4.version}</include>
@@ -331,21 +328,23 @@
                             <include>org.apache.solr:solr-solrj:jar:${solr.version}</include>
                             <include>org.apache.httpcomponents:httpcore-nio:jar:${httpcomponents.httpcore.version}</include>
                             <include>org.apache.httpcomponents:httpasyncclient:jar:${httpcomponents.httpasyncclient.version}</include>
-                            <include>org.glassfish.jersey.core:jersey-client</include>
-                            <include>org.glassfish.jersey.core:jersey-common</include>
-                            <include>org.glassfish.jersey.core:jersey-server</include>
-                            <include>org.glassfish.jersey.ext:jersey-entity-filtering:jar:${jersey-client.version}</include>
-                            <include>org.glassfish.jersey.inject:jersey-hk2</include>
-                            <include>org.glassfish.jersey.media:jersey-media-json-jackson</include>
-                            <include>org.glassfish.hk2:hk2-api</include>
-                            <include>org.glassfish.hk2:hk2-locator</include>
-                            <include>org.glassfish.hk2:hk2-utils</include>
-                            <include>org.glassfish.hk2:hk2</include>
-                            <include>org.glassfish.hk2:hk2-core</include>
                             <include>joda-time:joda-time</include>
                             <include>com.carrotsearch:hppc</include>
                             <include>io.airlift:aircompressor:jar:${aircompressor.version}</include>
                         </includes>
+                        <excludes>
+                            <exclude>com.fasterxml.jackson.core:*</exclude>
+                            <exclude>com.fasterxml.jackson.jaxrs:*</exclude>
+                            <exclude>com.fasterxml.jackson.module:*</exclude>
+                            <exclude>com.fasterxml.jackson.dataformat:*</exclude>
+                            <exclude>org.glassfish.jersey.core:*</exclude>
+                            <exclude>org.glassfish.jersey.ext:*</exclude>
+                            <exclude>org.glassfish.jersey.inject:*</exclude>
+                            <exclude>org.glassfish.jersey.media:*</exclude>
+                            <exclude>org.glassfish.hk2:*</exclude>
+                            <exclude>javax.ws.rs:javax.ws.rs-api</exclude>
+                            <exclude>jakarta.ws.rs:jakarta.ws.rs-api</exclude>
+                        </excludes>
                     </dependencySet>
                     <dependencySet>
                         <outputDirectory>install/lib</outputDirectory>
