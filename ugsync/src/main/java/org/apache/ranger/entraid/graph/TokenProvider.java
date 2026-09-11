@@ -24,4 +24,6 @@ interface TokenProvider {
     void init(EntraIdGraphConfig config, Client httpClient) throws GraphClientException;
 
     String getAccessToken(boolean forceRefresh) throws GraphClientException;
+
+    void destroy();
 }

@@ -41,7 +41,8 @@ final class ClientSecretTokenProvider extends OAuthTokenProvider {
         form.param("client_secret", new String(clientSecret));
     }
 
-    void destroy() {
+    @Override
+    public void destroy() {
         if (clientSecret != null) {
             Arrays.fill(clientSecret, '\0');
             clientSecret = null;

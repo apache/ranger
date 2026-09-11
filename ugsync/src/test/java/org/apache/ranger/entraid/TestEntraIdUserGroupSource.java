@@ -40,6 +40,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
@@ -439,7 +440,38 @@ public class TestEntraIdUserGroupSource {
     }
 
     @Test
-    public void test25_removedGroupInInlinePage_excludedFromUpsertAndMembership() throws Throwable {
+    public void test25_incrementalMembershipChange_refreshesEmittedGroup() throws Throwable {
+        String secondMemberGuid = "cccccccc-0000-0000-0000-000000000003";
+        Map<String, Set<String>> initialMembership = new HashMap<>();
+        initialMembership.put(GROUP_GUID, new LinkedHashSet<>(Collections.singletonList(USER_GUID)));
+        Map<String, Set<String>> updatedMembership = new HashMap<>();
+        updatedMembership.put(GROUP_GUID, new LinkedHashSet<>(Arrays.asList(USER_GUID, secondMemberGuid)));
+
+        Mockito.when(graphClient.getUserDelta(null)).thenReturn(userPage("uDelta-1"));
+        Mockito.when(graphClient.getGroupDeltaWithMembers(null)).thenReturn(
+                membersPage(initialMembership, new DeltaEntry<>(group(GROUP_GUID, GROUP_NAME), false)));
+        Mockito.when(graphClient.getUserDelta("uDelta-1")).thenReturn(userPage("uDelta-2"));
+        // The Graph mock re-emits a group when its membership changes, so the incremental
+        // group delta identifies the group whose complete membership must be refreshed.
+        Mockito.when(graphClient.getGroupDelta("gDelta")).thenReturn(
+                groupPage("gDelta-2", new DeltaEntry<>(group(GROUP_GUID, GROUP_NAME), false)));
+        Mockito.when(graphClient.getGroupMembers(GROUP_GUID, MembershipMode.DIRECT)).thenReturn(
+                Arrays.asList(userRef(USER_GUID), userRef(secondMemberGuid)));
+
+        EntraIdUserGroupSource source = newSource();
+        source.updateSink(sink);
+        source.updateSink(sink);
+
+        @SuppressWarnings("unchecked")
+        ArgumentCaptor<Map<String, Set<String>>> memberships = ArgumentCaptor.forClass(Map.class);
+        Mockito.verify(sink, Mockito.times(2)).addOrUpdateUsersGroups(
+                Mockito.any(), Mockito.any(), memberships.capture(), Mockito.anyBoolean());
+        Assertions.assertEquals(initialMembership.get(GROUP_GUID), memberships.getAllValues().get(0).get(GROUP_GUID));
+        Assertions.assertEquals(updatedMembership.get(GROUP_GUID), memberships.getAllValues().get(1).get(GROUP_GUID));
+    }
+
+    @Test
+    public void test31_removedGroupInInlinePage_excludedFromUpsertAndMembership() throws Throwable {
         // A group flagged @removed in an inline getGroupDeltaWithMembers page must be routed
         // to the delete map ONLY: not surfaced in the upsert map or the membership map
         // (no stale group record, no orphaned membership edges).

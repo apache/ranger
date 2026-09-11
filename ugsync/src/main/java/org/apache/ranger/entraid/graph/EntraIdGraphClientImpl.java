@@ -57,6 +57,8 @@ public final class EntraIdGraphClientImpl implements EntraIdGraphClient {
     private static final String ODATA_DELTALINK = "@odata.deltaLink";
     private static final String ODATA_REMOVED   = "@removed";
     private static final String MEMBERS_DELTA   = "members@delta";
+    private static final Set<String> BASE_USER_ATTRS  = Set.of("userPrincipalName", "mail", "displayName", "accountEnabled");
+    private static final Set<String> BASE_GROUP_ATTRS = Set.of("displayName", "mailNickname", "securityEnabled");
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -241,6 +243,7 @@ public final class EntraIdGraphClientImpl implements EntraIdGraphClient {
         // carry the configured group attributes so the group objects are fully populated.
         Set<String> attrs = new LinkedHashSet<>();
         attrs.add("id");
+        attrs.addAll(BASE_GROUP_ATTRS);
         if (config.getGroupSelectAttrs() != null) {
             attrs.addAll(config.getGroupSelectAttrs());
         }
@@ -275,26 +278,35 @@ public final class EntraIdGraphClientImpl implements EntraIdGraphClient {
 
     @Override
     public void close() throws GraphClientException {
-        if (httpClient != null) {
-            try {
+        GraphClientException closeException = null;
+        try {
+            if (httpClient != null) {
                 httpClient.close();
-            } catch (Exception e) {
-                throw new GraphClientException("Failed to close Graph HTTP client", e);
-            } finally {
-                httpClient = null;
             }
+        } catch (Exception e) {
+            closeException = new GraphClientException("Failed to close Graph HTTP client", e);
+        } finally {
+            httpClient = null;
+            if (tokenProvider != null) {
+                tokenProvider.destroy();
+                tokenProvider = null;
+            }
+        }
+        if (closeException != null) {
+            throw closeException;
         }
     }
 
     private String buildInitialDeltaUrl(String entity, Set<String> selectAttrs) throws GraphClientException {
         StringBuilder sb = new StringBuilder(config.getGraphBaseUrl()).append("/").append(API_VERSION).append("/").append(entity).append("/delta");
         StringBuilder query = new StringBuilder();
-        if (selectAttrs != null && !selectAttrs.isEmpty()) {
-            Set<String> attrs = new LinkedHashSet<>();
-            attrs.add("id");
+        Set<String> attrs = new LinkedHashSet<>();
+        attrs.add("id");
+        attrs.addAll("groups".equals(entity) ? BASE_GROUP_ATTRS : BASE_USER_ATTRS);
+        if (selectAttrs != null) {
             attrs.addAll(selectAttrs);
-            query.append("$select=").append(encode(String.join(",", attrs)));
         }
+        query.append("$select=").append(encode(String.join(",", attrs)));
         // NOTE: Microsoft Graph does not support attribute-based $filter on the /delta
         // endpoints -- the only accepted $filter is "id eq {guid}" (max 50 ids). Sending
         // any other $filter to /users/delta or /groups/delta returns 400 Request_Unsupported

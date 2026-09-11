@@ -42,13 +42,19 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.lang.reflect.Field;
 import java.net.InetSocketAddress;
+import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 
 @ExtendWith(MockitoExtension.class)
 @TestMethodOrder(MethodOrderer.MethodName.class)
@@ -252,6 +258,20 @@ public class TestEntraIdGraphClientImpl {
         EntraIdGraphClientImpl client = new EntraIdGraphClientImpl();
         Assertions.assertThrows(GraphClientException.class, () -> client.init(stubConfig()));
         client.close();
+    }
+
+    @Test
+    public void test38_closeDestroysClientSecret() throws Exception {
+        EntraIdGraphClientImpl client = newClient();
+        Field providerField = EntraIdGraphClientImpl.class.getDeclaredField("tokenProvider");
+        providerField.setAccessible(true);
+        ClientSecretTokenProvider provider = (ClientSecretTokenProvider) providerField.get(client);
+        Field secretField = ClientSecretTokenProvider.class.getDeclaredField("clientSecret");
+        secretField.setAccessible(true);
+
+        Assertions.assertNotNull(secretField.get(provider));
+        client.close();
+        Assertions.assertNull(secretField.get(provider));
     }
 
     @Test
@@ -555,6 +575,106 @@ public class TestEntraIdGraphClientImpl {
             GraphClientException ex = Assertions.assertThrows(GraphClientException.class, () -> client.getUserDelta(null));
             Assertions.assertTrue(ex.getMessage().toLowerCase().contains("host") || ex.getMessage().toLowerCase().contains("refus"), "error should indicate the URL was outside the configured Graph host");
         }
+    }
+
+    private EntraIdGraphConfig stubConfig(Set<String> userSelectAttrs, Set<String> groupSelectAttrs) {
+        return new EntraIdGraphConfig.Builder()
+                .tenantId(TENANT)
+                .clientId(CLIENT)
+                .authMode(AuthMode.CLIENT_SECRET)
+                .clientSecret("test-secret".toCharArray())
+                .authorityHost(baseUrl)
+                .graphBaseUrl(baseUrl)
+                .retryBaseBackoffMs(5)
+                .maxRetries(3)
+                .userSelectAttrs(userSelectAttrs)
+                .groupSelectAttrs(groupSelectAttrs)
+                .build();
+    }
+
+    private EntraIdGraphClientImpl newClient(EntraIdGraphConfig config) throws Exception {
+        EntraIdGraphClientImpl client = new EntraIdGraphClientImpl();
+        client.init(config);
+        return client;
+    }
+
+    /**
+     * Pulls the decoded $select value off a captured raw request query string.
+     */
+    private Set<String> selectAttrsOf(String rawQuery) {
+        Assertions.assertNotNull(rawQuery, "request never arrived at the mock server");
+        for (String param : rawQuery.split("&")) {
+            if (param.startsWith("$select=")) {
+                String decoded = URLDecoder.decode(param.substring("$select=".length()), StandardCharsets.UTF_8);
+                return new HashSet<>(Arrays.asList(decoded.split(",")));
+            }
+        }
+        Assertions.fail("request has no $select param at all: " + rawQuery);
+        return Collections.emptySet();
+    }
+
+    @Test
+    public void test39_getGroupDeltaWithMembers_selectAttrsUnset_requestIncludesBaseGroupAttrs() throws Exception {
+        AtomicReference<String> capturedQuery = new AtomicReference<>();
+        context("/v1.0/groups/delta", exchange -> {
+            capturedQuery.set(exchange.getRequestURI().getRawQuery());
+            respond(exchange, 200, "{\"value\":[{\"id\":\"g-1\",\"displayName\":\"Engineering\"}],"
+                    + "\"@odata.deltaLink\":\"" + baseUrl + "/v1.0/groups/delta?$deltatoken=D\"}");
+        });
+        try (EntraIdGraphClientImpl client = newClient()) {
+            client.getGroupDeltaWithMembers(null);
+        }
+        Set<String> select = selectAttrsOf(capturedQuery.get());
+        Assertions.assertTrue(select.containsAll(Set.of("id", "displayName", "mailNickname", "securityEnabled", "members")),
+                "groups+members request must always include base group attrs even with group.select.attributes unset: " + select);
+    }
+
+    @Test
+    public void test40_getUserDelta_selectAttrsUnset_requestIncludesBaseUserAttrs() throws Exception {
+        AtomicReference<String> capturedQuery = new AtomicReference<>();
+        context("/v1.0/users/delta", exchange -> {
+            capturedQuery.set(exchange.getRequestURI().getRawQuery());
+            respond(exchange, 200, "{\"value\":[],\"@odata.deltaLink\":\"" + baseUrl + "/v1.0/users/delta?$deltatoken=D\"}");
+        });
+        try (EntraIdGraphClientImpl client = newClient()) {
+            client.getUserDelta(null);
+        }
+        Set<String> select = selectAttrsOf(capturedQuery.get());
+        Assertions.assertTrue(select.containsAll(Set.of("id", "userPrincipalName", "mail", "displayName", "accountEnabled")),
+                "user delta request must always include base user attrs even with user.select.attributes unset: " + select);
+    }
+
+    @Test
+    public void test41_getGroupDelta_selectAttrsUnset_requestIncludesBaseGroupAttrs() throws Exception {
+        AtomicReference<String> capturedQuery = new AtomicReference<>();
+        context("/v1.0/groups/delta", exchange -> {
+            capturedQuery.set(exchange.getRequestURI().getRawQuery());
+            respond(exchange, 200, "{\"value\":[{\"id\":\"g-1\",\"displayName\":\"Engineering\"}],"
+                    + "\"@odata.deltaLink\":\"" + baseUrl + "/v1.0/groups/delta?$deltatoken=D\"}");
+        });
+        try (EntraIdGraphClientImpl client = newClient()) {
+            client.getGroupDelta(null);
+        }
+        Set<String> select = selectAttrsOf(capturedQuery.get());
+        Assertions.assertTrue(select.containsAll(Set.of("id", "displayName", "mailNickname", "securityEnabled")),
+                "group delta request must always include base group attrs even with group.select.attributes unset: " + select);
+    }
+
+    @Test
+    public void test42_getGroupDeltaWithMembers_customGroupSelectAttrsConfigured_unionsWithBaseAttrs() throws Exception {
+        AtomicReference<String> capturedQuery = new AtomicReference<>();
+        context("/v1.0/groups/delta", exchange -> {
+            capturedQuery.set(exchange.getRequestURI().getRawQuery());
+            respond(exchange, 200, "{\"value\":[{\"id\":\"g-1\",\"displayName\":\"Engineering\"}],"
+                    + "\"@odata.deltaLink\":\"" + baseUrl + "/v1.0/groups/delta?$deltatoken=D\"}");
+        });
+        try (EntraIdGraphClientImpl client = newClient(stubConfig(null, Set.of("department")))) {
+            client.getGroupDeltaWithMembers(null);
+        }
+        Set<String> select = selectAttrsOf(capturedQuery.get());
+        Assertions.assertTrue(select.containsAll(Set.of("id", "displayName", "mailNickname", "securityEnabled", "members")),
+                "base attrs must still be present alongside custom config: " + select);
+        Assertions.assertTrue(select.contains("department"), "configured custom attr was dropped: " + select);
     }
 
     private String loadGraphResponse(String fileName) throws IOException {

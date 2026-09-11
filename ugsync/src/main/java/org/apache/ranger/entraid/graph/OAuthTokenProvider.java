@@ -77,6 +77,11 @@ abstract class OAuthTokenProvider implements TokenProvider {
      */
     protected abstract void addCredential(Form form) throws GraphClientException;
 
+    @Override
+    public void destroy() {
+        // Certificate providers do not retain a mutable credential buffer here.
+    }
+
     private synchronized String acquireNewToken() throws GraphClientException {
         Form form = new Form();
         form.param("client_id", clientId);
