@@ -185,7 +185,7 @@ public class SecurityZoneREST {
         } else {
             securityZone.setId(zoneId);
         }
-
+        blockAdminFromKMSServiceOnUpdate(securityZone, zoneId);
         RangerSecurityZone ret;
 
         try {
@@ -219,6 +219,8 @@ public class SecurityZoneREST {
         try {
             ensureAdminAccess();
 
+            blockAdminFromKMSServiceOnDelete(zoneName, null);
+
             RangerSecurityZoneValidator validator = validatorFactory.getSecurityZoneValidator(svcStore, securityZoneStore);
 
             validator.validate(zoneName, RangerValidator.Action.DELETE);
@@ -250,6 +252,8 @@ public class SecurityZoneREST {
 
         try {
             ensureAdminAccess();
+
+            blockAdminFromKMSServiceOnDelete(null, zoneId);
 
             RangerSecurityZoneValidator validator = validatorFactory.getSecurityZoneValidator(svcStore, securityZoneStore);
 
@@ -706,6 +710,50 @@ public class SecurityZoneREST {
                     }
                 }
             }
+        }
+    }
+
+    private void blockAdminFromKMSServiceOnUpdate(RangerSecurityZone submittedZone, Long zoneId) {
+        if (bizUtil.isAdmin()) {
+            blockAdminFromKMSService(submittedZone);
+
+            if (zoneId != null) {
+                RangerSecurityZone existingZone = null;
+
+                try {
+                    existingZone = securityZoneStore.getSecurityZone(zoneId);
+                } catch (WebApplicationException excp) {
+                    throw excp;
+                } catch (Exception ex) {
+                    LOG.error("Unable to get Security Zone with id : {}", zoneId, ex);
+
+                    throw restErrorUtil.createRESTException(ex.getMessage());
+                }
+
+                blockAdminFromKMSService(existingZone);
+            }
+        }
+    }
+
+    private void blockAdminFromKMSServiceOnDelete(String zoneName, Long zoneId) {
+        if (bizUtil.isAdmin()) {
+            RangerSecurityZone existingZone = null;
+
+            try {
+                if (zoneId != null) {
+                    existingZone = securityZoneStore.getSecurityZone(zoneId);
+                } else if (zoneName != null) {
+                    existingZone = securityZoneStore.getSecurityZoneByName(zoneName);
+                }
+            } catch (WebApplicationException excp) {
+                throw excp;
+            } catch (Exception ex) {
+                LOG.error("Unable to get Security Zone with id : {}, name : {}", zoneId, zoneName, ex);
+
+                throw restErrorUtil.createRESTException(ex.getMessage());
+            }
+
+            blockAdminFromKMSService(existingZone);
         }
     }
 
