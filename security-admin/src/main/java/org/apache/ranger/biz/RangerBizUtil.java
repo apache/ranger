@@ -1060,9 +1060,9 @@ public class RangerBizUtil {
             return true;
         }
 
-        boolean            isAccessible = true;
-        List<String> payloadRoles = StringUtil.transformElements(vXUser.getUserRoleList(), s -> s.trim().toUpperCase());
-        List<String> userExistingRoles      = StringUtil.transformElements(userMgr.getRolesByLoginId(vXUser.getName()), s -> s.trim().toUpperCase());
+        boolean      isAccessible      = true;
+        List<String> payloadRoles      = StringUtil.transformElements(vXUser.getUserRoleList(), s -> s.trim().toUpperCase());
+        List<String> userExistingRoles = StringUtil.transformElements(userMgr.getRolesByLoginId(vXUser.getName()), s -> s.trim().toUpperCase());
 
         if (isKeyAdmin()) {
             if (payloadRoles.contains(RangerConstants.ROLE_SYS_ADMIN)
