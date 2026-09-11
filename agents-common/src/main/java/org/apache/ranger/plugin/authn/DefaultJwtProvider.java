@@ -29,8 +29,9 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.function.Supplier;
 
-public class DefaultJwtProvider implements JwtProvider {
+public class DefaultJwtProvider implements Supplier<String> {
     private static final Logger LOG = LoggerFactory.getLogger(DefaultJwtProvider.class);
 
     public static final String JWT_SOURCE     = ".jwt.source";
@@ -38,6 +39,7 @@ public class DefaultJwtProvider implements JwtProvider {
     public static final String JWT_FILE       = ".jwt.file";
     public static final String JWT_CRED_FILE  = ".jwt.cred.file";
     public static final String JWT_CRED_ALIAS = ".jwt.cred.alias";
+    public static final String JWT_PROVIDER   = ".jwt.provider"; // class name of a Supplier<String> implementation; defaults to DefaultJwtProvider
 
     private final String jwtEnvVar;
     private final String jwtFilePath;
@@ -87,7 +89,7 @@ public class DefaultJwtProvider implements JwtProvider {
     }
 
     @Override
-    public String getJwt() {
+    public String get() {
         if (StringUtils.isNotEmpty(jwtEnvVar)) {
             jwt = System.getenv(jwtEnvVar);
         } else if (StringUtils.isNotEmpty(jwtFilePath)) {

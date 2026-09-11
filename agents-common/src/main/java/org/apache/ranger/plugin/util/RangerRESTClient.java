@@ -26,7 +26,6 @@ import org.apache.ranger.authorization.hadoop.config.RangerPluginConfig;
 import org.apache.ranger.authorization.hadoop.utils.RangerCredentialProvider;
 import org.apache.ranger.authorization.utils.JsonUtils;
 import org.apache.ranger.authorization.utils.StringUtil;
-import org.apache.ranger.plugin.authn.JwtProvider;
 import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.client.ClientProperties;
 import org.slf4j.Logger;
@@ -67,6 +66,7 @@ import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Supplier;
 
 public class RangerRESTClient {
     private static final Logger LOG = LoggerFactory.getLogger(RangerRESTClient.class);
@@ -143,7 +143,7 @@ public class RangerRESTClient {
     private          int          lastKnownActiveUrlIndex;
     private volatile Client       client;
     private volatile Client       cookieAuthClient;
-    private          JwtProvider  jwtProvider;
+    private          Supplier<String> tokenSupplier;
     private volatile String       authHeader;
     private volatile Map<String, String> trustedAuthHeaders = Collections.emptyMap();
 
@@ -183,7 +183,7 @@ public class RangerRESTClient {
     }
 
     public boolean isAuthFilterPresent() {
-        return jwtProvider != null || hasBasicAuth();
+        return tokenSupplier != null || hasBasicAuth();
     }
 
     public int getRestClientConnTimeOutMs() {
@@ -235,8 +235,8 @@ public class RangerRESTClient {
         setBasicAuthFilter(username, password);
     }
 
-    public void setJwtProvider(JwtProvider jwtProvider) {
-        this.jwtProvider = jwtProvider;
+    public void setTokenSupplier(Supplier<String> tokenSupplier) {
+        this.tokenSupplier = tokenSupplier;
         resetClient();
     }
 
@@ -664,7 +664,7 @@ public class RangerRESTClient {
         // Validate that MOXy prevention is properly configured
         RangerJersey2ClientBuilder.validateAntiMoxyConfiguration(config);
 
-        if (jwtProvider != null) {
+        if (tokenSupplier != null) {
             config.register(new javax.ws.rs.client.ClientRequestFilter() {
                 @Override
                 public void filter(javax.ws.rs.client.ClientRequestContext requestContext) {
@@ -695,7 +695,7 @@ public class RangerRESTClient {
     }
 
     private void setJWTFilter() {
-        JwtProvider provider = jwtProvider;
+        Supplier<String> provider = tokenSupplier;
 
         if (provider != null) {
             LOG.info("Registering JWT auth header in REST client");
@@ -818,9 +818,9 @@ public class RangerRESTClient {
     }
 
     private String getCurrentJwt() {
-        JwtProvider provider = jwtProvider;
+        Supplier<String> provider = tokenSupplier;
 
-        return provider != null ? StringUtils.trimToNull(provider.getJwt()) : null;
+        return provider != null ? StringUtils.trimToNull(provider.get()) : null;
     }
 
     private boolean hasBasicAuth() {
