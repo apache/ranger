@@ -177,4 +177,16 @@
       <name>ranger.usersync.group.hierarchylevels</name>
       <value>2</value>
     </property>
+
+    <property>
+        <name>ranger.usersync.dn.validation.enabled</name>
+        <value></value>
+        <description>
+            Controls whether LDAP DN changes (e.g. OU moves) are synced to Ranger.
+            Accepted values:
+            - true  : DN changes are allowed and synced
+            - false : DN mismatch causes update to be skipped
+            - empty : treated as false (default); DN changes are skipped
+        </description>
+    </property>
   </configuration>
