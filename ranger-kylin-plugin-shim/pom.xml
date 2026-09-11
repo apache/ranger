@@ -60,10 +60,20 @@
                     <artifactId>kylin-shaded-guava</artifactId>
                 </exclusion>
                 <exclusion>
+                    <groupId>org.roaringbitmap</groupId>
+                    <artifactId>RoaringBitmap</artifactId>
+                </exclusion>
+                <exclusion>
                     <groupId>org.slf4j</groupId>
                     <artifactId>*</artifactId>
                 </exclusion>
             </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>org.roaringbitmap</groupId>
+            <artifactId>RoaringBitmap</artifactId>
+            <version>0.7.36</version>
+            <scope>provided</scope>
         </dependency>
     </dependencies>
 </project>
