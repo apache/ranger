@@ -166,6 +166,30 @@ Depends on RANGER-5499 (already on 2.10).
 | 2026-09-11 | GDS cleanup | Restore 2.10 `AssetMgr`, `RangerBizUtil`, `agents-common` from GDS pollution | OK — kept OpenSearch-only additions |
 | 2026-09-11 | 2–5 | All cherry-picks applied on `backport-audit-spiffe-2.10` | OK |
 | 2026-09-11 | Fix | Jersey 1 SPIFFE port, build fixes | OK — audit-server + dest modules build |
+| 2026-09-11 | Build | `security-admin compile -am` | **PASS** — StopEmbeddedServer fix (ref: opensource master), GDS-free SPIFFE |
+| 2026-09-11 | Docker | Smoke test | **PENDING** — run from `dev-support/ranger-docker` (see below) |
+
+### Docker smoke test (from release + opensource README)
+
+Working dir: `/Users/ramk/rangerRelease29/ranger/dev-support/ranger-docker`
+
+```bash
+# Build Ranger in docker (uses BRANCH=ranger-2.10 in .env; checkout backport branch first)
+chmod +x scripts/**/*.sh download-archives.sh
+./download-archives.sh hadoop hive hbase kafka knox ozone opensearch
+export RANGER_DB_TYPE=postgres
+docker compose -f docker-compose.ranger-build.yml build
+docker compose -f docker-compose.ranger-build.yml up
+
+# Full stack with audit-server + OpenSearch index store (5680 layout)
+export AUDIT_DESTINATIONS=audit-store-opensearch
+docker compose --profile ${AUDIT_DESTINATIONS} \
+  -f docker-compose.ranger.yml \
+  -f docker-compose.ranger-audit-service.yml \
+  up -d
+```
+
+Verify: admin UI, plugins, audit-ingestor, OpenSearch `ranger_audits` index, audit logs in Admin.
 
 ---
 

@@ -280,33 +280,6 @@ public class OpenSearchAccessAuditsService extends org.apache.ranger.AccessAudit
             accessAudit.setTags(value.toString());
         }
 
-        value = source.get("datasets");
-        if (value != null) {
-            try {
-                accessAudit.setDatasets(JsonUtilsV2.nonSerializableObjToJson(value));
-            } catch (Exception e) {
-                LOG.warn("Failed to convert datasets to json", e);
-            }
-        }
-
-        value = source.get("projects");
-        if (value != null) {
-            try {
-                accessAudit.setProjects(JsonUtilsV2.nonSerializableObjToJson(value));
-            } catch (Exception e) {
-                LOG.warn("Failed to convert projects to json", e);
-            }
-        }
-
-        value = source.get("datasetIds");
-        if (value != null) {
-            try {
-                accessAudit.setDatasetIds(JsonUtilsV2.nonSerializableObjToJson(value));
-            } catch (Exception e) {
-                LOG.warn("Failed to convert datasetIds to json", e);
-            }
-        }
-
         return accessAudit;
     }
 }
