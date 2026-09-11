@@ -20,7 +20,6 @@
 package org.apache.ranger.audit.destination;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.sun.jersey.api.client.ClientHandlerException;
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.WebResource;
 import org.apache.commons.lang3.StringUtils;
@@ -278,7 +277,7 @@ public class RangerAuditServerDestination extends AuditDestination {
         try {
             jsonBody = AUDIT_POST_MAPPER.writeValueAsString(new ArrayList<>(events));
         } catch (Exception e) {
-            throw new ClientHandlerException("Failed to serialize audit events to JSON", e);
+            throw new RuntimeException("Failed to serialize audit events to JSON", e);
         }
 
         return webResource
