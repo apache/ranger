@@ -16,7 +16,8 @@ Bring to 2.10 from master:
 
 ## Out of scope (do not cherry-pick)
 
-- GDS features
+- **GDS (Governed Data Sharing) — not needed on 2.10.** On conflict resolution, always drop GDS imports, methods, and service-def wiring. If `--theirs` pulls GDS into `AssetMgr`, `RangerBizUtil`, `RangerBasePlugin`, or `RangerDefaultAuditHandler`, restore those files from `ranger-2.10` and re-apply only audit/SPIFFE hunks.
+- GDS features (general)
 - JDK 17 / master-only pom churn
 - Full RANGER-4076 Jersey 2 migration (adapt audit commits to 2.10 Jersey 1.x instead)
 - TagSync-only fixes (5658, 5656)
@@ -54,13 +55,13 @@ Master order: `RANGER-5482` → `RANGER-4076` (Jersey 2) → `RANGER-5520` → �
 
 | # | Status | SHA | Jira | Summary |
 |---|--------|-----|------|---------|
-| 1.1 | ⬜ | `89ce14a26` | RANGER-5482 | Create Audit Server + dest-auditserver |
-| 1.2 | ⬜ | `3fd46dbe` | RANGER-5520 | Refactor ingestor/dispatcher |
-| 1.3 | ⬜ | `e3ab2b33` | RANGER-5613 | Audit Server Dockerfile dedup |
-| 1.4 | ⬜ | `d000d3e7e` | RANGER-5611 | TLS 1.3 for audit comms |
-| 1.5 | ⬜ | `a23c30c6` | RANGER-4676/5615 | OpenSearch dispatcher |
-| 1.6 | ⬜ | `7017225e6` | RANGER-5654 | Solr Kerberos TGT relogin |
-| 1.7 | ⬜ | `2ad565fe6` | RANGER-5720 | DB patch 078 — x_audit_config |
+| 1.1 | ✅ | `89ce14a26` | RANGER-5482 | Create Audit Server + dest-auditserver |
+| 1.2 | ✅ | `3fd46dbe` | RANGER-5520 | Refactor ingestor/dispatcher |
+| 1.3 | ✅ | `e3ab2b33` | RANGER-5613 | Audit Server Dockerfile dedup |
+| 1.4 | ⏭️ | `d000d3e7e` | RANGER-5611 | TLS 1.3 — **deferred** (wide blast radius, not audit-only) |
+| 1.5 | ✅ | `a23c30c6` | RANGER-4676/5615 | OpenSearch dispatcher |
+| 1.6 | ✅ | `7017225e6` | RANGER-5654 | Solr Kerberos TGT relogin |
+| 1.7 | ✅ | `2ad565fe6` | RANGER-5720 | DB patch 078 — x_audit_config |
 
 **Cherry-pick:**
 
@@ -158,8 +159,11 @@ Depends on RANGER-5499 (already on 2.10).
 
 | Date | Wave | Action | Result |
 |------|------|--------|--------|
-| | 0 | | |
-| | 1 | | |
+| 2026-09-11 | 0 | Branch `backport-audit-spiffe-2.10` created | OK |
+| 2026-09-11 | 1.1 | Cherry-pick `89ce14a26` RANGER-5482 | OK — 13 conflicts, resolved with `--theirs` |
+| 2026-09-11 | 1.2 | Cherry-pick `3fd46dbe` RANGER-5520 | OK — 3 docker conflicts, manual merge |
+| 2026-09-11 | 1.3–1.7 | 5613, 4676/5615, 5654, 5720 | OK — 5611 skipped |
+| 2026-09-11 | GDS cleanup | Restore 2.10 `AssetMgr`, `RangerBizUtil`, `agents-common` from GDS pollution | OK — kept OpenSearch-only additions |
 | | 2 | | |
 | | 3 | | |
 | | 4 | | |

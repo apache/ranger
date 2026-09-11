@@ -21,7 +21,7 @@
     <parent>
         <groupId>org.apache.ranger</groupId>
         <artifactId>ranger</artifactId>
-        <version>3.0.0-SNAPSHOT</version>
+        <version>2.10.0-SNAPSHOT</version>
         <relativePath>..</relativePath>
     </parent>
 
@@ -401,6 +401,28 @@
                 <groupId>org.springframework.security</groupId>
                 <artifactId>spring-security-web</artifactId>
                 <version>${springframework.security.version}</version>
+            </dependency>
+
+            <!-- Jersey 2 (audit-server WAR runtime; versions from ranger root pom) -->
+            <dependency>
+                <groupId>org.glassfish.jersey.containers</groupId>
+                <artifactId>jersey-container-servlet</artifactId>
+                <version>${jersey-client.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.glassfish.jersey.ext</groupId>
+                <artifactId>jersey-spring5</artifactId>
+                <version>${jersey-client.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.glassfish.jersey.inject</groupId>
+                <artifactId>jersey-hk2</artifactId>
+                <version>${jersey-client.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.glassfish.jersey.media</groupId>
+                <artifactId>jersey-media-json-jackson</artifactId>
+                <version>${jersey-client.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
