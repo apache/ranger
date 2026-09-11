@@ -69,7 +69,7 @@ class OpenSearchUtilTest {
         criteria.setStartIndex(0);
 
         List<SearchField> searchFields = new ArrayList<>();
-        List<SortField>   sortFields   = List.of(new SortField("eventTime", "evtTime", true, SortField.SORT_ORDER.DESC));
+        List<SortField>   sortFields   = Arrays.asList(new SortField("eventTime", "evtTime", true, SortField.SORT_ORDER.DESC));
         String            body         = openSearchUtil.buildSearchBody(criteria, searchFields, sortFields);
         JsonNode          root         = MAPPER.readTree(body);
 
@@ -86,8 +86,8 @@ class OpenSearchUtilTest {
         criteria.setStartIndex(0);
         criteria.addParam("requestUser", "testuser");
 
-        List<SearchField> searchFields = List.of(new SearchField("requestUser", "reqUser", SearchField.DATA_TYPE.STRING, SearchField.SEARCH_TYPE.PARTIAL));
-        List<SortField>   sortFields   = List.of(new SortField("eventTime", "evtTime", true, SortField.SORT_ORDER.DESC));
+        List<SearchField> searchFields = Arrays.asList(new SearchField("requestUser", "reqUser", SearchField.DATA_TYPE.STRING, SearchField.SEARCH_TYPE.PARTIAL));
+        List<SortField>   sortFields   = Arrays.asList(new SortField("eventTime", "evtTime", true, SortField.SORT_ORDER.DESC));
         String            body         = openSearchUtil.buildSearchBody(criteria, searchFields, sortFields);
         JsonNode          root         = MAPPER.readTree(body);
         JsonNode          mustClauses  = root.at("/query/bool/must");
@@ -108,8 +108,8 @@ class OpenSearchUtilTest {
         criteria.setStartIndex(0);
         criteria.addParam("accessType", "read");
 
-        List<SearchField> searchFields = List.of(new SearchField("accessType", "access", SearchField.DATA_TYPE.STRING, SearchField.SEARCH_TYPE.FULL));
-        List<SortField>   sortFields   = List.of(new SortField("eventTime", "evtTime", true, SortField.SORT_ORDER.DESC));
+        List<SearchField> searchFields = Arrays.asList(new SearchField("accessType", "access", SearchField.DATA_TYPE.STRING, SearchField.SEARCH_TYPE.FULL));
+        List<SortField>   sortFields   = Arrays.asList(new SortField("eventTime", "evtTime", true, SortField.SORT_ORDER.DESC));
         String            body         = openSearchUtil.buildSearchBody(criteria, searchFields, sortFields);
 
         assertTrue(body.contains("match_phrase"));
@@ -126,10 +126,10 @@ class OpenSearchUtilTest {
         criteria.addParam("startDate", new Date(1700000000000L));
         criteria.addParam("endDate", new Date(1700100000000L));
 
-        List<SearchField> searchFields = List.of(
+        List<SearchField> searchFields = Arrays.asList(
                 new SearchField("startDate", "evtTime", SearchField.DATA_TYPE.DATE, SearchField.SEARCH_TYPE.GREATER_EQUAL_THAN),
                 new SearchField("endDate", "evtTime", SearchField.DATA_TYPE.DATE, SearchField.SEARCH_TYPE.LESS_EQUAL_THAN));
-        List<SortField> sortFields = List.of(new SortField("eventTime", "evtTime", true, SortField.SORT_ORDER.DESC));
+        List<SortField> sortFields = Arrays.asList(new SortField("eventTime", "evtTime", true, SortField.SORT_ORDER.DESC));
 
         String body = openSearchUtil.buildSearchBody(criteria, searchFields, sortFields);
 
@@ -147,8 +147,8 @@ class OpenSearchUtilTest {
         criteria.setStartIndex(0);
         criteria.addParam("requestUser", Arrays.asList("user1", "user2", "user3"));
 
-        List<SearchField> searchFields = List.of(new SearchField("requestUser", "reqUser", SearchField.DATA_TYPE.STR_LIST, SearchField.SEARCH_TYPE.FULL));
-        List<SortField>   sortFields   = List.of(new SortField("eventTime", "evtTime", true, SortField.SORT_ORDER.DESC));
+        List<SearchField> searchFields = Arrays.asList(new SearchField("requestUser", "reqUser", SearchField.DATA_TYPE.STR_LIST, SearchField.SEARCH_TYPE.FULL));
+        List<SortField>   sortFields   = Arrays.asList(new SortField("eventTime", "evtTime", true, SortField.SORT_ORDER.DESC));
         String            body         = openSearchUtil.buildSearchBody(criteria, searchFields, sortFields);
 
         assertTrue(body.contains("query_string"));
@@ -166,8 +166,8 @@ class OpenSearchUtilTest {
         criteria.setStartIndex(0);
         criteria.addParam("excludeUser", "serviceuser");
 
-        List<SearchField> searchFields = List.of(new SearchField("excludeUser", "-reqUser", SearchField.DATA_TYPE.STRING, SearchField.SEARCH_TYPE.FULL));
-        List<SortField>   sortFields   = List.of(new SortField("eventTime", "evtTime", true, SortField.SORT_ORDER.DESC));
+        List<SearchField> searchFields = Arrays.asList(new SearchField("excludeUser", "-reqUser", SearchField.DATA_TYPE.STRING, SearchField.SEARCH_TYPE.FULL));
+        List<SortField>   sortFields   = Arrays.asList(new SortField("eventTime", "evtTime", true, SortField.SORT_ORDER.DESC));
         String            body         = openSearchUtil.buildSearchBody(criteria, searchFields, sortFields);
 
         assertTrue(body.contains("must_not"));
@@ -184,7 +184,7 @@ class OpenSearchUtilTest {
         criteria.setSortType("asc");
 
         List<SearchField> searchFields = new ArrayList<>();
-        List<SortField>   sortFields   = List.of(new SortField("eventTime", "evtTime", true, SortField.SORT_ORDER.DESC));
+        List<SortField>   sortFields   = Arrays.asList(new SortField("eventTime", "evtTime", true, SortField.SORT_ORDER.DESC));
         String            body         = openSearchUtil.buildSearchBody(criteria, searchFields, sortFields);
         JsonNode          root         = MAPPER.readTree(body);
         JsonNode          sortNode     = root.get("sort");
