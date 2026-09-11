@@ -74,9 +74,9 @@
 		<value></value>
 	</property>
 	<property>
-                <name>ranger.usersync.ldap.deltasync</name>
-                <value></value>
-        </property>
+		<name>ranger.usersync.ldap.deltasync</name>
+		<value></value>
+	</property>
 	<property>
 		<name>ranger.usersync.ldap.user.groupnameattribute</name>
 		<value></value>
@@ -198,49 +198,49 @@
 		<value></value>
 	</property>
 	<property>
-      <name>ranger.usersync.keystore.password</name>
-      <value></value>
-    </property>
-    <property>
-      <name>ranger.usersync.truststore.password</name>
-      <value></value>
-    </property>
-    <property>
-      <name>ranger.usersync.role.assignment.list.delimiter</name>
-          <value></value>
-        </property>
-        <property>
-      <name>ranger.usersync.users.groups.assignment.list.delimiter</name>
-      <value></value>
-        </property>
-        <property>
-      <name>ranger.usersync.username.groupname.assignment.list.delimiter</name>
-      <value></value>
-        </property>
-    <property>
-          <name>ranger.usersync.group.based.role.assignment.rules</name>
-      <value></value>
-    </property>
-    <property>
+		<name>ranger.usersync.keystore.password</name>
+		<value></value>
+	</property>
+	<property>
+		<name>ranger.usersync.truststore.password</name>
+		<value></value>
+	</property>
+	<property>
+		<name>ranger.usersync.role.assignment.list.delimiter</name>
+		<value></value>
+	</property>
+	<property>
+		<name>ranger.usersync.users.groups.assignment.list.delimiter</name>
+		<value></value>
+	</property>
+	<property>
+		<name>ranger.usersync.username.groupname.assignment.list.delimiter</name>
+		<value></value>
+	</property>
+	<property>
+		<name>ranger.usersync.group.based.role.assignment.rules</name>
+		<value></value>
+	</property>
+	<property>
 		<name>ranger.usersync.dest.ranger.session.cookie.name</name>
 		<value>RANGERADMINSESSIONID</value>
 	</property>
-    <property>
+	<property>
 		<name>ranger.usersync.metrics.enabled</name>
 		<value>false</value>
-    </property>
-    <property>
+	</property>
+	<property>
 		<name>ranger.usersync.metrics.filepath</name>
 		<value></value>
-    </property>
-    <property>
+	</property>
+	<property>
 		<name>ranger.usersync.metrics.frequencytimeinmillis</name>
 		<value></value>
-    </property>
-    <property>
+	</property>
+	<property>
 		<name>ranger.usersync.metrics.filename</name>
 		<value></value>
-    </property>
+	</property>
 
 	<!-- HA property -->
 	<property>
@@ -299,24 +299,32 @@
 		<name>ranger-ugsync.server.ha.https.port</name>
 		<value></value>
 	</property>
-    <property>
-        <name>ranger.usersync.service.http.port</name>
-        <value></value>
-    </property>
-    <property>
-        <name>ranger.usersync.service.https.port</name>
-        <value></value>
-    </property>
-    <property>
-        <name>ranger.usersync.service.https.attrib.keystore.keyalias</name>
-        <value></value>
-    </property>
-    <property>
-        <name>ranger.usersync.service.https.attrib.keystore.credential.alias</name>
-        <value></value>
-    </property>
-    <property>
-        <name>ranger.usersync.service.host</name>
-        <value></value>
-    </property>
+	<property>
+		<name>ranger.usersync.service.http.port</name>
+		<value></value>
+	</property>
+	<property>
+		<name>ranger.usersync.service.https.port</name>
+		<value></value>
+	</property>
+	<property>
+		<name>ranger.usersync.service.https.attrib.keystore.keyalias</name>
+		<value></value>
+	</property>
+	<property>
+		<name>ranger.usersync.service.https.attrib.keystore.credential.alias</name>
+		<value></value>
+	</property>
+	<property>
+		<name>ranger.usersync.service.host</name>
+		<value></value>
+	</property>
+	<property>
+		<name>ranger.usersync.unix.auth.enabled</name>
+		<value></value>
+	</property>
+	<property>
+		<name>ranger.usersync.unix.backend</name>
+		<value></value>
+	</property>
 </configuration>

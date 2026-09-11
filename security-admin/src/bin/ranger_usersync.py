@@ -120,7 +120,7 @@ if service_entry:
 		jdk_options = get_jdk_options()
 		class_path = get_ranger_classpath()
 		java_class = 'org.apache.ranger.authentication.server.RangerUserSyncServer'
-		class_arguments = '-enableUnixAuth'
+		class_arguments = ''
 
 		dom = getDOMImplementation()
 		xmlDoc = dom.createDocument(None, 'service', None)

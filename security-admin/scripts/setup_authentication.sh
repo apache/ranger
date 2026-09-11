@@ -16,7 +16,7 @@
 # limitations under the License.
 
 
-USAGE="Usage: setup_authentication.sh [UNIX|LDAP|AD|NONE] <path>"
+USAGE="Usage: setup_authentication.sh [UNIX|LDAP|AD|PAM|NONE] <path>"
 
 if [ $# -ne 2 ]
   then
@@ -92,6 +92,9 @@ elif [ $authentication_method = "ACTIVE_DIRECTORY" ]; then
 	/AD_SEC_SETTINGS_END/{f=0}!f' $path/META-INF/contextXML/ad_security_settings.xml $CONFIG_FILE  > tmp
 	mv tmp $CONFIG_FILE
 
+    exit 0;
+elif [ $authentication_method = "PAM" ]; then
+echo $path;
     exit 0;
 elif [ $authentication_method = "NONE" ]; then
 echo $path;
