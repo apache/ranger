@@ -19,6 +19,8 @@
 
 package org.apache.ranger.audit.destination;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.sun.jersey.api.client.ClientHandlerException;
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.WebResource;
 import org.apache.commons.lang3.StringUtils;
@@ -33,6 +35,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.security.PrivilegedExceptionAction;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -41,6 +44,8 @@ import java.util.Properties;
 
 public class RangerAuditServerDestination extends AuditDestination {
     private static final Logger LOG = LoggerFactory.getLogger(RangerAuditServerDestination.class);
+
+    private static final ObjectMapper AUDIT_POST_MAPPER = new ObjectMapper();
 
     public static final String PROP_URL                    = "url";
     public static final String PROP_SSL_CONFIG_FILE        = "ssl.config.file";
@@ -266,10 +271,20 @@ public class RangerAuditServerDestination extends AuditDestination {
             }
         }
 
+        // Pre-serialize with ISO-8601 dates: Jersey 1.x on plugin classloader threads cannot
+        // reliably resolve List body writers, and JsonUtils uses a non-ingestor date format.
+        String jsonBody;
+
+        try {
+            jsonBody = AUDIT_POST_MAPPER.writeValueAsString(new ArrayList<>(events));
+        } catch (Exception e) {
+            throw new ClientHandlerException("Failed to serialize audit events to JSON", e);
+        }
+
         return webResource
                 .accept("application/json")
                 .type("application/json")
-                .entity(events)
+                .entity(jsonBody)
                 .post(ClientResponse.class);
     }
 
