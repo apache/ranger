@@ -44,10 +44,10 @@ import java.util.Properties;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class TestEmbeddedAuthorizer {
-    private static final TypeReference<List<TestAuthzData>>               TYPE_LIST_TEST_AUTHZ_DATA                = new TypeReference<>() {};
-    private static final TypeReference<List<TestMultiAuthzData>>          TYPE_LIST_TEST_MULTI_AUTHZ_DATA          = new TypeReference<>() {};
-    private static final TypeReference<List<TestResourcePermissionsData>> TYPE_LIST_TEST_RESOURCE_PERMISSIONS_DATA = new TypeReference<>() {};
-    private static final TypeReference<List<TestFilterResourcesData>>     TYPE_LIST_TEST_FILTER_RESOURCES_DATA     = new TypeReference<>() {};
+    private static final TypeReference<List<TestAuthzData>>               TYPE_LIST_TEST_AUTHZ_DATA                = new TypeReference<List<TestAuthzData>>() {};
+    private static final TypeReference<List<TestMultiAuthzData>>          TYPE_LIST_TEST_MULTI_AUTHZ_DATA          = new TypeReference<List<TestMultiAuthzData>>() {};
+    private static final TypeReference<List<TestResourcePermissionsData>> TYPE_LIST_TEST_RESOURCE_PERMISSIONS_DATA = new TypeReference<List<TestResourcePermissionsData>>() {};
+    private static final TypeReference<List<TestFilterResourcesData>>     TYPE_LIST_TEST_FILTER_RESOURCES_DATA     = new TypeReference<List<TestFilterResourcesData>>() {};
 
     @Test
     public void testAuthzS3() throws Exception {
