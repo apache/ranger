@@ -24,6 +24,10 @@ import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.clients.consumer.OffsetAndMetadata;
 import org.apache.kafka.common.TopicPartition;
+import org.apache.kafka.common.errors.AuthenticationException;
+import org.apache.kafka.common.errors.AuthorizationException;
+import org.apache.kafka.common.errors.InterruptException;
+import org.apache.kafka.common.errors.WakeupException;
 import org.apache.ranger.audit.provider.MiscUtil;
 import org.apache.ranger.audit.server.AuditServerConstants;
 import org.apache.ranger.audit.utils.AuditMessageQueueUtils;
@@ -40,6 +44,7 @@ import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
@@ -54,10 +59,13 @@ public abstract class AuditDispatcherBase implements AuditDispatcher {
 
     protected final AtomicBoolean                 running               = new AtomicBoolean(false);
     protected final Map<String, DispatcherWorker> dispatcherWorkers     = new ConcurrentHashMap<>();
+    protected final Map<String, Future<?>>        workerFutures         = new ConcurrentHashMap<>();
     protected ExecutorService                     dispatcherThreadPool;
     protected int                                 dispatcherThreadCount = 1;
     protected String                              offsetCommitStrategy  = AuditServerConstants.DEFAULT_OFFSET_COMMIT_STRATEGY;
     protected long                                offsetCommitInterval  = AuditServerConstants.DEFAULT_OFFSET_COMMIT_INTERVAL_MS;
+    protected long                                authRetryDelayMs      = AuditServerConstants.DEFAULT_DISPATCHER_AUTH_RETRY_DELAY_MS;
+    protected long                                pollErrorRetryDelayMs = AuditServerConstants.DEFAULT_DISPATCHER_POLL_ERROR_RETRY_DELAY_MS;
 
     public AuditDispatcherBase(Properties props, String propPrefix, String dispatcherGroupId) throws Exception {
         this.dispatcherGroupId = getDispatcherGroupId(props, propPrefix, dispatcherGroupId);
@@ -93,6 +101,9 @@ public abstract class AuditDispatcherBase implements AuditDispatcher {
         // Configure partition assignment strategy
         String partitionAssignmentStrategy = MiscUtil.getStringProperty(props, propPrefix + "." + AuditServerConstants.PROP_DISPATCHER_PARTITION_ASSIGNMENT_STRATEGY, AuditServerConstants.DEFAULT_PARTITION_ASSIGNMENT_STRATEGY);
         dispatcherProps.put(ConsumerConfig.PARTITION_ASSIGNMENT_STRATEGY_CONFIG, partitionAssignmentStrategy);
+
+        authRetryDelayMs      = MiscUtil.getLongProperty(props, propPrefix + "." + AuditServerConstants.PROP_DISPATCHER_AUTH_RETRY_DELAY_MS, AuditServerConstants.DEFAULT_DISPATCHER_AUTH_RETRY_DELAY_MS);
+        pollErrorRetryDelayMs = MiscUtil.getLongProperty(props, propPrefix + "." + AuditServerConstants.PROP_DISPATCHER_POLL_ERROR_RETRY_DELAY_MS, AuditServerConstants.DEFAULT_DISPATCHER_POLL_ERROR_RETRY_DELAY_MS);
 
         LOG.info("Dispatcher '{}' configured for subscription-based partition assignment with re-balancing support", this.dispatcherGroupId);
         LOG.info("Re-balancing config - session.timeout.ms: {}, max.poll.interval.ms: {}, heartbeat.interval.ms: {}", sessionTimeoutMs, maxPollIntervalMs, heartbeatIntervalMs);
@@ -146,10 +157,11 @@ public abstract class AuditDispatcherBase implements AuditDispatcher {
                 startDispatcherWorkers();
             }
 
-            // Keep main thread alive while dispatcher threads are running
+            // Keep main thread alive while dispatcher threads are running and monitor their health
             while (running.get()) {
                 try {
-                    Thread.sleep(1000);
+                    Thread.sleep(5000); // Check worker health every 5 seconds
+                    monitorAndRestartWorkers();
                 } catch (InterruptedException e) {
                     LOG.info("{} dispatcher main thread interrupted", getDispatcherName());
                     Thread.currentThread().interrupt();
@@ -182,6 +194,7 @@ public abstract class AuditDispatcherBase implements AuditDispatcher {
         }
 
         dispatcherWorkers.clear();
+        workerFutures.clear();
 
         if (dispatcher != null) {
             try {
@@ -205,14 +218,42 @@ public abstract class AuditDispatcherBase implements AuditDispatcher {
 
         for (int i = 0; i < dispatcherThreadCount; i++) {
             String workerId = getDispatcherName().toLowerCase() + "-worker-" + i;
-            DispatcherWorker worker = createDispatcherWorker(workerId, new ArrayList<>());
-            dispatcherWorkers.put(workerId, worker);
-            dispatcherThreadPool.submit(worker);
-
-            LOG.info("Started {} dispatcher worker '{}' - will process ANY appId assigned by Kafka", getDispatcherName(), workerId);
+            startWorker(workerId);
         }
 
         LOG.info("<== AuditDispatcherBase.startDispatcherWorkers(): All {} workers started in SUBSCRIBE mode", dispatcherThreadCount);
+    }
+
+    private void startWorker(String workerId) {
+        DispatcherWorker worker = createDispatcherWorker(workerId, new ArrayList<>());
+        dispatcherWorkers.put(workerId, worker);
+        Future<?> future = dispatcherThreadPool.submit(worker);
+        workerFutures.put(workerId, future);
+        LOG.info("Started {} dispatcher worker '{}' - will process ANY appId assigned by Kafka", getDispatcherName(), workerId);
+    }
+
+    private void monitorAndRestartWorkers() {
+        if (!running.get()) {
+            return;
+        }
+
+        for (Map.Entry<String, Future<?>> entry : workerFutures.entrySet()) {
+            String workerId = entry.getKey();
+            Future<?> future = entry.getValue();
+
+            if (future.isDone()) {
+                LOG.warn("Worker '{}' has terminated unexpectedly. Attempting to restart...", workerId);
+                try {
+                    // Remove the dead worker
+                    dispatcherWorkers.remove(workerId);
+                    // Start a new worker with the same ID
+                    startWorker(workerId);
+                    LOG.info("Successfully restarted worker '{}'", workerId);
+                } catch (Exception e) {
+                    LOG.error("Failed to restart worker '{}'", workerId, e);
+                }
+            }
+        }
     }
 
     protected abstract class DispatcherWorker implements Runnable {
@@ -268,12 +309,18 @@ public abstract class AuditDispatcherBase implements AuditDispatcher {
 
                 // Consume messages
                 while (running.get()) {
-                    ConsumerRecords<String, String> records = workerDispatcher.poll(Duration.ofMillis(100));
+                    try {
+                        ConsumerRecords<String, String> records = workerDispatcher.poll(Duration.ofMillis(100));
 
-                    if (!records.isEmpty()) {
-                        processRecordBatch(records);
-                        // Handle offset committing based on strategy
-                        handleOffsetCommitting();
+                        if (!records.isEmpty()) {
+                            processRecordBatch(records);
+                            // Handle offset committing based on strategy
+                            handleOffsetCommitting();
+                        }
+                    } catch (Exception e) {
+                        if (!handlePollException(e)) {
+                            break;
+                        }
                     }
                 }
             } catch (Throwable e) {
@@ -298,6 +345,44 @@ public abstract class AuditDispatcherBase implements AuditDispatcher {
                     }
                 }
                 LOG.info("{} dispatcher worker '{}' stopped", getDispatcherName(), workerId);
+            }
+        }
+
+        private boolean handlePollException(Exception e) {
+            if (e instanceof WakeupException) {
+                if (!running.get()) {
+                    LOG.info("WakeupException in {} dispatcher worker '{}' during shutdown", getDispatcherName(), workerId);
+                    return false;
+                }
+                LOG.error("WakeupException in {} dispatcher worker '{}'", getDispatcherName(), workerId, e);
+                return true;
+            } else if (e instanceof InterruptException) {
+                if (!running.get()) {
+                    LOG.info("InterruptException in {} dispatcher worker '{}' during shutdown", getDispatcherName(), workerId);
+                    return false;
+                }
+                LOG.error("InterruptException in {} dispatcher worker '{}'", getDispatcherName(), workerId, e);
+                Thread.currentThread().interrupt();
+                return false;
+            } else if (e instanceof AuthorizationException) {
+                LOG.warn("Authorization error in {} dispatcher worker '{}'. Retrying in {} ms...", getDispatcherName(), workerId, authRetryDelayMs, e);
+                return sleepForRetry(authRetryDelayMs);
+            } else if (e instanceof AuthenticationException) {
+                LOG.warn("Authentication error in {} dispatcher worker '{}'. Retrying in {} ms...", getDispatcherName(), workerId, authRetryDelayMs, e);
+                return sleepForRetry(authRetryDelayMs);
+            } else {
+                LOG.error("Error while polling/processing in {} dispatcher worker '{}'. Retrying in {} ms...", getDispatcherName(), workerId, pollErrorRetryDelayMs, e);
+                return sleepForRetry(pollErrorRetryDelayMs);
+            }
+        }
+
+        private boolean sleepForRetry(long delayMs) {
+            try {
+                Thread.sleep(delayMs);
+                return true;
+            } catch (InterruptedException ie) {
+                Thread.currentThread().interrupt();
+                return false;
             }
         }
 

@@ -135,6 +135,8 @@ public class AuditServerConstants {
     public static final String PROP_DISPATCHER_MAX_POLL_INTERVAL_MS          = "max.poll.interval.ms";
     public static final String PROP_DISPATCHER_HEARTBEAT_INTERVAL_MS         = "heartbeat.interval.ms";
     public static final String PROP_DISPATCHER_PARTITION_ASSIGNMENT_STRATEGY = "partition.assignment.strategy";
+    public static final String PROP_DISPATCHER_AUTH_RETRY_DELAY_MS           = "auth.retry.delay.ms";
+    public static final String PROP_DISPATCHER_POLL_ERROR_RETRY_DELAY_MS     = "poll.error.retry.delay.ms";
     public static final String PROP_DISPATCHER_TYPE                          = "ranger.audit.dispatcher.type";
     public static final String PROP_DISPATCHER_CLASS                         = "ranger.audit.dispatcher.class";
 
@@ -142,4 +144,6 @@ public class AuditServerConstants {
     public static final int    DEFAULT_SESSION_TIMEOUT_MS                    = 60000;  // 60 seconds - failure detection
     public static final int    DEFAULT_MAX_POLL_INTERVAL_MS                  = 300000; // 5 minutes - max processing time
     public static final int    DEFAULT_HEARTBEAT_INTERVAL_MS                 = 10000;  // 10 seconds - heartbeat frequency
+    public static final int    DEFAULT_DISPATCHER_AUTH_RETRY_DELAY_MS        = 10000;  // 10 seconds - auth retry delay
+    public static final int    DEFAULT_DISPATCHER_POLL_ERROR_RETRY_DELAY_MS  = 5000;   // 5 seconds - poll error retry delay
 }
