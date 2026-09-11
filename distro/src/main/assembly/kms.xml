@@ -333,9 +333,6 @@
                             <include>io.airlift:aircompressor:jar:${aircompressor.version}</include>
                         </includes>
                         <excludes>
-                            <exclude>com.fasterxml.jackson.core:*</exclude>
-                            <exclude>com.fasterxml.jackson.jaxrs:*</exclude>
-                            <exclude>com.fasterxml.jackson.module:*</exclude>
                             <exclude>com.fasterxml.jackson.dataformat:*</exclude>
                             <exclude>org.glassfish.jersey.core:*</exclude>
                             <exclude>org.glassfish.jersey.ext:*</exclude>

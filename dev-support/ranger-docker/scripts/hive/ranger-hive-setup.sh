@@ -99,8 +99,8 @@ su -c "${HADOOP_HOME}/bin/hdfs dfs -chmod 777 /tmp" hdfs
 su -c "${HADOOP_HOME}/bin/hdfs dfs -mkdir -p /user/root" hdfs
 su -c "${HADOOP_HOME}/bin/hdfs dfs -chmod 777 /user/root" hdfs
 
-# Initialize Hive schema
-su -c "${HIVE_HOME}/bin/schematool -dbType ${RANGER_DB_TYPE} -initSchema" hive
+# Initialize Hive schema (postgres driver must be in HIVE_HOME/lib)
+su -c "${HIVE_HOME}/bin/schematool -dbType ${RANGER_DB_TYPE} -initSchema -ifNotExists" hive
 
 mkdir -p /opt/hive/logs
 chown -R hive:hadoop /opt/hive/

@@ -54,9 +54,14 @@ su -c "nohup ${HIVE_HOME}/bin/hive --service metastore > metastore.log 2>&1 &" h
 # Start HiveServer2
 su -c "nohup ${HIVE_HOME}/bin/hiveserver2 > hive-server2.log 2>&1 &" hive
 
-sleep 10
-
-HIVE_SERVER2_PID=`ps -ef  | grep -v grep | grep -i "org.apache.hive.service.server.HiveServer2" | awk '{print $2}'`
+HIVE_SERVER2_PID=""
+for _ in $(seq 1 24); do
+  HIVE_SERVER2_PID=`ps -ef | grep -v grep | grep -i "org.apache.hive.service.server.HiveServer2" | awk '{print $2}'`
+  if [ -n "$HIVE_SERVER2_PID" ]; then
+    break
+  fi
+  sleep 5
+done
 
 # prevent the container from exiting
 if [ -z "$HIVE_SERVER2_PID" ]
