@@ -48,7 +48,7 @@ public class PluginHeaderAuthConfigTest {
     @Test
     public void buildTrustedAuthHeadersUsesFileValueSpec(@TempDir Path tempDir) throws Exception {
         Path spiffeFile = tempDir.resolve("spiffe");
-        Files.writeString(spiffeFile, VALID_SPIFFE + "\n", StandardCharsets.UTF_8);
+        Files.write(spiffeFile, (VALID_SPIFFE + "\n").getBytes(StandardCharsets.UTF_8));
 
         Properties props = new Properties();
         props.setProperty("ranger.ozone.authn.header.enabled", "true");

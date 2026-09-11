@@ -21,6 +21,7 @@ package org.apache.ranger.plugin.util;
 
 import org.junit.jupiter.api.Test;
 
+import java.util.Arrays;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -116,10 +117,10 @@ class SpiffeIdUtilTest {
         assertTrue(SpiffeIdUtil.parseHeaderNames(null).isEmpty());
         assertTrue(SpiffeIdUtil.parseHeaderNames("   ").isEmpty());
 
-        assertEquals(List.of("x-spiffe"), SpiffeIdUtil.parseHeaderNames("x-spiffe"));
+        assertEquals(Arrays.asList("x-spiffe"), SpiffeIdUtil.parseHeaderNames("x-spiffe"));
 
         List<String> names = SpiffeIdUtil.parseHeaderNames(" x-source , x-upstream ,");
 
-        assertEquals(List.of("x-source", "x-upstream"), names);
+        assertEquals(Arrays.asList("x-source", "x-upstream"), names);
     }
 }
