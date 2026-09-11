@@ -37,11 +37,11 @@ public class DummyAuthorizer extends RangerAuthorizer {
     }
 
     @Override
-    public void init()  {
+    public void init() {
     }
 
     @Override
-    public void close()  {
+    public void close() {
     }
 
     @Override
