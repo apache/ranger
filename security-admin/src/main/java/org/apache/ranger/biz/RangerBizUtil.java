@@ -72,7 +72,6 @@ import javax.servlet.http.HttpServletResponse;
 import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -1062,21 +1061,22 @@ public class RangerBizUtil {
         }
 
         boolean            isAccessible = true;
-        Collection<String> roleList     = userMgr.getRolesByLoginId(vXUser.getName());
+        List<String> payloadRoles = StringUtil.transformElements(vXUser.getUserRoleList(), s -> s.trim().toUpperCase());
+        List<String> userExistingRoles      = StringUtil.transformElements(userMgr.getRolesByLoginId(vXUser.getName()), s -> s.trim().toUpperCase());
 
         if (isKeyAdmin()) {
-            if (vXUser.getUserRoleList().contains(RangerConstants.ROLE_SYS_ADMIN)
-                    || vXUser.getUserRoleList().contains(RangerConstants.ROLE_ADMIN_AUDITOR)
-                    || roleList.contains(RangerConstants.ROLE_SYS_ADMIN)
-                    || roleList.contains(RangerConstants.ROLE_ADMIN_AUDITOR)) {
+            if (payloadRoles.contains(RangerConstants.ROLE_SYS_ADMIN)
+                    || payloadRoles.contains(RangerConstants.ROLE_ADMIN_AUDITOR)
+                    || userExistingRoles.contains(RangerConstants.ROLE_SYS_ADMIN)
+                    || userExistingRoles.contains(RangerConstants.ROLE_ADMIN_AUDITOR)) {
                 isAccessible = false;
             }
         }
         if (isAdmin()) {
-            if (vXUser.getUserRoleList().contains(RangerConstants.ROLE_KEY_ADMIN)
-                    || vXUser.getUserRoleList().contains(RangerConstants.ROLE_KEY_ADMIN_AUDITOR)
-                    || roleList.contains(RangerConstants.ROLE_KEY_ADMIN)
-                    || roleList.contains(RangerConstants.ROLE_KEY_ADMIN_AUDITOR)) {
+            if (payloadRoles.contains(RangerConstants.ROLE_KEY_ADMIN)
+                    || payloadRoles.contains(RangerConstants.ROLE_KEY_ADMIN_AUDITOR)
+                    || userExistingRoles.contains(RangerConstants.ROLE_KEY_ADMIN)
+                    || userExistingRoles.contains(RangerConstants.ROLE_KEY_ADMIN_AUDITOR)) {
                 isAccessible = false;
             }
         }

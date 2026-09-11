@@ -27,8 +27,12 @@ import java.io.Serializable;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
+import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -68,6 +72,25 @@ public class StringUtil implements Serializable {
 
     public static String getUTFEncodedString(String username) throws UnsupportedEncodingException {
         return URLEncoder.encode(username, StandardCharsets.UTF_8.toString());
+    }
+
+    public static List<String> transformElements(Collection<String> values, Function<String, String> transform) {
+        if (values == null) {
+            return Collections.emptyList();
+        }
+        if (transform == null) {
+            return new ArrayList<>(values);
+        }
+
+        List<String> out = new ArrayList<>(values.size());
+
+        for (String v : values) {
+            if (v != null) {
+                out.add(transform.apply(v));
+            }
+        }
+
+        return out;
     }
 
     /**
