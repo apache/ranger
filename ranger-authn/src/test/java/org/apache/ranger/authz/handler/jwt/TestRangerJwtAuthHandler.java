@@ -56,14 +56,6 @@ public class TestRangerJwtAuthHandler {
         String callSafeJwtLogContext(SignedJWT jwt) {
             return safeJwtLogContext(jwt);
         }
-
-        boolean callValidateAudiences(SignedJWT jwt) {
-            return validateAudiences(jwt);
-        }
-
-        String callSafeJwtLogContext(SignedJWT jwt) {
-            return safeJwtLogContext(jwt);
-        }
     }
 
     private static SignedJWT jwtWithIssuer(String issuer) {
@@ -74,38 +66,6 @@ public class TestRangerJwtAuthHandler {
                 .build();
 
         return new SignedJWT(new JWSHeader(JWSAlgorithm.RS256), claims);
-    }
-
-    @Test
-    void validateAudiencesFalse_whenTokenAudienceMissingAndAudiencesConfigured() {
-        TestHandler handler = new TestHandler();
-        handler.audiences = Arrays.asList("service-a");
-
-        SignedJWT jwt = jwtWithIssuer("test-issuer");
-
-        assertFalse(handler.callValidateAudiences(jwt));
-    }
-
-    @Test
-    void safeJwtLogContext_includesMetadataWithoutRawToken() throws Exception {
-        TestHandler handler = new TestHandler();
-        String header = "eyJhbGciOiJSUzI1NiIsImtpZCI6ImtpZC1hYmMifQ";
-        String payload = "eyJzdWIiOiJmMDE1X3JlcGxheV91c2VyIiwiYXVkIjoic2VydmljZS1hIiwiaXNzIjoidGVzdC1pc3N1ZXIiLCJqdGkiOiJqdGktMTIzIiwiZXhwIjoxOTk5OTk5OTk5fQ";
-        String signature = "abcd";
-        String serialized = header + "." + payload + "." + signature;
-
-        String context = handler.callSafeJwtLogContext(SignedJWT.parse(serialized));
-
-        assertNotNull(context);
-        assertTrue(context.contains("subject=f015_replay_user"));
-        assertTrue(context.contains("audience=service-a"));
-        assertTrue(context.contains("issuer=test-issuer"));
-        assertTrue(context.contains("keyId=kid-abc"));
-        assertTrue(context.contains("jwtId=jti-123"));
-        assertFalse(context.contains(serialized));
-        assertFalse(context.contains(header));
-        assertFalse(context.contains(payload));
-        assertFalse(context.contains(signature));
     }
 
     @Test

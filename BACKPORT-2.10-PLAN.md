@@ -85,19 +85,19 @@ mvn clean install -pl audit-server,agents-audit/dest-auditserver -am -DskipTests
 
 | # | Status | SHA | Jira | Summary |
 |---|--------|-----|------|---------|
-| 2.1 | ⬜ | `d2cd9ea7` | RANGER-5483 | Audit-server as plugin destination |
-| 2.2 | ⬜ | `e3babee0` | RANGER-5632 | Packaging: audit-server only destination |
-| 2.3 | ⬜ | `4a061759` | RANGER-5633 | Kafka producer/consumer tuning |
-| 2.4 | ⬜ | `10bda4d1` | RANGER-5642/5644 | Jersey client JARs in Kafka/HBase |
-| 2.5 | ⬜ | `33e7b3a3` | RANGER-5650 | KMS audit client JARs |
-| 2.6 | ⬜ | `6bf19137` | RANGER-5642 | Kafka duplicate Jersey exclude |
-| 2.7 | ⬜ | `9272baf0` | RANGER-5646 | Hive duplicate JAR exclude |
-| 2.8 | ⬜ | `6d9b1b2c` | RANGER-5661 | Kafka 3.9 classloading |
-| 2.9 | ⬜ | `abe67188` | RANGER-5660 | YARN packaging |
-| 2.10 | ⬜ | `09b53156` | RANGER-5640 | Ozone audit-server JARs |
-| 2.11 | ⬜ | `137a5dd4` | RANGER-5637 | Knox/Ozone docker CI |
-| 2.12 | ⬜ | `9ab006932` | RANGER-5645 | Ingestor service-user allowlist |
-| 2.13 | ⬜ | `ce93068d` | RANGER-5643 | Solr Kerberos docker |
+| 2.1 | ✅ | `d2cd9ea7` | RANGER-5483 | Audit-server as plugin destination |
+| 2.2 | ✅ | `e3babee0` | RANGER-5632 | Packaging: audit-server only destination |
+| 2.3 | ✅ | `4a061759` | RANGER-5633 | Kafka producer/consumer tuning |
+| 2.4 | ✅ | `10bda4d1` | RANGER-5642/5644 | Jersey client JARs in Kafka/HBase |
+| 2.5 | ✅ | `33e7b3a3` | RANGER-5650 | KMS audit client JARs |
+| 2.6 | ✅ | `6bf19137` | RANGER-5642 | Kafka duplicate Jersey exclude |
+| 2.7 | ✅ | `9272baf0` | RANGER-5646 | Hive duplicate JAR exclude |
+| 2.8 | ✅ | `6d9b1b2c` | RANGER-5661 | Kafka 3.9 classloading |
+| 2.9 | ✅ | `abe67188` | RANGER-5660 | YARN packaging |
+| 2.10 | ✅ | `09b53156` | RANGER-5640 | Ozone audit-server JARs |
+| 2.11 | ✅ | `137a5dd4` | RANGER-5637 | Knox/Ozone docker CI |
+| 2.12 | ✅ | `9ab006932` | RANGER-5645 | Ingestor service-user allowlist |
+| 2.13 | ✅ | `ce93068d` | RANGER-5643 | Solr Kerberos docker |
 
 **Gate:** Docker plugin smoke — audits reach audit-ingestor.
 
@@ -107,8 +107,8 @@ mvn clean install -pl audit-server,agents-audit/dest-auditserver -am -DskipTests
 
 | # | Status | SHA | Jira | Summary |
 |---|--------|-----|------|---------|
-| 3.1 | ⬜ | `d4a0759a4` | RANGER-5680 | Compose restructure + OpenSearch default |
-| 3.2 | ⬜ | `0249cc1d` | RANGER-5679 | OpenSearch docs, decouple Solr |
+| 3.1 | ✅ | `d4a0759a4` | RANGER-5680 | Compose restructure + OpenSearch default |
+| 3.2 | ✅ | `0249cc1d` | RANGER-5679 | OpenSearch docs, decouple Solr |
 
 **Skip:** `7685006a`, `96282864` (JDK17 Ozone runner).
 
@@ -122,10 +122,10 @@ Depends on RANGER-5499 (already on 2.10).
 
 | # | Status | SHA | Jira | Summary |
 |---|--------|-----|------|---------|
-| 4.1 | ⬜ | `22fbc813` | RANGER-5700 | SPIFFE authn via HTTP headers |
-| 4.2 | ⬜ | `b222989f` | RANGER-5766 | SPIFFE IDs as usernames |
-| 4.3 | ⬜ | `d9d2c44d` | RANGER-5767 | ROLEs in header authn |
-| 4.4 | ⬜ | `8e7716cd3` | RANGER-5723 | SPIFFE outbound to audit-server |
+| 4.1 | ✅ | `22fbc813` | RANGER-5700 | SPIFFE authn via HTTP headers |
+| 4.2 | ✅ | `b222989f` | RANGER-5766 | SPIFFE IDs as usernames |
+| 4.3 | ✅ | `d9d2c44d` | RANGER-5767 | ROLEs in header authn |
+| 4.4 | ✅ | `8e7716cd3` | RANGER-5723 | SPIFFE outbound to audit-server |
 
 **Gate:** Header auth in K8s-style setup; plugin → audit-server with SPIFFE headers.
 
@@ -137,9 +137,9 @@ Depends on RANGER-5499 (already on 2.10).
 
 | # | Status | SHA | Jira | Summary |
 |---|--------|-----|------|---------|
-| 5.1 | ⬜ | `06c44cbe` | RANGER-5736 | MariaDB grant fix |
-| 5.2 | ⬜ | `67233292` | RANGER-5693 | Stop logging full JWT |
-| 5.3 | ⬜ | `b4fd13c20` | RANGER-5716 | KMS audit IP/resource fix |
+| 5.1 | ✅ | `06c44cbe` | RANGER-5736 | MariaDB grant fix |
+| 5.2 | ✅ | `67233292` | RANGER-5693 | Stop logging full JWT (already on 2.10 via #1089) |
+| 5.3 | ✅ | `b4fd13c20` | RANGER-5716 | KMS audit IP/resource fix |
 
 **Gate:** MariaDB docker admin install; no JWT in logs on auth failure.
 
@@ -164,10 +164,8 @@ Depends on RANGER-5499 (already on 2.10).
 | 2026-09-11 | 1.2 | Cherry-pick `3fd46dbe` RANGER-5520 | OK — 3 docker conflicts, manual merge |
 | 2026-09-11 | 1.3–1.7 | 5613, 4676/5615, 5654, 5720 | OK — 5611 skipped |
 | 2026-09-11 | GDS cleanup | Restore 2.10 `AssetMgr`, `RangerBizUtil`, `agents-common` from GDS pollution | OK — kept OpenSearch-only additions |
-| | 2 | | |
-| | 3 | | |
-| | 4 | | |
-| | 5 | | |
+| 2026-09-11 | 2–5 | All cherry-picks applied on `backport-audit-spiffe-2.10` | OK |
+| 2026-09-11 | Fix | Jersey 1 SPIFFE port, build fixes | OK — audit-server + dest modules build |
 
 ---
 

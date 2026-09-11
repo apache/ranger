@@ -39,6 +39,16 @@ import java.util.Map;
 import java.util.Set;
 
 public class NullServletContext implements ServletContext {
+    public String getRequestCharacterEncoding() {
+        return null;
+    }
+
+    public void setRequestCharacterEncoding(String encoding) {
+    }
+
+    public void setResponseCharacterEncoding(String encoding) {
+    }
+
     public void setSessionTrackingModes(Set<SessionTrackingMode> sessionTrackingModes) {
     }
 
@@ -67,6 +77,13 @@ public class NullServletContext implements ServletContext {
 
     public SessionCookieConfig getSessionCookieConfig() {
         return null;
+    }
+
+    public int getSessionTimeout() {
+        return 0;
+    }
+
+    public void setSessionTimeout(int sessionTimeout) {
     }
 
     public Enumeration<Servlet> getServlets() {
@@ -110,6 +127,10 @@ public class NullServletContext implements ServletContext {
     }
 
     public RequestDispatcher getRequestDispatcher(String path) {
+        return null;
+    }
+
+    public String getResponseCharacterEncoding() {
         return null;
     }
 
@@ -214,6 +235,10 @@ public class NullServletContext implements ServletContext {
     }
 
     public javax.servlet.ServletRegistration.Dynamic addServlet(String servletName, String className) {
+        return null;
+    }
+
+    public javax.servlet.ServletRegistration.Dynamic addJspFile(String servletName, String jspFile) {
         return null;
     }
 

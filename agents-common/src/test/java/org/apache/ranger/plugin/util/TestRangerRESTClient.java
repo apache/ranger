@@ -26,7 +26,7 @@ import org.apache.ranger.plugin.policyengine.RangerPolicyEngineOptions;
 import org.apache.ranger.plugin.service.RangerBasePlugin;
 import org.junit.jupiter.api.Test;
 
-import javax.ws.rs.core.Response;
+import com.sun.jersey.api.client.ClientResponse;
 
 import java.net.InetSocketAddress;
 import java.util.Collections;
@@ -92,8 +92,11 @@ public class TestRangerRESTClient {
             headers.put("X-Spiffe-Id", VALID_SPIFFE);
             client.setTrustedAuthHeaders(headers);
 
-            try (Response response = client.get("/test", Collections.emptyMap())) {
+            ClientResponse response = client.get("/test", Collections.emptyMap());
+            try {
                 assertEquals(200, response.getStatus());
+            } finally {
+                response.close();
             }
 
             assertEquals(VALID_SPIFFE, capturedSpiffeHeader.get());
