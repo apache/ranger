@@ -22,7 +22,7 @@ fi
 
 if [ ! -e ${HIVE_HOME}/.setupDone ]
 then
-  su -c "ssh-keygen -t rsa -P '' -f ~/.ssh/id_rsa" hdfs
+  su -c "[ ! -f ~/.ssh/id_rsa ] && ssh-keygen -t rsa -P '' -f ~/.ssh/id_rsa" hdfs
   su -c "cat ~/.ssh/id_rsa.pub >> ~/.ssh/authorized_keys" hdfs
   su -c "chmod 0600 ~/.ssh/authorized_keys" hdfs
 
@@ -31,7 +31,7 @@ then
     /usr/sbin/sshd
   fi
 
-  su -c "ssh-keygen -t rsa -P '' -f ~/.ssh/id_rsa" yarn
+  su -c "[ ! -f ~/.ssh/id_rsa ] && ssh-keygen -t rsa -P '' -f ~/.ssh/id_rsa" yarn
   su -c "cat ~/.ssh/id_rsa.pub >> ~/.ssh/authorized_keys" yarn
   su -c "chmod 0600 ~/.ssh/authorized_keys" yarn
 

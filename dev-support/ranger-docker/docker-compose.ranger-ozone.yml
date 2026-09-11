@@ -8,6 +8,7 @@ services:
       - ./dist/keytabs/datanode:/etc/keytabs
       - ./scripts/kdc/krb5.conf:/etc/krb5.conf:ro
       - ./scripts/ozone/ozone-service-start.sh:/opt/ozone-service-start.sh:ro
+      - ./scripts/wait_for_keytab.sh:/opt/wait_for_keytab.sh:ro
     networks:
       - ranger
     ports:
@@ -39,6 +40,7 @@ services:
       - ./dist/keytabs/om:/etc/keytabs
       - ./scripts/kdc/krb5.conf:/etc/krb5.conf:ro
       - ./scripts/ozone/ozone-service-start.sh:/opt/ozone-service-start.sh:ro
+      - ./scripts/wait_for_keytab.sh:/opt/wait_for_keytab.sh:ro
     networks:
       - ranger
     ports:
@@ -73,6 +75,7 @@ services:
       - ./dist/keytabs/scm:/etc/keytabs
       - ./scripts/kdc/krb5.conf:/etc/krb5.conf:ro
       - ./scripts/ozone/ozone-service-start.sh:/opt/ozone-service-start.sh:ro
+      - ./scripts/wait_for_keytab.sh:/opt/wait_for_keytab.sh:ro
     networks:
       - ranger
     ports:
