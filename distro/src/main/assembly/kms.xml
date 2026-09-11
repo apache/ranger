@@ -130,7 +130,7 @@
                             <include>com.microsoft.azure:azure-mgmt-eventhub</include>
                             <include>com.microsoft.azure:azure-keyvault-cryptography</include>
                             <!-- GCP -->
-                            <include>com.google.cloud:google-cloud-kms</include>
+                            <include>com.google.cloud:google-cloud-kms:jar:${google.cloud.kms}</include>
                             <include>io.grpc:grpc-api</include>
                             <include>io.grpc:grpc-context</include>
                             <include>io.grpc:grpc-stub</include>
@@ -141,9 +141,10 @@
                             <include>com.google.auto.value:auto-value-annotations</include>
                             <include>com.google.api.grpc:proto-google-common-protos</include>
                             <include>com.google.api.grpc:proto-google-cloud-kms-v1</include>
-                            <include>com.google.api:gax</include>
+                            <include>com.google.api:gax:jar:${google.gax.version}</include>
                             <include>io.opencensus:opencensus-api</include>
-                            <include>com.google.api:gax-grpc</include>
+                            <include>com.google.api:gax-grpc:jar:${google.gax.version}</include>
+                            <include>com.google.api:gax-httpjson:jar:${google.gax.version}</include>
                             <include>com.google.auth:google-auth-library-credentials</include>
                             <include>io.grpc:grpc-netty-shaded</include>
                             <include>io.perfmark:perfmark-api</include>
@@ -224,6 +225,8 @@
                     <include>org.apache.tomcat:tomcat-annotations-api*</include>
                     <include>org.eclipse.jdt.core.compiler:ecj:jar:P20140317-1600</include>
                     <include>org.eclipse.jetty:jetty-client:jar:${jetty-client.version}</include>
+                    <include>com.google.protobuf:protobuf-java:jar:${gcp.protobuf-java.version}</include>
+                    <include>com.google.protobuf:protobuf-java-util:jar:${gcp.protobuf-java.version}</include>
                     <include>org.apache.hadoop:hadoop-auth:jar:${hadoop.version}</include>
                     <include>org.apache.hadoop:hadoop-client-api:jar:${hadoop.version}</include>
                     <include>org.apache.hadoop:hadoop-client-runtime:jar:${hadoop.version}</include>
