@@ -1,3 +1,5 @@
+#!/bin/bash
+
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
 # distributed with this work for additional information
@@ -14,7 +16,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-<<<<<<<< HEAD:dev-support/ranger-docker/scripts/wait_for_keytab.sh
 RETRY_COUNT="${KEYTAB_RETRY_COUNT:-5}"
 KEYTABS_DIR=/etc/keytabs
 
@@ -38,11 +39,3 @@ else
   echo "[ERROR] Keytab not found: ${KEYTAB}"
   exit 1
 fi
-========
-services:
-  ranger-hadoop:
-    profiles: ["audit-store-hdfs"]
-    extends:
-      file: docker-compose.ranger-hadoop.yml
-      service: ranger-hadoop
->>>>>>>> d4a0759a4 (RANGER-5680: Restructure audit services in docker compose and use OpenSearch as the default Index Store (#1167)):dev-support/ranger-docker/docker-compose.ranger-audit-destination-hdfs.yml
