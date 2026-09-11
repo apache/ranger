@@ -249,6 +249,11 @@
                RULE:[2:$1/$2@$0]([ndj]n/.*@.*|hdfs/.*@.*)s/.*/hdfs/
                RULE:[2:$1/$2@$0]([rn]m/.*@.*|yarn/.*@.*)s/.*/yarn/
                RULE:[2:$1/$2@$0](jhs/.*@.*)s/.*/mapred/
+               RULE:[2:$1/$2@$0](hive/.*@.*)s/.*/hive/
+               RULE:[2:$1/$2@$0](hbase/.*@.*)s/.*/hbase/
+               RULE:[2:$1/$2@$0](kafka/.*@.*)s/.*/kafka/
+               RULE:[2:$1/$2@$0](om/.*@.*)s/.*/om/
+               RULE:[2:$1/$2@$0](rangerkms/.*@.*)s/.*/rangerkms/
                RULE:[1:$1@$0](.*@.*)s/@.*//
                DEFAULT
         </value>
