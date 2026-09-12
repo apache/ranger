@@ -91,7 +91,7 @@ public class RangerAuditServerDestination extends AuditDestination {
         this.restClient = new RangerRESTClient(url, sslConfigFileName, config);
 
         if (AUTH_TYPE_JWT.equalsIgnoreCase(authType)) {
-            this.restClient.setJwtProvider(new DefaultJwtProvider("ranger.plugin.policy.rest.client", config));
+            this.restClient.setTokenSupplier(new DefaultJwtProvider("ranger.plugin.policy.rest.client", config));
         }
 
         this.restClient.setRestClientConnTimeOutMs(connTimeoutMs);
