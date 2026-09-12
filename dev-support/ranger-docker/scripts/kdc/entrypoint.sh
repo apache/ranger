@@ -94,6 +94,9 @@ function create_keytabs() {
   create_principal_and_keytab rangerkms ranger-kms
   create_principal_and_keytab HTTP        ranger-kms
 
+  create_principal_and_keytab HTTP      ranger-pdp
+  create_principal_and_keytab rangerpdp ranger-pdp
+
   create_principal_and_keytab dn          ranger-hadoop
   create_principal_and_keytab hdfs        ranger-hadoop
   create_principal_and_keytab healthcheck ranger-hadoop

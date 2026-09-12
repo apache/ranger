@@ -18,6 +18,8 @@
 
 echo "export JAVA_HOME=${JAVA_HOME}" >> ${HADOOP_HOME}/etc/hadoop/hadoop-env.sh
 
+echo "export HADOOP_OPTS=\"${HADOOP_OPTS} --add-opens=java.base/java.nio=ALL-UNNAMED \"" >> ${HADOOP_HOME}/etc/hadoop/hadoop-env.sh
+
 cat <<EOF > /etc/ssh/ssh_config
 Host *
    StrictHostKeyChecking no
@@ -34,9 +36,6 @@ fi
 
 cp ${RANGER_SCRIPTS}/hive-site.xml ${HIVE_HOME}/conf/hive-site.xml
 cp ${RANGER_SCRIPTS}/hive-site.xml ${HIVE_HOME}/conf/hiveserver2-site.xml
-
-# fix to address error during HiveServer2 startup due to java.lang.NoClassDefFoundError: org/apache/commons/collections/CollectionUtils
-cp ${RANGER_HOME}/ranger-hive-plugin/lib/ranger-hive-plugin-impl/commons-collections-3.2.2.jar ${HIVE_HOME}/lib/
 
 mkdir -p ${HADOOP_HOME}/etc/hadoop
 
@@ -79,32 +78,52 @@ cat <<EOF > ${HADOOP_HOME}/etc/hadoop/yarn-site.xml
     <name>yarn.resourcemanager.address</name>
     <value>ranger-hadoop:8032</value>
   </property>
+  <property>
+    <name>yarn.resourcemanager.principal</name>
+    <value>rm/ranger-hadoop.rangernw@EXAMPLE.COM</value>
+  </property>
 </configuration>
 EOF
-
 
 # Copy all Hadoop configurations to Hive conf directory so Hive can find them
 cp ${HADOOP_HOME}/etc/hadoop/core-site.xml ${HIVE_HOME}/conf/
 cp ${HADOOP_HOME}/etc/hadoop/mapred-site.xml ${HIVE_HOME}/conf/
 cp ${HADOOP_HOME}/etc/hadoop/yarn-site.xml ${HIVE_HOME}/conf/
 
-# Create HDFS user directory for hive
-su -c "${HADOOP_HOME}/bin/hdfs dfs -mkdir -p /user/hive" hdfs
-su -c "${HADOOP_HOME}/bin/hdfs dfs -chmod -R 777 /user/hive" hdfs
+create_hdfs_directories() {
+  exec_user=$1
 
-# Fix /tmp directory permissions for Ranger (critical for INSERT operations)
-su -c "${HADOOP_HOME}/bin/hdfs dfs -chmod 777 /tmp" hdfs
+  su -c "${HADOOP_HOME}/bin/hdfs dfs -mkdir -p /user/hive" "$exec_user"
+  su -c "${HADOOP_HOME}/bin/hdfs dfs -chmod -R 770 /user/hive" "$exec_user"
 
-# Create /user/root directory for YARN job execution
-su -c "${HADOOP_HOME}/bin/hdfs dfs -mkdir -p /user/root" hdfs
-su -c "${HADOOP_HOME}/bin/hdfs dfs -chmod 777 /user/root" hdfs
+  su -c "${HADOOP_HOME}/bin/hdfs dfs -chmod 777 /tmp" "$exec_user"
 
-# Initialize Hive schema (postgres driver must be in HIVE_HOME/lib)
-su -c "${HIVE_HOME}/bin/schematool -dbType ${RANGER_DB_TYPE} -initSchema -ifNotExists" hive
+  su -c "${HADOOP_HOME}/bin/hdfs dfs -mkdir -p /user/root" "$exec_user"
+  su -c "${HADOOP_HOME}/bin/hdfs dfs -chmod 770 /user/root" "$exec_user"
+}
+
+if [ "${KERBEROS_ENABLED}" == "true" ]; then
+  echo "Kerberos enabled - authenticating as hdfs user..."
+  su -c "kinit -kt /etc/keytabs/hdfs.keytab hdfs/\`hostname -f\`@EXAMPLE.COM" hdfs
+  rc=$?
+  if [ $rc -ne 0 ]; then
+    echo "ERROR: kinit failed for hdfs principal (exit code=$rc)" >&2
+    exit $rc
+  fi
+
+  create_hdfs_directories 'hdfs'
+
+  su -c "kdestroy" hdfs
+else
+  create_hdfs_directories 'hdfs'
+fi
 
 mkdir -p /opt/hive/logs
 chown -R hive:hadoop /opt/hive/
 chmod g+w /opt/hive/logs
+
+# Initialize Hive schema (postgres driver must be in HIVE_HOME/lib)
+su -c "${HIVE_HOME}/bin/schematool -dbType ${RANGER_DB_TYPE} -initSchema" hive
 
 cd ${RANGER_HOME}/ranger-hive-plugin
 ./enable-hive-plugin.sh
