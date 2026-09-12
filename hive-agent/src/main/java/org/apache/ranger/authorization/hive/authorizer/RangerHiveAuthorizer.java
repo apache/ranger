@@ -532,10 +532,8 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
     public void grantRole(List<HivePrincipal> hivePrincipals, List<String> roles, boolean grantOption, HivePrincipal grantorPrinc) throws HiveAccessControlException {
         LOG.debug("RangerHiveAuthorizerBase.grantRole()");
 
-        boolean                result       = false;
         RangerHiveAuditHandler auditHandler = new RangerHiveAuditHandler(hivePlugin.getConfig());
         String                 username     = getGrantorUsername(grantorPrinc);
-        List<String>           principals   = new ArrayList<>();
 
         try {
             GrantRevokeRoleRequest request   = new GrantRevokeRoleRequest();
@@ -554,21 +552,18 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
                         name = principal.getName();
 
                         userList.add(name);
-                        principals.add("USER " + name);
                         break;
 
                     case GROUP:
                         name = principal.getName();
 
                         groupList.add(name);
-                        principals.add("GROUP " + name);
                         break;
 
                     case ROLE:
                         name = principal.getName();
 
                         roleList.add(name);
-                        principals.add("ROLE " + name);
                         break;
 
                     case UNKNOWN:
@@ -603,13 +598,9 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 
             hivePlugin.grantRole(request, auditHandler);
 
-            result = true;
         } catch (Exception excp) {
             throw new HiveAccessControlException(excp);
         } finally {
-            RangerAccessResult accessResult = createAuditEvent(hivePlugin, username, principals, HiveOperationType.GRANT_ROLE, HiveAccessType.ALTER, roles, result);
-
-            auditHandler.processResult(accessResult);
             auditHandler.flushAudit();
         }
     }
@@ -618,10 +609,8 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
     public void revokeRole(List<HivePrincipal> hivePrincipals, List<String> roles, boolean grantOption, HivePrincipal grantorPrinc) throws HiveAccessControlException {
         LOG.debug("RangerHiveAuthorizerBase.revokeRole()");
 
-        boolean                result          = false;
         RangerHiveAuditHandler auditHandler    = new RangerHiveAuditHandler(hivePlugin.getConfig());
         String                 grantorUserName = getGrantorUsername(grantorPrinc);
-        List<String>           principals      = new ArrayList<>();
 
         try {
             GrantRevokeRoleRequest request   = new GrantRevokeRoleRequest();
@@ -640,20 +629,17 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
                         principalName = principal.getName();
 
                         userList.add(principalName);
-                        principals.add("USER " + principalName);
                         break;
 
                     case GROUP:
                         principalName = principal.getName();
 
                         groupList.add(principalName);
-                        principals.add("GROUP " + principalName);
                         break;
                     case ROLE:
                         principalName = principal.getName();
 
                         roleList.add(principalName);
-                        principals.add("ROLE " + principalName);
                         break;
 
                     case UNKNOWN:
@@ -690,13 +676,9 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 
             hivePlugin.revokeRole(request, auditHandler);
 
-            result = true;
         } catch (Exception excp) {
             throw new HiveAccessControlException(excp);
         } finally {
-            RangerAccessResult accessResult = createAuditEvent(hivePlugin, grantorUserName, principals, HiveOperationType.REVOKE_ROLE, HiveAccessType.ALTER, roles, result);
-
-            auditHandler.processResult(accessResult);
             auditHandler.flushAudit();
         }
     }
