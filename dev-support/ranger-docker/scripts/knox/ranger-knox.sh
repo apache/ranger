@@ -42,9 +42,9 @@ then
   fi
 fi
 
-su -c "${KNOX_HOME}/bin/ldap.sh start" knox
+su -p -c "${KNOX_HOME}/bin/ldap.sh start" knox
 
-su -c "${KNOX_HOME}/bin/gateway.sh start" knox
+su -p -c "${KNOX_HOME}/bin/gateway.sh start" knox
 
 KNOX_GATEWAY_PID=`ps -ef  | grep -v grep | grep -i "gateway.jar" | awk '{print $2}'`
 
