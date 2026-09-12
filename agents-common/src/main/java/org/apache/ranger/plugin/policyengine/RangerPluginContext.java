@@ -58,48 +58,6 @@ public class RangerPluginContext {
         return config;
     }
 
-    private static Supplier<String> getTokenSupplier(String propertyPrefix, RangerPluginConfig config) {
-        String           clzName = config.get(propertyPrefix + DefaultJwtProvider.JWT_PROVIDER);
-        Supplier<String> ret;
-
-        if (StringUtils.isBlank(clzName) || DefaultJwtProvider.class.getName().equals(clzName)) {
-            ret = new DefaultJwtProvider(propertyPrefix, config);
-        } else {
-            ret = getCustomTokenSupplier(clzName, config);
-        }
-
-        LOG.info("Using Token supplier [{}], config: [{}]", ret.getClass().getName(), propertyPrefix + DefaultJwtProvider.JWT_PROVIDER);
-
-        return ret;
-    }
-
-    @SuppressWarnings("unchecked")
-    private static Supplier<String> getCustomTokenSupplier(String clzName, RangerPluginConfig config) {
-        Supplier<String> ret;
-
-        try {
-            Class<?> clz = Class.forName(clzName);
-
-            if (!Supplier.class.isAssignableFrom(clz)) {
-                throw new IllegalArgumentException(clzName + " does not implement " + Supplier.class.getName());
-            }
-
-            try {
-                // prefer a constructor that accepts the Ranger Configuration
-                Constructor<?> ctor = clz.getDeclaredConstructor(Configuration.class);
-
-                ret = (Supplier<String>) ctor.newInstance(config);
-            } catch (NoSuchMethodException excp) {
-                // fall back to the no-argument constructor
-                ret = (Supplier<String>) clz.getDeclaredConstructor().newInstance();
-            }
-        } catch (ReflectiveOperationException excp) {
-            throw new IllegalArgumentException("Failed to instantiate custom token supplier: " + clzName, excp);
-        }
-
-        return ret;
-    }
-
     public String getClusterName() {
         return config.getClusterName();
     }
@@ -239,5 +197,62 @@ public class RangerPluginContext {
         }
 
         LOG.debug("<== cleanResourceMatchers()");
+    }
+
+    private static Supplier<String> getTokenSupplier(String propertyPrefix, RangerPluginConfig config) {
+        String           providerProp = propertyPrefix + DefaultJwtProvider.JWT_PROVIDER;
+        String           clzName      = config.get(providerProp);
+        Supplier<String> ret          = null;
+
+        if (StringUtils.isNotBlank(clzName) && !DefaultJwtProvider.class.getName().equals(clzName)) {
+            ret = getCustomTokenSupplier(clzName, config, providerProp);
+        }
+
+        /* DefaultJwtProvider is used only when configured explicitly or when a JWT source is set: otherwise no
+         * token supplier is created, so the plugin keeps the authentication it had before (basic-auth or none). */
+        if (ret == null && (DefaultJwtProvider.class.getName().equals(clzName) || isJwtSourceConfigured(propertyPrefix, config))) {
+            ret = new DefaultJwtProvider(propertyPrefix, config);
+        }
+
+        if (ret != null) {
+            LOG.info("Using Token supplier [{}], config: [{}]", ret.getClass().getName(), providerProp);
+        } else {
+            LOG.debug("No token supplier configured, config: [{}]", providerProp);
+        }
+
+        return ret;
+    }
+
+    private static boolean isJwtSourceConfigured(String propertyPrefix, RangerPluginConfig config) {
+        return StringUtils.isNotBlank(config.get(propertyPrefix + DefaultJwtProvider.JWT_SOURCE));
+    }
+
+    @SuppressWarnings("unchecked")
+    private static Supplier<String> getCustomTokenSupplier(String clzName, RangerPluginConfig config, String providerProp) {
+        Supplier<String> ret = null;
+
+        /* a misconfigured supplier must not prevent plugin initialization: this returns null and the caller decides
+         * the fallback. Throwable covers LinkageError/NoClassDefFoundError from a class on an incomplete classpath. */
+        try {
+            Class<?> clz = Class.forName(clzName);
+
+            if (Supplier.class.isAssignableFrom(clz)) {
+                try {
+                    /* prefer a constructor that accepts the Ranger Configuration */
+                    Constructor<?> ctor = clz.getDeclaredConstructor(Configuration.class);
+
+                    ret = (Supplier<String>) ctor.newInstance(config);
+                } catch (NoSuchMethodException excp) {
+                    /* fall back to the no-argument constructor */
+                    ret = (Supplier<String>) clz.getDeclaredConstructor().newInstance();
+                }
+            } else {
+                LOG.error("{}={}: class does not implement {}. Requests may be sent without a bearer token", providerProp, clzName, Supplier.class.getName());
+            }
+        } catch (Throwable excp) {
+            LOG.error("{}={}: failed to instantiate token supplier. Requests may be sent without a bearer token", providerProp, clzName, excp);
+        }
+
+        return ret;
     }
 }

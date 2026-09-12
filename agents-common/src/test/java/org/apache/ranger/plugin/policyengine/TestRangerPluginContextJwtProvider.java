@@ -27,13 +27,24 @@ import org.junit.jupiter.api.Test;
 import java.util.function.Supplier;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 public class TestRangerPluginContextJwtProvider {
     @Test
-    public void usesDefaultProviderWhenNotConfigured() {
+    public void noTokenSupplierWhenNotConfigured() {
         RangerPluginConfig  config = newConfig();
         RangerPluginContext ctx    = new RangerPluginContext(config);
+
+        assertNull(ctx.getTokenSupplier());
+    }
+
+    @Test
+    public void usesDefaultProviderWhenJwtSourceConfigured() {
+        RangerPluginConfig config = newConfig();
+
+        config.set(jwtSourceProperty(config), "env");
+
+        RangerPluginContext ctx = new RangerPluginContext(config);
 
         assertEquals(DefaultJwtProvider.class, ctx.getTokenSupplier().getClass());
     }
@@ -74,29 +85,50 @@ public class TestRangerPluginContextJwtProvider {
     }
 
     @Test
-    public void throwsForClassThatIsNotSupplier() {
+    public void fallsBackToDefaultForClassThatIsNotSupplier() {
         RangerPluginConfig config = newConfig();
 
         config.set(jwtProviderProperty(config), NotASupplier.class.getName());
+        config.set(jwtSourceProperty(config), "env");
 
-        assertThrows(IllegalArgumentException.class, () -> new RangerPluginContext(config));
+        RangerPluginContext ctx = new RangerPluginContext(config);
+
+        assertEquals(DefaultJwtProvider.class, ctx.getTokenSupplier().getClass());
     }
 
     @Test
-    public void throwsForUnknownClass() {
+    public void fallsBackToDefaultForUnknownClass() {
+        RangerPluginConfig config = newConfig();
+
+        config.set(jwtProviderProperty(config), "org.apache.ranger.NoSuchJwtProvider");
+        config.set(jwtSourceProperty(config), "env");
+
+        RangerPluginContext ctx = new RangerPluginContext(config);
+
+        assertEquals(DefaultJwtProvider.class, ctx.getTokenSupplier().getClass());
+    }
+
+    @Test
+    public void fallsBackToDefaultWhenProviderConstructorThrows() {
+        RangerPluginConfig config = newConfig();
+
+        config.set(jwtProviderProperty(config), FailingJwtProvider.class.getName());
+        config.set(jwtSourceProperty(config), "env");
+
+        RangerPluginContext ctx = new RangerPluginContext(config);
+
+        assertEquals(DefaultJwtProvider.class, ctx.getTokenSupplier().getClass());
+    }
+
+    @Test
+    public void noTokenSupplierWhenCustomProviderFailsAndNoJwtSource() {
         RangerPluginConfig config = newConfig();
 
         config.set(jwtProviderProperty(config), "org.apache.ranger.NoSuchJwtProvider");
 
-        assertThrows(IllegalArgumentException.class, () -> new RangerPluginContext(config));
-    }
+        RangerPluginContext ctx = new RangerPluginContext(config);
 
-    private RangerPluginConfig newConfig() {
-        return new RangerPluginConfig("hive", "test-service", "test-app", "cl1", "on-perm", new RangerPolicyEngineOptions());
-    }
-
-    private String jwtProviderProperty(RangerPluginConfig config) {
-        return config.getPropertyPrefix() + ".policy.rest.client" + DefaultJwtProvider.JWT_PROVIDER;
+        assertNull(ctx.getTokenSupplier());
     }
 
     public static class NoArgJwtProvider implements Supplier<String> {
@@ -108,7 +140,7 @@ public class TestRangerPluginContextJwtProvider {
 
     public static class ConfigJwtProvider implements Supplier<String> {
         public ConfigJwtProvider(Configuration config) {
-            // custom providers may accept the Ranger Configuration
+            /* custom providers may accept the Ranger Configuration */
         }
 
         @Override
@@ -121,5 +153,28 @@ public class TestRangerPluginContextJwtProvider {
         public String get() {
             return "not-a-supplier";
         }
+    }
+
+    public static class FailingJwtProvider implements Supplier<String> {
+        public FailingJwtProvider() {
+            throw new IllegalStateException("token source unavailable");
+        }
+
+        @Override
+        public String get() {
+            return "never-returned";
+        }
+    }
+
+    private RangerPluginConfig newConfig() {
+        return new RangerPluginConfig("hive", "test-service", "test-app", "cl1", "on-perm", new RangerPolicyEngineOptions());
+    }
+
+    private String jwtProviderProperty(RangerPluginConfig config) {
+        return config.getPropertyPrefix() + ".policy.rest.client" + DefaultJwtProvider.JWT_PROVIDER;
+    }
+
+    private String jwtSourceProperty(RangerPluginConfig config) {
+        return config.getPropertyPrefix() + ".policy.rest.client" + DefaultJwtProvider.JWT_SOURCE;
     }
 }
