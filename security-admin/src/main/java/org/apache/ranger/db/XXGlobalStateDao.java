@@ -38,7 +38,9 @@ import java.util.Map;
 public class XXGlobalStateDao extends BaseDao<XXGlobalState> {
     private static final Logger logger = LoggerFactory.getLogger(XXGlobalStateDao.class);
 
-    final static String APP_DATA_ENTRY_VERSION = "Version";
+    public static final String RANGER_GLOBAL_STATE_NAME_ROLE       = "RangerRole";
+    public static final String RANGER_GLOBAL_STATE_NAME_USER_GROUP = "RangerUserStore";
+    public static final String APP_DATA_ENTRY_VERSION              = "Version";
 
     public void onGlobalStateChange(String stateName) throws Exception {
 
@@ -68,26 +70,26 @@ public class XXGlobalStateDao extends BaseDao<XXGlobalState> {
         }
     }
 
-	public void onGlobalAppDataChange(String stateName) throws Exception {
+    public void onGlobalAppDataChange(String stateName) throws Exception {
 
-		if (StringUtils.isBlank(stateName)) {
-			logger.error("Invalid name for state:[" + stateName + "]");
-			throw new Exception("Invalid name for state:[" + stateName + "]");
-		} else {
-			try {
-				XXGlobalState globalState = findByStateName(stateName);
-				if (globalState == null) {
-					createGlobalStateForAppDataVersion(stateName);
-				} else {
-					updateGlobalStateForAppDataVersion(globalState, stateName);
-				}
-			} catch (OptimisticLockException | org.eclipse.persistence.exceptions.OptimisticLockException ole) {
-				logger.warn("One or more objects cannot be updated because it has changed or been deleted since it was last read. Unable to update GlobalState for state:[" + stateName + "] continuing...");
-			} catch (Exception exception) {
-				logger.warn("Cannot create/update GlobalState for state:[" + stateName + "] continuing...");
-			}
-		}
-	}
+        if (StringUtils.isBlank(stateName)) {
+            logger.error("Invalid name for state:[" + stateName + "]");
+            throw new Exception("Invalid name for state:[" + stateName + "]");
+        } else {
+            try {
+                XXGlobalState globalState = findByStateName(stateName);
+                if (globalState == null) {
+                    createGlobalStateForAppDataVersion(stateName);
+                } else {
+                    updateGlobalStateForAppDataVersion(globalState, stateName);
+                }
+            } catch (OptimisticLockException | org.eclipse.persistence.exceptions.OptimisticLockException ole) {
+                logger.warn("One or more objects cannot be updated because it has changed or been deleted since it was last read. Unable to update GlobalState for state:[" + stateName + "] continuing...");
+            } catch (Exception exception) {
+                logger.warn("Cannot create/update GlobalState for state:[" + stateName + "] continuing...");
+            }
+        }
+    }
 
     public Long getAppDataVersion(String stateName) {
         Long ret = null;
@@ -167,4 +169,3 @@ public class XXGlobalStateDao extends BaseDao<XXGlobalState> {
         }
     }
 }
-

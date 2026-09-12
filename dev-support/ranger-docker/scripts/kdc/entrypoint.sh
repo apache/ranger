@@ -74,12 +74,25 @@ function create_keytabs() {
   create_principal_and_keytab rangeradmin  ranger
   create_principal_and_keytab rangerlookup ranger
 
+  # Ranger Audit Server Microservices
+  create_principal_and_keytab HTTP              ranger-audit-ingestor
+  create_principal_and_keytab rangerauditserver ranger-audit-ingestor
+
+  create_principal_and_keytab HTTP              ranger-audit-dispatcher-solr
+  create_principal_and_keytab rangerauditserver ranger-audit-dispatcher-solr
+
+  create_principal_and_keytab HTTP              ranger-audit-dispatcher-hdfs
+  create_principal_and_keytab rangerauditserver ranger-audit-dispatcher-hdfs
+
+  create_principal_and_keytab HTTP              ranger-audit-dispatcher-opensearch
+  create_principal_and_keytab rangerauditserver ranger-audit-dispatcher-opensearch
+
   create_principal_and_keytab rangertagsync ranger-tagsync
 
   create_principal_and_keytab rangerusersync ranger-usersync
 
   create_principal_and_keytab rangerkms ranger-kms
-  create_principal_and_keytab HTTP      ranger-kms
+  create_principal_and_keytab HTTP        ranger-kms
 
   create_principal_and_keytab HTTP      ranger-pdp
   create_principal_and_keytab rangerpdp ranger-pdp
@@ -94,8 +107,11 @@ function create_keytabs() {
   create_principal_and_keytab yarn        ranger-hadoop
 
   create_principal_and_keytab hbase ranger-hbase
+  create_principal_and_keytab HTTP  ranger-hbase
 
   create_principal_and_keytab hive ranger-hive
+  create_principal_and_keytab hdfs ranger-hive
+  create_principal_and_keytab HTTP ranger-hive
 
   create_principal_and_keytab kafka ranger-kafka
 
@@ -104,10 +120,13 @@ function create_keytabs() {
   create_principal_and_keytab solr ranger-solr
   create_principal_and_keytab HTTP ranger-solr
 
+  create_principal_and_keytab opensearch ranger-opensearch
+  create_principal_and_keytab HTTP       ranger-opensearch
+
   create_principal_and_keytab om  om
   create_principal_and_keytab scm scm
   create_principal_and_keytab dn  datanode
-
+  
   create_principal_and_keytab zookeeper ranger-zk
 }
 
@@ -135,7 +154,10 @@ if [ ! -f $DB_DIR/principal ]; then
   echo "Database initialized"
 
   create_keytabs
-  create_testusers ranger ranger-usersync ranger-tagsync ranger-pdp ranger-audit ranger-hadoop ranger-hive ranger-hbase ranger-kafka ranger-solr ranger-knox ranger-kms ranger-ozone ranger-trino om scm datanode
+  create_testusers ranger ranger-usersync ranger-tagsync ranger-pdp ranger-audit-ingestor ranger-audit-dispatcher-solr ranger-audit-dispatcher-hdfs ranger-audit-dispatcher-opensearch ranger-hadoop ranger-hive ranger-hbase ranger-kafka ranger-solr ranger-knox ranger-kms ranger-ozone ranger-trino ranger-opensearch om scm datanode
+
+  touch /etc/keytabs/.provisioned
+  echo "All keytabs provisioned"
 else
   echo "KDC DB already exists; skipping create"
 fi

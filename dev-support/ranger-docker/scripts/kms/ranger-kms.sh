@@ -49,9 +49,20 @@ fi
 # delete PID file if exists
 rm -f /var/run/ranger_kms/rangerkms.pid
 
-cd ${RANGER_HOME}/kms && ./ranger-kms-services.sh start
+if [ ! -f "${RANGER_HOME}/kms/ranger-kms-services.sh" ] && [ -f "${RANGER_HOME}/kms/ranger-kms-initd" ]; then
+  ln -sf "${RANGER_HOME}/kms/ranger-kms-initd" "${RANGER_HOME}/kms/ranger-kms-services.sh"
+fi
 
-RANGER_KMS_PID=`ps -ef  | grep -v grep | grep "Dproc_rangerkms" | awk '{print $2}'`
+cd ${RANGER_HOME}/kms && ./ranger-kms start
+
+RANGER_KMS_PID=""
+for _ in $(seq 1 12); do
+  RANGER_KMS_PID=`ps -ef | grep -v grep | grep "Dproc_rangerkms" | awk '{print $2}'`
+  if [ -n "$RANGER_KMS_PID" ]; then
+    break
+  fi
+  sleep 5
+done
 
 # prevent the container from exiting
 if [ -z "$RANGER_KMS_PID" ]

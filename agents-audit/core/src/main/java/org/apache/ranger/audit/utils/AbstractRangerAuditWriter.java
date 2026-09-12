@@ -21,7 +21,12 @@ package org.apache.ranger.audit.utils;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.*;
+import org.apache.hadoop.fs.CommonPathCapabilities;
+import org.apache.hadoop.fs.FSDataOutputStream;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.FileUtil;
+import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.fs.StreamCapabilities;
 import org.apache.ranger.audit.provider.MiscUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -48,122 +53,169 @@ public abstract class AbstractRangerAuditWriter implements RangerAuditWriter {
     public static final String PROP_FILESYSTEM_FILE_EXTENSION   = ".log";
     public static final String PROP_IS_APPEND_ENABLED           = "file.append.enabled";
 
-    public Configuration		  conf						       = null;
-    public FileSystem		      fileSystem				       = null;
-    public Map<String, String>    auditConfigs				       = null;
-    public Path				      auditPath					       = null;
-    public volatile PrintWriter   logWriter                        = null;
-    public RollingTimeUtil        rollingTimeUtil                  = null;
-    public String			      auditProviderName			       = null;
-    public String			      fullPath                         = null;
-    public String 				  parentFolder					   = null;
-    public String			      currentFileName	               = null;
-    public String 			      logFileNameFormat			       = null;
-    public String		          logFolder                        = null;
-    public String 				  fileExtension					   = null;
-    public String                 rolloverPeriod                   = null;
-    public String				  fileSystemScheme				   = null;
-    public Date                   nextRollOverTime                 = null;
-    public int                    fileRolloverSec			       = 24 * 60 * 60; // In seconds
-    public boolean                rollOverByDuration               = false;
-    public volatile FSDataOutputStream ostream                     = null;   // output stream wrapped in logWriter
-    private boolean               isHFlushCapableStream            = false;
-    protected boolean             reUseLastLogFile                 = false;
+    public Configuration       conf;
+    public FileSystem          fileSystem;
+    public Map<String, String> auditConfigs;
+    public Path                auditPath;
+    public RollingTimeUtil     rollingTimeUtil;
+    public String              auditProviderName;
+    public String              fullPath;
+    public String              parentFolder;
+    public String              currentFileName;
+    public String              logFileNameFormat;
+    public String              logFolder;
+    public String              fileExtension;
+    public String              rolloverPeriod;
+    public String              fileSystemScheme;
+    public Date                nextRollOverTime;
+    public int                 fileRolloverSec = 24 * 60 * 60; // In seconds
+    public boolean             rollOverByDuration;
+
+    public volatile PrintWriter         logWriter;
+    public volatile FSDataOutputStream  ostream;   // output stream wrapped in logWriter
+
+    protected boolean reUseLastLogFile;
+    private   boolean isHFlushCapableStream;
 
     @Override
-    public void init(Properties props, String propPrefix, String auditProviderName, Map<String,String> auditConfigs) {
+    public void init(Properties props, String propPrefix, String auditProviderName, Map<String, String> auditConfigs) {
         // Initialize properties for this class
         // Initial folder and file properties
         logger.info("==> AbstractRangerAuditWriter.init()");
-        this.auditProviderName = auditProviderName;
-        this.auditConfigs	   = auditConfigs;
 
-        init(props,propPrefix);
+        this.auditProviderName = auditProviderName;
+        this.auditConfigs      = auditConfigs;
+
+        init(props, propPrefix);
 
         logger.info("<== AbstractRangerAuditWriter.init()");
     }
 
-    public void createFileSystemFolders() throws Exception {
+    @Override
+    public void flush() {
+        logger.debug("==> AbstractRangerAuditWriter.flush() {}", fileSystemScheme);
 
-        if (logger.isDebugEnabled()) {
-            logger.debug("==> AbstractRangerAuditWriter.createFileSystemFolders()");
+        if (ostream != null) {
+            try {
+                synchronized (this) {
+                    if (ostream != null) {
+                        // 1) PrinterWriter does not have bufferring of its own so
+                        // we need to flush its underlying stream
+                        // 2) HDFS flush() does not really flush all the way to disk.
+                        if (isHFlushCapableStream) {
+                            //Checking HFLUSH capability of the stream because of HADOOP-13327.
+                            //For S3 filesysttem, hflush throws UnsupportedOperationException and hence we call flush.
+                            ostream.hflush();
+                        } else {
+                            ostream.flush();
+                        }
+                    }
+
+                    logger.debug("Flush {} audit logs completed.....", fileSystemScheme);
+                }
+            } catch (IOException e) {
+                logger.error("Error on flushing log writer: {}\nException will be ignored. name={}, fileName={}", e.getMessage(), auditProviderName, currentFileName);
+            }
         }
+
+        logger.debug("<== AbstractRangerAuditWriter.flush()");
+    }
+
+    public void createFileSystemFolders() throws Exception {
+        logger.debug("==> AbstractRangerAuditWriter.createFileSystemFolders()");
+
         // Create a new file
-        Date   currentTime    = new Date();
-        String fileName       = MiscUtil.replaceTokens(logFileNameFormat,	currentTime.getTime());
-        parentFolder   		  = MiscUtil.replaceTokens(logFolder,	currentTime.getTime());
-        fullPath              = parentFolder + Path.SEPARATOR + fileName;
-        String defaultPath    = fullPath;
-        conf                  = createConfiguration();
-        URI	      uri         = URI.create(fullPath);
-        fileSystem            = FileSystem.get(uri, conf);
-        auditPath             = new Path(fullPath);
-        fileSystemScheme	  = getFileSystemScheme();
-        logger.info("Checking whether log file exists. "+ fileSystemScheme + "Path= " + fullPath + ", UGI=" + MiscUtil.getUGILoginUser());
+        Date   currentTime = new Date();
+        String fileName    = MiscUtil.replaceTokens(logFileNameFormat, currentTime.getTime());
+
+        parentFolder = MiscUtil.replaceTokens(logFolder, currentTime.getTime());
+        fullPath     = parentFolder + Path.SEPARATOR + fileName;
+
+        String defaultPath = fullPath;
+
+        fileSystemScheme = getFileSystemScheme();
+
+        conf = createConfiguration();
+
+        URI uri = URI.create(fullPath);
+
+        fileSystem = FileSystem.get(uri, conf);
+
+        auditPath  = new Path(fullPath);
+
+        logger.info("Checking whether log file exists. {} Path={}, UGI={}", fileSystemScheme, fullPath, MiscUtil.getUGILoginUser());
+
         int i = 0;
+
         while (fileSystem.exists(auditPath)) {
             i++;
+
             int    lastDot   = defaultPath.lastIndexOf('.');
             String baseName  = defaultPath.substring(0, lastDot);
             String extension = defaultPath.substring(lastDot);
-            fullPath         = baseName + "." + i + extension;
-            auditPath        = new Path(fullPath);
-            logger.info("Checking whether log file exists. "+ fileSystemScheme + "Path= " + fullPath);
+
+            fullPath  = baseName + "." + i + extension;
+            auditPath = new Path(fullPath);
+
+            logger.info("Checking whether log file exists. {} Path={}", fileSystemScheme, fullPath);
         }
-        logger.info("Log file doesn't exists. Will create and use it. "+ fileSystemScheme + "Path= " + fullPath);
+
+        logger.info("Log file doesn't exists. Will create and use it. {} Path={}", fileSystemScheme, fullPath);
 
         // Create parent folders
         createParents(auditPath, fileSystem);
 
         currentFileName = fullPath;
 
-        if (logger.isDebugEnabled()) {
-            logger.debug("<== AbstractRangerAuditWriter.createFileSystemFolders()");
-        }
+        logger.debug("<== AbstractRangerAuditWriter.createFileSystemFolders()");
     }
 
-    public  Configuration createConfiguration() {
+    public Configuration createConfiguration() {
         Configuration conf = new Configuration();
+
         for (Map.Entry<String, String> entry : auditConfigs.entrySet()) {
             String key   = entry.getKey();
             String value = entry.getValue();
+
             // for ease of install config file may contain properties with empty value, skip those
             if (StringUtils.isNotEmpty(value)) {
                 conf.set(key, value);
             }
-            logger.info("Adding property to "+ fileSystemScheme + " + config: " + key + " => " + value);
+
+            logger.info("Adding property to {} + config: {} => {}", fileSystemScheme, key, value);
         }
 
-        logger.info("Returning " + fileSystemScheme + "Filesystem Config: " + conf.toString());
+        logger.info("Returning {} Filesystem Config: {}", fileSystemScheme, conf);
+
         return conf;
     }
 
     public void createParents(Path pathLogfile, FileSystem fileSystem) throws Exception {
-        logger.info("Creating parent folder for " + pathLogfile);
+        logger.info("Creating parent folder for {}", pathLogfile);
+
         Path parentPath = pathLogfile != null ? pathLogfile.getParent() : null;
 
-        if (parentPath != null && fileSystem != null
-                && !fileSystem.exists(parentPath)) {
+        if (parentPath != null && fileSystem != null && !fileSystem.exists(parentPath)) {
             fileSystem.mkdirs(parentPath);
+            logger.info("Successfully created parent folder: {}", parentPath);
+        } else {
+            logger.info("Parent folder already exists or not required: {}", parentPath);
         }
     }
 
     public void init(Properties props, String propPrefix) {
+        logger.debug("==> AbstractRangerAuditWriter.init()");
 
-        if (logger.isDebugEnabled()) {
-            logger.debug("==> AbstractRangerAuditWriter.init()");
-        }
+        String logFolderProp = MiscUtil.getStringProperty(props, propPrefix + "." + PROP_FILESYSTEM_DIR);
 
-        String logFolderProp = MiscUtil.getStringProperty(props, propPrefix	+ "." + PROP_FILESYSTEM_DIR);
         if (StringUtils.isEmpty(logFolderProp)) {
-            logger.error("File destination folder is not configured. Please set "
-                    + propPrefix + "."
-                    + PROP_FILESYSTEM_DIR + ". name="
-                    + auditProviderName);
+            logger.error("File destination folder is not configured. Please set {}.{}. name={}", propPrefix, PROP_FILESYSTEM_DIR, auditProviderName);
+
             return;
         }
 
         String logSubFolder = MiscUtil.getStringProperty(props, propPrefix + "." + PROP_FILESYSTEM_SUBDIR);
+
         if (StringUtils.isEmpty(logSubFolder)) {
             logSubFolder = "%app-type%/%time:yyyyMMdd%";
         }
@@ -180,75 +232,68 @@ public abstract class AbstractRangerAuditWriter implements RangerAuditWriter {
         }
 
         reUseLastLogFile = MiscUtil.getBooleanProperty(props, propPrefix + "." + PROP_IS_APPEND_ENABLED, false);
-        logFolder = logFolderProp + "/" + logSubFolder;
+        logFolder        = logFolderProp + "/" + logSubFolder;
 
-        logger.info("logFolder={}, destName={}", logFolder, auditProviderName);
-        logger.info("logFileNameFormat={}, destName={}", logFileNameFormat, auditProviderName);
-        logger.info("config={}", auditConfigs.toString());
+        logger.info("logFolder = {}, destName = {}", logFolder, auditProviderName);
+        logger.info("logFileNameFormat = {}, destName = {}", logFileNameFormat, auditProviderName);
+        logger.info("config = {}", auditConfigs);
         logger.info("isAppendEnabled = {}", reUseLastLogFile);
 
         rolloverPeriod  = MiscUtil.getStringProperty(props, propPrefix + "." + PROP_FILESYSTEM_ROLLOVER_PERIOD);
         rollingTimeUtil = RollingTimeUtil.getInstance();
 
-        //file.rollover.period is used for rolling over. If it could compute the next roll over time using file.rollover.period
-        //it fall back to use file.rollover.sec for find next rollover time. If still couldn't find default will be 1day window
-        //for rollover.
-        if(StringUtils.isEmpty(rolloverPeriod) ) {
+        //file.rollover.period is used for rolling over. If it could compute the next rollover time using file.rollover.period
+        //it fallbacks to use file.rollover.sec for find next rollover time. If still couldn't find default will be 1day window for rollover.
+        if (StringUtils.isEmpty(rolloverPeriod)) {
             rolloverPeriod = rollingTimeUtil.convertRolloverSecondsToRolloverPeriod(fileRolloverSec);
         }
 
         try {
             nextRollOverTime = rollingTimeUtil.computeNextRollingTime(rolloverPeriod);
-        } catch ( Exception e) {
-            logger.warn("Rollover by file.rollover.period failed...will be using the file.rollover.sec for "+ fileSystemScheme + " audit file rollover...", e);
+        } catch (Exception e) {
+            logger.warn("Rollover by file.rollover.period failed...will be using the file.rollover.sec for {} audit file rollover...", fileSystemScheme, e);
+
             rollOverByDuration = true;
             nextRollOverTime   = rollOverByDuration();
         }
 
-        if (logger.isDebugEnabled()) {
-            logger.debug("<== AbstractRangerAuditWriter.init()");
-        }
-
+        logger.debug("<== AbstractRangerAuditWriter.init()");
     }
 
     public void closeFileIfNeeded() {
-        if (logger.isDebugEnabled()) {
-            logger.debug("==> AbstractRangerAuditWriter.closeFileIfNeeded()");
-        }
+        logger.debug("==> AbstractRangerAuditWriter.closeFileIfNeeded()");
 
         if (logWriter == null) {
-            if (logger.isDebugEnabled()){
-                logger.debug("Log writer is null, aborting rollover condition check!");
-            }
+            logger.debug("Log writer is null, aborting rollover condition check!");
+
             return;
         }
 
-        if ( System.currentTimeMillis() >= nextRollOverTime.getTime() ) {
+        if (System.currentTimeMillis() >= nextRollOverTime.getTime()) {
             logger.info("Closing file. Rolling over. name = {}, fileName = {}", auditProviderName, currentFileName);
+
             logWriter.flush();
+
             closeWriter();
             resetWriter();
             setNextRollOverTime();
 
-            currentFileName = null;
+            currentFileName  = null;
             auditPath        = null;
             fullPath         = null;
         }
 
-        if (logger.isDebugEnabled()) {
-            logger.debug("<== AbstractRangerAuditWriter.closeFileIfNeeded()");
-        }
+        logger.debug("<== AbstractRangerAuditWriter.closeFileIfNeeded()");
     }
 
-    public   Date rollOverByDuration() {
-        long rollOverTime = rollingTimeUtil.computeNextRollingTime(fileRolloverSec,nextRollOverTime);
+    public Date rollOverByDuration() {
+        long rollOverTime = rollingTimeUtil.computeNextRollingTime(fileRolloverSec, nextRollOverTime);
+
         return new Date(rollOverTime);
     }
 
     public PrintWriter createWriter() throws Exception {
-        if (logger.isDebugEnabled()) {
-            logger.debug("==> AbstractRangerAuditWriter.createWriter()");
-        }
+        logger.debug("==> AbstractRangerAuditWriter.createWriter()");
 
         if (logWriter == null) {
             boolean appendMode = false;
@@ -256,29 +301,32 @@ public abstract class AbstractRangerAuditWriter implements RangerAuditWriter {
             // if append is supported and enabled via config param, reuse last log file
             if (auditPath != null && reUseLastLogFile && isAppendEnabled()) {
                 try {
-                    ostream = fileSystem.append(auditPath);
+                    ostream    = fileSystem.append(auditPath);
                     appendMode = true;
 
                     logger.info("Appending to last log file. auditPath = {}", fullPath);
-                } catch (Exception e){
+                } catch (Exception e) {
                     logger.error("Failed to append to file {} due to {}", fullPath, e.getMessage());
                     logger.info("Falling back to create a new log file!");
-                    appendMode = false;
                 }
             }
+
             if (!appendMode) {
                 // Create the file to write
-                logger.info("Creating new log file. auditPath = {}", fullPath);
                 createFileSystemFolders();
+
+                logger.info("Creating new log file. fullPath = {}", fullPath);
+
                 ostream = fileSystem.create(auditPath);
+                logger.info("Successfully created {} output stream for file: {}", fileSystemScheme, fullPath);
             }
             logWriter             = new PrintWriter(ostream);
             isHFlushCapableStream = ostream.hasCapability(StreamCapabilities.HFLUSH);
+
+            logger.info("{} audit writer initialized successfully. File: {}, HFlush capable: {}", fileSystemScheme, fullPath, isHFlushCapableStream);
         }
 
-        if (logger.isDebugEnabled()) {
-            logger.debug("<== AbstractRangerAuditWriter.createWriter()");
-        }
+        logger.debug("<== AbstractRangerAuditWriter.createWriter()");
 
         return logWriter;
     }
@@ -287,9 +335,7 @@ public abstract class AbstractRangerAuditWriter implements RangerAuditWriter {
      * Closes the writer after writing audits
      **/
     public void closeWriter() {
-        if (logger.isDebugEnabled()) {
-            logger.debug("==> AbstractRangerAuditWriter.closeWriter()");
-        }
+        logger.debug("==> AbstractRangerAuditWriter.closeWriter()");
 
         if (ostream != null) {
             try {
@@ -298,89 +344,50 @@ public abstract class AbstractRangerAuditWriter implements RangerAuditWriter {
                 logger.error("Error closing the stream {}", e.getMessage());
             }
         }
-        if (logWriter != null)
-            logWriter.close();
 
-        if (logger.isDebugEnabled()) {
-            logger.debug("<== AbstractRangerAuditWriter.closeWriter()");
+        if (logWriter != null) {
+            logWriter.close();
         }
+
+        logger.debug("<== AbstractRangerAuditWriter.closeWriter()");
     }
 
     public void resetWriter() {
-        if (logger.isDebugEnabled()) {
-            logger.debug("==> AbstractRangerAuditWriter.resetWriter()");
-        }
+        logger.debug("==> AbstractRangerAuditWriter.resetWriter()");
 
         logWriter = null;
-        ostream = null;
+        ostream   = null;
 
-        if (logger.isDebugEnabled()) {
-            logger.debug("<== AbstractRangerAuditWriter.resetWriter()");
-        }
-    }
-
-    @Override
-    public void flush() {
-        if (logger.isDebugEnabled()) {
-            logger.debug("==> AbstractRangerAuditWriter.flush() " + fileSystemScheme);
-        }
-        if (ostream != null) {
-            try {
-                synchronized (this) {
-                    if (ostream != null)
-                        // 1) PrinterWriter does not have bufferring of its own so
-                        // we need to flush its underlying stream
-                        // 2) HDFS flush() does not really flush all the way to disk.
-                        if (isHFlushCapableStream) {
-                            //Checking HFLUSH capability of the stream because of HADOOP-13327.
-                            //For S3 filesysttem, hflush throws UnsupportedOperationException and hence we call flush.
-                            ostream.hflush();
-                        } else {
-                            ostream.flush();
-                        }
-                        if (logger.isDebugEnabled()) {
-                            logger.debug("Flush " + fileSystemScheme + " audit logs completed.....");
-                        }
-                }
-            } catch (IOException e) {
-                logger.error("Error on flushing log writer: " + e.getMessage() +
-                        "\nException will be ignored. name=" + auditProviderName + ", fileName=" + currentFileName);
-            }
-        }
-        if (logger.isDebugEnabled()) {
-            logger.debug("<== AbstractRangerAuditWriter.flush()");
-        }
+        logger.debug("<== AbstractRangerAuditWriter.resetWriter()");
     }
 
     public boolean logFileToHDFS(File file) throws Exception {
+        logger.debug("==> AbstractRangerAuditWriter.logFileToHDFS()");
+
         boolean ret = false;
-        if (logger.isDebugEnabled()) {
-            logger.debug("==> AbstractRangerAuditWriter.logFileToHDFS()");
-        }
 
         if (logWriter == null) {
             // Create the file to write
             createFileSystemFolders();
-            logger.info("Copying the Audit File" + file.getName() + " to HDFS Path" + fullPath);
+
+            logger.info("Copying the Audit File {} to HDFS Path {}", file.getName(), fullPath);
+
             Path destPath = new Path(fullPath);
-            ret = FileUtil.copy(file,fileSystem,destPath,false,conf);
+
+            ret = FileUtil.copy(file, fileSystem, destPath, false, conf);
         }
 
-        if (logger.isDebugEnabled()) {
-            logger.debug("<== AbstractRangerAuditWriter.logFileToHDFS()");
-        }
+        logger.debug("<== AbstractRangerAuditWriter.logFileToHDFS()");
+
         return ret;
     }
 
     public String getFileSystemScheme() {
-        String ret = null;
-        ret  = logFolder.substring(0, (logFolder.indexOf(":")));
-        ret  = ret.toUpperCase();
-        return ret;
+        return logFolder.substring(0, (logFolder.indexOf(":"))).toUpperCase();
     }
 
     public void setFileExtension(String fileExtension) {
-        this.fileExtension  = fileExtension;
+        this.fileExtension = fileExtension;
     }
 
     private void setNextRollOverTime() {

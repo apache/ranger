@@ -35,12 +35,16 @@ import javax.security.auth.login.LoginException;
 public class KerberosJAASConfigUser extends AbstractKerberosUser {
     private static final Logger LOG = LoggerFactory.getLogger(KerberosJAASConfigUser.class);
 
+    private static final String JAAS_USE_KEYTAB = "useKeyTab";
+
     private final String        configName;
     private final Configuration config;
+    private final boolean       optionUseKeyTab;
 
     public KerberosJAASConfigUser(final String configName, final Configuration config) {
-        this.configName = configName;
-        this.config     = config;
+        this.configName      = configName;
+        this.config          = config;
+        this.optionUseKeyTab = getBooleanOption(JAAS_USE_KEYTAB);
     }
 
 
@@ -62,6 +66,35 @@ public class KerberosJAASConfigUser extends AbstractKerberosUser {
         return ret;
     }
 
+    /**
+     * Admin Solr audit queries use {@code useKeyTab=true}. Opt those principals
+     * into in-place keytab relogin so shipped {@code useTicketCache=true} does
+     * not fail at TGT renewal with {@code "No key to store"}.
+     */
+    @Override
+    protected boolean useKeytabRelogin() {
+        return optionUseKeyTab;
+    }
+
+    private boolean getBooleanOption(String optionName) {
+        boolean                 ret     = false;
+        AppConfigurationEntry[] entries = config.getAppConfigurationEntry(configName);
+
+        if (entries != null) {
+            for (AppConfigurationEntry entry : entries) {
+                Object value = entry.getOptions().get(optionName);
+
+                if (value != null && Boolean.parseBoolean(value.toString())) {
+                    ret = true;
+
+                    break;
+                }
+            }
+        }
+
+        return ret;
+    }
+
     @Override
     protected LoginContext createLoginContext(Subject subject) throws LoginException {
         if (LOG.isDebugEnabled()) {
@@ -75,4 +108,3 @@ public class KerberosJAASConfigUser extends AbstractKerberosUser {
         return new LoginContext(configName, subject, null, config);
     }
 }
-

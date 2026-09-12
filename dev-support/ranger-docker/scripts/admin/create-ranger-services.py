@@ -21,6 +21,17 @@ hdfs = RangerService({'name': 'dev_hdfs', 'type': 'hdfs',
                                   'policy.download.auth.users': 'hdfs',
                                   'tag.download.auth.users': 'hdfs',
                                   'userstore.download.auth.users': 'hdfs',
+                                  'setup.additional.default.policies': 'true',
+                                  'default-policy.1.name': 'hive-tez-path',
+                                  'default-policy.1.resource.path': '/apps/tez,/tmp/hive',
+                                  'default-policy.1.resource.path.is-recursive': 'true',
+                                  'default-policy.1.policyItem.1.users': 'hive',
+                                  'default-policy.1.policyItem.1.accessTypes': 'read,write,execute',
+                                  'default-policy.2.name': 'ranger-audit-path',
+                                  'default-policy.2.resource.path': '/ranger/audit',
+                                  'default-policy.2.resource.path.is-recursive': 'true',
+                                  'default-policy.2.policyItem.1.users': 'rangerauditserver',
+                                  'default-policy.2.policyItem.1.accessTypes': 'read,write,execute',
                                   'ranger.plugin.hdfs.policy.refresh.synchronous':'true'}})
 
 hive = RangerService({'name': 'dev_hive', 'type': 'hive',
@@ -47,7 +58,19 @@ kafka = RangerService({'name': 'dev_kafka', 'type': 'kafka',
                                    'default-policy.2.resource.consumergroup': 'ranger_entities_consumer',
                                    'default-policy.2.policyItem.1.users': 'rangertagsync',
                                    'default-policy.2.policyItem.1.accessTypes': 'consume,describe',
-                                   'ranger.plugin.audit.filters': "[{'accessResult': 'DENIED', 'isAudited': true},{'resources':{'topic':{'values':['ATLAS_ENTITIES']}},'users':['rangertagsync'],'actions':['create','consume','describe'],'isAudited':false},{'resources':{'consumergroup':{'values':['ranger_entities_consumer']}},'users':['rangertagsync'],'actions':['consume'],'isAudited':false}]",
+                                   'default-policy.3.name': 'topic: ranger_audit*',
+                                   'default-policy.3.resource.topic': 'ranger_audit*,__consumer_offsets',
+                                   'default-policy.3.policyItem.1.users': 'rangerauditserver',
+                                   'default-policy.3.policyItem.1.accessTypes': 'create,configure,consume,publish,describe,create,delete,alter,describe_configs,alter_configs',
+                                   'default-policy.4.name': 'consumergroup: ranger_audit*',
+                                   'default-policy.4.resource.consumergroup': 'ranger_audit*',
+                                   'default-policy.4.policyItem.1.users': 'rangerauditserver',
+                                   'default-policy.4.policyItem.1.accessTypes': 'consume,describe,delete',
+                                   'default-policy.5.name': 'cluster: audit server cluster permissions',
+                                   'default-policy.5.resource.cluster': '*,dummy',
+                                   'default-policy.5.policyItem.1.users': 'rangerauditserver',
+                                   'default-policy.5.policyItem.1.accessTypes': 'configure,describe,alter,create,idempotent_write,describe_configs,alter_configs',
+                                   'ranger.plugin.audit.filters': "[{'accessResult': 'DENIED', 'isAudited': true},{'resources':{'topic':{'values':['ATLAS_ENTITIES']}},'users':['rangertagsync'],'actions':['create','consume','describe'],'isAudited':false},{'resources':{'consumergroup':{'values':['ranger_entities_consumer']}},'users':['rangertagsync'],'actions':['consume'],'isAudited':false},{'users':['rangerauditserver'],'isAudited':false}]",
                                    'userstore.download.auth.users': 'kafka',
                                    'ranger.plugin.kafka.policy.refresh.synchronous':'true'}})
 
@@ -81,7 +104,7 @@ hbase = RangerService({'name': 'dev_hbase', 'type': 'hbase',
 
 kms = RangerService({'name': 'dev_kms', 'type': 'kms',
                      'configs': {'username': 'keyadmin', 'password': 'rangerR0cks!',
-                                 'provider': 'kms://http@ranger-kms.rangernw:9292/kms',
+                                 'provider': 'http://ranger-kms.rangernw:9292',
                                  'policy.download.auth.users': 'rangerkms',
                                  'tag.download.auth.users': 'rangerkms',
                                  'userstore.download.auth.users': 'rangerkms',
@@ -114,29 +137,16 @@ ozone = RangerService({'name': 'dev_ozone',
 solr = RangerService({'name': 'dev_solr', 'type': 'solr',
                      'configs': {'username': 'solr', 'password': 'rangerR0cks!',
                                  'solr.url': 'http://ranger-solr.rangernw:8983',
+                                 'setup.additional.default.policies': 'true',
+                                 'default-policy.1.name': 'collection: ranger_audits',
+                                 'default-policy.1.resource.collection': 'ranger_audits',
+                                 'default-policy.1.policyItem.1.users': 'rangerauditserver',
+                                 'default-policy.1.policyItem.1.accessTypes': 'query,update',
                                  'policy.download.auth.users': 'solr',
                                  'tag.download.auth.users': 'solr',
                                  'userstore.download.auth.users': 'solr',
                                  'ranger.plugin.super.users': 'solr',
                                  'ranger.plugin.solr.policy.refresh.synchronous':'true'}})
-
-def ensure_ozone_kerberos_download_auth():
-    """Existing docker volumes may have dev_ozone with policy.download.auth.users=ozone."""
-    try:
-        existing = ranger_client.get_service('dev_ozone')
-    except JSONDecodeError:
-        return
-    if existing is None:
-        return
-    configs = existing.get('configs') or {}
-    if configs.get('policy.download.auth.users') == 'om':
-        return
-    configs['policy.download.auth.users'] = 'om'
-    configs['tag.download.auth.users'] = 'om'
-    configs['userstore.download.auth.users'] = 'om'
-    existing['configs'] = configs
-    ranger_client.update_service_by_id(existing['id'], existing)
-    print(' dev_ozone service updated for OM Kerberos policy download (policy.download.auth.users=om)')
 
 services = [hdfs, yarn, hive, hbase, kafka, knox, kms, trino, ozone, solr]
 for service in services:
@@ -146,5 +156,3 @@ for service in services:
             print(f" {service.name} service created!")
     except Exception as e:
         print(f"An exception occured: {e}")
-
-ensure_ozone_kerberos_download_auth()

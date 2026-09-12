@@ -18,14 +18,6 @@
 
 package org.apache.ranger.audit.provider;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Properties;
-import java.util.concurrent.Semaphore;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
-
 import org.apache.hadoop.util.ShutdownHookManager;
 import org.apache.ranger.audit.destination.AuditDestination;
 import org.apache.ranger.audit.queue.AuditAsyncQueue;
@@ -36,6 +28,14 @@ import org.apache.ranger.audit.queue.AuditSummaryQueue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Properties;
+import java.util.concurrent.Semaphore;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
+
 /*
  * TODO:
  * 1) Flag to enable/disable audit logging
@@ -44,94 +44,94 @@ import org.slf4j.LoggerFactory;
  */
 
 public class AuditProviderFactory {
-	private static final Logger LOG = LoggerFactory.getLogger(AuditProviderFactory.class);
+    private static final Logger LOG = LoggerFactory.getLogger(AuditProviderFactory.class);
 
-	public static final String AUDIT_IS_ENABLED_PROP                    = "xasecure.audit.is.enabled";
-	public static final String AUDIT_HDFS_IS_ENABLED_PROP               = "xasecure.audit.hdfs.is.enabled";
-	public static final String AUDIT_LOG4J_IS_ENABLED_PROP              = "xasecure.audit.log4j.is.enabled";
-	public static final String AUDIT_KAFKA_IS_ENABLED_PROP              = "xasecure.audit.kafka.is.enabled";
-	public static final String AUDIT_SOLR_IS_ENABLED_PROP               = "xasecure.audit.solr.is.enabled";
-	public static final String AUDIT_DEST_BASE                          = "xasecure.audit.destination";
-	public static final String AUDIT_SHUTDOWN_HOOK_MAX_WAIT_SEC         = "xasecure.audit.shutdown.hook.max.wait.seconds";
-	public static final String AUDIT_IS_FILE_CACHE_PROVIDER_ENABLE_PROP = "xasecure.audit.provider.filecache.is.enabled";
-	public static final String AUDIT_HDFS_IS_ASYNC_PROP                 = "xasecure.audit.hdfs.is.async";
-	public static final String AUDIT_HDFS_MAX_QUEUE_SIZE_PROP           = "xasecure.audit.hdfs.async.max.queue.size";
-	public static final String AUDIT_HDFS_MAX_FLUSH_INTERVAL_PROP       = "xasecure.audit.hdfs.async.max.flush.interval.ms";
-	public static final String AUDIT_LOG4J_IS_ASYNC_PROP                = "xasecure.audit.log4j.is.async";
-	public static final String AUDIT_LOG4J_MAX_QUEUE_SIZE_PROP          = "xasecure.audit.log4j.async.max.queue.size";
-	public static final String AUDIT_LOG4J_MAX_FLUSH_INTERVAL_PROP      = "xasecure.audit.log4j.async.max.flush.interval.ms";
-	public static final String AUDIT_KAFKA_IS_ASYNC_PROP                = "xasecure.audit.kafka.is.async";
-	public static final String AUDIT_SOLR_IS_ASYNC_PROP                 = "xasecure.audit.solr.is.async";
+    public static final String AUDIT_IS_ENABLED_PROP                    = "xasecure.audit.is.enabled";
+    public static final String AUDIT_HDFS_IS_ENABLED_PROP               = "xasecure.audit.hdfs.is.enabled";
+    public static final String AUDIT_LOG4J_IS_ENABLED_PROP              = "xasecure.audit.log4j.is.enabled";
+    public static final String AUDIT_KAFKA_IS_ENABLED_PROP              = "xasecure.audit.kafka.is.enabled";
+    public static final String AUDIT_SOLR_IS_ENABLED_PROP               = "xasecure.audit.solr.is.enabled";
+    public static final String AUDIT_DEST_BASE                          = "xasecure.audit.destination";
+    public static final String AUDIT_SHUTDOWN_HOOK_MAX_WAIT_SEC         = "xasecure.audit.shutdown.hook.max.wait.seconds";
+    public static final String AUDIT_IS_FILE_CACHE_PROVIDER_ENABLE_PROP = "xasecure.audit.provider.filecache.is.enabled";
+    public static final String AUDIT_HDFS_IS_ASYNC_PROP                 = "xasecure.audit.hdfs.is.async";
+    public static final String AUDIT_HDFS_MAX_QUEUE_SIZE_PROP           = "xasecure.audit.hdfs.async.max.queue.size";
+    public static final String AUDIT_HDFS_MAX_FLUSH_INTERVAL_PROP       = "xasecure.audit.hdfs.async.max.flush.interval.ms";
+    public static final String AUDIT_LOG4J_IS_ASYNC_PROP                = "xasecure.audit.log4j.is.async";
+    public static final String AUDIT_LOG4J_MAX_QUEUE_SIZE_PROP          = "xasecure.audit.log4j.async.max.queue.size";
+    public static final String AUDIT_LOG4J_MAX_FLUSH_INTERVAL_PROP      = "xasecure.audit.log4j.async.max.flush.interval.ms";
+    public static final String AUDIT_KAFKA_IS_ASYNC_PROP                = "xasecure.audit.kafka.is.async";
+    public static final String AUDIT_SOLR_IS_ASYNC_PROP                 = "xasecure.audit.solr.is.async";
 
-	public static final String FILE_QUEUE_TYPE                          = "filequeue";
-	public static final String DEFAULT_QUEUE_TYPE                       = "memoryqueue";
-	public static final int    AUDIT_SHUTDOWN_HOOK_MAX_WAIT_SEC_DEFAULT = 30;
-	public static final int    AUDIT_ASYNC_MAX_QUEUE_SIZE_DEFAULT       = 10 * 1024;
-	public static final int    AUDIT_ASYNC_MAX_FLUSH_INTERVAL_DEFAULT   = 5 * 1000;
+    public static final String FILE_QUEUE_TYPE                          = "filequeue";
+    public static final String DEFAULT_QUEUE_TYPE                       = "memoryqueue";
+    public static final int    AUDIT_SHUTDOWN_HOOK_MAX_WAIT_SEC_DEFAULT = 30;
+    public static final int    AUDIT_ASYNC_MAX_QUEUE_SIZE_DEFAULT       = 10 * 1024;
+    public static final int    AUDIT_ASYNC_MAX_FLUSH_INTERVAL_DEFAULT   = 5 * 1000;
 
-	private static final int RANGER_AUDIT_SHUTDOWN_HOOK_PRIORITY = 30;
+    private static final int RANGER_AUDIT_SHUTDOWN_HOOK_PRIORITY = 30;
 
-	private volatile static AuditProviderFactory sFactory = null;
+    private volatile static AuditProviderFactory sFactory = null;
 
-	private AuditHandler      mProvider        = null;
-	private String            componentAppType = "";
-	private boolean           mInitDone        = false;
-	private JVMShutdownHook   jvmShutdownHook  = null;
-	private ArrayList<String> hbaseAppTypes    = new ArrayList<>(Arrays.asList("hbaseMaster","hbaseRegional"));
+    private AuditHandler      mProvider        = null;
+    private String            componentAppType = "";
+    private boolean           mInitDone        = false;
+    private JVMShutdownHook   jvmShutdownHook  = null;
+    private ArrayList<String> hbaseAppTypes    = new ArrayList<>(Arrays.asList("hbaseMaster","hbaseRegional"));
 
-	public AuditProviderFactory() {
-		LOG.info("AuditProviderFactory: creating..");
+    public AuditProviderFactory() {
+        LOG.info("AuditProviderFactory: creating..");
 
-		mProvider = getDefaultProvider();
-	}
+        mProvider = getDefaultProvider();
+    }
 
-	public static AuditProviderFactory getInstance() {
-		AuditProviderFactory ret = sFactory;
+    public static AuditProviderFactory getInstance() {
+        AuditProviderFactory ret = sFactory;
 
-		if(ret == null) {
-			synchronized(AuditProviderFactory.class) {
-				ret = sFactory;
+        if(ret == null) {
+            synchronized(AuditProviderFactory.class) {
+                ret = sFactory;
 
-				if(ret == null) {
-					ret = sFactory = new AuditProviderFactory();
-				}
-			}
-		}
+                if(ret == null) {
+                    ret = sFactory = new AuditProviderFactory();
+                }
+            }
+        }
 
-		return ret;
-	}
+        return ret;
+    }
 
-	public AuditHandler getAuditProvider() {
-		return mProvider;
-	}
+    public AuditHandler getAuditProvider() {
+        return mProvider;
+    }
 
-	public boolean isInitDone() {
-		return mInitDone;
-	}
+    public boolean isInitDone() {
+        return mInitDone;
+    }
 
-	/**
-	 * call shutdown hook to provide a way to
-	 * shutdown gracefully in addition to the ShutdownHook mechanism
-	 */
-	public void shutdown() {
-		if (isInitDone() && jvmShutdownHook != null) {
-			jvmShutdownHook.run();
-		}
-	}
+    /**
+     * call shutdown hook to provide a way to
+     * shutdown gracefully in addition to the ShutdownHook mechanism
+     */
+    public void shutdown() {
+        if (isInitDone() && jvmShutdownHook != null) {
+            jvmShutdownHook.run();
+        }
+    }
 
-	public synchronized void init(Properties props, String appType) {
-		LOG.info("AuditProviderFactory: initializing..");
+    public synchronized void init(Properties props, String appType) {
+        LOG.info("AuditProviderFactory: initializing..");
 
-		if (mInitDone) {
-			LOG.warn("AuditProviderFactory.init(): already initialized! Will try to re-initialize");
-		}
+        if (mInitDone) {
+            LOG.warn("AuditProviderFactory.init(): already initialized! Will try to re-initialize");
+        }
 
-		mInitDone        = true;
-		componentAppType = appType;
+        mInitDone        = true;
+        componentAppType = appType;
 
-		MiscUtil.setApplicationType(appType);
+        MiscUtil.setApplicationType(appType);
 
-		boolean isEnabled = MiscUtil.getBooleanProperty(props, AUDIT_IS_ENABLED_PROP, true);
+        boolean isEnabled = MiscUtil.getBooleanProperty(props, AUDIT_IS_ENABLED_PROP, true);
 
         if (!isEnabled) {
             LOG.info("AuditProviderFactory: Audit not enabled..");
@@ -433,12 +433,16 @@ public class AuditProviderFactory {
                 provider = createDestination("org.apache.ranger.audit.destination.SolrAuditDestination");
             } else if (providerName.equalsIgnoreCase("elasticsearch")) {
                 provider = createDestination("org.apache.ranger.audit.destination.ElasticSearchAuditDestination");
+            } else if (providerName.equalsIgnoreCase("opensearch")) {
+                provider = createDestination("org.apache.ranger.audit.destination.OpenSearchAuditDestination");
             } else if (providerName.equalsIgnoreCase("amazon_cloudwatch")) {
                 provider = createDestination("org.apache.ranger.audit.destination.AmazonCloudWatchAuditDestination");
             } else if (providerName.equalsIgnoreCase("kafka")) {
                 provider = createDestination("org.apache.ranger.audit.provider.kafka.KafkaAuditProvider");
             } else if (providerName.equalsIgnoreCase("log4j")) {
                 provider = createDestination("org.apache.ranger.audit.destination.Log4JAuditDestination");
+            } else if (providerName.equalsIgnoreCase("auditserver")) {
+                provider = createDestination("org.apache.ranger.audit.destination.RangerAuditServerDestination");
             } else if (providerName.equalsIgnoreCase("batch")) {
                 provider = getAuditProvider(props, propPrefix, consumer);
             } else if (providerName.equalsIgnoreCase("async")) {
