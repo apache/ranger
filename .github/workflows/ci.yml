@@ -197,7 +197,7 @@ jobs:
             -f docker-compose.ranger-tagsync.yml \
             -f docker-compose.ranger-kms.yml"
           # Start admin first so Kafka policy cache can populate before audit pipeline healthchecks.
-          docker compose ${COMPOSE_FILES} up -d ranger-kdc ranger-zk ranger-postgres ranger
+          docker compose ${COMPOSE_FILES} up -d ranger-kdc ranger-zk ranger-db ranger
           echo "Waiting for Ranger Admin..."
           for i in $(seq 1 120); do
             if curl -sf http://localhost:6080/login.jsp >/dev/null; then
@@ -326,7 +326,7 @@ jobs:
             -f docker-compose.ranger-hive.yml \
             -f docker-compose.ranger-knox.yml \
             -f docker-compose.ranger-ozone.yml"
-          docker compose ${COMPOSE_FILES} up -d ranger-kdc ranger-zk ranger-postgres ranger
+          docker compose ${COMPOSE_FILES} up -d ranger-kdc ranger-zk ranger-db ranger
           echo "Waiting for Ranger Admin..."
           for i in $(seq 1 120); do
             if curl -sf http://localhost:6080/login.jsp >/dev/null; then
