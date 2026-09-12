@@ -61,7 +61,7 @@
           <include>org.apache.hadoop:hadoop-common:jar:${hadoop.version}</include>
           <include>com.google.code.gson:gson</include>
           <include>com.sun.jersey:jersey-bundle:jar:${jersey-bundle.version}</include>
-          <include>javax.ws.rs:javax.ws.rs-api</include>
+          <include>javax.ws.rs:jsr311-api:jar:${jsr311-api.version}</include>
           <include>com.fasterxml.jackson.jaxrs:jackson-jaxrs-base</include>
           <include>com.fasterxml.jackson.jaxrs:jackson-jaxrs-json-provider</include>
           <include>com.fasterxml.jackson.module:jackson-module-jaxb-annotations</include>

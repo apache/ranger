@@ -51,6 +51,11 @@
             <version>${protobuf-java.version}</version>
         </dependency>
         <dependency>
+            <groupId>com.sun.jersey</groupId>
+            <artifactId>jersey-client</artifactId>
+            <version>${jersey-bundle.version}</version>
+        </dependency>
+        <dependency>
             <groupId>commons-collections</groupId>
             <artifactId>commons-collections</artifactId>
             <version>${commons.collections.version}</version>
@@ -118,17 +123,19 @@
             <version>${project.version}</version>
             <exclusions>
                 <exclusion>
+                    <groupId>com.sun.jersey</groupId>
+                    <artifactId>jersey-bundle</artifactId>
+                </exclusion>
+                <exclusion>
                     <groupId>javax.ws.rs</groupId>
                     <artifactId>jsr311-api</artifactId>
                 </exclusion>
             </exclusions>
-            <!-- TO DEBUG JERSEY2 code: uncomment this exclusion
-       <exclusions><exclusion><artifactId>*</artifactId><groupId>*</groupId></exclusion></exclusions>
- -->
         </dependency>
         <dependency>
             <groupId>org.glassfish.jersey.core</groupId>
             <artifactId>jersey-client</artifactId>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>ch.qos.reload4j</groupId>

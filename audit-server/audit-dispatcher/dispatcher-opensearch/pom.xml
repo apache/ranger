@@ -35,20 +35,42 @@
     </properties>
 
     <dependencies>
-        <!-- Jackson (ObjectMapper for JSON serialization) -->
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>
             <version>${fasterxml.jackson.version}</version>
         </dependency>
-
+        <dependency>
+            <groupId>com.sun.jersey</groupId>
+            <artifactId>jersey-bundle</artifactId>
+            <version>${jersey-bundle.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.sun.jersey.contribs</groupId>
+            <artifactId>jersey-spring</artifactId>
+            <version>${jersey-spring.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>com.sun.jersey</groupId>
+                    <artifactId>jersey-server</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.springframework</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>javax.servlet</groupId>
+            <artifactId>javax.servlet-api</artifactId>
+            <version>${javax.servlet.version}</version>
+            <scope>provided</scope>
+        </dependency>
         <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-lang3</artifactId>
             <version>${commons.lang3.version}</version>
         </dependency>
-
-        <!-- HTTP Components (used by RestClient for OpenSearch communication) -->
         <dependency>
             <groupId>org.apache.httpcomponents</groupId>
             <artifactId>httpasyncclient</artifactId>
@@ -81,8 +103,6 @@
             <artifactId>httpcore-nio</artifactId>
             <version>${httpcomponents.httpcore.version}</version>
         </dependency>
-
-        <!-- OpenSearch audit destination (connection, auth, bulk write + doc mapping) -->
         <dependency>
             <groupId>org.apache.ranger</groupId>
             <artifactId>ranger-audit-dest-os</artifactId>
@@ -94,8 +114,18 @@
                 </exclusion>
             </exclusions>
         </dependency>
-
-        <!-- Provided by dispatcher-app at runtime -->
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-context</artifactId>
+            <version>${springframework.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-web</artifactId>
+            <version>${springframework.version}</version>
+            <scope>provided</scope>
+        </dependency>
         <dependency>
             <groupId>org.apache.kafka</groupId>
             <artifactId>kafka-clients</artifactId>

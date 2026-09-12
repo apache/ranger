@@ -37,6 +37,11 @@
             <version>${jersey-bundle.version}</version>
         </dependency>
         <dependency>
+            <groupId>javax.ws.rs</groupId>
+            <artifactId>jsr311-api</artifactId>
+            <version>${jsr311-api.version}</version>
+        </dependency>
+        <dependency>
             <groupId>org.apache.httpcomponents</groupId>
             <artifactId>httpcore</artifactId>
             <version>${httpcomponents.httpcore.version}</version>
