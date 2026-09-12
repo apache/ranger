@@ -355,7 +355,7 @@ jobs:
 
       - name: Check status of containers and remove them
         run: |
-          sleep 60
+          sleep 120
           containers=(ranger ranger-zk ranger-opensearch ranger-postgres ranger-hadoop ranger-hbase ranger-kafka ranger-hive ranger-knox ozone-om ozone-scm ozone-datanode ranger-audit-ingestor ranger-audit-dispatcher-opensearch);
           flag=true;
           for container in "${containers[@]}"; do

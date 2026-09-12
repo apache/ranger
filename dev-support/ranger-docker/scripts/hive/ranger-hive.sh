@@ -17,25 +17,63 @@
 # limitations under the License.
 
 if [ "${OS_NAME}" = "UBUNTU" ]; then
+  echo "Starting SSH service (Ubuntu)..."
   service ssh start
+else
+  echo "Starting SSH daemon (RHEL/CentOS)..."
+  mkdir -p /run/sshd
+  /usr/sbin/sshd
+fi
+
+# Wait for SSH daemon to be fully ready before proceeding
+if [ -f /home/hdfs/.ssh/id_rsa ]; then
+  echo "Waiting for SSH daemon to be ready..."
+  SSH_READY=false
+  for i in {1..30}; do
+    if su -c "ssh -o ConnectTimeout=2 -o StrictHostKeyChecking=no localhost exit" hdfs 2>/dev/null; then
+      echo "SSH daemon is ready for hdfs service..."
+      SSH_READY=true
+      break
+    fi
+    echo "Waiting for SSH daemon... ($i/30)"
+    sleep 2
+  done
+
+  if [ "$SSH_READY" = false ]; then
+    echo "WARNING: SSH daemon did not become ready within 60 seconds, Hive Services may fail to start properly...."
+    echo "Attempting to restart SSH daemon..."
+    pkill sshd 2>/dev/null || true
+    if [ "${OS_NAME}" = "UBUNTU" ]; then
+      service ssh start
+    else
+      mkdir -p /run/sshd
+      /usr/sbin/sshd
+    fi
+    sleep 3
+  fi
+else
+  echo "SSH keys not yet generated, skipping SSH connectivity test"
+  sleep 2
 fi
 
 if [ ! -e ${HIVE_HOME}/.setupDone ]
 then
-  su -c "[ ! -f ~/.ssh/id_rsa ] && ssh-keygen -t rsa -P '' -f ~/.ssh/id_rsa" hdfs
+  su -c "ssh-keygen -t rsa -P '' -f ~/.ssh/id_rsa" hdfs
   su -c "cat ~/.ssh/id_rsa.pub >> ~/.ssh/authorized_keys" hdfs
   su -c "chmod 0600 ~/.ssh/authorized_keys" hdfs
 
   if [ "${OS_NAME}" = "RHEL" ]; then
     ssh-keygen -A
-    /usr/sbin/sshd
   fi
 
-  su -c "[ ! -f ~/.ssh/id_rsa ] && ssh-keygen -t rsa -P '' -f ~/.ssh/id_rsa" yarn
+  su -c "ssh-keygen -t rsa -P '' -f ~/.ssh/id_rsa" yarn
   su -c "cat ~/.ssh/id_rsa.pub >> ~/.ssh/authorized_keys" yarn
   su -c "chmod 0600 ~/.ssh/authorized_keys" yarn
 
-  # pdsh is unavailable with microdnf in rhel based image.
+  su -c "ssh-keygen -t rsa -P '' -f ~/.ssh/id_rsa" hive
+  su -c "cat ~/.ssh/id_rsa.pub >> ~/.ssh/authorized_keys" hive
+  su -c "chmod 0600 ~/.ssh/authorized_keys" hive
+
   echo "ssh" > /etc/pdsh/rcmd_default
 
   if "${RANGER_SCRIPTS}"/ranger-hive-setup.sh;
@@ -48,25 +86,52 @@ fi
 
 cd "${HIVE_HOME}" || exit
 
-# Start Hive MetaStore
-su -c "nohup ${HIVE_HOME}/bin/hive --service metastore > metastore.log 2>&1 &" hive
+echo "Starting Hive MetaStore..."
+su -c "export HADOOP_CLIENT_OPTS='${HADOOP_CLIENT_OPTS} -Dlog4j2.configurationFile=file:${HIVE_HOME}/conf/hive-metastore-log4j2.properties' && nohup ${HIVE_HOME}/bin/hive --service metastore &" hive
 
-# Start HiveServer2
-su -c "nohup ${HIVE_HOME}/bin/hiveserver2 > hive-server2.log 2>&1 &" hive
+echo "Starting HiveServer2..."
+su -c "export HADOOP_CLIENT_OPTS='${HADOOP_CLIENT_OPTS} -Dlog4j2.configurationFile=file:${HIVE_HOME}/conf/hive-log4j2.properties' && nohup ${HIVE_HOME}/bin/hiveserver2 &" hive
 
-HIVE_SERVER2_PID=""
-for _ in $(seq 1 24); do
-  HIVE_SERVER2_PID=`ps -ef | grep -v grep | grep -i "org.apache.hive.service.server.HiveServer2" | awk '{print $2}'`
-  if [ -n "$HIVE_SERVER2_PID" ]; then
+echo "Waiting for Hive services to initialize..."
+sleep 10
+
+echo "Verifying Hive services are ready for beeline connections..."
+METASTORE_PID=`ps -ef | grep -v grep | grep -i "org.apache.hadoop.hive.metastore.HiveMetaStore" | awk '{print $2}'`
+HIVE_SERVER2_PID=`ps -ef | grep -v grep | grep -i "org.apache.hive.service.server.HiveServer2" | awk '{print $2}'`
+
+if [ -n "$METASTORE_PID" ]; then
+  echo "Hive MetaStore is running (PID: $METASTORE_PID)"
+else
+  echo "WARNING: Hive MetaStore process not found!"
+  tail -100 "${HIVE_HOME}/logs/metastore.log" 2>/dev/null || true
+fi
+
+if [ -n "$HIVE_SERVER2_PID" ]; then
+  echo "HiveServer2 is running (PID: $HIVE_SERVER2_PID)"
+else
+  echo "WARNING: HiveServer2 process not found!"
+  tail -100 "${HIVE_HOME}/logs/hiveserver2.log" 2>/dev/null || true
+fi
+
+echo "Checking if HiveServer2 is listening on port 10000..."
+for i in {1..30}; do
+  if timeout 2 bash -c "echo > /dev/tcp/localhost/10000" 2>/dev/null; then
+    echo "HiveServer2 is ready and listening on port 10000...."
     break
   fi
-  sleep 5
+  if [ $i -eq 30 ]; then
+    echo "WARNING: HiveServer2 is not listening on port 10000 after 60 seconds"
+    tail -100 "${HIVE_HOME}/logs/hiveserver2.log" 2>/dev/null || true
+  else
+    echo "Waiting for HiveServer2 to listen on port 10000... ($i/30)"
+    sleep 2
+  fi
 done
 
-# prevent the container from exiting
 if [ -z "$HIVE_SERVER2_PID" ]
 then
   echo "The HiveServer2 process probably exited, no process id found!"
+  exit 1
 else
   tail --pid="$HIVE_SERVER2_PID" -f /dev/null
 fi

@@ -119,7 +119,8 @@ else
 fi
 
 mkdir -p /opt/hive/logs
-chown -R hive:hadoop /opt/hive/
+mkdir -p /var/log/hive/audit/audit-ingestor/spool
+chown -R hive:hadoop /opt/hive/ /var/log/hive
 chmod g+w /opt/hive/logs
 
 # Initialize Hive schema (postgres driver must be in HIVE_HOME/lib)
