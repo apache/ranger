@@ -109,8 +109,14 @@ jobs:
           name: knox-plugin-jar
       - name: Install knox plugin jar for distro build
         run: |
+          KNOX_JAR="$(find . -path '*/ranger-knox-plugin-*.jar' -not -path '*/ranger-knox-plugin-shim-*' | head -1)"
+          if [ -z "${KNOX_JAR}" ]; then
+            echo "Knox plugin jar not found after artifact download" >&2
+            find . -name 'ranger-knox-plugin-*.jar' >&2 || true
+            exit 1
+          fi
           mvn install:install-file \
-            -Dfile=knox-agent/target/ranger-knox-plugin-*.jar \
+            -Dfile="${KNOX_JAR}" \
             -DpomFile=knox-agent/pom.xml \
             --no-transfer-progress -B -q
       - name: build (11)
