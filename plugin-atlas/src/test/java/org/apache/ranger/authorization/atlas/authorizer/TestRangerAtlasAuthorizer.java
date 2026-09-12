@@ -45,6 +45,10 @@ public class TestRangerAtlasAuthorizer {
     private static final Set<String> USER_STEWARD1_GROUPS         = Collections.singleton("stewards");
     private static final String      USER_FINANCE_STEWARD1        = "finance-data-steward1";
     private static final Set<String> USER_FINANCE_STEWARD1_GROUPS = new HashSet<>(Arrays.asList("finance-stewards", "stewards"));
+    private static final String      USER_HOOK1                   = "hook1";
+    private static final Set<String> USER_HOOK1_GROUPS            = Collections.singleton("hook-users");
+    private static final String      TOPIC_ATLAS_HOOK            = "ATLAS_HOOK";
+    private static final String      TOPIC_OTHER                  = "OTHER_TOPIC";
 
     private static final AtlasEntityDef         ENTITY_DEF_HIVE_TABLE           = new AtlasEntityDef("hive_table");
     private static final AtlasClassificationDef CLASSIFICATION_DEF_FINANCE      = new AtlasClassificationDef("FINANCE");
@@ -469,6 +473,64 @@ public class TestRangerAtlasAuthorizer {
         assertThat(authorizer.isAccessAllowed(request))
                 .as("%s should be allowed to admin audits", request.getUser())
                 .isTrue();
+    }
+
+    @Test
+    public void testPostNotification() {
+        AtlasAdminAccessRequest request = new AtlasAdminAccessRequest(AtlasPrivilege.SERVICE_NOTIFICATION_POST);
+
+        request.setUser(USER_USER1, USER_USER1_GROUPS);
+
+        assertThat(authorizer.isAccessAllowed(request))
+                .as("%s should be denied to post notification", request.getUser())
+                .isFalse();
+
+        request.setUser(USER_STEWARD1, USER_STEWARD1_GROUPS);
+
+        assertThat(authorizer.isAccessAllowed(request))
+                .as("%s should be denied to post notification", request.getUser())
+                .isFalse();
+
+        request.setUser(USER_ADMIN1, USER_ADMIN1_GROUPS);
+
+        assertThat(authorizer.isAccessAllowed(request))
+                .as("%s should be allowed to post notification", request.getUser())
+                .isTrue();
+    }
+
+    @Test
+    public void testPostNotificationOnAllowedTopic() {
+        AtlasAdminAccessRequest request = new TopicAccessRequest(AtlasPrivilege.SERVICE_NOTIFICATION_POST, TOPIC_ATLAS_HOOK);
+
+        request.setUser(USER_HOOK1, USER_HOOK1_GROUPS);
+
+        assertThat(authorizer.isAccessAllowed(request))
+                .as("%s should be allowed to post notification to %s", request.getUser(), TOPIC_ATLAS_HOOK)
+                .isTrue();
+    }
+
+    @Test
+    public void testPostNotificationOnDeniedTopic() {
+        AtlasAdminAccessRequest request = new TopicAccessRequest(AtlasPrivilege.SERVICE_NOTIFICATION_POST, TOPIC_OTHER);
+
+        request.setUser(USER_HOOK1, USER_HOOK1_GROUPS);
+
+        assertThat(authorizer.isAccessAllowed(request))
+                .as("%s should be denied to post notification to %s", request.getUser(), TOPIC_OTHER)
+                .isFalse();
+    }
+
+    private static class TopicAccessRequest extends AtlasAdminAccessRequest {
+        private final String topicName;
+
+        TopicAccessRequest(AtlasPrivilege action, String topicName) {
+            super(action);
+            this.topicName = topicName;
+        }
+
+        public String getTopicName() {
+            return topicName;
+        }
     }
 
     @Test

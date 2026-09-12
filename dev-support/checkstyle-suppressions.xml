@@ -91,6 +91,7 @@
   <suppress files="PatchSetAccessTypeCategory_J10061" checks="TypeName"/>
   <suppress files="PatchTagModulePermission_J10005" checks="TypeName"/>
   <suppress files="PatchForAtlasPolicyUpdateForEntityRead_J10064" checks="TypeName"/>
+  <suppress files="PatchForAtlasNotificationTopic_J10067" checks="TypeName"/>
   <suppress files="PatchForOzoneServiceDefPolicyConditionUpdate_J10066" checks="TypeName"/>
   <suppress files="PatchForOzoneServiceDefAssumeRoleUpdate_J10065" checks="TypeName"/>
 </suppressions>

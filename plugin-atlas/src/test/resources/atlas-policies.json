@@ -1,5 +1,5 @@
 {
-  "serviceName": "dev_atlas", "serviceId": 8, "policyVersion": 19,
+  "serviceName": "dev_atlas", "serviceId": 8, "policyVersion": 21,
   "policies": [
     {
       "id": 1, "name": "Default: all type-category, type",
@@ -112,6 +112,30 @@
       ]
     },
     {
+      "id": 9, "name": "Default: all notification-topic",
+      "resources": {
+        "notification-topic": { "values": [ "*" ] }
+      },
+      "policyItems": [
+        {
+          "accesses":  [ { "type": "post-notification" } ],
+          "groups": [ "admins" ]
+        }
+      ]
+    },
+    {
+      "id": 10, "name": "Allow hook users to post to ATLAS_HOOK",
+      "resources": {
+        "notification-topic": { "values": [ "ATLAS_HOOK" ] }
+      },
+      "policyItems": [
+        {
+          "accesses":  [ { "type": "post-notification" } ],
+          "groups": [ "hook-users" ]
+        }
+      ]
+    },
+    {
       "id": 8, "name": "Entities having FINANCE classification", "isDenyAllElse": true,
       "resources": {
         "entity-type":           { "values": [ "*" ] },
@@ -145,7 +169,8 @@
       { "itemId": 13, "name": "end-one-entity",                "level": 40, "parent": "end-one-entity-classification", "accessTypeRestrictions": [ "add-relationship", "update-relationship", "remove-relationship" ] },
       { "itemId": 14, "name": "end-two-entity-type",           "level": 50, "parent": "end-one-entity" },
       { "itemId": 15, "name": "end-two-entity-classification", "level": 60, "parent": "end-two-entity-type" },
-      { "itemId": 16, "name": "end-two-entity",                "level": 70, "parent": "end-two-entity-classification", "accessTypeRestrictions": [ "add-relationship", "update-relationship", "remove-relationship" ] }
+      { "itemId": 16, "name": "end-two-entity",                "level": 70, "parent": "end-two-entity-classification", "accessTypeRestrictions": [ "add-relationship", "update-relationship", "remove-relationship" ] },
+      { "itemId": 17, "name": "notification-topic",         "level": 10,                                    "accessTypeRestrictions": [ "post-notification" ] }
     ],
     "accessTypes": [
       { "itemId": 1,  "name": "type-read",                       "category": "READ",   "label": "Read Type" },
@@ -168,7 +193,8 @@
       { "itemId": 18, "name": "admin-export",                    "category": "MANAGE", "label": "Export" },
       { "itemId": 19, "name": "admin-import",                    "category": "MANAGE", "label": "Import" },
       { "itemId": 20, "name": "admin-purge",                     "category": "MANAGE", "label": "Purge" },
-      { "itemId": 21, "name": "admin-audits",                    "category": "MANAGE", "label": "Admin Audits" }
+      { "itemId": 21, "name": "admin-audits",                    "category": "MANAGE", "label": "Admin Audits" },
+      { "itemId": 22, "name": "post-notification",              "category": "UPDATE", "label": "Post Notification" }
     ],
     "configs": [
       { "itemId": 1, "name": "username",                    "type": "string",   "mandatory": true },
