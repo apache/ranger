@@ -47,6 +47,7 @@ ENV PATH=/opt/java/openjdk/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin
 RUN chmod a+rwx ${RANGER_SCRIPTS}/ranger-knox-expect.py
 
 RUN pip3 install pexpect
-RUN python3 ${RANGER_SCRIPTS}/ranger-knox-expect.py
+RUN python3 ${RANGER_SCRIPTS}/ranger-knox-expect.py && \
+    chown -R knox:knox /opt/knox-${KNOX_VERSION}/data /opt/knox-${KNOX_VERSION}/logs /opt/knox-${KNOX_VERSION}/pids
 
 ENTRYPOINT [ "/home/ranger/scripts/ranger-knox.sh" ]
