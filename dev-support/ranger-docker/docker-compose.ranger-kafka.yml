@@ -50,8 +50,8 @@ services:
       test: [ "CMD-SHELL", "if [ \"$$KERBEROS_ENABLED\" = \"true\" ]; then kafka-broker-api-versions.sh --bootstrap-server ranger-kafka.rangernw:9092 --command-config /opt/kafka/config/kafka-client.properties > /dev/null 2>&1 || exit 1; else kafka-broker-api-versions.sh --bootstrap-server ranger-kafka.rangernw:9092 > /dev/null 2>&1 || exit 1; fi; grep -rq 'ranger_audit' /etc/ranger/dev_kafka/policycache/ 2>/dev/null" ]
       interval: 15s
       timeout: 15s
-      retries: 20
-      start_period: 90s
+      retries: 40
+      start_period: 300s
     environment:
       KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092
       KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://ranger-kafka:9092,PLAINTEXT_HOST://localhost:9092

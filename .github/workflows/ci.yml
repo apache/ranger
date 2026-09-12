@@ -76,11 +76,13 @@ jobs:
           name: target-8
           path: target/*
 
-      - name: Upload knox plugin jar for build-11
+      - name: Upload build-11 dependency jars
         uses: actions/upload-artifact@v4
         with:
-          name: knox-plugin-jar
-          path: knox-agent/target/ranger-knox-plugin-*.jar
+          name: build-11-deps
+          path: |
+            knox-agent/target/ranger-knox-plugin-*.jar
+            kms/target/ranger-kms-*.jar
 
   build-11:
     needs:
@@ -103,24 +105,29 @@ jobs:
         with:
           java-version: '11'
           distribution: 'temurin'
-      - name: Download knox plugin jar from build-8
+      - name: Download build-11 dependency jars from build-8
         uses: actions/download-artifact@v4
         with:
-          name: knox-plugin-jar
-      - name: Install knox plugin jar for distro build
+          name: build-11-deps
+      - name: Install build-11 dependency jars for distro build
         run: |
           KNOX_JAR="$(find . -path '*/ranger-knox-plugin-*.jar' -not -path '*/ranger-knox-plugin-shim-*' | head -1)"
-          if [ -z "${KNOX_JAR}" ]; then
-            echo "Knox plugin jar not found after artifact download" >&2
-            find . -name 'ranger-knox-plugin-*.jar' >&2 || true
+          KMS_JAR="$(find . -path '*/ranger-kms-*.jar' -not -path '*plugin*' | head -1)"
+          if [ -z "${KNOX_JAR}" ] || [ -z "${KMS_JAR}" ]; then
+            echo "Missing build-11 dependency jar(s)" >&2
+            find . -name 'ranger-knox-plugin-*.jar' -o -name 'ranger-kms-*.jar' >&2 || true
             exit 1
           fi
           mvn install:install-file \
             -Dfile="${KNOX_JAR}" \
             -DpomFile=knox-agent/pom.xml \
             --no-transfer-progress -B -q
+          mvn install:install-file \
+            -Dfile="${KMS_JAR}" \
+            -DpomFile=kms/pom.xml \
+            --no-transfer-progress -B -q
       - name: build (11)
-        run: mvn -T 8 clean verify -pl '!knox-agent' --no-transfer-progress -B -V
+        run: mvn -T 8 clean verify -pl '!knox-agent,!kms' --no-transfer-progress -B -V
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
@@ -183,13 +190,23 @@ jobs:
           export RANGER_DB_TYPE=postgres
           export AUDIT_INDEX_STORE=opensearch
           export AUDIT_DESTINATIONS=audit-store-opensearch
-          docker compose --profile ${AUDIT_DESTINATIONS} \
-          -f docker-compose.ranger.yml \
-          -f docker-compose.ranger-audit-service.yml \
-          -f docker-compose.ranger-pdp.yml \
-          -f docker-compose.ranger-usersync.yml \
-          -f docker-compose.ranger-tagsync.yml \
-          -f docker-compose.ranger-kms.yml up -d
+          COMPOSE_FILES="-f docker-compose.ranger.yml \
+            -f docker-compose.ranger-audit-service.yml \
+            -f docker-compose.ranger-pdp.yml \
+            -f docker-compose.ranger-usersync.yml \
+            -f docker-compose.ranger-tagsync.yml \
+            -f docker-compose.ranger-kms.yml"
+          # Start admin first so Kafka policy cache can populate before audit pipeline healthchecks.
+          docker compose ${COMPOSE_FILES} up -d ranger-kdc ranger-zk ranger-postgres ranger
+          echo "Waiting for Ranger Admin..."
+          for i in $(seq 1 120); do
+            if curl -sf http://localhost:6080/login.jsp >/dev/null; then
+              echo "Ranger Admin is up after ${i} attempt(s)"
+              break
+            fi
+            sleep 5
+          done
+          docker compose --profile ${AUDIT_DESTINATIONS} ${COMPOSE_FILES} up -d
 
       - name: Check status of containers and remove them
         run: |
@@ -302,14 +319,23 @@ jobs:
           export RANGER_DB_TYPE=postgres
           export AUDIT_INDEX_STORE=opensearch
           export AUDIT_DESTINATIONS=audit-store-opensearch
-          docker compose --profile ${AUDIT_DESTINATIONS} \
-          -f docker-compose.ranger.yml \
-          -f docker-compose.ranger-audit-service.yml \
-          -f docker-compose.ranger-hadoop.yml \
-          -f docker-compose.ranger-hbase.yml \
-          -f docker-compose.ranger-hive.yml \
-          -f docker-compose.ranger-knox.yml \
-          -f docker-compose.ranger-ozone.yml up -d
+          COMPOSE_FILES="-f docker-compose.ranger.yml \
+            -f docker-compose.ranger-audit-service.yml \
+            -f docker-compose.ranger-hadoop.yml \
+            -f docker-compose.ranger-hbase.yml \
+            -f docker-compose.ranger-hive.yml \
+            -f docker-compose.ranger-knox.yml \
+            -f docker-compose.ranger-ozone.yml"
+          docker compose ${COMPOSE_FILES} up -d ranger-kdc ranger-zk ranger-postgres ranger
+          echo "Waiting for Ranger Admin..."
+          for i in $(seq 1 120); do
+            if curl -sf http://localhost:6080/login.jsp >/dev/null; then
+              echo "Ranger Admin is up after ${i} attempt(s)"
+              break
+            fi
+            sleep 5
+          done
+          docker compose --profile ${AUDIT_DESTINATIONS} ${COMPOSE_FILES} up -d
 
       - name: Wait for KDC Kerberos readiness
         run: |
