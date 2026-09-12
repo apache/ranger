@@ -109,4 +109,3 @@ public class KerberosJAASConfigUser extends AbstractKerberosUser {
         return new LoginContext(configName, subject, null, config);
     }
 }
-

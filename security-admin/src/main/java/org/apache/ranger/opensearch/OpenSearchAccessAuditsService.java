@@ -28,7 +28,6 @@ import org.apache.ranger.db.XXServiceDefDao;
 import org.apache.ranger.entity.XXService;
 import org.apache.ranger.entity.XXServiceDef;
 import org.apache.ranger.opensearch.OpenSearchUtil.OpenSearchSearchResult;
-import org.apache.ranger.plugin.util.JsonUtilsV2;
 import org.apache.ranger.view.VXAccessAudit;
 import org.apache.ranger.view.VXAccessAuditList;
 import org.apache.ranger.view.VXLong;

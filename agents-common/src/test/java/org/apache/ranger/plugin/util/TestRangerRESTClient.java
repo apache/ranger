@@ -19,14 +19,13 @@
 
 package org.apache.ranger.plugin.util;
 
+import com.sun.jersey.api.client.ClientResponse;
 import com.sun.net.httpserver.HttpServer;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.ranger.authorization.hadoop.config.RangerPluginConfig;
 import org.apache.ranger.plugin.policyengine.RangerPolicyEngineOptions;
 import org.apache.ranger.plugin.service.RangerBasePlugin;
 import org.junit.jupiter.api.Test;
-
-import com.sun.jersey.api.client.ClientResponse;
 
 import java.net.InetSocketAddress;
 import java.util.Collections;
