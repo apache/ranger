@@ -56,4 +56,3 @@ services:
 networks:
   ranger:
     name: rangernw
-    external: true
