@@ -1063,20 +1063,21 @@ public class RangerBizUtil {
 
         boolean            isAccessible = true;
         Collection<String> roleList     = userMgr.getRolesByLoginId(vXUser.getName());
+        Collection<String> payloadRoles = vXUser.getUserRoleList();
 
         if (isKeyAdmin()) {
-            if (vXUser.getUserRoleList().contains(RangerConstants.ROLE_SYS_ADMIN)
-                    || vXUser.getUserRoleList().contains(RangerConstants.ROLE_ADMIN_AUDITOR)
-                    || roleList.contains(RangerConstants.ROLE_SYS_ADMIN)
-                    || roleList.contains(RangerConstants.ROLE_ADMIN_AUDITOR)) {
+            if (StringUtil.containsIgnoreCase(payloadRoles, RangerConstants.ROLE_SYS_ADMIN)
+                    || StringUtil.containsIgnoreCase(payloadRoles, RangerConstants.ROLE_ADMIN_AUDITOR)
+                    || StringUtil.containsIgnoreCase(roleList, RangerConstants.ROLE_SYS_ADMIN)
+                    || StringUtil.containsIgnoreCase(roleList, RangerConstants.ROLE_ADMIN_AUDITOR)) {
                 isAccessible = false;
             }
         }
         if (isAdmin()) {
-            if (vXUser.getUserRoleList().contains(RangerConstants.ROLE_KEY_ADMIN)
-                    || vXUser.getUserRoleList().contains(RangerConstants.ROLE_KEY_ADMIN_AUDITOR)
-                    || roleList.contains(RangerConstants.ROLE_KEY_ADMIN)
-                    || roleList.contains(RangerConstants.ROLE_KEY_ADMIN_AUDITOR)) {
+            if (StringUtil.containsIgnoreCase(payloadRoles, RangerConstants.ROLE_KEY_ADMIN)
+                    || StringUtil.containsIgnoreCase(payloadRoles, RangerConstants.ROLE_KEY_ADMIN_AUDITOR)
+                    || StringUtil.containsIgnoreCase(roleList, RangerConstants.ROLE_KEY_ADMIN)
+                    || StringUtil.containsIgnoreCase(roleList, RangerConstants.ROLE_KEY_ADMIN_AUDITOR)) {
                 isAccessible = false;
             }
         }

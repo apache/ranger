@@ -2276,9 +2276,9 @@ public class XUserMgr extends XUserMgrBase {
                 throw restErrorUtil.create403RESTException("Permission denied. LoggedInUser=" + session.getXXPortalUser().getId() + " ,isn't permitted to perform the action.");
             } else {
                 if (!"rangerusersync".equals(session.getXXPortalUser().getLoginId())) { // new logic for rangerusersync user
-                    if (session.isUserAdmin() && (stringRolesList.contains(RangerConstants.ROLE_KEY_ADMIN) || stringRolesList.contains(RangerConstants.ROLE_KEY_ADMIN_AUDITOR))) {
+                    if (session.isUserAdmin() && (StringUtil.containsIgnoreCase(stringRolesList, RangerConstants.ROLE_KEY_ADMIN) || StringUtil.containsIgnoreCase(stringRolesList, RangerConstants.ROLE_KEY_ADMIN_AUDITOR))) {
                         throw restErrorUtil.create403RESTException("Permission denied. LoggedInUser=" + session.getXXPortalUser().getId() + " isn't permitted to perform the action.");
-                    } else if (session.isKeyAdmin() && (stringRolesList.contains(RangerConstants.ROLE_SYS_ADMIN) || stringRolesList.contains(RangerConstants.ROLE_ADMIN_AUDITOR))) {
+                    } else if (session.isKeyAdmin() && (StringUtil.containsIgnoreCase(stringRolesList, RangerConstants.ROLE_SYS_ADMIN) || StringUtil.containsIgnoreCase(stringRolesList, RangerConstants.ROLE_ADMIN_AUDITOR))) {
                         throw restErrorUtil.create403RESTException("Permission denied. LoggedInUser=" + session.getXXPortalUser().getId() + " isn't permitted to perform the action.");
                     }
                 }
@@ -3308,15 +3308,15 @@ public class XUserMgr extends XUserMgrBase {
             VXUser loggedInVXUser = xUserService.getXUserByUserName(userSession.getLoginId());
 
             if (requestedVXUser != null && CollectionUtils.isNotEmpty(requestedVXUser.getUserRoleList()) && loggedInVXUser != null && loggedInVXUser.getUserRoleList().size() == 1) {
-                if (loggedInVXUser.getUserRoleList().contains(RangerConstants.ROLE_USER)) {
+                if (StringUtil.containsIgnoreCase(loggedInVXUser.getUserRoleList(), RangerConstants.ROLE_USER)) {
                     return requestedVXUser.getId().equals(loggedInVXUser.getId());
-                } else if (loggedInVXUser.getUserRoleList().contains(RangerConstants.ROLE_KEY_ADMIN) || loggedInVXUser.getUserRoleList().contains(RangerConstants.ROLE_KEY_ADMIN_AUDITOR)) {
-                    return requestedVXUser.getUserRoleList().contains(RangerConstants.ROLE_KEY_ADMIN) || requestedVXUser.getUserRoleList().contains(RangerConstants.ROLE_KEY_ADMIN_AUDITOR) || requestedVXUser.getUserRoleList().contains(RangerConstants.ROLE_USER);
-                } else if (loggedInVXUser.getUserRoleList().contains(RangerConstants.ROLE_SYS_ADMIN) || loggedInVXUser.getUserRoleList().contains(RangerConstants.ROLE_ADMIN_AUDITOR)) {
-                    if (loggedInVXUser.getUserRoleList().contains(RangerConstants.ROLE_SYS_ADMIN) && "rangerusersync".equalsIgnoreCase(userSession.getLoginId())) {
+                } else if (StringUtil.containsIgnoreCase(loggedInVXUser.getUserRoleList(), RangerConstants.ROLE_KEY_ADMIN) || StringUtil.containsIgnoreCase(loggedInVXUser.getUserRoleList(), RangerConstants.ROLE_KEY_ADMIN_AUDITOR)) {
+                    return StringUtil.containsIgnoreCase(requestedVXUser.getUserRoleList(), RangerConstants.ROLE_KEY_ADMIN) || StringUtil.containsIgnoreCase(requestedVXUser.getUserRoleList(), RangerConstants.ROLE_KEY_ADMIN_AUDITOR) || StringUtil.containsIgnoreCase(requestedVXUser.getUserRoleList(), RangerConstants.ROLE_USER);
+                } else if (StringUtil.containsIgnoreCase(loggedInVXUser.getUserRoleList(), RangerConstants.ROLE_SYS_ADMIN) || StringUtil.containsIgnoreCase(loggedInVXUser.getUserRoleList(), RangerConstants.ROLE_ADMIN_AUDITOR)) {
+                    if (StringUtil.containsIgnoreCase(loggedInVXUser.getUserRoleList(), RangerConstants.ROLE_SYS_ADMIN) && "rangerusersync".equalsIgnoreCase(userSession.getLoginId())) {
                         return true;
                     } else {
-                        return requestedVXUser.getUserRoleList().contains(RangerConstants.ROLE_SYS_ADMIN) || requestedVXUser.getUserRoleList().contains(RangerConstants.ROLE_ADMIN_AUDITOR) || requestedVXUser.getUserRoleList().contains(RangerConstants.ROLE_USER);
+                        return StringUtil.containsIgnoreCase(requestedVXUser.getUserRoleList(), RangerConstants.ROLE_SYS_ADMIN) || StringUtil.containsIgnoreCase(requestedVXUser.getUserRoleList(), RangerConstants.ROLE_ADMIN_AUDITOR) || StringUtil.containsIgnoreCase(requestedVXUser.getUserRoleList(), RangerConstants.ROLE_USER);
                     }
                 }
             }
