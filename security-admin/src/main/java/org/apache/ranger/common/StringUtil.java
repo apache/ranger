@@ -27,6 +27,7 @@ import java.io.Serializable;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -68,6 +69,14 @@ public class StringUtil implements Serializable {
 
     public static String getUTFEncodedString(String username) throws UnsupportedEncodingException {
         return URLEncoder.encode(username, StandardCharsets.UTF_8.toString());
+    }
+
+    public static boolean containsIgnoreCase(Collection<String> values, String str) {
+        if (values != null && str != null) {
+            return values.stream().anyMatch(str::equalsIgnoreCase);
+        }
+
+        return false;
     }
 
     /**

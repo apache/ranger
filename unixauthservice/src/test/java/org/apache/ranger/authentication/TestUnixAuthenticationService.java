@@ -255,7 +255,7 @@ public class TestUnixAuthenticationService {
         try (MockedStatic<UserGroupSyncConfig> ugscStatic = mockStatic(UserGroupSyncConfig.class);
                 MockedStatic<UserSyncHAInitializerImpl> haStatic = mockStatic(UserSyncHAInitializerImpl.class);
                 MockedConstruction<UnixAuthenticationService> serviceConstruction = mockConstruction(UnixAuthenticationService.class, (mock, ctx) -> {
-                    // service.run() will be called by main; make it a no-op
+                    doNothing().when(mock).run();
                 })) {
             UserGroupSyncConfig ugsc = mock(UserGroupSyncConfig.class);
             ugscStatic.when(UserGroupSyncConfig::getInstance).thenReturn(ugsc);
@@ -264,7 +264,10 @@ public class TestUnixAuthenticationService {
             UserSyncHAInitializerImpl ha = mock(UserSyncHAInitializerImpl.class);
             haStatic.when(() -> UserSyncHAInitializerImpl.getInstance(any())).thenReturn(ha);
 
-            UnixAuthenticationService.main(new String[] {"-enableUnixAuth"});
+            UnixAuthenticationService.main(new String[] {});
+
+            assertEquals(1, serviceConstruction.constructed().size());
+            verify(serviceConstruction.constructed().get(0)).run();
         }
     }
 

@@ -711,4 +711,8 @@
 		<name>ranger.allow.kerberos.auth.login.browser</name>
 		<value>false</value>
 	</property>
+	<property>
+		<name>ranger.pam.service</name>
+		<value>login</value>
+	</property>
 </configuration>
