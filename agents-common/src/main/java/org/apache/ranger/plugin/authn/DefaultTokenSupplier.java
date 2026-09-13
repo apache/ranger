@@ -31,15 +31,17 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.function.Supplier;
 
-public class DefaultJwtProvider implements Supplier<String> {
-    private static final Logger LOG = LoggerFactory.getLogger(DefaultJwtProvider.class);
+public class DefaultTokenSupplier implements Supplier<String> {
+    private static final Logger LOG = LoggerFactory.getLogger(DefaultTokenSupplier.class);
 
     public static final String JWT_SOURCE     = ".jwt.source";
     public static final String JWT_ENV        = ".jwt.env";
     public static final String JWT_FILE       = ".jwt.file";
     public static final String JWT_CRED_FILE  = ".jwt.cred.file";
     public static final String JWT_CRED_ALIAS = ".jwt.cred.alias";
-    public static final String JWT_PROVIDER   = ".jwt.provider"; // class name of a Supplier<String> implementation; defaults to DefaultJwtProvider
+
+    // class name of a Supplier<String> implementation; defaults to DefaultTokenSupplier if JWT_SOURCE is configured
+    public static final String JWT_SUPPLIER   = ".jwt.supplier";
 
     private final String jwtEnvVar;
     private final String jwtFilePath;
@@ -50,7 +52,7 @@ public class DefaultJwtProvider implements Supplier<String> {
 
     private volatile String jwt;
 
-    public DefaultJwtProvider(String propertyPrefix, Configuration config) {
+    public DefaultTokenSupplier(String propertyPrefix, Configuration config) {
         String jwtSrc = config.get(propertyPrefix + JWT_SOURCE);
 
         if (jwtSrc == null) {

@@ -24,7 +24,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.ranger.admin.client.RangerAdminClient;
 import org.apache.ranger.admin.client.RangerAdminRESTClient;
 import org.apache.ranger.authorization.hadoop.config.RangerPluginConfig;
-import org.apache.ranger.plugin.authn.DefaultJwtProvider;
+import org.apache.ranger.plugin.authn.DefaultTokenSupplier;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.resourcematcher.RangerResourceMatcher;
 import org.apache.ranger.plugin.service.RangerAuthContext;
@@ -200,18 +200,18 @@ public class RangerPluginContext {
     }
 
     private static Supplier<String> getTokenSupplier(String propertyPrefix, RangerPluginConfig config) {
-        String           providerProp = propertyPrefix + DefaultJwtProvider.JWT_PROVIDER;
+        String           providerProp = propertyPrefix + DefaultTokenSupplier.JWT_SUPPLIER;
         String           clzName      = config.get(providerProp);
         Supplier<String> ret          = null;
 
-        if (StringUtils.isNotBlank(clzName) && !DefaultJwtProvider.class.getName().equals(clzName)) {
+        if (StringUtils.isNotBlank(clzName) && !DefaultTokenSupplier.class.getName().equals(clzName)) {
             ret = getCustomTokenSupplier(clzName, config, providerProp);
         }
 
-        /* DefaultJwtProvider is used only when configured explicitly or when a JWT source is set: otherwise no
+        /* DefaultTokenSupplier is used only when configured explicitly or when a JWT source is set: otherwise no
          * token supplier is created, so the plugin keeps the authentication it had before (basic-auth or none). */
-        if (ret == null && (DefaultJwtProvider.class.getName().equals(clzName) || isJwtSourceConfigured(propertyPrefix, config))) {
-            ret = new DefaultJwtProvider(propertyPrefix, config);
+        if (ret == null && (DefaultTokenSupplier.class.getName().equals(clzName) || isJwtSourceConfigured(propertyPrefix, config))) {
+            ret = new DefaultTokenSupplier(propertyPrefix, config);
         }
 
         if (ret != null) {
@@ -224,7 +224,7 @@ public class RangerPluginContext {
     }
 
     private static boolean isJwtSourceConfigured(String propertyPrefix, RangerPluginConfig config) {
-        return StringUtils.isNotBlank(config.get(propertyPrefix + DefaultJwtProvider.JWT_SOURCE));
+        return StringUtils.isNotBlank(config.get(propertyPrefix + DefaultTokenSupplier.JWT_SOURCE));
     }
 
     @SuppressWarnings("unchecked")

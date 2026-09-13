@@ -29,10 +29,10 @@ import java.util.function.Supplier;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class TestDefaultJwtProvider {
+public class TestDefaultTokenSupplier {
     @Test
-    public void defaultJwtProviderIsSupplierAndReadsTokenFromFile() throws Exception {
-        assertTrue(Supplier.class.isAssignableFrom(DefaultJwtProvider.class), "DefaultJwtProvider should implement Supplier<String>");
+    public void defaultTokenSupplierIsSupplierAndReadsTokenFromFile() throws Exception {
+        assertTrue(Supplier.class.isAssignableFrom(DefaultTokenSupplier.class), "DefaultTokenSupplier should implement Supplier<String>");
 
         File jwtFile = File.createTempFile("ranger-jwt", ".token");
 
@@ -42,10 +42,10 @@ public class TestDefaultJwtProvider {
 
         Configuration config = new Configuration();
 
-        config.set("test.prefix" + DefaultJwtProvider.JWT_SOURCE, "file");
-        config.set("test.prefix" + DefaultJwtProvider.JWT_FILE, jwtFile.getAbsolutePath());
+        config.set("test.prefix" + DefaultTokenSupplier.JWT_SOURCE, "file");
+        config.set("test.prefix" + DefaultTokenSupplier.JWT_FILE, jwtFile.getAbsolutePath());
 
-        Supplier<String> provider = new DefaultJwtProvider("test.prefix", config);
+        Supplier<String> provider = new DefaultTokenSupplier("test.prefix", config);
 
         assertEquals("file-jwt-token", provider.get());
     }
