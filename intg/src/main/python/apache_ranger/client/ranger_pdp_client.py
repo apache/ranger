@@ -21,6 +21,7 @@ from apache_ranger.client.ranger_client import RangerClientHttp
 from apache_ranger.model.ranger_authz   import RangerAuthzRequest, RangerAuthzResult
 from apache_ranger.model.ranger_authz   import RangerMultiAuthzRequest, RangerMultiAuthzResult
 from apache_ranger.model.ranger_authz   import RangerResourcePermissions, RangerResourcePermissionsRequest
+from apache_ranger.model.ranger_authz   import RangerFilterResourcesResult, RangerFilterResourcesRequest
 from apache_ranger.utils                import API, HttpMethod, HTTPStatus
 from apache_ranger.utils                import type_coerce
 
@@ -71,14 +72,27 @@ class RangerPDPClient:
 
         return type_coerce(resp, RangerResourcePermissions)
 
+    def filter_resources(self, filter_resources_request):
+        """
+        Call POST /authz/v1/filterResources
+        :param filter_resources_request: dict-like OR RangerFilterResourcesRequest
+        :return: RangerFilterResourcesResult
+        """
+        req  = type_coerce(filter_resources_request, RangerFilterResourcesRequest)
+        resp = self.client_http.call_api(RangerPDPClient.FILTER_RESOURCES, request_data=req)
+
+        return type_coerce(resp, RangerFilterResourcesResult)
+
     # URIs
     URI_BASE                     = "authz/v1"
     URI_AUTHORIZE                = URI_BASE + "/authorize"
     URI_AUTHORIZE_MULTI          = URI_BASE + "/authorizeMulti"
     URI_RESOURCE_PERMISSIONS     = URI_BASE + "/permissions"
+    URI_FILTER_RESOURCES         = URI_BASE + "/filterResources"
 
     # APIs
     AUTHORIZE                = API(URI_AUTHORIZE, HttpMethod.POST, HTTPStatus.OK)
     AUTHORIZE_MULTI          = API(URI_AUTHORIZE_MULTI, HttpMethod.POST, HTTPStatus.OK)
     GET_RESOURCE_PERMISSIONS = API(URI_RESOURCE_PERMISSIONS, HttpMethod.POST, HTTPStatus.OK)
+    FILTER_RESOURCES         = API(URI_FILTER_RESOURCES, HttpMethod.POST, HTTPStatus.OK)
 

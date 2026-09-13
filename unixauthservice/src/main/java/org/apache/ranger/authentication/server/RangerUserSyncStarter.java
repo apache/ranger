@@ -43,8 +43,7 @@ public class RangerUserSyncStarter {
     static class UnixAuthenticationServiceThread extends Thread {
         @Override
         public void run() {
-            String[] params = {"-enableUnixAuth"};
-            UnixAuthenticationService.main(params);
+            UnixAuthenticationService.main(new String[] {});
         }
     }
 }

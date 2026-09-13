@@ -195,12 +195,14 @@ public class UserGroupSyncConfig {
     /* SSL Configs */
     private static final String SSL_KEYSTORE_FILE_TYPE_PARAM       = "ranger.keystore.file.type";
     private static final String SSL_TRUSTSTORE_FILE_TYPE_PARAM     = "ranger.truststore.file.type";
-    private static final String SSL_KEYSTORE_PATH_PARAM            = "ranger.usersync.keystore.file";
-    private static final String SSL_KEYSTORE_PATH_PASSWORD_PARAM   = "ranger.usersync.keystore.password";
+    private static final String SSL_KEYSTORE_PATH_PARAM            = "ranger.usersync.service.https.attrib.keystore.file";
+    private static final String SSL_KEYSTORE_PATH_PASSWORD_PARAM   = "ranger.usersync.service.https.attrib.keystore.pass";
     private static final String SSL_TRUSTSTORE_PATH_PARAM          = "ranger.usersync.truststore.file";
     private static final String SSL_TRUSTSTORE_PATH_PASSWORD_PARAM = "ranger.usersync.truststore.password";
-    private static final String SSL_KEYSTORE_PATH_PASSWORD_ALIAS   = "usersync.ssl.key.password";
+    private static final String SSL_KEYSTORE_PATH_PASSWORD_ALIAS   = "ranger.usersync.service.https.attrib.keystore.pass";
     private static final String SSL_TRUSTSTORE_PATH_PASSWORD_ALIAS = "usersync.ssl.truststore.password";
+
+    private static final String UGSYNC_UNIX_AUTH_ENABLED = "ranger.usersync.unix.auth.enabled";
 
     private static volatile UserGroupSyncConfig me;
     private final           Properties          prop = new Properties();
@@ -409,6 +411,14 @@ public class UserGroupSyncConfig {
         }
 
         return prop.getProperty(SSL_TRUSTSTORE_PATH_PASSWORD_PARAM);
+    }
+
+    public boolean getUserSyncUnixAuth() {
+        boolean enableUnixAuth = false;
+        if (prop.containsKey(UGSYNC_UNIX_AUTH_ENABLED)) {
+            enableUnixAuth = Boolean.parseBoolean(prop.getProperty(UGSYNC_UNIX_AUTH_ENABLED));
+        }
+        return enableUnixAuth;
     }
 
     public long getUpdateMillisMin() {

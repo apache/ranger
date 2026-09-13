@@ -2,7 +2,7 @@
     "serviceId": 1, "serviceName": "dev_s3", "policyVersion": 15,
     "policies": [
         {
-            "id": 1, "name": "mybucket/path/path1", "version": 1,
+            "id": 1, "name": "mybucket/data/path1", "version": 1,
             "resources": { "bucket": { "values": [ "mybucket" ] }, "path": { "values": [ "data/path1" ], "isRecursive": true } },
             "policyItems": [
                 { "accesses": [ { "type": "read" } ], "users": [ "path1-r-user" ] },
@@ -10,7 +10,7 @@
             ]
         },
         {
-            "id": 2, "name": "mybucket/path/path2", "version": 1,
+            "id": 2, "name": "mybucket/data/path2", "version": 1,
             "resources": { "bucket": { "values": [ "mybucket" ] }, "path": { "values": [ "data/path2" ], "isRecursive": true } },
             "policyItems": [
                 { "accesses": [ { "type": "read" } ], "users": [ "path2-r-user" ] },

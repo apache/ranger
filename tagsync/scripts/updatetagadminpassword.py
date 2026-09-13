@@ -170,7 +170,7 @@ def main(argv):
 
 	if KEYSTORE_FILENAME != "" or USERNAME != "" or PASSWORD != "":
 		log("[I] Storing password for " + ENDPOINT + " user " + USERNAME + " in credential store:","info")
-		cmd="%s -cp lib/* org.apache.ranger.credentialapi.buildks create %s -value %s  -provider jceks://file%s" %(JAVA_BIN,ALIAS,PASSWORD,KEYSTORE_FILENAME)
+		cmd="%s -cp ews/lib/* org.apache.ranger.credentialapi.buildks create %s -value %s  -provider jceks://file%s" %(JAVA_BIN,ALIAS,PASSWORD,KEYSTORE_FILENAME)
 		ret=subprocess.call(shlex.split(cmd))
 		if ret == 0:
 			cmd="chown %s:%s %s" %(unix_user,unix_group,KEYSTORE_FILENAME)
