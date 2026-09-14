@@ -60,12 +60,14 @@ public abstract class AuditDispatcherBase implements AuditDispatcher {
     protected final AtomicBoolean                 running               = new AtomicBoolean(false);
     protected final Map<String, DispatcherWorker> dispatcherWorkers     = new ConcurrentHashMap<>();
     protected final Map<String, Future<?>>        workerFutures         = new ConcurrentHashMap<>();
+    protected final Map<String, AtomicInteger>    workerRestartCounts   = new ConcurrentHashMap<>();
+    protected final long                          authzRetryDelayMs;
+    protected final long                          authnRetryDelayMs;
+    protected final long                          pollErrorRetryDelayMs;
     protected ExecutorService                     dispatcherThreadPool;
     protected int                                 dispatcherThreadCount = 1;
     protected String                              offsetCommitStrategy  = AuditServerConstants.DEFAULT_OFFSET_COMMIT_STRATEGY;
     protected long                                offsetCommitInterval  = AuditServerConstants.DEFAULT_OFFSET_COMMIT_INTERVAL_MS;
-    protected long                                authRetryDelayMs      = AuditServerConstants.DEFAULT_DISPATCHER_AUTH_RETRY_DELAY_MS;
-    protected long                                pollErrorRetryDelayMs = AuditServerConstants.DEFAULT_DISPATCHER_POLL_ERROR_RETRY_DELAY_MS;
 
     public AuditDispatcherBase(Properties props, String propPrefix, String dispatcherGroupId) throws Exception {
         this.dispatcherGroupId = getDispatcherGroupId(props, propPrefix, dispatcherGroupId);
@@ -102,8 +104,14 @@ public abstract class AuditDispatcherBase implements AuditDispatcher {
         String partitionAssignmentStrategy = MiscUtil.getStringProperty(props, propPrefix + "." + AuditServerConstants.PROP_DISPATCHER_PARTITION_ASSIGNMENT_STRATEGY, AuditServerConstants.DEFAULT_PARTITION_ASSIGNMENT_STRATEGY);
         dispatcherProps.put(ConsumerConfig.PARTITION_ASSIGNMENT_STRATEGY_CONFIG, partitionAssignmentStrategy);
 
-        authRetryDelayMs      = MiscUtil.getLongProperty(props, propPrefix + "." + AuditServerConstants.PROP_DISPATCHER_AUTH_RETRY_DELAY_MS, AuditServerConstants.DEFAULT_DISPATCHER_AUTH_RETRY_DELAY_MS);
+        authzRetryDelayMs = MiscUtil.getLongProperty(props, propPrefix + "." + AuditServerConstants.PROP_DISPATCHER_AUTHZ_RETRY_DELAY_MS, AuditServerConstants.DEFAULT_DISPATCHER_AUTHZ_RETRY_DELAY_MS);
+        dispatcherProps.put(propPrefix + "." + AuditServerConstants.PROP_DISPATCHER_AUTHZ_RETRY_DELAY_MS, authzRetryDelayMs);
+
+        authnRetryDelayMs = MiscUtil.getLongProperty(props, propPrefix + "." + AuditServerConstants.PROP_DISPATCHER_AUTHN_RETRY_DELAY_MS, AuditServerConstants.DEFAULT_DISPATCHER_AUTHN_RETRY_DELAY_MS);
+        dispatcherProps.put(propPrefix + "." + AuditServerConstants.PROP_DISPATCHER_AUTHN_RETRY_DELAY_MS, authnRetryDelayMs);
+
         pollErrorRetryDelayMs = MiscUtil.getLongProperty(props, propPrefix + "." + AuditServerConstants.PROP_DISPATCHER_POLL_ERROR_RETRY_DELAY_MS, AuditServerConstants.DEFAULT_DISPATCHER_POLL_ERROR_RETRY_DELAY_MS);
+        dispatcherProps.put(propPrefix + "." + AuditServerConstants.PROP_DISPATCHER_POLL_ERROR_RETRY_DELAY_MS, pollErrorRetryDelayMs);
 
         LOG.info("Dispatcher '{}' configured for subscription-based partition assignment with re-balancing support", this.dispatcherGroupId);
         LOG.info("Re-balancing config - session.timeout.ms: {}, max.poll.interval.ms: {}, heartbeat.interval.ms: {}", sessionTimeoutMs, maxPollIntervalMs, heartbeatIntervalMs);
@@ -113,10 +121,13 @@ public abstract class AuditDispatcherBase implements AuditDispatcher {
         topicName  = MiscUtil.getStringProperty(props, propPrefix + "." + AuditServerConstants.PROP_TOPIC_NAME, AuditServerConstants.DEFAULT_TOPIC);
     }
 
-    AuditDispatcherBase(String dispatcherGroupId, KafkaConsumer<String, String> dispatcher, String topicName) {
-        this.dispatcherGroupId = dispatcherGroupId;
-        this.dispatcher        = dispatcher;
-        this.topicName         = topicName;
+    AuditDispatcherBase(String dispatcherGroupId, KafkaConsumer<String, String> dispatcher, String topicName, long authzRetryDelayMs, long authnRetryDelayMs, long pollErrorRetryDelayMs) {
+        this.dispatcherGroupId     = dispatcherGroupId;
+        this.dispatcher            = dispatcher;
+        this.topicName             = topicName;
+        this.authzRetryDelayMs     = authzRetryDelayMs;
+        this.authnRetryDelayMs     = authnRetryDelayMs;
+        this.pollErrorRetryDelayMs = pollErrorRetryDelayMs;
     }
 
     @Override
@@ -242,15 +253,16 @@ public abstract class AuditDispatcherBase implements AuditDispatcher {
             Future<?> future = entry.getValue();
 
             if (future.isDone()) {
-                LOG.warn("Worker '{}' has terminated unexpectedly. Attempting to restart...", workerId);
+                int restartCount = workerRestartCounts.computeIfAbsent(workerId, k -> new AtomicInteger(0)).incrementAndGet();
+                LOG.warn("Worker '{}' has terminated unexpectedly. Attempting to restart... (Restart count: {})", workerId, restartCount);
                 try {
                     // Remove the dead worker
                     dispatcherWorkers.remove(workerId);
                     // Start a new worker with the same ID
                     startWorker(workerId);
-                    LOG.info("Successfully restarted worker '{}'", workerId);
+                    LOG.info("Successfully restarted worker '{}' (Restart count: {})", workerId, restartCount);
                 } catch (Exception e) {
-                    LOG.error("Failed to restart worker '{}'", workerId, e);
+                    LOG.error("Failed to restart worker '{}' (Restart count: {})", workerId, restartCount, e);
                 }
             }
         }
@@ -365,11 +377,11 @@ public abstract class AuditDispatcherBase implements AuditDispatcher {
                 Thread.currentThread().interrupt();
                 return false;
             } else if (e instanceof AuthorizationException) {
-                LOG.warn("Authorization error in {} dispatcher worker '{}'. Retrying in {} ms...", getDispatcherName(), workerId, authRetryDelayMs, e);
-                return sleepForRetry(authRetryDelayMs);
+                LOG.warn("Authorization error in {} dispatcher worker '{}'. Retrying in {} ms...", getDispatcherName(), workerId, authzRetryDelayMs, e);
+                return sleepForRetry(authzRetryDelayMs);
             } else if (e instanceof AuthenticationException) {
-                LOG.warn("Authentication error in {} dispatcher worker '{}'. Retrying in {} ms...", getDispatcherName(), workerId, authRetryDelayMs, e);
-                return sleepForRetry(authRetryDelayMs);
+                LOG.warn("Authentication error in {} dispatcher worker '{}'. Retrying in {} ms...", getDispatcherName(), workerId, authnRetryDelayMs, e);
+                return sleepForRetry(authnRetryDelayMs);
             } else {
                 LOG.error("Error while polling/processing in {} dispatcher worker '{}'. Retrying in {} ms...", getDispatcherName(), workerId, pollErrorRetryDelayMs, e);
                 return sleepForRetry(pollErrorRetryDelayMs);

@@ -48,7 +48,8 @@ public class AuditDispatcherBaseTest {
         Properties props = new Properties();
         props.setProperty("ranger.audit.dispatcher.test.kafka.group.id", "test-group");
         props.setProperty("ranger.audit.dispatcher.test." + AuditServerConstants.PROP_BOOTSTRAP_SERVERS, "localhost:9092");
-        props.setProperty("ranger.audit.dispatcher.test." + AuditServerConstants.PROP_DISPATCHER_AUTH_RETRY_DELAY_MS, "100");
+        props.setProperty("ranger.audit.dispatcher.test." + AuditServerConstants.PROP_DISPATCHER_AUTHZ_RETRY_DELAY_MS, "100");
+        props.setProperty("ranger.audit.dispatcher.test." + AuditServerConstants.PROP_DISPATCHER_AUTHN_RETRY_DELAY_MS, "100");
         props.setProperty("ranger.audit.dispatcher.test." + AuditServerConstants.PROP_DISPATCHER_POLL_ERROR_RETRY_DELAY_MS, "100");
 
         mockConsumer = mock(KafkaConsumer.class);
@@ -98,9 +99,7 @@ public class AuditDispatcherBaseTest {
 
     private static class TestAuditDispatcher extends AuditDispatcherBase {
         public TestAuditDispatcher(Properties props, String propPrefix, String dispatcherGroupId, KafkaConsumer<String, String> mockConsumer) throws Exception {
-            super(dispatcherGroupId, mockConsumer, "test-topic");
-            this.authRetryDelayMs = 100;
-            this.pollErrorRetryDelayMs = 100;
+            super(dispatcherGroupId, mockConsumer, "test-topic", 100L, 100L, 100L);
         }
 
         @Override
