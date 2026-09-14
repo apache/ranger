@@ -1504,6 +1504,92 @@ public class TestRangerHiveAuthorizer {
         }
     }
 
+    @Test
+    void test80_isBlockAccessIfRowfilterColumnMaskSpecified_blocksUpdateAndAlterOnTable() throws Exception {
+        RangerHiveAuthorizer authorizer = new RangerHiveAuthorizer(null, null, null, null);
+        Method               m          = RangerHiveAuthorizer.class.getDeclaredMethod(
+                "isBlockAccessIfRowfilterColumnMaskSpecified", HiveOperationType.class, RangerHiveAccessRequest.class);
+        m.setAccessible(true);
+
+        boolean originalBlockFlag = getBlockUpdateIfRowfilterColumnMaskSpecified();
+        setBlockUpdateIfRowfilterColumnMaskSpecified(true);
+
+        try {
+            RangerHiveResource      tableResource = new RangerHiveResource(RangerHiveAuthorizer.HiveObjectType.TABLE, "rf_test", "orders_east");
+            RangerHiveAccessRequest updateRequest = new RangerHiveAccessRequest(tableResource, "user1", new HashSet<>(), new HashSet<>(),
+                    "TRUNCATETABLE", RangerHiveAuthorizer.HiveAccessType.UPDATE, null, null);
+            RangerHiveAccessRequest alterRequest = new RangerHiveAccessRequest(tableResource, "user1", new HashSet<>(), new HashSet<>(),
+                    "ALTERTABLE", RangerHiveAuthorizer.HiveAccessType.ALTER, null, null);
+            RangerHiveAccessRequest selectRequest = new RangerHiveAccessRequest(tableResource, "user1", new HashSet<>(), new HashSet<>(),
+                    "QUERY", RangerHiveAuthorizer.HiveAccessType.SELECT, null, null);
+
+            assertTrue((Boolean) m.invoke(authorizer, HiveOperationType.TRUNCATETABLE, updateRequest));
+            assertTrue((Boolean) m.invoke(authorizer, HiveOperationType.ALTERTABLE_ADDCOLS, alterRequest));
+            assertFalse((Boolean) m.invoke(authorizer, HiveOperationType.QUERY, selectRequest));
+
+            setBlockUpdateIfRowfilterColumnMaskSpecified(false);
+            assertFalse((Boolean) m.invoke(authorizer, HiveOperationType.TRUNCATETABLE, updateRequest));
+        } finally {
+            setBlockUpdateIfRowfilterColumnMaskSpecified(originalBlockFlag);
+        }
+    }
+
+    @Test
+    void test81_checkPrivileges_blocksUpdateWhenWildcardRowFilterApplies() throws Exception {
+        RangerBasePlugin pluginSpy = (RangerBasePlugin) Mockito.spy(newInstanceRangerHivePlugin("hiveCLI"));
+        Mockito.doReturn(allowedResult(true)).when(pluginSpy).isAccessAllowed(Mockito.any(RangerAccessRequestImpl.class), Mockito.any());
+
+        RangerAccessResult rowFilterResult = new RangerAccessResult(RangerPolicy.POLICY_TYPE_ROWFILTER, "svc", null, new RangerAccessRequestImpl());
+        rowFilterResult.setFilterExpr("region IN ('FA','SL')");
+        Mockito.doReturn(rowFilterResult).when(pluginSpy).evalRowFilterPolicies(Mockito.any(RangerHiveAccessRequest.class), Mockito.any());
+        setStaticHivePlugin(pluginSpy);
+
+        boolean originalBlockFlag = getBlockUpdateIfRowfilterColumnMaskSpecified();
+        setBlockUpdateIfRowfilterColumnMaskSpecified(true);
+
+        try {
+            HiveMetastoreClientFactory msFactory = Mockito.mock(HiveMetastoreClientFactory.class);
+            IMetaStoreClient           ms        = Mockito.mock(IMetaStoreClient.class);
+            Mockito.when(msFactory.getHiveMetastoreClient()).thenReturn(ms);
+
+            RangerHiveAuthorizer authorizer = Mockito.spy(new RangerHiveAuthorizer(msFactory, null, null, null));
+            UserGroupInformation ugi        = UserGroupInformation.createRemoteUser("rf_user");
+            Mockito.doReturn(ugi).when(authorizer).getCurrentUserGroupInfo();
+
+            HivePrivilegeObject table = new HivePrivilegeObject(HivePrivilegeObjectType.TABLE_OR_VIEW, "rf_test", "orders_east");
+            assertThrows(HiveAccessControlException.class, () -> authorizer.checkPrivileges(
+                    HiveOperationType.TRUNCATETABLE, Collections.singletonList(table), Collections.emptyList(), Mockito.mock(HiveAuthzContext.class)));
+        } finally {
+            setBlockUpdateIfRowfilterColumnMaskSpecified(originalBlockFlag);
+        }
+    }
+
+    @Test
+    void test82_checkPrivileges_allowsUpdateWhenBlockPropertyDisabled() throws Exception {
+        RangerBasePlugin pluginSpy = (RangerBasePlugin) Mockito.spy(newInstanceRangerHivePlugin("hiveCLI"));
+        Mockito.doReturn(allowedResult(true)).when(pluginSpy).isAccessAllowed(Mockito.any(RangerAccessRequestImpl.class), Mockito.any());
+        setStaticHivePlugin(pluginSpy);
+
+        boolean originalBlockFlag = getBlockUpdateIfRowfilterColumnMaskSpecified();
+        setBlockUpdateIfRowfilterColumnMaskSpecified(false);
+
+        try {
+            HiveMetastoreClientFactory msFactory = Mockito.mock(HiveMetastoreClientFactory.class);
+            IMetaStoreClient           ms        = Mockito.mock(IMetaStoreClient.class);
+            Mockito.when(msFactory.getHiveMetastoreClient()).thenReturn(ms);
+
+            RangerHiveAuthorizer authorizer = Mockito.spy(new RangerHiveAuthorizer(msFactory, null, null, null));
+            UserGroupInformation ugi        = UserGroupInformation.createRemoteUser("rf_user");
+            Mockito.doReturn(ugi).when(authorizer).getCurrentUserGroupInfo();
+
+            HivePrivilegeObject table = new HivePrivilegeObject(HivePrivilegeObjectType.TABLE_OR_VIEW, "rf_test", "orders_east");
+            authorizer.checkPrivileges(HiveOperationType.TRUNCATETABLE, Collections.singletonList(table), Collections.emptyList(),
+                    Mockito.mock(HiveAuthzContext.class));
+        } finally {
+            setBlockUpdateIfRowfilterColumnMaskSpecified(originalBlockFlag);
+        }
+    }
+
     private static RangerAccessResult allowedResult(boolean isAllowed) {
         RangerAccessResult res = new RangerAccessResult(RangerPolicy.POLICY_TYPE_ACCESS, "svc", null, new RangerAccessRequestImpl());
         res.setIsAudited(true);
@@ -1535,5 +1621,19 @@ public class TestRangerHiveAuthorizer {
         java.lang.reflect.Constructor<?> ctor = c.getDeclaredConstructor(String.class);
         ctor.setAccessible(true);
         return ctor.newInstance(appType);
+    }
+
+    private static boolean getBlockUpdateIfRowfilterColumnMaskSpecified() throws Exception {
+        Field f = Class.forName("org.apache.ranger.authorization.hive.authorizer.RangerHiveAuthorizer$RangerHivePlugin")
+                .getDeclaredField("blockUpdateIfRowfilterColumnMaskSpecified");
+        f.setAccessible(true);
+        return f.getBoolean(null);
+    }
+
+    private static void setBlockUpdateIfRowfilterColumnMaskSpecified(boolean value) throws Exception {
+        Field f = Class.forName("org.apache.ranger.authorization.hive.authorizer.RangerHiveAuthorizer$RangerHivePlugin")
+                .getDeclaredField("blockUpdateIfRowfilterColumnMaskSpecified");
+        f.setAccessible(true);
+        f.set(null, value);
     }
 }

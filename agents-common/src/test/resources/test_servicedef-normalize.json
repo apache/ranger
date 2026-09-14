@@ -71,7 +71,7 @@
             "accessTypes": [ { "itemId": 1, "name": "select", "label": "select" } ],
             "resources": [
                 { "itemId": 1, "name": "database", "type": "string", "level": 10, "mandatory": true, "lookupSupported": true, "recursiveSupported": false, "excludesSupported": false, "matcher": "org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher", "matcherOptions": { "wildCard": "false", "ignoreCase": "true" }, "uiHint": "{ \"singleValue\":true }", "label": "Hive Database", "description": "Hive Database", "accessTypeRestrictions": [], "isValidLeaf": false },
-                { "itemId": 2, "name": "table", "type": "string", "level": 20, "parent": "database", "mandatory": true, "lookupSupported": true, "recursiveSupported": false, "excludesSupported": false, "matcher": "org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher", "matcherOptions": { "wildCard": "false", "ignoreCase": "true" }, "uiHint": "{ \"singleValue\":true }", "label": "Hive Table", "description": "Hive Table", "accessTypeRestrictions": [], "isValidLeaf": true }
+                { "itemId": 2, "name": "table", "type": "string", "level": 20, "parent": "database", "mandatory": true, "lookupSupported": true, "recursiveSupported": false, "excludesSupported": false, "matcher": "org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher", "matcherOptions": { "wildCard": "true", "ignoreCase": "true" }, "uiHint": "", "label": "Hive Table", "description": "Hive Table", "accessTypeRestrictions": [], "isValidLeaf": true }
             ]
         },
         "markerAccessTypes": [
