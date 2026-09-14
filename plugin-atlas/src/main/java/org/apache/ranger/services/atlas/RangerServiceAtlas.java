@@ -87,7 +87,6 @@ public class RangerServiceAtlas extends RangerBaseService {
     public static final String ACCESS_TYPE_ENTITY_UPDATE              = "entity-update";
     public static final String ACCESS_TYPE_ENTITY_DELETE              = "entity-delete";
     public static final String ACCESS_TYPE_POST_NOTIFICATION          = "post-notification";
-    public static final String ACCESS_TYPE_SERVICE_NOTIFICATION_POST  = "service-notification-post";
     public static final String ADMIN_USERNAME_DEFAULT                 = "admin";
     public static final String TAGSYNC_USERNAME_DEFAULT               = "rangertagsync";
     public static final String ENTITY_TYPE_USER_PROFILE               = "__AtlasUserProfile";
