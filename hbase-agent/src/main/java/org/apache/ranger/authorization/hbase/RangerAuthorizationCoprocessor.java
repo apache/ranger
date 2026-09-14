@@ -1437,26 +1437,30 @@ public class RangerAuthorizationCoprocessor implements AccessControlService.Inte
     boolean isAccessForMetadataRead(String access, String table, User user) {
         if (authUtils.isReadAccess(access) && isSpecialTable(table)) {
             if (StringUtils.equals(table, "hbase:acl")) {
-                boolean isSystemOrSuperUser = false;
-                try {
-                    User currentUser = User.getCurrent();
-                    if (currentUser != null && user != null) {
-                        isSystemOrSuperUser = Objects.equals(currentUser.getShortName(), user.getShortName());
-                    }
-                } catch (IOException e) {
-                    LOG.warn("Unable to obtain the current user", e);
+                if (user == null) {
+                    return false;
                 }
-                if (!isSystemOrSuperUser && user != null) {
-                    isSystemOrSuperUser = userUtils.isSuperUser(user);
+                boolean isSystemOrSuperUser = userUtils.isSuperUser(user);
+                if (!isSystemOrSuperUser) {
+                    try {
+                        User currentUser = User.getCurrent();
+                        if (currentUser != null) {
+                            isSystemOrSuperUser = Objects.equals(currentUser.getShortName(), user.getShortName());
+                        }
+                    } catch (IOException e) {
+                        LOG.warn("Unable to obtain the current user", e);
+                    }
                 }
                 if (!isSystemOrSuperUser) {
                     return false;
                 }
             }
-            LOG.debug("isAccessForMetadataRead: Metadata tables read: access allowed!");
+            LOG.debug("isAccessForMetadataRead: Metadata tables read: access allowed for user: {}!", (user != null ? user.getShortName() : ""));
 
             return true;
         }
+
+        LOG.debug("isAccessForMetadataRead: Metadata tables read: not access allowed for user: {}!", (user != null ? user.getShortName() : ""));
 
         return false;
     }
