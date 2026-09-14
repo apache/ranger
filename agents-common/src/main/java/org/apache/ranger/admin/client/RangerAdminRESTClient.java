@@ -30,7 +30,6 @@ import org.apache.ranger.admin.client.datatype.RESTResponse;
 import org.apache.ranger.audit.provider.MiscUtil;
 import org.apache.ranger.authorization.hadoop.config.RangerPluginConfig;
 import org.apache.ranger.authorization.utils.StringUtil;
-import org.apache.ranger.plugin.authn.JwtProvider;
 import org.apache.ranger.plugin.model.RangerRole;
 import org.apache.ranger.plugin.util.*;
 import org.slf4j.Logger;
@@ -43,6 +42,7 @@ import java.security.PrivilegedExceptionAction;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Supplier;
 
 public class RangerAdminRESTClient extends AbstractRangerAdminClient {
 	private static final Logger LOG = LoggerFactory.getLogger(RangerAdminRESTClient.class);
@@ -53,7 +53,7 @@ public class RangerAdminRESTClient extends AbstractRangerAdminClient {
     private String           serviceNameUrlParam;
 	private String           pluginId;
 	private String           clusterName;
-	private JwtProvider      jwtProvider;
+	private Supplier<String> tokenSupplier;
 	private RangerRESTClient restClient;
 	private RangerRESTUtils  restUtils   = new RangerRESTUtils();
 	private boolean 		 supportsPolicyDeltas;
@@ -766,11 +766,11 @@ public class RangerAdminRESTClient extends AbstractRangerAdminClient {
 		return (restClient != null && restClient.isAuthFilterPresent()) || super.isAuthenticationEnabled();
 	}
 
-	public void setJwtProvider(JwtProvider jwtProvider) {
-		this.jwtProvider = jwtProvider;
+	public void setTokenSupplier(Supplier<String> tokenSupplier) {
+		this.tokenSupplier = tokenSupplier;
 
 		if (restClient != null) {
-			restClient.setJwtProvider(jwtProvider);
+			restClient.setTokenSupplier(tokenSupplier);
 		}
 	}
 
@@ -780,8 +780,8 @@ public class RangerAdminRESTClient extends AbstractRangerAdminClient {
 		}
 
 		restClient = new RangerRESTClient(url, sslConfigFileName, config);
-		if (jwtProvider != null) {
-			restClient.setJwtProvider(jwtProvider);
+		if (tokenSupplier != null) {
+			restClient.setTokenSupplier(tokenSupplier);
 		}
 		restClient.setRestClientConnTimeOutMs(restClientConnTimeOutMs);
 		restClient.setRestClientReadTimeOutMs(restClientReadTimeOutMs);

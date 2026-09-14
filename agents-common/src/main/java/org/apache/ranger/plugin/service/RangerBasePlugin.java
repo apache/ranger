@@ -21,6 +21,7 @@ package org.apache.ranger.plugin.service;
 
 import java.io.IOException;
 import java.util.*;
+import java.util.function.Supplier;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -34,7 +35,6 @@ import org.apache.ranger.audit.provider.StandAloneAuditProviderFactory;
 import org.apache.ranger.authorization.hadoop.config.RangerAuditConfig;
 import org.apache.ranger.authorization.hadoop.config.RangerPluginConfig;
 import org.apache.ranger.authorization.utils.StringUtil;
-import org.apache.ranger.plugin.authn.JwtProvider;
 import org.apache.ranger.plugin.contextenricher.RangerAdminUserStoreRetriever;
 import org.apache.ranger.plugin.contextenricher.RangerUserStoreEnricher;
 import org.apache.ranger.plugin.model.RangerBaseModelObject;
@@ -216,8 +216,8 @@ public class RangerBasePlugin {
 		return ret;
 	}
 
-	public void registerJwtProvider(JwtProvider jwtProvider) {
-		pluginContext.registerJWTProvider(jwtProvider);
+	public void registerTokenSupplier(Supplier<String> tokenSupplier) {
+		pluginContext.registerTokenSupplier(tokenSupplier);
 	}
 
 	public String getServiceType() {

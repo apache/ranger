@@ -37,6 +37,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.Set;
+import java.util.function.Supplier;
 
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.KeyManager;
@@ -57,7 +58,6 @@ import org.apache.ranger.authorization.hadoop.config.RangerPluginConfig;
 import org.apache.ranger.authorization.hadoop.utils.RangerCredentialProvider;
 import org.apache.ranger.authorization.utils.JsonUtils;
 import org.apache.ranger.authorization.utils.StringUtil;
-import org.apache.ranger.plugin.authn.JwtProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -119,7 +119,7 @@ public class RangerRESTClient {
 
 	private volatile Client client;
 	private volatile Client cookieAuthClient;
-	private          JwtProvider  jwtProvider;
+	private volatile Supplier<String> tokenSupplier;
 	private          ClientFilter jwtAuthFilter;
 	private          ClientFilter basicAuthFilter;
 	private volatile String       basicAuthHeader;
@@ -194,8 +194,8 @@ public class RangerRESTClient {
 		setBasicAuthFilter(username, password);
 	}
 
-	public void setJwtProvider(JwtProvider jwtProvider) {
-		this.jwtProvider = jwtProvider;
+	public void setTokenSupplier(Supplier<String> tokenSupplier) {
+		this.tokenSupplier = tokenSupplier;
 
 		setJWTFilter();
 		resetClient();
@@ -301,13 +301,13 @@ public class RangerRESTClient {
 	}
 
 	private void setJWTFilter() {
-		JwtProvider jwtProvider = this.jwtProvider;
-		if (jwtProvider != null) {
+		Supplier<String> provider = tokenSupplier;
+		if (provider != null) {
 			LOG.info("Registering JWT auth header in REST client");
 			jwtAuthFilter = new ClientFilter() {
 				@Override
 				public ClientResponse handle(ClientRequest clientRequest) throws ClientHandlerException {
-					String jwt = StringUtils.trimToNull(jwtProvider.getJwt());
+					String jwt = StringUtils.trimToNull(provider.get());
 
 					/* without a token, fall back to basic auth when it is configured */
 					if (jwt != null) {
