@@ -1390,7 +1390,7 @@ public class RangerAuthorizationCoprocessor implements AccessControlService.Inte
             LOG.warn("canSkipAccessCheck: exiting{}", "Unexpeceted: User is null: access denied, not audited!");
 
             throw new AccessDeniedException("No user associated with request (" + operation + ") for action: " + access + "on table:" + table);
-        } else if (isAccessForMetadataRead(access, table)) {
+        } else if (isAccessForMetadataRead(access, table, user)) {
             LOG.debug("canSkipAccessCheck: true: metadata read access always allowed, not audited");
 
             result = true;
@@ -1434,12 +1434,33 @@ public class RangerAuthorizationCoprocessor implements AccessControlService.Inte
 
     /* ---- EndpointObserver implementation ---- */
 
-    boolean isAccessForMetadataRead(String access, String table) {
+    boolean isAccessForMetadataRead(String access, String table, User user) {
         if (authUtils.isReadAccess(access) && isSpecialTable(table)) {
-            LOG.debug("isAccessForMetadataRead: Metadata tables read: access allowed!");
+            if (StringUtils.equals(table, "hbase:acl")) {
+                if (user == null) {
+                    return false;
+                }
+                boolean isSystemOrSuperUser = userUtils.isSuperUser(user);
+                if (!isSystemOrSuperUser) {
+                    try {
+                        User currentUser = User.getCurrent();
+                        if (currentUser != null) {
+                            isSystemOrSuperUser = Objects.equals(currentUser.getShortName(), user.getShortName());
+                        }
+                    } catch (IOException e) {
+                        LOG.warn("Unable to obtain the current user", e);
+                    }
+                }
+                if (!isSystemOrSuperUser) {
+                    return false;
+                }
+            }
+            LOG.debug("isAccessForMetadataRead: Metadata tables read: access allowed for user: {}!", (user != null ? user.getShortName() : ""));
 
             return true;
         }
+
+        LOG.debug("isAccessForMetadataRead: Metadata tables read: not access allowed for user: {}!", (user != null ? user.getShortName() : ""));
 
         return false;
     }
