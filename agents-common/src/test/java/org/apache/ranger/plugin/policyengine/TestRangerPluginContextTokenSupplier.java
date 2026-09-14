@@ -28,6 +28,7 @@ import java.util.function.Supplier;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class TestRangerPluginContextTokenSupplier {
     @Test
@@ -85,50 +86,33 @@ public class TestRangerPluginContextTokenSupplier {
     }
 
     @Test
-    public void fallsBackToDefaultForClassThatIsNotSupplier() {
+    public void throwsForClassThatIsNotSupplier() {
         RangerPluginConfig config = newConfig();
 
         config.set(tokenSupplierProperty(config), NotASupplier.class.getName());
         config.set(jwtSourceProperty(config), "env");
 
-        RangerPluginContext ctx = new RangerPluginContext(config);
-
-        assertEquals(DefaultTokenSupplier.class, ctx.getTokenSupplier().getClass());
+        assertThrows(IllegalArgumentException.class, () -> new RangerPluginContext(config));
     }
 
     @Test
-    public void fallsBackToDefaultForUnknownClass() {
+    public void throwsForUnknownClass() {
         RangerPluginConfig config = newConfig();
 
         config.set(tokenSupplierProperty(config), "org.apache.ranger.NoSuchTokenSupplier");
         config.set(jwtSourceProperty(config), "env");
 
-        RangerPluginContext ctx = new RangerPluginContext(config);
-
-        assertEquals(DefaultTokenSupplier.class, ctx.getTokenSupplier().getClass());
+        assertThrows(IllegalArgumentException.class, () -> new RangerPluginContext(config));
     }
 
     @Test
-    public void fallsBackToDefaultWhenProviderConstructorThrows() {
+    public void throwsWhenProviderConstructorThrows() {
         RangerPluginConfig config = newConfig();
 
         config.set(tokenSupplierProperty(config), FailingTokenSupplier.class.getName());
         config.set(jwtSourceProperty(config), "env");
 
-        RangerPluginContext ctx = new RangerPluginContext(config);
-
-        assertEquals(DefaultTokenSupplier.class, ctx.getTokenSupplier().getClass());
-    }
-
-    @Test
-    public void noTokenSupplierWhenCustomProviderFailsAndNoJwtSource() {
-        RangerPluginConfig config = newConfig();
-
-        config.set(tokenSupplierProperty(config), "org.apache.ranger.NoSuchTokenSupplier");
-
-        RangerPluginContext ctx = new RangerPluginContext(config);
-
-        assertNull(ctx.getTokenSupplier());
+        assertThrows(IllegalArgumentException.class, () -> new RangerPluginContext(config));
     }
 
     public static class NoArgTokenSupplier implements Supplier<String> {
