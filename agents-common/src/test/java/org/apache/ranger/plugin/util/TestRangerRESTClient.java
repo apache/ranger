@@ -66,6 +66,44 @@ public class TestRangerRESTClient {
     }
 
     @Test
+    public void jwtProviderInjectsBearerAuthorizationHeader() throws Exception {
+        AtomicReference<String> capturedAuthHeader = new AtomicReference<>();
+        HttpServer              httpServer         = HttpServer.create(new InetSocketAddress(0), 0);
+
+        httpServer.createContext("/", exchange -> {
+            List<String> values = exchange.getRequestHeaders().get("Authorization");
+
+            if (values != null && !values.isEmpty()) {
+                capturedAuthHeader.set(values.get(0));
+            }
+
+            exchange.sendResponseHeaders(200, -1);
+            exchange.close();
+        });
+
+        httpServer.start();
+
+        try {
+            String           serverUrl = "http://localhost:" + httpServer.getAddress().getPort();
+            Configuration    conf      = new Configuration();
+            RangerRESTClient client    = new RangerRESTClient(serverUrl, null, conf);
+
+            // custom token provider is now a plain java.util.function.Supplier<String> (no dependency on Ranger interfaces)
+            client.setTokenSupplier(() -> "test-jwt-token");
+
+            assertTrue(client.isAuthFilterPresent(), "JWT auth filter should be present when a token supplier is registered");
+
+            try (Response response = client.get("/test", Collections.emptyMap())) {
+                assertEquals(200, response.getStatus());
+            }
+
+            assertEquals("Bearer test-jwt-token", capturedAuthHeader.get());
+        } finally {
+            httpServer.stop(0);
+        }
+    }
+
+    @Test
     public void setTrustedAuthHeadersAddsHeaderToOutboundRequest() throws Exception {
         AtomicReference<String> capturedSpiffeHeader = new AtomicReference<>();
         HttpServer              httpServer           = HttpServer.create(new InetSocketAddress(0), 0);
