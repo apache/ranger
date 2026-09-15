@@ -289,4 +289,79 @@ public class TestServiceMgr {
         mgr.lookupResource("s", ctx, store);
         Assertions.assertTrue(true);
     }
+
+    @Test
+    public void test11_validateConfig_sanitizesConnectionRefusedDetails() throws Exception {
+        ServiceMgr mgr = new ServiceMgr();
+        RangerServiceService svcService = mock(RangerServiceService.class);
+        TimedExecutor exec = mock(TimedExecutor.class);
+        setField(mgr, ServiceMgr.class, "rangerSvcService", svcService);
+        setField(mgr, ServiceMgr.class, "timedExecutor", exec);
+
+        RangerService svc = new RangerService();
+        svc.setName("nifi_probe");
+        svc.setType("nifi");
+        svc.setConfigs(new HashMap<>());
+        ServiceStore store = mock(ServiceStore.class);
+        RangerServiceDef def = new RangerServiceDef();
+        def.setName("nifi");
+        def.setImplClass(RangerDefaultService.class.getName());
+        when(store.getServiceDefByName("nifi")).thenReturn(def);
+        when(svcService.getConfigsWithDecryptedPassword(any(RangerService.class))).thenReturn(new HashMap<>());
+
+        Map<String, Object> resp = new HashMap<>();
+        resp.put("connectivityStatus", false);
+        resp.put("message", "Unable to retrieve any resources using given parameters. ");
+        resp.put("description", "Unable to retrieve any resources using given parameters. java.net.ConnectException: Connection refused");
+        when(exec.timedTask(any(ServiceMgr.ValidateCallable.class), any(Long.class), any())).thenReturn(resp);
+
+        VXResponse out = mgr.validateConfig(svc, store);
+
+        Assertions.assertEquals(VXResponse.STATUS_ERROR, out.getStatusCode());
+        Assertions.assertFalse(String.valueOf(out.getMsgDesc()).toLowerCase().contains("connection refused"));
+        Assertions.assertFalse(String.valueOf(out.getMsgDesc()).toLowerCase().contains("connectexception"));
+        Assertions.assertTrue(String.valueOf(out.getMsgDesc()).contains("ranger_admin.log"));
+        Assertions.assertFalse(out.getMessageList().get(0).getMessage().toLowerCase().contains("connection refused"));
+    }
+
+    @Test
+    public void test12_validateConfig_keepsNonReachabilityConfigErrors() throws Exception {
+        ServiceMgr mgr = new ServiceMgr();
+        RangerServiceService svcService = mock(RangerServiceService.class);
+        TimedExecutor exec = mock(TimedExecutor.class);
+        setField(mgr, ServiceMgr.class, "rangerSvcService", svcService);
+        setField(mgr, ServiceMgr.class, "timedExecutor", exec);
+
+        RangerService svc = new RangerService();
+        svc.setName("nifi_cfg");
+        svc.setType("nifi");
+        svc.setConfigs(new HashMap<>());
+        ServiceStore store = mock(ServiceStore.class);
+        RangerServiceDef def = new RangerServiceDef();
+        def.setName("nifi");
+        def.setImplClass(RangerDefaultService.class.getName());
+        when(store.getServiceDefByName("nifi")).thenReturn(def);
+        when(svcService.getConfigsWithDecryptedPassword(any(RangerService.class))).thenReturn(new HashMap<>());
+
+        String configError = "Authentication Type of SSL requires an https URL";
+        Map<String, Object> resp = new HashMap<>();
+        resp.put("connectivityStatus", false);
+        resp.put("message", "Error creating NiFi client");
+        resp.put("description", configError);
+        when(exec.timedTask(any(ServiceMgr.ValidateCallable.class), any(Long.class), any())).thenReturn(resp);
+
+        VXResponse out = mgr.validateConfig(svc, store);
+
+        Assertions.assertEquals(VXResponse.STATUS_ERROR, out.getStatusCode());
+        Assertions.assertEquals(configError, out.getMsgDesc());
+        Assertions.assertEquals("Error creating NiFi client", out.getMessageList().get(0).getMessage());
+    }
+
+    @Test
+    public void test13_disclosesHostPortReachability_detectsKnownLeakPatterns() {
+        Assertions.assertTrue(ServiceMgr.disclosesHostPortReachability("java.net.ConnectException: Connection refused"));
+        Assertions.assertTrue(ServiceMgr.disclosesHostPortReachability("java.net.UnknownHostException: badhost"));
+        Assertions.assertFalse(ServiceMgr.disclosesHostPortReachability("Authentication Type of SSL requires an https URL"));
+        Assertions.assertFalse(ServiceMgr.disclosesHostPortReachability((String[]) null));
+    }
 }
