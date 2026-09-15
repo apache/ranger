@@ -23,6 +23,7 @@ import org.apache.hadoop.hive.ql.exec.vector.VectorizedRowBatch;
 import org.apache.orc.ColumnStatistics;
 import org.apache.orc.OrcProto;
 import org.apache.orc.StripeInformation;
+import org.apache.orc.StripeStatistics;
 import org.apache.orc.TypeDescription;
 import org.apache.orc.Writer;
 import org.apache.ranger.audit.model.AuthzAuditEvent;
@@ -80,6 +81,11 @@ class RangerORCAuditWriterTest {
                                            OrcProto.StripeStatistics stripeStatistics) throws IOException {}
 
         @Override
+        public void appendStripe(byte[] data, int offset, int length,
+                                           StripeInformation stripeInfo,
+                                           StripeStatistics[] stripeStatistics) throws IOException {}
+
+        @Override
         public void appendUserMetadata(List<OrcProto.UserMetadataItem> metadata) {}
 
         @Override
@@ -90,6 +96,16 @@ class RangerORCAuditWriterTest {
         @Override
         public TypeDescription getSchema() {
             return null;
+        }
+
+        @Override
+        public List<StripeInformation> getStripes() throws IOException {
+            return Collections.emptyList();
+        }
+
+        @Override
+        public long estimateMemory() {
+            return 0;
         }
 
         @Override
