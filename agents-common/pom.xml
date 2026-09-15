@@ -69,12 +69,7 @@
         </dependency>
         <dependency>
             <groupId>com.sun.jersey</groupId>
-            <artifactId>jersey-client</artifactId>
-            <version>${jersey-bundle.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.sun.jersey</groupId>
-            <artifactId>jersey-core</artifactId>
+            <artifactId>jersey-bundle</artifactId>
             <version>${jersey-bundle.version}</version>
         </dependency>
         <dependency>

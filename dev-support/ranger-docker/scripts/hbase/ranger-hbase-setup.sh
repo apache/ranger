@@ -32,7 +32,13 @@ fi
 
 cp ${RANGER_SCRIPTS}/hbase-site.xml /opt/hbase/conf/hbase-site.xml
 cp ${RANGER_SCRIPTS}/core-site.xml  /opt/hbase/conf/core-site.xml
+# Single-node docker: run master + regionserver on this container only (not ZK).
+echo "ranger-hbase.rangernw" > ${HBASE_HOME}/conf/regionservers
+echo "ranger-hbase.rangernw" > ${HBASE_HOME}/conf/masters
 chown -R hbase:hadoop /opt/hbase/
 
 cd ${RANGER_HOME}/ranger-hbase-plugin
 ./enable-hbase-plugin.sh
+
+mkdir -p /var/log/hadoop/hbase/audit/audit-ingestor/spool
+chown -R hbase:hadoop /var/log/hadoop/hbase

@@ -16,8 +16,6 @@
 
 CORE-SITE.XML_fs.defaultFS=ofs://om
 CORE-SITE.XML_fs.trash.interval=1
-CORE-SITE.XML_hadoop.security.authentication=kerberos
-CORE-SITE.XML_hadoop.security.auth_to_local=DEFAULT
 # For HttpFS service it is required to enable proxying users.
 CORE-SITE.XML_hadoop.proxyuser.hadoop.hosts=*
 CORE-SITE.XML_hadoop.proxyuser.hadoop.groups=*
@@ -60,7 +58,7 @@ OZONE-SITE.XML_hdds.container.ratis.datastream.enabled=true
 OZONE_CONF_DIR=/etc/hadoop
 OZONE_LOG_DIR=/var/log/hadoop
 
-# GitHub Actions ubuntu-24.04 (kernel 6.12+) cgroup layout breaks JDK container
+# GitHub Actions ubuntu-24.04 (kernel 6.12+) cgroup layout breaks JDK 17 container
 # metrics and can NPE during Ratis JMX init; disable container support for CI smoke tests.
 OZONE_OPTS=-XX:-UseContainerSupport
 
@@ -68,15 +66,6 @@ no_proxy=om,scm,s3g,recon,kdc,localhost,127.0.0.1
 
 # Explicitly enable filesystem snapshot feature for this Docker compose cluster
 OZONE-SITE.XML_ozone.filesystem.snapshot.enabled=true
-
-# Kerberos via Ranger KDC keytabs (do not set KERBEROS_ENABLED env; Ozone entrypoint expects krb5:8081)
-OZONE-SITE.XML_ozone.security.enabled=true
-OZONE-SITE.XML_hdds.scm.kerberos.principal=scm/scm.rangernw@EXAMPLE.COM
-OZONE-SITE.XML_hdds.scm.kerberos.keytab.file=/etc/keytabs/scm.keytab
-OZONE-SITE.XML_ozone.om.kerberos.principal=om/om.rangernw@EXAMPLE.COM
-OZONE-SITE.XML_ozone.om.kerberos.keytab.file=/etc/keytabs/om.keytab
-OZONE-SITE.XML_hdds.datanode.kerberos.principal=dn/datanode.rangernw@EXAMPLE.COM
-OZONE-SITE.XML_hdds.datanode.kerberos.keytab.file=/etc/keytabs/dn.keytab
 
 # To enable Ranger as the Authorizer in Ozone
 OZONE-SITE.XML_ozone.acl.enabled=true

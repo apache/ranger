@@ -109,8 +109,8 @@
     <name>hadoop.kms.authentication.kerberos.name.rules</name>
     <value>RULE:[2:$1/$2@$0](rangeradmin/ranger\.rangernw@EXAMPLE\.COM)s/.*/ranger/
 RULE:[2:$1/$2@$0](rangertagsync/ranger-tagsync\.rangernw@EXAMPLE\.COM)s/.*/rangertagsync/
-RULE:[2:$1/$2$0](rangerusersync/ranger-usersync\.rangernw@EXAMPLE\.COM)s/.*/rangerusersync/
-RULE:[2:$1/$2$0](rangerkms/ranger-kms\.rangernw@EXAMPLE\.COM)s/.*/keyadmin/
+RULE:[2:$1/$2@$0](rangerusersync/ranger-usersync\.rangernw@EXAMPLE\.COM)s/.*/rangerusersync/
+RULE:[2:$1/$2@$0](rangerkms/ranger-kms\.rangernw@EXAMPLE\.COM)s/.*/keyadmin/
 DEFAULT</value>
     <description>
       Rules used to resolve Kerberos principal names.

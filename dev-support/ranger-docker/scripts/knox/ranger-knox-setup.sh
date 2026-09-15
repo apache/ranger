@@ -37,5 +37,12 @@ mkdir -p /opt/knox/logs
 chown -R knox:knox /opt/knox/
 chmod g+w /opt/knox/logs
 
+# JDK 17+ module exports break gateway startup on JDK 8 (2.10 docker base image).
+if "${JAVA_HOME:-/opt/java/openjdk}/bin/java" -version 2>&1 | grep -qE 'version "(1[7-9]|[2-9][0-9])'; then
+  if ! grep -q 'knox-jdk17-env.sh' /opt/knox/bin/knox-env.sh 2>/dev/null; then
+    echo '. "${RANGER_SCRIPTS}/knox-jdk17-env.sh"' >> /opt/knox/bin/knox-env.sh
+  fi
+fi
+
 cd ${RANGER_HOME}/ranger-knox-plugin
 ./enable-knox-plugin.sh

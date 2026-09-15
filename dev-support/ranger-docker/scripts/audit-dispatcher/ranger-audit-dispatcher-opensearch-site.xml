@@ -1,0 +1,207 @@
+<!--
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License. See accompanying LICENSE file.
+-->
+<configuration>
+    <property>
+        <name>ranger.audit.dispatcher.opensearch.class</name>
+        <value>org.apache.ranger.audit.dispatcher.OpenSearchDispatcherManager</value>
+    </property>
+
+    <property>
+        <name>log.dir</name>
+        <value>${audit.dispatcher.opensearch.log.dir}</value>
+        <description>Log directory for OpenSearch dispatcher service</description>
+    </property>
+
+    <property>
+        <name>ranger.audit.dispatcher.host</name>
+        <value>ranger-audit-dispatcher-opensearch.rangernw</value>
+    </property>
+
+    <property>
+        <name>ranger.audit.dispatcher.service.kerberos.principal</name>
+        <value>rangerauditserver/_HOST@EXAMPLE.COM</value>
+    </property>
+
+    <property>
+        <name>ranger.audit.dispatcher.service.kerberos.keytab</name>
+        <value>/etc/keytabs/rangerauditserver.keytab</value>
+    </property>
+
+    <!-- KAFKA DISPATCHER CONFIGURATION -->
+    <property>
+        <name>ranger.audit.dispatcher.kafka.bootstrap.servers</name>
+        <value>ranger-kafka.rangernw:9092</value>
+    </property>
+
+    <property>
+        <name>ranger.audit.dispatcher.kafka.topic.name</name>
+        <value>ranger_audits</value>
+    </property>
+
+    <property>
+        <name>ranger.audit.dispatcher.kafka.security.protocol</name>
+        <value>SASL_PLAINTEXT</value>
+    </property>
+
+    <property>
+        <name>ranger.audit.dispatcher.kafka.sasl.mechanism</name>
+        <value>GSSAPI</value>
+    </property>
+
+    <property>
+        <name>ranger.audit.dispatcher.thread.count</name>
+        <value>1</value>
+    </property>
+
+    <property>
+        <name>ranger.audit.dispatcher.offset.commit.strategy</name>
+        <value>batch</value>
+    </property>
+
+    <property>
+        <name>ranger.audit.dispatcher.offset.commit.interval.ms</name>
+        <value>30000</value>
+    </property>
+
+    <property>
+        <name>ranger.audit.dispatcher.max.poll.records</name>
+        <value>500</value>
+    </property>
+
+    <property>
+        <name>ranger.audit.dispatcher.partition.assignment.strategy</name>
+        <value>org.apache.kafka.clients.consumer.CooperativeStickyAssignor</value>
+        <description>Cooperative sticky assignor for K8s pod churn (Kafka 3.9+). Override with RangeAssignor if needed.</description>
+    </property>
+
+    <property>
+        <name>ranger.audit.dispatcher.session.timeout.ms</name>
+        <value>60000</value>
+        <description>Consumer session timeout (failure detection). Must be &gt; 3 × heartbeat.interval.ms.</description>
+    </property>
+
+    <property>
+        <name>ranger.audit.dispatcher.heartbeat.interval.ms</name>
+        <value>10000</value>
+        <description>Consumer heartbeat interval while idle.</description>
+    </property>
+
+    <property>
+        <name>ranger.audit.dispatcher.max.poll.interval.ms</name>
+        <value>300000</value>
+        <description>Max time between poll() calls while processing a batch (OpenSearch indexing). Increase if batches are slow.</description>
+    </property>
+
+    <property>
+        <name>ranger.audit.dispatcher.class</name>
+        <value>org.apache.ranger.audit.dispatcher.kafka.AuditOpenSearchDispatcher</value>
+    </property>
+
+    <!-- OPENSEARCH DESTINATION CONFIGURATION -->
+    <property>
+        <name>xasecure.audit.destination.opensearch</name>
+        <value>true</value>
+    </property>
+
+    <property>
+        <name>ranger.audit.dispatcher.urls</name>
+        <value>ranger-opensearch.rangernw</value>
+    </property>
+
+    <property>
+        <name>ranger.audit.dispatcher.port</name>
+        <value>9200</value>
+    </property>
+
+    <property>
+        <name>ranger.audit.dispatcher.protocol</name>
+        <value>http</value>
+    </property>
+
+    <property>
+        <name>ranger.audit.dispatcher.index</name>
+        <value>ranger_audits</value>
+    </property>
+
+    <property>
+        <name>ranger.audit.dispatcher.authentication.type</name>
+        <value></value>
+        <description>
+            OpenSearch authentication scheme: kerberos, basic, or none.
+            When left empty it is inferred for backward compatibility. Use NONE or empty
+            for unauthenticated OpenSearch (dev only). Production: set basic (with user/password)
+            or kerberos (with kerberos.principal/keytab).
+        </description>
+    </property>
+
+    <property>
+        <name>ranger.audit.dispatcher.user</name>
+        <value></value>
+        <description>Username for OpenSearch Basic Auth (authentication.type=basic).</description>
+    </property>
+
+    <property>
+        <name>ranger.audit.dispatcher.password</name>
+        <value></value>
+        <description>Password for OpenSearch Basic Auth (authentication.type=basic).</description>
+    </property>
+
+    <property>
+        <name>ranger.audit.dispatcher.kerberos.principal</name>
+        <value></value>
+        <description>Kerberos principal when authentication.type=kerberos. Falls back to ranger.audit.dispatcher.user when unset.</description>
+    </property>
+
+    <property>
+        <name>ranger.audit.dispatcher.kerberos.keytab</name>
+        <value></value>
+        <description>Path to the Kerberos keytab when authentication.type=kerberos. Falls back to ranger.audit.dispatcher.password when unset.</description>
+    </property>
+
+    <!-- DISPATCHER TYPE SELECTION -->
+    <property>
+        <name>ranger.audit.dispatcher.type</name>
+        <value>opensearch</value>
+    </property>
+
+    <property>
+        <name>ranger.audit.dispatcher.war.file</name>
+        <value>ranger-audit-dispatcher.war</value>
+    </property>
+
+    <property>
+        <name>ranger.audit.dispatcher.launcher.class</name>
+        <value>org.apache.ranger.audit.dispatcher.AuditDispatcherLauncher</value>
+    </property>
+
+    <property>
+        <name>ranger.audit.dispatcher.main.class</name>
+        <value>org.apache.ranger.audit.dispatcher.AuditDispatcherApplication</value>
+    </property>
+
+    <property>
+        <name>ranger.audit.dispatcher.http.port</name>
+        <value>7090</value>
+    </property>
+
+    <property>
+        <name>ranger.audit.dispatcher.contextName</name>
+        <value>/</value>
+    </property>
+
+    <property>
+        <name>ranger.audit.dispatcher.kafka.group.id</name>
+        <value>ranger_audit_opensearch_dispatcher_group</value>
+    </property>
+</configuration>

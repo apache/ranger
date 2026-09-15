@@ -18,7 +18,7 @@
 
 if [ ! -e ${HBASE_HOME}/.setupDone ]
 then
-  su -c "ssh-keygen -t rsa -P '' -f ~/.ssh/id_rsa" hbase
+  su -c "[ ! -f ~/.ssh/id_rsa ] && ssh-keygen -t rsa -P '' -f ~/.ssh/id_rsa" hbase
   su -c "cat ~/.ssh/id_rsa.pub >> ~/.ssh/authorized_keys" hbase
   su -c "chmod 0600 ~/.ssh/authorized_keys" hbase
 
@@ -36,9 +36,22 @@ then
   fi
 fi
 
-su -c "${HBASE_HOME}/bin/start-hbase.sh" hbase
+# Single-node docker: keep master/regionserver on this host (not ZK).
+echo "ranger-hbase.rangernw" > "${HBASE_HOME}/conf/regionservers"
+echo "ranger-hbase.rangernw" > "${HBASE_HOME}/conf/masters"
 
-HBASE_MASTER_PID=`ps -ef  | grep -v grep | grep -i "org.apache.hadoop.hbase.master.HMaster" | awk '{print $2}'`
+# Start master + regionserver locally (avoid ssh-based start-hbase.sh in docker).
+su -c "${HBASE_HOME}/bin/hbase-daemon.sh start master" hbase
+su -c "${HBASE_HOME}/bin/hbase-daemon.sh start regionserver" hbase
+
+HBASE_MASTER_PID=""
+for _ in $(seq 1 24); do
+  HBASE_MASTER_PID=`ps -ef | grep -v grep | grep -i "org.apache.hadoop.hbase.master.HMaster" | awk '{print $2}'`
+  if [ -n "$HBASE_MASTER_PID" ]; then
+    break
+  fi
+  sleep 5
+done
 
 # prevent the container from exiting
 if [ -z "$HBASE_MASTER_PID" ]

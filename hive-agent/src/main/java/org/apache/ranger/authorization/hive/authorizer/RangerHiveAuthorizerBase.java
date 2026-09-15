@@ -22,7 +22,6 @@
 import java.util.List;
 
 import org.apache.hadoop.hive.conf.HiveConf;
-import org.apache.hadoop.hive.conf.HiveConf.ConfVars;
 import org.apache.hadoop.hive.ql.security.HiveAuthenticationProvider;
 import org.apache.hadoop.hive.ql.security.authorization.plugin.AbstractHiveAuthorizer;
 import org.apache.hadoop.hive.ql.security.authorization.plugin.DisallowTransformHook;
@@ -99,15 +98,15 @@ public abstract class RangerHiveAuthorizerBase extends AbstractHiveAuthorizer {
 
 		// from SQLStdHiveAccessController.applyAuthorizationConfigPolicy()
 		if (mSessionContext != null && mSessionContext.getClientType() == CLIENT_TYPE.HIVESERVER2) {
-			// Configure PREEXECHOOKS with DisallowTransformHook to disallow transform queries
-			String hooks = hiveConf.getVar(ConfVars.PREEXECHOOKS).trim();
+			// Configure hive.exec.pre.hooks with DisallowTransformHook to disallow transform queries
+			String hooks = hiveConf.getVar(HiveConf.getConfVars("hive.exec.pre.hooks")).trim();
 			if (hooks.isEmpty()) {
 				hooks = DisallowTransformHook.class.getName();
 			} else {
 				hooks = hooks + "," + DisallowTransformHook.class.getName();
 			}
 
-			hiveConf.setVar(ConfVars.PREEXECHOOKS, hooks);
+			hiveConf.setVar(HiveConf.getConfVars("hive.exec.pre.hooks"), hooks);
 
 			SettableConfigUpdater.setHiveConfWhiteList(hiveConf);
 		}

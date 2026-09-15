@@ -23,24 +23,24 @@ import java.io.PrintWriter;
 import java.net.Socket;
 
 public class StopEmbeddedServer extends EmbeddedServer {
-
     private static final String SHUTDOWN_HOSTNAME = "localhost";
-
-    public static void main(String[] args) {
-        new StopEmbeddedServer(args).stop();
-    }
 
     public StopEmbeddedServer(String[] args) {
         super(args);
     }
 
+    public static void main(String[] args) {
+        new StopEmbeddedServer(args).stop();
+    }
+
     public void stop() {
+        int    shutdownPort    = EmbeddedServerUtil.getIntConfig("ranger.service.shutdown.port", defaultShutdownPort);
+        String shutdownCommand = EmbeddedServerUtil.getConfig("ranger.service.shutdown.command", defaultShutdownCommand);
 
-        int    shutdownPort    = EmbeddedServerUtil.getIntConfig("ranger.service.shutdown.port", DEFAULT_SHUTDOWN_PORT);
-        String shutdownCommand = EmbeddedServerUtil.getConfig("ranger.service.shutdown.command", DEFAULT_SHUTDOWN_COMMAND);
+        try {
+            Socket      sock = new Socket(SHUTDOWN_HOSTNAME, shutdownPort);
+            PrintWriter out  = new PrintWriter(sock.getOutputStream(), true);
 
-        try (Socket sock = new Socket(SHUTDOWN_HOSTNAME, shutdownPort);
-			 PrintWriter out = new PrintWriter(sock.getOutputStream(), true)) {
             out.println(shutdownCommand);
             out.flush();
         } catch (Throwable t) {
@@ -48,5 +48,4 @@ public class StopEmbeddedServer extends EmbeddedServer {
             System.exit(1);
         }
     }
-
 }

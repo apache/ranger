@@ -32,6 +32,10 @@ on:
 env:
   MAVEN_OPTS: -Xmx5g -Dhttp.keepAlive=false -Dmaven.wagon.http.pool=false -Dmaven.wagon.http.retryHandler.class=standard -Dmaven.wagon.http.retryHandler.count=3
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
   build-8:
     runs-on: ubuntu-22.04
@@ -72,6 +76,14 @@ jobs:
           name: target-8
           path: target/*
 
+      - name: Upload build-11 dependency jars
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-11-deps
+          path: |
+            knox-agent/target/ranger-knox-plugin-*.jar
+            kms/target/ranger-kms-*.jar
+
   build-11:
     needs:
       - build-8
@@ -93,8 +105,29 @@ jobs:
         with:
           java-version: '11'
           distribution: 'temurin'
+      - name: Download build-11 dependency jars from build-8
+        uses: actions/download-artifact@v4
+        with:
+          name: build-11-deps
+      - name: Install build-11 dependency jars for distro build
+        run: |
+          KNOX_JAR="$(find . -path '*/ranger-knox-plugin-*.jar' -not -path '*/ranger-knox-plugin-shim-*' | head -1)"
+          KMS_JAR="$(find . -path '*/ranger-kms-*.jar' -not -path '*plugin*' | head -1)"
+          if [ -z "${KNOX_JAR}" ] || [ -z "${KMS_JAR}" ]; then
+            echo "Missing build-11 dependency jar(s)" >&2
+            find . -name 'ranger-knox-plugin-*.jar' -o -name 'ranger-kms-*.jar' >&2 || true
+            exit 1
+          fi
+          mvn install:install-file \
+            -Dfile="${KNOX_JAR}" \
+            -DpomFile=knox-agent/pom.xml \
+            --no-transfer-progress -B -q
+          mvn install:install-file \
+            -Dfile="${KMS_JAR}" \
+            -DpomFile=kms/pom.xml \
+            --no-transfer-progress -B -q
       - name: build (11)
-        run: mvn -T 8 clean verify -pl '!knox-agent' --no-transfer-progress -B -V
+        run: mvn -T 8 clean verify -pl '!knox-agent,!kms' --no-transfer-progress -B -V
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
@@ -105,7 +138,7 @@ jobs:
     needs:
       - build-8
     runs-on: ubuntu-22.04
-    timeout-minutes: 30
+    timeout-minutes: 60
     steps:
       - uses: actions/checkout@v4
       - name: Download build-8 artifacts
@@ -116,10 +149,15 @@ jobs:
       - name: Copy artifacts for docker build
         run: |
           mv ranger-*-admin.tar.gz dev-support/ranger-docker/dist
+          mv ranger-*-pdp.tar.gz dev-support/ranger-docker/dist
           mv ranger-*-usersync.tar.gz dev-support/ranger-docker/dist
           mv ranger-*-tagsync.tar.gz dev-support/ranger-docker/dist
           mv ranger-*-kms.tar.gz dev-support/ranger-docker/dist
-          mv ranger-*-solr-plugin.tar.gz dev-support/ranger-docker/dist
+          # Audit index stores are only brought up via the audit service, which
+          # also needs Kafka + the audit ingestor/dispatcher images.
+          mv ranger-*-kafka-plugin.tar.gz dev-support/ranger-docker/dist
+          mv ranger-*-audit-ingestor.tar.gz dev-support/ranger-docker/dist
+          mv ranger-*-audit-dispatcher.tar.gz dev-support/ranger-docker/dist
           mv version dev-support/ranger-docker/dist
           rm -f ranger-*.tar.gz # clean up workspace
 
@@ -129,14 +167,19 @@ jobs:
       - name: Download DB and Log4J connectors
         run: |
           cd dev-support/ranger-docker
-          ./download-archives.sh none
+          # Kafka archive is needed to build the ranger-kafka image (audit pipeline).
+          ./download-archives.sh kafka
 
       - name: Build all ranger-service images
         run: |
           cd dev-support/ranger-docker
           export RANGER_DB_TYPE=postgres
-          docker compose \
+          export AUDIT_INDEX_STORE=opensearch
+          export AUDIT_DESTINATIONS=audit-store-opensearch
+          docker compose --profile ${AUDIT_DESTINATIONS} \
           -f docker-compose.ranger.yml \
+          -f docker-compose.ranger-audit-service.yml \
+          -f docker-compose.ranger-pdp.yml \
           -f docker-compose.ranger-usersync.yml \
           -f docker-compose.ranger-tagsync.yml \
           -f docker-compose.ranger-kms.yml build
@@ -145,16 +188,30 @@ jobs:
         run: |
           cd dev-support/ranger-docker
           export RANGER_DB_TYPE=postgres
-          docker compose \
-          -f docker-compose.ranger.yml \
-          -f docker-compose.ranger-usersync.yml \
-          -f docker-compose.ranger-tagsync.yml \
-          -f docker-compose.ranger-kms.yml up -d
+          export AUDIT_INDEX_STORE=opensearch
+          export AUDIT_DESTINATIONS=audit-store-opensearch
+          COMPOSE_FILES="-f docker-compose.ranger.yml \
+            -f docker-compose.ranger-audit-service.yml \
+            -f docker-compose.ranger-pdp.yml \
+            -f docker-compose.ranger-usersync.yml \
+            -f docker-compose.ranger-tagsync.yml \
+            -f docker-compose.ranger-kms.yml"
+          # Start admin first so Kafka policy cache can populate before audit pipeline healthchecks.
+          docker compose ${COMPOSE_FILES} up -d ranger-kdc ranger-zk ranger-db ranger
+          echo "Waiting for Ranger Admin..."
+          for i in $(seq 1 120); do
+            if curl -sf http://localhost:6080/login.jsp >/dev/null; then
+              echo "Ranger Admin is up after ${i} attempt(s)"
+              break
+            fi
+            sleep 5
+          done
+          docker compose --profile ${AUDIT_DESTINATIONS} ${COMPOSE_FILES} up -d
 
       - name: Check status of containers and remove them
         run: |
           sleep 60
-          containers=(ranger ranger-zk ranger-solr ranger-postgres ranger-usersync ranger-tagsync ranger-kms);
+          containers=(ranger ranger-zk ranger-opensearch ranger-postgres ranger-pdp ranger-usersync ranger-tagsync ranger-kms ranger-kafka ranger-audit-ingestor ranger-audit-dispatcher-opensearch);
           flag=true;
           for container in "${containers[@]}"; do
               if [[ $(docker inspect -f '{{.State.Running}}' $container 2>/dev/null) == "true" ]]; then
@@ -175,27 +232,13 @@ jobs:
               exit 1;
           fi
 
-  plugins-docker-build:
-    needs:
-      - build-8
-    runs-on: ubuntu-24.04 # bumping os version for more disk space
-    timeout-minutes: 60 # bumping timeout to allow containers to come up
+  # Download large plugin distro archives in parallel with build-8 so a slow
+  # archive.apache.org mirror does not consume the docker-build job budget.
+  plugins-download-archives:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
     steps:
       - uses: actions/checkout@v4
-      - name: Download build-8 artifacts
-        uses: actions/download-artifact@v4
-        with:
-          name: target-8
-
-      - name: Copy artifacts for docker build
-        run: |
-          mv ranger-*-admin.tar.gz dev-support/ranger-docker/dist
-          mv ranger-*-plugin.tar.gz dev-support/ranger-docker/dist
-          mv version dev-support/ranger-docker/dist
-          rm -f ranger-*.tar.gz # clean up workspace
-
-      - name: Free up disk space
-        run: docker system prune --all --force --volumes
 
       - name: Cache downloaded archives
         uses: actions/cache@v4
@@ -212,15 +255,59 @@ jobs:
           cd dev-support/ranger-docker
           ./download-archives.sh hadoop hive hbase kafka knox ozone
 
+  plugins-docker-build:
+    needs:
+      - build-8
+      - plugins-download-archives
+    runs-on: ubuntu-24.04 # bumping os version for more disk space
+    timeout-minutes: 60 # bumping timeout to allow containers to come up
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download build-8 artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: target-8
+
+      - name: Copy artifacts for docker build
+        run: |
+          mv ranger-*-admin.tar.gz dev-support/ranger-docker/dist
+          mv ranger-*-plugin.tar.gz dev-support/ranger-docker/dist
+          # Audit index stores are only brought up via the audit service, which
+          # also needs the audit ingestor/dispatcher images.
+          mv ranger-*-audit-ingestor.tar.gz dev-support/ranger-docker/dist
+          mv ranger-*-audit-dispatcher.tar.gz dev-support/ranger-docker/dist
+          mv version dev-support/ranger-docker/dist
+          rm -f ranger-*.tar.gz # clean up workspace
+
+      - name: Free up disk space
+        run: docker system prune --all --force --volumes
+
+      - name: Restore plugin archives from cache
+        uses: actions/cache@v4
+        with:
+          path: dev-support/ranger-docker/downloads
+          key: ${{ runner.os }}-ranger-downloads-${{ hashFiles('dev-support/ranger-docker/.env') }}
+          restore-keys: |
+            ${{ runner.os }}-ranger-downloads-
+
+      # Idempotent: skips downloads already in the Actions cache; Ozone re-extract runs
+      # only when the tarball or extract dir is missing/stale (see extractOzoneIfNeeded).
+      - name: Verify plugin archives (download any cache misses)
+        run: |
+          cd dev-support/ranger-docker
+          ./download-archives.sh hadoop hive hbase kafka knox ozone
+
       - name: Build all ranger-plugin images
         run: |
           cd dev-support/ranger-docker
           export RANGER_DB_TYPE=postgres
-          docker compose \
+          export AUDIT_INDEX_STORE=opensearch
+          export AUDIT_DESTINATIONS=audit-store-opensearch
+          docker compose --profile ${AUDIT_DESTINATIONS} \
           -f docker-compose.ranger.yml \
+          -f docker-compose.ranger-audit-service.yml \
           -f docker-compose.ranger-hadoop.yml \
           -f docker-compose.ranger-hbase.yml \
-          -f docker-compose.ranger-kafka.yml \
           -f docker-compose.ranger-hive.yml \
           -f docker-compose.ranger-knox.yml \
           -f docker-compose.ranger-ozone.yml build
@@ -230,19 +317,46 @@ jobs:
           cd dev-support/ranger-docker
           ./scripts/ozone/ozone-plugin-docker-setup.sh
           export RANGER_DB_TYPE=postgres
-          docker compose \
-          -f docker-compose.ranger.yml \
-          -f docker-compose.ranger-hadoop.yml \
-          -f docker-compose.ranger-hbase.yml \
-          -f docker-compose.ranger-kafka.yml \
-          -f docker-compose.ranger-hive.yml \
-          -f docker-compose.ranger-knox.yml \
-          -f docker-compose.ranger-ozone.yml up -d
+          export AUDIT_INDEX_STORE=opensearch
+          export AUDIT_DESTINATIONS=audit-store-opensearch
+          COMPOSE_FILES="-f docker-compose.ranger.yml \
+            -f docker-compose.ranger-audit-service.yml \
+            -f docker-compose.ranger-hadoop.yml \
+            -f docker-compose.ranger-hbase.yml \
+            -f docker-compose.ranger-hive.yml \
+            -f docker-compose.ranger-knox.yml \
+            -f docker-compose.ranger-ozone.yml"
+          docker compose ${COMPOSE_FILES} up -d ranger-kdc ranger-zk ranger-db ranger
+          echo "Waiting for Ranger Admin..."
+          for i in $(seq 1 120); do
+            if curl -sf http://localhost:6080/login.jsp >/dev/null; then
+              echo "Ranger Admin is up after ${i} attempt(s)"
+              break
+            fi
+            sleep 5
+          done
+          docker compose --profile ${AUDIT_DESTINATIONS} ${COMPOSE_FILES} up -d
+
+      - name: Wait for KDC Kerberos readiness
+        run: |
+          cd dev-support/ranger-docker
+          for i in $(seq 1 90); do
+            status=$(docker inspect -f '{{.State.Health.Status}}' ranger-kdc 2>/dev/null || echo missing)
+            if [ "$status" = "healthy" ]; then
+              echo "ranger-kdc is healthy after ${i} attempt(s)"
+              exit 0
+            fi
+            echo "Waiting for ranger-kdc (status=${status})..."
+            sleep 2
+          done
+          echo "ranger-kdc did not become healthy in time"
+          docker logs ranger-kdc || true
+          exit 1
 
       - name: Check status of containers and remove them
         run: |
-          sleep 60
-          containers=(ranger ranger-zk ranger-solr ranger-postgres ranger-hadoop ranger-hbase ranger-kafka ranger-hive ranger-knox ozone-om ozone-scm ozone-datanode);
+          sleep 120
+          containers=(ranger ranger-zk ranger-opensearch ranger-postgres ranger-hadoop ranger-hbase ranger-kafka ranger-hive ranger-knox ozone-om ozone-scm ozone-datanode ranger-audit-ingestor ranger-audit-dispatcher-opensearch);
           flag=true;
           for container in "${containers[@]}"; do
               if [[ $(docker inspect -f '{{.State.Running}}' $container 2>/dev/null) == "true" ]]; then

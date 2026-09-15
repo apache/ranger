@@ -42,9 +42,9 @@ then
   fi
 fi
 
-su -c "${KNOX_HOME}/bin/ldap.sh start" knox
+su -p -c "${KNOX_HOME}/bin/ldap.sh start" knox
 
-su -c "${KNOX_HOME}/bin/gateway.sh start" knox
+su -p -c "${KNOX_HOME}/bin/gateway.sh start" knox
 
 KNOX_GATEWAY_PID=`ps -ef  | grep -v grep | grep -i "gateway.jar" | awk '{print $2}'`
 
@@ -52,6 +52,14 @@ KNOX_GATEWAY_PID=`ps -ef  | grep -v grep | grep -i "gateway.jar" | awk '{print $
 if [ -z "$KNOX_GATEWAY_PID" ]
 then
   echo "The Knox Gateway process probably exited, no process id found!"
+  for log in "${KNOX_HOME}"/logs/gateway.log \
+             "${KNOX_HOME}"/logs/gateway-"${HOSTNAME}".log \
+             "${KNOX_HOME}"/logs/knox-gateway.log; do
+    if [ -f "${log}" ]; then
+      echo "--- tail ${log} ---"
+      tail -100 "${log}"
+    fi
+  done
 else
   tail --pid="$KNOX_GATEWAY_PID" -f /dev/null
 fi
