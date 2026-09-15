@@ -756,10 +756,6 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
                     deltaGroups.put(groupName, curGroup);
                     noOfModifiedGroups++;
                     groupNameMap.put(groupDN, groupName);
-
-                    if (isDnValidationEnabled) {
-                        groupNameMap.remove(curGroupDN);
-                    }
                 } else if (MapUtils.isNotEmpty(curGroupAttrs) && !StringUtils.equalsIgnoreCase(groupDN, curGroupDN) && !isDnValidationEnabled) {
                     LOG.debug("[{}]: SyncSource update skipped, current group DN = {} new group DN = {}", groupName, curGroupDN, groupDN);
 
@@ -782,7 +778,7 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
                         noOfModifiedGroups++;
                         groupNameMap.put(groupDN, groupName);
 
-                        if (isDnValidationEnabled) {
+                        if (allowSyncSourceOverwrite) {
                             groupNameMap.remove(curGroupDN);
                         }
                     } else {
@@ -850,12 +846,8 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
 
                     curUser.setUserSource(SOURCE_EXTERNAL);
                     deltaUsers.put(userName, curUser);
-                    noOfModifiedUsers++; // corrected the variable name from groups to users
+                    noOfModifiedUsers++;
                     userNameMap.put(userDN, userName);
-
-                    if (isDnValidationEnabled) {
-                        userNameMap.remove(curUserDN);
-                    }
                 } else if (MapUtils.isNotEmpty(curUserAttrs) && !StringUtils.equalsIgnoreCase(userDN, curUserDN) && !isDnValidationEnabled) {
                     LOG.debug("[{}]: SyncSource update skipped, current user DN = {} new user DN = {}", userName, curUserDN, userDN);
                     if (StringUtils.equalsIgnoreCase(curUserAttrsStr, newUserAttrsStr)) {
@@ -878,7 +870,7 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
                         noOfModifiedUsers++;
                         userNameMap.put(userDN, userName);
 
-                        if (isDnValidationEnabled) {
+                        if (allowSyncSourceOverwrite) {
                             userNameMap.remove(curUserDN);
                         }
                     } else {
