@@ -33,4 +33,8 @@ public interface UserGroupSink {
             Map<String, Map<String, String>> sourceUsers,
             Map<String, Set<String>> sourceGroupUsers,
             boolean computeDeletes) throws Throwable;
+
+    default void deleteUsersAndGroups(Map<String, Map<String, String>> deletedUsers, Map<String, Map<String, String>> deletedGroups) throws Throwable {
+        // No-op by default. Snapshot-diff sources do not use this path.
+    }
 }
