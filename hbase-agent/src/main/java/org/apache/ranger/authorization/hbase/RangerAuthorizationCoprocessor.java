@@ -852,6 +852,24 @@ public class RangerAuthorizationCoprocessor implements AccessControlService.Inte
         return tableName;
     }
 
+    private boolean isSystemOrSuperUser(User activeUser) {
+        if (activeUser == null) {
+            return false;
+        }
+        if (userUtils.isSuperUser(activeUser)) {
+            return true;
+        }
+        try {
+            User currentUser = User.getCurrent();
+            if (currentUser != null) {
+                return Objects.equals(currentUser.getShortName(), activeUser.getShortName());
+            }
+        } catch (IOException e) {
+            LOG.warn("Unable to obtain the current user", e);
+        }
+        return false;
+    }
+
     protected void requireSystemOrSuperUser(ObserverContext<?> ctx) throws IOException {
         User user = User.getCurrent();
 
@@ -859,10 +877,9 @@ public class RangerAuthorizationCoprocessor implements AccessControlService.Inte
             throw new IOException("Unable to obtain the current user, authorization checks for internal operations will not work correctly!");
         }
 
-        String systemUser = user.getShortName();
-        User   activeUser = getActiveUser(ctx);
+        User activeUser = getActiveUser(ctx);
 
-        if (!Objects.equals(systemUser, activeUser.getShortName()) && !userUtils.isSuperUser(activeUser)) {
+        if (activeUser == null || !isSystemOrSuperUser(activeUser)) {
             throw new AccessDeniedException("User '" + user.getShortName() + "is not system or super user.");
         }
     }
@@ -1437,21 +1454,8 @@ public class RangerAuthorizationCoprocessor implements AccessControlService.Inte
     boolean isAccessForMetadataRead(String access, String table, User user) {
         if (authUtils.isReadAccess(access) && isSpecialTable(table)) {
             if (StringUtils.equals(table, "hbase:acl")) {
-                if (user == null) {
-                    return false;
-                }
-                boolean isSystemOrSuperUser = userUtils.isSuperUser(user);
-                if (!isSystemOrSuperUser) {
-                    try {
-                        User currentUser = User.getCurrent();
-                        if (currentUser != null) {
-                            isSystemOrSuperUser = Objects.equals(currentUser.getShortName(), user.getShortName());
-                        }
-                    } catch (IOException e) {
-                        LOG.warn("Unable to obtain the current user", e);
-                    }
-                }
-                if (!isSystemOrSuperUser) {
+                if (!isSystemOrSuperUser(user)) {
+                    LOG.debug("isAccessForMetadataRead: Metadata tables read: not access allowed for user: {}!", (user != null ? user.getShortName() : ""));
                     return false;
                 }
             }
@@ -1459,8 +1463,6 @@ public class RangerAuthorizationCoprocessor implements AccessControlService.Inte
 
             return true;
         }
-
-        LOG.debug("isAccessForMetadataRead: Metadata tables read: not access allowed for user: {}!", (user != null ? user.getShortName() : ""));
 
         return false;
     }

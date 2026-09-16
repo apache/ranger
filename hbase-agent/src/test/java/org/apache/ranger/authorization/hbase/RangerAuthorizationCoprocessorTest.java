@@ -412,6 +412,15 @@ public class RangerAuthorizationCoprocessorTest {
         userUtilsField.setAccessible(true);
         userUtilsField.set(cp, userUtils);
         Assertions.assertTrue(cp.isAccessForMetadataRead("read", "hbase:acl", superUser));
+
+        // Test for normal user on hbase:acl (should be denied)
+        User normalUser = mock(User.class);
+        when(normalUser.getShortName()).thenReturn("normal_user");
+        lenient().when(userUtils.isSuperUser(normalUser)).thenReturn(false);
+        Assertions.assertFalse(cp.isAccessForMetadataRead("read", "hbase:acl", normalUser));
+
+        // Test for normal user on hbase:meta (should be allowed)
+        Assertions.assertTrue(cp.isAccessForMetadataRead("read", "hbase:meta", normalUser));
     }
 
     @Test
