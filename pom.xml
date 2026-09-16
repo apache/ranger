@@ -174,6 +174,7 @@
         <maven-plugin-sortpom.version>3.0.1</maven-plugin-sortpom.version>
         <maven-resources-plugin.version>3.2.0</maven-resources-plugin.version>
         <maven-shade-plugin.version>3.4.1</maven-shade-plugin.version>
+        <maven-source-plugin.version>3.3.1</maven-source-plugin.version>
         <maven-war-plugin.version>3.4.0</maven-war-plugin.version>
         <maven.exec.plugin.version>1.6.0</maven.exec.plugin.version>
         <maven.pmd.plugin.version>3.15.0</maven.pmd.plugin.version>
