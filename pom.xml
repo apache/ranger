@@ -88,6 +88,7 @@
         <distMgmtStagingUrl>https://repository.apache.org/service/local/staging/deploy/maven2</distMgmtStagingUrl>
         <dnsjava.version>3.6.2</dnsjava.version>
         <eclipse.jpa.version>2.7.12</eclipse.jpa.version>
+        <elasticsearch.jackson.version>2.14.2</elasticsearch.jackson.version>
         <elasticsearch.version>7.17.29</elasticsearch.version>
         <enunciate.version>2.15.0</enunciate.version>
         <fasterxml.jackson.databind.version>2.18.9</fasterxml.jackson.databind.version>

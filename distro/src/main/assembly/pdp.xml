@@ -157,6 +157,19 @@
 
     </moduleSets>
 
+    <dependencySets>
+        <!-- Always ship Jackson from distro provided deps (survives partial reactor builds) -->
+        <dependencySet>
+            <useProjectArtifact>false</useProjectArtifact>
+            <outputDirectory>lib</outputDirectory>
+            <scope>provided</scope>
+            <includes>
+                <include>com.fasterxml.jackson.core:jackson-databind</include>
+                <include>com.fasterxml.jackson.core:jackson-annotations</include>
+            </includes>
+        </dependencySet>
+    </dependencySets>
+
     <fileSets>
         <!-- Default config template (copy to conf/ and customise) -->
         <fileSet>

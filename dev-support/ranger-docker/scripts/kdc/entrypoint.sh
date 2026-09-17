@@ -121,7 +121,9 @@ function create_keytabs() {
 
   create_principal_and_keytab opensearch ranger-opensearch
   create_principal_and_keytab HTTP       ranger-opensearch
-  
+
+  create_principal_and_keytab elasticsearch ranger-elasticsearch
+
   create_principal_and_keytab om  om
   create_principal_and_keytab scm scm
   create_principal_and_keytab dn  datanode
