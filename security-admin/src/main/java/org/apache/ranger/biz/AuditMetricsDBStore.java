@@ -23,6 +23,7 @@ import org.apache.ranger.authorization.hadoop.config.RangerAdminConfig;
 import org.apache.ranger.common.MessageEnums;
 import org.apache.ranger.common.RESTErrorUtil;
 import org.apache.ranger.db.RangerDaoManager;
+import org.apache.ranger.solr.SolrAccessAuditsService;
 import org.apache.ranger.view.RangerAuditAdminMetricsByDays;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -35,6 +36,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -48,6 +50,9 @@ public class AuditMetricsDBStore {
 
     @Autowired
     RangerDaoManager daoMgr;
+
+    @Autowired
+    SolrAccessAuditsService solrAccessAuditsService;
 
     @Autowired
     RESTErrorUtil restErrorUtil;
@@ -71,6 +76,18 @@ public class AuditMetricsDBStore {
         ZoneId zoneId                           = getZoneId(timezone);
 
         return daoMgr.getXXTrxLogV2().getRangerAuditAdminMetricsByDays(olderThanInDays, validatedObjectClassTypes, validatedActions, zoneId);
+    }
+
+    public List<Map<String, Object>> getRangerAuditAccessMetricsByDays(Integer olderThanInDays, String timezone) throws RuntimeException {
+        Integer maxAllowedDays = config.getInt(PROP_AUDIT_METRICS_MAX_SUPPORTED_DAYS, PROP_AUDIT_METRICS_MAX_SUPPORTED_DAYS_DEFAULT);
+
+        if (olderThanInDays <= 0 || olderThanInDays > maxAllowedDays) {
+            throw restErrorUtil.createRESTException("Invalid parameter: olderThanInDays must be between 1 and " + maxAllowedDays, MessageEnums.INVALID_INPUT_DATA);
+        }
+
+        getZoneId(timezone);
+
+        return solrAccessAuditsService.getAuditAccessMetricsByDays(olderThanInDays, timezone);
     }
 
     private List<String> validateActions(List<String> actions) {

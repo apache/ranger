@@ -252,4 +252,31 @@ public class AuditMetricsREST {
 
         return ret;
     }
+
+    @GET
+    @Path("/days-audit-access-metrics")
+    @Produces("application/json")
+    @PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.GET_DAYS_AUDIT_ACCESS_METRICS + "\")")
+    public Map<String, List<Map<String, Object>>> getDaysAuditAccessMetrics(@DefaultValue("7") @QueryParam("olderThanInDays") Integer olderThanInDays,
+            @DefaultValue("UTC") @QueryParam("timezone") String timezone) {
+        LOG.debug("==> AuditMetricsREST.getDaysAuditAccessMetrics(olderThanInDays={}, timezone={})", olderThanInDays, timezone);
+
+        Map<String, List<Map<String, Object>>> ret = new LinkedHashMap<>();
+        List<Map<String, Object>> rangerAuditAccessMetrics;
+
+        try {
+            rangerAuditAccessMetrics = auditMetricsDBStore.getRangerAuditAccessMetricsByDays(olderThanInDays, timezone);
+        } catch (WebApplicationException excp) {
+            throw excp;
+        } catch (Throwable excp) {
+            LOG.error("Error getting all latest audit access metrics..", excp);
+            throw restErrorUtil.createRESTException(excp.getMessage());
+        }
+
+        ret.put("AuditAccessMetricsByDays", rangerAuditAccessMetrics);
+
+        LOG.debug("<== AuditMetricsREST.getDaysAuditAccessMetrics(): {}", ret);
+
+        return ret;
+    }
 }
