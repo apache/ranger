@@ -21,6 +21,7 @@ package org.apache.ranger.rest;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.ranger.authorization.hadoop.config.RangerAdminConfig;
+import org.apache.ranger.biz.AuditMetricsDBStore;
 import org.apache.ranger.common.MessageEnums;
 import org.apache.ranger.common.RESTErrorUtil;
 import org.apache.ranger.common.RangerSearchUtil;
@@ -30,6 +31,7 @@ import org.apache.ranger.plugin.model.RangerAuditMetricsByHours;
 import org.apache.ranger.plugin.util.SearchFilter;
 import org.apache.ranger.security.context.RangerAPIList;
 import org.apache.ranger.solr.SolrAccessAuditsService;
+import org.apache.ranger.view.RangerAuditAdminMetricsByDays;
 import org.apache.ranger.view.RangerAuditMetricsList;
 import org.apache.ranger.view.RangerAuditMetricsListByDays;
 import org.apache.ranger.view.RangerAuditMetricsListByHours;
@@ -52,8 +54,11 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Context;
 
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 @Path("audit")
 @Component
@@ -74,6 +79,9 @@ public class AuditMetricsREST {
 
     @Autowired
     SolrAccessAuditsService solrAccessAuditsService;
+
+    @Autowired
+    AuditMetricsDBStore auditMetricsDBStore;
 
     @GET
     @Path("/metrics/servicetype/{servicetype}/servicename/{servicename}")
@@ -204,6 +212,97 @@ public class AuditMetricsREST {
         }
 
         LOG.debug("<== AuditMetricsREST.getDaysAuditMetrics()");
+
+        return ret;
+    }
+
+    @GET
+    @Path("/days-audit-admin-metrics")
+    @Produces("application/json")
+    @PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.GET_DAYS_AUDIT_ADMIN_METRICS + "\")")
+    public Map<String, List<RangerAuditAdminMetricsByDays>> getDaysAuditAdminMetrics(@QueryParam("objectClassTypes") List<String> objectClassTypes,
+            @QueryParam("actions") List<String> actions, @DefaultValue("7") @QueryParam("olderThanInDays") Integer olderThanInDays,
+            @DefaultValue("UTC") @QueryParam("timezone") String timezone) {
+        LOG.debug("==> AuditMetricsREST.getDaysAuditAdminMetrics(objectClassTypes={}, actions={}, olderThanInDays={}, timezone={})", objectClassTypes, actions, olderThanInDays, timezone);
+
+        Map<String, List<RangerAuditAdminMetricsByDays>> ret = new LinkedHashMap<>();
+        List<RangerAuditAdminMetricsByDays> rangerAuditAdminMetrics;
+
+        try {
+            rangerAuditAdminMetrics = auditMetricsDBStore.getRangerAuditAdminMetricsByDays(olderThanInDays, objectClassTypes, actions, timezone);
+        } catch (WebApplicationException excp) {
+            throw excp;
+        } catch (Throwable excp) {
+            LOG.error("Error getting all latest audit admin metrics..", excp);
+            throw restErrorUtil.createRESTException(excp.getMessage());
+        }
+
+        if (CollectionUtils.isNotEmpty(rangerAuditAdminMetrics)) {
+            RangerAuditAdminMetricsByDays.TYPE_TO_KEY.values().forEach(k -> ret.put(k, new ArrayList<>()));
+
+            for (RangerAuditAdminMetricsByDays auditAdminMetric : rangerAuditAdminMetrics) {
+                String key = RangerAuditAdminMetricsByDays.TYPE_TO_KEY.get(auditAdminMetric.getObjectClassType());
+                if (key != null) {
+                    ret.get(key).add(auditAdminMetric);
+                }
+            }
+        }
+
+        LOG.debug("<== AuditMetricsREST.getDaysAuditAdminMetrics(): {}", ret);
+
+        return ret;
+    }
+
+    @GET
+    @Path("/days-audit-access-metrics")
+    @Produces("application/json")
+    @PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.GET_DAYS_AUDIT_ACCESS_METRICS + "\")")
+    public Map<String, List<Map<String, Object>>> getDaysAuditAccessMetrics(@DefaultValue("7") @QueryParam("olderThanInDays") Integer olderThanInDays,
+            @DefaultValue("UTC") @QueryParam("timezone") String timezone) {
+        LOG.debug("==> AuditMetricsREST.getDaysAuditAccessMetrics(olderThanInDays={}, timezone={})", olderThanInDays, timezone);
+
+        Map<String, List<Map<String, Object>>> ret = new LinkedHashMap<>();
+        List<Map<String, Object>> rangerAuditAccessMetrics;
+
+        try {
+            rangerAuditAccessMetrics = auditMetricsDBStore.getRangerAuditAccessMetricsByDays(olderThanInDays, timezone);
+        } catch (WebApplicationException excp) {
+            throw excp;
+        } catch (Throwable excp) {
+            LOG.error("Error getting all latest audit access metrics..", excp);
+            throw restErrorUtil.createRESTException(excp.getMessage());
+        }
+
+        ret.put("AuditAccessMetricsByDays", rangerAuditAccessMetrics);
+
+        LOG.debug("<== AuditMetricsREST.getDaysAuditAccessMetrics(): {}", ret);
+
+        return ret;
+    }
+
+    @GET
+    @Path("/days-plugin-policy-sync-metrics")
+    @Produces("application/json")
+    @PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.GET_DAYS_PLUGIN_POLICY_SYNC_METRICS + "\")")
+    public Map<String, List<Map<String, Object>>> getDaysPluginPolicySyncMetrics(@DefaultValue("7") @QueryParam("olderThanInDays") Integer olderThanInDays,
+            @DefaultValue("UTC") @QueryParam("timezone") String timezone) {
+        LOG.debug("==> AuditMetricsREST.getDaysPluginPolicySyncMetrics(olderThanInDays={}, timezone={})", olderThanInDays, timezone);
+
+        Map<String, List<Map<String, Object>>> ret = new LinkedHashMap<>();
+        List<Map<String, Object>> rangerPluginPolicySyncMetrics;
+
+        try {
+            rangerPluginPolicySyncMetrics = auditMetricsDBStore.getRangerPluginPolicySyncMetricsByDays(olderThanInDays, timezone);
+        } catch (WebApplicationException excp) {
+            throw excp;
+        } catch (Throwable excp) {
+            LOG.error("Error getting all latest plugin policy sync metrics..", excp);
+            throw restErrorUtil.createRESTException(excp.getMessage());
+        }
+
+        ret.put("PluginPolicySyncMetricsByDays", rangerPluginPolicySyncMetrics);
+
+        LOG.debug("<== AuditMetricsREST.getDaysPluginPolicySyncMetrics(): {}", ret);
 
         return ret;
     }
