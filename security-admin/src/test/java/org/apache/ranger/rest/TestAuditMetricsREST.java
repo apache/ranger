@@ -19,6 +19,8 @@
 
 package org.apache.ranger.rest;
 
+import org.apache.ranger.biz.AuditMetricsDBStore;
+import org.apache.ranger.common.AppConstants;
 import org.apache.ranger.common.MessageEnums;
 import org.apache.ranger.common.RESTErrorUtil;
 import org.apache.ranger.common.RangerSearchUtil;
@@ -27,6 +29,7 @@ import org.apache.ranger.plugin.model.RangerAuditMetricsByDays;
 import org.apache.ranger.plugin.model.RangerAuditMetricsByHours;
 import org.apache.ranger.plugin.util.SearchFilter;
 import org.apache.ranger.solr.SolrAccessAuditsService;
+import org.apache.ranger.view.RangerAuditAdminMetricsByDays;
 import org.apache.ranger.view.RangerAuditMetricsList;
 import org.apache.ranger.view.RangerAuditMetricsListByDays;
 import org.apache.ranger.view.RangerAuditMetricsListByHours;
@@ -42,12 +45,17 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.WebApplicationException;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -73,6 +81,9 @@ class TestAuditMetricsREST {
 
     @Mock
     SolrAccessAuditsService solrAccessAuditsService;
+
+    @Mock
+    AuditMetricsDBStore auditMetricsDBStore;
 
     @Mock
     HttpServletRequest httpServletRequest;
@@ -362,6 +373,179 @@ class TestAuditMetricsREST {
         verify(solrAccessAuditsService, never()).getAuditMetricsByDays(anyInt(), any(), any());
     }
 
+    @Test
+    void testGetDaysAuditAdminMetrics_Success() {
+        Integer olderThanInDays = 14;
+        String timezone = "Asia/Kolkata";
+        List<String> objectClassTypes = createTestStringList("1020", "1030");
+        List<String> actions = createTestStringList("create", "update");
+        RangerAuditAdminMetricsByDays policyMetric = createTestRangerAuditAdminMetricsByDays(
+                AppConstants.CLASS_TYPE_RANGER_POLICY, 1L, 2L, 3L, 20240401L);
+        RangerAuditAdminMetricsByDays serviceMetric = createTestRangerAuditAdminMetricsByDays(
+                AppConstants.CLASS_TYPE_XA_SERVICE, 4L, 5L, 6L, 20240402L);
+        List<RangerAuditAdminMetricsByDays> fromStore = createTestRangerAuditAdminMetricsByDaysList(policyMetric, serviceMetric);
+        when(auditMetricsDBStore.getRangerAuditAdminMetricsByDays(eq(olderThanInDays), eq(objectClassTypes), eq(actions), eq(timezone)))
+                .thenReturn(fromStore);
+
+        Map<String, List<RangerAuditAdminMetricsByDays>> result =
+                auditMetricsREST.getDaysAuditAdminMetrics(objectClassTypes, actions, olderThanInDays, timezone);
+
+        assertNotNull(result);
+        assertEquals(RangerAuditAdminMetricsByDays.TYPE_TO_KEY.size(), result.size());
+        assertEquals(1, result.get("RangerPolicyMetricsByDays").size());
+        assertEquals(policyMetric, result.get("RangerPolicyMetricsByDays").get(0));
+        assertEquals(1, result.get("RangerServiceMetricsByDays").size());
+        assertEquals(serviceMetric, result.get("RangerServiceMetricsByDays").get(0));
+        assertTrue(result.get("RangerUserMetricsByDays").isEmpty());
+        assertTrue(result.get("RangerGroupMetricsByDays").isEmpty());
+        assertTrue(result.get("RangerRoleMetricsByDays").isEmpty());
+        verify(auditMetricsDBStore, times(1)).getRangerAuditAdminMetricsByDays(olderThanInDays, objectClassTypes, actions, timezone);
+    }
+
+    @Test
+    void testGetDaysAuditAdminMetrics_EmptyFromStore_ReturnsEmptyMap() {
+        Integer olderThanInDays = 7;
+        String timezone = "UTC";
+        List<String> objectClassTypes = createTestStringList("1020");
+        List<String> actions = createTestStringList("create");
+        when(auditMetricsDBStore.getRangerAuditAdminMetricsByDays(eq(olderThanInDays), eq(objectClassTypes), eq(actions), eq(timezone)))
+                .thenReturn(Collections.emptyList());
+
+        Map<String, List<RangerAuditAdminMetricsByDays>> result =
+                auditMetricsREST.getDaysAuditAdminMetrics(objectClassTypes, actions, olderThanInDays, timezone);
+
+        assertNotNull(result);
+        assertTrue(result.isEmpty());
+        verify(auditMetricsDBStore, times(1)).getRangerAuditAdminMetricsByDays(olderThanInDays, objectClassTypes, actions, timezone);
+        verify(restErrorUtil, never()).createRESTException(anyString());
+    }
+
+    @Test
+    void testGetDaysAuditAdminMetrics_GeneralException() {
+        Integer olderThanInDays = 7;
+        String timezone = "UTC";
+        List<String> objectClassTypes = createTestStringList("1020");
+        List<String> actions = createTestStringList("create");
+        RuntimeException generalException = new RuntimeException("Admin metrics failed");
+        when(auditMetricsDBStore.getRangerAuditAdminMetricsByDays(eq(olderThanInDays), eq(objectClassTypes), eq(actions), eq(timezone)))
+                .thenThrow(generalException);
+        when(restErrorUtil.createRESTException(anyString())).thenReturn(new WebApplicationException());
+
+        assertThrows(WebApplicationException.class, () ->
+                auditMetricsREST.getDaysAuditAdminMetrics(objectClassTypes, actions, olderThanInDays, timezone));
+
+        verify(auditMetricsDBStore, times(1)).getRangerAuditAdminMetricsByDays(olderThanInDays, objectClassTypes, actions, timezone);
+        verify(restErrorUtil, times(1)).createRESTException("Admin metrics failed");
+    }
+
+    @Test
+    void testGetDaysAuditAdminMetrics_WebApplicationException() {
+        Integer olderThanInDays = 7;
+        String timezone = "UTC";
+        List<String> objectClassTypes = createTestStringList();
+        List<String> actions = createTestStringList();
+        WebApplicationException webException = new WebApplicationException();
+        when(auditMetricsDBStore.getRangerAuditAdminMetricsByDays(eq(olderThanInDays), eq(objectClassTypes), eq(actions), eq(timezone)))
+                .thenThrow(webException);
+
+        WebApplicationException exception = assertThrows(WebApplicationException.class, () ->
+                auditMetricsREST.getDaysAuditAdminMetrics(objectClassTypes, actions, olderThanInDays, timezone));
+
+        assertEquals(webException, exception);
+        verify(auditMetricsDBStore, times(1)).getRangerAuditAdminMetricsByDays(olderThanInDays, objectClassTypes, actions, timezone);
+        verify(restErrorUtil, never()).createRESTException(anyString());
+    }
+
+    @Test
+    void testGetDaysAuditAccessMetrics_GeneralException() {
+        Integer olderThanInDays = 7;
+        String timezone = "UTC";
+        RuntimeException generalException = new RuntimeException("Access metrics failed");
+        when(auditMetricsDBStore.getRangerAuditAccessMetricsByDays(olderThanInDays, timezone)).thenThrow(generalException);
+        when(restErrorUtil.createRESTException(anyString())).thenReturn(new WebApplicationException());
+
+        assertThrows(WebApplicationException.class, () -> auditMetricsREST.getDaysAuditAccessMetrics(olderThanInDays, timezone));
+
+        verify(auditMetricsDBStore, times(1)).getRangerAuditAccessMetricsByDays(olderThanInDays, timezone);
+        verify(restErrorUtil, times(1)).createRESTException("Access metrics failed");
+    }
+
+    @Test
+    void testGetDaysAuditAccessMetrics_Success() {
+        Integer olderThanInDays = 7;
+        String timezone = "Asia/Kolkata";
+        Map<String, Object> row = new HashMap<>();
+        row.put("day", "2024-04-01");
+        List<Map<String, Object>> fromStore = new ArrayList<>(Collections.singletonList(row));
+        when(auditMetricsDBStore.getRangerAuditAccessMetricsByDays(olderThanInDays, timezone)).thenReturn(fromStore);
+
+        Map<String, List<Map<String, Object>>> result = auditMetricsREST.getDaysAuditAccessMetrics(olderThanInDays, timezone);
+
+        assertNotNull(result);
+        assertEquals(1, result.size());
+        assertEquals(fromStore, result.get("AuditAccessMetricsByDays"));
+        verify(auditMetricsDBStore, times(1)).getRangerAuditAccessMetricsByDays(olderThanInDays, timezone);
+    }
+
+    @Test
+    void testGetDaysAuditAccessMetrics_WebApplicationException() {
+        Integer olderThanInDays = 7;
+        String timezone = "UTC";
+        WebApplicationException webException = new WebApplicationException();
+        when(auditMetricsDBStore.getRangerAuditAccessMetricsByDays(olderThanInDays, timezone)).thenThrow(webException);
+
+        WebApplicationException exception = assertThrows(WebApplicationException.class, () ->
+                auditMetricsREST.getDaysAuditAccessMetrics(olderThanInDays, timezone));
+
+        assertEquals(webException, exception);
+        verify(restErrorUtil, never()).createRESTException(anyString());
+    }
+
+    @Test
+    void testGetDaysPluginPolicySyncMetrics_GeneralException() {
+        Integer olderThanInDays = 7;
+        String timezone = "UTC";
+        RuntimeException generalException = new RuntimeException("Plugin sync failed");
+        when(auditMetricsDBStore.getRangerPluginPolicySyncMetricsByDays(olderThanInDays, timezone)).thenThrow(generalException);
+        when(restErrorUtil.createRESTException(anyString())).thenReturn(new WebApplicationException());
+
+        assertThrows(WebApplicationException.class, () -> auditMetricsREST.getDaysPluginPolicySyncMetrics(olderThanInDays, timezone));
+
+        verify(auditMetricsDBStore, times(1)).getRangerPluginPolicySyncMetricsByDays(olderThanInDays, timezone);
+        verify(restErrorUtil, times(1)).createRESTException("Plugin sync failed");
+    }
+
+    @Test
+    void testGetDaysPluginPolicySyncMetrics_Success() {
+        Integer olderThanInDays = 14;
+        String timezone = "Asia/Kolkata";
+        Map<String, Object> row = new HashMap<>();
+        row.put("syncCount", 5L);
+        List<Map<String, Object>> fromStore = new ArrayList<>(Collections.singletonList(row));
+        when(auditMetricsDBStore.getRangerPluginPolicySyncMetricsByDays(olderThanInDays, timezone)).thenReturn(fromStore);
+
+        Map<String, List<Map<String, Object>>> result = auditMetricsREST.getDaysPluginPolicySyncMetrics(olderThanInDays, timezone);
+
+        assertNotNull(result);
+        assertEquals(1, result.size());
+        assertEquals(fromStore, result.get("PluginPolicySyncMetricsByDays"));
+        verify(auditMetricsDBStore, times(1)).getRangerPluginPolicySyncMetricsByDays(olderThanInDays, timezone);
+    }
+
+    @Test
+    void testGetDaysPluginPolicySyncMetrics_WebApplicationException() {
+        Integer olderThanInDays = 7;
+        String timezone = "UTC";
+        WebApplicationException webException = new WebApplicationException();
+        when(auditMetricsDBStore.getRangerPluginPolicySyncMetricsByDays(olderThanInDays, timezone)).thenThrow(webException);
+
+        WebApplicationException exception = assertThrows(WebApplicationException.class, () ->
+                auditMetricsREST.getDaysPluginPolicySyncMetrics(olderThanInDays, timezone));
+
+        assertEquals(webException, exception);
+        verify(restErrorUtil, never()).createRESTException(anyString());
+    }
+
     private RangerAuditMetrics createTestAuditMetrics() {
         RangerAuditMetrics metrics = new RangerAuditMetrics();
         metrics.setId(1L);
@@ -393,5 +577,19 @@ class TestAuditMetricsREST {
         metrics.setClientIP("127.0.0.1");
         metrics.setNumberOfAudits(20L);
         return metrics;
+    }
+
+    private RangerAuditAdminMetricsByDays createTestRangerAuditAdminMetricsByDays(int objectClassType, long createCount,
+            long updateCount, long deleteCount, long auditDate) {
+        return new RangerAuditAdminMetricsByDays(objectClassType, createCount, updateCount, deleteCount, auditDate);
+    }
+
+    private List<RangerAuditAdminMetricsByDays> createTestRangerAuditAdminMetricsByDaysList(
+            RangerAuditAdminMetricsByDays... items) {
+        return new ArrayList<>(Arrays.asList(items));
+    }
+
+    private List<String> createTestStringList(String... elements) {
+        return new ArrayList<>(Arrays.asList(elements));
     }
 }
