@@ -124,6 +124,8 @@ policymgr_http_enabled=$(get_prop 'policymgr_http_enabled' $PROPFILE)
 policymgr_https_keystore_file=$(get_prop 'policymgr_https_keystore_file' $PROPFILE)
 policymgr_https_keystore_keyalias=$(get_prop 'policymgr_https_keystore_keyalias' $PROPFILE)
 policymgr_https_keystore_password=$(get_prop 'policymgr_https_keystore_password' $PROPFILE)
+policymgr_https_truststore_file=$(get_prop 'policymgr_https_truststore_file' $PROPFILE)
+policymgr_https_truststore_password=$(get_prop 'policymgr_https_truststore_password' $PROPFILE)
 policymgr_supportedcomponents=$(get_prop_or_default 'policymgr_supportedcomponents' $PROPFILE '')
 unix_user=$(get_prop 'unix_user' $PROPFILE)
 unix_user_pwd=$(get_prop 'unix_user_pwd' $PROPFILE)
@@ -1217,6 +1219,37 @@ update_properties() {
 				updatePropertyToFilePy $propertyName "${newPropertyValue}" $to_file_ranger
 			fi
 		fi
+		if [ "${policymgr_https_truststore_file}" != "" ] && [ "${policymgr_https_truststore_password}" != "" ]
+    		then
+    			propertyName=ranger.service.https.attrib.truststore.file
+    			newPropertyValue="${policymgr_https_truststore_file}"
+    			updatePropertyToFilePy $propertyName "${newPropertyValue}" $to_file_ranger
+
+    			policymgr_https_truststore_credential_alias=trustStoreCredentialAlias
+    			propertyName=ranger.service.https.attrib.truststore.credential.alias
+    			newPropertyValue="${policymgr_https_truststore_credential_alias}"
+    			updatePropertyToFilePy $propertyName "${newPropertyValue}" $to_file_ranger
+
+    			if [ "${keystore}" != "" ]
+    			then
+    				propertyName=ranger.service.https.attrib.truststore.pass
+    				newPropertyValue="_"
+    				updatePropertyToFilePy $propertyName "${newPropertyValue}" $to_file_ranger
+    				$PYTHON_COMMAND_INVOKER ranger_credential_helper.py -l "cred/lib/*" -f "$keystore" -k "$policymgr_https_truststore_credential_alias" -v "$policymgr_https_truststore_password" -c 1
+
+    				if test -f "${keystore}"; then
+    					chown -R ${unix_user}:${unix_group} ${keystore}
+    				else
+    					propertyName=ranger.service.https.attrib.truststore.pass
+    					newPropertyValue="${policymgr_https_truststore_password}"
+    					updatePropertyToFilePy $propertyName "${newPropertyValue}" $to_file_ranger
+    				fi
+    			else
+    				propertyName=ranger.service.https.attrib.truststore.pass
+    				newPropertyValue="${policymgr_https_truststore_password}"
+    				updatePropertyToFilePy $propertyName "${newPropertyValue}" $to_file_ranger
+    			fi
+    		fi
 	fi
 
 	if [ "${ranger_unixauth_keystore}" != "" ] && [ "${ranger_unixauth_keystore_password}" != "" ]
