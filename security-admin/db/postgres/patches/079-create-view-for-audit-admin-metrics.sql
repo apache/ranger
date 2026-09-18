@@ -51,4 +51,4 @@ SELECT
 FROM x_trx_log_v2
 GROUP BY action, class_type, days, auditDate
 ORDER BY auditDate, days;
-commit;
+select 'delimiter end';
