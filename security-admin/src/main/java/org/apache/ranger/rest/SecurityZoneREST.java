@@ -183,7 +183,7 @@ public class SecurityZoneREST {
         } else {
             securityZone.setId(zoneId);
         }
-        blockAdminFromKMSServiceOnUpdate(securityZone, zoneId);
+        blockAdminFromKMSServiceOnUpdate(securityZone);
         RangerSecurityZone ret;
 
         try {
@@ -697,9 +697,9 @@ public class SecurityZoneREST {
 
             if (serviceMap != null) {
                 for (String serviceName : serviceMap.keySet()) {
-                    String serviceType = daoManager.getXXServiceDef().findServiceDefTypeByServiceName(serviceName);
+                    String implClass = daoManager.getXXServiceDef().findServiceDefImplClassByServiceName(serviceName);
 
-                    if (EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_KMS_NAME.equals(serviceType)) {
+                    if (EmbeddedServiceDefsUtil.KMS_IMPL_CLASS_NAME.equals(implClass)) {
                         throw restErrorUtil.createRESTException("KMS Services/Service-Defs are not accessible for Zone operations", MessageEnums.OPER_NOT_ALLOWED_FOR_ENTITY);
                     }
                 }
@@ -707,25 +707,9 @@ public class SecurityZoneREST {
         }
     }
 
-    private void blockAdminFromKMSServiceOnUpdate(RangerSecurityZone submittedZone, Long zoneId) {
+    private void blockAdminFromKMSServiceOnUpdate(RangerSecurityZone submittedZone) {
         if (bizUtil.isAdmin()) {
             blockAdminFromKMSService(submittedZone);
-
-            if (zoneId != null) {
-                RangerSecurityZone existingZone = null;
-
-                try {
-                    existingZone = securityZoneStore.getSecurityZone(zoneId);
-                } catch (WebApplicationException excp) {
-                    throw excp;
-                } catch (Exception ex) {
-                    LOG.error("Unable to get Security Zone with id : {}", zoneId, ex);
-
-                    throw restErrorUtil.createRESTException(ex.getMessage());
-                }
-
-                blockAdminFromKMSService(existingZone);
-            }
         }
     }
 
