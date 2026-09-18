@@ -205,28 +205,31 @@ public class TestSecurityZoneREST {
     }
 
     @Test
-    void testCreateSecurityZone_AdminBlockedFromCustomNamedKMSService() throws Exception {
+    void testCreateSecurityZone_AllowedForCustomNamedKMSServiceDef() throws Exception {
         String             customKmsServiceName = "my_kms_instance";
         RangerSecurityZone zone                 = createRangerSecurityZoneWithKmsService(customKmsServiceName);
 
         when(rangerBizUtil.isAdmin()).thenReturn(true);
-        mockMixedKmsAndNonKmsServiceLookupForZoneCheck(customKmsServiceName);
+        mockServiceDefTypeLookup("test_service_1", "hdfs", customKmsServiceName, "my-kms");
 
-        assertThrows(WebApplicationException.class, () -> securityZoneREST.createSecurityZone(zone));
+        when(validatorFactory.getSecurityZoneValidator(svcStore, securityZoneStore)).thenReturn(validator);
+        doNothing().when(validator).validate(any(RangerSecurityZone.class), eq(RangerValidator.Action.CREATE));
+        when(securityZoneStore.createSecurityZone(any(RangerSecurityZone.class))).thenReturn(zone);
 
-        verify(validator, never()).validate(any(RangerSecurityZone.class), any());
-        verify(securityZoneStore, never()).createSecurityZone(any());
+        securityZoneREST.createSecurityZone(zone);
+
+        verify(securityZoneStore, times(1)).createSecurityZone(any(RangerSecurityZone.class));
     }
 
     @Test
-    public void testCreateSecurityZone_AllowedWhenImplClassLookupReturnsNull() throws Exception {
+    public void testCreateSecurityZone_AllowedWhenServiceTypeLookupReturnsNull() throws Exception {
         String             unknownServiceName = "unknown_service";
         RangerSecurityZone zone               = createRangerSecurityZone();
 
         zone.getServices().put(unknownServiceName, new RangerSecurityZoneService());
 
         when(rangerBizUtil.isAdmin()).thenReturn(true);
-        mockServiceDefImplClassLookup("test_service_1", EmbeddedServiceDefsUtil.HDFS_IMPL_CLASS_NAME, unknownServiceName, null);
+        mockServiceDefTypeLookup("test_service_1", "hdfs", unknownServiceName, null);
 
         when(validatorFactory.getSecurityZoneValidator(svcStore, securityZoneStore)).thenReturn(validator);
         doNothing().when(validator).validate(any(RangerSecurityZone.class), eq(RangerValidator.Action.CREATE));
@@ -1452,14 +1455,13 @@ public class TestSecurityZoneREST {
 
     private void mockNonKmsServiceLookupForZoneCheck() {
         when(daoManager.getXXServiceDef()).thenReturn(xxServiceDefDao);
-        when(xxServiceDefDao.findServiceDefImplClassByServiceName("test_service_1"))
-                .thenReturn(EmbeddedServiceDefsUtil.HDFS_IMPL_CLASS_NAME);
+        when(xxServiceDefDao.findServiceDefTypeByServiceName("test_service_1")).thenReturn("hdfs");
     }
 
     private void mockKmsServiceLookupForZoneCheck(String kmsServiceName) {
         when(daoManager.getXXServiceDef()).thenReturn(xxServiceDefDao);
-        when(xxServiceDefDao.findServiceDefImplClassByServiceName(kmsServiceName))
-                .thenReturn(EmbeddedServiceDefsUtil.KMS_IMPL_CLASS_NAME);
+        when(xxServiceDefDao.findServiceDefTypeByServiceName(kmsServiceName))
+                .thenReturn(EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_KMS_NAME);
         when(restErrorUtil.createRESTException(
                 eq("KMS Services/Service-Defs are not accessible for Zone operations"),
                 eq(MessageEnums.OPER_NOT_ALLOWED_FOR_ENTITY))).thenReturn(new WebApplicationException());
@@ -1467,19 +1469,18 @@ public class TestSecurityZoneREST {
 
     private void mockMixedKmsAndNonKmsServiceLookupForZoneCheck(String kmsServiceName) {
         when(daoManager.getXXServiceDef()).thenReturn(xxServiceDefDao);
-        lenient().when(xxServiceDefDao.findServiceDefImplClassByServiceName("test_service_1"))
-                .thenReturn(EmbeddedServiceDefsUtil.HDFS_IMPL_CLASS_NAME);
-        when(xxServiceDefDao.findServiceDefImplClassByServiceName(kmsServiceName))
-                .thenReturn(EmbeddedServiceDefsUtil.KMS_IMPL_CLASS_NAME);
+        lenient().when(xxServiceDefDao.findServiceDefTypeByServiceName("test_service_1")).thenReturn("hdfs");
+        when(xxServiceDefDao.findServiceDefTypeByServiceName(kmsServiceName))
+                .thenReturn(EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_KMS_NAME);
         when(restErrorUtil.createRESTException(
                 eq("KMS Services/Service-Defs are not accessible for Zone operations"),
                 eq(MessageEnums.OPER_NOT_ALLOWED_FOR_ENTITY))).thenReturn(new WebApplicationException());
     }
 
-    private void mockServiceDefImplClassLookup(String serviceName1, String implClass1, String serviceName2, String implClass2) {
+    private void mockServiceDefTypeLookup(String serviceName1, String serviceType1, String serviceName2, String serviceType2) {
         when(daoManager.getXXServiceDef()).thenReturn(xxServiceDefDao);
-        when(xxServiceDefDao.findServiceDefImplClassByServiceName(serviceName1)).thenReturn(implClass1);
-        when(xxServiceDefDao.findServiceDefImplClassByServiceName(serviceName2)).thenReturn(implClass2);
+        when(xxServiceDefDao.findServiceDefTypeByServiceName(serviceName1)).thenReturn(serviceType1);
+        when(xxServiceDefDao.findServiceDefTypeByServiceName(serviceName2)).thenReturn(serviceType2);
     }
 
     private RangerSecurityZone createRangerSecurityZoneWithKmsService(String kmsServiceName) {

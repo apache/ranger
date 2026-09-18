@@ -697,9 +697,9 @@ public class SecurityZoneREST {
 
             if (serviceMap != null) {
                 for (String serviceName : serviceMap.keySet()) {
-                    String implClass = daoManager.getXXServiceDef().findServiceDefImplClassByServiceName(serviceName);
+                    String serviceType = daoManager.getXXServiceDef().findServiceDefTypeByServiceName(serviceName);
 
-                    if (EmbeddedServiceDefsUtil.KMS_IMPL_CLASS_NAME.equals(implClass)) {
+                    if (EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_KMS_NAME.equals(serviceType)) {
                         throw restErrorUtil.createRESTException("KMS Services/Service-Defs are not accessible for Zone operations", MessageEnums.OPER_NOT_ALLOWED_FOR_ENTITY);
                     }
                 }
