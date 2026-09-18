@@ -279,4 +279,31 @@ public class AuditMetricsREST {
 
         return ret;
     }
+
+    @GET
+    @Path("/days-plugin-policy-sync-metrics")
+    @Produces("application/json")
+    @PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.GET_DAYS_PLUGIN_POLICY_SYNC_METRICS + "\")")
+    public Map<String, List<Map<String, Object>>> getDaysPluginPolicySyncMetrics(@DefaultValue("7") @QueryParam("olderThanInDays") Integer olderThanInDays,
+            @DefaultValue("UTC") @QueryParam("timezone") String timezone) {
+        LOG.debug("==> AuditMetricsREST.getDaysPluginPolicySyncMetrics(olderThanInDays={}, timezone={})", olderThanInDays, timezone);
+
+        Map<String, List<Map<String, Object>>> ret = new LinkedHashMap<>();
+        List<Map<String, Object>> rangerPluginPolicySyncMetrics;
+
+        try {
+            rangerPluginPolicySyncMetrics = auditMetricsDBStore.getRangerPluginPolicySyncMetricsByDays(olderThanInDays, timezone);
+        } catch (WebApplicationException excp) {
+            throw excp;
+        } catch (Throwable excp) {
+            LOG.error("Error getting all latest plugin policy sync metrics..", excp);
+            throw restErrorUtil.createRESTException(excp.getMessage());
+        }
+
+        ret.put("PluginPolicySyncMetricsByDays", rangerPluginPolicySyncMetrics);
+
+        LOG.debug("<== AuditMetricsREST.getDaysPluginPolicySyncMetrics(): {}", ret);
+
+        return ret;
+    }
 }

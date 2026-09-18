@@ -226,6 +226,7 @@ END;/
 /
 
 call spdropview('vx_audit_admin_metrics_by_days');
+call spdropview('vx_policy_export_audit_metrics_by_days');
 call spdroptable('X_RMS_MAPPING_PROVIDER');
 call spdroptable('X_RMS_RESOURCE_MAPPING');
 call spdroptable('X_RMS_NOTIFICATION');
@@ -2083,6 +2084,21 @@ GROUP BY
 ORDER BY auditDate, days;
 commit;
 
+CREATE VIEW vx_policy_export_audit_metrics_by_days AS
+SELECT
+    repository_name,
+    agent_id,
+    client_ip,
+    http_ret_code,
+    COUNT(id) AS audit_count,
+    EXTRACT(DAY from CAST(create_time AS TIMESTAMP)) AS days,
+    TRUNC(create_time) AS auditDate
+FROM x_policy_export_audit
+GROUP BY
+    repository_name, agent_id, client_ip, http_ret_code, EXTRACT(DAY from CAST(create_time AS TIMESTAMP)), TRUNC(create_time)
+ORDER BY auditDate, days;
+commit;
+
 insert into x_portal_user (id,CREATE_TIME, UPDATE_TIME,FIRST_NAME, LAST_NAME, PUB_SCR_NAME, LOGIN_ID, PASSWORD, EMAIL, STATUS) values (X_PORTAL_USER_SEQ.NEXTVAL, sys_extract_utc(systimestamp), sys_extract_utc(systimestamp), 'Admin', '', 'Admin', 'admin', 'ceb4f32325eda6142bd65215f4c0f371', '', 1);
 insert into x_portal_user_role (id, CREATE_TIME, UPDATE_TIME, USER_ID, USER_ROLE, STATUS) values (X_PORTAL_USER_ROLE_SEQ.NEXTVAL, sys_extract_utc(systimestamp), sys_extract_utc(systimestamp), getXportalUIdByLoginId('admin'), 'ROLE_SYS_ADMIN', 1);
 insert into x_user (id,CREATE_TIME, UPDATE_TIME,user_name, status,descr) values (X_USER_SEQ.NEXTVAL, sys_extract_utc(systimestamp), sys_extract_utc(systimestamp),'admin', 0,'Administrator');
@@ -2183,6 +2199,7 @@ INSERT INTO x_db_version_h (id,version,inst_at,inst_by,updated_at,updated_by,act
 INSERT INTO x_db_version_h (id,version,inst_at,inst_by,updated_at,updated_by,active) VALUES (X_DB_VERSION_H_SEQ.nextval, '077',sys_extract_utc(systimestamp),'Ranger 3.0.0',sys_extract_utc(systimestamp),'localhost','Y');
 INSERT INTO x_db_version_h (id,version,inst_at,inst_by,updated_at,updated_by,active) VALUES (X_DB_VERSION_H_SEQ.nextval, '078',sys_extract_utc(systimestamp),'Ranger 3.0.0',sys_extract_utc(systimestamp),'localhost','Y');
 INSERT INTO x_db_version_h (id,version,inst_at,inst_by,updated_at,updated_by,active) VALUES (X_DB_VERSION_H_SEQ.nextval, '079',sys_extract_utc(systimestamp),'Ranger 1.0.0',sys_extract_utc(systimestamp),'localhost','Y');
+INSERT INTO x_db_version_h (id,version,inst_at,inst_by,updated_at,updated_by,active) VALUES (X_DB_VERSION_H_SEQ.nextval, '080',sys_extract_utc(systimestamp),'Ranger 1.0.0',sys_extract_utc(systimestamp),'localhost','Y');
 INSERT INTO x_db_version_h (id,version,inst_at,inst_by,updated_at,updated_by,active) VALUES (X_DB_VERSION_H_SEQ.nextval, 'DB_PATCHES',sys_extract_utc(systimestamp),'Ranger 1.0.0',sys_extract_utc(systimestamp),'localhost','Y');
 
 INSERT INTO x_user_module_perm (id,user_id,module_id,create_time,update_time,added_by_id,upd_by_id,is_allowed) VALUES (X_USER_MODULE_PERM_SEQ.nextval,getXportalUIdByLoginId('admin'),getModulesIdByName('Reports'),sys_extract_utc(systimestamp),sys_extract_utc(systimestamp),getXportalUIdByLoginId('admin'),getXportalUIdByLoginId('admin'),1);

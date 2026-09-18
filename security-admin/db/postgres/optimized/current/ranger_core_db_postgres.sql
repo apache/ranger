@@ -2079,6 +2079,7 @@ INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('077',current_timestamp,'Ranger 3.0.0',current_timestamp,'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('078',current_timestamp,'Ranger 3.0.0',current_timestamp,'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('079',current_timestamp,'Ranger 1.0.0',current_timestamp,'localhost','Y');
+INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('080',current_timestamp,'Ranger 1.0.0',current_timestamp,'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('DB_PATCHES',current_timestamp,'Ranger 1.0.0',current_timestamp,'localhost','Y');
 
 INSERT INTO x_user_module_perm (user_id,module_id,create_time,update_time,added_by_id,upd_by_id,is_allowed) VALUES
@@ -2205,5 +2206,21 @@ SELECT
     CAST(create_time AS DATE) AS auditDate
 FROM x_trx_log_v2
 GROUP BY action, class_type, days, auditDate
+ORDER BY auditDate, days;
+commit;
+
+DROP VIEW IF EXISTS vx_policy_export_audit_metrics_by_days;
+CREATE VIEW vx_policy_export_audit_metrics_by_days AS
+SELECT
+    repository_name,
+    agent_id,
+    client_ip,
+    http_ret_code,
+    COUNT(id) AS audit_count,
+    EXTRACT(DAY FROM create_time) AS days,
+    CAST(create_time AS DATE) AS auditDate
+FROM x_policy_export_audit
+GROUP BY
+    repository_name, agent_id, client_ip, http_ret_code, days, auditDate
 ORDER BY auditDate, days;
 commit;

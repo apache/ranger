@@ -90,6 +90,18 @@ public class AuditMetricsDBStore {
         return solrAccessAuditsService.getAuditAccessMetricsByDays(olderThanInDays, timezone);
     }
 
+    public List<Map<String, Object>> getRangerPluginPolicySyncMetricsByDays(Integer olderThanInDays, String timezone) throws RuntimeException {
+        Integer maxAllowedDays = config.getInt(PROP_AUDIT_METRICS_MAX_SUPPORTED_DAYS, PROP_AUDIT_METRICS_MAX_SUPPORTED_DAYS_DEFAULT);
+
+        if (olderThanInDays <= 0 || olderThanInDays > maxAllowedDays) {
+            throw restErrorUtil.createRESTException("Invalid parameter: olderThanInDays must be between 1 and " + maxAllowedDays, MessageEnums.INVALID_INPUT_DATA);
+        }
+
+        ZoneId zoneId = getZoneId(timezone);
+
+        return daoMgr.getXXPolicyExportAudit().getRangerPluginPolicySyncMetricsByDays(olderThanInDays, zoneId);
+    }
+
     private List<String> validateActions(List<String> actions) {
         if (actions == null || actions.isEmpty()) {
             return new ArrayList<>(ALLOWED_ACTIONS);

@@ -15,6 +15,7 @@
 
 DROP VIEW IF EXISTS `vx_principal`;
 DROP VIEW IF EXISTS `vx_audit_admin_metrics_by_days`;
+DROP VIEW IF EXISTS `vx_policy_export_audit_metrics_by_days`;
 DROP TABLE IF EXISTS `x_rms_mapping_provider`;
 DROP TABLE IF EXISTS `x_rms_resource_mapping`;
 DROP TABLE IF EXISTS `x_rms_notification`;
@@ -1543,6 +1544,20 @@ FROM x_trx_log_v2
 GROUP BY action, class_type, days, auditDate
 ORDER BY auditDate, days;
 
+CREATE OR REPLACE VIEW vx_policy_export_audit_metrics_by_days AS
+SELECT
+    repository_name,
+    agent_id,
+    client_ip,
+    http_ret_code,
+    COUNT(id) AS audit_count,
+    EXTRACT(DAY FROM create_time) AS days,
+    CAST(create_time AS DATE) AS auditDate
+FROM x_policy_export_audit
+GROUP BY
+    repository_name, agent_id, client_ip, http_ret_code, days, auditDate
+ORDER BY auditDate, days;
+
 DELIMITER $$
 DROP PROCEDURE if exists getXportalUIdByLoginId$$
 CREATE PROCEDURE `getXportalUIdByLoginId`(IN input_val VARCHAR(100), OUT myid BIGINT)
@@ -1989,6 +2004,7 @@ INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('077',UTC_TIMESTAMP(),'Ranger 3.0.0',UTC_TIMESTAMP(),'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('078',UTC_TIMESTAMP(),'Ranger 3.0.0',UTC_TIMESTAMP(),'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('079',UTC_TIMESTAMP(),'Ranger 1.0.0',UTC_TIMESTAMP(),'localhost','Y');
+INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('080',UTC_TIMESTAMP(),'Ranger 1.0.0',UTC_TIMESTAMP(),'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('DB_PATCHES',UTC_TIMESTAMP(),'Ranger 1.0.0',UTC_TIMESTAMP(),'localhost','Y');
 
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('J10001',UTC_TIMESTAMP(),'Ranger 1.0.0',UTC_TIMESTAMP(),'localhost','Y');

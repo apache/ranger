@@ -38,6 +38,8 @@ END
 GO
 DROP VIEW IF EXISTS dbo.vx_audit_admin_metrics_by_days
 GO
+DROP VIEW IF EXISTS dbo.vx_policy_export_audit_metrics_by_days
+GO
 call dbo.removeForeignKeysAndTable('x_rms_mapping_provider')
 GO
 call dbo.removeForeignKeysAndTable('x_rms_resource_mapping')
@@ -1874,6 +1876,20 @@ FROM x_trx_log_v2
 GROUP BY action, class_type, days, auditDate
 ORDER BY auditDate, days;
 GO
+CREATE VIEW vx_policy_export_audit_metrics_by_days AS
+SELECT
+    repository_name,
+    agent_id,
+    client_ip,
+    http_ret_code,
+    COUNT(id) AS audit_count,
+    DAY(create_time) as days,
+    cast(create_time as date) as auditDate
+FROM x_policy_export_audit
+GROUP BY
+    repository_name, agent_id, client_ip, http_ret_code, days, auditDate
+ORDER BY auditDate, days;
+GO
 CREATE NONCLUSTERED INDEX x_user_cr_time ON dbo.x_user(create_time ASC)
 GO
 CREATE NONCLUSTERED INDEX x_user_FK_added_by_id ON dbo.x_user(added_by_id ASC)
@@ -2273,6 +2289,8 @@ GO
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('078',CURRENT_TIMESTAMP,'Ranger 3.0.0',CURRENT_TIMESTAMP,'localhost','Y');
 GO
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('079',CURRENT_TIMESTAMP,'Ranger 1.0.0',CURRENT_TIMESTAMP,'localhost','Y');
+GO
+INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('080',CURRENT_TIMESTAMP,'Ranger 1.0.0',CURRENT_TIMESTAMP,'localhost','Y');
 GO
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('DB_PATCHES',CURRENT_TIMESTAMP,'Ranger 1.0.0',CURRENT_TIMESTAMP,'localhost','Y');
 GO
