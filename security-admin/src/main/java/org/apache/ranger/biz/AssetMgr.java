@@ -124,9 +124,6 @@ public class AssetMgr extends AssetMgrBase {
 	CloudWatchAccessAuditsService cloudWatchAccessAuditsService;
 
 	@Autowired
-	XPolicyService xPolicyService;
-
-	@Autowired
 	RangerTransactionSynchronizationAdapter transactionSynchronizationAdapter;
 
 	@Autowired
