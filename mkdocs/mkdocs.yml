@@ -93,8 +93,12 @@ nav:
           - Authz Remote Java Client: https://github.com/apache/ranger/blob/master/authz-remote/README.md
   - Project:
       - Contributing: project/contributing.md
+      - Community: project/community.md
       - Code Style Guide: project/java-code-style.md
       - Release Process: project/release-process.md
+      - Security:
+          - Security policy: project/security.md
+          - Vulnerabilities Found: project/cve-list.md
       - ASF:
           - ASF: project/asf-index.md
           - Sponsorship: "https://www.apache.org/foundation/sponsorship.html"
@@ -103,13 +107,28 @@ nav:
           - License: "https://www.apache.org/licenses/"
           - Security: "https://www.apache.org/security/"
           - Sponsors: "https://www.apache.org/foundation/sponsors.html"
-
-      - Security:
-          - Vulnerabilities Found: project/cve-list.md
   - Releases:
       - Releases: release-notes/index.md
+      - Download and verify: release-notes/download.md
+      - Release notes:
+          - 2.9.0: release-notes/2.9.0.md
+          - 2.8.0: release-notes/2.8.0.md
+          - 2.7.0: release-notes/2.7.0.md
+          - 2.6.0: release-notes/2.6.0.md
+          - 2.5.0: release-notes/2.5.0.md
+          - 2.4.0: release-notes/2.4.0.md
+          - 2.3.0: release-notes/2.3.0.md
+          - 2.2.0: release-notes/2.2.0.md
+          - 2.1.0: release-notes/2.1.0.md
+          - 2.0.0: release-notes/2.0.0.md
+          - 1.x and older: release-notes/1.x-and-older.md
   - Blog:
-      - blog/blog.md
+      - Posts: blog/blog.md
+      - Apache Ranger policy model: blog/policy-model.md
+      - Integrating applications with Ranger: blog/integrating-applications.md
+      - Dynamic expressions: blog/dynamic-expressions.md
+      - Adventures in ABAC, part 1: blog/abac-part-1.md
+      - Adventures in ABAC, part 2: blog/abac-part-2.md
 
 extra:
   homepage: https://ranger.apache.org
@@ -151,7 +170,11 @@ markdown_extensions:
         custom_icons:
           - simple
 
-  - pymdownx.superfences
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
   - pymdownx.tabbed:
       alternate_style: true
   - toc:
