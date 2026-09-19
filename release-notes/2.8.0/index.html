@@ -1,0 +1,2431 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+        <link rel="canonical" href="https://apache.github.io/ranger/release-notes/2.8.0/">
+      
+      
+        <link rel="prev" href="../2.9.0/">
+      
+      
+        <link rel="next" href="../2.7.0/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/brand/favicon.ico">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+    
+    
+      
+        <title>Apache Ranger 2.8.0 - Apache Ranger</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.ec1eaa64.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Noto+Sans:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Noto Sans";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/css/custom.css">
+    
+      <link rel="stylesheet" href="../../assets/css/table.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  
+<meta property="og:type" content="website" />
+<meta property="og:title" content="Apache Ranger 2.8.0 - Apache Ranger" />
+<meta property="og:image" content="https://apache.github.io/ranger/assets/images/social/release-notes/2.8.0.png" />
+<meta property="og:image:type" content="image/png" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta property="og:url" content="https://apache.github.io/ranger/release-notes/2.8.0/" />
+<meta property="twitter:card" content="summary_large_image" />
+<meta property="twitter:title" content="Apache Ranger 2.8.0 - Apache Ranger" />
+<meta property="twitter:image" content="https://apache.github.io/ranger/assets/images/social/release-notes/2.8.0.png" />
+</head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="deep-purple">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#apache-ranger-280-release-notes" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="https://ranger.apache.org" title="Apache Ranger" class="md-header__button md-logo" aria-label="Apache Ranger" data-md-component="logo">
+      
+  <img src="../../assets/brand/merged-logo.svg" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Apache Ranger
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Apache Ranger 2.8.0
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="deep-purple"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-2.69L23.31 12 20 8.69V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="amber"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 2c-1.82 0-3.53.5-5 1.35C8 5.08 10 8.3 10 12s-2 6.92-5 8.65C6.47 21.5 8.18 22 10 22a10 10 0 0 0 10-10A10 10 0 0 0 10 2"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/apache/ranger" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    apache/ranger
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+            
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../.." class="md-tabs__link">
+        
+  
+  
+    
+  
+  Home
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../getting-started/install/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Getting started
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../arch/architecture/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Architecture
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../plugins/trino/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Plugins
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../services/admin/service/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Services
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../features/gds/gds_intro/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Features
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../project/contributing/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Project
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Releases
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../blog/blog/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Blog
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ul>
+  </div>
+</nav>
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="https://ranger.apache.org" title="Apache Ranger" class="md-nav__button md-logo" aria-label="Apache Ranger" data-md-component="logo">
+      
+  <img src="../../assets/brand/merged-logo.svg" alt="logo">
+
+    </a>
+    Apache Ranger
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/apache/ranger" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    apache/ranger
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+    
+    
+      
+        
+        
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+  
+    <a href="../../getting-started/install/" class="md-nav__link">
+      
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting started
+  
+
+    
+  </span>
+  
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+    
+    
+    
+      
+      
+    
+    
+      
+        
+        
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+  
+    <a href="../../arch/architecture/" class="md-nav__link">
+      
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture
+  
+
+    
+  </span>
+  
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+    
+    
+    
+      
+      
+    
+    
+      
+        
+        
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+  
+    <a href="../../plugins/trino/" class="md-nav__link">
+      
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Plugins
+  
+
+    
+  </span>
+  
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+    
+    
+      
+        
+        
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+  
+    <a href="../../services/admin/service/" class="md-nav__link">
+      
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Services
+  
+
+    
+  </span>
+  
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+    
+    
+      
+        
+        
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+  
+    <a href="../../features/gds/gds_intro/" class="md-nav__link">
+      
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Features
+  
+
+    
+  </span>
+  
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+    
+    
+      
+        
+        
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+  
+    <a href="../../project/contributing/" class="md-nav__link">
+      
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Project
+  
+
+    
+  </span>
+  
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+      
+    
+    
+      
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8" checked>
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Releases
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_8" id="__nav_8_label" tabindex="">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_8">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Releases
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../download/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Download and verify
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+    
+    
+      
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8_3" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_8_3" id="__nav_8_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Release notes
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_8_3_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_8_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Release notes
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2.9.0/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    2.9.0
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    2.8.0
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    2.8.0
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#highlights" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Highlights
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#component-versions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Component versions
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#artifacts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Artifacts
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#resolved-issues" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Resolved issues
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Resolved issues">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#improvements" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Improvements
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#bugs-fixed" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Bugs fixed
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#tasks" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Tasks
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#further-reading" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Further reading
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2.7.0/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    2.7.0
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2.6.0/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    2.6.0
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2.5.0/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    2.5.0
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2.4.0/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    2.4.0
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2.3.0/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    2.3.0
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2.2.0/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    2.2.0
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2.1.0/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    2.1.0
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2.0.0/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    2.0.0
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../1.x-and-older/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    1.x and older
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+    
+    
+      
+        
+        
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+  
+    <a href="../../blog/blog/" class="md-nav__link">
+      
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Blog
+  
+
+    
+  </span>
+  
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#highlights" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Highlights
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#component-versions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Component versions
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#artifacts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Artifacts
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#resolved-issues" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Resolved issues
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Resolved issues">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#improvements" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Improvements
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#bugs-fixed" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Bugs fixed
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#tasks" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Tasks
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#further-reading" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Further reading
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+                
+
+
+
+  
+
+
+  <nav class="md-path" aria-label="Navigation" >
+    <ol class="md-path__list">
+      
+        
+  
+  
+    <li class="md-path__item">
+      <a href="../.." class="md-path__link">
+        
+  <span class="md-ellipsis">
+    Home
+  </span>
+
+      </a>
+    </li>
+  
+
+      
+      
+        
+  
+  
+    
+    
+      <li class="md-path__item">
+        <a href="../" class="md-path__link">
+          
+  <span class="md-ellipsis">
+    Releases
+  </span>
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+    
+    
+      <li class="md-path__item">
+        <a href="../2.9.0/" class="md-path__link">
+          
+  <span class="md-ellipsis">
+    Release notes
+  </span>
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ol>
+  </nav>
+
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<!---
+  Licensed to the Apache Software Foundation (ASF) under one or more
+  contributor license agreements.  See the NOTICE file distributed with
+  this work for additional information regarding copyright ownership.
+  The ASF licenses this file to You under the Apache License, Version 2.0
+  (the "License"); you may not use this file except in compliance with
+  the License.  You may obtain a copy of the License at
+
+      http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+
+<h1 id="apache-ranger-280-release-notes">Apache Ranger 2.8.0 release notes<a class="headerlink" href="#apache-ranger-280-release-notes" title="Permanent link">&para;</a></h1>
+<p>Apache Ranger 2.8.0 was released on March 1, 2026. The release introduces the <code>authz-api</code> and <code>authz-embedded</code> modules, service-managed ACLs in the policy engine, Kerberized Solr audit support in the installers, and many dependency upgrades and bug fixes.</p>
+<h2 id="highlights">Highlights<a class="headerlink" href="#highlights" title="Permanent link">&para;</a></h2>
+<ul>
+<li><strong>Authorization API modules</strong> — new <code>authz-api</code> (<a href="https://issues.apache.org/jira/browse/RANGER-5309">RANGER-5309</a>) and <code>authz-embedded</code> (<a href="https://issues.apache.org/jira/browse/RANGER-5312">RANGER-5312</a>) modules define a component-neutral
+  authorization request/response model and an embedded authorizer.</li>
+<li><strong>Policy engine support for service-managed ACLs</strong> (<a href="https://issues.apache.org/jira/browse/RANGER-5369">RANGER-5369</a>) and synchronous policy-cache download for testing plugins (<a href="https://issues.apache.org/jira/browse/RANGER-5230">RANGER-5230</a>).</li>
+<li><strong>Kerberized Solr audit</strong> — Admin and plugin installers accept configuration for a Kerberos-protected Solr audit destination
+  (<a href="https://issues.apache.org/jira/browse/RANGER-5382">RANGER-5382</a>, <a href="https://issues.apache.org/jira/browse/RANGER-5383">RANGER-5383</a>); the audit UI can query Kerberized Solr (<a href="https://issues.apache.org/jira/browse/RANGER-5384">RANGER-5384</a>).</li>
+<li><strong>Authentication</strong> — <code>RangerRESTClient</code> can fetch a JWT when one is available (<a href="https://issues.apache.org/jira/browse/RANGER-5475">RANGER-5475</a>); clients can reach secure API endpoints in
+  non-Kerberos environments (<a href="https://issues.apache.org/jira/browse/RANGER-5488">RANGER-5488</a>).</li>
+<li><strong>Audit filters</strong> can exclude by resource name (<a href="https://issues.apache.org/jira/browse/RANGER-5315">RANGER-5315</a>, <a href="https://issues.apache.org/jira/browse/RANGER-5325">RANGER-5325</a>).</li>
+<li><strong>Operations</strong> — change the log level without a restart (<a href="https://issues.apache.org/jira/browse/RANGER-5266">RANGER-5266</a>), last login date and time on the home page (<a href="https://issues.apache.org/jira/browse/RANGER-5271">RANGER-5271</a>), Ozone authorizer
+  support for AssumeRole (<a href="https://issues.apache.org/jira/browse/RANGER-5393">RANGER-5393</a>).</li>
+<li><strong>Dependencies</strong> — Hadoop 3.4.2 (<a href="https://issues.apache.org/jira/browse/RANGER-5467">RANGER-5467</a>), Kafka 3.9.1 (<a href="https://issues.apache.org/jira/browse/RANGER-5457">RANGER-5457</a>), Tomcat 9.0.113 (<a href="https://issues.apache.org/jira/browse/RANGER-5426">RANGER-5426</a>), Jetty 9.4.57 (<a href="https://issues.apache.org/jira/browse/RANGER-5460">RANGER-5460</a>), Elasticsearch 7.17.29 (<a href="https://issues.apache.org/jira/browse/RANGER-4939">RANGER-4939</a>),
+  <code>hadoop-common</code> replaced by smaller dependencies (<a href="https://issues.apache.org/jira/browse/RANGER-5478">RANGER-5478</a>), migration from commons-lang 2.6 to commons-lang3 (<a href="https://issues.apache.org/jira/browse/RANGER-5391">RANGER-5391</a>).</li>
+<li><strong>Security fixes</strong> — XML External Entity injection (<a href="https://issues.apache.org/jira/browse/RANGER-5477">RANGER-5477</a>), server version disclosure in Ranger KMS (<a href="https://issues.apache.org/jira/browse/RANGER-5416">RANGER-5416</a>), users with names
+  similar to <code>admin</code>/<code>keyadmin</code> could query those accounts (<a href="https://issues.apache.org/jira/browse/RANGER-5342">RANGER-5342</a>).</li>
+<li><strong>Docker</strong> — Kerberos support in the docker setup (<a href="https://issues.apache.org/jira/browse/RANGER-4898">RANGER-4898</a>), volume mounts for service and plugin configuration (<a href="https://issues.apache.org/jira/browse/RANGER-5396">RANGER-5396</a>, <a href="https://issues.apache.org/jira/browse/RANGER-5401">RANGER-5401</a>),
+  Ranger authorization for Solr (<a href="https://issues.apache.org/jira/browse/RANGER-5451">RANGER-5451</a>).</li>
+</ul>
+<h2 id="component-versions">Component versions<a class="headerlink" href="#component-versions" title="Permanent link">&para;</a></h2>
+<p>The release was built and tested with the following component versions (as recorded in the release notes):</p>
+<table>
+<thead>
+<tr>
+<th>Component</th>
+<th>Version</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Java</td>
+<td>JDK 8</td>
+</tr>
+<tr>
+<td>Python</td>
+<td>3.10.12</td>
+</tr>
+<tr>
+<td>MariaDB</td>
+<td>10.7.3</td>
+</tr>
+<tr>
+<td>PostgreSQL</td>
+<td>13.16</td>
+</tr>
+<tr>
+<td>Oracle</td>
+<td>23.6</td>
+</tr>
+<tr>
+<td>Apache Solr</td>
+<td>8.11.3</td>
+</tr>
+</tbody>
+</table>
+<h2 id="artifacts">Artifacts<a class="headerlink" href="#artifacts" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Artifact</th>
+<th>Location</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Source tarball</td>
+<td><a href="https://downloads.apache.org/ranger/2.8.0/apache-ranger-2.8.0.tar.gz">apache-ranger-2.8.0.tar.gz</a> (<a href="https://downloads.apache.org/ranger/2.8.0/apache-ranger-2.8.0.tar.gz.asc">signature</a>, <a href="https://downloads.apache.org/ranger/2.8.0/apache-ranger-2.8.0.tar.gz.sha512">SHA-512</a>)</td>
+</tr>
+<tr>
+<td>Binary tarballs</td>
+<td><a href="https://downloads.apache.org/ranger/2.8.0/services/">https://downloads.apache.org/ranger/2.8.0/services/</a> (admin, usersync, tagsync, kms), <a href="https://downloads.apache.org/ranger/2.8.0/plugins/">https://downloads.apache.org/ranger/2.8.0/plugins/</a>, <a href="https://downloads.apache.org/ranger/2.8.0/tools/">https://downloads.apache.org/ranger/2.8.0/tools/</a></td>
+</tr>
+<tr>
+<td>Release directory</td>
+<td><a href="https://downloads.apache.org/ranger/2.8.0/">https://downloads.apache.org/ranger/2.8.0/</a></td>
+</tr>
+<tr>
+<td>Git tag</td>
+<td><a href="https://github.com/apache/ranger/tree/release-ranger-2.8.0">release-ranger-2.8.0</a></td>
+</tr>
+<tr>
+<td>Docker images</td>
+<td><code>apache/ranger:2.8.0</code>, <code>apache/ranger-db:2.8.0</code>, <code>apache/ranger-solr:2.8.0</code>, <code>apache/ranger-zk:2.8.0</code> on <a href="https://hub.docker.com/r/apache/ranger/tags">Docker Hub</a></td>
+</tr>
+<tr>
+<td>Maven Central</td>
+<td><code>org.apache.ranger:*:2.8.0</code></td>
+</tr>
+<tr>
+<td>Archive</td>
+<td><a href="https://archive.apache.org/dist/ranger/2.8.0/">archive.apache.org/dist/ranger/2.8.0/</a></td>
+</tr>
+</tbody>
+</table>
+<p>Verify every download against its <code>.asc</code> signature and checksum file before you use it; see <a href="../download/">Download and verify</a>.</p>
+<h2 id="resolved-issues">Resolved issues<a class="headerlink" href="#resolved-issues" title="Permanent link">&para;</a></h2>
+<p>The tables below list the 91 JIRA issues recorded in the release notes for this version (47 improvements, 36 bugs fixed, 8 tasks). Each key links to the issue in the Apache JIRA.</p>
+<h3 id="improvements">Improvements<a class="headerlink" href="#improvements" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>JIRA</th>
+<th>Summary</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-5389">RANGER-5389</a></td>
+<td>Replace unmaintained jquery-cookie library with modern alternative</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-5488">RANGER-5488</a></td>
+<td>Allow clients to access secure API endpoints in Ranger Admin in non-kerberos envs</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-5478">RANGER-5478</a></td>
+<td>replace hadoop-common dependency with smaller</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-5475">RANGER-5475</a></td>
+<td>Add support to fetch JWT if available in RangerRESTClient</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-5467">RANGER-5467</a></td>
+<td>update Hadoop version to 3.4.2</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-5462">RANGER-5462</a></td>
+<td>update commons-beanutils version</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-5460">RANGER-5460</a></td>
+<td>update jetty version to 9.4.57.v20241219</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-5459">RANGER-5459</a></td>
+<td>remove reference to unused library mysql-connector-java</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-5457">RANGER-5457</a></td>
+<td>Update Kafka version to 3.9.1</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-5451">RANGER-5451</a></td>
+<td>Docker setup update to configure Ranger authorization in Solr</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-5447">RANGER-5447</a></td>
+<td>local policy source implementations to support loading from <serviceName>.json</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-5443">RANGER-5443</a></td>
+<td>fix Unchecked cast warnings in JsonUtils</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-5442">RANGER-5442</a></td>
+<td>replace repeated Gson instantiation with JsonUtils method calls</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-5438">RANGER-5438</a></td>
+<td>Upgrade qs, express and node-forge library in Ranger React UI.</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-5434">RANGER-5434</a></td>
+<td>Add test users keytabs to the ranger and dependency service docker containers</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-5433">RANGER-5433</a></td>
+<td>update service-def json files to improve readability</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-5426">RANGER-5426</a></td>
+<td>Update tomcat to 9.0.113</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-5401">RANGER-5401</a></td>
+<td>[docker] Use Volume Mounts for ranger-plugin configs</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-5396">RANGER-5396</a></td>
+<td>[docker] Use Volume Mounts for ranger-service configs</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-5393">RANGER-5393</a></td>
+<td>Ranger Ozone authorizer updates to support AssumeRole</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-5386">RANGER-5386</a></td>
+<td>Docker setup update to use latest Trino release</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-5383">RANGER-5383</a></td>
+<td>plugin installation to support configurations for Kerberized Solr audit destination</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-5382">RANGER-5382</a></td>
+<td>Admin server installation to support configurations for Kerberized Solr</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-5381">RANGER-5381</a></td>
+<td>add krb5-user package in ranger-base image</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-5369">RANGER-5369</a></td>
+<td>policy engine support for service-managed ACLs</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-5338">RANGER-5338</a></td>
+<td>Make XMLUtils's error message more informative</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-5336">RANGER-5336</a></td>
+<td>Upgrade bouncycastle to 1.79 due to CVE-2025-8916 and CVE-2025-8885</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-5332">RANGER-5332</a></td>
+<td>Ranger: Upgrade axios version 1.8.4 to latest 1.12.2</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-5325">RANGER-5325</a></td>
+<td>Ranger Access audit option to exclude resource</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-5320">RANGER-5320</a></td>
+<td>Handle unsupported cipher key creation</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-5315">RANGER-5315</a></td>
+<td>Enhance Audit Log Filters to Support Resource Name Exclusions</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-5294">RANGER-5294</a></td>
+<td>FileUtils.isOwnerOfFileHierarchy doesn’t have the recurse parameter</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-5293">RANGER-5293</a></td>
+<td>Upgrade netty to 4.1.124.Final</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-5291">RANGER-5291</a></td>
+<td>'User' role users api '/service/roles/roles' is giving 400 status</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-5283">RANGER-5283</a></td>
+<td>Updating library dependencies in Ranger Admin React package-lock.json</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-5271">RANGER-5271</a></td>
+<td>Last login date and time on Ranger Home page</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-5269">RANGER-5269</a></td>
+<td>Update UI hint for Ranger service definition for HA enabled HDFS</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-5266">RANGER-5266</a></td>
+<td>Change log level without service restart</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-5230">RANGER-5230</a></td>
+<td>Support synchronous policy cache download for testing plugins</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-5215">RANGER-5215</a></td>
+<td>Policy authroization fails for Ranger Plugins in case of users/groups converted by Ranger userysnc as per given Regex</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-5212">RANGER-5212</a></td>
+<td>Search filter in Roles tab does not consider all relevant role columns</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-5200">RANGER-5200</a></td>
+<td>Add search Parameter for "XA Group of Users" in Audit Admin logs Tab.</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-5148">RANGER-5148</a></td>
+<td>Redundant Role Cache Modification Triggers Caused by Role Version Changes in Scenarios with a Large Number of Plugin Clients</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-4939">RANGER-4939</a></td>
+<td>Upgrade Elasticsearch version to 7.17.29</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-4247">RANGER-4247</a></td>
+<td>auditPolicyEvaluators should be set before logging it</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-3313">RANGER-3313</a></td>
+<td>Remove org.apache.ranger.audit.entity.AuthzAuditEventDbObj from JPA (persistence.xml)</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2713">RANGER-2713</a></td>
+<td>Remove audit fields from XXPolicyRef objects</td>
+</tr>
+</tbody>
+</table>
+<h3 id="bugs-fixed">Bugs fixed<a class="headerlink" href="#bugs-fixed" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>JIRA</th>
+<th>Summary</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-5494">RANGER-5494</a></td>
+<td>Docker setup: ranger-hive container missing log4j configuration files</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-5495">RANGER-5495</a></td>
+<td>replace references to org.apache.log4j with org.slf4j</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-3643">RANGER-3643</a></td>
+<td>Service config UI to include additional configurations like service.admin.users, service.admin.groups</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-5416">RANGER-5416</a></td>
+<td>Disable Server Version Disclosure in HTTP Response for Ranger KMS</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-5477">RANGER-5477</a></td>
+<td>XML External Entity Injection Security issue in Ranger</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-5476">RANGER-5476</a></td>
+<td>PolicyRefresher.stopRefresher() can deadlock when retrying HTTP request</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-5461">RANGER-5461</a></td>
+<td>Incorrect condition in computeDeletedGroups() prevents groups from being marked as HIDDEN</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-5458">RANGER-5458</a></td>
+<td>Tagsync fails while initializing Atlas source</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-5441">RANGER-5441</a></td>
+<td>Docker: HiveServer2 initialization fails in creating Zookeeper node /hiveserver2</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-5431">RANGER-5431</a></td>
+<td>Docker: ranger-admin-site.xml contains invalid property values</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-5422">RANGER-5422</a></td>
+<td>Fix incorrect date format in logback.xml</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-5407">RANGER-5407</a></td>
+<td>In Atlas Service for some of the default policies wrong permissions seen</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-5405">RANGER-5405</a></td>
+<td>PatchForSolrSvcDefAndPoliciesUpdate_J10055 Java patch fails during upgrade</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-5404">RANGER-5404</a></td>
+<td>Modify the evtTime format to avoid format errors in ES</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-5403">RANGER-5403</a></td>
+<td>Intermittent HDFS authorization failures caused by unsafe lazy initialization in CaseSensitiveRecursiveMatcher</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-5402">RANGER-5402</a></td>
+<td>Fix the out-of-bounds issue caused by overly long kms keys</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-5399">RANGER-5399</a></td>
+<td>Ranger: HTTP 403 - User '' lacks delegated-admin privilege when attempting to GRANT privilege on a database</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-5397">RANGER-5397</a></td>
+<td>IllegalArgumentException in RangerRESTClient when no ranger.plugin.<service>.policy.rest.url is configured</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-5394">RANGER-5394</a></td>
+<td>policyEngine should be volatile to prevent policy update visibility race</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-5392">RANGER-5392</a></td>
+<td>Policies created by grant command have empty 'created by' and 'updated by' fields</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-5391">RANGER-5391</a></td>
+<td>Migrate from commons-lang 2.6 to commons-lang3 3.19.0 to fix CVE-2025-48924</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-5384">RANGER-5384</a></td>
+<td>Audit UI fails to query from kerberized Solr</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-5361">RANGER-5361</a></td>
+<td>Updating node &amp; npm version getting used for building ranger admin js code in security-admin module</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-5352">RANGER-5352</a></td>
+<td>Resource changes in tag does not work correctly when delta sync &amp; dedup is enabled</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-5342">RANGER-5342</a></td>
+<td>USER-role users with names similar to admin or keyadmin can query those admin/keyadmin users.</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-5340">RANGER-5340</a></td>
+<td>RangerResourceACLs has incorrect isFinal flag for ACLs from GDS policy engine</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-5322">RANGER-5322</a></td>
+<td>PolicyRefresher can struck with no download thread if exception thrown in startRefresher</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-5270">RANGER-5270</a></td>
+<td>Audits &gt; Admin tab: Zone name missing in "Delete Zone Policy" log</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-5259">RANGER-5259</a></td>
+<td>Ranger Does Not Clean Up Stale Plugin Entries After Role Deletion or Migration</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-4883">RANGER-4883</a></td>
+<td>audit to HDFS fails with error: org.apache.hadoop.fs.UnsupportedFileSystemException: No FileSystem for scheme "hdfs"</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-4518">RANGER-4518</a></td>
+<td>Improvement in state management for search filter parameters in Ranger React</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-4021">RANGER-4021</a></td>
+<td>Shell syntax bug in kms setup.sh</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-3965">RANGER-3965</a></td>
+<td>When creating a key with too long attribute values, KMS returns OK but key not really added</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-3491">RANGER-3491</a></td>
+<td>Not find TAG serviceDef when update tag serviceDef for loading service-defs json file</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-3222">RANGER-3222</a></td>
+<td>Ranger yarn plugin does not support parsing fair scheduler json or xml response</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-3166">RANGER-3166</a></td>
+<td>Spaced are authorized in LDAP value strings but the setup.sh script doesnt account for spaces</td>
+</tr>
+</tbody>
+</table>
+<h3 id="tasks">Tasks<a class="headerlink" href="#tasks" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>JIRA</th>
+<th>Summary</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-5302">RANGER-5302</a></td>
+<td>Code Coverage changes for React JS script files</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-5464">RANGER-5464</a></td>
+<td>Update lodash version from 4.17.21 to 4.17.23</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-4898">RANGER-4898</a></td>
+<td>Docker setup to support kerberos authentication</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-4771">RANGER-4771</a></td>
+<td>Remove the calls to ensureAdminAccess() in grantAccess() and revokeAccess()</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-5367">RANGER-5367</a></td>
+<td>simplify resourceName parsing</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-5324">RANGER-5324</a></td>
+<td>replace use of iterations with streams: RangerRequestScriptEvaluator</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-5312">RANGER-5312</a></td>
+<td>Add module: authz-embedded</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-5309">RANGER-5309</a></td>
+<td>Add module: authz-api</td>
+</tr>
+</tbody>
+</table>
+<h2 id="further-reading">Further reading<a class="headerlink" href="#further-reading" title="Permanent link">&para;</a></h2>
+<ul>
+<li><a href="https://cwiki.apache.org/confluence/display/RANGER/Apache+Ranger+2.8.0+-+Release+Notes">Apache Ranger 2.8.0 - Release Notes (cwiki)</a></li>
+<li><a href="https://issues.apache.org/jira/issues/?jql=project%20%3D%20RANGER%20AND%20fixVersion%20%3D%202.8.0">All issues with fixVersion 2.8.0 in JIRA</a></li>
+<li><a href="../">Release index</a> and <a href="../download/">Download and verify</a></li>
+</ul>
+
+
+
+
+
+
+
+  
+    
+  
+  
+
+
+  <aside class="md-source-file">
+    
+      
+  <span class="md-source-file__fact">
+    <span class="md-icon" title="Last update">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
+    </span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="September 19, 2026 13:04:02 PDT">September 19, 2026</span>
+  </span>
+
+    
+    
+    
+    
+  </aside>
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      Copyright &copy; 2014-2025 The Apache Software Foundation
+    </div>
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+        
+<div class="md-social">
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://the-asf.slack.com/archives/C4SC5NXAA" target="_blank" rel="noopener" title="the-asf.slack.com" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M94.1 315.1c0 25.9-21.2 47.1-47.1 47.1S0 341 0 315.1 21.2 268 47.1 268h47.1v47.1zm23.7 0c0-25.9 21.2-47.1 47.1-47.1s47.1 21.2 47.1 47.1v117.8c0 25.9-21.2 47.1-47.1 47.1s-47.1-21.2-47.1-47.1zm47.1-189c-25.9 0-47.1-21.2-47.1-47.1s21.2-47 47.1-47S212 53.2 212 79.1v47.1h-47.1zm0 23.7c25.9 0 47.1 21.2 47.1 47.1S190.8 244 164.9 244H47.1C21.2 244 0 222.8 0 196.9s21.2-47.1 47.1-47.1zm189 47.1c0-25.9 21.2-47.1 47.1-47.1s47 21.2 47 47.1-21.2 47.1-47.1 47.1h-47.1v-47.1zm-23.7 0c0 25.9-21.2 47.1-47.1 47.1S236 222.8 236 196.9V79.1c0-25.9 21.2-47.1 47.1-47.1s47.1 21.2 47.1 47.1zm-47.1 189c25.9 0 47.1 21.2 47.1 47.1s-21.2 47-47.1 47-47.1-21.2-47.1-47.1v-47.1h47.1zm0-23.7c-25.9 0-47.1-21.2-47.1-47.1s21.2-47.1 47.1-47.1h117.8c25.9 0 47.1 21.2 47.1 47.1s-21.2 47.1-47.1 47.1z"/></svg>
+    </a>
+  
+    
+    
+    
+    
+    <a href="mailto:dev@ranger.apache.org" target="_blank" rel="noopener" title="" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M48 64C21.5 64 0 85.5 0 112c0 15.1 7.1 29.3 19.2 38.4l208 156a48 48 0 0 0 57.6 0l208-156c12.1-9.1 19.2-23.3 19.2-38.4 0-26.5-21.5-48-48-48zM0 196v188c0 35.3 28.7 64 64 64h384c35.3 0 64-28.7 64-64V196L313.6 344.8c-34.1 25.6-81.1 25.6-115.2 0z"/></svg>
+    </a>
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://github.com/apache/ranger" target="_blank" rel="noopener" title="github.com" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+    </a>
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://hub.docker.com/r/apache/ranger" target="_blank" rel="noopener" title="hub.docker.com" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M349.9 236.3h-66.1v-59.4h66.1zm0-204.3h-66.1v60.7h66.1zm78.2 144.8H362v59.4h66.1zm-156.3-72.1h-66.1v60.1h66.1zm78.1 0h-66.1v60.1h66.1zm276.8 100c-14.4-9.7-47.6-13.2-73.1-8.4-3.3-24-16.7-44.9-41.1-63.7l-14-9.3-9.3 14c-18.4 27.8-23.4 73.6-3.7 103.8-8.7 4.7-25.8 11.1-48.4 10.7H2.4c-8.7 50.8 5.8 116.8 44 162.1 37.1 43.9 92.7 66.2 165.4 66.2 157.4 0 273.9-72.5 328.4-204.2 21.4.4 67.6.1 91.3-45.2 1.5-2.5 6.6-13.2 8.5-17.1zm-511.1-27.9h-66v59.4h66.1v-59.4zm78.1 0h-66.1v59.4h66.1zm78.1 0h-66.1v59.4h66.1zm-78.1-72.1h-66.1v60.1h66.1z"/></svg>
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.instant", "navigation.instant.prefetch", "navigation.top", "navigation.tracking", "navigation.tabs", "navigation.path", "navigation.indexes", "navigation.prune", "content.code.copy", "toc.follow", "announce.dismiss"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+        <script src="../../assets/js/typewriter.js"></script>
+      
+        <script src="https://unpkg.com/typewriter-effect@latest/dist/core.js"></script>
+      
+        <script src="https://cdn.jsdelivr.net/npm/vega@5"></script>
+      
+        <script src="https://cdn.jsdelivr.net/npm/vega-lite@5"></script>
+      
+        <script src="https://cdn.jsdelivr.net/npm/vega-embed@6"></script>
+      
+    
+  </body>
+</html>

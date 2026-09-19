@@ -1,0 +1,2830 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+        <link rel="canonical" href="https://apache.github.io/ranger/blog/integrating-applications/">
+      
+      
+        <link rel="prev" href="../policy-model/">
+      
+      
+        <link rel="next" href="../dynamic-expressions/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/brand/favicon.ico">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+    
+    
+      
+        <title>Integrating applications with Ranger - Apache Ranger</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.ec1eaa64.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Noto+Sans:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Noto Sans";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/css/custom.css">
+    
+      <link rel="stylesheet" href="../../assets/css/table.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  
+<meta property="og:type" content="website" />
+<meta property="og:title" content="Integrating applications with Ranger - Apache Ranger" />
+<meta property="og:image" content="https://apache.github.io/ranger/assets/images/social/blog/integrating-applications.png" />
+<meta property="og:image:type" content="image/png" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta property="og:url" content="https://apache.github.io/ranger/blog/integrating-applications/" />
+<meta property="twitter:card" content="summary_large_image" />
+<meta property="twitter:title" content="Integrating applications with Ranger - Apache Ranger" />
+<meta property="twitter:image" content="https://apache.github.io/ranger/assets/images/social/blog/integrating-applications.png" />
+</head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="deep-purple">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#integrating-applications-with-apache-ranger" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="https://ranger.apache.org" title="Apache Ranger" class="md-header__button md-logo" aria-label="Apache Ranger" data-md-component="logo">
+      
+  <img src="../../assets/brand/merged-logo.svg" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Apache Ranger
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Integrating applications with Ranger
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="deep-purple"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-2.69L23.31 12 20 8.69V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="amber"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 2c-1.82 0-3.53.5-5 1.35C8 5.08 10 8.3 10 12s-2 6.92-5 8.65C6.47 21.5 8.18 22 10 22a10 10 0 0 0 10-10A10 10 0 0 0 10 2"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/apache/ranger" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    apache/ranger
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+            
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../.." class="md-tabs__link">
+        
+  
+  
+    
+  
+  Home
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../getting-started/install/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Getting started
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../arch/architecture/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Architecture
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../plugins/trino/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Plugins
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../services/admin/service/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Services
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../features/gds/gds_intro/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Features
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../project/contributing/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Project
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../release-notes/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Releases
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../blog/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Blog
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ul>
+  </div>
+</nav>
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="https://ranger.apache.org" title="Apache Ranger" class="md-nav__button md-logo" aria-label="Apache Ranger" data-md-component="logo">
+      
+  <img src="../../assets/brand/merged-logo.svg" alt="logo">
+
+    </a>
+    Apache Ranger
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/apache/ranger" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    apache/ranger
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+    
+    
+      
+        
+        
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+  
+    <a href="../../getting-started/install/" class="md-nav__link">
+      
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting started
+  
+
+    
+  </span>
+  
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+    
+    
+    
+      
+      
+    
+    
+      
+        
+        
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+  
+    <a href="../../arch/architecture/" class="md-nav__link">
+      
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture
+  
+
+    
+  </span>
+  
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+    
+    
+    
+      
+      
+    
+    
+      
+        
+        
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+  
+    <a href="../../plugins/trino/" class="md-nav__link">
+      
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Plugins
+  
+
+    
+  </span>
+  
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+    
+    
+      
+        
+        
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+  
+    <a href="../../services/admin/service/" class="md-nav__link">
+      
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Services
+  
+
+    
+  </span>
+  
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+    
+    
+      
+        
+        
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+  
+    <a href="../../features/gds/gds_intro/" class="md-nav__link">
+      
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Features
+  
+
+    
+  </span>
+  
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+    
+    
+      
+        
+        
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+  
+    <a href="../../project/contributing/" class="md-nav__link">
+      
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Project
+  
+
+    
+  </span>
+  
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+    
+    
+      
+        
+        
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+  
+    <a href="../../release-notes/" class="md-nav__link">
+      
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Releases
+  
+
+    
+  </span>
+  
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+      
+    
+    
+      
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_9" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_9" id="__nav_9_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Blog
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_9_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_9">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Blog
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../blog/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Posts
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../policy-model/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Apache Ranger policy model
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Integrating applications with Ranger
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Integrating applications with Ranger
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#introduction" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Introduction
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#1-apache-ranger" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Apache Ranger
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-integration-overview" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Integration: Overview
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2. Integration: Overview">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#21-register-applications-service-definition" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.1 Register Application's Service Definition
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#22-request-authorization-decisions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.2 Request Authorization Decisions
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2.2 Request Authorization Decisions">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#ranger-plugin" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Ranger Plugin
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ranger-pdp" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Ranger PDP
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#23-enforce-the-authorization-decision" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.3 Enforce the Authorization Decision
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-integration-service-definition" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Integration: Service Definition
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3. Integration: Service Definition">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#31-resources" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.1 Resources
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#32-access-types" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.2 Access Types
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#33-data-masking" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.3 Data Masking
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#34-row-filtering" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.4 Row Filtering
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#35-service-configurations" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.5 Service Configurations
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-integration-plugin" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Integration: Plugin
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="4. Integration: Plugin">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#41-initializing-the-plugin" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.1 Initializing the Plugin
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#42-creating-an-authorization-request" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.2 Creating an Authorization Request
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#43-evaluating-the-request" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.3 Evaluating the Request
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#44-plugin-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.4 Plugin Configuration
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#45-existing-authorizer-implementations" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.5 Existing Authorizer Implementations
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-integration-pdp-server" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. Integration: PDP Server
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="5. Integration: PDP Server">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#51-pdp-rest-apis" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.1 PDP REST APIs
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#52-pdp-java-apis" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.2 PDP Java APIs
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#53-pdp-python-apis" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.3 PDP Python APIs
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#6-policy-administration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. Policy Administration
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="6. Policy Administration">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#61-register-service-definition" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.1 Register service definition
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#62-create-a-ranger-service" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.2 Create a Ranger service
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#63-delegated-policy-administration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.3 Delegated policy administration
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#64-roles" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.4 Roles
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#65-security-zones" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.5 Security Zones
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#references" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        References
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../dynamic-expressions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Dynamic expressions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../abac-part-1/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Adventures in ABAC, part 1
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../abac-part-2/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Adventures in ABAC, part 2
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#introduction" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Introduction
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#1-apache-ranger" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Apache Ranger
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-integration-overview" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Integration: Overview
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2. Integration: Overview">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#21-register-applications-service-definition" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.1 Register Application's Service Definition
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#22-request-authorization-decisions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.2 Request Authorization Decisions
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2.2 Request Authorization Decisions">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#ranger-plugin" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Ranger Plugin
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ranger-pdp" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Ranger PDP
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#23-enforce-the-authorization-decision" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.3 Enforce the Authorization Decision
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-integration-service-definition" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Integration: Service Definition
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3. Integration: Service Definition">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#31-resources" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.1 Resources
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#32-access-types" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.2 Access Types
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#33-data-masking" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.3 Data Masking
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#34-row-filtering" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.4 Row Filtering
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#35-service-configurations" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.5 Service Configurations
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-integration-plugin" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Integration: Plugin
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="4. Integration: Plugin">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#41-initializing-the-plugin" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.1 Initializing the Plugin
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#42-creating-an-authorization-request" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.2 Creating an Authorization Request
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#43-evaluating-the-request" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.3 Evaluating the Request
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#44-plugin-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.4 Plugin Configuration
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#45-existing-authorizer-implementations" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.5 Existing Authorizer Implementations
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-integration-pdp-server" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. Integration: PDP Server
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="5. Integration: PDP Server">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#51-pdp-rest-apis" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.1 PDP REST APIs
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#52-pdp-java-apis" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.2 PDP Java APIs
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#53-pdp-python-apis" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.3 PDP Python APIs
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#6-policy-administration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. Policy Administration
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="6. Policy Administration">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#61-register-service-definition" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.1 Register service definition
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#62-create-a-ranger-service" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.2 Create a Ranger service
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#63-delegated-policy-administration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.3 Delegated policy administration
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#64-roles" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.4 Roles
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#65-security-zones" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.5 Security Zones
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#references" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        References
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+                
+
+
+
+  
+
+
+  <nav class="md-path" aria-label="Navigation" >
+    <ol class="md-path__list">
+      
+        
+  
+  
+    <li class="md-path__item">
+      <a href="../.." class="md-path__link">
+        
+  <span class="md-ellipsis">
+    Home
+  </span>
+
+      </a>
+    </li>
+  
+
+      
+      
+        
+  
+  
+    
+    
+      <li class="md-path__item">
+        <a href="../blog/" class="md-path__link">
+          
+  <span class="md-ellipsis">
+    Blog
+  </span>
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ol>
+  </nav>
+
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<!---
+  Licensed to the Apache Software Foundation (ASF) under one or more
+  contributor license agreements.  See the NOTICE file distributed with
+  this work for additional information regarding copyright ownership.
+  The ASF licenses this file to You under the Apache License, Version 2.0
+  (the "License"); you may not use this file except in compliance with
+  the License.  You may obtain a copy of the License at
+
+      http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+
+<h1 id="integrating-applications-with-apache-ranger">Integrating Applications with Apache Ranger<a class="headerlink" href="#integrating-applications-with-apache-ranger" title="Permanent link">&para;</a></h1>
+<p><em>Madhan Neethiraj, Apache Ranger committer · Aug 24, 2026</em></p>
+<p><a href="../blog/">← All blogs</a></p>
+<h2 id="introduction">Introduction<a class="headerlink" href="#introduction" title="Permanent link">&para;</a></h2>
+<p>Apache Ranger provides a centralized framework for managing authorization policies and controlling access to resources in services such as HDFS, Ozone, HMS, Hive, Impala, Kafka, Solr, KMS, Atlas, Trino and Polaris. Enterprises use Ranger to address their data access governance needs, access auditing, delegated policy management by business users through an intuitive UI. This guide describes how an application can integrate with Apache Ranger to authorize access to its resources.</p>
+<h2 id="1-apache-ranger">1. Apache Ranger<a class="headerlink" href="#1-apache-ranger" title="Permanent link">&para;</a></h2>
+<p>Apache Ranger provides policy-based authorization for resources managed by applications. An application submits an authorization request identifying the user, resource, and requested access. Ranger evaluates the request against the applicable policies and returns an authorization decision.</p>
+<p>Apache Ranger provides centralized policy administration through APIs and UI. Policies can be managed by Ranger administrators, designated administrators for each application and users delegated to manage policies for a limited resource scope.</p>
+<p>Apache Ranger can audit access requests and authorization decisions. Audit records can include information such as the user, resource, requested access, authorization result, and request context.</p>
+<p>Apache Ranger policies can control access based on:</p>
+<ol>
+<li>resource names and resource hierarchies.</li>
+<li>tags associated with resources.</li>
+<li>attributes and groups associated with users.</li>
+<li>attributes associated with resources.</li>
+<li>request context and policy conditions.</li>
+</ol>
+<p>Apache Ranger supports several types of data-access policies:</p>
+<ol>
+<li>Access policies determine whether a user is allowed or denied access to a resource.</li>
+<li>Data masking policies determine how data should be masked when returned to an authorized user.</li>
+<li>Row-filtering policies determine which rows of a dataset are visible to a user.</li>
+</ol>
+<p>The application is responsible for enforcing the authorization, masking, and filtering decisions returned by Ranger. For more on Ranger policy concepts, see the <a href="../policy-model/">Apache Ranger Policy Model</a> blog.</p>
+<h2 id="2-integration-overview">2. Integration: Overview<a class="headerlink" href="#2-integration-overview" title="Permanent link">&para;</a></h2>
+<p>An application integrates with Ranger in three basic steps:</p>
+<ol>
+<li>Register the application's authorization model with Ranger.</li>
+<li>Request authorization decisions from Ranger.</li>
+<li>Enforce the decisions returned by Ranger.</li>
+</ol>
+<p>The application's authorization model is represented by a Ranger service definition. A service definition describes the resources protected by the application, the access types that can be authorized, and optional data-masking and row-filtering capabilities. Ranger's service-definition model includes resources, access types, service configurations, context enrichers, custom conditions, data-mask definitions, and row-filter definitions.</p>
+<h3 id="21-register-applications-service-definition">2.1 Register Application's Service Definition<a class="headerlink" href="#21-register-applications-service-definition" title="Permanent link">&para;</a></h3>
+<p>The application defines its authorization model using a Ranger service definition.</p>
+<p>The service definition describes:</p>
+<ul>
+<li>resources</li>
+<li>access types</li>
+<li>data-masking capabilities</li>
+<li>row-filtering capabilities</li>
+<li>service configuration properties</li>
+</ul>
+<p>A service definition can be registered and managed through Apache Ranger's service-definition APIs. Apache Ranger exposes APIs for creating, retrieving, updating, and deleting service definitions.</p>
+<p>For example, an application managing datasets might define:</p>
+<div class="highlight"><pre><span></span><code>Resources:
+    catalog
+    database
+    table
+    column
+
+Access types:
+    create
+    alter
+    drop
+    select
+    update
+</code></pre></div>
+<p>Once the service definition is registered, administrators can create policies using these resources and access types.</p>
+<h3 id="22-request-authorization-decisions">2.2 Request Authorization Decisions<a class="headerlink" href="#22-request-authorization-decisions" title="Permanent link">&para;</a></h3>
+<p>An application can obtain authorization decisions using either a Ranger plugin or the Ranger PDP APIs.</p>
+<h4 id="ranger-plugin">Ranger Plugin<a class="headerlink" href="#ranger-plugin" title="Permanent link">&para;</a></h4>
+<p>Ranger plugin integration approach is typically used by Java applications. The plugin is embedded in the application and evaluates authorization requests locally using policies obtained from Ranger admin server. The plugin can generate audit events that are delivered to configured audit destinations.</p>
+<p><img alt="Fig 1. Apache Ranger embedded plugin authorization flow" src="../../assets/blogs/integrating_applications.files/image1.png" /></p>
+<p><em>Fig 1. Apache Ranger embedded plugin authorization flow</em></p>
+<h4 id="ranger-pdp">Ranger PDP<a class="headerlink" href="#ranger-pdp" title="Permanent link">&para;</a></h4>
+<p>Apache Ranger PDP server provides authorization service that applications can invoke through REST APIs. This integration approach is suitable for:</p>
+<ul>
+<li>non-Java applications</li>
+<li>applications that do not want to embed Ranger libraries</li>
+<li>applications requiring a smaller client-side footprint</li>
+</ul>
+<p><img alt="Fig 2. Apache Ranger PDP server authorization flow" src="../../assets/blogs/integrating_applications.files/image2.png" /></p>
+<p><em>Fig 2. Apache Ranger PDP server authorization flow</em></p>
+<h3 id="23-enforce-the-authorization-decision">2.3 Enforce the Authorization Decision<a class="headerlink" href="#23-enforce-the-authorization-decision" title="Permanent link">&para;</a></h3>
+<p>Ranger returns an authorization decision; it does not enforce the decision on behalf of the application. The application must ensure that a denied request does not proceed.</p>
+<h2 id="3-integration-service-definition">3. Integration: Service Definition<a class="headerlink" href="#3-integration-service-definition" title="Permanent link">&para;</a></h2>
+<p>A Ranger service definition describes the authorization model exposed by an application or service. It tells Ranger what resources can be protected, what operations can be authorized, and what additional authorization capabilities the service supports.</p>
+<p>The primary Java model is <a href="https://github.com/apache/ranger/blob/release-ranger-2.9.0/agents-common/src/main/java/org/apache/ranger/plugin/model/RangerServiceDef.java">RangerServiceDef</a>, containing definitions for resources, access types, service configurations, context enrichers, custom conditions, data masking, and row filtering. A service definition can be registered with Apache Ranger using the service-definition APIs. Ranger provides REST APIs to create, retrieve, update, and delete service definitions.</p>
+<p>A good way to design a service definition is to start with the application's authorization model and then map that model to Apache Ranger concepts.</p>
+<p>Refer to following service-definitions for existing integrations, in JSON files, for details of available options:</p>
+<ul>
+<li><a href="https://github.com/apache/ranger/blob/master/agents-common/src/main/resources/service-defs/ranger-servicedef-hdfs.json">HDFS</a></li>
+<li><a href="https://github.com/apache/ranger/blob/master/agents-common/src/main/resources/service-defs/ranger-servicedef-ozone.json">Ozone</a></li>
+<li><a href="https://github.com/apache/ranger/blob/master/agents-common/src/main/resources/service-defs/ranger-servicedef-hive.json">Hive</a></li>
+<li><a href="https://github.com/apache/ranger/blob/master/agents-common/src/main/resources/service-defs/ranger-servicedef-trino.json">Trino</a></li>
+<li><a href="https://github.com/apache/ranger/blob/master/agents-common/src/main/resources/service-defs/ranger-servicedef-polaris.json">Polaris</a></li>
+</ul>
+<h3 id="31-resources">3.1 Resources<a class="headerlink" href="#31-resources" title="Permanent link">&para;</a></h3>
+<p>A resource definition identifies a resource that can appear in a Ranger policy. For example, here are few resources in Apache Hive service definition:</p>
+<div class="highlight"><pre><span></span><code><span class="nt">"resources"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">  </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">"itemId"</span><span class="p">:</span><span class="w">         </span><span class="mi">1</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">"name"</span><span class="p">:</span><span class="w">           </span><span class="s2">"database"</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">"parent"</span><span class="p">:</span><span class="w">         </span><span class="s2">""</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">"matcherOptions"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">"wildCard"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w"> </span><span class="nt">"ignoreCase"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="w"> </span><span class="p">},</span>
+<span class="w">    </span><span class="nt">"label"</span><span class="p">:</span><span class="w">          </span><span class="s2">"Hive Database"</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">"isValidLeaf"</span><span class="p">:</span><span class="w">    </span><span class="kc">true</span>
+<span class="w">  </span><span class="p">},</span>
+<span class="w">  </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">"itemId"</span><span class="p">:</span><span class="w">         </span><span class="mi">2</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">"name"</span><span class="p">:</span><span class="w">           </span><span class="s2">"table"</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">"parent"</span><span class="p">:</span><span class="w">         </span><span class="s2">"database"</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">"matcherOptions"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">"wildCard"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w"> </span><span class="nt">"ignoreCase"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="w"> </span><span class="p">},</span>
+<span class="w">    </span><span class="nt">"label"</span><span class="p">:</span><span class="w">          </span><span class="s2">"Hive Table"</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">"isValidLeaf"</span><span class="p">:</span><span class="w">    </span><span class="kc">true</span>
+<span class="w">  </span><span class="p">},</span>
+<span class="w">  </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">"itemId"</span><span class="p">:</span><span class="w">         </span><span class="mi">3</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">"name"</span><span class="p">:</span><span class="w">           </span><span class="s2">"column"</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">"parent"</span><span class="p">:</span><span class="w">         </span><span class="s2">"table"</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">"matcherOptions"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">"wildCard"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w"> </span><span class="nt">"ignoreCase"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="w"> </span><span class="p">},</span>
+<span class="w">    </span><span class="nt">"label"</span><span class="p">:</span><span class="w">          </span><span class="s2">"Hive Column"</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">"isValidLeaf"</span><span class="p">:</span><span class="w">    </span><span class="kc">true</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="p">]</span>
+</code></pre></div>
+<h3 id="32-access-types">3.2 Access Types<a class="headerlink" href="#32-access-types" title="Permanent link">&para;</a></h3>
+<p>Access types define the operations that can appear in a Ranger policy. For example, here are few access types in Apache Hive service definition:</p>
+<div class="highlight"><pre><span></span><code><span class="nt">"accessTypes"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">  </span><span class="p">{</span><span class="w"> </span><span class="nt">"itemId"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"select"</span><span class="p">,</span><span class="w"> </span><span class="nt">"label"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Select"</span><span class="w"> </span><span class="p">},</span>
+<span class="w">  </span><span class="p">{</span><span class="w"> </span><span class="nt">"itemId"</span><span class="p">:</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"update"</span><span class="p">,</span><span class="w"> </span><span class="nt">"label"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Update"</span><span class="w"> </span><span class="p">},</span>
+<span class="w">  </span><span class="p">{</span><span class="w"> </span><span class="nt">"itemId"</span><span class="p">:</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"create"</span><span class="p">,</span><span class="w"> </span><span class="nt">"label"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Create"</span><span class="w"> </span><span class="p">},</span>
+<span class="w">  </span><span class="p">{</span><span class="w"> </span><span class="nt">"itemId"</span><span class="p">:</span><span class="w"> </span><span class="mi">4</span><span class="p">,</span><span class="w"> </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"drop"</span><span class="p">,</span><span class="w">   </span><span class="nt">"label"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Drop"</span><span class="w"> </span><span class="p">},</span>
+<span class="w">  </span><span class="p">{</span><span class="w"> </span><span class="nt">"itemId"</span><span class="p">:</span><span class="w"> </span><span class="mi">5</span><span class="p">,</span><span class="w"> </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"alter"</span><span class="p">,</span><span class="w">  </span><span class="nt">"label"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Alter"</span><span class="w"> </span><span class="p">},</span>
+<span class="w">  </span><span class="p">{</span><span class="w"> </span><span class="nt">"itemId"</span><span class="p">:</span><span class="w"> </span><span class="mi">6</span><span class="p">,</span><span class="w"> </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"all"</span><span class="p">,</span><span class="w">    </span><span class="nt">"label"</span><span class="p">:</span><span class="w"> </span><span class="s2">"All"</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">"impliedGrants"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w"> </span><span class="s2">"select"</span><span class="p">,</span><span class="w"> </span><span class="s2">"update"</span><span class="p">,</span><span class="w"> </span><span class="s2">"create"</span><span class="p">,</span><span class="w"> </span><span class="s2">"drop"</span><span class="p">,</span><span class="w"> </span><span class="s2">"alter"</span><span class="w"> </span><span class="p">]</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="p">]</span>
+</code></pre></div>
+<p>impliedGrants enable grouping of multiple accessTypes with a logical name, such as all in the example above. Reference to an accessTypes in policies are equivalent to referencing all its impliedGrants.</p>
+<h3 id="33-data-masking">3.3 Data Masking<a class="headerlink" href="#33-data-masking" title="Permanent link">&para;</a></h3>
+<p>A service can expose data-masking capabilities through the dataMaskDef section in its service definition. This section defines:</p>
+<ul>
+<li>resources to which masking can apply</li>
+<li>supported mask types</li>
+<li>access types for which masking is relevant</li>
+</ul>
+<p>For example, here is a sample dataMaskDef section from Apache Hive service definition:</p>
+<div class="highlight"><pre><span></span><code><span class="nt">"dataMaskDef"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="nt">"resources"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">"name"</span><span class="p">:</span><span class="w">           </span><span class="s2">"database"</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">"matcherOptions"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">"wildCard"</span><span class="p">:</span><span class="w"> </span><span class="s2">"false"</span><span class="w"> </span><span class="p">},</span>
+<span class="w">      </span><span class="nt">"uiHint"</span><span class="p">:</span><span class="w">         </span><span class="s2">"{ \"singleValue\":true }"</span>
+<span class="w">    </span><span class="p">},</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">"name"</span><span class="p">:</span><span class="w">           </span><span class="s2">"table"</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">"matcherOptions"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">"wildCard"</span><span class="p">:</span><span class="w"> </span><span class="s2">"false"</span><span class="w"> </span><span class="p">},</span>
+<span class="w">      </span><span class="nt">"uiHint"</span><span class="p">:</span><span class="w">         </span><span class="s2">"{ \"singleValue\":true }"</span>
+<span class="w">    </span><span class="p">},</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">"name"</span><span class="p">:</span><span class="w">           </span><span class="s2">"column"</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">"matcherOptions"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">"wildCard"</span><span class="p">:</span><span class="w"> </span><span class="s2">"false"</span><span class="w"> </span><span class="p">},</span>
+<span class="w">      </span><span class="nt">"uiHint"</span><span class="p">:</span><span class="w">         </span><span class="s2">"{ \"singleValue\":true }"</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">  </span><span class="p">],</span>
+<span class="w">  </span><span class="nt">"maskTypes"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">"itemId"</span><span class="p">:</span><span class="w">      </span><span class="mi">1</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">"name"</span><span class="p">:</span><span class="w">        </span><span class="s2">"MASK"</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">"label"</span><span class="p">:</span><span class="w">       </span><span class="s2">"Redact"</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">"transformer"</span><span class="p">:</span><span class="w"> </span><span class="s2">"mask({col})"</span>
+<span class="w">    </span><span class="p">},</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">"itemId"</span><span class="p">:</span><span class="w">      </span><span class="mi">2</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">"name"</span><span class="p">:</span><span class="w">        </span><span class="s2">"MASK_SHOW_LAST_4"</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">"label"</span><span class="p">:</span><span class="w">       </span><span class="s2">"Partial mask: show last 4"</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">"transformer"</span><span class="p">:</span><span class="w"> </span><span class="s2">"mask_show_last_n({col}, 4, 'x', 'x', 'x', -1, '1')"</span>
+<span class="w">    </span><span class="p">},</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">"itemId"</span><span class="p">:</span><span class="w">      </span><span class="mi">3</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">"name"</span><span class="p">:</span><span class="w">        </span><span class="s2">"MASK_SHOW_FIRST_4"</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">"label"</span><span class="p">:</span><span class="w">       </span><span class="s2">"Partial mask: show first 4"</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">"transformer"</span><span class="p">:</span><span class="w"> </span><span class="s2">"mask_show_first_n({col}, 4, 'x', 'x', 'x', -1, '1')"</span>
+<span class="w">    </span><span class="p">},</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">"itemId"</span><span class="p">:</span><span class="w">      </span><span class="mi">4</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">"name"</span><span class="p">:</span><span class="w">        </span><span class="s2">"MASK_HASH"</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">"label"</span><span class="p">:</span><span class="w">       </span><span class="s2">"Hash"</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">"transformer"</span><span class="p">:</span><span class="w"> </span><span class="s2">"mask_hash({col})"</span>
+<span class="w">    </span><span class="p">},</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">"itemId"</span><span class="p">:</span><span class="w">      </span><span class="mi">5</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">"name"</span><span class="p">:</span><span class="w">        </span><span class="s2">"MASK_DATE_SHOW_YEAR"</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">"label"</span><span class="p">:</span><span class="w">       </span><span class="s2">"Date: show only year"</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">"transformer"</span><span class="p">:</span><span class="w"> </span><span class="s2">"mask({col}, 'x', 'x', 'x', -1, '1', 1, 0, -1)"</span>
+<span class="w">    </span><span class="p">},</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">"itemId"</span><span class="p">:</span><span class="w"> </span><span class="mi">6</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">"name"</span><span class="p">:</span><span class="w">   </span><span class="s2">"MASK_NULL"</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">"label"</span><span class="p">:</span><span class="w">  </span><span class="s2">"Nullify"</span>
+<span class="w">    </span><span class="p">},</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">"itemId"</span><span class="p">:</span><span class="w"> </span><span class="mi">7</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">"name"</span><span class="p">:</span><span class="w">   </span><span class="s2">"MASK_NONE"</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">"label"</span><span class="p">:</span><span class="w">  </span><span class="s2">"Unmasked (retain original value)"</span>
+<span class="w">    </span><span class="p">},</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">"itemId"</span><span class="p">:</span><span class="w"> </span><span class="mi">8</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">"name"</span><span class="p">:</span><span class="w">   </span><span class="s2">"CUSTOM"</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">"label"</span><span class="p">:</span><span class="w">  </span><span class="s2">"Custom"</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">  </span><span class="p">],</span>
+<span class="w">  </span><span class="nt">"accessTypes"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">    </span><span class="p">{</span><span class="w"> </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"select"</span><span class="w"> </span><span class="p">}</span>
+<span class="w">  </span><span class="p">]</span>
+<span class="p">}</span>
+</code></pre></div>
+<h3 id="34-row-filtering">3.4 Row Filtering<a class="headerlink" href="#34-row-filtering" title="Permanent link">&para;</a></h3>
+<p>A service can expose row-filtering capabilities through the rowFilterDef section in its service definition. This section defines:</p>
+<ul>
+<li>Resources to which row-filtering can apply</li>
+<li>Access types for which row-filtering is relevant</li>
+</ul>
+<p>For example, here is a sample rowFilterDef section from Apache Hive service definition:</p>
+<div class="highlight"><pre><span></span><code><span class="nt">"rowFilterDef"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="nt">"resources"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">"name"</span><span class="p">:</span><span class="w">           </span><span class="s2">"database"</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">"matcherOptions"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">"wildCard"</span><span class="p">:</span><span class="w"> </span><span class="s2">"false"</span><span class="w"> </span><span class="p">},</span>
+<span class="w">      </span><span class="nt">"uiHint"</span><span class="p">:</span><span class="w">         </span><span class="s2">"{ \"singleValue\":true }"</span>
+<span class="w">    </span><span class="p">},</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">"name"</span><span class="p">:</span><span class="w">           </span><span class="s2">"table"</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">"matcherOptions"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">"wildCard"</span><span class="p">:</span><span class="w"> </span><span class="s2">"false"</span><span class="w"> </span><span class="p">},</span>
+<span class="w">      </span><span class="nt">"uiHint"</span><span class="p">:</span><span class="w">         </span><span class="s2">"{ \"singleValue\":true }"</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">  </span><span class="p">],</span>
+<span class="w">  </span><span class="nt">"accessTypes"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">    </span><span class="p">{</span><span class="w"> </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"select"</span><span class="w"> </span><span class="p">}</span>
+<span class="w">  </span><span class="p">]</span>
+<span class="p">}</span>
+</code></pre></div>
+<h3 id="35-service-configurations">3.5 Service Configurations<a class="headerlink" href="#35-service-configurations" title="Permanent link">&para;</a></h3>
+<p>A service definition can define configuration properties required to lookup resources in the application, for auto-completion in policy UI as users enter resource values. These configurations include the endpoint (JDBC, HTTP, ..) the application can be reached at, credentials to use while connecting to the application.</p>
+<div class="highlight"><pre><span></span><code><span class="nt">"configs"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">  </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">"itemId"</span><span class="p">:</span><span class="w">    </span><span class="mi">1</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">"name"</span><span class="p">:</span><span class="w">      </span><span class="s2">"username"</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">"type"</span><span class="p">:</span><span class="w">      </span><span class="s2">"string"</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">"mandatory"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">"label"</span><span class="p">:</span><span class="w">     </span><span class="s2">"Username"</span>
+<span class="w">  </span><span class="p">},</span>
+<span class="w">  </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">"itemId"</span><span class="p">:</span><span class="w">    </span><span class="mi">2</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">"name"</span><span class="p">:</span><span class="w">      </span><span class="s2">"password"</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">"type"</span><span class="p">:</span><span class="w">      </span><span class="s2">"password"</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">"mandatory"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">"label"</span><span class="p">:</span><span class="w">     </span><span class="s2">"Password"</span>
+<span class="w">  </span><span class="p">},</span>
+<span class="w">  </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">"itemId"</span><span class="p">:</span><span class="w">       </span><span class="mi">3</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">"name"</span><span class="p">:</span><span class="w">         </span><span class="s2">"jdbc.driverClassName"</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">"type"</span><span class="p">:</span><span class="w">         </span><span class="s2">"string"</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">"mandatory"</span><span class="p">:</span><span class="w">    </span><span class="kc">true</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">"defaultValue"</span><span class="p">:</span><span class="w"> </span><span class="s2">"org.apache.hive.jdbc.HiveDriver"</span>
+<span class="w">  </span><span class="p">},</span>
+<span class="w">  </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">"itemId"</span><span class="p">:</span><span class="w">       </span><span class="mi">4</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">"name"</span><span class="p">:</span><span class="w">         </span><span class="s2">"jdbc.url"</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">"type"</span><span class="p">:</span><span class="w">         </span><span class="s2">"string"</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">"mandatory"</span><span class="p">:</span><span class="w">    </span><span class="kc">true</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">"defaultValue"</span><span class="p">:</span><span class="w"> </span><span class="s2">""</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="p">]</span>
+</code></pre></div>
+<h2 id="4-integration-plugin">4. Integration: Plugin<a class="headerlink" href="#4-integration-plugin" title="Permanent link">&para;</a></h2>
+<p>Ranger plugin is the preferred integration mechanism for Java applications that want to perform authorization locally i.e. in-process. The core APIs, including following classes, are provided by Ranger libraries <a href="https://mvnrepository.com/artifact/org.apache.ranger/ranger-authz-api">org.apache.ranger:ranger-authz-api</a> and <a href="https://mvnrepository.com/artifact/org.apache.ranger/authz-embedded">org.apache.ranger:authz-embedded</a>.</p>
+<div class="highlight"><pre><span></span><code>org.apache.ranger.authz.api.RangerAuthorizer
+org.apache.ranger.authz.embedded.RangerEmbeddedAuthorizer
+org.apache.ranger.authz.model.RangerAccessContext
+org.apache.ranger.authz.model.RangerAccessInfo
+org.apache.ranger.authz.model.RangerAuthzRequest
+org.apache.ranger.authz.model.RangerAuthzResult
+org.apache.ranger.authz.model.RangerAuthzResult.AccessDecision
+org.apache.ranger.authz.model.RangerUserInfo
+</code></pre></div>
+<h3 id="41-initializing-the-plugin">4.1 Initializing the Plugin<a class="headerlink" href="#41-initializing-the-plugin" title="Permanent link">&para;</a></h3>
+<p>Ranger plugin instance is typically created and initialized during initialization of the application. Here is an example of Polaris plugin initialization:</p>
+<div class="highlight"><pre><span></span><code><span class="n">RangerAuthorizer</span><span class="w"> </span><span class="n">authorizer</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">RangerEmbeddedAuthorizer</span><span class="p">(</span><span class="n">properties</span><span class="p">);</span>
+<span class="n">authorizer</span><span class="p">.</span><span class="na">init</span><span class="p">();</span>
+</code></pre></div>
+<p>Ranger plugin downloads policies from Ranger admin server during initialization, builds a policy engine in-memory for faster evaluation. The plugin periodically polls the Ranger admin server, asynchronously, for any policy changes and keeps its policy engine updated.</p>
+<h3 id="42-creating-an-authorization-request">4.2 Creating an Authorization Request<a class="headerlink" href="#42-creating-an-authorization-request" title="Permanent link">&para;</a></h3>
+<p>The application converts its native access request into a Ranger authorization request. For example:</p>
+<div class="highlight"><pre><span></span><code><span class="n">String</span><span class="w">              </span><span class="n">table</span><span class="w">  </span><span class="o">=</span><span class="w"> </span><span class="s">"table:sales/customers/accounts"</span><span class="p">;</span>
+<span class="n">RangerUserInfo</span><span class="w">      </span><span class="n">user</span><span class="w">   </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">RangerUserInfo</span><span class="p">(</span><span class="s">"alice"</span><span class="p">);</span>
+<span class="n">RangerAccessInfo</span><span class="w">    </span><span class="n">access</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">RangerAccessInfo</span><span class="p">(</span><span class="n">table</span><span class="p">,</span><span class="w"> </span><span class="s">"QUERY"</span><span class="p">,</span><span class="w"> </span><span class="s">"select"</span><span class="p">);</span>
+<span class="n">RangerAccessContext</span><span class="w"> </span><span class="n">ctx</span><span class="w">    </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">RangerAccessContext</span><span class="p">(</span><span class="s">"trino"</span><span class="p">,</span><span class="w"> </span><span class="s">"sales_trino"</span><span class="p">);</span>
+<span class="n">RangerAuthzRequest</span><span class="w"> </span><span class="n">request</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">RangerAuthzRequest</span><span class="p">(</span><span class="n">user</span><span class="p">,</span><span class="w"> </span><span class="n">access</span><span class="p">,</span><span class="w"> </span><span class="n">ctx</span><span class="p">);</span>
+</code></pre></div>
+<p>Notes:</p>
+<ul>
+<li><code>alice</code>, the username referenced must represent the authenticated caller of the application.</li>
+<li><code>trino</code>, the serviceType referenced is the name of the service-definition registered with Ranger.</li>
+<li><code>select</code>, the permission referenced must be one of accessTypes in the service-definition.</li>
+<li><code>sales_trino</code>, the serviceName referenced represents a deployment of the Trino application. Remember, Ranger can support multiple deployments of an application type, such as <code>marketing_trino</code>, <code>support_trino</code>, <code>test_trino</code> - each with a different set of policies, policy administrators.</li>
+</ul>
+<p>Additional information can be included in the authorization request, for example:</p>
+<p>Context can include the following:</p>
+<ul>
+<li>client IP</li>
+<li>client type</li>
+<li>request time</li>
+<li>cluster name</li>
+</ul>
+<p>User can include the following:</p>
+<ul>
+<li>groups the user belongs to</li>
+<li>user attributes, like department, location</li>
+</ul>
+<p>Resource can include the following:</p>
+<ul>
+<li>subResources, such as column names</li>
+<li>resource attributes, such as OWNER</li>
+<li>matchingScope, such as SELF, SELF_OR_ANY_DESCENDANT</li>
+</ul>
+<h3 id="43-evaluating-the-request">4.3 Evaluating the Request<a class="headerlink" href="#43-evaluating-the-request" title="Permanent link">&para;</a></h3>
+<p>The plugin evaluates the request:</p>
+<div class="highlight"><pre><span></span><code><span class="n">RangerAuthzResult</span><span class="w"> </span><span class="n">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">authorizer</span><span class="p">.</span><span class="na">authorize</span><span class="p">(</span><span class="n">request</span><span class="p">);</span>
+</code></pre></div>
+<p>The result contains the authorization decision and additional information that can be used by the application or audit subsystem.</p>
+<p>When the result doesn't allow the requested access, applications should treat it as an authorization failure and must enforce that decision before accessing the protected resource.</p>
+<div class="highlight"><pre><span></span><code><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">AccessDecision</span><span class="p">.</span><span class="na">ALLOW</span><span class="p">.</span><span class="na">equals</span><span class="p">(</span><span class="n">result</span><span class="p">.</span><span class="na">getDecision</span><span class="p">()))</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">throw</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">AccessDeniedException</span><span class="p">();</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>When the result includes masking and/or row-filter expression, the application must include these into the query before executing.</p>
+<div class="highlight"><pre><span></span><code><span class="n">RowFilterResult</span><span class="w"> </span><span class="n">rowFilter</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">result</span><span class="p">.</span><span class="na">getPermissions</span><span class="p">(</span><span class="s">"select"</span><span class="p">).</span><span class="na">getRowFilter</span><span class="p">();</span>
+
+<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">rowFilter</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">null</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">StringUtils</span><span class="p">.</span><span class="na">isNotBlank</span><span class="p">(</span><span class="n">rowFilter</span><span class="p">.</span><span class="na">getFilterExpr</span><span class="p">()))</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="c1">// application must include the returned filter expression into the query</span>
+<span class="p">}</span>
+
+<span class="n">DataMaskResult</span><span class="w"> </span><span class="n">dataMask</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">result</span><span class="p">.</span><span class="na">getPermissions</span><span class="p">(</span><span class="s">"select"</span><span class="p">).</span><span class="na">getDataMask</span><span class="p">();</span>
+
+<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">dataMask</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">null</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">StringUtils</span><span class="p">.</span><span class="na">isNotBlank</span><span class="p">(</span><span class="n">dataMask</span><span class="p">.</span><span class="na">getMaskType</span><span class="p">()))</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="c1">// application must apply the returned data mask expression into the query</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>authorize() method is thread-safe, hence can be called from multiple threads simultaneously.</p>
+<h3 id="44-plugin-configuration">4.4 Plugin Configuration<a class="headerlink" href="#44-plugin-configuration" title="Permanent link">&para;</a></h3>
+<p>Ranger plugin requires configuration identifying:</p>
+<ul>
+<li>Ranger Admin endpoint</li>
+<li>Policy refresh settings</li>
+<li>Authentication configuration</li>
+<li>Audit configuration</li>
+</ul>
+<p>Depending on the Ranger version and deployment configuration, the plugin's Ranger Admin client can use authentication mechanisms such as Basic authentication, JWT, or Kerberos, together with SSL/TLS.</p>
+<p>A typical deployment would include following configurations:</p>
+<div class="highlight"><pre><span></span><code><span class="na">ranger.authz.service.sales_trino.policy.rest.url</span><span class="o">=</span><span class="s">https://ranger.example.com</span>
+<span class="na">ranger.authz.service.sales_trino.policy.pollIntervalMs</span><span class="o">=</span><span class="s">30000</span>
+<span class="na">ranger.authz.service.sales_trino.policy.cache.dir</span><span class="o">=</span><span class="s">/etc/trino/policy_cache</span>
+<span class="c1"># Choose the authentication mechanism appropriate for the deployment</span>
+<span class="c1"># Basic authentication</span>
+<span class="na">ranger.authz.service.sales_trino.policy.rest.client.username</span><span class="o">=</span>
+<span class="na">ranger.authz.service.sales_trino.policy.rest.client.password</span><span class="o">=</span>
+</code></pre></div>
+<div class="highlight"><pre><span></span><code><span class="c1"># JWT authentication</span>
+<span class="na">ranger.authz.service.sales_trino.policy.rest.client.jwt.source</span><span class="o">=</span><span class="s">env|file|cred</span>
+<span class="na">ranger.authz.service.sales_trino.policy.rest.client.jwt.env</span><span class="o">=</span><span class="s">TRINO_JWT</span>
+<span class="na">ranger.authz.service.sales_trino.policy.rest.client.jwt.file</span><span class="o">=</span><span class="s">/etc/trino/trino.jwt</span>
+<span class="na">ranger.authz.service.sales_trino.policy.rest.client.jwt.cred.file</span><span class="o">=</span>
+<span class="na">ranger.authz.service.sales_trino.policy.rest.client.jwt.cred.alias</span><span class="o">=</span>
+<span class="c1"># Kerberos authentication</span>
+<span class="na">ranger.authz.service.sales_trino.ugi.initialize</span><span class="o">=</span><span class="s">true</span>
+<span class="na">ranger.authz.service.sales_trino.ugi.login.type</span><span class="o">=</span><span class="s">keytab</span>
+<span class="na">ranger.authz.service.sales_trino.ugi.keytab.principal</span><span class="o">=</span><span class="s">trino@MYDOMAIN.COM</span>
+<span class="na">ranger.authz.service.sales_trino.ugi.keytab.file</span><span class="o">=</span><span class="s">/etc/keytabs/trino.keytab</span>
+</code></pre></div>
+<div class="highlight"><pre><span></span><code><span class="c1"># audit configuration</span>
+<span class="na">ranger.authz.audit.is.enabled</span><span class="o">=</span><span class="s">true</span>
+<span class="na">ranger.authz.audit.destination.solr</span><span class="o">=</span><span class="s">true</span>
+<span class="na">ranger.authz.audit.destination.solr.urls</span><span class="o">=</span>
+<span class="na">ranger.authz.audit.destination.hdfs</span><span class="o">=</span><span class="s">true</span>
+<span class="na">ranger.authz.audit.destination.hdfs.dir</span><span class="o">=</span>
+</code></pre></div>
+<h3 id="45-existing-authorizer-implementations">4.5 Existing Authorizer Implementations<a class="headerlink" href="#45-existing-authorizer-implementations" title="Permanent link">&para;</a></h3>
+<p>Several complete authorizer implementations are available in Apache Ranger repository and other application repositories. Here are a few that can be good references for anyone looking to use the Ranger plugin approach.</p>
+<p>API version note: Apache Ranger currently has two integration patterns in use. The newer authorization API introduced in Apache Ranger 2.9.0 uses authz-api/authz-embedded API shown in this guide. Polaris authorizer implementation uses this new API. Many existing Ranger plugins, including HDFS, Hive, HBase, Kafka, and Ozone, use the older ranger-plugins-common/RangerBasePlugin API.</p>
+<p>For new integrations, use the authorization API appropriate to the Ranger version being integrated with. The examples in this guide use the newer authz-api/authz-embedded API.</p>
+<table>
+<thead>
+<tr>
+<th>Application</th>
+<th>Implementation Classes</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Polaris</td>
+<td><a href="https://github.com/apache/polaris/blob/main/extensions/auth/ranger/src/main/java/org/apache/polaris/extension/auth/ranger/RangerPolarisAuthorizer.java">RangerPolarisAuthorizer</a></td>
+<td>Iceberg catalog authorization</td>
+</tr>
+<tr>
+<td>Trino</td>
+<td><a href="https://github.com/trinodb/trino/blob/master/plugin/trino-ranger/src/main/java/io/trino/plugin/ranger/RangerSystemAccessControl.java">RangerSystemAccessControl</a></td>
+<td>SQL engine authorization, column-masking, row-filtering</td>
+</tr>
+<tr>
+<td>HDFS</td>
+<td><a href="https://github.com/apache/ranger/blob/master/hdfs-agent/src/main/java/org/apache/ranger/authorization/hadoop/RangerHdfsAuthorizer.java">RangerHdfsAuthorizer</a></td>
+<td>Authorize access to path resources</td>
+</tr>
+<tr>
+<td>Ozone</td>
+<td><a href="https://github.com/apache/ranger/blob/master/plugin-ozone/src/main/java/org/apache/ranger/authorization/ozone/authorizer/RangerOzoneAuthorizer.java">RangerOzoneAuthorizer</a></td>
+<td>Relatively compact RangerBasePlugin integration</td>
+</tr>
+<tr>
+<td>Hive</td>
+<td><a href="https://github.com/apache/ranger/blob/master/hive-agent/src/main/java/org/apache/ranger/authorization/hive/authorizer/RangerHiveAuthorizer.java">RangerHiveAuthorizer</a></td>
+<td>Authorize access to hierarchical resources, resource filtering, column masking, row filtering</td>
+</tr>
+<tr>
+<td>HBase</td>
+<td><a href="https://github.com/apache/ranger/blob/master/hbase-agent/src/main/java/org/apache/ranger/authorization/hbase/RangerAuthorizationCoprocessor.java">RangerAuthorizationCoprocessor</a></td>
+<td>Authorize access to columnar data</td>
+</tr>
+<tr>
+<td>Kafka</td>
+<td><a href="https://github.com/apache/ranger/blob/master/plugin-kafka/src/main/java/org/apache/ranger/authorization/kafka/authorizer/RangerKafkaAuthorizer.java">RangerKafkaAuthorizer</a></td>
+<td>Authorize event streaming in Kafka</td>
+</tr>
+</tbody>
+</table>
+<h2 id="5-integration-pdp-server">5. Integration: PDP Server<a class="headerlink" href="#5-integration-pdp-server" title="Permanent link">&para;</a></h2>
+<p>Ranger PDP server provides a remote authorization model, using REST APIs, for applications that can't or don't prefer embedding a Ranger authorizer. For example:</p>
+<ul>
+<li>The application is not written in Java.</li>
+<li>Embedding Ranger plugin Java libraries is undesirable or not feasible.</li>
+<li>A small client-side footprint is preferred.</li>
+</ul>
+<p>The tradeoff is that each authorization request involves communication with the Ranger PDP server via REST APIs. Applications should therefore consider latency, availability, connection management, and timeout behavior. Unlike embedded plugin authorization, remote authorization introduces a network dependency into the authorization path. An application must define how it behaves when the PDP is unavailable or a request times out.</p>
+<p>A PDP communication failure is not an authorization decision. Applications should not treat failure to obtain a decision as an implicit allow. For protected operations, a fail-closed approach is generally appropriate unless the application has an explicitly designed alternative.</p>
+<p>Applications can use the supported PDP APIs appropriate to their implementation language.</p>
+<ul>
+<li>A non-Java application can use the REST APIs defined in <a href="https://github.com/apache/ranger/blob/master/pdp/src/main/java/org/apache/ranger/pdp/rest/RangerPdpREST.java">RangerPdpREST</a> directly.</li>
+<li>Java applications can use Java APIs in <a href="https://mvnrepository.com/artifact/org.apache.ranger/authz-remote">org.apache.ranger:authz-remote</a> library.</li>
+<li>Python applications can use Python APIs in <a href="https://pypi.org/project/apache-ranger/">apache-ranger</a> library.</li>
+</ul>
+<h3 id="51-pdp-rest-apis">5.1 PDP REST APIs<a class="headerlink" href="#51-pdp-rest-apis" title="Permanent link">&para;</a></h3>
+<p>Applications that prefer a minimal footprint in using Ranger policies to authorize access should consider directly calling REST APIs provided by Ranger PDP server. The PDP request contains essentially the same authorization information used by the embedded plugin:</p>
+<ul>
+<li>user</li>
+<li>resource</li>
+<li>permissions (access types defined in service definitions)</li>
+<li>context</li>
+</ul>
+<div class="highlight"><pre><span></span><code>For example:
+POST /v1/authorize
+{
+  "user": { "name": "alice" },
+  "access": {
+    "resource":    { "name": "table:sales/customers/accounts" },
+    "action":      "QUERY",
+    "permissions": [ "select" ]
+  },
+  "context": {
+    "serviceType": "trino",
+    "serviceName": "sales_trino"
+  }
+}
+</code></pre></div>
+<p>Response:</p>
+<div class="highlight"><pre><span></span><code><span class="p">{</span>
+<span class="w">  </span><span class="nt">"decision"</span><span class="p">:</span><span class="w"> </span><span class="s2">"ALLOW"</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>Ranger PDP server evaluates the request against the applicable Ranger policies and returns the authorization result. The exact wire format should follow the PDP API supported by the Ranger version being deployed.</p>
+<p>Note that only trusted users, as configured in PDP server, are allowed the following:</p>
+<ol>
+<li>authorize for other users i.e, "user.name" is different from the caller</li>
+<li>provide groups the user belongs to</li>
+<li>provide attributes of the user or the resource</li>
+</ol>
+<p>This distinction is important because the PDP server must not blindly trust a caller to assert another user's identity, groups, or attributes. Such fields should only be accepted from callers that are explicitly trusted by the PDP configuration.</p>
+<h3 id="52-pdp-java-apis">5.2 PDP Java APIs<a class="headerlink" href="#52-pdp-java-apis" title="Permanent link">&para;</a></h3>
+<p>Ranger PDP client Java APIs provide convenient wrappers over corresponding Ranger PDP REST APIs. These are provided by libraries <a href="https://mvnrepository.com/artifact/org.apache.ranger/ranger-authz-api">org.apache.ranger:ranger-authz-api</a> and <a href="https://mvnrepository.com/artifact/org.apache.ranger/authz-remote">org.apache.ranger:authz-remote</a>.</p>
+<p>These APIs look very similar to the APIs used in plugin integration detailed earlier - except for the authorizer initialization, as seen in the example below:</p>
+<div class="highlight"><pre><span></span><code><span class="c1">// initialize once during application startup</span>
+<span class="n">RangerAuthorizer</span><span class="w"> </span><span class="n">authorizer</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">RangerRemoteAuthorizer</span><span class="p">(</span><span class="n">properties</span><span class="p">);</span>
+</code></pre></div>
+<div class="highlight"><pre><span></span><code><span class="n">authorizer</span><span class="p">.</span><span class="na">init</span><span class="p">();</span>
+</code></pre></div>
+<div class="highlight"><pre><span></span><code><span class="c1">// authorize an access</span>
+<span class="n">String</span><span class="w">              </span><span class="n">table</span><span class="w">  </span><span class="o">=</span><span class="w"> </span><span class="s">"table:sales/customers/accounts"</span><span class="p">;</span>
+<span class="n">RangerUserInfo</span><span class="w">      </span><span class="n">user</span><span class="w">   </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">RangerUserInfo</span><span class="p">(</span><span class="s">"alice"</span><span class="p">);</span>
+<span class="n">RangerAccessInfo</span><span class="w">    </span><span class="n">access</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">RangerAccessInfo</span><span class="p">(</span><span class="n">table</span><span class="p">,</span><span class="w"> </span><span class="s">"QUERY"</span><span class="p">,</span><span class="w"> </span><span class="s">"select"</span><span class="p">);</span>
+<span class="n">RangerAccessContext</span><span class="w"> </span><span class="n">ctx</span><span class="w">    </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">RangerAccessContext</span><span class="p">(</span><span class="s">"trino"</span><span class="p">,</span><span class="w"> </span><span class="s">"sales_trino"</span><span class="p">);</span>
+
+<span class="n">RangerAuthzRequest</span><span class="w"> </span><span class="n">request</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">RangerAuthzRequest</span><span class="p">(</span><span class="n">user</span><span class="p">,</span><span class="w"> </span><span class="n">access</span><span class="p">,</span><span class="w"> </span><span class="n">ctx</span><span class="p">);</span>
+
+<span class="n">RangerAuthzResult</span><span class="w"> </span><span class="n">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">authorizer</span><span class="p">.</span><span class="na">authorize</span><span class="p">(</span><span class="n">request</span><span class="p">);</span>
+</code></pre></div>
+<div class="highlight"><pre><span></span><code><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">AccessDecision</span><span class="p">.</span><span class="na">ALLOW</span><span class="p">.</span><span class="na">equals</span><span class="p">(</span><span class="n">result</span><span class="p">.</span><span class="na">getDecision</span><span class="p">()))</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">throw</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">AccessDeniedException</span><span class="p">();</span>
+<span class="p">}</span>
+
+<span class="n">RowFilterResult</span><span class="w"> </span><span class="n">rowFilter</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">result</span><span class="p">.</span><span class="na">getPermissions</span><span class="p">(</span><span class="s">"select"</span><span class="p">).</span><span class="na">getRowFilter</span><span class="p">();</span>
+
+<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">rowFilter</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">null</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">StringUtils</span><span class="p">.</span><span class="na">isNotBlank</span><span class="p">(</span><span class="n">rowFilter</span><span class="p">.</span><span class="na">getFilterExpr</span><span class="p">()))</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="c1">// application must include the returned filter expression into the query</span>
+<span class="p">}</span>
+
+<span class="n">DataMaskResult</span><span class="w"> </span><span class="n">dataMask</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">result</span><span class="p">.</span><span class="na">getPermissions</span><span class="p">(</span><span class="s">"select"</span><span class="p">).</span><span class="na">getDataMask</span><span class="p">();</span>
+
+<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">dataMask</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">null</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">StringUtils</span><span class="p">.</span><span class="na">isNotBlank</span><span class="p">(</span><span class="n">dataMask</span><span class="p">.</span><span class="na">getMaskType</span><span class="p">()))</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="c1">// application must apply the returned data mask expression into the query</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>Configurations to connect to Ranger PDP server, including authentication details, must be populated in properties referenced above:</p>
+<div class="highlight"><pre><span></span><code><span class="na">ranger.authz.remote.pdp.url</span><span class="o">=</span><span class="s">https://ranger-pdp.example.com</span>
+<span class="na">ranger.authz.remote.authn.type</span><span class="o">=</span><span class="s">jwt|kerberos|header</span>
+<span class="na">ranger.authz.remote.authn.jwt.source</span><span class="o">=</span>
+<span class="na">ranger.authz.remote.authn.jwt.env</span><span class="o">=</span>
+<span class="na">ranger.authz.remote.authn.kerberos.principal</span><span class="o">=</span>
+<span class="na">ranger.authz.remote.authn.kerberos.keytab</span><span class="o">=</span>
+<span class="na">ranger.authz.remote.authn.header.&lt;trusted-header&gt;</span><span class="o">=</span>
+</code></pre></div>
+<h3 id="53-pdp-python-apis">5.3 PDP Python APIs<a class="headerlink" href="#53-pdp-python-apis" title="Permanent link">&para;</a></h3>
+<p>Ranger PDP Python APIs are provided by RangerPdpClient class in <a href="https://pypi.org/project/apache-ranger/">apache-ranger</a> library.</p>
+<p>Here is an example of PDP Python APIs to authorize access to Hive table:</p>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">apache_ranger.client.ranger_pdp_client</span><span class="w"> </span><span class="kn">import</span> <span class="n">RangerPDPClient</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">apache_ranger.model.ranger_authz</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+<span class="n">RangerAccessContext</span><span class="p">,</span>
+<span class="n">RangerAccessInfo</span><span class="p">,</span>
+<span class="n">RangerAuthzRequest</span><span class="p">,</span>
+<span class="n">RangerResourceInfo</span><span class="p">,</span>
+<span class="n">RangerUserInfo</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">requests_kerberos</span><span class="w"> </span><span class="kn">import</span> <span class="n">HTTPKerberosAuth</span>
+</code></pre></div>
+<div class="highlight"><pre><span></span><code><span class="n">pdp</span> <span class="o">=</span> <span class="n">RangerPDPClient</span><span class="p">(</span><span class="s2">"https://ranger-pdp.example.com"</span><span class="p">,</span> <span class="n">auth</span><span class="o">=</span><span class="n">HTTPKerberosAuth</span><span class="p">())</span>
+</code></pre></div>
+<div class="highlight"><pre><span></span><code><span class="n">user</span>     <span class="o">=</span> <span class="n">RangerUserInfo</span><span class="p">({</span><span class="s2">"name"</span><span class="p">:</span> <span class="s2">"alice"</span><span class="p">})</span>
+<span class="n">resource</span> <span class="o">=</span> <span class="n">RangerResourceInfo</span><span class="p">({</span><span class="s2">"name"</span><span class="p">:</span> <span class="s2">"table:sales/customers/accounts"</span><span class="p">})</span>
+<span class="n">access</span>   <span class="o">=</span> <span class="n">RangerAccessInfo</span><span class="p">({</span><span class="s2">"resource"</span><span class="p">:</span>    <span class="n">resource</span><span class="p">,</span>
+                             <span class="s2">"action"</span><span class="p">:</span>      <span class="s2">"QUERY"</span><span class="p">,</span>
+                             <span class="s2">"permissions"</span><span class="p">:</span> <span class="p">[</span> <span class="s2">"select"</span> <span class="p">]})</span>
+
+<span class="n">ctx</span> <span class="o">=</span> <span class="n">RangerAccessContext</span><span class="p">({</span><span class="s2">"serviceType"</span><span class="p">:</span> <span class="s2">"trino"</span><span class="p">,</span> <span class="s2">"serviceName"</span><span class="p">:</span> <span class="s2">"sales_trino"</span><span class="p">})</span>
+</code></pre></div>
+<div class="highlight"><pre><span></span><code><span class="n">req</span> <span class="o">=</span> <span class="n">RangerAuthzRequest</span><span class="p">({</span><span class="s2">"user"</span><span class="p">:</span> <span class="n">user</span><span class="p">,</span> <span class="s2">"access"</span><span class="p">:</span> <span class="n">access</span><span class="p">,</span> <span class="s2">"context"</span><span class="p">:</span> <span class="n">ctx</span> <span class="p">})</span>
+<span class="n">res</span> <span class="o">=</span> <span class="n">pdp</span><span class="o">.</span><span class="n">authorize</span><span class="p">(</span><span class="n">req</span><span class="p">)</span>
+</code></pre></div>
+<div class="highlight"><pre><span></span><code><span class="nb">print</span><span class="p">(</span><span class="n">res</span><span class="o">.</span><span class="n">decision</span><span class="p">)</span>
+</code></pre></div>
+<h2 id="6-policy-administration">6. Policy Administration<a class="headerlink" href="#6-policy-administration" title="Permanent link">&para;</a></h2>
+<p>Before an application can use Ranger policies, the Ranger service corresponding to the application must be registered and configured. This involves three administrative steps.</p>
+<h3 id="61-register-service-definition">6.1 Register service definition<a class="headerlink" href="#61-register-service-definition" title="Permanent link">&para;</a></h3>
+<p>The application's service definition must first be registered with Ranger Admin. The service definition describes the application's authorization model, including:</p>
+<ul>
+<li>resources that can be protected</li>
+<li>access types</li>
+<li>data-masking capabilities</li>
+<li>row-filtering capabilities</li>
+<li>configuration properties used by the service</li>
+</ul>
+<p>Registering, updating, or deleting a service definition requires Ranger administrator privileges. Typically, the application/integration developer provides the service definition, while a Ranger administrator registers it in the Ranger Admin service. Another option is to include the service definition in Apache Ranger git repository, which will be loaded by Ranger admin service during its initialization.</p>
+<p>Once registered, the service definition becomes the template from which Ranger service instances can be created.</p>
+<h3 id="62-create-a-ranger-service">6.2 Create a Ranger service<a class="headerlink" href="#62-create-a-ranger-service" title="Permanent link">&para;</a></h3>
+<p>A Ranger service represents a particular instance of an application or service for which policies are managed. For example, an application might have separate Ranger services for different environments:</p>
+<div class="highlight"><pre><span></span><code>Service definition: trino
+Services:           dev_trino, prod_trino, sales_trino, mktg_trino
+</code></pre></div>
+<p>Creating a Ranger service requires Ranger administrator privileges. When creating a service, the administrator provides application specific configurations, including the details required by Ranger admin to connect to the application for resource lookup. Following configurations can be used to specify list of users and groups whose members can create, update, delete, and read policies for the service:</p>
+<div class="highlight"><pre><span></span><code>service.admin.users
+service.admin.groups
+</code></pre></div>
+<h3 id="63-delegated-policy-administration">6.3 Delegated policy administration<a class="headerlink" href="#63-delegated-policy-administration" title="Permanent link">&para;</a></h3>
+<p>Ranger supports delegated administration, which allows policy management privileges to be restricted to a subset of resources and permissions within a service. For example, consider prod_hive service containing resources from several business domains:</p>
+<div class="highlight"><pre><span></span><code>prod_hive
+  |
+  |--- finance
+  |     +-- payroll
+  |     +-- expenses
+  |
+  |___ hr
+  |     +-- employees
+  |     +-- benefits
+</code></pre></div>
+<p>A service administrator can create a policy with delegated-administration privileges for the contents of a database named finance, granting users in the finance-admin group permission to manage policies. Users in the finance-admin group can then create and modify policies for resources within their delegated resource and permissions scope only.</p>
+<h3 id="64-roles">6.4 Roles<a class="headerlink" href="#64-roles" title="Permanent link">&para;</a></h3>
+<p>Ranger supports roles as a way to manage grants to a set of users and groups. A role can contain multiple users, groups or other roles. Roles are useful when the same set of permissions needs to be assigned to multiple users or groups without creating separate policies for each user.</p>
+<p>For example, a Ranger administrator can create roles and assign users and groups to roles:</p>
+<div class="highlight"><pre><span></span><code>sales-data-reader
+      |
+      +-- add group analysts
+      +-- add group reporting users
+
+sales-data-writer
+      |
+      +-- add group data-engineers
+</code></pre></div>
+<p>A user with service policy administrator privileges can grant permissions a role:</p>
+<div class="highlight"><pre><span></span><code>sales-data
+      |
+      +-- grant read  permission to sales-data-reader and sales-data-writer
+      +-- grant write permission to sales-data-writer
+</code></pre></div>
+<p>The application does not need to implement role evaluation itself. Ranger evaluates the roles associated with the requesting user when determining whether an access request is allowed.</p>
+<h3 id="65-security-zones">6.5 Security Zones<a class="headerlink" href="#65-security-zones" title="Permanent link">&para;</a></h3>
+<p>For larger deployments, Ranger can also organize services and resources into <a href="https://cwiki.apache.org/confluence/display/RANGER/Introduction+of+Security+Zones+in+Ranger">security zones</a>. A security zone can provide an additional administrative boundary spanning resources, potentially across multiple services.</p>
+<p>Applications do not need to implement anything special for security-zone support; the important consideration is that the service definition and resource model expose the resources in a way that allows administrators to place them into the appropriate policy scope.</p>
+<h2 id="references">References<a class="headerlink" href="#references" title="Permanent link">&para;</a></h2>
+<ul>
+<li><a href="https://cwiki.apache.org/confluence/display/RANGER/Ranger+Client+Libraries">Apache Ranger: Java client libraries</a></li>
+<li><a href="https://pypi.org/project/apache-ranger/">Apache Ranger: Python client library</a></li>
+<li>Apache Ranger: REST API documentation</li>
+<li><a href="https://cwiki.apache.org/confluence/display/RANGER/Introduction+of+Security+Zones+in+Ranger">Apache Ranger: security zones</a></li>
+<li><a href="https://cwiki.apache.org/confluence/pages/viewpage.action?pageId=65868896">Apache Ranger: row-filter and data-masking policies</a></li>
+<li><a href="../policy-model/">Apache Ranger Policy Model</a></li>
+</ul>
+
+
+
+
+
+
+
+  
+    
+  
+  
+
+
+  <aside class="md-source-file">
+    
+      
+  <span class="md-source-file__fact">
+    <span class="md-icon" title="Last update">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
+    </span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="September 19, 2026 13:04:02 PDT">September 19, 2026</span>
+  </span>
+
+    
+    
+    
+    
+  </aside>
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      Copyright &copy; 2014-2025 The Apache Software Foundation
+    </div>
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+        
+<div class="md-social">
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://the-asf.slack.com/archives/C4SC5NXAA" target="_blank" rel="noopener" title="the-asf.slack.com" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M94.1 315.1c0 25.9-21.2 47.1-47.1 47.1S0 341 0 315.1 21.2 268 47.1 268h47.1v47.1zm23.7 0c0-25.9 21.2-47.1 47.1-47.1s47.1 21.2 47.1 47.1v117.8c0 25.9-21.2 47.1-47.1 47.1s-47.1-21.2-47.1-47.1zm47.1-189c-25.9 0-47.1-21.2-47.1-47.1s21.2-47 47.1-47S212 53.2 212 79.1v47.1h-47.1zm0 23.7c25.9 0 47.1 21.2 47.1 47.1S190.8 244 164.9 244H47.1C21.2 244 0 222.8 0 196.9s21.2-47.1 47.1-47.1zm189 47.1c0-25.9 21.2-47.1 47.1-47.1s47 21.2 47 47.1-21.2 47.1-47.1 47.1h-47.1v-47.1zm-23.7 0c0 25.9-21.2 47.1-47.1 47.1S236 222.8 236 196.9V79.1c0-25.9 21.2-47.1 47.1-47.1s47.1 21.2 47.1 47.1zm-47.1 189c25.9 0 47.1 21.2 47.1 47.1s-21.2 47-47.1 47-47.1-21.2-47.1-47.1v-47.1h47.1zm0-23.7c-25.9 0-47.1-21.2-47.1-47.1s21.2-47.1 47.1-47.1h117.8c25.9 0 47.1 21.2 47.1 47.1s-21.2 47.1-47.1 47.1z"/></svg>
+    </a>
+  
+    
+    
+    
+    
+    <a href="mailto:dev@ranger.apache.org" target="_blank" rel="noopener" title="" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M48 64C21.5 64 0 85.5 0 112c0 15.1 7.1 29.3 19.2 38.4l208 156a48 48 0 0 0 57.6 0l208-156c12.1-9.1 19.2-23.3 19.2-38.4 0-26.5-21.5-48-48-48zM0 196v188c0 35.3 28.7 64 64 64h384c35.3 0 64-28.7 64-64V196L313.6 344.8c-34.1 25.6-81.1 25.6-115.2 0z"/></svg>
+    </a>
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://github.com/apache/ranger" target="_blank" rel="noopener" title="github.com" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+    </a>
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://hub.docker.com/r/apache/ranger" target="_blank" rel="noopener" title="hub.docker.com" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M349.9 236.3h-66.1v-59.4h66.1zm0-204.3h-66.1v60.7h66.1zm78.2 144.8H362v59.4h66.1zm-156.3-72.1h-66.1v60.1h66.1zm78.1 0h-66.1v60.1h66.1zm276.8 100c-14.4-9.7-47.6-13.2-73.1-8.4-3.3-24-16.7-44.9-41.1-63.7l-14-9.3-9.3 14c-18.4 27.8-23.4 73.6-3.7 103.8-8.7 4.7-25.8 11.1-48.4 10.7H2.4c-8.7 50.8 5.8 116.8 44 162.1 37.1 43.9 92.7 66.2 165.4 66.2 157.4 0 273.9-72.5 328.4-204.2 21.4.4 67.6.1 91.3-45.2 1.5-2.5 6.6-13.2 8.5-17.1zm-511.1-27.9h-66v59.4h66.1v-59.4zm78.1 0h-66.1v59.4h66.1zm78.1 0h-66.1v59.4h66.1zm-78.1-72.1h-66.1v60.1h66.1z"/></svg>
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.instant", "navigation.instant.prefetch", "navigation.top", "navigation.tracking", "navigation.tabs", "navigation.path", "navigation.indexes", "navigation.prune", "content.code.copy", "toc.follow", "announce.dismiss"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+        <script src="../../assets/js/typewriter.js"></script>
+      
+        <script src="https://unpkg.com/typewriter-effect@latest/dist/core.js"></script>
+      
+        <script src="https://cdn.jsdelivr.net/npm/vega@5"></script>
+      
+        <script src="https://cdn.jsdelivr.net/npm/vega-lite@5"></script>
+      
+        <script src="https://cdn.jsdelivr.net/npm/vega-embed@6"></script>
+      
+    
+  </body>
+</html>

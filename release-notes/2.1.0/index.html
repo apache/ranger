@@ -1,0 +1,3310 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+        <link rel="canonical" href="https://apache.github.io/ranger/release-notes/2.1.0/">
+      
+      
+        <link rel="prev" href="../2.2.0/">
+      
+      
+        <link rel="next" href="../2.0.0/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/brand/favicon.ico">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+    
+    
+      
+        <title>Apache Ranger 2.1.0 - Apache Ranger</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.ec1eaa64.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Noto+Sans:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Noto Sans";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/css/custom.css">
+    
+      <link rel="stylesheet" href="../../assets/css/table.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  
+<meta property="og:type" content="website" />
+<meta property="og:title" content="Apache Ranger 2.1.0 - Apache Ranger" />
+<meta property="og:image" content="https://apache.github.io/ranger/assets/images/social/release-notes/2.1.0.png" />
+<meta property="og:image:type" content="image/png" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta property="og:url" content="https://apache.github.io/ranger/release-notes/2.1.0/" />
+<meta property="twitter:card" content="summary_large_image" />
+<meta property="twitter:title" content="Apache Ranger 2.1.0 - Apache Ranger" />
+<meta property="twitter:image" content="https://apache.github.io/ranger/assets/images/social/release-notes/2.1.0.png" />
+</head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="deep-purple">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#apache-ranger-210-release-notes" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="https://ranger.apache.org" title="Apache Ranger" class="md-header__button md-logo" aria-label="Apache Ranger" data-md-component="logo">
+      
+  <img src="../../assets/brand/merged-logo.svg" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Apache Ranger
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Apache Ranger 2.1.0
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="deep-purple"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-2.69L23.31 12 20 8.69V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="amber"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 2c-1.82 0-3.53.5-5 1.35C8 5.08 10 8.3 10 12s-2 6.92-5 8.65C6.47 21.5 8.18 22 10 22a10 10 0 0 0 10-10A10 10 0 0 0 10 2"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/apache/ranger" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    apache/ranger
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+            
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../.." class="md-tabs__link">
+        
+  
+  
+    
+  
+  Home
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../getting-started/install/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Getting started
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../arch/architecture/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Architecture
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../plugins/trino/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Plugins
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../services/admin/service/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Services
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../features/gds/gds_intro/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Features
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../project/contributing/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Project
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Releases
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../blog/blog/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Blog
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ul>
+  </div>
+</nav>
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="https://ranger.apache.org" title="Apache Ranger" class="md-nav__button md-logo" aria-label="Apache Ranger" data-md-component="logo">
+      
+  <img src="../../assets/brand/merged-logo.svg" alt="logo">
+
+    </a>
+    Apache Ranger
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/apache/ranger" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    apache/ranger
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+    
+    
+      
+        
+        
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+  
+    <a href="../../getting-started/install/" class="md-nav__link">
+      
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting started
+  
+
+    
+  </span>
+  
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+    
+    
+    
+      
+      
+    
+    
+      
+        
+        
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+  
+    <a href="../../arch/architecture/" class="md-nav__link">
+      
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture
+  
+
+    
+  </span>
+  
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+    
+    
+    
+      
+      
+    
+    
+      
+        
+        
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+  
+    <a href="../../plugins/trino/" class="md-nav__link">
+      
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Plugins
+  
+
+    
+  </span>
+  
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+    
+    
+      
+        
+        
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+  
+    <a href="../../services/admin/service/" class="md-nav__link">
+      
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Services
+  
+
+    
+  </span>
+  
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+    
+    
+      
+        
+        
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+  
+    <a href="../../features/gds/gds_intro/" class="md-nav__link">
+      
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Features
+  
+
+    
+  </span>
+  
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+    
+    
+      
+        
+        
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+  
+    <a href="../../project/contributing/" class="md-nav__link">
+      
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Project
+  
+
+    
+  </span>
+  
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+      
+    
+    
+      
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8" checked>
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Releases
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_8" id="__nav_8_label" tabindex="">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_8">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Releases
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../download/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Download and verify
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+    
+    
+      
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8_3" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_8_3" id="__nav_8_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Release notes
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_8_3_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_8_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Release notes
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2.9.0/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    2.9.0
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2.8.0/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    2.8.0
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2.7.0/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    2.7.0
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2.6.0/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    2.6.0
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2.5.0/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    2.5.0
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2.4.0/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    2.4.0
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2.3.0/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    2.3.0
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2.2.0/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    2.2.0
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    2.1.0
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    2.1.0
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#highlights" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Highlights
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#artifacts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Artifacts
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#resolved-issues" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Resolved issues
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Resolved issues">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#new-features" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        New features
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#improvements" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Improvements
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#bugs-fixed" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Bugs fixed
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#further-reading" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Further reading
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2.0.0/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    2.0.0
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../1.x-and-older/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    1.x and older
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+    
+    
+      
+        
+        
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+  
+    <a href="../../blog/blog/" class="md-nav__link">
+      
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Blog
+  
+
+    
+  </span>
+  
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#highlights" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Highlights
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#artifacts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Artifacts
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#resolved-issues" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Resolved issues
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Resolved issues">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#new-features" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        New features
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#improvements" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Improvements
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#bugs-fixed" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Bugs fixed
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#further-reading" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Further reading
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+                
+
+
+
+  
+
+
+  <nav class="md-path" aria-label="Navigation" >
+    <ol class="md-path__list">
+      
+        
+  
+  
+    <li class="md-path__item">
+      <a href="../.." class="md-path__link">
+        
+  <span class="md-ellipsis">
+    Home
+  </span>
+
+      </a>
+    </li>
+  
+
+      
+      
+        
+  
+  
+    
+    
+      <li class="md-path__item">
+        <a href="../" class="md-path__link">
+          
+  <span class="md-ellipsis">
+    Releases
+  </span>
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+    
+    
+      <li class="md-path__item">
+        <a href="../2.9.0/" class="md-path__link">
+          
+  <span class="md-ellipsis">
+    Release notes
+  </span>
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ol>
+  </nav>
+
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<!---
+  Licensed to the Apache Software Foundation (ASF) under one or more
+  contributor license agreements.  See the NOTICE file distributed with
+  this work for additional information regarding copyright ownership.
+  The ASF licenses this file to You under the Apache License, Version 2.0
+  (the "License"); you may not use this file except in compliance with
+  the License.  You may obtain a copy of the License at
+
+      http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+
+<h1 id="apache-ranger-210-release-notes">Apache Ranger 2.1.0 release notes<a class="headerlink" href="#apache-ranger-210-release-notes" title="Permanent link">&para;</a></h1>
+<p>Apache Ranger 2.1.0 was released on September 3, 2020. The release adds plugins for Presto, Kudu and Schema Registry, Elasticsearch as an audit store, Ranger Admin high availability, Java and Python client libraries, Java 11 support and the first docker setup.</p>
+<h2 id="highlights">Highlights<a class="headerlink" href="#highlights" title="Permanent link">&para;</a></h2>
+<ul>
+<li><strong>New plugins</strong> — Presto (<a href="https://issues.apache.org/jira/browse/RANGER-1784">RANGER-1784</a>, <a href="https://issues.apache.org/jira/browse/RANGER-2754">RANGER-2754</a>), Kudu (<a href="https://issues.apache.org/jira/browse/RANGER-2683">RANGER-2683</a>), Schema Registry (<a href="https://issues.apache.org/jira/browse/RANGER-2748">RANGER-2748</a>); Solr document-level authorization (<a href="https://issues.apache.org/jira/browse/RANGER-2393">RANGER-2393</a>, <a href="https://issues.apache.org/jira/browse/RANGER-2723">RANGER-2723</a>).</li>
+<li><strong>Audit</strong> — Elasticsearch as an audit destination (<a href="https://issues.apache.org/jira/browse/RANGER-676">RANGER-676</a>), audit-exclude users and a blacklist for audits (<a href="https://issues.apache.org/jira/browse/RANGER-2669">RANGER-2669</a>, <a href="https://issues.apache.org/jira/browse/RANGER-2780">RANGER-2780</a>, <a href="https://issues.apache.org/jira/browse/RANGER-2829">RANGER-2829</a>),
+  optional GUID per audit record (<a href="https://issues.apache.org/jira/browse/RANGER-2869">RANGER-2869</a>).</li>
+<li><strong>High availability</strong> — Ranger Admin HA (<a href="https://issues.apache.org/jira/browse/RANGER-2052">RANGER-2052</a>), plugins and UserSync work with HA without a load balancer (<a href="https://issues.apache.org/jira/browse/RANGER-2555">RANGER-2555</a>, <a href="https://issues.apache.org/jira/browse/RANGER-2591">RANGER-2591</a>, <a href="https://issues.apache.org/jira/browse/RANGER-2592">RANGER-2592</a>).</li>
+<li><strong>Ranger KMS</strong> — Azure Key Vault as master-key store (<a href="https://issues.apache.org/jira/browse/RANGER-2497">RANGER-2497</a>), re-encryption APIs (<a href="https://issues.apache.org/jira/browse/RANGER-2616">RANGER-2616</a>).</li>
+<li><strong>Client libraries</strong> — Java (<a href="https://issues.apache.org/jira/browse/RANGER-2862">RANGER-2862</a>) and Python (<a href="https://issues.apache.org/jira/browse/RANGER-2927">RANGER-2927</a>) clients for the REST API; see <a href="../../features/client-interface/intro/">client interface</a>.</li>
+<li><strong>Policy engine</strong> — plugin capability/compatibility model (<a href="https://issues.apache.org/jira/browse/RANGER-2625">RANGER-2625</a>), incremental tag updates (<a href="https://issues.apache.org/jira/browse/RANGER-2510">RANGER-2510</a>), formal super users (<a href="https://issues.apache.org/jira/browse/RANGER-785">RANGER-785</a>, <a href="https://issues.apache.org/jira/browse/RANGER-2829">RANGER-2829</a>),
+  refactored policy engine and resource trie (<a href="https://issues.apache.org/jira/browse/RANGER-2652">RANGER-2652</a>, <a href="https://issues.apache.org/jira/browse/RANGER-2651">RANGER-2651</a>).</li>
+<li><strong>UserSync</strong> — additional user and group attributes from AD/LDAP with a REST API to download them (<a href="https://issues.apache.org/jira/browse/RANGER-2697">RANGER-2697</a>, <a href="https://issues.apache.org/jira/browse/RANGER-2632">RANGER-2632</a>).</li>
+<li><strong>Platform</strong> — Java 11 support (<a href="https://issues.apache.org/jira/browse/RANGER-2575">RANGER-2575</a>), Python 3 scripts (<a href="https://issues.apache.org/jira/browse/RANGER-2759">RANGER-2759</a>), display names for services and service definitions (<a href="https://issues.apache.org/jira/browse/RANGER-2590">RANGER-2590</a>),
+  build produces a single <code>.tar.gz</code> archive (<a href="https://issues.apache.org/jira/browse/RANGER-2980">RANGER-2980</a>).</li>
+<li><strong>Docker</strong> — first <code>dev-support/ranger-docker</code> setup to build Ranger and run Admin, HDFS, HBase, Kafka and YARN (<a href="https://issues.apache.org/jira/browse/RANGER-2960">RANGER-2960</a>, <a href="https://issues.apache.org/jira/browse/RANGER-2961">RANGER-2961</a>, <a href="https://issues.apache.org/jira/browse/RANGER-2969">RANGER-2969</a>,
+  <a href="https://issues.apache.org/jira/browse/RANGER-2971">RANGER-2971</a>, <a href="https://issues.apache.org/jira/browse/RANGER-2974">RANGER-2974</a>, <a href="https://issues.apache.org/jira/browse/RANGER-2975">RANGER-2975</a>).</li>
+</ul>
+<h2 id="artifacts">Artifacts<a class="headerlink" href="#artifacts" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Artifact</th>
+<th>Location</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Source tarball</td>
+<td><a href="https://archive.apache.org/dist/ranger/2.1.0/apache-ranger-2.1.0.tar.gz">apache-ranger-2.1.0.tar.gz</a> (<a href="https://archive.apache.org/dist/ranger/2.1.0/apache-ranger-2.1.0.tar.gz.asc">signature</a>, <a href="https://archive.apache.org/dist/ranger/2.1.0/apache-ranger-2.1.0.tar.gz.sha512">SHA-512</a>)</td>
+</tr>
+<tr>
+<td>Release directory</td>
+<td><a href="https://archive.apache.org/dist/ranger/2.1.0/">https://archive.apache.org/dist/ranger/2.1.0/</a></td>
+</tr>
+<tr>
+<td>Git tag</td>
+<td><a href="https://github.com/apache/ranger/tree/release-ranger-2.1.0">release-ranger-2.1.0</a></td>
+</tr>
+<tr>
+<td>Maven Central</td>
+<td><code>org.apache.ranger:*:2.1.0</code></td>
+</tr>
+<tr>
+<td>Archive</td>
+<td><a href="https://archive.apache.org/dist/ranger/2.1.0/">archive.apache.org/dist/ranger/2.1.0/</a></td>
+</tr>
+</tbody>
+</table>
+<p>Verify every download against its <code>.asc</code> signature and checksum file before you use it; see <a href="../download/">Download and verify</a>.</p>
+<h2 id="resolved-issues">Resolved issues<a class="headerlink" href="#resolved-issues" title="Permanent link">&para;</a></h2>
+<p>The tables below list the 328 JIRA issues recorded in the release notes for this version (15 new features, 108 improvements, 205 bugs fixed). Each key links to the issue in the Apache JIRA.</p>
+<h3 id="new-features">New features<a class="headerlink" href="#new-features" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>JIRA</th>
+<th>Summary</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-676">RANGER-676</a></td>
+<td>Audit logging to Elasticsearch</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-1784">RANGER-1784</a></td>
+<td>Presto Ranger integration</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2052">RANGER-2052</a></td>
+<td>Ranger admin supports high availability</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2393">RANGER-2393</a></td>
+<td>Document level authorization for solr</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2497">RANGER-2497</a></td>
+<td>Support Azure Key Vault for storing master keys of Ranger KMS</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2625">RANGER-2625</a></td>
+<td>Plugin capability/compatibility model</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2683">RANGER-2683</a></td>
+<td>Kudu Ranger Integration</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2697">RANGER-2697</a></td>
+<td>Retrieve additional user/group attributes from AD/LDAP and rest API to download this information</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2723">RANGER-2723</a></td>
+<td>Support multi-field attribute based document level controls for Solr</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2748">RANGER-2748</a></td>
+<td>Schema Registry Ranger Plugin</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2862">RANGER-2862</a></td>
+<td>Ranger Client Libraries (Java) For REST Services</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2863">RANGER-2863</a></td>
+<td>Ranger UI Improvement.</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2897">RANGER-2897</a></td>
+<td>Update jQuery version.</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2900">RANGER-2900</a></td>
+<td>Include policy priority in policy details popup on access auidts page</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2927">RANGER-2927</a></td>
+<td>Ranger Client Libraries (Python) For REST Services</td>
+</tr>
+</tbody>
+</table>
+<h3 id="improvements">Improvements<a class="headerlink" href="#improvements" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>JIRA</th>
+<th>Summary</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-785">RANGER-785</a></td>
+<td>Ranger plugins should support a formal notion of super user</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-837">RANGER-837</a></td>
+<td>Fix Maven Assembly</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2510">RANGER-2510</a></td>
+<td>Support for Incremental tag updates to improve performance</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2528">RANGER-2528</a></td>
+<td>Export API to get zone, unzone as well as tag based policies from Ranger.</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2535">RANGER-2535</a></td>
+<td>Good coding practices for storing and retrieving data history in ranger</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2542">RANGER-2542</a></td>
+<td>Similar to RANGER-2515, add .gitignore for project plugin-ozone and ranger-ozone-plugin-shim</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2550">RANGER-2550</a></td>
+<td>Increase sort_order field length of all the tables</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2551">RANGER-2551</a></td>
+<td>Optimize obtaining the agentHostname of audit log</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2555">RANGER-2555</a></td>
+<td>Enhancements in Ranger plugins to support Ranger HA without load-balancer</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2561">RANGER-2561</a></td>
+<td>add functionality in ranger to get default policy groups list from service config while creation of service and add that group to policies in that service</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2571">RANGER-2571</a></td>
+<td>Need to add Knox proxy configuration support in Ranger plugins</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2575">RANGER-2575</a></td>
+<td>Java 11 Support for Ranger</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2584">RANGER-2584</a></td>
+<td>Disable deny and exceptions in policies for NiFi</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2588">RANGER-2588</a></td>
+<td>Integrate Apache maven checkstyle plugin to Ranger</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2589">RANGER-2589</a></td>
+<td>Introduce Ranger API to return Ranger's JVM resource status metric</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2590">RANGER-2590</a></td>
+<td>add displayName attribute to service-def and service</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2591">RANGER-2591</a></td>
+<td>Need changes for usersync(unix/ldap) to support HA without load balancer.</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2592">RANGER-2592</a></td>
+<td>Enhancements in Ranger usersync to support Ranger HA without load-balancer</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2594">RANGER-2594</a></td>
+<td>Improve policy validation performance during delete</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2595">RANGER-2595</a></td>
+<td>Improve policy delete performance using batch delete</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2599">RANGER-2599</a></td>
+<td>Add more audit data to HBase grant/revoke events</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2607">RANGER-2607</a></td>
+<td>Disable deny and exceptions in policies for NiFi Registry</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2608">RANGER-2608</a></td>
+<td>Create profile for building only security-admin assemby</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2627">RANGER-2627</a></td>
+<td>Upgrade Apache commons-beanutils to 1.9.4</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2632">RANGER-2632</a></td>
+<td>Record additional Active Directory attributes in Ranger DB</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2636">RANGER-2636</a></td>
+<td>Allow NiFi Client to use default SSLContext</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2639">RANGER-2639</a></td>
+<td>XUserService has duplicate db query in when populateViewBean for XXUser</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2643">RANGER-2643</a></td>
+<td>Use JPA/JDBC batching during policy creation</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2646">RANGER-2646</a></td>
+<td>Refactor: replace references to static configuration instance</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2651">RANGER-2651</a></td>
+<td>Improve performance of building and querying RangerResourceTrie</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2652">RANGER-2652</a></td>
+<td>Refactor policy engine</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2653">RANGER-2653</a></td>
+<td>Refactor product code to move out APIs used only by test code</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2654">RANGER-2654</a></td>
+<td>refactor RangerBasePlugins to remove static servicePluginsMap</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2657">RANGER-2657</a></td>
+<td>Upgrade Hive version from 3.1 to 3.1.2</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2662">RANGER-2662</a></td>
+<td>Upgrade Kylin version to 2.6.4</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2663">RANGER-2663</a></td>
+<td>Add elasticsearch-plugin infomation to README.txt</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2666">RANGER-2666</a></td>
+<td>Rename matchType and matchScope enumerators to more descriptive names</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2668">RANGER-2668</a></td>
+<td>Remove tag service linking for any service created in Ranger KMS</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2669">RANGER-2669</a></td>
+<td>Blacklist for Ranger Audits</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2674">RANGER-2674</a></td>
+<td>Allow service admins to manage tag policies</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2682">RANGER-2682</a></td>
+<td>Add new authorization privilege - "admin-purge" in Ranger-Atlas service.</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2686">RANGER-2686</a></td>
+<td>Upgrade Tomcat version to 7.0.99 in Ranger</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2695">RANGER-2695</a></td>
+<td>Default displayName for ServiceDef</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2699">RANGER-2699</a></td>
+<td>JVM metrics for Ranger usersync and Ranger tagsync</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2700">RANGER-2700</a></td>
+<td>creating service sometimes fails because SecureRandom.getInstanceStrong() is often blocked</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2701">RANGER-2701</a></td>
+<td>Improve Logging mechanism for Ranger KMS</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2706">RANGER-2706</a></td>
+<td>usermapsyncenabled can be removed from code</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2711">RANGER-2711</a></td>
+<td>"Service display Name" attribute on all tabs in Ranger</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2712">RANGER-2712</a></td>
+<td>Revisit privileges for rangerlookup user in default policies</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2721">RANGER-2721</a></td>
+<td>README.txt shows incorrect build command</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2724">RANGER-2724</a></td>
+<td>Support EXECUTE permission in HBase Authorisation</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2725">RANGER-2725</a></td>
+<td>Improve the Checkstyle integration from RANGER-2588</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2734">RANGER-2734</a></td>
+<td>update Ranger authorizer for Atlas to support new operations</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2741">RANGER-2741</a></td>
+<td>Fix typo in solr_for_audit_setup</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2744">RANGER-2744</a></td>
+<td>Add response header in login.jsp page</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2746">RANGER-2746</a></td>
+<td>Handle display name for upgrade scenario</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2753">RANGER-2753</a></td>
+<td>Optimize populating user group mappings from DB.</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2754">RANGER-2754</a></td>
+<td>Update presto dependency and implement row/column level security</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2758">RANGER-2758</a></td>
+<td>Option to create missing users/groups while creating/updating roles</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2759">RANGER-2759</a></td>
+<td>Migrate Python scripts to Python 3</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2766">RANGER-2766</a></td>
+<td>enable implementations of RangerAccessResourceImpl to provide custom stringified value</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2768">RANGER-2768</a></td>
+<td>Ranger audit UI updates to render action field.</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2770">RANGER-2770</a></td>
+<td>Upgrade jackson-databind to version 2.10.0 [CVE-2020-8840] - (Ranger)</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2772">RANGER-2772</a></td>
+<td>Adding the functionality of merging the policy</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2779">RANGER-2779</a></td>
+<td>update tag-sync to process Atlas notifications for ADLS-Gen2 entities</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2780">RANGER-2780</a></td>
+<td>Ranger plugins should support audit-exclude users</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2783">RANGER-2783</a></td>
+<td>Add schema registry service def to be registered by default on start of Ranger</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2787">RANGER-2787</a></td>
+<td>Upgrade presto version to 331</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2791">RANGER-2791</a></td>
+<td>Ignore .iml files from RAT check for schema-registry plugin</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2796">RANGER-2796</a></td>
+<td>Ranger Reports page to show user + groups policies for user based search</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2808">RANGER-2808</a></td>
+<td>Service Name must not allow spaces in newly created services</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2811">RANGER-2811</a></td>
+<td>Ranger should keep trying to create collection in solr until its successfully created</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2825">RANGER-2825</a></td>
+<td>Fix PMD issues</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2826">RANGER-2826</a></td>
+<td>Update Presto Plugin to support PrestoSql 333</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2829">RANGER-2829</a></td>
+<td>support to specify super-users/groups and audit-exclude-users/groups via plugin config</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2834">RANGER-2834</a></td>
+<td>Upgrade Ranger to support Elasticsearch 7.6.0</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2842">RANGER-2842</a></td>
+<td>RangerDefaultRequestProcessor preProcess overrides clusterName, clusterType</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2843">RANGER-2843</a></td>
+<td>Privilege filteration is required for ranger lookup user for Nifi and Nifi Registry</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2849">RANGER-2849</a></td>
+<td>Allow Ranger to be configurable to not disclose server version</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2850">RANGER-2850</a></td>
+<td>Add javax.annotation to Presto plugin to ensure java 11 support</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2851">RANGER-2851</a></td>
+<td>Remove caret M characters from ranger files</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2852">RANGER-2852</a></td>
+<td>Add .gitattributes file to prevent CRLF and LF mismatches for source and text files</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2854">RANGER-2854</a></td>
+<td>Make audit bootstrap property configurable</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2861">RANGER-2861</a></td>
+<td>Support username and keytab to authenticate ES service to use as an Ranger Audit Store</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2867">RANGER-2867</a></td>
+<td>Update Spring Security framework for Ranger</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2887">RANGER-2887</a></td>
+<td>Upgrade Tomcat to 7.0.104</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2888">RANGER-2888</a></td>
+<td>Upgrade Spring framework to version 4.3.27.RELEASE</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2890">RANGER-2890</a></td>
+<td>Add missing log4j properties for audit log</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2896">RANGER-2896</a></td>
+<td>show grant not display grant_time in hive plugin</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2902">RANGER-2902</a></td>
+<td>Add policy id to the list of filters in Access Audit Tab</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2904">RANGER-2904</a></td>
+<td>Add appopriate warning messages when updates to in-memory policy cache encounter unexpected conditions</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2908">RANGER-2908</a></td>
+<td>Upgrade jackson version to 2.10.3</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2916">RANGER-2916</a></td>
+<td>Get rid of POM model related warnings in Ranger build output</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2920">RANGER-2920</a></td>
+<td>Improvement in DB scripts for handling upgrade scenario for MS-SQL</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2923">RANGER-2923</a></td>
+<td>Changing data type of sync_source_info column to accommodate more characters</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2925">RANGER-2925</a></td>
+<td>Ranger UI - third party library version upgrades part 1</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2935">RANGER-2935</a></td>
+<td>Upgrade joda-time to 2.10.6</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2939">RANGER-2939</a></td>
+<td>Search functionality with Cluster name is not working on Audit&gt;&gt;Access and Plugins tab</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2949">RANGER-2949</a></td>
+<td>Upgrade Tomcat to 7.0.105</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2960">RANGER-2960</a></td>
+<td>Docker setup to build Ranger</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2961">RANGER-2961</a></td>
+<td>Docker setup to run Ranger Admin</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2966">RANGER-2966</a></td>
+<td>Upgrade POI to 4.1.2</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2969">RANGER-2969</a></td>
+<td>Docker setup to run Ranger enabled HDFS</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2970">RANGER-2970</a></td>
+<td>HBase plugin package - remove duplicate libraries, add missing library</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2971">RANGER-2971</a></td>
+<td>Docker setup to run Ranger enabled HBase</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2974">RANGER-2974</a></td>
+<td>Docker setup to run Ranger enabled Kafka</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2975">RANGER-2975</a></td>
+<td>Docker setup to run Ranger enabled YARN</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2980">RANGER-2980</a></td>
+<td>Update Ranger build to generate one type of archive only - .tar.gz</td>
+</tr>
+</tbody>
+</table>
+<h3 id="bugs-fixed">Bugs fixed<a class="headerlink" href="#bugs-fixed" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>JIRA</th>
+<th>Summary</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-332">RANGER-332</a></td>
+<td>Ranger Plugin config to support policy manager URLs</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2109">RANGER-2109</a></td>
+<td>Ranger mysql db does not allow creation of many service definitions</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2378">RANGER-2378</a></td>
+<td>KeySecure HSM Integration is not compatible with Java9</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2483">RANGER-2483</a></td>
+<td>Presto plugin uses /presto/plugins instead of /presto/plugin</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2499">RANGER-2499</a></td>
+<td>Improve bulk create/update policy performance</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2512">RANGER-2512</a></td>
+<td>RangerRolesRESTClient for serving user group roles to the plugins for evaluation</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2526">RANGER-2526</a></td>
+<td>Log does not get generated for "Deny All Other Accesses" toggle button available on Policy page.</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2527">RANGER-2527</a></td>
+<td>UI Improvement for Roles create update and delete log on Audit -&gt; Admin Tab.</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2529">RANGER-2529</a></td>
+<td>Create index on obj_id and obj_class_type column of x_data_hist table</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2530">RANGER-2530</a></td>
+<td>Constant increase in memory usage by ranger-usersync process and eventually going out of memory</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2531">RANGER-2531</a></td>
+<td>Removing a user from a group is not reflected properly in unix based sync.</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2533">RANGER-2533</a></td>
+<td>After setting 'xasecure.audit.is.enabled' to 'false', the audit log is still logged</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2534">RANGER-2534</a></td>
+<td>Official logo for Apache Ranger</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2536">RANGER-2536</a></td>
+<td>Ranger Hive authorizer enhancement to enable Hive policies based on resource owners</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2537">RANGER-2537</a></td>
+<td>Ranger KMS having wrong bit length and version in DB after after export / import within keystore file</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2538">RANGER-2538</a></td>
+<td>Ranger policy import calls via knox trusted proxy failing</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2539">RANGER-2539</a></td>
+<td>Create Default Policies for Hive Databases -default, Information_schema</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2543">RANGER-2543</a></td>
+<td>Delete service def request is failing</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2544">RANGER-2544</a></td>
+<td>Ranger Owner Policy not getting honored for SELECT * queries.</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2546">RANGER-2546</a></td>
+<td>Replace hard-coded 'python' with '$PYTHON_COMMAND_INVOKER' in setup.sh</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2547">RANGER-2547</a></td>
+<td>Good coding practices: minimize use of static/unnecessary class members</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2548">RANGER-2548</a></td>
+<td>Ranger-admin updates to ensure owner information in GrantRevokeData is correctly consumed</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2552">RANGER-2552</a></td>
+<td>Adding a user to a group is resetting the role/permissions of the user</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2553">RANGER-2553</a></td>
+<td>Hive RangerServiceDef isValidLeaf attribute values should not be copied to DataMaskDef and RowFilterDef</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2554">RANGER-2554</a></td>
+<td>Log out message for Ranger needs to be more informative on Knox enabled cluster</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2556">RANGER-2556</a></td>
+<td>RangerHivePlugin Row filtering and Column Masking auditing gives inconsistent audit information</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2559">RANGER-2559</a></td>
+<td>Update Atlas Authorizer with forwardedAddresses and Remote IP to handle request from proxy..</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2560">RANGER-2560</a></td>
+<td>Solve the problem of the order of the configuration items of the Solr plugin</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2564">RANGER-2564</a></td>
+<td>Avoid recursive audit log in Solr Plugin by user "solr" when plugin is enabled for ranger_audits collection</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2565">RANGER-2565</a></td>
+<td>Remove duplicate error messages when test connection fails</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2567">RANGER-2567</a></td>
+<td>Ranger fails to connect wired Solr</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2568">RANGER-2568</a></td>
+<td>Ranger Hive policy creation page in Ranger Admin UI shows resources as Database,None instead of Database,Table,Column</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2569">RANGER-2569</a></td>
+<td>Policy with isDenyAllElse=true denies request to check if any access is allowed</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2573">RANGER-2573</a></td>
+<td>Ranger hbase policy not taking effect if column-family name is given in policy</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2574">RANGER-2574</a></td>
+<td>Ranger Import of fails if policy type is not passed</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2577">RANGER-2577</a></td>
+<td>Missing one dependency jar file during packaging for Ranger Ozone plugin.</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2580">RANGER-2580</a></td>
+<td>RangerPolicy.getServiceType API should return name of the service-type</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2581">RANGER-2581</a></td>
+<td>Ranger solr plugin fails to connect to SSL enabled Ranger</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2582">RANGER-2582</a></td>
+<td>Policy history details popup not getting populated properly.</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2583">RANGER-2583</a></td>
+<td>Upgrade jackson-databind</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2585">RANGER-2585</a></td>
+<td>Ranger audits for hive role commands show user as "hive" instead of the effective user</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2586">RANGER-2586</a></td>
+<td>Ranger KMS start fails with NoClassDefFoundError</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2597">RANGER-2597</a></td>
+<td>Allow auditor role user to get details of services and policies from public API</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2600">RANGER-2600</a></td>
+<td>Ranger Login Sessions audits always show "Login Type" as "Username/Password" even for kerberos login</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2602">RANGER-2602</a></td>
+<td>Import is failing with "Can not construct instance of java.util.Date from String" error</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2603">RANGER-2603</a></td>
+<td>Delegate Admin processing incorrectly giving policy access to user - due to owner</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2605">RANGER-2605</a></td>
+<td>Update maven version to 3.6.2</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2606">RANGER-2606</a></td>
+<td>Maven central deployment publishing only the top level ranger artifact</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2610">RANGER-2610</a></td>
+<td>NPE in PolicyRefresher if service-policies in policy-cache contain only service definition</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2612">RANGER-2612</a></td>
+<td>Last updated time of tag based policies under "Plugin Status" tab are not getting updated</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2613">RANGER-2613</a></td>
+<td>Public API for listing roles needs to return a Java list of RangerRole objects</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2614">RANGER-2614</a></td>
+<td>Unable to create service</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2615">RANGER-2615</a></td>
+<td>Unable to create Role</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2616">RANGER-2616</a></td>
+<td>Add reencryptEncryptedKey, batch reencryption interface to KMS and improve logs</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2617">RANGER-2617</a></td>
+<td>Provide descriptive error message when role delete not allowed</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2618">RANGER-2618</a></td>
+<td>Restrict rolename change when a policy/another role with that role exist</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2619">RANGER-2619</a></td>
+<td>Admin Audit Details not displayed for edit role</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2620">RANGER-2620</a></td>
+<td>Create empty Role cache file when no roles are present in ranger yet.</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2622">RANGER-2622</a></td>
+<td>Ranger UI side code improvement.</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2623">RANGER-2623</a></td>
+<td>Add Validations to RoleREST apis</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2624">RANGER-2624</a></td>
+<td>Issue downloading Ranger Roles in non-kerberized cluster</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2626">RANGER-2626</a></td>
+<td>Block unauthenticated access to Ranger REST endpoints in kerberized environment</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2630">RANGER-2630</a></td>
+<td>Ensure that entity deletes are handled even when Atlas sets deleted entity's state as not ACTIVE</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2631">RANGER-2631</a></td>
+<td>Ranger Audit logs for SHOW commands related to ROLE operations in Hive</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2633">RANGER-2633</a></td>
+<td>RangerYarnAuthorizer should get the remoteIPaddress from the accessRequest from YARN</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2635">RANGER-2635</a></td>
+<td>Backport hadoop-kms changes in ranger-kms</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2637">RANGER-2637</a></td>
+<td>RangerTags loading issue when Ranger admin service is not available.</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2638">RANGER-2638</a></td>
+<td>Ranger admin Logging improvement</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2641">RANGER-2641</a></td>
+<td>Upgrade scenario fails in MYSQL DB</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2642">RANGER-2642</a></td>
+<td>Grant/Revoke REST invocations by non-service users should not specify resource owner</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2644">RANGER-2644</a></td>
+<td>Improvement in Ranger encryption algorithm usage.</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2647">RANGER-2647</a></td>
+<td>Show display name instead of name in UI</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2648">RANGER-2648</a></td>
+<td>Provide policy list page url with service name</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2649">RANGER-2649</a></td>
+<td>Unix user doesn't get 'Admin' role when set through assignment rules</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2650">RANGER-2650</a></td>
+<td>Public group should not be given access to all kafka resources in default ranger policies</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2655">RANGER-2655</a></td>
+<td>Ranger UI improvement</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2656">RANGER-2656</a></td>
+<td>RangerHiveAuthorizer filterListCmdObjects failed to filter database / tables when HMS calls the authorizer for filtering</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2659">RANGER-2659</a></td>
+<td>Zone-based policies are not listed for USER_ROLE with delegate admin privilege</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2660">RANGER-2660</a></td>
+<td>Option to create missing users/groups/roles while creating/updating/importing policies</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2661">RANGER-2661</a></td>
+<td>NullPointerException on RangerRolesProvider.loadUserGroupRoles</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2665">RANGER-2665</a></td>
+<td>Policy engine for delegate-admin processing is not built correctly when policy-deltas are enabled and a zone policy is updated</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2667">RANGER-2667</a></td>
+<td>Running the disable-presto-plugin.sh script will always get stuck</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2671">RANGER-2671</a></td>
+<td>Running the setup.sh in usersync a second time will change the permissions and owner of hadoop core-site.xml</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2675">RANGER-2675</a></td>
+<td>Add Logs if keystore is not initialised during Ranger start</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2677">RANGER-2677</a></td>
+<td>Fix corner case of Ranger Audit login going into race condition</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2678">RANGER-2678</a></td>
+<td>RangerUgSyncRESTClient sets password as username for basic auth</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2679">RANGER-2679</a></td>
+<td>upgrade spring framework version to 4.3.23 to be compatible with current spring security version(4.2.13)</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2680">RANGER-2680</a></td>
+<td>Ranger Usersync and Tagsync is not updating session cookie until restart</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2685">RANGER-2685</a></td>
+<td>set_globals.sh will throw an exception "cp ews/logs/* failed"</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2687">RANGER-2687</a></td>
+<td>NoClassDefFoundError when Ranger Knox plugin is enabled</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2688">RANGER-2688</a></td>
+<td>Make cookie name configurable</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2690">RANGER-2690</a></td>
+<td>Default service display name is not getting set for Tag service</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2691">RANGER-2691</a></td>
+<td>Upgrade with MsSQL fails because of invalid syntax</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2692">RANGER-2692</a></td>
+<td>RangerKafkaAuthorizer support for ConsumerGroup resource for authorization</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2694">RANGER-2694</a></td>
+<td>TagSync fails to start due to NoClassDefFoundError</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2696">RANGER-2696</a></td>
+<td>Fix unit test failure in TestPolicyEngine.testValiditySchedulerApplicable</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2698">RANGER-2698</a></td>
+<td>Fix Ranger Unit Test failing in Ranger hive Plugin</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2702">RANGER-2702</a></td>
+<td>Upgrade Kafka Version in Ranger to 2.4</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2703">RANGER-2703</a></td>
+<td>Grant operation succeeds even though there is no delegate admin permission</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2705">RANGER-2705</a></td>
+<td>Group sync does does not parse DNs properly</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2707">RANGER-2707</a></td>
+<td>ranger.usersync.enabled not respected on initial ugsync startup</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2708">RANGER-2708</a></td>
+<td>Ranger public group check uses wrong comparison for equality</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2714">RANGER-2714</a></td>
+<td>Fix Failing Kylin test cases</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2715">RANGER-2715</a></td>
+<td>"Service display Name" attribute on all tabs in Ranger(UI)</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2717">RANGER-2717</a></td>
+<td>Edit repo/service fails(Knox proxy)</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2718">RANGER-2718</a></td>
+<td>Utility to update user and group names in stored policy json</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2719">RANGER-2719</a></td>
+<td>Fix Ranger Atlas Plugin packaging issue</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2720">RANGER-2720</a></td>
+<td>Search filter not work properly.</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2722">RANGER-2722</a></td>
+<td>policies/hive/for-resource api call is returning deleted policies</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2729">RANGER-2729</a></td>
+<td>RANGER-2660 should creates external users rather internal</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2730">RANGER-2730</a></td>
+<td>Missing JAVA Patch record in the ranger admin x_db_version_h table</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2731">RANGER-2731</a></td>
+<td>BaseDao.batchCreate uses the wrong property</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2735">RANGER-2735</a></td>
+<td>Update Atlas serviceDef for upgrade case of RANGER-2734</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2743">RANGER-2743</a></td>
+<td>Upgrade Tomcat Version to 7.0.100</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2747">RANGER-2747</a></td>
+<td>Ranger integration with presto works on "Release 317" but fails on versions later</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2749">RANGER-2749</a></td>
+<td>Ranger depends on commons-lang but doesn't specify it in it's pom</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2750">RANGER-2750</a></td>
+<td>Permission "alter" has to be there for TOPIC and CLUSTER resource in RangerKafkaPlugin ServiceDef</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2752">RANGER-2752</a></td>
+<td>Upgrade from 0.7.0 to master fails due to schema issue</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2755">RANGER-2755</a></td>
+<td>Update Atlas service-def and plugin for changes in ATLAS-3653</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2756">RANGER-2756</a></td>
+<td>A spelling mistake in RangerHiveAuthorizer</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2757">RANGER-2757</a></td>
+<td>Ranger Knox SSO logout issue</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2761">RANGER-2761</a></td>
+<td>Policy evaluators are not correctly updated when using policy deltas for downloads to plugins</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2762">RANGER-2762</a></td>
+<td>Logout issue when knox-trusted proxy is enabled</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2763">RANGER-2763</a></td>
+<td>Hive SET Role command in Ranger hive plugin</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2764">RANGER-2764</a></td>
+<td>Role API : Duplicate key value violates unique constraint "x_ranger_global_state_uk_state_name"</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2765">RANGER-2765</a></td>
+<td>Correct permissions are not getting loaded for entity-label in Atlas service</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2773">RANGER-2773</a></td>
+<td>Enhanced logging messages for RangerScriptConditionEvaluator class</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2775">RANGER-2775</a></td>
+<td>Pagination not working for role in Ranger admin UI page</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2776">RANGER-2776</a></td>
+<td>Unable to access service through knox, facing NPE when authorization is set to Ranger</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2777">RANGER-2777</a></td>
+<td>Ranger Knox Plugin failed to download Roles</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2781">RANGER-2781</a></td>
+<td>default policy creation fails for policy-items with no users</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2785">RANGER-2785</a></td>
+<td>Ranger Ozone plugin does not include configuration jars</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2786">RANGER-2786</a></td>
+<td>Ranger usersync group modifyTimestamp parsing should be in 24 hours format</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2788">RANGER-2788</a></td>
+<td>Fix schema-registry servicedef with correct values of id and itemIds.</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2789">RANGER-2789</a></td>
+<td>GET API service/xusers/users turns very slow when there are more than 1000 users</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2790">RANGER-2790</a></td>
+<td>Import start and import end are not in sequence</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2793">RANGER-2793</a></td>
+<td>Admin log clogged with a warning</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2794">RANGER-2794</a></td>
+<td>Search is not working in Role page</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2795">RANGER-2795</a></td>
+<td>Update Presto serviceDef for upgrade case of RANGER-2754</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2797">RANGER-2797</a></td>
+<td>changing error to debug as it does not make impact on transactions</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2800">RANGER-2800</a></td>
+<td>Ranger DB upgrade script for version name change in x_ranger_global_state table</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2801">RANGER-2801</a></td>
+<td>Update apache thrift version in ranger</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2802">RANGER-2802</a></td>
+<td>Java patch J10034 may fail in upgrade case</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2803">RANGER-2803</a></td>
+<td>Modify db_setup.py script to handle pre-created user's tablespace for Oracle</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2804">RANGER-2804</a></td>
+<td>Ranger Ozone plugin unable to write to solr audits in SSL enabled cluster</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2805">RANGER-2805</a></td>
+<td>Create role with non-existing group/user failing due to concurrent threads</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2806">RANGER-2806</a></td>
+<td>RangerScriptConditionEvaluator does not initialize correctly with openJDK 11</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2807">RANGER-2807</a></td>
+<td>Change audit format for access logs</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2809">RANGER-2809</a></td>
+<td>Solr plugin fails to download policies with authentication error in a secure cluster</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2812">RANGER-2812</a></td>
+<td>Upgrade Nimbus-Jose-JWT and netty versions</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2813">RANGER-2813</a></td>
+<td>[HBase]Not able to pull execute permission given to user from getUserPermissions API in HBase Ranger Coprocessor</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2814">RANGER-2814</a></td>
+<td>RangerServiceResource signature should not include service-specific information</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2815">RANGER-2815</a></td>
+<td>Ranger HDFSAuditDestination flush call should be privileged one</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2817">RANGER-2817</a></td>
+<td>Service configuration update does not cause policies in the service to get downloaded to plugin</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2818">RANGER-2818</a></td>
+<td>[Ozone Ranger Plugin] Init Failed due to CNF JacksonJsonProvider</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2821">RANGER-2821</a></td>
+<td>Update ranger authorizer for Atlas to add admin-purge</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2822">RANGER-2822</a></td>
+<td>Best practices: Refactor embeddedserver code and remove redundant code</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2823">RANGER-2823</a></td>
+<td>RangerResouceTrie.copySubTree() does not set up TrieNode's child nodes correctly</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2824">RANGER-2824</a></td>
+<td>Allow from an override policy having deny-items is ignored</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2828">RANGER-2828</a></td>
+<td>RangerExportPolicy with resource filter fails to fetch policies</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2831">RANGER-2831</a></td>
+<td>presto-server-333 start failed due to NoClassDefFoundError</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2833">RANGER-2833</a></td>
+<td>Enforcing Strict transport security</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2836">RANGER-2836</a></td>
+<td>Make Elasticsearch port and protocol properties configurable</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2838">RANGER-2838</a></td>
+<td>Kafka Testcase failing the build with NoClassDefFoundError</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2839">RANGER-2839</a></td>
+<td>Assorted improvements for debugging and handling of thread terminations, clean-up of unused data, etc.</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2840">RANGER-2840</a></td>
+<td>Create policy with non existing group is failing due to to multiple threads creating same group</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2841">RANGER-2841</a></td>
+<td>Refactor userstore enricher in order to support userstore download without service information</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2844">RANGER-2844</a></td>
+<td>presto-server-333 can not show schemas/tables after integrated with Ranger master branch</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2853">RANGER-2853</a></td>
+<td>"Unauthenticated : Please check the permission in the policy for the user": An NPE in ranger admin when enable kms.</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2855">RANGER-2855</a></td>
+<td>import policy for ranger is not working properly if updateifexist parameter is passed</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2856">RANGER-2856</a></td>
+<td>A policy should be deleted if it has no policyItems</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2858">RANGER-2858</a></td>
+<td>'show databases' gives permission denied error, even though the user has permissions on a few of the databases in security zone policies</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2864">RANGER-2864</a></td>
+<td>Group creation is failing during import policy</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2869">RANGER-2869</a></td>
+<td>Ranger audit module to provide an option to generate a GUID for each audit log</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2872">RANGER-2872</a></td>
+<td>The Ranger authentication group permission of the ES does not take effect.</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2874">RANGER-2874</a></td>
+<td>Tag policies not getting enforced for ADLS path</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2875">RANGER-2875</a></td>
+<td>Security zone policy not getting enforced correctly for some servicedef</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2876">RANGER-2876</a></td>
+<td>allow-exception policy-items are not correctly handled when access-type is '_any'</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2877">RANGER-2877</a></td>
+<td>ElasticSearch-Plugin throws NullPointException when the type of request is 'PutMappingRequest'</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2881">RANGER-2881</a></td>
+<td>Delegate Admin user having role "user" able to create policy which has non-existing users/groups</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2885">RANGER-2885</a></td>
+<td>Add missing PermType Java codes for new versions of Kafka</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2886">RANGER-2886</a></td>
+<td>Exporting tag policies fails when 'polResource' query parameter is used</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2893">RANGER-2893</a></td>
+<td>show grant on database xxx will fail in ranger hive plugin</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2903">RANGER-2903</a></td>
+<td>Remove elasticsearch audit's is_enabled property from config</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2905">RANGER-2905</a></td>
+<td>Failed to log Audit event in Elasticsearch</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2911">RANGER-2911</a></td>
+<td>ES plugin missing implemention for some ES request</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2912">RANGER-2912</a></td>
+<td>ranger and plugins will throw GSSAPI error when write audit log to ElasticSearch when cluster running on none security mode</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2913">RANGER-2913</a></td>
+<td>Import policy fails when policy with same name present in multiple service</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2914">RANGER-2914</a></td>
+<td>Invalid obj name in DB script for MS-SQL</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2915">RANGER-2915</a></td>
+<td>Support tag based policies for Ozone resources in Ranger</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2917">RANGER-2917</a></td>
+<td>Avoid recursive audit log in ES Plugin by user elasticsearch when plugin is enabled for ranger_audits index</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2918">RANGER-2918</a></td>
+<td>Ranger Audit for HBase does not capture predicates</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2919">RANGER-2919</a></td>
+<td>Source policies gets deleted after importing policy with deleteifexists parameter</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2921">RANGER-2921</a></td>
+<td>Regression: When all resource and tag(if applicable) policies are deleted then plugin continues to use old set of policies</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2922">RANGER-2922</a></td>
+<td>Query info not included for solr query audits in Ranger</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2930">RANGER-2930</a></td>
+<td>Change atlas version to 2.1.0 for Ranger 2.1.0 release</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2931">RANGER-2931</a></td>
+<td>Fix PMD Error of RANGER-2922</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2938">RANGER-2938</a></td>
+<td>[Ranger Audits] Zone Name field is not populated in case of Deny Operations via Security Zones</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2944">RANGER-2944</a></td>
+<td>Presto plugin lookupResource throws NPE if not set service password</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2945">RANGER-2945</a></td>
+<td>Need to check if RANGER_LOGIN_PASSWORD exists in HadoopConfigHolder</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2947">RANGER-2947</a></td>
+<td>[Ranger][Policy Import] Usage of serviceType config while importing ranger policy for any service</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2958">RANGER-2958</a></td>
+<td>Unable to run build using docker script - build_ranger_using_docker.sh</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2968">RANGER-2968</a></td>
+<td>HDFS plugin package - missing library</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2978">RANGER-2978</a></td>
+<td>Ranger upgrade fails due to missing DB function.</td>
+</tr>
+<tr>
+<td><a href="https://issues.apache.org/jira/browse/RANGER-2979">RANGER-2979</a></td>
+<td>Test failure due to NPE</td>
+</tr>
+</tbody>
+</table>
+<h2 id="further-reading">Further reading<a class="headerlink" href="#further-reading" title="Permanent link">&para;</a></h2>
+<ul>
+<li><a href="https://cwiki.apache.org/confluence/display/RANGER/Apache+Ranger+2.1.0+-+Release+Notes">Apache Ranger 2.1.0 - Release Notes (cwiki)</a></li>
+<li><a href="https://issues.apache.org/jira/issues/?jql=project%20%3D%20RANGER%20AND%20fixVersion%20%3D%202.1.0">All issues with fixVersion 2.1.0 in JIRA</a></li>
+<li><a href="../">Release index</a> and <a href="../download/">Download and verify</a></li>
+</ul>
+
+
+
+
+
+
+
+  
+    
+  
+  
+
+
+  <aside class="md-source-file">
+    
+      
+  <span class="md-source-file__fact">
+    <span class="md-icon" title="Last update">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
+    </span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="September 19, 2026 13:04:02 PDT">September 19, 2026</span>
+  </span>
+
+    
+    
+    
+    
+  </aside>
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      Copyright &copy; 2014-2025 The Apache Software Foundation
+    </div>
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+        
+<div class="md-social">
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://the-asf.slack.com/archives/C4SC5NXAA" target="_blank" rel="noopener" title="the-asf.slack.com" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M94.1 315.1c0 25.9-21.2 47.1-47.1 47.1S0 341 0 315.1 21.2 268 47.1 268h47.1v47.1zm23.7 0c0-25.9 21.2-47.1 47.1-47.1s47.1 21.2 47.1 47.1v117.8c0 25.9-21.2 47.1-47.1 47.1s-47.1-21.2-47.1-47.1zm47.1-189c-25.9 0-47.1-21.2-47.1-47.1s21.2-47 47.1-47S212 53.2 212 79.1v47.1h-47.1zm0 23.7c25.9 0 47.1 21.2 47.1 47.1S190.8 244 164.9 244H47.1C21.2 244 0 222.8 0 196.9s21.2-47.1 47.1-47.1zm189 47.1c0-25.9 21.2-47.1 47.1-47.1s47 21.2 47 47.1-21.2 47.1-47.1 47.1h-47.1v-47.1zm-23.7 0c0 25.9-21.2 47.1-47.1 47.1S236 222.8 236 196.9V79.1c0-25.9 21.2-47.1 47.1-47.1s47.1 21.2 47.1 47.1zm-47.1 189c25.9 0 47.1 21.2 47.1 47.1s-21.2 47-47.1 47-47.1-21.2-47.1-47.1v-47.1h47.1zm0-23.7c-25.9 0-47.1-21.2-47.1-47.1s21.2-47.1 47.1-47.1h117.8c25.9 0 47.1 21.2 47.1 47.1s-21.2 47.1-47.1 47.1z"/></svg>
+    </a>
+  
+    
+    
+    
+    
+    <a href="mailto:dev@ranger.apache.org" target="_blank" rel="noopener" title="" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M48 64C21.5 64 0 85.5 0 112c0 15.1 7.1 29.3 19.2 38.4l208 156a48 48 0 0 0 57.6 0l208-156c12.1-9.1 19.2-23.3 19.2-38.4 0-26.5-21.5-48-48-48zM0 196v188c0 35.3 28.7 64 64 64h384c35.3 0 64-28.7 64-64V196L313.6 344.8c-34.1 25.6-81.1 25.6-115.2 0z"/></svg>
+    </a>
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://github.com/apache/ranger" target="_blank" rel="noopener" title="github.com" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+    </a>
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://hub.docker.com/r/apache/ranger" target="_blank" rel="noopener" title="hub.docker.com" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M349.9 236.3h-66.1v-59.4h66.1zm0-204.3h-66.1v60.7h66.1zm78.2 144.8H362v59.4h66.1zm-156.3-72.1h-66.1v60.1h66.1zm78.1 0h-66.1v60.1h66.1zm276.8 100c-14.4-9.7-47.6-13.2-73.1-8.4-3.3-24-16.7-44.9-41.1-63.7l-14-9.3-9.3 14c-18.4 27.8-23.4 73.6-3.7 103.8-8.7 4.7-25.8 11.1-48.4 10.7H2.4c-8.7 50.8 5.8 116.8 44 162.1 37.1 43.9 92.7 66.2 165.4 66.2 157.4 0 273.9-72.5 328.4-204.2 21.4.4 67.6.1 91.3-45.2 1.5-2.5 6.6-13.2 8.5-17.1zm-511.1-27.9h-66v59.4h66.1v-59.4zm78.1 0h-66.1v59.4h66.1zm78.1 0h-66.1v59.4h66.1zm-78.1-72.1h-66.1v60.1h66.1z"/></svg>
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.instant", "navigation.instant.prefetch", "navigation.top", "navigation.tracking", "navigation.tabs", "navigation.path", "navigation.indexes", "navigation.prune", "content.code.copy", "toc.follow", "announce.dismiss"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+        <script src="../../assets/js/typewriter.js"></script>
+      
+        <script src="https://unpkg.com/typewriter-effect@latest/dist/core.js"></script>
+      
+        <script src="https://cdn.jsdelivr.net/npm/vega@5"></script>
+      
+        <script src="https://cdn.jsdelivr.net/npm/vega-lite@5"></script>
+      
+        <script src="https://cdn.jsdelivr.net/npm/vega-embed@6"></script>
+      
+    
+  </body>
+</html>

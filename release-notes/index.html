@@ -11,10 +11,10 @@
         <link rel="canonical" href="https://apache.github.io/ranger/release-notes/">
       
       
-        <link rel="prev" href="../project/cve-list/">
+        <link rel="prev" href="../project/asf-index/">
       
       
-        <link rel="next" href="../blog/blog/">
+        <link rel="next" href="download/">
       
       
         
@@ -803,6 +803,8 @@
       
         
       
+        
+      
     
     
     
@@ -862,6 +864,10 @@
           
         
       
+        
+      
+        
+      
     
     
     
@@ -899,6 +905,11 @@
 
             </a>
             
+              
+              <label class="md-nav__link md-nav__link--active" for="__nav_8" id="__nav_8_label" tabindex="">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
           </div>
         
         <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="true">
@@ -912,6 +923,110 @@
           </label>
           <ul class="md-nav__list" data-md-scrollfix>
             
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="download/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Download and verify
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+    
+    
+      
+        
+        
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+  
+    <a href="2.9.0/" class="md-nav__link">
+      
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Release notes
+  
+
+    
+  </span>
+  
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
               
             
           </ul>
@@ -929,6 +1044,16 @@
   
     
     
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
       
         
       
@@ -995,6 +1120,47 @@
   
     
   
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#2x-releases" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.x releases
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#1x-and-0x-releases" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.x and 0.x releases
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#where-release-information-comes-from" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Where release information comes from
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
   
 </nav>
                   </div>
@@ -1079,6 +1245,208 @@
  - limitations under the License.
  -->
 <h1 id="apache-ranger-releases">Apache Ranger Releases<a class="headerlink" href="#apache-ranger-releases" title="Permanent link">&para;</a></h1>
+<p>This page lists every Apache Ranger release, from the first incubating release in 2014 to the current stable
+release, with the release date, the release notes and where to download the artifacts. Release notes for the
+2.x line are part of this site; notes for 1.x and older releases live on the Apache Ranger cwiki and are
+summarized in <a href="1.x-and-older/">1.x and older</a>.</p>
+<p>Release dates are the dates recorded for the corresponding <code>fixVersion</code> in the
+<a href="https://issues.apache.org/jira/projects/RANGER">Apache Ranger JIRA project</a>. The source code for every release is
+tagged in Git as <code>release-ranger-&lt;version&gt;</code> from 0.7.1 onward; older releases carry tags such as <code>ranger-0.7.0</code>,
+<code>release-0.6.3</code> or only release-candidate tags (<code>ranger-&lt;version&gt;-rc&lt;n&gt;</code>). The <code>master</code> branch builds
+version <code>3.0.0-SNAPSHOT</code>.</p>
+<div class="admonition tip">
+<p class="admonition-title">Latest release: Apache Ranger 2.9.0 (August 8, 2026)</p>
+<p>Ranger 2.9.0 adds the standalone Ranger PDP server and <code>authz-remote</code> thin-client library, a plugin for Apache
+Polaris, action-based policies for Apache Ozone, header-based authentication and many security fixes.
+Read the <a href="2.9.0/">2.9.0 release notes</a> or go straight to <a href="download/">Download and verify</a>.</p>
+</div>
+<h2 id="2x-releases">2.x releases<a class="headerlink" href="#2x-releases" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Version</th>
+<th>Release date</th>
+<th>Release notes</th>
+<th>Download</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>2.9.0</td>
+<td>2026-08-08</td>
+<td><a href="2.9.0/">2.9.0</a></td>
+<td><a href="https://downloads.apache.org/ranger/2.9.0/">downloads.apache.org/ranger/2.9.0</a></td>
+</tr>
+<tr>
+<td>2.8.0</td>
+<td>2026-03-01</td>
+<td><a href="2.8.0/">2.8.0</a></td>
+<td><a href="https://downloads.apache.org/ranger/2.8.0/">downloads.apache.org/ranger/2.8.0</a></td>
+</tr>
+<tr>
+<td>2.7.0</td>
+<td>2025-07-30</td>
+<td><a href="2.7.0/">2.7.0</a></td>
+<td><a href="https://downloads.apache.org/ranger/2.7.0/">downloads.apache.org/ranger/2.7.0</a></td>
+</tr>
+<tr>
+<td>2.6.0</td>
+<td>2025-02-15</td>
+<td><a href="2.6.0/">2.6.0</a></td>
+<td><a href="https://downloads.apache.org/ranger/2.6.0/">downloads.apache.org/ranger/2.6.0</a></td>
+</tr>
+<tr>
+<td>2.5.0</td>
+<td>2024-08-08</td>
+<td><a href="2.5.0/">2.5.0</a></td>
+<td><a href="https://archive.apache.org/dist/ranger/2.5.0/">archive.apache.org/dist/ranger/2.5.0</a></td>
+</tr>
+<tr>
+<td>2.4.0</td>
+<td>2023-03-30</td>
+<td><a href="2.4.0/">2.4.0</a></td>
+<td><a href="https://archive.apache.org/dist/ranger/2.4.0/">archive.apache.org/dist/ranger/2.4.0</a></td>
+</tr>
+<tr>
+<td>2.3.0</td>
+<td>2022-07-09</td>
+<td><a href="2.3.0/">2.3.0</a></td>
+<td><a href="https://archive.apache.org/dist/ranger/2.3.0/">archive.apache.org/dist/ranger/2.3.0</a></td>
+</tr>
+<tr>
+<td>2.2.0</td>
+<td>2021-11-01</td>
+<td><a href="2.2.0/">2.2.0</a></td>
+<td><a href="https://archive.apache.org/dist/ranger/2.2.0/">archive.apache.org/dist/ranger/2.2.0</a></td>
+</tr>
+<tr>
+<td>2.1.0</td>
+<td>2020-09-03</td>
+<td><a href="2.1.0/">2.1.0</a></td>
+<td><a href="https://archive.apache.org/dist/ranger/2.1.0/">archive.apache.org/dist/ranger/2.1.0</a></td>
+</tr>
+<tr>
+<td>2.0.0</td>
+<td>2019-08-07</td>
+<td><a href="2.0.0/">2.0.0</a></td>
+<td><a href="https://archive.apache.org/dist/ranger/2.0.0/">archive.apache.org/dist/ranger/2.0.0</a></td>
+</tr>
+</tbody>
+</table>
+<p>Each 2.x line has had a single release so far; fixes ship in the next minor version rather than in patch releases.
+Every 2.x release is also published to Maven Central under the <code>org.apache.ranger</code> group, and releases from 2.4.0
+onward have Docker images on Docker Hub. See <a href="download/">Download and verify</a> for details.</p>
+<h2 id="1x-and-0x-releases">1.x and 0.x releases<a class="headerlink" href="#1x-and-0x-releases" title="Permanent link">&para;</a></h2>
+<p>The release notes for these versions are on the cwiki. <a href="1.x-and-older/">1.x and older</a> summarizes the
+highlights of each release.</p>
+<table>
+<thead>
+<tr>
+<th>Version</th>
+<th>Release date</th>
+<th>Release notes</th>
+<th>Download</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1.2.0</td>
+<td>2018-10-04</td>
+<td><a href="https://cwiki.apache.org/confluence/pages/viewpage.action?pageId=93325735">cwiki</a></td>
+<td><a href="https://archive.apache.org/dist/ranger/1.2.0/">archive.apache.org/dist/ranger/1.2.0</a></td>
+</tr>
+<tr>
+<td>1.1.0</td>
+<td>2018-07-09</td>
+<td><a href="https://cwiki.apache.org/confluence/pages/viewpage.action?pageId=87297827">cwiki</a></td>
+<td><a href="https://archive.apache.org/dist/ranger/1.1.0/">archive.apache.org/dist/ranger/1.1.0</a></td>
+</tr>
+<tr>
+<td>1.0.0</td>
+<td>2018-03-20</td>
+<td><a href="https://cwiki.apache.org/confluence/pages/viewpage.action?pageId=75975356">cwiki</a></td>
+<td><a href="https://archive.apache.org/dist/ranger/1.0.0/">archive.apache.org/dist/ranger/1.0.0</a></td>
+</tr>
+<tr>
+<td>0.7.1</td>
+<td>2017-06-07</td>
+<td><a href="https://cwiki.apache.org/confluence/pages/viewpage.action?pageId=70257650">cwiki</a></td>
+<td><a href="https://archive.apache.org/dist/ranger/0.7.1/">archive.apache.org/dist/ranger/0.7.1</a></td>
+</tr>
+<tr>
+<td>0.7.0</td>
+<td>2017-02-27</td>
+<td><a href="https://cwiki.apache.org/confluence/pages/viewpage.action?pageId=68715504">cwiki</a></td>
+<td><a href="https://archive.apache.org/dist/ranger/0.7.0/">archive.apache.org/dist/ranger/0.7.0</a></td>
+</tr>
+<tr>
+<td>0.6.3</td>
+<td>2017-01-30</td>
+<td><a href="https://cwiki.apache.org/confluence/pages/viewpage.action?pageId=67637684">cwiki</a></td>
+<td><a href="https://archive.apache.org/dist/ranger/0.6.3/">archive.apache.org/dist/ranger/0.6.3</a></td>
+</tr>
+<tr>
+<td>0.6.2</td>
+<td>2016-11-08</td>
+<td><a href="https://cwiki.apache.org/confluence/pages/viewpage.action?pageId=65877405">cwiki</a></td>
+<td><a href="https://archive.apache.org/dist/incubator/ranger/0.6.2-incubating/">archive.apache.org/dist/incubator/ranger/0.6.2-incubating</a></td>
+</tr>
+<tr>
+<td>0.6.1</td>
+<td>2016-08-20</td>
+<td><a href="https://cwiki.apache.org/confluence/pages/viewpage.action?pageId=65865300">cwiki</a></td>
+<td><a href="https://archive.apache.org/dist/incubator/ranger/0.6.1-incubating/">archive.apache.org/dist/incubator/ranger/0.6.1-incubating</a></td>
+</tr>
+<tr>
+<td>0.6.0</td>
+<td>2016-07-18</td>
+<td><a href="https://cwiki.apache.org/confluence/pages/viewpage.action?pageId=65146308">cwiki</a></td>
+<td><a href="https://archive.apache.org/dist/incubator/ranger/0.6.0-incubating/">archive.apache.org/dist/incubator/ranger/0.6.0-incubating</a></td>
+</tr>
+<tr>
+<td>0.5.3</td>
+<td>2016-05-31</td>
+<td><a href="https://cwiki.apache.org/confluence/pages/viewpage.action?pageId=62694969">cwiki</a></td>
+<td><a href="https://archive.apache.org/dist/incubator/ranger/0.5.3-incubating/">archive.apache.org/dist/incubator/ranger/0.5.3-incubating</a></td>
+</tr>
+<tr>
+<td>0.5.2</td>
+<td>2016-02-29</td>
+<td><a href="https://cwiki.apache.org/confluence/pages/viewpage.action?pageId=61339642">cwiki</a></td>
+<td><a href="https://archive.apache.org/dist/incubator/ranger/0.5.2-incubating/">archive.apache.org/dist/incubator/ranger/0.5.2-incubating</a></td>
+</tr>
+<tr>
+<td>0.5.1</td>
+<td>2016-01-26</td>
+<td><a href="https://cwiki.apache.org/confluence/pages/viewpage.action?pageId=61337303">cwiki</a></td>
+<td><a href="https://archive.apache.org/dist/incubator/ranger/0.5.1-incubating/">archive.apache.org/dist/incubator/ranger/0.5.1-incubating</a></td>
+</tr>
+<tr>
+<td>0.5.0</td>
+<td>2015-06-10</td>
+<td><a href="https://cwiki.apache.org/confluence/pages/viewpage.action?pageId=57906100">cwiki</a></td>
+<td><a href="https://archive.apache.org/dist/incubator/ranger/0.5.0-incubating/">archive.apache.org/dist/incubator/ranger/0.5.0-incubating</a></td>
+</tr>
+<tr>
+<td>0.4.0</td>
+<td>2014-11-17</td>
+<td><a href="https://cwiki.apache.org/confluence/pages/viewpage.action?pageId=59688883">cwiki</a></td>
+<td><a href="https://archive.apache.org/dist/incubator/ranger/0.4.0-incubating/">archive.apache.org/dist/incubator/ranger/0.4.0-incubating</a></td>
+</tr>
+</tbody>
+</table>
+<p>Releases up to 0.6.2 were made while Ranger was in the Apache Incubator; their artifacts are named
+<code>apache-ranger-incubating-&lt;version&gt;.tar.gz</code> (<code>ranger-&lt;version&gt;-incubating.tar.gz</code> for 0.4.0 and 0.5.0) and live under the <code>incubator/ranger</code> path of the archive.</p>
+<h2 id="where-release-information-comes-from">Where release information comes from<a class="headerlink" href="#where-release-information-comes-from" title="Permanent link">&para;</a></h2>
+<ul>
+<li><strong>Release notes</strong> are compiled by the release manager from the JIRA issues with the matching <code>fixVersion</code>; the
+  process is described in <a href="../project/release-process/">Release process</a>.</li>
+<li><strong>Announcements</strong> go to the <code>dev@</code>, <code>user@</code> and <code>announce@apache.org</code> mailing lists; see
+  <a href="../project/community/">Community</a>.</li>
+<li><strong>Security fixes</strong> in each release are tracked separately in the <a href="../project/cve-list/">CVE list</a>.</li>
+<li>The <a href="https://cwiki.apache.org/confluence/display/RANGER/Release+Folders">cwiki release folders</a> keep a page per
+  release with links to the notes, artifacts and Git tag.</li>
+</ul>
 
 
 
@@ -1099,7 +1467,7 @@
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="January 13, 2026 13:08:42 PST">January 13, 2026</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="September 19, 2026 13:04:02 PDT">September 19, 2026</span>
   </span>
 
     
