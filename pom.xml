@@ -803,6 +803,7 @@
                 <module>knox-agent</module>
                 <module>pdp</module>
                 <module>plugin-atlas</module>
+                <module>plugin-drill</module>
                 <module>plugin-elasticsearch</module>
                 <module>plugin-kafka</module>
                 <module>plugin-kms</module>
@@ -1103,7 +1104,21 @@
                 <module>agents-installer</module>
                 <module>common-utils</module>
                 <module>credentialbuilder</module>
+                <module>plugin-drill</module>
                 <module>plugin-trino</module>
+                <module>ranger-plugin-classloader</module>
+                <module>ranger-util</module>
+            </modules>
+        </profile>
+        <profile>
+            <id>ranger-drill-plugin</id>
+            <modules>
+                <module>agents-audit</module>
+                <module>agents-common</module>
+                <module>agents-cred</module>
+                <module>agents-installer</module>
+                <module>common-utils</module>
+                <module>plugin-drill</module>
                 <module>ranger-plugin-classloader</module>
                 <module>ranger-util</module>
             </modules>
@@ -1153,6 +1168,7 @@
                 <module>knox-agent</module>
                 <module>pdp</module>
                 <module>plugin-atlas</module>
+                <module>plugin-drill</module>
                 <module>plugin-elasticsearch</module>
                 <module>plugin-kafka</module>
                 <module>plugin-kms</module>
@@ -1242,6 +1258,7 @@
                 <module>knox-agent</module>
                 <module>pdp</module>
                 <module>plugin-atlas</module>
+                <module>plugin-drill</module>
                 <module>plugin-elasticsearch</module>
                 <module>plugin-kafka</module>
                 <module>plugin-kms</module>
