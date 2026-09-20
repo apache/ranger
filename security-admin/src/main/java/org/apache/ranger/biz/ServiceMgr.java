@@ -79,6 +79,10 @@ public class ServiceMgr {
     private static final long _DefaultTimeoutValue_Lookp          = 1000; // 1 s
     private static final long _DefaultTimeoutValue_ValidateConfig = 10000; // 10 s
 
+    // Avoid returning low-level connect/reachability details from Test Connection to the UI
+    private static final String SAFE_TEST_CONN_FAILURE_MSG =
+            "Unable to connect repository with given config. Please check the configuration and ranger_admin.log for more details.";
+
     private static final Map<String, Class<? extends RangerBaseService>> serviceTypeClassMap = new HashMap<>();
 
     @Autowired
@@ -588,6 +592,13 @@ public class ServiceMgr {
             }
         }
 
+        if (!connectivityStatus && disclosesHostPortReachability(message, description)) {
+            LOG.error("Test Connection failed; sanitizing UI response. Original message=[{}] description=[{}]", message, description);
+
+            message     = SAFE_TEST_CONN_FAILURE_MSG;
+            description = SAFE_TEST_CONN_FAILURE_MSG;
+        }
+
         VXMessage       vXMsg     = new VXMessage();
         List<VXMessage> vXMsgList = new ArrayList<>();
 
@@ -601,6 +612,41 @@ public class ServiceMgr {
         vXResponse.setStatusCode(statusCode);
 
         return vXResponse;
+    }
+
+    /**
+     * Returns true when Test Connection failure text would disclose whether a host/port is reachable
+     * (for example Connection refused vs timeout), which can be used as a lightweight port probe.
+     */
+    static boolean disclosesHostPortReachability(String... texts) {
+        if (texts == null) {
+            return false;
+        }
+
+        for (String text : texts) {
+            if (StringUtils.isBlank(text)) {
+                continue;
+            }
+
+            String normalized = text.toLowerCase();
+
+            if (normalized.contains("connection refused")
+                    || normalized.contains("connectexception")
+                    || normalized.contains("unknownhostexception")
+                    || normalized.contains("noroutetohostexception")
+                    || normalized.contains("no route to host")
+                    || normalized.contains("network is unreachable")
+                    || normalized.contains("sockettimeoutexception")
+                    || normalized.contains("socketexception")
+                    || normalized.contains("connection timed out")
+                    || normalized.contains("connect timed out")
+                    || normalized.contains("connection reset")
+                    || normalized.contains("connection reset by peer")) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private boolean isUserOrUserGroupsInRole(String userId, Set<String> userGroups, List<String> roles) {
