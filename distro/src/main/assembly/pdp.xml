@@ -79,8 +79,6 @@
                     <include>org.glassfish.hk2:hk2-locator</include>
                     <include>org.glassfish.hk2:hk2-utils</include>
                     <include>org.glassfish.hk2.external:aopalliance-repackaged</include>
-                    <include>org.glassfish.hk2.external:javax.inject</include>
-                    <include>org.glassfish:osgi-resource-locator</include>
 
                     <!-- Gson (policy/role/tag JSON parsing in ranger-plugins-common) -->
                     <include>com.google.code.gson:gson:jar:${gson.version}</include>
@@ -96,7 +94,6 @@
                     <!-- JWT bearer token authentication -->
                     <include>com.nimbusds:nimbus-jose-jwt:jar:${nimbus-jose-jwt.version}</include>
                     <include>net.minidev:json-smart</include>
-                    <include>com.nimbusds:content-type</include>
 
                     <!-- Commons -->
                     <include>org.apache.commons:commons-lang3:jar:${commons.lang3.version}</include>
@@ -108,7 +105,6 @@
                     <include>commons-io:commons-io:jar:${commons.io.version}</include>
                     <include>commons-logging:commons-logging:jar:${commons.logging.version}</include>
                     <include>org.apache.commons:commons-text:jar:${commons.text.version}</include>
-                    <include>org.eclipse.jetty:jetty-client:jar:${jetty-client.version}</include>
 
                     <!-- Hadoop client (audit, Kerberos utilities) -->
                     <include>org.apache.hadoop:hadoop-auth:jar:${hadoop.version}</include>
@@ -121,12 +117,9 @@
                     <include>com.fasterxml.woodstox:woodstox-core:jar:${fasterxml.woodstox.version}</include>
 
                     <!-- Audit sinks -->
-                    <include>org.apache.solr:solr-solrj</include>
-                    <include>org.apache.httpcomponents:httpmime:jar:${httpcomponents.httpmime.version}</include>
                     <include>org.apache.httpcomponents:httpclient:jar:${httpcomponents.httpclient.version}</include>
                     <include>org.apache.httpcomponents:httpcore:jar:${httpcomponents.httpcore.version}</include>
                     <include>org.apache.zookeeper:zookeeper:jar:${zookeeper.version}</include>
-                    <include>org.noggit:noggit</include>
 
                     <!-- Logging -->
                     <include>org.slf4j:slf4j-api:jar:${slf4j.version}</include>
@@ -148,10 +141,6 @@
                     <include>org.graalvm.shadowed:xz:jar:${graalvm.version}</include>
 
                 </includes>
-                <excludes>
-                    <!-- avoid jersey-bundle because it conflicts with Jersey-2 -->
-                    <exclude>com.sun.jersey:jersey-bundle</exclude>
-                </excludes>
             </binaries>
         </moduleSet>
 

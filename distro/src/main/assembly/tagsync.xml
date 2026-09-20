@@ -90,7 +90,6 @@
 							<include>org.apache.ranger:ranger-common-utils</include>
 							<include>org.apache.ranger:ranger-plugins-common</include>
 							<include>org.apache.ranger:ranger-util</include>
-							<include>org.apache.ranger:ugsync-util</include>
                             <include>org.apache.tomcat.embed:tomcat-embed*</include>
                             <include>org.apache.tomcat:tomcat-annotations-api*</include>
 							<include>org.apache.zookeeper:zookeeper-jute:jar:${zookeeper.version}</include>
