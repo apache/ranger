@@ -71,8 +71,9 @@ x-audit-dispatcher-env-common: &audit-dispatcher-env-common
   AUDIT_DISPATCHER_HOME_DIR: /opt/ranger/audit-dispatcher
   AUDIT_DISPATCHER_CONF_DIR: /opt/ranger/audit-dispatcher/conf
   RANGER_AUDIT_DISPATCHER_MAX_HEAP: ${RANGER_AUDIT_DISPATCHER_MAX_HEAP}
-  RANGER_JVM_METASPACE: ${RANGER_JVM_METASPACE}
-  RANGER_JVM_MAX_METASPACE: ${RANGER_JVM_MAX_METASPACE}
+  # Optional metaspace tuning; :- avoids compose warnings when unset in .env
+  RANGER_JVM_METASPACE: ${RANGER_JVM_METASPACE:-}
+  RANGER_JVM_MAX_METASPACE: ${RANGER_JVM_MAX_METASPACE:-}
   RANGER_VERSION: ${RANGER_VERSION}
   KERBEROS_ENABLED: ${KERBEROS_ENABLED}
   KAFKA_BOOTSTRAP_SERVERS: ranger-kafka.rangernw:9092
@@ -191,8 +192,9 @@ services:
       AUDIT_INGESTOR_CONF_DIR: /opt/ranger/audit-ingestor/conf
       AUDIT_INGESTOR_LOG_DIR: /var/log/ranger/audit-ingestor
       RANGER_AUDIT_INGESTOR_MAX_HEAP: ${RANGER_AUDIT_INGESTOR_MAX_HEAP}
-      RANGER_JVM_METASPACE: ${RANGER_JVM_METASPACE}
-      RANGER_JVM_MAX_METASPACE: ${RANGER_JVM_MAX_METASPACE}
+      # Optional metaspace tuning; :- avoids compose warnings when unset in .env
+      RANGER_JVM_METASPACE: ${RANGER_JVM_METASPACE:-}
+      RANGER_JVM_MAX_METASPACE: ${RANGER_JVM_MAX_METASPACE:-}
       RANGER_VERSION: ${RANGER_VERSION}
       KERBEROS_ENABLED: ${KERBEROS_ENABLED}
       KAFKA_BOOTSTRAP_SERVERS: ranger-kafka.rangernw:9092
