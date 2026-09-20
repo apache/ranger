@@ -31,6 +31,14 @@ services:
         condition: service_started
       ranger-zk:
         condition: service_started
+    healthcheck:
+      # Ready means: gateway listening, sandbox topology deployed (404 until then), demo LDAP
+      # authenticating (401 until then) and the Ranger Knox authorizer answering - 200 or 403.
+      test: ["CMD-SHELL", "curl -sk -o /dev/null -w '%{http_code}' -u admin:admin-password 'https://localhost:8443/gateway/sandbox/webhdfs/v1/?op=LISTSTATUS' | grep -qE '^(200|403)$$'"]
+      interval: 20s
+      timeout: 10s
+      retries: 20
+      start_period: 40s
     environment:
       - KNOX_VERSION
       - KNOX_PLUGIN_VERSION

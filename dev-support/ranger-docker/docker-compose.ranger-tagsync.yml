@@ -28,6 +28,14 @@ services:
     depends_on:
       ranger:
         condition: service_started
+    healthcheck:
+      # Tagsync logs this once it has connected to Ranger admin and started the sync loop,
+      # which is the point at which the container is actually doing its job.
+      test: ["CMD-SHELL", "grep -q 'Initializing TAG source and sink' /var/log/ranger/tagsync/tagsync-*.log"]
+      interval: 20s
+      timeout: 10s
+      retries: 20
+      start_period: 40s
     environment:
       - TAGSYNC_VERSION
       - DEBUG_TAGSYNC=${DEBUG_TAGSYNC:-false}
