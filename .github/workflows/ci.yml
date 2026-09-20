@@ -59,7 +59,21 @@ jobs:
       - name: Clear npm cache
         run: npm cache clean --force
       - name: build (17)
-        run: mvn -T 8 clean verify --no-transfer-progress -B -V
+        run: |
+          set -o pipefail
+          mvn -T 8 clean verify --no-transfer-progress -B -V 2>&1 | tee "$RUNNER_TEMP/build.log"
+
+      # fail on stale or non-portable patterns in assembly descriptors (distro/src/main/assembly)
+      - name: check assembly warnings
+        run: |
+          patterns='patterns were never triggered|filesystem-root relative reference'
+          # -a: build.log has binary bytes from test output, without it grep prints only "binary file matches"
+          if grep -aEq "$patterns" "$RUNNER_TEMP/build.log"; then
+            echo "::error::Assembly descriptors produced warnings; fix the patterns listed below"
+            # each archive's warnings are logged just before its "Building tar/zip" line; drop repeats per archive
+            grep -aE "$patterns|^o +'|Building (tar|zip):" "$RUNNER_TEMP/build.log" | awk '/Building/ { print; delete seen; next } !seen[$0]++'
+            exit 1
+          fi
 
       - name: run code coverage
         run: |
