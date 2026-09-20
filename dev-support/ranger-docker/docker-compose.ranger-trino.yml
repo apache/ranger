@@ -20,6 +20,13 @@ services:
     depends_on:
       ranger:
         condition: service_started
+    healthcheck:
+      # /v1/info reports starting=false once the coordinator has finished startup.
+      test: ["CMD-SHELL", "curl -sf http://localhost:8080/v1/info | grep -q '\"starting\":false'"]
+      interval: 20s
+      timeout: 10s
+      retries: 20
+      start_period: 30s
     environment:
       - TRINO_VERSION
       - KERBEROS_ENABLED

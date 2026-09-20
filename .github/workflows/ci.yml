@@ -140,19 +140,32 @@ jobs:
           -f docker-compose.ranger-pdp.yml \
           -f docker-compose.ranger-usersync.yml \
           -f docker-compose.ranger-tagsync.yml \
-          -f docker-compose.ranger-kms.yml up -d
+          -f docker-compose.ranger-kms.yml up -d --wait --wait-timeout 900
+
+      - name: Dump container state on failure
+        if: ${{ failure() }}
+        run: |
+          docker ps -a
+          for container in $(docker ps -aq); do
+            name=$(docker inspect -f '{{.Name}}' "$container");
+            echo "::group::docker logs ${name}";
+            docker logs --tail 300 "$container" || true;
+            echo "::endgroup::";
+          done
 
       - name: Check status of containers and remove them
         run: |
-          sleep 60
           containers=(ranger ranger-zk ranger-opensearch ranger-postgres ranger-pdp ranger-usersync ranger-tagsync ranger-kms ranger-kafka ranger-audit-ingestor ranger-audit-dispatcher-opensearch);
           flag=true;
           for container in "${containers[@]}"; do
-              if [[ $(docker inspect -f '{{.State.Running}}' $container 2>/dev/null) == "true" ]]; then
-                  echo "Container $container is running!";
+              # Every container above declares a healthcheck, so "healthy" is what `up --wait`
+              # already blocked on; containers without one only report "running".
+              health=$(docker inspect -f '{{if .State.Health}}{{.State.Health.Status}}{{else}}none{{end}}' $container 2>/dev/null);
+              if [[ $(docker inspect -f '{{.State.Running}}' $container 2>/dev/null) == "true" ]] && [[ $health != "unhealthy" ]]; then
+                  echo "Container $container is running! (health: $health)";
               else
                   flag=false;
-                  echo "Container $container is NOT running! Status: $(docker inspect -f '{{.State.Status}}' $container 2>/dev/null)";
+                  echo "Container $container is NOT ready! Status: $(docker inspect -f '{{.State.Status}}' $container 2>/dev/null) (health: $health)";
                   echo "docker logs $container:";
                   docker logs $container
               fi
@@ -260,35 +273,32 @@ jobs:
           -f docker-compose.ranger-hbase.yml \
           -f docker-compose.ranger-hive.yml \
           -f docker-compose.ranger-knox.yml \
-          -f docker-compose.ranger-ozone.yml up -d
+          -f docker-compose.ranger-ozone.yml up -d --wait --wait-timeout 1200
 
-      - name: Wait for KDC Kerberos readiness
+      - name: Dump container state on failure
+        if: ${{ failure() }}
         run: |
-          cd dev-support/ranger-docker
-          for i in $(seq 1 90); do
-            status=$(docker inspect -f '{{.State.Health.Status}}' ranger-kdc 2>/dev/null || echo missing)
-            if [ "$status" = "healthy" ]; then
-              echo "ranger-kdc is healthy after ${i} attempt(s)"
-              exit 0
-            fi
-            echo "Waiting for ranger-kdc (status=${status})..."
-            sleep 2
+          docker ps -a
+          for container in $(docker ps -aq); do
+            name=$(docker inspect -f '{{.Name}}' "$container");
+            echo "::group::docker logs ${name}";
+            docker logs --tail 300 "$container" || true;
+            echo "::endgroup::";
           done
-          echo "ranger-kdc did not become healthy in time"
-          docker logs ranger-kdc || true
-          exit 1
 
       - name: Check status of containers and remove them
         run: |
-          sleep 60
           containers=(ranger ranger-zk ranger-opensearch ranger-postgres ranger-hadoop ranger-hbase ranger-kafka ranger-hive ranger-knox ozone-om ozone-scm ozone-datanode ranger-audit-ingestor ranger-audit-dispatcher-opensearch);
           flag=true;
           for container in "${containers[@]}"; do
-              if [[ $(docker inspect -f '{{.State.Running}}' $container 2>/dev/null) == "true" ]]; then
-                  echo "Container $container is running!";
+              # Every container above declares a healthcheck, so "healthy" is what `up --wait`
+              # already blocked on; containers without one only report "running".
+              health=$(docker inspect -f '{{if .State.Health}}{{.State.Health.Status}}{{else}}none{{end}}' $container 2>/dev/null);
+              if [[ $(docker inspect -f '{{.State.Running}}' $container 2>/dev/null) == "true" ]] && [[ $health != "unhealthy" ]]; then
+                  echo "Container $container is running! (health: $health)";
               else
                   flag=false;
-                  echo "Container $container is NOT running! Status: $(docker inspect -f '{{.State.Status}}' $container 2>/dev/null)";
+                  echo "Container $container is NOT ready! Status: $(docker inspect -f '{{.State.Status}}' $container 2>/dev/null) (health: $health)";
                   echo "docker logs $container:";
                   docker logs $container
               fi

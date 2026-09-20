@@ -124,6 +124,14 @@ services:
       - KRB5_CONFIG=/etc/krb5.conf
       # Solr 9 enables Java SecurityManager by default; Ranger keytab login and policy cache need broader access
       - SOLR_SECURITY_MANAGER_ENABLED=false
+    healthcheck:
+      # 200 when the core answers; 401 when security.json has Solr behind SPNEGO, which it
+      # returns for any path - so this proves Solr is serving, not that the core is loaded.
+      test: ["CMD-SHELL", "curl -s -o /dev/null -w '%{http_code}' http://localhost:8983/solr/ranger_audits/admin/ping | grep -qE '^(200|401)$$'"]
+      interval: 20s
+      timeout: 10s
+      retries: 20
+      start_period: 30s
     command:
       - solr-precreate
       - ranger_audits
@@ -150,6 +158,13 @@ services:
         condition: service_started
     environment:
       - OPENSEARCH_JAVA_OPTS=-Xms512m -Xmx512m
+    healthcheck:
+      # A single-node cluster never goes green (replicas stay unassigned), so yellow is ready.
+      test: ["CMD-SHELL", "curl -sf http://ranger-opensearch.rangernw:9200/_cluster/health | grep -qE '\"status\":\"(green|yellow)\"'"]
+      interval: 20s
+      timeout: 10s
+      retries: 20
+      start_period: 30s
 
   ranger-kafka:
     extends:
