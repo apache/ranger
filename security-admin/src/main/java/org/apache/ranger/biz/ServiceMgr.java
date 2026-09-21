@@ -481,7 +481,10 @@ public class ServiceMgr {
                             } else {
                                 URL[]          pluginFiles = getPluginFilesForServiceType(serviceType);
                                 URLClassLoader clsLoader   = new URLClassLoader(pluginFiles, Thread.currentThread().getContextClassLoader());
-                                Class<?>       cls         = Class.forName(clsName, true, clsLoader);
+                                Class<?>       cls         = Class.forName(clsName, false, clsLoader);
+                                if (!RangerBaseService.class.isAssignableFrom(cls)) {
+                                    throw new ClassCastException("class " + clsName + " is not assignable to " + RangerBaseService.class.getName());
+                                }
 
                                 ret = (Class<? extends RangerBaseService>) cls;
                             }

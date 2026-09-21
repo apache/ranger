@@ -31,6 +31,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
+import java.lang.reflect.InvocationTargetException;
 import java.util.Timer;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -64,17 +65,23 @@ public class RangerUserStoreEnricher extends RangerAbstractContextEnricher {
 
         if (StringUtils.isNotBlank(userStoreRetrieverClassName)) {
             try {
-                @SuppressWarnings("unchecked")
-                Class<RangerUserStoreRetriever> userStoreRetriverClass = (Class<RangerUserStoreRetriever>) Class.forName(userStoreRetrieverClassName);
+                Class<?> cls = Class.forName(userStoreRetrieverClassName, false, RangerUserStoreEnricher.class.getClassLoader());
 
-                userStoreRetriever = userStoreRetriverClass.newInstance();
+                if (!RangerUserStoreRetriever.class.isAssignableFrom(cls)) {
+                    throw new ClassCastException("class " + userStoreRetrieverClassName + " is not assignable to " + RangerUserStoreRetriever.class.getName());
+                }
+
+                @SuppressWarnings("unchecked")
+                Class<RangerUserStoreRetriever> userStoreRetriverClass = (Class<RangerUserStoreRetriever>) cls;
+
+                userStoreRetriever = userStoreRetriverClass.getDeclaredConstructor().newInstance();
             } catch (ClassNotFoundException exception) {
                 LOG.error("Class {} not found, exception={}", userStoreRetrieverClassName, exception);
             } catch (ClassCastException exception) {
                 LOG.error("Class {} is not a type of RangerUserStoreRetriever, exception={}", userStoreRetrieverClassName, exception);
             } catch (IllegalAccessException exception) {
                 LOG.error("Class {} illegally accessed, exception={}", userStoreRetrieverClassName, exception);
-            } catch (InstantiationException exception) {
+            } catch (InstantiationException | NoSuchMethodException | InvocationTargetException exception) {
                 LOG.error("Class {} could not be instantiated, exception={}", userStoreRetrieverClassName, exception);
             }
 
