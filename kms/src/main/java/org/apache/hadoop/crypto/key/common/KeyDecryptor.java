@@ -15,30 +15,15 @@
  * limitations under the License.
  */
 
-package org.apache.hadoop.crypto.key;
+package org.apache.hadoop.crypto.key.common;
+
+import javax.crypto.SealedObject;
 
 import java.security.Key;
+import java.util.Optional;
 
-public interface RangerKMSMKI {
-    boolean generateMasterKey(String password) throws Throwable;
+public interface KeyDecryptor {
+    byte[] decryptKey(byte[] data, String password, RangerKMSKeyCryptoAPI.KMSCryptoParams cryptoParams, Optional<byte[]> aad) throws RangerKMSCryptoException;
 
-    String getMasterKey(String password) throws Throwable;
-
-    default byte[] decryptZoneKey(byte[] encryptedByte) throws Exception {
-        return null;
-    }
-
-    default byte[] encryptZoneKey(Key zoneKey) throws Exception {
-        return null;
-    }
-
-    default void onInitialization() throws Exception {}
-
-    default boolean reencryptOrUpdateMK(String mkPassword) throws Exception {
-        return  false;
-    }
-
-    default boolean setExternalKeyAsMK(String password, byte[] key) throws Throwable {
-        throw new UnsupportedOperationException("This method is not supported for current MK provider");
-    }
+    Key unsealKey(SealedObject sealedObject, char[] password, RangerKMSKeyCryptoAPI.KMSCryptoParams cryptoParams, Optional<byte[]> aad) throws RangerKMSCryptoException;
 }

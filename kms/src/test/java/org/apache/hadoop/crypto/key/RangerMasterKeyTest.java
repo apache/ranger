@@ -17,7 +17,7 @@
 
 package org.apache.hadoop.crypto.key;
 
-import com.sun.org.apache.xml.internal.security.utils.Base64;
+import org.apache.hadoop.crypto.key.common.SupportedPBECryptoKDFSuite;
 import org.apache.hadoop.crypto.key.kms.server.DerbyTestUtils;
 import org.apache.hadoop.crypto.key.kms.server.KMSConfiguration;
 import org.apache.ranger.entity.XXRangerMasterKey;
@@ -35,8 +35,6 @@ import javax.crypto.Cipher;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.Provider;
@@ -81,7 +79,9 @@ public class RangerMasterKeyTest {
         }
 
         Security.removeProvider("BC");
-        this.rangerMasterKey = new RangerMasterKey(daoManager);
+        RangerKMSCryptoConfigManager kmsCryptoConfigApi = new TestKMSCryptoAPIManager("PBEWithMD5AndTripleDES", "MD5", 20);
+        ((TestKMSCryptoAPIManager) kmsCryptoConfigApi).setConfigForMK(true);
+        this.rangerMasterKey = new RangerMasterKey(daoManager, kmsCryptoConfigApi);
     }
 
     @AfterEach
@@ -131,31 +131,24 @@ public class RangerMasterKeyTest {
            Change keystore type to bcfks
          */
 
-        // Before FIPS setup, default and selected crypto Algo should be PBEWithMD5AndTripleDES
-        Assertions.assertEquals(SupportedPBECryptoAlgo.PBEWithMD5AndTripleDES, rangerMasterKey.getDefaultCryptoAlgorithm());
-
         Provider provider = new BouncyCastleProvider();
         Security.insertProviderAt(provider, 1);
-        Security.setProperty("keystore.type", "bcfks");
 
-        rangerMasterKey.init();
+        RangerKMSCryptoConfigManager kmsCryptoConfigApi = new TestKMSCryptoAPIManager("PBKDF2WithHmacSHA256", "SHA-512", 1000);
+        ((TestKMSCryptoAPIManager) kmsCryptoConfigApi).setConfigForMK(true);
+        this.rangerMasterKey = new RangerMasterKey(daoManager, kmsCryptoConfigApi);
 
-        Assertions.assertEquals(SupportedPBECryptoAlgo.PBKDF2WithHmacSHA256, rangerMasterKey.getDefaultCryptoAlgorithm());
-        Assertions.assertEquals(SupportedPBECryptoAlgo.PBKDF2WithHmacSHA256, rangerMasterKey.getSelectedCryptoAlgorithm());
-
-        Assertions.assertTrue(rangerMasterKey.reencryptMKWithFipsAlgo(masterKeyPassword));
+        Assertions.assertTrue(rangerMasterKey.reencryptOrUpdateMK(masterKeyPassword));
 
         // this checks the Algo name written in the DB.
-        Assertions.assertEquals(SupportedPBECryptoAlgo.PBKDF2WithHmacSHA256, rangerMasterKey.getMKEncryptionAlgoName());
+        Assertions.assertEquals(SupportedPBECryptoKDFSuite.PBKDF2WITHHMACSHA256, rangerMasterKey.getMKEncryptionAlgoName());
 
         Assertions.assertEquals(masterKey, rangerMasterKey.getMasterKey(masterKeyPassword));
 
-        Assertions.assertFalse(rangerMasterKey.reencryptMKWithFipsAlgo(masterKeyPassword));
+        Assertions.assertFalse(rangerMasterKey.reencryptOrUpdateMK(masterKeyPassword));
 
         // revert the FIPS specific changes so that other cases can execute with default provider.
         Security.removeProvider(provider.getName());
-        Security.setProperty("keystore.type", "jks");
-        rangerMasterKey.resetDefaultMDAlgoAndEncrAlgo();
     }
 
     @Test
@@ -168,11 +161,39 @@ public class RangerMasterKeyTest {
                 + "password0password0password0password0password0password0password0password0password0password0"
                 + "password0password0password0password0password0password0password0password0password0password0";
 
-        Assertions.assertFalse(rangerMasterKey.reencryptMKWithFipsAlgo(masterKeyPassword));  // or assertTrue if expecting re-encryption to happen
+        Assertions.assertFalse(rangerMasterKey.reencryptOrUpdateMK(masterKeyPassword));  // or assertTrue if expecting re-encryption to happen
     }
 
     @Test
-    public void testGenerateMKFromHSMMK() throws Throwable {
+    void testMKGenerateEncryptAndDecryptUsingAESGCMNoPadding() throws Throwable {
+        if (!UNRESTRICTED_POLICIES_INSTALLED) {
+            return;
+        }
+
+        String masterKeyPassword = "password0password0password0password0password0password0password0password0"
+                + "password0password0password0password0password0password0password0password0password0password0"
+                + "password0password0password0password0password0password0password0password0password0password0";
+
+        RangerKMSCryptoConfigManager kmsCryptoConfigApi = new TestKMSCryptoAPIManager("PBKDF2WITHHMACSHA256", "AES/GCM/NOPADDING", "SHA-512", 1000);
+        ((TestKMSCryptoAPIManager) kmsCryptoConfigApi).setConfigForMK(true);
+        this.rangerMasterKey = new RangerMasterKey(daoManager, kmsCryptoConfigApi);
+
+        Assertions.assertTrue(rangerMasterKey.generateMasterKey(masterKeyPassword));
+        String masterKey = rangerMasterKey.getMasterKey(masterKeyPassword);
+        Assertions.assertNotNull(masterKey);
+
+        try {
+            rangerMasterKey.getMasterKey("badpass");
+            Assertions.fail("Failure expected on retrieving a key with the wrong password");
+        } catch (Exception ex) {
+            // expected
+        }
+
+        Assertions.assertNotNull(rangerMasterKey.getMasterSecretKey(masterKeyPassword));
+    }
+
+    @Test
+    public void testExternalKeyAsMK() throws Throwable {
         if (!UNRESTRICTED_POLICIES_INSTALLED) {
             return;
         }
@@ -184,61 +205,7 @@ public class RangerMasterKeyTest {
                 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f,
                 0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17};
         rangerMasterKey.setExternalKeyAsMK(password, key);
-    }
-
-    @Test
-    public void testGenerateMKFromKeySecureMK() throws Throwable {
-        if (!UNRESTRICTED_POLICIES_INSTALLED) {
-            return;
-        }
-
-        String password = "password0password0password0password0password0password0password0password0"
-                + "password0password0password0password0password0password0password0";
-        byte[] key = {0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
-                0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f,
-                0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17};
-        rangerMasterKey.setExternalKeyAsMK(password, key);
-
         assertNotNull(rangerMasterKey.getMasterKey(password));
-    }
-
-    @Test
-    public void testDecryptMasterKeySK() throws Exception {
-        if (!UNRESTRICTED_POLICIES_INSTALLED) {
-            return;
-        }
-
-        String password = "password0password0password0password0password0password0password0password0"
-                + "password0password0password0password0password0password0password0";
-
-        // Simulate a generated master key
-        byte[] rawKey        = "myMockRawKey1234567890".getBytes();  // Simulated secret key material
-        Method encryptMethod = RangerMasterKey.class.getDeclaredMethod("encryptMasterKey", String.class, byte[].class);
-        encryptMethod.setAccessible(true);
-        String encryptedStr = (String) encryptMethod.invoke(rangerMasterKey, password, rawKey);
-
-        // Now decrypt using the method under test
-        Method decryptMethod = RangerMasterKey.class.getDeclaredMethod(
-                "decryptMasterKeySK", byte[].class, String.class, String.class);
-        decryptMethod.setAccessible(true);
-
-        byte[]    encryptedBytes = Base64.decode(encryptedStr);
-        SecretKey secretKey      = (SecretKey) decryptMethod.invoke(rangerMasterKey, encryptedBytes, password, encryptedStr);
-
-        assertNotNull(secretKey);
-    }
-
-    @Test
-    public void testGetIntConfig_ReturnsDefaultWhenPropertyMissing() throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
-        if (!UNRESTRICTED_POLICIES_INSTALLED) {
-            return;
-        }
-
-        Method method = RangerMasterKey.class.getDeclaredMethod("getIntConfig", String.class, int.class);
-        method.setAccessible(true);
-        int defaultValue = 42;
-        int result       = (int) method.invoke(rangerMasterKey, "non.existent.property", defaultValue);
-        Assertions.assertEquals(defaultValue, result, "Expected default value when property is missing");
     }
 
     static {
