@@ -90,6 +90,7 @@ function UserForm(props) {
   const isExternalOrFederatedUser =
     userInfo?.userSource == UserTypes.USER_EXTERNAL.value ||
     userInfo?.userSource == UserTypes.USER_FEDERATED.value;
+  const isInternalUser = userInfo?.userSource == UserTypes.USER_INTERNAL.value;
 
   const handleSubmit = async (formData) => {
     let userFormData = {};
@@ -289,11 +290,7 @@ function UserForm(props) {
   };
 
   const disabledGroupField = () => {
-    if (!isSystemAdmin()) {
-      return true;
-    }
-
-    return isEditView && userInfo && isExternalOrFederatedUser;
+    return !(isSystemAdmin() && isEditView && isInternalUser)
   };
 
   const userRoleListData = () => {
