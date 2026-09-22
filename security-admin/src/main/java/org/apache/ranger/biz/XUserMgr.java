@@ -1197,6 +1197,7 @@ public class XUserMgr extends XUserMgrBase {
         vXUser.setPassword(hiddenPasswordString);
 
         Long             userId             = vXUser.getId();
+        validateGroupMembershipChangeAccess(userId, groupIdList);
         List<Long>       groupUsersToRemove = new ArrayList<>();
         List<XXTrxLogV2> groupUserTrxLogs   = createOrDelGrpUserWithUpdatedGrpId(vXUser, groupIdList, userId, groupUsersToRemove);
 
@@ -3198,6 +3199,26 @@ public class XUserMgr extends XUserMgrBase {
             logger.warn("validatePassword(). Password cannot be blank/null.");
 
             throw restErrorUtil.createRESTException("serverMsg.xuserMgrValidatePassword", MessageEnums.INVALID_PASSWORD, null, "Password cannot be blank/null", null);
+        }
+    }
+
+    private void validateGroupMembershipChangeAccess(Long userId, Collection<Long> groupIdList) {
+        if (groupIdList == null || userId == null) {
+            return;
+        }
+        UserSessionBase session = ContextUtil.getCurrentUserSession();
+        if (session == null || session.isUserAdmin()) {
+            return;
+        }
+        List<Long> existingGroupIds = daoManager.getXXGroupUser().findGroupIdListByUserId(userId);
+        Set<Long> requestedGroupIds = new HashSet<>(groupIdList);
+        Set<Long> currentGroupIds     = new HashSet<>();
+        if (CollectionUtils.isNotEmpty(existingGroupIds)) {
+            currentGroupIds.addAll(existingGroupIds);
+        }
+        if (!requestedGroupIds.equals(currentGroupIds)) {
+            throw restErrorUtil.create403RESTException(
+                    "Logged-in user is not permitted to modify group membership.");
         }
     }
 
