@@ -228,4 +228,27 @@ public class TestEntraIdGraphConfigLoader {
     public void test18_nullConfig_isRejected() {
         Assertions.assertThrows(IllegalArgumentException.class, () -> new EntraIdGraphConfigLoader(null));
     }
+
+    @Test
+    public void test19_load_skipDisabledUsers_absentDefaultsToFalse() throws Exception {
+        stubValidCertificate();
+        EntraIdGraphConfig result = new EntraIdGraphConfigLoader(config).load();
+        Assertions.assertFalse(result.isSkipDisabledUsers());
+    }
+
+    @Test
+    public void test20_load_skipDisabledUsers_trueIsParsed() throws Exception {
+        stubValidCertificate();
+        stub(EntraIdGraphConfigLoader.ENTRAID_SKIP_DISABLED_USERS, "true");
+        EntraIdGraphConfig result = new EntraIdGraphConfigLoader(config).load();
+        Assertions.assertTrue(result.isSkipDisabledUsers());
+    }
+
+    @Test
+    public void test21_load_skipDisabledUsers_falseIsParsed() throws Exception {
+        stubValidCertificate();
+        stub(EntraIdGraphConfigLoader.ENTRAID_SKIP_DISABLED_USERS, "false");
+        EntraIdGraphConfig result = new EntraIdGraphConfigLoader(config).load();
+        Assertions.assertFalse(result.isSkipDisabledUsers());
+    }
 }

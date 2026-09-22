@@ -43,8 +43,8 @@ abstract class OAuthTokenProvider implements TokenProvider {
     private String scope;
     private String clientId;
 
-    private String  cachedToken;
-    private Instant cachedTokenExpiry;
+    private volatile String  cachedToken;
+    private volatile Instant cachedTokenExpiry;
 
     @Override
     public void init(EntraIdGraphConfig config, Client httpClient) throws GraphClientException {
@@ -79,7 +79,8 @@ abstract class OAuthTokenProvider implements TokenProvider {
 
     @Override
     public void destroy() {
-        // Certificate providers do not retain a mutable credential buffer here.
+        cachedToken = null;
+        cachedTokenExpiry = null;
     }
 
     private synchronized String acquireNewToken() throws GraphClientException {

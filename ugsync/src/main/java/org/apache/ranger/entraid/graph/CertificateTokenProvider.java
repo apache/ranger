@@ -61,6 +61,13 @@ final class CertificateTokenProvider extends OAuthTokenProvider {
         form.param("client_assertion", buildSignedAssertion());
     }
 
+    @Override
+    public void destroy() {
+        privateKey = null;
+        x5tThumbprint = null;
+        super.destroy();
+    }
+
     private void loadKeyMaterial(EntraIdGraphConfig config) throws GraphClientException {
         String path = config.getKeystorePath();
         char[] password = config.getKeystorePassword();

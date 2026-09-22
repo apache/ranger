@@ -100,6 +100,85 @@ public class TestXGroupService {
     }
 
     @Test
+    public void test3CreateXGroupWithOutLogin_matchesByFullNameViaOtherAttributes() {
+        VXGroup vxGroup = new VXGroup();
+        vxGroup.setName("group-new-name");
+        vxGroup.setOtherAttributes("{\"full_name\":\"guid-1\",\"sync_source\":\"EntraID\"}");
+
+        XXGroup existing = new XXGroup();
+        existing.setId(7L);
+        existing.setName("group-old-name");
+        existing.setOtherAttributes("{\"full_name\":\"guid-1\",\"sync_source\":\"EntraID\"}");
+
+        Mockito.when(daoManager.getXXGroup()).thenReturn(xXGroupDao);
+        Mockito.when(xXGroupDao.findByOtherAttributesLike(Mockito.contains("guid-1"))).thenReturn(java.util.Collections.singletonList(existing));
+        // Identity match resolves the row before any name lookup; the method still re-fetches by
+        // the new name after getDao().update() to build the return view, which a real DB would
+        // find under the now-persisted new name.
+        Mockito.when(xXGroupDao.findByGroupName("group-new-name")).thenReturn(existing);
+        Mockito.when(daoManager.getXXPortalUser()).thenReturn(xXPortalUserDao);
+        lenient().when(xXPortalUserDao.getById(1L)).thenReturn(tUser);
+        lenient().when(entityDao.update(Mockito.any(XXGroup.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        xGroupService.createXGroupWithOutLogin(vxGroup);
+
+        Mockito.verify(xXGroupDao, Mockito.never()).getAll();
+    }
+
+    @Test
+    public void test3CreateXGroupWithOutLogin_crossSourceCollision_isNotMatched() {
+        VXGroup vxGroup = new VXGroup();
+        vxGroup.setName("group-entraid-name");
+        vxGroup.setOtherAttributes("{\"full_name\":\"guid-shared\",\"sync_source\":\"EntraID\"}");
+
+        // Same GUID-shaped value, but this candidate belongs to a DIFFERENT sync source.
+        XXGroup ldapGroup = new XXGroup();
+        ldapGroup.setId(77L);
+        ldapGroup.setName("group-ldap-name");
+        ldapGroup.setOtherAttributes("{\"full_name\":\"guid-shared\",\"sync_source\":\"LDAP\"}");
+
+        XXGroup created = new XXGroup();
+        created.setId(88L);
+        created.setName("group-entraid-name");
+
+        Mockito.when(daoManager.getXXGroup()).thenReturn(xXGroupDao);
+        Mockito.when(xXGroupDao.findByOtherAttributesLike(Mockito.contains("guid-shared"))).thenReturn(java.util.Collections.singletonList(ldapGroup));
+        Mockito.when(xXGroupDao.findByGroupName("group-entraid-name")).thenReturn(null, created);
+        Mockito.when(daoManager.getXXPortalUser()).thenReturn(xXPortalUserDao);
+        lenient().when(xXPortalUserDao.getById(1L)).thenReturn(tUser);
+        lenient().when(entityDao.create(Mockito.any(XXGroup.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        xGroupService.createXGroupWithOutLogin(vxGroup);
+
+        Mockito.verify(entityDao, Mockito.never()).update(Mockito.any(XXGroup.class));
+        Mockito.verify(entityDao).create(Mockito.any(XXGroup.class));
+    }
+
+    @Test
+    public void test3CreateXGroupWithOutLogin_noIdentityMatch_createsNew() {
+        VXGroup vxGroup = new VXGroup();
+        vxGroup.setName("group-new-name");
+        vxGroup.setOtherAttributes("{\"full_name\":\"guid-unmatched\",\"sync_source\":\"EntraID\"}");
+
+        XXGroup created = new XXGroup();
+        created.setId(9L);
+        created.setName("group-new-name");
+
+        Mockito.when(daoManager.getXXGroup()).thenReturn(xXGroupDao);
+        // First call misses (no such row yet); the method re-fetches by name after getDao().create()
+        // to build the return view, which a real DB would now find under the newly created row.
+        Mockito.when(xXGroupDao.findByGroupName("group-new-name")).thenReturn(null, created);
+        Mockito.when(xXGroupDao.findByOtherAttributesLike(Mockito.contains("guid-unmatched"))).thenReturn(java.util.Collections.emptyList());
+        Mockito.when(daoManager.getXXPortalUser()).thenReturn(xXPortalUserDao);
+        lenient().when(xXPortalUserDao.getById(1L)).thenReturn(tUser);
+        lenient().when(entityDao.create(Mockito.any(XXGroup.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        xGroupService.createXGroupWithOutLogin(vxGroup);
+
+        Mockito.verify(xXGroupDao, Mockito.never()).getAll();
+    }
+
+    @Test
     public void test4GetTransactionLog() {
         VXGroup vObj = createvXGroup();
         xGroupService.createTransactionLog(vObj, null, OPERATION_UPDATE_CONTEXT);

@@ -29,6 +29,7 @@ import org.apache.ranger.ugsyncutil.model.graph.GraphUser;
 import org.apache.ranger.ugsyncutil.model.graph.GroupMembershipPage;
 import org.apache.ranger.ugsyncutil.model.graph.MemberType;
 import org.apache.ranger.ugsyncutil.model.graph.MembershipMode;
+import org.glassfish.jersey.client.ClientProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -73,6 +74,7 @@ public final class EntraIdGraphClientImpl implements EntraIdGraphClient {
         }
         this.config = config;
         this.httpClient = RangerJersey2ClientBuilder.createClient(config.getConnectTimeoutMs(), config.getReadTimeoutMs());
+        this.httpClient.property(ClientProperties.FOLLOW_REDIRECTS, Boolean.FALSE);
         switch (config.getAuthMode()) {
             case CERTIFICATE:
                 this.tokenProvider = new CertificateTokenProvider();
@@ -164,24 +166,31 @@ public final class EntraIdGraphClientImpl implements EntraIdGraphClient {
 
     @Override
     public GroupMembershipPage getGroupDeltaWithMembers(String deltaLink) throws GraphClientException {
-        // Full-sync path: fetch groups AND their membership inline via $select=...,members,
-        // so we avoid one /members call per group. Membership for a single large group can be
-        // split across delta pages, so pageGroupsWithMembers merges per group id across pages.
+        return getGroupDeltaWithMembers(deltaLink, null);
+    }
+
+    @Override
+    public GroupMembershipPage getGroupDeltaWithMembers(String deltaLink, Map<String, Set<String>> priorMembersByGroupId) throws GraphClientException {
+        // Fetch groups AND membership inline via $select=...,members. Membership for a large
+        // group can split across delta pages; pageGroupsWithMembers merges per group id.
+        // Full pull (null prior): accumulate members@delta from an empty set.
+        // Incremental (non-null prior): seed each group from prior, then apply members@delta.
         String baseUrl = buildGroupDeltaUrlWithMembers();
+        Map<String, Set<String>> prior = (priorMembersByGroupId == null) ? Collections.emptyMap() : priorMembersByGroupId;
         try {
-            return pageGroupsWithMembers((deltaLink != null) ? deltaLink : baseUrl, false);
+            return pageGroupsWithMembers((deltaLink != null) ? deltaLink : baseUrl, false, prior);
         } catch (DeltaResyncRequiredException e) {
             if (deltaLink == null) {
                 throw e;
             }
             LOG.warn("Group(+members) delta link expired; restarting with a full group sync. Cause: {}", e.getMessage());
-            return pageGroupsWithMembers(baseUrl, true);
+            return pageGroupsWithMembers(baseUrl, true, Collections.emptyMap());
         }
     }
 
-    private GroupMembershipPage pageGroupsWithMembers(String startUrl, boolean resynced) throws GraphClientException {
+    private GroupMembershipPage pageGroupsWithMembers(String startUrl, boolean resynced, Map<String, Set<String>> priorMembersByGroupId) throws GraphClientException {
         // Dedup group objects across page splits (first occurrence defines attributes) and
-        // accumulate each group's user-member ids across all pages.
+        // merge each group's user-member ids across all pages (seeded from prior when present).
         Map<String, GraphGroup> groupsById = new LinkedHashMap<>();
         Map<String, Boolean> removedById = new LinkedHashMap<>();
         Map<String, Set<String>> membersById = new HashMap<>();
@@ -194,11 +203,27 @@ public final class EntraIdGraphClientImpl implements EntraIdGraphClient {
                 if (id == null || id.isEmpty()) {
                     continue;
                 }
-                // First occurrence defines the group's attributes and removed flag.
-                groupsById.putIfAbsent(id, mapGroup(node));
-                removedById.putIfAbsent(id, node.has(ODATA_REMOVED));
-                // Accumulate this page's chunk of members for the group.
-                Set<String> members = membersById.computeIfAbsent(id, k -> new LinkedHashSet<>());
+                // Merge attrs across pages: a members-only continuation must not freeze a
+                // blank displayName from the first sighting (putIfAbsent alone would).
+                GraphGroup mapped = mapGroup(node);
+                GraphGroup existing = groupsById.putIfAbsent(id, mapped);
+                if (existing != null) {
+                    mergeMissingGroupAttributes(existing, mapped);
+                }
+                if (node.has(ODATA_REMOVED)) {
+                    removedById.put(id, Boolean.TRUE);
+                } else {
+                    removedById.putIfAbsent(id, Boolean.FALSE);
+                }
+                // Seed from prior membership on first sight of this group in this enumeration.
+                Set<String> members = membersById.computeIfAbsent(id, k -> {
+                    Set<String> seed = priorMembersByGroupId.get(k);
+                    return (seed == null) ? new LinkedHashSet<>() : new LinkedHashSet<>(seed);
+                });
+                if (node.has(ODATA_REMOVED)) {
+                    members.clear();
+                    continue;
+                }
                 JsonNode inline = node.get(MEMBERS_DELTA);
                 if (inline != null && inline.isArray()) {
                     for (JsonNode m : inline) {
@@ -207,7 +232,7 @@ public final class EntraIdGraphClientImpl implements EntraIdGraphClient {
                             continue;
                         }
                         if (m.has(ODATA_REMOVED)) {
-                            members.remove(memberId); // defensive; rare on a full pull
+                            members.remove(memberId);
                         } else if (isUserMember(m)) {
                             members.add(memberId); // users only (DIRECT mode)
                         }
@@ -234,7 +259,30 @@ public final class EntraIdGraphClientImpl implements EntraIdGraphClient {
         String type = textOrNull(memberNode, "@odata.type");
         // Inline members@delta carries @odata.type (unlike the type-cast /members segment).
         // Absent type is treated as non-user to avoid mis-adding directory objects.
-        return type != null && type.toLowerCase().endsWith("user");
+        // Exact match only — a suffix check would also accept unrelated types ending in "user".
+        return type != null && "#microsoft.graph.user".equalsIgnoreCase(type);
+    }
+
+    /** Fill blank core attrs / missing additional attrs on target from a later page's mapping. */
+    private static void mergeMissingGroupAttributes(GraphGroup target, GraphGroup incoming) {
+        if (incoming == null) {
+            return;
+        }
+        if (isBlank(target.getDisplayName()) && !isBlank(incoming.getDisplayName())) {
+            target.setDisplayName(incoming.getDisplayName());
+        }
+        if (isBlank(target.getMailNickname()) && !isBlank(incoming.getMailNickname())) {
+            target.setMailNickname(incoming.getMailNickname());
+        }
+        for (Map.Entry<String, String> e : incoming.getAdditionalAttributes().entrySet()) {
+            if (e.getKey() != null && !target.getAdditionalAttributes().containsKey(e.getKey())) {
+                target.putAdditionalAttribute(e.getKey(), e.getValue());
+            }
+        }
+    }
+
+    private static boolean isBlank(String s) {
+        return s == null || s.isEmpty();
     }
 
     private String buildGroupDeltaUrlWithMembers() {
@@ -310,12 +358,8 @@ public final class EntraIdGraphClientImpl implements EntraIdGraphClient {
         // NOTE: Microsoft Graph does not support attribute-based $filter on the /delta
         // endpoints -- the only accepted $filter is "id eq {guid}" (max 50 ids). Sending
         // any other $filter to /users/delta or /groups/delta returns 400 Request_Unsupported
-        // Query. Attribute-based scoping must therefore be applied client-side; it is not
-        // attempted in this phase (see proposal: group scoping is a follow-up, implemented
-        // client-side following the Microsoft Entra provisioning pattern of delta + post-filter).
-        /*if (config.getGroupFilter() != null && !config.getGroupFilter().isEmpty() && "groups".equals(entity)) {
-            appendAmp(query).append("$filter=").append(encode(config.getGroupFilter()));
-        }*/
+        // Query. config.getGroupFilter() is therefore NOT applied here; any group-scoping
+        // support would need to be a client-side post-filter instead.
         appendAmp(query).append("$top=").append(config.getPageSize());
         return sb.append("?").append(query).toString();
     }
@@ -349,13 +393,29 @@ public final class EntraIdGraphClientImpl implements EntraIdGraphClient {
         }
         String targetHost = target.getHost();
         String baseHost = base.getHost();
-        if (targetHost == null || !targetHost.equalsIgnoreCase(baseHost) || !schemeEquals(base, target) || base.getPort() != target.getPort()) {
+        if (targetHost == null || !targetHost.equalsIgnoreCase(baseHost) || !schemeEquals(base, target) || effectivePort(base) != effectivePort(target)) {
             throw new GraphClientException("Refusing to follow URL outside the configured Graph host (" + baseHost + "): " + url);
         }
     }
 
     private static boolean schemeEquals(URI a, URI b) {
         return a.getScheme() != null && a.getScheme().equalsIgnoreCase(b.getScheme());
+    }
+
+    /** Treat omitted default ports (-1) as 80/443 so https://host and https://host:443 match. */
+    private static int effectivePort(URI uri) {
+        int port = uri.getPort();
+        if (port != -1) {
+            return port;
+        }
+        String scheme = uri.getScheme();
+        if (scheme != null && scheme.equalsIgnoreCase("https")) {
+            return 443;
+        }
+        if (scheme != null && scheme.equalsIgnoreCase("http")) {
+            return 80;
+        }
+        return -1;
     }
 
     private JsonNode executeGet(String url) throws GraphClientException {

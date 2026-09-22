@@ -27,6 +27,8 @@ import org.apache.ranger.ugsyncutil.model.graph.MembershipMode;
 
 import java.io.Closeable;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 public interface EntraIdGraphClient extends Closeable {
     void init(EntraIdGraphConfig config) throws GraphClientException;
@@ -36,6 +38,8 @@ public interface EntraIdGraphClient extends Closeable {
     DeltaPage<GraphGroup> getGroupDelta(String deltaLink) throws GraphClientException;
 
     GroupMembershipPage getGroupDeltaWithMembers(String deltaLink) throws GraphClientException;
+
+    GroupMembershipPage getGroupDeltaWithMembers(String deltaLink, Map<String, Set<String>> priorMembersByGroupId) throws GraphClientException;
 
     List<GraphMemberRef> getGroupMembers(String groupId, MembershipMode mode) throws GraphClientException;
 

@@ -125,6 +125,118 @@ class TestXUserService {
     }
 
     @Test
+    void test_createXUserWithOutLogin_matchesByFullNameViaOtherAttributes() {
+        XXUserDao       userDao = mock(XXUserDao.class);
+        XXPortalUserDao pDao    = mock(XXPortalUserDao.class);
+        when(daoManager.getXXUser()).thenReturn(userDao);
+        when(daoManager.getXXPortalUser()).thenReturn(pDao);
+        when(daoManager.getXXGroupUser()).thenReturn(mock(XXGroupUserDao.class));
+
+        XXUser existing = new XXUser();
+        existing.setId(42L);
+        existing.setName("alice_old");
+        existing.setOtherAttributes("{\"full_name\":\"guid-1\",\"sync_source\":\"EntraID\"}");
+
+        when(userDao.findByOtherAttributesLike(contains("guid-1"))).thenReturn(Collections.singletonList(existing));
+        when(pDao.findByLoginId("alice_new")).thenReturn(null);
+        when(entityDao.update(any(XXUser.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        VXUser in = new VXUser();
+        in.setName("alice_new");
+        in.setOtherAttributes("{\"full_name\":\"guid-1\",\"sync_source\":\"EntraID\"}");
+
+        VXUser out = svc.createXUserWithOutLogin(in);
+
+        assertNotNull(out);
+        org.mockito.Mockito.verify(userDao, org.mockito.Mockito.never()).getAll();
+    }
+
+    @Test
+    void test_createXUserWithOutLogin_matchesByCloudIdWhenFullNameMisses() {
+        XXUserDao       userDao = mock(XXUserDao.class);
+        XXPortalUserDao pDao    = mock(XXPortalUserDao.class);
+        when(daoManager.getXXUser()).thenReturn(userDao);
+        when(daoManager.getXXPortalUser()).thenReturn(pDao);
+        when(daoManager.getXXGroupUser()).thenReturn(mock(XXGroupUserDao.class));
+
+        XXUser existing = new XXUser();
+        existing.setId(43L);
+        existing.setName("bob_old");
+        existing.setOtherAttributes("{\"full_name\":\"guid-2\",\"cloud_id\":\"cloud-2\",\"sync_source\":\"EntraID\"}");
+
+        // full_name search finds nothing; cloud_id search finds the existing user.
+        when(userDao.findByOtherAttributesLike(contains("guid-2-new"))).thenReturn(Collections.emptyList());
+        when(userDao.findByOtherAttributesLike(contains("cloud-2"))).thenReturn(Collections.singletonList(existing));
+        when(pDao.findByLoginId("bob_new")).thenReturn(null);
+        when(entityDao.update(any(XXUser.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        VXUser in = new VXUser();
+        in.setName("bob_new");
+        in.setOtherAttributes("{\"full_name\":\"guid-2-new\",\"cloud_id\":\"cloud-2\",\"sync_source\":\"EntraID\"}");
+
+        VXUser out = svc.createXUserWithOutLogin(in);
+
+        assertNotNull(out);
+        org.mockito.Mockito.verify(userDao, org.mockito.Mockito.never()).getAll();
+    }
+
+    @Test
+    void test_createXUserWithOutLogin_crossSourceCollision_isNotMatched() {
+        XXUserDao       userDao = mock(XXUserDao.class);
+        XXPortalUserDao pDao    = mock(XXPortalUserDao.class);
+        when(daoManager.getXXUser()).thenReturn(userDao);
+        when(daoManager.getXXPortalUser()).thenReturn(pDao);
+        when(daoManager.getXXGroupUser()).thenReturn(mock(XXGroupUserDao.class));
+
+        // Same GUID-shaped value, but this candidate belongs to a DIFFERENT sync source (e.g. an
+        // LDAP-synced user that happens to carry the same objectGUID as cloud_id).
+        XXUser ldapUser = new XXUser();
+        ldapUser.setId(99L);
+        ldapUser.setName("dave_ldap");
+        ldapUser.setOtherAttributes("{\"full_name\":\"guid-shared\",\"sync_source\":\"LDAP\"}");
+
+        when(userDao.findByOtherAttributesLike(contains("guid-shared"))).thenReturn(Collections.singletonList(ldapUser));
+        when(userDao.findByUserName("dave_entraid")).thenReturn(null);
+        when(pDao.findByLoginId("dave_entraid")).thenReturn(null);
+        when(pDao.getById(anyLong())).thenReturn(null);
+        when(entityDao.create(any(XXUser.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        VXUser in = new VXUser();
+        in.setName("dave_entraid");
+        in.setOtherAttributes("{\"full_name\":\"guid-shared\",\"sync_source\":\"EntraID\"}");
+
+        VXUser out = svc.createXUserWithOutLogin(in);
+
+        assertNotNull(out);
+        org.mockito.Mockito.verify(entityDao, org.mockito.Mockito.never()).update(any(XXUser.class));
+        org.mockito.Mockito.verify(entityDao).create(any(XXUser.class));
+    }
+
+    @Test
+    void test_createXUserWithOutLogin_noIdentityMatch_createsNew() {
+        XXUserDao       userDao = mock(XXUserDao.class);
+        XXPortalUserDao pDao    = mock(XXPortalUserDao.class);
+        when(daoManager.getXXUser()).thenReturn(userDao);
+        when(daoManager.getXXPortalUser()).thenReturn(pDao);
+        when(daoManager.getXXGroupUser()).thenReturn(mock(XXGroupUserDao.class));
+        when(userDao.findByUserName("carol")).thenReturn(null);
+        when(userDao.findByOtherAttributesLike(anyString())).thenReturn(Collections.emptyList());
+        when(pDao.findByLoginId("carol")).thenReturn(null);
+        when(pDao.getById(anyLong())).thenReturn(null);
+        when(entityDao.create(any(XXUser.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        VXUser in = new VXUser();
+        in.setName("carol");
+        in.setOtherAttributes("{\"full_name\":\"guid-unmatched\",\"sync_source\":\"EntraID\"}");
+
+        VXUser out = svc.createXUserWithOutLogin(in);
+
+        assertNotNull(out);
+        assertEquals("carol", out.getName());
+        org.mockito.Mockito.verify(userDao, org.mockito.Mockito.never()).getAll();
+    }
+
+    @Test
     void test_readResourceWithOutLogin_notFound_throws() {
         when(entityDao.getById(99L)).thenReturn(null);
         when(restErrorUtil.createRESTException(

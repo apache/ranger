@@ -34,6 +34,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.extension.Extension;
+import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import javax.ws.rs.core.Cookie;
@@ -129,16 +130,18 @@ public class TestPolicyMgrUserGroupBuilder {
     public void testD_computeGroupUsersDelta_updatesDeltaMap() throws Exception {
         PolicyMgrUserGroupBuilder builder = new PolicyMgrUserGroupBuilder();
 
+        // groupNameMap/userNameMap are keyed lowercased (case-insensitive GUID/DN lookup);
+        // see the comment in computeGroupDelta()/computeUserDelta().
         Field groupNameMap = PolicyMgrUserGroupBuilder.class.getDeclaredField("groupNameMap");
         groupNameMap.setAccessible(true);
         Map<String, String> gnm = new HashMap<>();
-        gnm.put("cn=G1", "Group1");
+        gnm.put("cn=g1", "Group1");
         groupNameMap.set(builder, gnm);
 
         Field userNameMap = PolicyMgrUserGroupBuilder.class.getDeclaredField("userNameMap");
         userNameMap.setAccessible(true);
         Map<String, String> unm = new HashMap<>();
-        unm.put("uid=U1", "user1");
+        unm.put("uid=u1", "user1");
         userNameMap.set(builder, unm);
 
         Field groupUsersCache = PolicyMgrUserGroupBuilder.class.getDeclaredField("groupUsersCache");
@@ -1071,7 +1074,7 @@ public class TestPolicyMgrUserGroupBuilder {
         // Cause inner build* calls to fail in doAs, so lambda returns false
         setPrivate(builder, "ldapUgSyncClient", new FakeRest());
 
-        try (org.mockito.MockedStatic<org.apache.hadoop.security.SecureClientLogin> mocked = org.mockito.Mockito.mockStatic(org.apache.hadoop.security.SecureClientLogin.class)) {
+        try (org.mockito.MockedStatic<org.apache.hadoop.security.SecureClientLogin> mocked = Mockito.mockStatic(org.apache.hadoop.security.SecureClientLogin.class)) {
             mocked.when(() -> org.apache.hadoop.security.SecureClientLogin.isKerberosCredentialExists("svc/_HOST@EXAMPLE.COM", "/tmp/svc.keytab")).thenReturn(true);
             mocked.when(() -> org.apache.hadoop.security.SecureClientLogin.loginUserFromKeytab("svc/_HOST@EXAMPLE.COM", "/tmp/svc.keytab", "DEFAULT")).thenReturn(new javax.security.auth.Subject());
 
@@ -1241,6 +1244,94 @@ public class TestPolicyMgrUserGroupBuilder {
         assertEquals("1", ucacheAfter.get("alice").getIsVisible(), "startup cycle must not mark deletes");
     }
 
+    @Test
+    public void testMergeIdsFromAdmin_targetedLookup_fillsMissingGroupId() throws Exception {
+        PolicyMgrUserGroupBuilder builder = new PolicyMgrUserGroupBuilder();
+
+        setPrivate(builder, "userCache", new HashMap<String, XUserInfo>());
+        setPrivate(builder, "userNameMap", new HashMap<String, String>());
+        setPrivate(builder, "groupNameMap", new HashMap<String, String>());
+
+        Map<String, XGroupInfo> gcache = new HashMap<>();
+        gcache.put("target_group", cachedGroup("target_group", "guid-1", "EntraID", null, "1"));
+        setPrivate(builder, "groupCache", gcache);
+
+        // Only one missing id (well below the targeted-lookup threshold): the fake REST client
+        // asserts a "name" filter is present (the targeted path), and returns just that one row.
+        setPrivate(builder, "ldapUgSyncClient", new ScriptedRest(params -> {
+            assertEquals("target_group", params.get("name"), "targeted lookup must filter by the missing name");
+            return "{\"totalCount\":1,\"vXGroups\":[{\"id\":\"101\",\"name\":\"target_group\"}]}";
+        }));
+
+        Method m = PolicyMgrUserGroupBuilder.class.getDeclaredMethod("refreshMissingRangerIds");
+        m.setAccessible(true);
+        m.invoke(builder);
+
+        assertEquals("101", gcache.get("target_group").getId(), "targeted lookup must fill the missing id");
+    }
+
+    @Test
+    public void testMergeIdsFromAdmin_targetedLookup_picksExactMatchOverPartial() throws Exception {
+        PolicyMgrUserGroupBuilder builder = new PolicyMgrUserGroupBuilder();
+
+        setPrivate(builder, "groupCache", new HashMap<String, XGroupInfo>());
+        setPrivate(builder, "groupNameMap", new HashMap<String, String>());
+        setPrivate(builder, "userNameMap", new HashMap<String, String>());
+
+        Map<String, XUserInfo> ucache = new HashMap<>();
+        ucache.put("user5", cachedUser("user5", "guid-2", "EntraID", null, "1"));
+        setPrivate(builder, "userCache", ucache);
+
+        // The "name" search is a partial match, so Admin can legitimately return "user50" etc.
+        // alongside the real "user5" -- only the exact (case-insensitive) match must be trusted.
+        setPrivate(builder, "ldapUgSyncClient", new ScriptedRest(params ->
+                "{\"totalCount\":2,\"vXUsers\":[" +
+                        "{\"id\":\"999\",\"name\":\"user50\"}," +
+                        "{\"id\":\"202\",\"name\":\"user5\"}]}"));
+
+        Method m = PolicyMgrUserGroupBuilder.class.getDeclaredMethod("refreshMissingRangerIds");
+        m.setAccessible(true);
+        m.invoke(builder);
+
+        assertEquals("202", ucache.get("user5").getId(), "must fill the id from the exact-name match, not the partial-match false positive");
+    }
+
+    @Test
+    public void testMergeIdsFromAdmin_fullPull_usedAtOrAboveThreshold() throws Exception {
+        PolicyMgrUserGroupBuilder builder = new PolicyMgrUserGroupBuilder();
+
+        setPrivate(builder, "userCache", new HashMap<String, XUserInfo>());
+        setPrivate(builder, "userNameMap", new HashMap<String, String>());
+        setPrivate(builder, "groupNameMap", new HashMap<String, String>());
+
+        // 11 missing ids: one over MERGE_IDS_TARGETED_LOOKUP_THRESHOLD (10), so this must fall
+        // back to the paginated full pull (no "name" filter) rather than 11 targeted calls.
+        Map<String, XGroupInfo> gcache = new HashMap<>();
+        StringBuilder rows = new StringBuilder();
+        for (int i = 0; i < 11; i++) {
+            String name = "bulk_group_" + i;
+            gcache.put(name, cachedGroup(name, "guid-bulk-" + i, "EntraID", null, "1"));
+            if (i > 0) {
+                rows.append(',');
+            }
+            rows.append("{\"id\":\"").append(500 + i).append("\",\"name\":\"").append(name).append("\"}");
+        }
+        setPrivate(builder, "groupCache", gcache);
+
+        setPrivate(builder, "ldapUgSyncClient", new ScriptedRest(params -> {
+            assertNull(params.get("name"), "the full-pull path must not filter by name");
+            return "{\"totalCount\":11,\"vXGroups\":[" + rows + "]}";
+        }));
+
+        Method m = PolicyMgrUserGroupBuilder.class.getDeclaredMethod("refreshMissingRangerIds");
+        m.setAccessible(true);
+        m.invoke(builder);
+
+        for (int i = 0; i < 11; i++) {
+            assertEquals(String.valueOf(500 + i), gcache.get("bulk_group_" + i).getId());
+        }
+    }
+
     // Helpers
     @SuppressWarnings("unchecked")
     private static <T> T getPrivate(Object target, String field, Class<T> type) throws Exception {
@@ -1270,6 +1361,41 @@ public class TestPolicyMgrUserGroupBuilder {
         @Override
         public Response get(String relativeUrl, Map<String, String> params, Cookie sessionId) {
             return null;
+        }
+
+        @Override
+        public Response post(String relativeUrl, Map<String, String> params, Object obj) {
+            return null;
+        }
+
+        @Override
+        public Response post(String relativeUrl, Map<String, String> params, Object obj, Cookie sessionId) {
+            return null;
+        }
+    }
+
+    private static class ScriptedRest extends RangerUgSyncRESTClient {
+        private final java.util.function.Function<Map<String, String>, String> responder;
+
+        ScriptedRest(java.util.function.Function<Map<String, String>, String> responder) {
+            super("http://localhost", "", "", "", "", "", "", "", "", "", "", "");
+            this.responder = responder;
+        }
+
+        @Override
+        public Response get(String relativeUrl, Map<String, String> params) {
+            String body = responder.apply(params);
+            if (body == null) {
+                return null;
+            }
+            Response mockResp = Mockito.mock(Response.class);
+            Mockito.when(mockResp.readEntity(String.class)).thenReturn(body);
+            return mockResp;
+        }
+
+        @Override
+        public Response get(String relativeUrl, Map<String, String> params, Cookie sessionId) {
+            return get(relativeUrl, params);
         }
 
         @Override

@@ -55,6 +55,7 @@ public final class EntraIdGraphConfigLoader {
     static final String ENTRAID_GROUP_SELECT_ATTRS = "ranger.usersync.entraid.group.select.attributes";
     static final String ENTRAID_GROUP_FILTER = "ranger.usersync.entraid.group.filter";
     static final String ENTRAID_PAGE_SIZE = "ranger.usersync.entraid.page.size";
+    static final String ENTRAID_SKIP_DISABLED_USERS = "ranger.usersync.entraid.user.skip.disabled";
 
     static final String ENTRAID_MAX_RETRIES = "ranger.usersync.entraid.max.retries";
     static final String ENTRAID_RETRY_BASE_BACKOFF = "ranger.usersync.entraid.retry.base.backoff.ms";
@@ -77,7 +78,8 @@ public final class EntraIdGraphConfigLoader {
                 .membershipMode(parseMembershipMode(trimmed(ENTRAID_MEMBERSHIP_MODE)))
                 .userSelectAttrs(parseCsv(getProperty(ENTRAID_USER_SELECT_ATTRS)))
                 .groupSelectAttrs(parseCsv(getProperty(ENTRAID_GROUP_SELECT_ATTRS)))
-                .groupFilter(trimmed(ENTRAID_GROUP_FILTER));
+                .groupFilter(trimmed(ENTRAID_GROUP_FILTER))
+                .skipDisabledUsers(parseBoolean(getProperty(ENTRAID_SKIP_DISABLED_USERS)));
 
         applyIfPresent(ENTRAID_AUTHORITY_HOST, builder::authorityHost);
         applyIfPresent(ENTRAID_GRAPH_BASE_URL, builder::graphBaseUrl);
@@ -147,6 +149,10 @@ public final class EntraIdGraphConfigLoader {
         } catch (IllegalArgumentException e) {
             throw new GraphClientException(ENTRAID_MEMBERSHIP_MODE + " must be DIRECT or TRANSITIVE, got: " + value);
         }
+    }
+
+    private static boolean parseBoolean(String value) {
+        return StringUtils.isNotBlank(value) && Boolean.parseBoolean(value.trim());
     }
 
     private static Set<String> parseCsv(String value) {

@@ -71,6 +71,13 @@ public class XXUserDao extends BaseDao<XXUser> {
         return null;
     }
 
+    public List<XXUser> findByOtherAttributesLike(String pattern) {
+        if (daoManager.getStringUtil().isEmpty(pattern)) {
+            return Collections.emptyList();
+        }
+        return getEntityManager().createNamedQuery("XXUser.findByOtherAttributesLike", XXUser.class).setParameter("pattern", pattern).getResultList();
+    }
+
     public XXUser findByPortalUserId(Long portalUserId) {
         if (portalUserId == null) {
             return null;

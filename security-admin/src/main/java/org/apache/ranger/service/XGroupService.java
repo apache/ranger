@@ -19,12 +19,15 @@
 
 package org.apache.ranger.service;
 
+import org.apache.commons.lang3.StringUtils;
+import org.apache.ranger.authorization.utils.JsonUtils;
 import org.apache.ranger.common.MessageEnums;
 import org.apache.ranger.common.PropertiesUtil;
 import org.apache.ranger.common.SearchField;
 import org.apache.ranger.common.SortField;
 import org.apache.ranger.entity.XXGroup;
 import org.apache.ranger.entity.XXPortalUser;
+import org.apache.ranger.ugsyncutil.util.UgsyncCommonConstants;
 import org.apache.ranger.view.VXGroup;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
@@ -62,9 +65,23 @@ public class XGroupService extends XGroupServiceBase<XXGroup, VXGroup> {
     }
 
     public VXGroup createXGroupWithOutLogin(VXGroup vxGroup) {
-        XXGroup xxGroup     = daoManager.getXXGroup().findByGroupName(vxGroup.getName());
+        // Prefer Ranger id when present so a displayName rename updates in place
+        // instead of creating a duplicate group keyed by the new name. Identity
+        // (otherAttributes full_name/cloud_id) is checked before name so that a rename landing
+        // on an unrelated existing name can't hijack that row; name is only a fallback for
+        // callers that never set otherAttributes at all.
+        XXGroup xxGroup     = null;
         boolean groupExists = true;
 
+        if (vxGroup.getId() != null) {
+            xxGroup = getDao().getById(vxGroup.getId());
+        }
+        if (xxGroup == null) {
+            xxGroup = findGroupByOtherAttributeIdentity(vxGroup.getOtherAttributes());
+        }
+        if (xxGroup == null) {
+            xxGroup = daoManager.getXXGroup().findByGroupName(vxGroup.getName());
+        }
         if (xxGroup == null) {
             xxGroup     = new XXGroup();
             groupExists = false;
@@ -171,5 +188,33 @@ public class XGroupService extends XGroupServiceBase<XXGroup, VXGroup> {
     @Override
     protected VXGroup mapEntityToViewBean(VXGroup vObj, XXGroup mObj) {
         return super.mapEntityToViewBean(vObj, mObj);
+    }
+
+    private XXGroup findGroupByOtherAttributeIdentity(String otherAttributes) {
+        if (StringUtils.isBlank(otherAttributes)) {
+            return null;
+        }
+        Map<String, String> incoming = JsonUtils.jsonToMapStringString(otherAttributes);
+        if (incoming == null || incoming.isEmpty()) {
+            return null;
+        }
+
+        String fullName   = incoming.get("full_name");
+        String cloudId    = incoming.get("cloud_id");
+        String syncSource = incoming.get(UgsyncCommonConstants.SYNC_SOURCE);
+        if (StringUtils.isBlank(fullName) && StringUtils.isBlank(cloudId)) {
+            return null;
+        }
+        XXGroup match = null;
+        if (StringUtils.isNotBlank(fullName)) {
+            List<XXGroup> candidates = daoManager.getXXGroup().findByOtherAttributesLike(OtherAttributesMatcher.likePattern(fullName));
+            match = OtherAttributesMatcher.findExactMatch(candidates, XXGroup::getOtherAttributes, "full_name", fullName, syncSource);
+        }
+        if (match == null && StringUtils.isNotBlank(cloudId)) {
+            List<XXGroup> candidates = daoManager.getXXGroup().findByOtherAttributesLike(OtherAttributesMatcher.likePattern(cloudId));
+
+            match = OtherAttributesMatcher.findExactMatch(candidates, XXGroup::getOtherAttributes, "cloud_id", cloudId, syncSource);
+        }
+        return match;
     }
 }

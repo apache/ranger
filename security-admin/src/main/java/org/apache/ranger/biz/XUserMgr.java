@@ -3508,6 +3508,7 @@ public class XUserMgr extends XUserMgrBase {
 
         vXPortalUser.setStatus(RangerCommonEnums.STATUS_ENABLED);
         vXPortalUser.setUserSource(RangerCommonEnums.USER_EXTERNAL);
+        vXPortalUser.setSyncSource(vXUser.getSyncSource());
 
         String saltEncodedpasswd = userMgr.encrypt(username, vXUser.getPassword());
 

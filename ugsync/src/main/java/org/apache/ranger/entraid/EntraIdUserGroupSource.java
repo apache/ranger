@@ -63,6 +63,12 @@ public class EntraIdUserGroupSource implements UserGroupSource {
     private String userDeltaLink;
     private String groupDeltaLink;
     private boolean firstSyncDone;
+    // Membership cache (group GUID -> user GUIDs). DIRECT: seeds incremental members@delta merges.
+    // TRANSITIVE: tracks known groups so every cycle can refresh /transitiveMembers for all of them.
+    private final Map<String, Set<String>> groupMembersCache = new HashMap<>();
+    // Group attribute cache (group GUID -> sink attrs) so TRANSITIVE membership-only refreshes
+    // can still upsert groups that did not appear in this cycle's group delta page.
+    private final Map<String, Map<String, String>> groupAttrsCache = new HashMap<>();
 
     // Delete-cycle cadence, mirroring LdapUserGroupBuilder / UnixUserGroupBuilder.
     private int deleteCycles;
@@ -128,19 +134,18 @@ public class EntraIdUserGroupSource implements UserGroupSource {
 
         // 2. Pull users and groups from Graph.
         DeltaPage<GraphUser> userPage = orEmpty(graphClient.getUserDelta(userToken));
-        // Group pull: on a full sync in DIRECT membership mode, fetch groups WITH inline
-        // membership in one delta enumeration (avoids one /members call per group -- the
-        // first-sync bottleneck). The inline path is valid ONLY for DIRECT mode: Graph's
-        // $select=members returns direct members only, with no transitive option on the
-        // delta endpoint. For TRANSITIVE mode we must use the per-group /transitiveMembers
-        // path even on full sync, otherwise a full sync would return direct members while
-        // incremental cycles return transitive members -- inconsistent membership for the
-        // same group. inlineMembers is non-null only when the inline path is used.
-        boolean useInlineMembers = fullSync && config.getMembershipMode() == MembershipMode.DIRECT;
+        // Group pull: in DIRECT mode, always use groups/delta with $select=...,members so
+        // membership-only changes appear under members@delta. Full sync seeds from an empty
+        // set; incremental sync passes groupMembersCache so the client merges adds/removes.
+        // TRANSITIVE mode cannot use inline members (Graph returns direct members only), so it
+        // uses getGroupDelta for group objects and refreshes /transitiveMembers for every
+        // known group each cycle (not only groups on this delta page).
+        boolean useInlineMembers = config.getMembershipMode() == MembershipMode.DIRECT;
         DeltaPage<GraphGroup> groupPage;
         GroupMembershipPage inlineMembers = null;
         if (useInlineMembers) {
-            inlineMembers = orEmpty(graphClient.getGroupDeltaWithMembers(groupToken));
+            Map<String, Set<String>> priorMembers = fullSync ? null : groupMembersCache;
+            inlineMembers = orEmpty(graphClient.getGroupDeltaWithMembers(groupToken, priorMembers));
             groupPage = new DeltaPage<>(inlineMembers.getGroups(), inlineMembers.getDeltaLink(), inlineMembers.isResynced());
         } else {
             groupPage = orEmpty(graphClient.getGroupDelta(groupToken));
@@ -167,7 +172,7 @@ public class EntraIdUserGroupSource implements UserGroupSource {
                 // the snapshot-diff. Use inline membership only in DIRECT mode (see above);
                 // in TRANSITIVE mode fetch groups only and resolve members per-group below.
                 if (config.getMembershipMode() == MembershipMode.DIRECT) {
-                    inlineMembers = graphClient.getGroupDeltaWithMembers(null);
+                    inlineMembers = graphClient.getGroupDeltaWithMembers(null, null);
                     groupPage = new DeltaPage<>(inlineMembers.getGroups(), inlineMembers.getDeltaLink(), inlineMembers.isResynced());
                 } else {
                     groupPage = orEmpty(graphClient.getGroupDelta(null));
@@ -199,6 +204,14 @@ public class EntraIdUserGroupSource implements UserGroupSource {
             if (StringUtils.isBlank(userName)) {
                 continue;
             }
+            if (config.isSkipDisabledUsers() && !user.isAccountEnabled()) {
+                // Operator opt-in: treat a disabled account as absent, the same way an LDAP
+                // search filter can silently exclude one -- not a delete/hide signal, just an
+                // exclusion. The existing reconcile-sweep snapshot-diff picks up the resulting
+                // absence and hides it; re-enabling reverses that the same way any other
+                // reappearance would (no auto-restore, consistent with every other source).
+                continue;
+            }
             sourceUsers.put(user.getId(), buildUserAttributes(user, userName));
             usersSynced++;
         }
@@ -225,33 +238,23 @@ public class EntraIdUserGroupSource implements UserGroupSource {
                 continue;
             }
             sourceGroups.put(group.getId(), buildGroupAttributes(group, groupName));
-            // Membership: when the inline path was used (DIRECT full sync), read the member
-            // set already merged across pages by the client (no per-group call). Otherwise
-            // (incremental cycle, or TRANSITIVE mode) fetch the complete current member set
-            // for this group. Either way the sink receives the full member set to diff.
-            Set<String> memberGuids = null;
+            // Membership: DIRECT inline path returns the full member set (full pull or
+            // prior-cache + members@delta merge). TRANSITIVE defers member fetch to the
+            // known-group refresh below so delta-absent groups are covered too.
             if (inlineMembers != null) {
-                memberGuids = inlineMembers.getMembers(group.getId());
-            } else {
-                try {
-                    memberGuids = fetchMemberGuids(group.getId(), mode);
-                } catch (GraphClientException e) {
-                    // A single group that 404s mid-sync (e.g. deleted in Entra between the
-                    // group-list pull and this member fetch) must not abort the whole cycle.
-                    // Skip its membership this cycle and reconcile next cycle. Systemic
-                    // failures (auth, throttling exhausted, network) carry a non-404 status
-                    // or none, and are rethrown so a broken connection still fails loudly.
-                    if (e.getHttpStatus() == 404) {
-                        LOG.warn("EntraID: skipping membership for group {} (not found during member fetch): {}", group.getId(), e.getMessage());
-                        membershipFetchSkips++;
-                        memberGuids = Collections.emptySet();
-                    } else {
-                        throw e;   // systemic failure -> fail the cycle
-                    }
-                }
+                sourceGroupUsers.put(group.getId(), inlineMembers.getMembers(group.getId()));
             }
-            sourceGroupUsers.put(group.getId(), memberGuids);
             groupsSynced++;
+        }
+        if (!useInlineMembers) {
+            // TRANSITIVE: nested membership changes often do not surface the parent on
+            // /groups/delta. On incremental cycles, re-fetch /transitiveMembers for every
+            // known group (including those absent from this page). On a full/reconcile
+            // snapshot, ONLY refresh groups in sourceGroups — never reinstate from
+            // groupAttrsCache, or a vanished group would defeat sink computeDeletes.
+            boolean reinstateFromCache = !fullSync && !reconcileSweep;
+            membershipFetchSkips += refreshTransitiveMembershipForKnownGroups(sourceGroups, sourceGroupUsers, deletedGroups.keySet(), mode, reinstateFromCache);
+            groupsSynced = sourceGroups.size();
         }
         LOG.debug("EntraID snapshot: users={}, groups={}, deletedUsers={}, deletedGroups={}, fullSync={}, reconcileSweep={}",
                 sourceUsers.size(), sourceGroups.size(), deletedUsers.size(), deletedGroups.size(), fullSync, reconcileSweep);
@@ -265,6 +268,8 @@ public class EntraIdUserGroupSource implements UserGroupSource {
             userDeltaLink = userPage.getDeltaLink();
             groupDeltaLink = groupPage.getDeltaLink();
             firstSyncDone = true;
+            updateGroupMembersCache(sourceGroupUsers, deletedGroups.keySet(), fullSync || reconcileSweep);
+            updateGroupAttrsCache(sourceGroups, deletedGroups.keySet(), fullSync || reconcileSweep);
             LOG.info("EntraID sync cycle complete: users+~{}, groups+~{}, usersDeleted~{}, groupsDeleted~{}, membershipSkips={}, fullSync={}, reconcileSweep={}",
                     sourceUsers.size(), sourceGroups.size(), deletedUsers.size(), deletedGroups.size(), membershipFetchSkips, fullSync, reconcileSweep);
         } catch (Throwable t) {
@@ -317,33 +322,33 @@ public class EntraIdUserGroupSource implements UserGroupSource {
 
     private Map<String, String> buildUserAttributes(GraphUser user, String userName) {
         Map<String, String> attrs = new HashMap<>();
-        // Contract-critical keys (read by the sink for add/update/delete reconciliation).
-        attrs.put(UgsyncCommonConstants.ORIGINAL_NAME, userName);
-        attrs.put(UgsyncCommonConstants.FULL_NAME, user.getId());     // GUID = stable identity
-        attrs.put(UgsyncCommonConstants.SYNC_SOURCE, currentSyncSource);
-        // NOTE: LDAP_URL intentionally NOT set (mirrors Unix; enables delete reconciliation).
-        // Extra attributes (stored as otherAttributes; affect modify-detection).
-        attrs.put("cloud_id", user.getId());
+        // Extra Graph attrs first; contract keys below must win (sink matches full_name/GUID).
+        attrs.putAll(user.getAdditionalAttributes());
         if (StringUtils.isNotBlank(user.getDisplayName())) {
             attrs.put("displayName", user.getDisplayName());
         }
         if (StringUtils.isNotBlank(user.getMail())) {
             attrs.put("email", user.getMail());
         }
-        attrs.putAll(user.getAdditionalAttributes());
+        attrs.put("cloud_id", user.getId());
+        // Contract-critical keys (read by the sink for add/update/delete reconciliation).
+        attrs.put(UgsyncCommonConstants.ORIGINAL_NAME, userName);
+        attrs.put(UgsyncCommonConstants.FULL_NAME, user.getId());     // GUID = stable identity
+        attrs.put(UgsyncCommonConstants.SYNC_SOURCE, currentSyncSource);
+        // NOTE: LDAP_URL intentionally NOT set (mirrors Unix; enables delete reconciliation).
         return attrs;
     }
 
     private Map<String, String> buildGroupAttributes(GraphGroup group, String groupName) {
         Map<String, String> attrs = new HashMap<>();
-        attrs.put(UgsyncCommonConstants.ORIGINAL_NAME, groupName);
-        attrs.put(UgsyncCommonConstants.FULL_NAME, group.getId());
-        attrs.put(UgsyncCommonConstants.SYNC_SOURCE, currentSyncSource);
-        attrs.put("cloud_id", group.getId());
+        attrs.putAll(group.getAdditionalAttributes());
         if (StringUtils.isNotBlank(group.getDisplayName())) {
             attrs.put("displayName", group.getDisplayName());
         }
-        attrs.putAll(group.getAdditionalAttributes());
+        attrs.put("cloud_id", group.getId());
+        attrs.put(UgsyncCommonConstants.ORIGINAL_NAME, groupName);
+        attrs.put(UgsyncCommonConstants.FULL_NAME, group.getId());
+        attrs.put(UgsyncCommonConstants.SYNC_SOURCE, currentSyncSource);
         return attrs;
     }
 
@@ -363,6 +368,74 @@ public class EntraIdUserGroupSource implements UserGroupSource {
         auditInfo.setSyncSource(currentSyncSource);
         auditInfo.setEntraIdSyncSourceInfo(sourceInfo);
         return auditInfo;
+    }
+
+    private int refreshTransitiveMembershipForKnownGroups(Map<String, Map<String, String>> sourceGroups,
+                                                          Map<String, Set<String>> sourceGroupUsers,
+                                                          Set<String> deletedGroupIds,
+                                                          MembershipMode mode,
+                                                          boolean reinstateFromCache) throws Throwable {
+        Set<String> toRefresh = new HashSet<>(sourceGroups.keySet());
+        if (reinstateFromCache) {
+            toRefresh.addAll(groupAttrsCache.keySet());
+            if (deletedGroupIds != null) {
+                toRefresh.removeAll(deletedGroupIds);
+            }
+        }
+        int skips = 0;
+        for (String groupId : toRefresh) {
+            if (!sourceGroups.containsKey(groupId)) {
+                // Only reachable when reinstateFromCache is true.
+                Map<String, String> cachedAttrs = groupAttrsCache.get(groupId);
+                if (cachedAttrs == null || cachedAttrs.isEmpty()) {
+                    continue;
+                }
+                sourceGroups.put(groupId, cachedAttrs);
+            }
+            try {
+                sourceGroupUsers.put(groupId, fetchMemberGuids(groupId, mode));
+            } catch (GraphClientException e) {
+                // A single group that 404s must not abort the whole cycle.
+                if (e.getHttpStatus() == 404) {
+                    LOG.warn("EntraID: skipping membership for group {} (not found during member fetch): {}", groupId, e.getMessage());
+                    skips++;
+                    sourceGroupUsers.put(groupId, Collections.emptySet());
+                } else {
+                    throw e;
+                }
+            }
+        }
+        return skips;
+    }
+
+    private void updateGroupMembersCache(Map<String, Set<String>> sourceGroupUsers, Set<String> deletedGroupIds, boolean replaceAll) {
+        if (replaceAll) {
+            groupMembersCache.clear();
+        }
+        for (Map.Entry<String, Set<String>> e : sourceGroupUsers.entrySet()) {
+            Set<String> members = e.getValue();
+            groupMembersCache.put(e.getKey(), (members == null) ? new HashSet<>() : new HashSet<>(members));
+        }
+        if (deletedGroupIds != null) {
+            for (String id : deletedGroupIds) {
+                groupMembersCache.remove(id);
+            }
+        }
+    }
+
+    private void updateGroupAttrsCache(Map<String, Map<String, String>> sourceGroups, Set<String> deletedGroupIds, boolean replaceAll) {
+        if (replaceAll) {
+            groupAttrsCache.clear();
+        }
+        for (Map.Entry<String, Map<String, String>> e : sourceGroups.entrySet()) {
+            Map<String, String> attrs = e.getValue();
+            groupAttrsCache.put(e.getKey(), (attrs == null) ? new HashMap<>() : new HashMap<>(attrs));
+        }
+        if (deletedGroupIds != null) {
+            for (String id : deletedGroupIds) {
+                groupAttrsCache.remove(id);
+            }
+        }
     }
 
     private static <T> DeltaPage<T> orEmpty(DeltaPage<T> page) {

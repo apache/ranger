@@ -47,5 +47,6 @@ final class ClientSecretTokenProvider extends OAuthTokenProvider {
             Arrays.fill(clientSecret, '\0');
             clientSecret = null;
         }
+        super.destroy();
     }
 }

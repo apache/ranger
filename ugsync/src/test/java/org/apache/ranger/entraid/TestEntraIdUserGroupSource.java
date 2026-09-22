@@ -69,12 +69,12 @@ public class TestEntraIdUserGroupSource {
         Mockito.when(graphConfig.getMembershipMode()).thenReturn(MembershipMode.DIRECT);
         // Default for full-sync (DIRECT) tests that don't assert on groups: an empty inline
         // members page, so the inline path returns non-null. Group-asserting tests override.
-        Mockito.lenient().when(graphClient.getGroupDeltaWithMembers(Mockito.any())).thenReturn(membersPage("gDelta"));
+        Mockito.lenient().doReturn(membersPage("gDelta")).when(graphClient).getGroupDeltaWithMembers(Mockito.any(), Mockito.any());
     }
 
     // Build a GroupMembershipPage (inline-members full-sync return) from group entries.
     @SafeVarargs
-    private GroupMembershipPage membersPage(String deltaLink, DeltaEntry<GraphGroup>... entries) {
+    private final GroupMembershipPage membersPage(String deltaLink, DeltaEntry<GraphGroup>... entries) {
         List<DeltaEntry<GraphGroup>> list = new ArrayList<>();
         Collections.addAll(list, entries);
         return new GroupMembershipPage(list, new HashMap<>(), deltaLink, false);
@@ -82,7 +82,7 @@ public class TestEntraIdUserGroupSource {
 
     // Build a GroupMembershipPage with an explicit groupId -> member-GUIDs membership map.
     @SafeVarargs
-    private GroupMembershipPage membersPage(Map<String, Set<String>> membersByGroupId, DeltaEntry<GraphGroup>... entries) {
+    private final GroupMembershipPage membersPage(Map<String, Set<String>> membersByGroupId, DeltaEntry<GraphGroup>... entries) {
         List<DeltaEntry<GraphGroup>> list = new ArrayList<>();
         Collections.addAll(list, entries);
         return new GroupMembershipPage(list, membersByGroupId, "gDelta", false);
@@ -90,7 +90,7 @@ public class TestEntraIdUserGroupSource {
 
     // A GroupMembershipPage flagged resynced (inline-path equivalent of a resynced group page).
     @SafeVarargs
-    private GroupMembershipPage resyncedGroupMembersPage(String deltaLink, DeltaEntry<GraphGroup>... entries) {
+    private final GroupMembershipPage resyncedGroupMembersPage(String deltaLink, DeltaEntry<GraphGroup>... entries) {
         List<DeltaEntry<GraphGroup>> list = new ArrayList<>();
         Collections.addAll(list, entries);
         return new GroupMembershipPage(list, new HashMap<>(), deltaLink, true);
@@ -98,7 +98,7 @@ public class TestEntraIdUserGroupSource {
 
     // A resynced DeltaPage<GraphGroup> (used when groups come via the non-inline getGroupDelta path).
     @SafeVarargs
-    private DeltaPage<GraphGroup> resyncedGroupPage(String deltaLink, DeltaEntry<GraphGroup>... entries) {
+    private final DeltaPage<GraphGroup> resyncedGroupPage(String deltaLink, DeltaEntry<GraphGroup>... entries) {
         List<DeltaEntry<GraphGroup>> list = new ArrayList<>();
         Collections.addAll(list, entries);
         return new DeltaPage<>(list, deltaLink, true);
@@ -123,21 +123,21 @@ public class TestEntraIdUserGroupSource {
     }
 
     @SafeVarargs
-    private DeltaPage<GraphUser> userPage(String deltaLink, DeltaEntry<GraphUser>... entries) {
+    private final DeltaPage<GraphUser> userPage(String deltaLink, DeltaEntry<GraphUser>... entries) {
         List<DeltaEntry<GraphUser>> list = new ArrayList<>();
         Collections.addAll(list, entries);
         return new DeltaPage<>(list, deltaLink);
     }
 
     @SafeVarargs
-    private DeltaPage<GraphUser> resyncedUserPage(String deltaLink, DeltaEntry<GraphUser>... entries) {
+    private final DeltaPage<GraphUser> resyncedUserPage(String deltaLink, DeltaEntry<GraphUser>... entries) {
         List<DeltaEntry<GraphUser>> list = new ArrayList<>();
         Collections.addAll(list, entries);
         return new DeltaPage<>(list, deltaLink, true);
     }
 
     @SafeVarargs
-    private DeltaPage<GraphGroup> groupPage(String deltaLink, DeltaEntry<GraphGroup>... entries) {
+    private final DeltaPage<GraphGroup> groupPage(String deltaLink, DeltaEntry<GraphGroup>... entries) {
         List<DeltaEntry<GraphGroup>> list = new ArrayList<>();
         Collections.addAll(list, entries);
         return new DeltaPage<>(list, deltaLink);
@@ -226,7 +226,7 @@ public class TestEntraIdUserGroupSource {
     @Test
     public void test07_group_keyedByGuid() throws Throwable {
         Mockito.when(graphClient.getUserDelta(null)).thenReturn(userPage("uDelta"));
-        Mockito.when(graphClient.getGroupDeltaWithMembers(null)).thenReturn(membersPage("gDelta", new DeltaEntry<>(group(GROUP_GUID, GROUP_NAME), false)));
+        Mockito.doReturn(membersPage("gDelta", new DeltaEntry<>(group(GROUP_GUID, GROUP_NAME), false))).when(graphClient).getGroupDeltaWithMembers(Mockito.isNull(), Mockito.any());
         EntraIdUserGroupSource source = newSource();
         source.updateSink(sink);
         Map<String, Map<String, String>> groups = captureUserAndGroupMaps()[0];
@@ -242,7 +242,7 @@ public class TestEntraIdUserGroupSource {
         Map<String, Set<String>> membership = new HashMap<>();
         membership.put(GROUP_GUID, new LinkedHashSet<>(List.of(USER_GUID)));
         Mockito.when(graphClient.getUserDelta(null)).thenReturn(userPage("uDelta", new DeltaEntry<>(user(), false)));
-        Mockito.when(graphClient.getGroupDeltaWithMembers(null)).thenReturn(membersPage(membership, new DeltaEntry<>(group(GROUP_GUID, GROUP_NAME), false)));
+        Mockito.doReturn(membersPage(membership, new DeltaEntry<>(group(GROUP_GUID, GROUP_NAME), false))).when(graphClient).getGroupDeltaWithMembers(Mockito.isNull(), Mockito.any());
         ArgumentCaptor<Map<String, Set<String>>> gusers = ArgumentCaptor.forClass(Map.class);
         EntraIdUserGroupSource source = newSource();
         source.updateSink(sink);
@@ -282,13 +282,13 @@ public class TestEntraIdUserGroupSource {
         Mockito.when(ugSyncConfig.isUserSyncDeletesEnabled()).thenReturn(true);
         Mockito.when(ugSyncConfig.getUserSyncDeletesFrequency()).thenReturn(1L);
         Mockito.when(graphClient.getUserDelta(Mockito.any())).thenReturn(userPage("uDelta"));
-        Mockito.when(graphClient.getGroupDeltaWithMembers(Mockito.any())).thenReturn(membersPage("gDelta"));
+        Mockito.doReturn(membersPage("gDelta")).when(graphClient).getGroupDeltaWithMembers(Mockito.isNull(), Mockito.any());
         EntraIdUserGroupSource source = newSource();
         source.updateSink(sink);
         // A reconcile sweep must request a full snapshot (delta token == null). Groups come
         // via the inline path in DIRECT mode.
         Mockito.verify(graphClient).getUserDelta(null);
-        Mockito.verify(graphClient).getGroupDeltaWithMembers(null);
+        Mockito.verify(graphClient).getGroupDeltaWithMembers(Mockito.isNull(), Mockito.any());
     }
 
     @Test
@@ -313,7 +313,7 @@ public class TestEntraIdUserGroupSource {
         Mockito.when(ugSyncConfig.isUserSyncDeletesEnabled()).thenReturn(true);
         Mockito.when(ugSyncConfig.getUserSyncDeletesFrequency()).thenReturn(100L);
         Mockito.when(graphClient.getUserDelta(null)).thenReturn(userPage("uDelta"));
-        Mockito.when(graphClient.getGroupDeltaWithMembers(null)).thenReturn(membersPage("gDelta", new DeltaEntry<>(group(GROUP_GUID, GROUP_NAME), true)));
+        Mockito.doReturn(membersPage("gDelta", new DeltaEntry<>(group(GROUP_GUID, GROUP_NAME), true))).when(graphClient).getGroupDeltaWithMembers(Mockito.isNull(), Mockito.any());
         EntraIdUserGroupSource source = newSource();
         source.updateSink(sink);
         ArgumentCaptor<Map<String, Map<String, String>>> delGroups = ArgumentCaptor.forClass(Map.class);
@@ -328,14 +328,14 @@ public class TestEntraIdUserGroupSource {
         Mockito.when(ugSyncConfig.isUserSyncDeletesEnabled()).thenReturn(true);
         Mockito.when(ugSyncConfig.getUserSyncDeletesFrequency()).thenReturn(100L);
         Mockito.when(graphClient.getUserDelta(null)).thenReturn(userPage("uDelta-1"));
-        Mockito.when(graphClient.getGroupDeltaWithMembers(null)).thenReturn(membersPage("gDelta-1"));
+        Mockito.doReturn(membersPage("gDelta-1")).when(graphClient).getGroupDeltaWithMembers(Mockito.isNull(), Mockito.any());
         EntraIdUserGroupSource source = newSource();
         source.updateSink(sink); // cycle 1: first sync, full pull, captures tokens
         Mockito.when(graphClient.getUserDelta("uDelta-1")).thenReturn(userPage("uDelta-2"));
-        Mockito.when(graphClient.getGroupDelta("gDelta-1")).thenReturn(groupPage("gDelta-2"));
+        Mockito.when(graphClient.getGroupDeltaWithMembers(Mockito.eq("gDelta-1"), Mockito.any())).thenReturn(membersPage("gDelta-2"));
         source.updateSink(sink); // cycle 2: normal cycle must use the delta token
         Mockito.verify(graphClient).getUserDelta("uDelta-1");
-        Mockito.verify(graphClient).getGroupDelta("gDelta-1");
+        Mockito.verify(graphClient).getGroupDeltaWithMembers(Mockito.eq("gDelta-1"), Mockito.any());
     }
 
     @Test
@@ -370,7 +370,7 @@ public class TestEntraIdUserGroupSource {
         Mockito.when(ugSyncConfig.isUserSyncDeletesEnabled()).thenReturn(true);
         Mockito.when(ugSyncConfig.getUserSyncDeletesFrequency()).thenReturn(100L);
         Mockito.when(graphClient.getUserDelta(null)).thenReturn(resyncedUserPage("uDelta", new DeltaEntry<>(user(), true)));
-        Mockito.when(graphClient.getGroupDeltaWithMembers(null)).thenReturn(resyncedGroupMembersPage("gDelta"));
+        Mockito.doReturn(resyncedGroupMembersPage("gDelta")).when(graphClient).getGroupDeltaWithMembers(Mockito.isNull(), Mockito.any());
         EntraIdUserGroupSource source = newSource();
         source.updateSink(sink);
         ArgumentCaptor<Boolean> del = ArgumentCaptor.forClass(Boolean.class);
@@ -390,16 +390,16 @@ public class TestEntraIdUserGroupSource {
         Mockito.when(ugSyncConfig.getUserSyncDeletesFrequency()).thenReturn(100L);
         // Cycle 1 (full, DIRECT) establishes tokens via the inline path.
         Mockito.when(graphClient.getUserDelta(null)).thenReturn(userPage("uDelta-1"));
-        Mockito.when(graphClient.getGroupDeltaWithMembers(null)).thenReturn(membersPage("gDelta-1"));
+        Mockito.doReturn(membersPage("gDelta-1")).when(graphClient).getGroupDeltaWithMembers(Mockito.isNull(), Mockito.any());
         EntraIdUserGroupSource source = newSource();
         source.updateSink(sink); // cycle 1: full pull, tokens captured
         // Cycle 2: user delta link expired -> resynced user page; group delta succeeds
         // incrementally (NOT resynced) off the persisted token.
         Mockito.when(graphClient.getUserDelta("uDelta-1")).thenReturn(resyncedUserPage("uDelta-2"));
-        Mockito.when(graphClient.getGroupDelta("gDelta-1")).thenReturn(groupPage("gDelta-2"));
+        Mockito.when(graphClient.getGroupDeltaWithMembers(Mockito.eq("gDelta-1"), Mockito.any())).thenReturn(membersPage("gDelta-2"));
         source.updateSink(sink);
-        // getGroupDeltaWithMembers(null): cycle 1 full pull + cycle 2 forced full re-pull = 2.
-        Mockito.verify(graphClient, Mockito.times(2)).getGroupDeltaWithMembers(null);
+        // getGroupDeltaWithMembers(null, ...): cycle 1 full pull + cycle 2 forced full re-pull = 2.
+        Mockito.verify(graphClient, Mockito.times(2)).getGroupDeltaWithMembers(Mockito.isNull(), Mockito.any());
     }
 
     @Test
@@ -407,14 +407,12 @@ public class TestEntraIdUserGroupSource {
         Mockito.when(ugSyncConfig.isUserSyncDeletesEnabled()).thenReturn(true);
         Mockito.when(ugSyncConfig.getUserSyncDeletesFrequency()).thenReturn(100L);
         Mockito.when(graphClient.getUserDelta(null)).thenReturn(userPage("uDelta-1"));
-        Mockito.when(graphClient.getGroupDeltaWithMembers(null)).thenReturn(membersPage("gDelta-1"));
+        Mockito.doReturn(membersPage("gDelta-1")).when(graphClient).getGroupDeltaWithMembers(Mockito.isNull(), Mockito.any());
         EntraIdUserGroupSource source = newSource();
         source.updateSink(sink); // cycle 1
-        // Cycle 2: group delta expired (resynced), user delta incremental. On an incremental
-        // cycle groups come via getGroupDelta (not the inline path), so the resync flag must
-        // arrive on that method.
+        // Cycle 2: group(+members) delta expired (resynced), user delta incremental.
         Mockito.when(graphClient.getUserDelta("uDelta-1")).thenReturn(userPage("uDelta-2"));
-        Mockito.when(graphClient.getGroupDelta("gDelta-1")).thenReturn(resyncedGroupPage("gDelta-2"));
+        Mockito.when(graphClient.getGroupDeltaWithMembers(Mockito.eq("gDelta-1"), Mockito.any())).thenReturn(resyncedGroupMembersPage("gDelta-2"));
         Mockito.when(graphClient.getUserDelta(null)).thenReturn(userPage("uDelta-full"));
         source.updateSink(sink);
         // getUserDelta(null) called on cycle 1 + forced re-pull = 2.
@@ -434,9 +432,88 @@ public class TestEntraIdUserGroupSource {
         EntraIdUserGroupSource source = newSource();
         source.updateSink(sink);
         // The inline path must never be taken in TRANSITIVE mode, even on a full sync.
-        Mockito.verify(graphClient, Mockito.never()).getGroupDeltaWithMembers(Mockito.any());
+        Mockito.verify(graphClient, Mockito.never()).getGroupDeltaWithMembers(Mockito.any(), Mockito.any());
         // Membership must be resolved per-group (TRANSITIVE => /transitiveMembers).
         Mockito.verify(graphClient).getGroupMembers(GROUP_GUID, MembershipMode.TRANSITIVE);
+    }
+
+    @Test
+    public void test24b_transitiveIncremental_refreshesKnownGroupsAbsentFromDelta() throws Throwable {
+        // TRANSITIVE cannot see nested membership changes via /groups/delta alone. After the
+        // first full sync caches a group, a later incremental cycle with an empty group delta
+        // must still re-fetch /transitiveMembers for that known group.
+        String secondMemberGuid = "cccccccc-0000-0000-0000-000000000003";
+        Mockito.when(graphConfig.getMembershipMode()).thenReturn(MembershipMode.TRANSITIVE);
+        Mockito.when(ugSyncConfig.isUserSyncDeletesEnabled()).thenReturn(true);
+        Mockito.when(ugSyncConfig.getUserSyncDeletesFrequency()).thenReturn(100L);
+        Mockito.when(graphClient.getUserDelta(null)).thenReturn(userPage("uDelta-1"));
+        Mockito.when(graphClient.getGroupDelta(null)).thenReturn(groupPage("gDelta-1", new DeltaEntry<>(group(GROUP_GUID, GROUP_NAME), false)));
+        Mockito.when(graphClient.getGroupMembers(GROUP_GUID, MembershipMode.TRANSITIVE))
+                .thenReturn(List.of(userRef(USER_GUID)))
+                .thenReturn(List.of(userRef(USER_GUID), userRef(secondMemberGuid)));
+
+        EntraIdUserGroupSource source = newSource();
+        source.updateSink(sink); // cycle 1: full sync caches group attrs + members
+
+        Mockito.when(graphClient.getUserDelta("uDelta-1")).thenReturn(userPage("uDelta-2"));
+        Mockito.when(graphClient.getGroupDelta("gDelta-1")).thenReturn(groupPage("gDelta-2")); // empty entries
+        source.updateSink(sink); // cycle 2: no groups on delta, but known group must refresh
+
+        @SuppressWarnings("unchecked")
+        ArgumentCaptor<Map<String, Set<String>>> memberships = ArgumentCaptor.forClass(Map.class);
+        Mockito.verify(sink, Mockito.times(2)).addOrUpdateUsersGroups(
+                Mockito.any(), Mockito.any(), memberships.capture(), Mockito.anyBoolean());
+        Assertions.assertEquals(Set.of(USER_GUID), memberships.getAllValues().get(0).get(GROUP_GUID));
+        Assertions.assertEquals(Set.of(USER_GUID, secondMemberGuid), memberships.getAllValues().get(1).get(GROUP_GUID));
+        Mockito.verify(graphClient, Mockito.times(2)).getGroupMembers(GROUP_GUID, MembershipMode.TRANSITIVE);
+        Mockito.verify(graphClient, Mockito.never()).getGroupDeltaWithMembers(Mockito.any(), Mockito.any());
+    }
+
+    @Test
+    public void test24c_transitiveReconcileSweep_doesNotReinstateCachedDeletedGroup() throws Throwable {
+        // Reconcile sweeps leave deletedGroups empty. A group that vanished from Entra is simply
+        // omitted from the full pull. Refresh must NOT reinstate it from groupAttrsCache, or
+        // sink computeDeletes would treat it as still present.
+        String vanishedGuid = "dddddddd-0000-0000-0000-000000000099";
+        Mockito.when(graphConfig.getMembershipMode()).thenReturn(MembershipMode.TRANSITIVE);
+        Mockito.when(ugSyncConfig.isUserSyncDeletesEnabled()).thenReturn(true);
+        // Cycle 1: not a sweep (frequency high); cache both groups.
+        Mockito.when(ugSyncConfig.getUserSyncDeletesFrequency()).thenReturn(100L);
+        Mockito.when(graphClient.getUserDelta(null)).thenReturn(userPage("uDelta-1"));
+        Mockito.when(graphClient.getGroupDelta(null)).thenReturn(groupPage("gDelta-1",
+                new DeltaEntry<>(group(GROUP_GUID, GROUP_NAME), false),
+                new DeltaEntry<>(group(vanishedGuid, "Vanished"), false)));
+        Mockito.when(graphClient.getGroupMembers(Mockito.anyString(), Mockito.eq(MembershipMode.TRANSITIVE)))
+                .thenReturn(List.of(userRef(USER_GUID)));
+
+        EntraIdUserGroupSource source = newSource();
+        source.updateSink(sink);
+
+        // Cycle 2: force reconcile sweep. deleteCycles is 2 after cycle 1; frequency 1 => sweep.
+        // fullSync=true => delta tokens null; full group pull omits vanishedGuid.
+        Mockito.when(ugSyncConfig.getUserSyncDeletesFrequency()).thenReturn(1L);
+        Mockito.when(graphClient.getUserDelta(null)).thenReturn(userPage("uDelta-full"));
+        Mockito.when(graphClient.getGroupDelta(null)).thenReturn(groupPage("gDelta-full",
+                new DeltaEntry<>(group(GROUP_GUID, GROUP_NAME), false)));
+        Mockito.when(graphClient.getGroupMembers(GROUP_GUID, MembershipMode.TRANSITIVE))
+                .thenReturn(List.of(userRef(USER_GUID)));
+        // Would be called if the bug reinstated vanishedGuid from cache.
+        Mockito.when(graphClient.getGroupMembers(vanishedGuid, MembershipMode.TRANSITIVE))
+                .thenReturn(List.of(userRef(USER_GUID)));
+
+        source.updateSink(sink);
+
+        @SuppressWarnings("unchecked")
+        ArgumentCaptor<Map<String, Map<String, String>>> groupUpserts = ArgumentCaptor.forClass(Map.class);
+        ArgumentCaptor<Boolean> computeDeletes = ArgumentCaptor.forClass(Boolean.class);
+        Mockito.verify(sink, Mockito.times(2)).addOrUpdateUsersGroups(
+                groupUpserts.capture(), Mockito.any(), Mockito.any(), computeDeletes.capture());
+        Assertions.assertTrue(computeDeletes.getAllValues().get(1), "cycle 2 must be a reconcile sweep");
+        Assertions.assertFalse(groupUpserts.getAllValues().get(1).containsKey(vanishedGuid),
+                "reconcile sweep must not reinstate a group omitted from the full pull");
+        Assertions.assertTrue(groupUpserts.getAllValues().get(1).containsKey(GROUP_GUID));
+        // getGroupMembers(vanished) may have been called on cycle 1; must not be called on cycle 2.
+        Mockito.verify(graphClient, Mockito.times(1)).getGroupMembers(vanishedGuid, MembershipMode.TRANSITIVE);
     }
 
     @Test
@@ -448,15 +525,13 @@ public class TestEntraIdUserGroupSource {
         updatedMembership.put(GROUP_GUID, new LinkedHashSet<>(Arrays.asList(USER_GUID, secondMemberGuid)));
 
         Mockito.when(graphClient.getUserDelta(null)).thenReturn(userPage("uDelta-1"));
-        Mockito.when(graphClient.getGroupDeltaWithMembers(null)).thenReturn(
-                membersPage(initialMembership, new DeltaEntry<>(group(GROUP_GUID, GROUP_NAME), false)));
+        Mockito.doReturn(
+                membersPage(initialMembership, new DeltaEntry<>(group(GROUP_GUID, GROUP_NAME), false))).when(graphClient).getGroupDeltaWithMembers(Mockito.isNull(), Mockito.any());
         Mockito.when(graphClient.getUserDelta("uDelta-1")).thenReturn(userPage("uDelta-2"));
-        // The Graph mock re-emits a group when its membership changes, so the incremental
-        // group delta identifies the group whose complete membership must be refreshed.
-        Mockito.when(graphClient.getGroupDelta("gDelta")).thenReturn(
-                groupPage("gDelta-2", new DeltaEntry<>(group(GROUP_GUID, GROUP_NAME), false)));
-        Mockito.when(graphClient.getGroupMembers(GROUP_GUID, MembershipMode.DIRECT)).thenReturn(
-                Arrays.asList(userRef(USER_GUID), userRef(secondMemberGuid)));
+        // Incremental DIRECT path keeps using getGroupDeltaWithMembers with the prior cache;
+        // the client returns the already-merged member set for groups in the delta.
+        Mockito.when(graphClient.getGroupDeltaWithMembers(Mockito.eq("gDelta"), Mockito.any())).thenReturn(
+                membersPage(updatedMembership, new DeltaEntry<>(group(GROUP_GUID, GROUP_NAME), false)));
 
         EntraIdUserGroupSource source = newSource();
         source.updateSink(sink);
@@ -468,6 +543,7 @@ public class TestEntraIdUserGroupSource {
                 Mockito.any(), Mockito.any(), memberships.capture(), Mockito.anyBoolean());
         Assertions.assertEquals(initialMembership.get(GROUP_GUID), memberships.getAllValues().get(0).get(GROUP_GUID));
         Assertions.assertEquals(updatedMembership.get(GROUP_GUID), memberships.getAllValues().get(1).get(GROUP_GUID));
+        Mockito.verify(graphClient, Mockito.never()).getGroupMembers(Mockito.anyString(), Mockito.any());
     }
 
     @Test
@@ -492,8 +568,8 @@ public class TestEntraIdUserGroupSource {
         membership.put(GROUP_GUID, new LinkedHashSet<>(List.of(USER_GUID)));
         membership.put(removedGroupGuid, new LinkedHashSet<>(List.of(USER_GUID)));
 
-        Mockito.when(graphClient.getGroupDeltaWithMembers(null)).thenReturn(membersPage(membership,
-                new DeltaEntry<>(liveGroup, false), new DeltaEntry<>(removedGroup, true)));
+        Mockito.doReturn(membersPage(membership,
+                new DeltaEntry<>(liveGroup, false), new DeltaEntry<>(removedGroup, true))).when(graphClient).getGroupDeltaWithMembers(Mockito.isNull(), Mockito.any());
         EntraIdUserGroupSource source = newSource();
         source.updateSink(sink);
 
@@ -550,7 +626,7 @@ public class TestEntraIdUserGroupSource {
         // A null page from the client (contract violation / empty-body parse) must degrade to
         // an empty sync, not NPE. Token must NOT advance (null page = nothing received).
         Mockito.when(graphClient.getUserDelta(null)).thenReturn(null);
-        Mockito.when(graphClient.getGroupDeltaWithMembers(null)).thenReturn(membersPage(new HashMap<>()));   // empty groups
+        Mockito.doReturn(membersPage(new HashMap<>())).when(graphClient).getGroupDeltaWithMembers(Mockito.isNull(), Mockito.any());   // empty groups
         EntraIdUserGroupSource source = newSource();
         source.updateSink(sink);   // must NOT throw
         // No users upserted; sink still called with empty maps.
@@ -563,7 +639,7 @@ public class TestEntraIdUserGroupSource {
         // An empty value array with a valid deltaLink must advance the token, so the next
         // cycle resumes from the new token rather than re-fetching the empty page forever.
         Mockito.when(graphClient.getUserDelta(null)).thenReturn(userPage("USER-TOKEN-2"));      // no entries
-        Mockito.when(graphClient.getGroupDeltaWithMembers(null)).thenReturn(membersPage(new HashMap<>()));   // no groups, deltaLink "gDelta"
+        Mockito.doReturn(membersPage(new HashMap<>())).when(graphClient).getGroupDeltaWithMembers(Mockito.isNull(), Mockito.any());   // no groups, deltaLink "gDelta"
 
         EntraIdUserGroupSource source = newSource();
         source.updateSink(sink);
@@ -584,7 +660,7 @@ public class TestEntraIdUserGroupSource {
         // group("") must be treated the same as group(null): StringUtils.isBlank catches both,
         // so an empty-name group is not synced (an empty Ranger group name would be invalid).
         Mockito.when(graphClient.getUserDelta(null)).thenReturn(userPage("uD", new DeltaEntry<>(user(), false)));
-        Mockito.when(graphClient.getGroupDeltaWithMembers(null)).thenReturn(membersPage(new HashMap<>(), new DeltaEntry<>(group(GROUP_GUID, ""), false)));   // empty display name
+        Mockito.doReturn(membersPage(new HashMap<>(), new DeltaEntry<>(group(GROUP_GUID, ""), false))).when(graphClient).getGroupDeltaWithMembers(Mockito.isNull(), Mockito.any());   // empty display name
 
         EntraIdUserGroupSource source = newSource();
         source.updateSink(sink);
@@ -597,15 +673,15 @@ public class TestEntraIdUserGroupSource {
     public void test12_deltaTokens_advanceAfterSuccessfulSink() throws Throwable {
         Mockito.when(ugSyncConfig.isUserSyncDeletesEnabled()).thenReturn(false);
         Mockito.when(graphClient.getUserDelta(null)).thenReturn(userPage("uDelta-1"));
-        Mockito.when(graphClient.getGroupDeltaWithMembers(null)).thenReturn(membersPage("gDelta-1"));
+        Mockito.doReturn(membersPage("gDelta-1")).when(graphClient).getGroupDeltaWithMembers(Mockito.isNull(), Mockito.any());
         EntraIdUserGroupSource source = newSource();
         source.updateSink(sink); // first cycle: full pull (null), captures uDelta-1/gDelta-1
         // Second cycle should now use the persisted tokens, not null.
         Mockito.when(graphClient.getUserDelta("uDelta-1")).thenReturn(userPage("uDelta-2"));
-        Mockito.when(graphClient.getGroupDelta("gDelta-1")).thenReturn(groupPage("gDelta-2"));
+        Mockito.doReturn(membersPage("gDelta-2")).when(graphClient).getGroupDeltaWithMembers(Mockito.eq("gDelta-1"), Mockito.any());
         source.updateSink(sink);
         Mockito.verify(graphClient).getUserDelta("uDelta-1");
-        Mockito.verify(graphClient).getGroupDelta("gDelta-1");
+        Mockito.verify(graphClient).getGroupDeltaWithMembers(Mockito.eq("gDelta-1"), Mockito.any());
     }
 
     @Test
@@ -625,7 +701,7 @@ public class TestEntraIdUserGroupSource {
     @Test
     public void test14_groupWithoutDisplayName_isSkipped() throws Throwable {
         Mockito.when(graphClient.getUserDelta(null)).thenReturn(userPage("uDelta"));
-        Mockito.when(graphClient.getGroupDeltaWithMembers(null)).thenReturn(membersPage("gDelta", new DeltaEntry<>(group(GROUP_GUID, null), false)));
+        Mockito.doReturn(membersPage("gDelta", new DeltaEntry<>(group(GROUP_GUID, null), false))).when(graphClient).getGroupDeltaWithMembers(Mockito.isNull(), Mockito.any());
         EntraIdUserGroupSource source = newSource();
         source.updateSink(sink);
         Map<String, Map<String, String>> groups = captureUserAndGroupMaps()[0];
@@ -639,5 +715,38 @@ public class TestEntraIdUserGroupSource {
         EntraIdUserGroupSource source = newSource();
         source.updateSink(sink);
         Mockito.verify(sink).postUserGroupAuditInfo(Mockito.any());
+    }
+
+    @Test
+    public void test32_disabledUser_flagOff_stillSynced() throws Throwable {
+        // Default (skipDisabledUsers=false, the mock's unstubbed default): zero behavior
+        // change -- a disabled account is synced exactly like an enabled one.
+        GraphUser disabled = user();
+        disabled.setAccountEnabled(false);
+        Mockito.when(graphClient.getUserDelta(null)).thenReturn(userPage("uDelta", new DeltaEntry<>(disabled, false)));
+        Mockito.when(graphClient.getGroupDelta(null)).thenReturn(groupPage("gDelta"));
+        EntraIdUserGroupSource source = newSource();
+        source.updateSink(sink);
+        Map<String, Map<String, String>> users = captureUserAndGroupMaps()[1];
+        Assertions.assertTrue(users.containsKey(USER_GUID), "disabled user must still sync when the flag is off");
+    }
+
+    @Test
+    public void test33_disabledUser_flagOn_isExcludedNotDeleted() throws Throwable {
+        // Operator opt-in: a disabled account is excluded like an LDAP search-filter exclusion --
+        // absent from the upsert snapshot, but NOT routed to the per-record delete path either
+        // (it's an exclusion signal, not a delete/hide signal).
+        Mockito.when(graphConfig.isSkipDisabledUsers()).thenReturn(true);
+        Mockito.when(ugSyncConfig.isUserSyncDeletesEnabled()).thenReturn(true);
+        Mockito.when(ugSyncConfig.getUserSyncDeletesFrequency()).thenReturn(100L);
+        GraphUser disabled = user();
+        disabled.setAccountEnabled(false);
+        Mockito.when(graphClient.getUserDelta(null)).thenReturn(userPage("uDelta", new DeltaEntry<>(disabled, false)));
+        Mockito.when(graphClient.getGroupDelta(null)).thenReturn(groupPage("gDelta"));
+        EntraIdUserGroupSource source = newSource();
+        source.updateSink(sink);
+        Map<String, Map<String, String>> users = captureUserAndGroupMaps()[1];
+        Assertions.assertFalse(users.containsKey(USER_GUID), "disabled user must be excluded from the upsert snapshot when the flag is on");
+        Mockito.verify(sink, Mockito.never()).deleteUsersAndGroups(Mockito.any(), Mockito.any());
     }
 }

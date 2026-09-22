@@ -45,6 +45,7 @@ public final class EntraIdGraphConfig {
     private final Set<String> groupSelectAttrs;
     private final String groupFilter;
     private final int pageSize;
+    private final boolean skipDisabledUsers;
 
     private final int maxRetries;
     private final long retryBaseBackoffMs;
@@ -66,6 +67,7 @@ public final class EntraIdGraphConfig {
         this.groupSelectAttrs = unmodifiableCopy(b.groupSelectAttrs);
         this.groupFilter = b.groupFilter;
         this.pageSize = b.pageSize;
+        this.skipDisabledUsers = b.skipDisabledUsers;
         this.maxRetries = b.maxRetries;
         this.retryBaseBackoffMs = b.retryBaseBackoffMs;
         this.connectTimeoutMs = b.connectTimeoutMs;
@@ -147,6 +149,10 @@ public final class EntraIdGraphConfig {
         return pageSize;
     }
 
+    public boolean isSkipDisabledUsers() {
+        return skipDisabledUsers;
+    }
+
     public int getMaxRetries() {
         return maxRetries;
     }
@@ -175,6 +181,7 @@ public final class EntraIdGraphConfig {
                 + ", groupSelectAttrs=" + groupSelectAttrs
                 + ", groupFilter=" + (groupFilter == null ? "none" : groupFilter)
                 + ", pageSize=" + pageSize
+                + ", skipDisabledUsers=" + skipDisabledUsers
                 + ", maxRetries=" + maxRetries
                 + ", retryBaseBackoffMs=" + retryBaseBackoffMs
                 + ", connectTimeoutMs=" + connectTimeoutMs
@@ -201,6 +208,7 @@ public final class EntraIdGraphConfig {
         private Set<String> groupSelectAttrs;
         private String groupFilter;
         private int pageSize = 999;
+        private boolean skipDisabledUsers;
 
         private int maxRetries = 5;
         private long retryBaseBackoffMs = 1000L;
@@ -274,6 +282,11 @@ public final class EntraIdGraphConfig {
 
         public Builder pageSize(int v) {
             this.pageSize = v;
+            return this;
+        }
+
+        public Builder skipDisabledUsers(boolean v) {
+            this.skipDisabledUsers = v;
             return this;
         }
 

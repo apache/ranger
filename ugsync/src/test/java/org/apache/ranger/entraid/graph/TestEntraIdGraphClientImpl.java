@@ -43,6 +43,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.net.InetSocketAddress;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
@@ -50,8 +51,10 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
@@ -675,6 +678,151 @@ public class TestEntraIdGraphClientImpl {
         Assertions.assertTrue(select.containsAll(Set.of("id", "displayName", "mailNickname", "securityEnabled", "members")),
                 "base attrs must still be present alongside custom config: " + select);
         Assertions.assertTrue(select.contains("department"), "configured custom attr was dropped: " + select);
+    }
+
+    @Test
+    public void test43_getGroupDeltaWithMembers_incrementalMergesPriorCache() throws Exception {
+        // Incremental members@delta must seed from prior membership, then apply add/remove.
+        String body = "{\"value\":[{\"id\":\"G1\",\"displayName\":\"Engineering\","
+                + "\"members@delta\":["
+                + "{\"@odata.type\":\"#microsoft.graph.user\",\"id\":\"u-new\"},"
+                + "{\"@odata.type\":\"#microsoft.graph.user\",\"id\":\"u-old\",\"@removed\":{\"reason\":\"deleted\"}}"
+                + "]}],"
+                + "\"@odata.deltaLink\":\"" + baseUrl + "/v1.0/groups/delta?$deltatoken=NEXT\"}";
+        context("/v1.0/groups/delta/resume", exchange -> respond(exchange, 200, body));
+        Map<String, Set<String>> prior = new HashMap<>();
+        prior.put("G1", new HashSet<>(Arrays.asList("u-old", "u-keep")));
+        try (EntraIdGraphClientImpl client = newClient()) {
+            GroupMembershipPage page = client.getGroupDeltaWithMembers(baseUrl + "/v1.0/groups/delta/resume", prior);
+            Assertions.assertEquals(Set.of("u-keep", "u-new"), page.getMembers("G1"));
+        }
+    }
+
+    @Test
+    public void test44_assertSameHost_allowsExplicitDefaultHttpsPort() throws Exception {
+        // Omitted port (-1) and explicit :443 must be treated as the same HTTPS endpoint.
+        EntraIdGraphClientImpl client = new EntraIdGraphClientImpl();
+        client.init(new EntraIdGraphConfig.Builder()
+                .tenantId(TENANT)
+                .clientId(CLIENT)
+                .authMode(AuthMode.CLIENT_SECRET)
+                .clientSecret("test-secret".toCharArray())
+                .authorityHost(baseUrl)
+                .graphBaseUrl("https://graph.example.test")
+                .retryBaseBackoffMs(5)
+                .maxRetries(3)
+                .build());
+        Method assertHost = EntraIdGraphClientImpl.class.getDeclaredMethod("assertSameHostAsGraph", String.class);
+        assertHost.setAccessible(true);
+        try {
+            Assertions.assertDoesNotThrow(() -> assertHost.invoke(client, "https://graph.example.test:443/v1.0/users/delta?$skiptoken=1"));
+            Exception ex = Assertions.assertThrows(Exception.class, () -> assertHost.invoke(client, "https://evil.example.test:443/v1.0/users/delta"));
+            Assertions.assertInstanceOf(GraphClientException.class, ex.getCause());
+        } finally {
+            client.close();
+        }
+    }
+
+    @Test
+    public void test45_membersMerge_excludesTypesThatOnlySuffixUser() throws Exception {
+        context("/v1.0/groups/delta", exchange -> respond(exchange, 200,
+                "{\"value\":[{\"id\":\"G1\",\"displayName\":\"G\","
+                        + "\"members@delta\":["
+                        + "{\"@odata.type\":\"#microsoft.graph.user\",\"id\":\"u-ok\"},"
+                        + "{\"@odata.type\":\"#microsoft.graph.deviceUser\",\"id\":\"u-bad\"},"
+                        + "{\"id\":\"u-notype\"}"
+                        + "]}],"
+                        + "\"@odata.deltaLink\":\"" + baseUrl + "/v1.0/groups/delta?$deltatoken=D\"}"));
+        try (EntraIdGraphClientImpl client = newClient()) {
+            GroupMembershipPage page = client.getGroupDeltaWithMembers(null);
+            Assertions.assertEquals(Set.of("u-ok"), page.getMembers("G1"));
+        }
+    }
+
+    @Test
+    public void test46_httpRedirect_isNotFollowed() throws Exception {
+        // FOLLOW_REDIRECTS is disabled so a 302 cannot bypass assertSameHostAsGraph.
+        context("/v1.0/users/delta", exchange -> {
+            exchange.getResponseHeaders().add("Location", "http://169.254.169.254/latest/meta-data/");
+            exchange.sendResponseHeaders(302, -1);
+            exchange.close();
+        });
+        try (EntraIdGraphClientImpl client = newClient()) {
+            GraphClientException ex = Assertions.assertThrows(GraphClientException.class, () -> client.getUserDelta(null));
+            Assertions.assertEquals(302, ex.getHttpStatus());
+        }
+    }
+
+    @Test
+    public void test47_membersMerge_fillsBlankDisplayNameFromLaterPage() throws Exception {
+        String page1 = "{\"value\":[{\"id\":\"G1\",\"members@delta\":["
+                + "{\"@odata.type\":\"#microsoft.graph.user\",\"id\":\"u1\"}]}],"
+                + "\"@odata.nextLink\":\"" + baseUrl + "/v1.0/groups/delta/page2\"}";
+        String page2 = "{\"value\":[{\"id\":\"G1\",\"displayName\":\"Engineering\",\"mailNickname\":\"eng\"}],"
+                + "\"@odata.deltaLink\":\"" + baseUrl + "/v1.0/groups/delta?$deltatoken=D\"}";
+        context("/v1.0/groups/delta", exchange -> respond(exchange, 200, page1));
+        context("/v1.0/groups/delta/page2", exchange -> respond(exchange, 200, page2));
+        try (EntraIdGraphClientImpl client = newClient()) {
+            GroupMembershipPage page = client.getGroupDeltaWithMembers(null);
+            Assertions.assertEquals(1, page.getGroups().size());
+            Assertions.assertEquals("Engineering", page.getGroups().get(0).getValue().getDisplayName());
+            Assertions.assertEquals("eng", page.getGroups().get(0).getValue().getMailNickname());
+            Assertions.assertEquals(Set.of("u1"), page.getMembers("G1"));
+        }
+    }
+
+    @Test
+    public void test48_closeClearsCachedAccessToken() throws Exception {
+        EntraIdGraphClientImpl client = newClient();
+        Field providerField = EntraIdGraphClientImpl.class.getDeclaredField("tokenProvider");
+        providerField.setAccessible(true);
+        OAuthTokenProvider provider = (OAuthTokenProvider) providerField.get(client);
+        Field tokenField = OAuthTokenProvider.class.getDeclaredField("cachedToken");
+        tokenField.setAccessible(true);
+        Assertions.assertNotNull(tokenField.get(provider));
+        client.close();
+        Assertions.assertNull(tokenField.get(provider));
+    }
+
+    @Test
+    public void test49_groupRemovedOnLaterPage_notMaskedByEarlierPresentSighting() throws Exception {
+        // A group can appear as present on one delta page and be marked @odata.removed on a
+        // later page within the same paginated walk (e.g. a large group split across pages).
+        // removedById must not freeze the first (non-removed) sighting via putIfAbsent -- a
+        // removal seen on ANY page must win, and members accumulated before it must be cleared.
+        String page1 = "{\"value\":[{\"id\":\"G1\",\"displayName\":\"Engineering\","
+                + "\"members@delta\":["
+                + "{\"@odata.type\":\"#microsoft.graph.user\",\"id\":\"u1\"}]}],"
+                + "\"@odata.nextLink\":\"" + baseUrl + "/v1.0/groups/delta/page2\"}";
+        String page2 = "{\"value\":[{\"id\":\"G1\",\"@removed\":{\"reason\":\"deleted\"}}],"
+                + "\"@odata.deltaLink\":\"" + baseUrl + "/v1.0/groups/delta?$deltatoken=D\"}";
+        context("/v1.0/groups/delta", exchange -> respond(exchange, 200, page1));
+        context("/v1.0/groups/delta/page2", exchange -> respond(exchange, 200, page2));
+        try (EntraIdGraphClientImpl client = newClient()) {
+            GroupMembershipPage page = client.getGroupDeltaWithMembers(null);
+            Assertions.assertEquals(1, page.getGroups().size());
+            Assertions.assertTrue(page.getGroups().get(0).isRemoved(), "group marked removed on a later page must be reported as removed");
+            Assertions.assertTrue(page.getMembers("G1").isEmpty(), "members accumulated before the removal signal must be cleared");
+        }
+    }
+
+    @Test
+    public void test50_groupRemovedOnFirstPage_staysRemovedIfReenumeratedPlainOnLaterPage() throws Exception {
+        // Symmetric case: a removal seen on an EARLIER page must not be overwritten by a plain
+        // (non-removed) sighting of the same group id on a later page in the same walk.
+        String page1 = "{\"value\":[{\"id\":\"G1\",\"@removed\":{\"reason\":\"deleted\"}}],"
+                + "\"@odata.nextLink\":\"" + baseUrl + "/v1.0/groups/delta/page2\"}";
+        String page2 = "{\"value\":[{\"id\":\"G1\",\"displayName\":\"Engineering\","
+                + "\"members@delta\":["
+                + "{\"@odata.type\":\"#microsoft.graph.user\",\"id\":\"u1\"}]}],"
+                + "\"@odata.deltaLink\":\"" + baseUrl + "/v1.0/groups/delta?$deltatoken=D\"}";
+        context("/v1.0/groups/delta", exchange -> respond(exchange, 200, page1));
+        context("/v1.0/groups/delta/page2", exchange -> respond(exchange, 200, page2));
+        try (EntraIdGraphClientImpl client = newClient()) {
+            GroupMembershipPage page = client.getGroupDeltaWithMembers(null);
+            Assertions.assertEquals(1, page.getGroups().size());
+            Assertions.assertTrue(page.getGroups().get(0).isRemoved(), "a removal seen on an earlier page must not be cleared by a later plain sighting");
+        }
     }
 
     private String loadGraphResponse(String fileName) throws IOException {
