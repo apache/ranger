@@ -19,9 +19,11 @@
 
 package org.apache.ranger.rest;
 
+import org.apache.ranger.biz.RangerBizUtil;
 import org.apache.ranger.common.MessageEnums;
 import org.apache.ranger.common.RESTErrorUtil;
 import org.apache.ranger.common.RangerSearchUtil;
+import org.apache.ranger.opensearch.OpenSearchAccessAuditsService;
 import org.apache.ranger.plugin.model.RangerAuditMetrics;
 import org.apache.ranger.plugin.model.RangerAuditMetricsByDays;
 import org.apache.ranger.plugin.model.RangerAuditMetricsByHours;
@@ -53,6 +55,7 @@ import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.contains;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -72,7 +75,13 @@ class TestAuditMetricsREST {
     RangerSearchUtil searchUtil;
 
     @Mock
+    RangerBizUtil rangerBizUtil;
+
+    @Mock
     SolrAccessAuditsService solrAccessAuditsService;
+
+    @Mock
+    OpenSearchAccessAuditsService openSearchAccessAuditsService;
 
     @Mock
     HttpServletRequest httpServletRequest;
@@ -91,6 +100,7 @@ class TestAuditMetricsREST {
         testAuditMetricsByHours = createTestAuditMetricsByHours();
         testAuditMetricsByDays = createTestAuditMetricsByDays();
         testSearchFilter = new SearchFilter();
+        lenient().when(rangerBizUtil.getAuditDBType()).thenReturn(RangerBizUtil.AUDIT_STORE_SOLR);
     }
 
     @Test
@@ -359,6 +369,91 @@ class TestAuditMetricsREST {
         verify(restErrorUtil, times(1)).createRESTException(
                 contains("olderThanInDays must be between 1 and"),
                 eq(MessageEnums.INVALID_INPUT_DATA));
+        verify(solrAccessAuditsService, never()).getAuditMetricsByDays(anyInt(), any(), any());
+    }
+
+    @Test
+    void testGetLatestAuditMetrics_OpenSearch() {
+        String serviceType = "hive";
+        String serviceName = "test-service";
+        String timezone = "Asia/Kolkata";
+
+        when(rangerBizUtil.getAuditDBType()).thenReturn(RangerBizUtil.AUDIT_STORE_OPENSEARCH);
+        when(openSearchAccessAuditsService.getLatestAuditMetrics(serviceType, serviceName, timezone)).thenReturn(testAuditMetrics);
+
+        RangerAuditMetrics result = auditMetricsREST.getLatestAuditMetrics(serviceType, serviceName, timezone);
+
+        assertNotNull(result);
+        assertEquals(testAuditMetrics.getId(), result.getId());
+        verify(openSearchAccessAuditsService, times(1)).getLatestAuditMetrics(serviceType, serviceName, timezone);
+        verify(solrAccessAuditsService, never()).getLatestAuditMetrics(anyString(), anyString(), any());
+    }
+
+    @Test
+    void testGetAuditMetrics_OpenSearch() {
+        Long id = 1L;
+        String timezone = "UTC";
+
+        when(rangerBizUtil.getAuditDBType()).thenReturn(RangerBizUtil.AUDIT_STORE_OPENSEARCH);
+        when(openSearchAccessAuditsService.getAuditMetrics(id, timezone)).thenReturn(testAuditMetrics);
+
+        RangerAuditMetrics result = auditMetricsREST.getAuditMetrics(id, timezone);
+
+        assertNotNull(result);
+        assertEquals(testAuditMetrics.getId(), result.getId());
+        verify(openSearchAccessAuditsService, times(1)).getAuditMetrics(id, timezone);
+        verify(solrAccessAuditsService, never()).getAuditMetrics(any(), any());
+    }
+
+    @Test
+    void testGetAllLatestRangerAuditMetrics_OpenSearch() {
+        List<RangerAuditMetrics> metricsList = Collections.singletonList(testAuditMetrics);
+        String timezone = "Asia/Kolkata";
+
+        when(rangerBizUtil.getAuditDBType()).thenReturn(RangerBizUtil.AUDIT_STORE_OPENSEARCH);
+        when(searchUtil.getSearchFilter(eq(httpServletRequest), eq(Collections.emptyList()))).thenReturn(testSearchFilter);
+        when(openSearchAccessAuditsService.getLatestAuditMetricsList(testSearchFilter, timezone)).thenReturn(metricsList);
+
+        RangerAuditMetricsList result = auditMetricsREST.getAllLatestRangerAuditMetrics(httpServletRequest, timezone);
+
+        assertNotNull(result);
+        assertEquals(1, result.getListSize());
+        verify(openSearchAccessAuditsService, times(1)).getLatestAuditMetricsList(testSearchFilter, timezone);
+        verify(solrAccessAuditsService, never()).getLatestAuditMetricsList(any(), any());
+    }
+
+    @Test
+    void testGetDailyAuditMetrics_OpenSearch() {
+        List<RangerAuditMetricsByHours> metricsList = Collections.singletonList(testAuditMetricsByHours);
+        String timezone = "Asia/Kolkata";
+
+        when(rangerBizUtil.getAuditDBType()).thenReturn(RangerBizUtil.AUDIT_STORE_OPENSEARCH);
+        when(searchUtil.getSearchFilter(eq(httpServletRequest), eq(Collections.emptyList()))).thenReturn(testSearchFilter);
+        when(openSearchAccessAuditsService.getAuditMetricsByHours(testSearchFilter, timezone)).thenReturn(metricsList);
+
+        RangerAuditMetricsListByHours result = auditMetricsREST.getDailyAuditMetrics(httpServletRequest, timezone);
+
+        assertNotNull(result);
+        assertEquals(1, result.getListSize());
+        verify(openSearchAccessAuditsService, times(1)).getAuditMetricsByHours(testSearchFilter, timezone);
+        verify(solrAccessAuditsService, never()).getAuditMetricsByHours(any(), any());
+    }
+
+    @Test
+    void testGetDaysAuditMetrics_OpenSearch() {
+        Integer olderThanInDays = 7;
+        String timezone = "Asia/Kolkata";
+        List<RangerAuditMetricsByDays> metricsList = Collections.singletonList(testAuditMetricsByDays);
+
+        when(rangerBizUtil.getAuditDBType()).thenReturn(RangerBizUtil.AUDIT_STORE_OPENSEARCH);
+        when(searchUtil.getSearchFilter(eq(httpServletRequest), eq(Collections.emptyList()))).thenReturn(testSearchFilter);
+        when(openSearchAccessAuditsService.getAuditMetricsByDays(olderThanInDays, testSearchFilter, timezone)).thenReturn(metricsList);
+
+        RangerAuditMetricsListByDays result = auditMetricsREST.getDaysAuditMetrics(httpServletRequest, olderThanInDays, timezone);
+
+        assertNotNull(result);
+        assertEquals(1, result.getListSize());
+        verify(openSearchAccessAuditsService, times(1)).getAuditMetricsByDays(olderThanInDays, testSearchFilter, timezone);
         verify(solrAccessAuditsService, never()).getAuditMetricsByDays(anyInt(), any(), any());
     }
 

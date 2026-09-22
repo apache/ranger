@@ -21,9 +21,11 @@ package org.apache.ranger.rest;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.ranger.authorization.hadoop.config.RangerAdminConfig;
+import org.apache.ranger.biz.RangerBizUtil;
 import org.apache.ranger.common.MessageEnums;
 import org.apache.ranger.common.RESTErrorUtil;
 import org.apache.ranger.common.RangerSearchUtil;
+import org.apache.ranger.opensearch.OpenSearchAccessAuditsService;
 import org.apache.ranger.plugin.model.RangerAuditMetrics;
 import org.apache.ranger.plugin.model.RangerAuditMetricsByDays;
 import org.apache.ranger.plugin.model.RangerAuditMetricsByHours;
@@ -73,7 +75,13 @@ public class AuditMetricsREST {
     RangerSearchUtil searchUtil;
 
     @Autowired
+    RangerBizUtil rangerBizUtil;
+
+    @Autowired
     SolrAccessAuditsService solrAccessAuditsService;
+
+    @Autowired
+    OpenSearchAccessAuditsService openSearchAccessAuditsService;
 
     @GET
     @Path("/metrics/servicetype/{servicetype}/servicename/{servicename}")
@@ -84,7 +92,11 @@ public class AuditMetricsREST {
         LOG.debug("==> AuditMetricsREST.getLatestAuditMetrics(serviceType={} serviceName={})", serviceType, serviceName);
         RangerAuditMetrics ret;
         try {
-            ret = solrAccessAuditsService.getLatestAuditMetrics(serviceType, serviceName, timezone);
+            if (RangerBizUtil.AUDIT_STORE_OPENSEARCH.equalsIgnoreCase(rangerBizUtil.getAuditDBType())) {
+                ret = openSearchAccessAuditsService.getLatestAuditMetrics(serviceType, serviceName, timezone);
+            } else {
+                ret = solrAccessAuditsService.getLatestAuditMetrics(serviceType, serviceName, timezone);
+            }
         } catch (WebApplicationException excp) {
             throw excp;
         } catch (Throwable excp) {
@@ -104,7 +116,11 @@ public class AuditMetricsREST {
         LOG.debug("==> AuditMetricsREST.getAuditMetrics(id={})", id);
         RangerAuditMetrics ret;
         try {
-            ret = solrAccessAuditsService.getAuditMetrics(id, timezone);
+            if (RangerBizUtil.AUDIT_STORE_OPENSEARCH.equalsIgnoreCase(rangerBizUtil.getAuditDBType())) {
+                ret = openSearchAccessAuditsService.getAuditMetrics(id, timezone);
+            } else {
+                ret = solrAccessAuditsService.getAuditMetrics(id, timezone);
+            }
         } catch (WebApplicationException excp) {
             throw excp;
         } catch (Throwable excp) {
@@ -128,7 +144,11 @@ public class AuditMetricsREST {
         SearchFilter filter = searchUtil.getSearchFilter(request, Collections.emptyList());
 
         try {
-            rangerAuditMetrics = solrAccessAuditsService.getLatestAuditMetricsList(filter, timezone);
+            if (RangerBizUtil.AUDIT_STORE_OPENSEARCH.equalsIgnoreCase(rangerBizUtil.getAuditDBType())) {
+                rangerAuditMetrics = openSearchAccessAuditsService.getLatestAuditMetricsList(filter, timezone);
+            } else {
+                rangerAuditMetrics = solrAccessAuditsService.getLatestAuditMetricsList(filter, timezone);
+            }
         } catch (WebApplicationException excp) {
             throw excp;
         } catch (Throwable excp) {
@@ -156,7 +176,11 @@ public class AuditMetricsREST {
 
         SearchFilter filter = searchUtil.getSearchFilter(request, Collections.emptyList());
         try {
-            rangerAuditMetricsByHours = solrAccessAuditsService.getAuditMetricsByHours(filter, timezone);
+            if (RangerBizUtil.AUDIT_STORE_OPENSEARCH.equalsIgnoreCase(rangerBizUtil.getAuditDBType())) {
+                rangerAuditMetricsByHours = openSearchAccessAuditsService.getAuditMetricsByHours(filter, timezone);
+            } else {
+                rangerAuditMetricsByHours = solrAccessAuditsService.getAuditMetricsByHours(filter, timezone);
+            }
         } catch (WebApplicationException excp) {
             throw excp;
         } catch (Throwable excp) {
@@ -191,7 +215,11 @@ public class AuditMetricsREST {
         List<RangerAuditMetricsByDays> rangerAuditMetricsByDays;
         SearchFilter                   filter = searchUtil.getSearchFilter(request, Collections.emptyList());
         try {
-            rangerAuditMetricsByDays = solrAccessAuditsService.getAuditMetricsByDays(olderThanInDays, filter, timezone);
+            if (RangerBizUtil.AUDIT_STORE_OPENSEARCH.equalsIgnoreCase(rangerBizUtil.getAuditDBType())) {
+                rangerAuditMetricsByDays = openSearchAccessAuditsService.getAuditMetricsByDays(olderThanInDays, filter, timezone);
+            } else {
+                rangerAuditMetricsByDays = solrAccessAuditsService.getAuditMetricsByDays(olderThanInDays, filter, timezone);
+            }
         } catch (WebApplicationException excp) {
             throw excp;
         } catch (Throwable excp) {

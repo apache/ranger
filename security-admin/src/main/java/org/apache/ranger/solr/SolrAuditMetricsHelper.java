@@ -20,11 +20,11 @@
 package org.apache.ranger.solr;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.ranger.audit.metrics.AuditMetricsHelper;
+import org.apache.ranger.audit.metrics.AuditMetricsHelper.FilterParams;
 import org.apache.ranger.common.MessageEnums;
 import org.apache.ranger.common.RESTErrorUtil;
-import org.apache.ranger.db.RangerDaoManager;
 import org.apache.ranger.entity.XXService;
-import org.apache.ranger.entity.XXServiceDef;
 import org.apache.ranger.plugin.model.RangerAuditMetrics;
 import org.apache.ranger.plugin.model.RangerAuditMetricsByDays;
 import org.apache.ranger.plugin.model.RangerAuditMetricsByHours;
@@ -39,23 +39,17 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import java.time.DateTimeException;
 import java.time.Instant;
 import java.time.ZoneId;
-import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
-import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Date;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 @Component
 public class SolrAuditMetricsHelper {
     private static final Logger LOGGER = LoggerFactory.getLogger(SolrAuditMetricsHelper.class);
-    private static final long   MISSING_REPO_TYPE_SENTINEL = -1L;
 
     private static final String FACET_REPO = "per_repo";
     private static final String FACET_AGENT = "per_agent";
@@ -63,8 +57,6 @@ public class SolrAuditMetricsHelper {
     private static final String FACET_CLIIP = "per_cliip";
     private static final String BUCKET_VAL = "val";
     private static final String FACETS_KEY = "facets";
-
-    private final Map<String, Long> repoTypeByServiceType = new ConcurrentHashMap<>();
 
     @Autowired
     SolrMgr solrMgr;
@@ -76,10 +68,10 @@ public class SolrAuditMetricsHelper {
     RESTErrorUtil restErrorUtil;
 
     @Autowired
-    RangerDaoManager daoManager;
+    AuditMetricsHelper auditMetricsHelper;
 
     public RangerAuditMetrics getLatestAuditMetrics(String serviceType, String serviceName, String timezone) {
-        SearchFilter filter = buildSearchFilter(serviceType, serviceName, null, null, null);
+        SearchFilter filter = auditMetricsHelper.buildSearchFilter(serviceType, serviceName, null, null, null);
 
         SolrQuery query = buildMetricsQuery();
         applyAuditMetricsFilters(query, filter);
@@ -88,7 +80,7 @@ public class SolrAuditMetricsHelper {
 
         QueryResponse response = runMetricsQuery(query, "latest audit metrics");
         long count = response.getResults() != null ? response.getResults().getNumFound() : 0L;
-        return buildAuditMetrics(serviceType, serviceName, null, null, null, count);
+        return auditMetricsHelper.buildAuditMetrics(serviceType, serviceName, null, null, null, count);
     }
 
     public List<RangerAuditMetrics> getLatestAuditMetricsList(SearchFilter filter, String timezone) {
@@ -124,16 +116,7 @@ public class SolrAuditMetricsHelper {
     }
 
     public String resolveServiceType(XXService service) {
-        String ret = null;
-
-        if (service != null && daoManager != null && daoManager.getXXServiceDef() != null) {
-            XXServiceDef serviceDef = daoManager.getXXServiceDef().getById(service.getType());
-            if (serviceDef != null) {
-                ret = serviceDef.getName();
-            }
-        }
-
-        return ret;
+        return auditMetricsHelper.resolveServiceType(service);
     }
 
     private SolrQuery buildMetricsQuery() {
@@ -167,7 +150,6 @@ public class SolrAuditMetricsHelper {
     }
 
     private String buildAuditAccessMetricsFacet(int olderThanInDays) {
-        // If olderThanInDays is 7, we go back 6 days from today to include today
         int daysBack = olderThanInDays - 1;
 
         return String.format("{per_day:{type:range,field:evtTime,start:\"NOW-%dDAYS/DAY\",end:\"NOW\",gap:\"+1DAY\",mincount:1}}", daysBack);
@@ -201,16 +183,6 @@ public class SolrAuditMetricsHelper {
         query.addFilterQuery("evtTime:[NOW/DAY TO NOW]");
     }
 
-    private SearchFilter buildSearchFilter(String serviceType, String serviceName, String appId, String clusterName, String clientIP) {
-        SearchFilter filter = new SearchFilter();
-        filter.setParam(SearchFilter.SERVICE_TYPE, serviceType);
-        filter.setParam(SearchFilter.SERVICE_NAME, serviceName);
-        filter.setParam(SearchFilter.PLUGIN_APP_ID, appId);
-        filter.setParam(SearchFilter.CLUSTER_NAME, clusterName);
-        filter.setParam(SearchFilter.CLIENT_IP, clientIP);
-        return filter;
-    }
-
     private void applyAuditMetricsFilters(SolrQuery query, SearchFilter filter) {
         if (query == null || filter == null) {
             return;
@@ -221,8 +193,8 @@ public class SolrAuditMetricsHelper {
 
         String serviceType = filter.getParam(SearchFilter.SERVICE_TYPE);
         if (StringUtils.isNotBlank(serviceType)) {
-            long repoType = resolveRepoType(serviceType);
-            if (repoType == MISSING_REPO_TYPE_SENTINEL) {
+            long repoType = auditMetricsHelper.resolveRepoType(serviceType);
+            if (repoType == AuditMetricsHelper.MISSING_REPO_TYPE_SENTINEL) {
                 query.addFilterQuery("repoType:-1");
             } else {
                 query.addFilterQuery("repoType:" + repoType);
@@ -249,35 +221,13 @@ public class SolrAuditMetricsHelper {
         }
 
         String tz = timezone.trim();
-        try {
-            ZoneId.of(tz);
-            query.set("TZ", tz);
-        } catch (DateTimeException e) {
+        ZoneId zoneId = auditMetricsHelper.parseZoneId(tz);
+
+        if (zoneId != null) {
+            query.set("TZ", zoneId.getId());
+        } else {
             query.set("TZ", "UTC");
         }
-    }
-
-    private long resolveRepoType(String serviceType) {
-        if (StringUtils.isBlank(serviceType)) {
-            return MISSING_REPO_TYPE_SENTINEL;
-        }
-
-        String cacheKey = serviceType.trim().toLowerCase();
-        Long cached = repoTypeByServiceType.get(cacheKey);
-        if (cached != null) {
-            return cached;
-        }
-
-        long resolved = MISSING_REPO_TYPE_SENTINEL;
-        if (daoManager != null && daoManager.getXXServiceDef() != null) {
-            XXServiceDef serviceDef = daoManager.getXXServiceDef().findByName(serviceType);
-            if (serviceDef != null && serviceDef.getId() != null) {
-                resolved = serviceDef.getId();
-            }
-        }
-
-        repoTypeByServiceType.put(cacheKey, resolved);
-        return resolved;
     }
 
     private List<RangerAuditMetrics> extractAuditMetricsList(QueryResponse response, SearchFilter filter) {
@@ -312,7 +262,7 @@ public class SolrAuditMetricsHelper {
             List<?> agentBuckets = extractBuckets(getBucketValue(repoBucket, FACET_AGENT));
 
             if (agentBuckets == null || agentBuckets.isEmpty()) {
-                metrics.add(buildAuditMetrics(serviceTypeFilter, serviceName, null, null, null, bucketCount(repoBucket)));
+                metrics.add(auditMetricsHelper.buildAuditMetrics(serviceTypeFilter, serviceName, null, null, null, bucketCount(repoBucket)));
             } else {
                 processAgentBuckets(agentBuckets, metrics, serviceTypeFilter, serviceName);
             }
@@ -326,7 +276,7 @@ public class SolrAuditMetricsHelper {
             List<?> cliIpBuckets = extractBuckets(getBucketValue(agentBucket, FACET_CLIIP));
 
             if (cliIpBuckets == null || cliIpBuckets.isEmpty()) {
-                metrics.add(buildAuditMetrics(serviceTypeFilter, serviceName, appId, null, null, bucketCount(agentBucket)));
+                metrics.add(auditMetricsHelper.buildAuditMetrics(serviceTypeFilter, serviceName, appId, null, null, bucketCount(agentBucket)));
             } else {
                 processCliIpBuckets(cliIpBuckets, metrics, serviceTypeFilter, serviceName, appId);
             }
@@ -339,7 +289,7 @@ public class SolrAuditMetricsHelper {
             List<?> clusterBuckets = extractBuckets(getBucketValue(cliIpBucket, FACET_CLUSTER));
 
             if (clusterBuckets == null || clusterBuckets.isEmpty()) {
-                metrics.add(buildAuditMetrics(serviceTypeFilter, serviceName, appId, null, clientIP, bucketCount(cliIpBucket)));
+                metrics.add(auditMetricsHelper.buildAuditMetrics(serviceTypeFilter, serviceName, appId, null, clientIP, bucketCount(cliIpBucket)));
             } else {
                 processClusterBuckets(clusterBuckets, metrics, serviceTypeFilter, serviceName, appId, clientIP);
             }
@@ -349,7 +299,7 @@ public class SolrAuditMetricsHelper {
     private void processClusterBuckets(List<?> clusterBuckets, List<RangerAuditMetrics> metrics, String serviceTypeFilter, String serviceName, String appId, String clientIP) {
         for (Object clusterBucket : clusterBuckets) {
             String clusterName = bucketValToString(getBucketValue(clusterBucket, BUCKET_VAL));
-            metrics.add(buildAuditMetrics(serviceTypeFilter, serviceName, appId, clusterName, clientIP, bucketCount(clusterBucket)));
+            metrics.add(auditMetricsHelper.buildAuditMetrics(serviceTypeFilter, serviceName, appId, clusterName, clientIP, bucketCount(clusterBucket)));
         }
     }
 
@@ -364,51 +314,6 @@ public class SolrAuditMetricsHelper {
         if (value != null) {
             ret = value.toString();
             if (StringUtils.isBlank(ret)) {
-                ret = null;
-            }
-        }
-
-        return ret;
-    }
-
-    private RangerAuditMetrics buildAuditMetrics(String serviceType, String serviceName, String appId, String clusterName, String clientIP, long count) {
-        RangerAuditMetrics metric = new RangerAuditMetrics();
-        metric.setServiceName(serviceName);
-        metric.setServiceType(resolveServiceType(serviceType, serviceName));
-        metric.setAppId(appId);
-        metric.setClusterName(clusterName);
-        metric.setClientIP(clientIP);
-        metric.setNumberOfAudits(count);
-
-        Long serviceId = resolveServiceId(serviceName);
-        if (serviceId != null) {
-            metric.setId(serviceId);
-        }
-
-        return metric;
-    }
-
-    private Long resolveServiceId(String serviceName) {
-        Long ret = null;
-
-        if (StringUtils.isNotBlank(serviceName) && daoManager != null && daoManager.getXXService() != null) {
-            XXService service = daoManager.getXXService().findByName(serviceName);
-            if (service != null) {
-                ret = service.getId();
-            }
-        }
-
-        return ret;
-    }
-
-    private String resolveServiceType(String serviceType, String serviceName) {
-        String ret = serviceType;
-
-        if (StringUtils.isBlank(ret)) {
-            if (StringUtils.isNotBlank(serviceName) && daoManager != null && daoManager.getXXService() != null) {
-                XXService service = daoManager.getXXService().findByName(serviceName);
-                ret = resolveServiceType(service);
-            } else {
                 ret = null;
             }
         }
@@ -436,15 +341,11 @@ public class SolrAuditMetricsHelper {
         }
 
         List<RangerAuditMetricsByDays> metrics = new ArrayList<>();
-        String serviceType = filter != null ? filter.getParam(SearchFilter.SERVICE_TYPE) : null;
-        String serviceName = filter != null ? filter.getParam(SearchFilter.SERVICE_NAME) : null;
-        String appId = filter != null ? filter.getParam(SearchFilter.PLUGIN_APP_ID) : null;
-        String clusterName = filter != null ? filter.getParam(SearchFilter.CLUSTER_NAME) : null;
-        String clientIP = filter != null ? filter.getParam(SearchFilter.CLIENT_IP) : null;
+        FilterParams params = auditMetricsHelper.getFilterParams(filter);
 
         for (Object bucketObj : buckets) {
             Object dateValue = getBucketValue(bucketObj, BUCKET_VAL);
-            Long auditDate = parseAuditDate(dateValue);
+            Long auditDate = auditMetricsHelper.parseAuditDate(dateValue);
             if (auditDate == null) {
                 continue;
             }
@@ -452,8 +353,7 @@ public class SolrAuditMetricsHelper {
             Object countObj = getBucketValue(bucketObj, "count");
             long count = countObj instanceof Number ? ((Number) countObj).longValue() : 0L;
 
-            RangerAuditMetricsByDays metric = new RangerAuditMetricsByDays(serviceType, serviceName, appId, clusterName, clientIP, auditDate, count);
-            metrics.add(metric);
+            metrics.add(auditMetricsHelper.buildAuditMetricsByDays(params, auditDate, count));
         }
 
         return metrics;
@@ -479,15 +379,12 @@ public class SolrAuditMetricsHelper {
         }
 
         List<RangerAuditMetricsByHours> metrics = new ArrayList<>();
-        String serviceType = filter != null ? filter.getParam(SearchFilter.SERVICE_TYPE) : null;
-        String serviceName = filter != null ? filter.getParam(SearchFilter.SERVICE_NAME) : null;
-        String appId = filter != null ? filter.getParam(SearchFilter.PLUGIN_APP_ID) : null;
-        String clusterName = filter != null ? filter.getParam(SearchFilter.CLUSTER_NAME) : null;
-        String clientIP = filter != null ? filter.getParam(SearchFilter.CLIENT_IP) : null;
+        FilterParams params = auditMetricsHelper.getFilterParams(filter);
+        ZoneId zoneId = auditMetricsHelper.resolveZoneId(timezone);
 
         for (Object bucketObj : buckets) {
             Object dateValue = getBucketValue(bucketObj, BUCKET_VAL);
-            Long auditDate = parseAuditDate(dateValue);
+            Long auditDate = auditMetricsHelper.parseAuditDate(dateValue);
             if (auditDate == null) {
                 continue;
             }
@@ -495,29 +392,13 @@ public class SolrAuditMetricsHelper {
             Object countObj = getBucketValue(bucketObj, "count");
             long count = countObj instanceof Number ? ((Number) countObj).longValue() : 0L;
 
-            ZoneId zoneId = resolveZoneId(timezone);
             ZonedDateTime dateTime = ZonedDateTime.ofInstant(Instant.ofEpochMilli(auditDate), zoneId);
             int hour = dateTime.getHour();
 
-            RangerAuditMetricsByHours metric = new RangerAuditMetricsByHours(serviceType, serviceName, appId, clusterName, clientIP, hour, count);
-            metrics.add(metric);
+            metrics.add(auditMetricsHelper.buildAuditMetricsByHours(params, hour, count));
         }
 
         return metrics;
-    }
-
-    private ZoneId resolveZoneId(String timezone) {
-        ZoneId ret = ZoneOffset.UTC;
-
-        if (StringUtils.isNotBlank(timezone)) {
-            try {
-                ret = ZoneId.of(timezone.trim());
-            } catch (DateTimeException e) {
-                LOGGER.warn("Invalid timezone '{}', using UTC", timezone, e);
-            }
-        }
-
-        return ret;
     }
 
     private List<?> extractBuckets(Object perDayObj) {
@@ -545,24 +426,6 @@ public class SolrAuditMetricsHelper {
             ret = ((NamedList<?>) bucketObj).get(key);
         } else if (bucketObj instanceof Map) {
             ret = ((Map<?, ?>) bucketObj).get(key);
-        }
-
-        return ret;
-    }
-
-    private Long parseAuditDate(Object value) {
-        Long ret = null;
-
-        if (value instanceof Date) {
-            ret = ((Date) value).getTime();
-        } else if (value instanceof Number) {
-            ret = ((Number) value).longValue();
-        } else if (value instanceof String) {
-            try {
-                ret = Instant.parse((String) value).toEpochMilli();
-            } catch (DateTimeParseException e) {
-                LOGGER.warn("Unable to parse audit metric date value: {}", value, e);
-            }
         }
 
         return ret;

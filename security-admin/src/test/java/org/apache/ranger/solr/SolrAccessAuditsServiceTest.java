@@ -17,6 +17,7 @@
 package org.apache.ranger.solr;
 
 import org.apache.ranger.AccessAuditsService;
+import org.apache.ranger.audit.metrics.AuditMetricsHelper;
 import org.apache.ranger.common.PropertiesUtil;
 import org.apache.ranger.common.RESTErrorUtil;
 import org.apache.ranger.common.SearchCriteria;
@@ -241,7 +242,7 @@ public class SolrAccessAuditsServiceTest {
         when(sdDao.getById(1L)).thenReturn(sd);
         when(sd.getName()).thenReturn("hdfs");
         injectField(service, AccessAuditsService.class, "daoManager", daoManager);
-        service.auditMetricsHelper.daoManager = daoManager;
+        injectField(service.auditMetricsHelper.auditMetricsHelper, AuditMetricsHelper.class, "daoManager", daoManager);
 
         RangerAuditMetrics metrics = service.getAuditMetrics(5L, null);
 
@@ -253,6 +254,7 @@ public class SolrAccessAuditsServiceTest {
     private SolrAccessAuditsService createServiceWithHelper() {
         SolrAccessAuditsService service = new SolrAccessAuditsService();
         service.auditMetricsHelper = new SolrAuditMetricsHelper();
+        service.auditMetricsHelper.auditMetricsHelper = new AuditMetricsHelper();
         service.auditMetricsHelper.solrMgr = mock(SolrMgr.class);
         service.auditMetricsHelper.solrUtil = mock(SolrUtil.class);
         service.auditMetricsHelper.restErrorUtil = new RESTErrorUtil();

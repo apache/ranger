@@ -16,6 +16,7 @@
  */
 package org.apache.ranger.solr;
 
+import org.apache.ranger.audit.metrics.AuditMetricsHelper;
 import org.apache.ranger.common.RESTErrorUtil;
 import org.apache.ranger.db.RangerDaoManager;
 import org.apache.ranger.db.XXServiceDao;
@@ -230,7 +231,19 @@ public class SolrAuditMetricsHelperTest {
         helper.solrMgr = mock(SolrMgr.class);
         helper.solrUtil = mock(SolrUtil.class);
         helper.restErrorUtil = new RESTErrorUtil();
-        helper.daoManager = daoManager;
+        helper.auditMetricsHelper = new AuditMetricsHelper();
+
+        if (daoManager != null) {
+            try {
+                java.lang.reflect.Field daoField = AuditMetricsHelper.class.getDeclaredField("daoManager");
+
+                daoField.setAccessible(true);
+                daoField.set(helper.auditMetricsHelper, daoManager);
+            } catch (ReflectiveOperationException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
         return helper;
     }
 
