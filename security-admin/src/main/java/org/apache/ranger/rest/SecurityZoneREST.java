@@ -58,8 +58,6 @@ import org.apache.ranger.common.RangerConstants;
 import org.apache.ranger.common.RangerSearchUtil;
 import org.apache.ranger.common.RangerValidatorFactory;
 import org.apache.ranger.db.RangerDaoManager;
-import org.apache.ranger.entity.XXService;
-import org.apache.ranger.entity.XXServiceDef;
 import org.apache.ranger.plugin.model.RangerSecurityZone;
 import org.apache.ranger.plugin.model.RangerSecurityZoneHeaderInfo;
 import org.apache.ranger.plugin.model.RangerSecurityZoneV2;
@@ -186,6 +184,7 @@ public class SecurityZoneREST {
         } else {
             securityZone.setId(zoneId);
         }
+        blockAdminFromKMSServiceOnUpdate(securityZone);
         RangerSecurityZone ret;
         try {
             RangerSecurityZoneValidator validator = validatorFactory.getSecurityZoneValidator(svcStore, securityZoneStore);
@@ -216,6 +215,9 @@ public class SecurityZoneREST {
         }
         try {
         	ensureAdminAccess();
+
+            blockAdminFromKMSServiceOnDelete(zoneName, null);
+
             RangerSecurityZoneValidator validator = validatorFactory.getSecurityZoneValidator(svcStore, securityZoneStore);
             validator.validate(zoneName, RangerValidator.Action.DELETE);
             securityZoneStore.deleteSecurityZoneByName(zoneName);
@@ -246,6 +248,9 @@ public class SecurityZoneREST {
         }
         try {
         	ensureAdminAccess();
+
+            blockAdminFromKMSServiceOnDelete(null, zoneId);
+
             RangerSecurityZoneValidator validator = validatorFactory.getSecurityZoneValidator(svcStore, securityZoneStore);
             validator.validate(zoneId, RangerValidator.Action.DELETE);
             securityZoneStore.deleteSecurityZoneById(zoneId);
@@ -739,21 +744,48 @@ public class SecurityZoneREST {
 	}
 
 	private void blockAdminFromKMSService(RangerSecurityZone securityZone) {
-		if(securityZone != null) {
+		if (securityZone != null) {
 			Map<String, RangerSecurityZoneService> serviceMap = securityZone.getServices();
+
 			if (serviceMap != null) {
 				for (String serviceName : serviceMap.keySet()) {
-					XXService xService = daoManager.getXXService().findByName(serviceName);
-					if (xService != null) {
-						XXServiceDef xServiceDef = daoManager.getXXServiceDef().getById(xService.getType());
-						if (EmbeddedServiceDefsUtil.KMS_IMPL_CLASS_NAME.equals(xServiceDef.getImplclassname())) {
-							throw restErrorUtil.createRESTException(
-									"KMS Services/Service-Defs are not accessible for Zone operations",
-									MessageEnums.OPER_NOT_ALLOWED_FOR_ENTITY);
-						}
+					String serviceType = daoManager.getXXServiceDef().findServiceDefTypeByServiceName(serviceName);
+
+					if (EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_KMS_NAME.equals(serviceType)) {
+						throw restErrorUtil.createRESTException(
+								"KMS Services/Service-Defs are not accessible for Zone operations",
+								MessageEnums.OPER_NOT_ALLOWED_FOR_ENTITY);
 					}
 				}
 			}
+		}
+	}
+
+	private void blockAdminFromKMSServiceOnUpdate(RangerSecurityZone submittedZone) {
+		if (bizUtil.isAdmin()) {
+			blockAdminFromKMSService(submittedZone);
+		}
+	}
+
+	private void blockAdminFromKMSServiceOnDelete(String zoneName, Long zoneId) {
+		if (bizUtil.isAdmin()) {
+			RangerSecurityZone existingZone = null;
+
+			try {
+				if (zoneId != null) {
+					existingZone = securityZoneStore.getSecurityZone(zoneId);
+				} else if (zoneName != null) {
+					existingZone = securityZoneStore.getSecurityZoneByName(zoneName);
+				}
+			} catch (WebApplicationException excp) {
+				throw excp;
+			} catch (Exception ex) {
+				LOG.error("Unable to get Security Zone with id : {}, name : {}", zoneId, zoneName, ex);
+
+				throw restErrorUtil.createRESTException(ex.getMessage());
+			}
+
+			blockAdminFromKMSService(existingZone);
 		}
 	}
 
