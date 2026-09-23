@@ -45,6 +45,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
@@ -260,10 +261,12 @@ public class EntraIdUserGroupSource implements UserGroupSource {
                 sourceUsers.size(), sourceGroups.size(), deletedUsers.size(), deletedGroups.size(), fullSync, reconcileSweep);
         // 5. Apply to the sink; advance delta tokens only on full success.
         try {
-            sink.addOrUpdateUsersGroups(sourceGroups, sourceUsers, sourceGroupUsers, reconcileSweep);
+            // Lowercase GUIDs on the copies passed to the sink. Delta caches stay keyed by the Graph id.
+            sink.addOrUpdateUsersGroups(normalizeAttrMaps(sourceGroups), normalizeAttrMaps(sourceUsers),
+                    normalizeMembership(sourceGroupUsers), reconcileSweep);
             // Per-record deletions (normal cycles only; the sweep computes deletes itself).
             if (!reconcileSweep && (!deletedUsers.isEmpty() || !deletedGroups.isEmpty())) {
-                sink.deleteUsersAndGroups(deletedUsers, deletedGroups);
+                sink.deleteUsersAndGroups(normalizeAttrMaps(deletedUsers), normalizeAttrMaps(deletedGroups));
             }
             userDeltaLink = userPage.getDeltaLink();
             groupDeltaLink = groupPage.getDeltaLink();
@@ -436,6 +439,70 @@ public class EntraIdUserGroupSource implements UserGroupSource {
                 groupAttrsCache.remove(id);
             }
         }
+    }
+
+    private static String normalizeGuid(String id) {
+        return id == null ? null : id.toLowerCase(Locale.ROOT);
+    }
+
+    /** Lowercase GUID keys, full_name, and cloud_id on the copies passed to the sink. */
+    private static Map<String, Map<String, String>> normalizeAttrMaps(Map<String, Map<String, String>> source) {
+        Map<String, Map<String, String>> normalized = new HashMap<>();
+
+        if (source == null) {
+            return normalized;
+        }
+
+        for (Map.Entry<String, Map<String, String>> entry : source.entrySet()) {
+            if (entry.getKey() == null) {
+                continue;
+            }
+
+            Map<String, String> attrs = entry.getValue() == null ? new HashMap<>() : new HashMap<>(entry.getValue());
+            String fullName = attrs.get(UgsyncCommonConstants.FULL_NAME);
+
+            if (fullName != null) {
+                attrs.put(UgsyncCommonConstants.FULL_NAME, normalizeGuid(fullName));
+            }
+
+            String cloudId = attrs.get("cloud_id");
+
+            if (cloudId != null) {
+                attrs.put("cloud_id", normalizeGuid(cloudId));
+            }
+
+            normalized.put(normalizeGuid(entry.getKey()), attrs);
+        }
+
+        return normalized;
+    }
+
+    private static Map<String, Set<String>> normalizeMembership(Map<String, Set<String>> source) {
+        Map<String, Set<String>> normalized = new HashMap<>();
+
+        if (source == null) {
+            return normalized;
+        }
+
+        for (Map.Entry<String, Set<String>> entry : source.entrySet()) {
+            if (entry.getKey() == null) {
+                continue;
+            }
+
+            Set<String> members = new HashSet<>();
+
+            if (entry.getValue() != null) {
+                for (String memberId : entry.getValue()) {
+                    if (memberId != null) {
+                        members.add(normalizeGuid(memberId));
+                    }
+                }
+            }
+
+            normalized.put(normalizeGuid(entry.getKey()), members);
+        }
+
+        return normalized;
     }
 
     private static <T> DeltaPage<T> orEmpty(DeltaPage<T> page) {

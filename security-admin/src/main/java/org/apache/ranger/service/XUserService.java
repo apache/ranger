@@ -19,8 +19,6 @@
 
 package org.apache.ranger.service;
 
-import org.apache.commons.lang3.StringUtils;
-import org.apache.ranger.authorization.utils.JsonUtils;
 import org.apache.ranger.common.MessageEnums;
 import org.apache.ranger.common.PropertiesUtil;
 import org.apache.ranger.common.RangerCommonEnums;
@@ -32,7 +30,6 @@ import org.apache.ranger.entity.XXGroupUser;
 import org.apache.ranger.entity.XXPortalUser;
 import org.apache.ranger.entity.XXPortalUserRole;
 import org.apache.ranger.entity.XXUser;
-import org.apache.ranger.ugsyncutil.util.UgsyncCommonConstants;
 import org.apache.ranger.view.VXUser;
 import org.apache.ranger.view.VXUserList;
 import org.springframework.context.annotation.Scope;
@@ -89,22 +86,9 @@ public class XUserService extends XUserServiceBase<XXUser, VXUser> {
     }
 
     public VXUser createXUserWithOutLogin(VXUser vxUser) {
-        // Prefer Ranger id when present so a UPN/name rename updates in place. Identity
-        // (otherAttributes full_name/cloud_id) is checked before name so that a rename landing
-        // on an unrelated existing name can't hijack that row; name is only a fallback for
-        // callers that never set otherAttributes at all (e.g. internal/service user creation).
-        XXUser  xxUser     = null;
+        XXUser  xxUser     = daoManager.getXXUser().findByUserName(vxUser.getName());
         boolean userExists = true;
 
-        if (vxUser.getId() != null) {
-            xxUser = getDao().getById(vxUser.getId());
-        }
-        if (xxUser == null) {
-            xxUser = findUserByOtherAttributeIdentity(vxUser.getOtherAttributes());
-        }
-        if (xxUser == null) {
-            xxUser = daoManager.getXXUser().findByUserName(vxUser.getName());
-        }
         if (xxUser == null) {
             xxUser     = new XXUser();
             userExists = false;
@@ -112,9 +96,7 @@ public class XUserService extends XUserServiceBase<XXUser, VXUser> {
 
         XXPortalUser xxPortalUser = daoManager.getXXPortalUser().findByLoginId(vxUser.getName());
 
-        // Only preserve DB visibility when the caller did not send one. Usersync always
-        // sends isVisible on upsert and must be able to un-hide after soft-delete.
-        if (xxPortalUser != null && xxPortalUser.getUserSource() == RangerCommonEnums.USER_EXTERNAL && vxUser.getIsVisible() == null && userExists) {
+        if (xxPortalUser != null && xxPortalUser.getUserSource() == RangerCommonEnums.USER_EXTERNAL) {
             vxUser.setIsVisible(xxUser.getIsVisible());
         }
 
@@ -306,32 +288,5 @@ public class XUserService extends XUserServiceBase<XXUser, VXUser> {
 
             vObj.setUserRoleList(userRoleList);
         }
-    }
-
-    private XXUser findUserByOtherAttributeIdentity(String otherAttributes) {
-        if (StringUtils.isBlank(otherAttributes)) {
-            return null;
-        }
-        Map<String, String> incoming = JsonUtils.jsonToMapStringString(otherAttributes);
-        if (incoming == null || incoming.isEmpty()) {
-            return null;
-        }
-        String fullName   = incoming.get("full_name");
-        String cloudId    = incoming.get("cloud_id");
-        String syncSource = incoming.get(UgsyncCommonConstants.SYNC_SOURCE);
-        if (StringUtils.isBlank(fullName) && StringUtils.isBlank(cloudId)) {
-            return null;
-        }
-        XXUser match = null;
-        if (StringUtils.isNotBlank(fullName)) {
-            List<XXUser> candidates = daoManager.getXXUser().findByOtherAttributesLike(OtherAttributesMatcher.likePattern(fullName));
-
-            match = OtherAttributesMatcher.findExactMatch(candidates, XXUser::getOtherAttributes, "full_name", fullName, syncSource);
-        }
-        if (match == null && StringUtils.isNotBlank(cloudId)) {
-            List<XXUser> candidates = daoManager.getXXUser().findByOtherAttributesLike(OtherAttributesMatcher.likePattern(cloudId));
-            match = OtherAttributesMatcher.findExactMatch(candidates, XXUser::getOtherAttributes, "cloud_id", cloudId, syncSource);
-        }
-        return match;
     }
 }

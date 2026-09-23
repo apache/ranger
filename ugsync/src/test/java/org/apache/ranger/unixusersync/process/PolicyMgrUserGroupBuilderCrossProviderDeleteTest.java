@@ -208,7 +208,7 @@ public class PolicyMgrUserGroupBuilderCrossProviderDeleteTest {
     }
 
     @Test
-    public void testL5_ldapUser_dnCaseDrift_notDeleted() throws Exception {
+    public void testL5_ldapUser_dnCaseDrift_isDeleted() throws Exception {
         setField("currentSyncSource", LDAP_SYNC_SOURCE);
         setField("ldapUrl", LDAP_URL_A);
 
@@ -221,12 +221,12 @@ public class PolicyMgrUserGroupBuilderCrossProviderDeleteTest {
 
         invoke("computeDeletedUsers", Map.class, sourceUsers);
 
-        assertFalse(deletedUsers().containsKey("alice"),
-                "DN case drift between cache and source must not look like a delete");
+        assertTrue(deletedUsers().containsKey("alice"),
+                "Delete matching stays an exact key compare; DN case drift is absent from the snapshot");
     }
 
     @Test
-    public void testL6_ldapGroup_dnCaseDrift_notDeleted() throws Exception {
+    public void testL6_ldapGroup_dnCaseDrift_isDeleted() throws Exception {
         setField("currentSyncSource", LDAP_SYNC_SOURCE);
         setField("ldapUrl", LDAP_URL_A);
 
@@ -239,7 +239,8 @@ public class PolicyMgrUserGroupBuilderCrossProviderDeleteTest {
 
         invoke("computeDeletedGroups", Map.class, sourceGroups);
 
-        assertFalse(deletedGroups().containsKey("eng"));
+        assertTrue(deletedGroups().containsKey("eng"),
+                "Delete matching stays an exact key compare; DN case drift is absent from the snapshot");
     }
 
     @Test
@@ -271,7 +272,7 @@ public class PolicyMgrUserGroupBuilderCrossProviderDeleteTest {
     }
 
     @Test
-    public void testU2_unixUser_emptyStringLdapUrlAttr_orphanDeleted() throws Exception {
+    public void testU2_unixUser_emptyStringLdapUrlAttr_notDeleted() throws Exception {
         setField("currentSyncSource", UNIX_SYNC_SOURCE);
         setField("ldapUrl", null);
 
@@ -279,12 +280,12 @@ public class PolicyMgrUserGroupBuilderCrossProviderDeleteTest {
 
         invoke("computeDeletedUsers", Map.class, Collections.emptyMap());
 
-        assertTrue(deletedUsers().containsKey("bob"),
-                "Unix orphan with ldap_url=\"\" must match null config ldapUrl (blank==blank)");
+        assertFalse(deletedUsers().containsKey("bob"),
+                "ldap_url=\"\" does not match a null configured ldapUrl");
     }
 
     @Test
-    public void testU3_unixGroup_emptyStringLdapUrlAttr_orphanDeleted() throws Exception {
+    public void testU3_unixGroup_emptyStringLdapUrlAttr_notDeleted() throws Exception {
         setField("currentSyncSource", UNIX_SYNC_SOURCE);
         setField("ldapUrl", null);
 
@@ -292,12 +293,12 @@ public class PolicyMgrUserGroupBuilderCrossProviderDeleteTest {
 
         invoke("computeDeletedGroups", Map.class, Collections.emptyMap());
 
-        assertTrue(deletedGroups().containsKey("devs"));
-        assertEquals(ISHIDDEN, deletedGroups().get("devs").getIsVisible());
+        assertFalse(deletedGroups().containsKey("devs"));
+        assertEquals(ISVISIBLE, this.<Map<String, XGroupInfo>>getField("groupCache").get("devs").getIsVisible());
     }
 
     @Test
-    public void testF1_fileUser_blankLdapUrl_orphanDeleted() throws Exception {
+    public void testF1_fileUser_blankLdapUrl_notDeleted() throws Exception {
         setField("currentSyncSource", FILE_SYNC_SOURCE);
         setField("ldapUrl", null);
 
@@ -305,7 +306,8 @@ public class PolicyMgrUserGroupBuilderCrossProviderDeleteTest {
 
         invoke("computeDeletedUsers", Map.class, Collections.emptyMap());
 
-        assertTrue(deletedUsers().containsKey("fileuser"));
+        assertFalse(deletedUsers().containsKey("fileuser"),
+                "ldap_url=\"\" does not match a null configured ldapUrl");
     }
 
     @Test
@@ -349,7 +351,7 @@ public class PolicyMgrUserGroupBuilderCrossProviderDeleteTest {
     }
 
     @Test
-    public void testS3_syncSourceFallback_toEntityField_whenAttrMissing() throws Exception {
+    public void testS3_missingSyncSourceAttr_notDeleted() throws Exception {
         setField("currentSyncSource", UNIX_SYNC_SOURCE);
         setField("ldapUrl", null);
 
@@ -362,8 +364,8 @@ public class PolicyMgrUserGroupBuilderCrossProviderDeleteTest {
 
         invoke("computeDeletedUsers", Map.class, Collections.emptyMap());
 
-        assertTrue(deletedUsers().containsKey("carol"),
-                "When otherAttributes omit sync_source, entity syncSource must still scope deletes");
+        assertFalse(deletedUsers().containsKey("carol"),
+                "Delete scoping reads sync_source from otherAttributes; the entity column is not a fallback");
     }
 
     @Test

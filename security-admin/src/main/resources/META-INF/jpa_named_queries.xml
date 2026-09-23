@@ -298,21 +298,9 @@
 		</query>
 	</named-query>
 
-	<named-query name="XXUser.findByOtherAttributesLike">
-		<query>SELECT obj FROM XXUser obj
-			   WHERE obj.otherAttributes LIKE :pattern
-		</query>
-	</named-query>
-
 	<named-query name="XXGroup.findByGroupName">
 		<query>SELECT Obj FROM XXGroup obj
 			   WHERE obj.name=:name
-		</query>
-	</named-query>
-
-	<named-query name="XXGroup.findByOtherAttributesLike">
-		<query>SELECT obj FROM XXGroup obj
-			   WHERE obj.otherAttributes LIKE :pattern
 		</query>
 	</named-query>
 

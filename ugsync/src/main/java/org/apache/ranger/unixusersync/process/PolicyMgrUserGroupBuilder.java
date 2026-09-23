@@ -58,7 +58,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.StringTokenizer;
-import java.util.TreeSet;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -85,8 +84,6 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
     /* ***** PUT API **** */
     public static final String PM_UPDATE_USERS_ROLES_URI             = "/service/xusers/users/roleassignments";
     /* ******************* */
-
-    private static final int MERGE_IDS_TARGETED_LOOKUP_THRESHOLD = 10;
 
     private static final String  AUTH_KERBEROS                       = "kerberos";
     private static final String  KERBEROS_PRINCIPAL                  = "ranger.usersync.kerberos.principal";
@@ -410,8 +407,6 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
         if (MapUtils.isNotEmpty(deltaGroupUsers)) {
             groupUsersCache.putAll(deltaGroupUsers);
         }
-
-        refreshMissingRangerIds();
     }
 
     protected String userNameTransform(String userName) {
@@ -540,10 +535,6 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
                     }
 
                     groupCache.put(g.getName(), g);
-                    String groupIdKey = resolveIdentityKey(g.getOtherAttrsMap());
-                    if (StringUtils.isNotEmpty(groupIdKey)) {
-                        groupNameMap.put(groupIdKey.toLowerCase(), g.getName());
-                    }
                 }
 
                 retrievedCount = groupCache.size();
@@ -598,10 +589,6 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
                     }
 
                     userCache.put(u.getName(), u);
-                    String userIdKey = resolveIdentityKey(u.getOtherAttrsMap());
-                    if (StringUtils.isNotEmpty(userIdKey)) {
-                        userNameMap.put(userIdKey.toLowerCase(), u.getName());
-                    }
                 }
 
                 retrievedCount = userCache.size();
@@ -739,109 +726,78 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
 
         deltaGroups = new HashMap<>();
 
-        // Resolve by stable identity (GUID/DN) first so displayName renames update
-        // in place instead of creating a duplicate cache/Admin entry.
+        // Check if the group exists in cache. If not, mark as new group else check if other attributes are updated and mark as updated group
         for (String groupDN : sourceGroups.keySet()) {
             Map<String, String> newGroupAttrs    = sourceGroups.get(groupDN);
             String              newGroupAttrsStr = JsonUtils.objectToJson(newGroupAttrs);
-            String              desiredName      = groupNameTransform(newGroupAttrs.get(UgsyncCommonConstants.ORIGINAL_NAME).trim());
-            String              groupKey         = groupDN.toLowerCase();
+            String              groupName        = groupNameMap.get(groupDN);
 
-            if (!isValidString(desiredName)) {
-                LOG.warn("Ignoring invalid group {} Full name = {}", desiredName, groupDN);
+            if (StringUtils.isEmpty(groupName)) {
+                groupName = groupNameTransform(newGroupAttrs.get(UgsyncCommonConstants.ORIGINAL_NAME).trim());
+            }
+
+            if (!isValidString(groupName)) {
+                LOG.warn("Ignoring invalid group {} Full name = {}", groupName, groupDN);
                 continue;
             }
 
-            String     existingName = groupNameMap.get(groupKey);
-            XGroupInfo curGroup     = StringUtils.isNotEmpty(existingName) ? groupCache.get(existingName) : null;
+            if (!groupCache.containsKey(groupName)) {
+                XGroupInfo newGroup = addXGroupInfo(groupName, newGroupAttrs, newGroupAttrsStr);
 
-            if (curGroup == null) {
-                curGroup = findGroupByIdentity(groupDN);
-                if (curGroup != null) {
-                    existingName = curGroup.getName();
-                    groupNameMap.put(groupKey, existingName);
-                }
-            }
-
-            if (curGroup == null && groupCache.containsKey(desiredName)) {
-                XGroupInfo byName             = groupCache.get(desiredName);
-                String     byNameDN           = resolveIdentityKey(byName.getOtherAttrsMap());
-                String     byNameSyncSource   = byName.getSyncSource();
-                String     incomingSyncSource = newGroupAttrs.get(UgsyncCommonConstants.SYNC_SOURCE);
-                if (StringUtils.isEmpty(byNameDN) || groupDN.equalsIgnoreCase(byNameDN) || (StringUtils.equalsIgnoreCase(byNameSyncSource, incomingSyncSource)
-                        && StringUtils.equalsIgnoreCase(byNameDN, desiredName))) {
-                    curGroup     = byName;
-                    existingName = desiredName;
-                    groupNameMap.put(groupKey, desiredName);
-                    LOG.debug("identity-merge-group: name={} byNameDN={} incomingDN={} byNameSync={} incomingSync={}", desiredName, byNameDN, groupDN, byNameSyncSource, incomingSyncSource);
-                } else {
-                    LOG.debug("[{}]: SyncSource update skipped, current group DN = {} new group DN = {}", desiredName, byNameDN, groupDN);
-                    continue;
-                }
-            }
-
-            if (curGroup == null) {
-                XGroupInfo newGroup = addXGroupInfo(desiredName, newGroupAttrs, newGroupAttrsStr);
-                deltaGroups.put(desiredName, newGroup);
+                deltaGroups.put(groupName, newGroup);
                 noOfNewGroups++;
-                groupNameMap.put(groupKey, desiredName);
-                continue;
-            }
-
-            if (!StringUtils.equals(existingName, desiredName)) {
-                if (groupCache.containsKey(desiredName) && groupCache.get(desiredName) != curGroup) {
-                    LOG.warn("[{}]: Cannot rename group '{}' -> '{}': target name already exists; updating under old name", groupDN, existingName, desiredName);
-                    desiredName = existingName;
-                } else {
-                    renameGroupInCache(curGroup, existingName, desiredName);
-                    existingName = desiredName;
-                    groupNameMap.put(groupKey, desiredName);
-                }
-            }
-
-            String              groupName        = existingName;
-            String              curSyncSource    = curGroup.getSyncSource();
-            String              curGroupAttrsStr = curGroup.getOtherAttributes();
-            Map<String, String> curGroupAttrs    = curGroup.getOtherAttrsMap();
-            String              curGroupDN       = resolveIdentityKey(curGroupAttrs);
-            if (StringUtils.isEmpty(curGroupDN)) {
-                curGroupDN = groupName;
-            }
-            String              newSyncSource    = newGroupAttrs.get(UgsyncCommonConstants.SYNC_SOURCE);
-
-            if (isStartupFlag && !isSyncSourceValidationEnabled && (!StringUtils.equalsIgnoreCase(curSyncSource, newSyncSource))) {
-                LOG.debug("[{}]: SyncSource updated to {}, previous value: {}", groupName, newSyncSource, curSyncSource);
-                curGroup = setOtherAttributes(curGroup, newSyncSource, newGroupAttrs, newGroupAttrsStr);
-                deltaGroups.put(groupName, curGroup);
-                noOfModifiedGroups++;
-                if (StringUtils.isNotEmpty(curGroupDN) && !StringUtils.equalsIgnoreCase(curGroupDN, groupDN)) {
-                    groupNameMap.remove(curGroupDN.toLowerCase());
-                }
-                groupNameMap.put(groupKey, groupName);
-                LOG.debug("identity-refresh-group: name={} oldDN={} newDN={} oldSync={} newSync={} deltaGroupsSizeSoFar={}", groupName, curGroupDN, groupDN, curSyncSource, newSyncSource, deltaGroups.size());
-            } else if (MapUtils.isNotEmpty(curGroupAttrs) && StringUtils.isNotEmpty(curGroupDN) && !StringUtils.equalsIgnoreCase(groupDN, curGroupDN) && !StringUtils.equalsIgnoreCase(curSyncSource, newSyncSource)) {
-                LOG.debug("[{}]: SyncSource update skipped, current group DN = {} new group DN = {}", groupName, curGroupDN, groupDN);
-                if (StringUtils.equalsIgnoreCase(curGroupAttrsStr, newGroupAttrsStr)) {
-                    groupNameMap.put(groupKey, groupName);
-                }
-            } else if (StringUtils.isEmpty(curSyncSource) || (!StringUtils.equalsIgnoreCase(curGroupAttrsStr, newGroupAttrsStr) && StringUtils.equalsIgnoreCase(curSyncSource, newSyncSource))) {
-                if (StringUtils.isEmpty(curSyncSource)) {
-                    LOG.debug("[{}]: SyncSource updated to {}, previously empty", groupName, newSyncSource);
-                } else {
-                    LOG.debug("[{}]: Other Attributes updated!", groupName);
-                }
-                curGroup = setOtherAttributes(curGroup, newSyncSource, newGroupAttrs, newGroupAttrsStr);
-                deltaGroups.put(groupName, curGroup);
-                noOfModifiedGroups++;
-                if (StringUtils.isNotEmpty(curGroupDN) && !StringUtils.equalsIgnoreCase(curGroupDN, groupDN)) {
-                    groupNameMap.remove(curGroupDN.toLowerCase());
-                }
-                groupNameMap.put(groupKey, groupName);
-            } else if (!StringUtils.equalsIgnoreCase(curSyncSource, newSyncSource)) {
-                LOG.debug("[{}]: Different sync source exists, update skipped!", groupName);
+                groupNameMap.put(groupDN, groupName);
             } else {
-                LOG.debug("[{}]: No change, update skipped!", groupName);
-                groupNameMap.put(groupKey, groupName);
+                XGroupInfo          curGroup         = groupCache.get(groupName);
+                String              curSyncSource    = curGroup.getSyncSource();
+                String              curGroupAttrsStr = curGroup.getOtherAttributes();
+                Map<String, String> curGroupAttrs    = curGroup.getOtherAttrsMap();
+                String              curGroupDN       = MapUtils.isEmpty(curGroupAttrs) ? groupName : curGroupAttrs.get(UgsyncCommonConstants.FULL_NAME);
+                String              newSyncSource    = newGroupAttrs.get(UgsyncCommonConstants.SYNC_SOURCE);
+
+                if (isStartupFlag && !isSyncSourceValidationEnabled && (!StringUtils.equalsIgnoreCase(curSyncSource, newSyncSource))) {
+                    LOG.debug("[{}]: SyncSource updated to {}, previous value: {}", groupName, newSyncSource, curSyncSource);
+
+                    curGroup = setOtherAttributes(curGroup, newSyncSource, newGroupAttrs, newGroupAttrsStr);
+
+                    deltaGroups.put(groupName, curGroup);
+                    noOfModifiedGroups++;
+                    groupNameMap.put(groupDN, groupName);
+                } else {
+                    if (MapUtils.isNotEmpty(curGroupAttrs) && !StringUtils.equalsIgnoreCase(groupDN, curGroupDN)) { // skip update
+                        LOG.debug("[{}]: SyncSource update skipped, current group DN = {} new user DN  = {}", groupName, curGroupDN, groupDN);
+
+                        if (StringUtils.equalsIgnoreCase(curGroupAttrsStr, newGroupAttrsStr)) {
+                            groupNameMap.put(groupDN, groupName);
+                        }
+
+                        continue;
+                    }
+
+                    if (StringUtils.isEmpty(curSyncSource) || (!StringUtils.equalsIgnoreCase(curGroupAttrsStr, newGroupAttrsStr) && StringUtils.equalsIgnoreCase(curSyncSource, newSyncSource))) { // update
+                        if (StringUtils.isEmpty(curSyncSource)) {
+                            LOG.debug("[{}]: SyncSource updated to {}, previously empty", groupName, newSyncSource);
+                        } else {
+                            LOG.debug("[{}]: Other Attributes updated!", groupName);
+                        }
+
+                        curGroup = setOtherAttributes(curGroup, newSyncSource, newGroupAttrs, newGroupAttrsStr);
+
+                        deltaGroups.put(groupName, curGroup);
+                        noOfModifiedGroups++;
+                        groupNameMap.put(groupDN, groupName);
+                    } else {
+                        if (!StringUtils.equalsIgnoreCase(curSyncSource, newSyncSource)) {
+                            LOG.debug("[{}]: Different sync source exists, update skipped!", groupName);
+                        } else {
+                            LOG.debug("[{}]: No change, update skipped!", groupName);
+                        }
+                    }
+
+                    if (StringUtils.equalsIgnoreCase(curGroupAttrsStr, newGroupAttrsStr)) {
+                        groupNameMap.put(groupDN, groupName);
+                    }
+                }
             }
         }
 
@@ -853,114 +809,88 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
 
         deltaUsers = new HashMap<>();
 
+        // Check if the user exists in cache. If not, mark as new user else check if other attributes are updated and mark as updated user
         for (Map.Entry<String, Map<String, String>> sourceUser : sourceUsers.entrySet()) {
             String              userDN          = sourceUser.getKey();
             Map<String, String> newUserAttrs    = sourceUser.getValue();
             String              newUserAttrsStr = JsonUtils.objectToJson(newUserAttrs);
-            String              desiredName     = userNameTransform(newUserAttrs.get(UgsyncCommonConstants.ORIGINAL_NAME).trim());
-            String              userKey         = userDN.toLowerCase();
+            String              userName        = userNameMap.get(userDN);
 
-            if (!isValidString(desiredName)) {
-                LOG.warn("Ignoring invalid user {} Full name = {}", desiredName, userDN);
+            if (StringUtils.isEmpty(userName)) {
+                userName = userNameTransform(newUserAttrs.get(UgsyncCommonConstants.ORIGINAL_NAME).trim());
+            }
+
+            if (!isValidString(userName)) {
+                LOG.warn("Ignoring invalid user {} Full name = {}", userName, userDN);
                 continue;
             }
 
-            if (StringUtils.equalsIgnoreCase(policyMgrUserName, desiredName) || StringUtils.equalsIgnoreCase("admin", desiredName)) {
-                LOG.debug("[{}]: SyncSource update skipped!", desiredName);
-                continue;
-            }
+            if (!userCache.containsKey(userName)) {
+                XUserInfo newUser = addXUserInfo(userName, newUserAttrs, newUserAttrsStr);
 
-            String    existingName = userNameMap.get(userKey);
-            XUserInfo curUser      = StringUtils.isNotEmpty(existingName) ? userCache.get(existingName) : null;
-
-            if (curUser == null) {
-                curUser = findUserByIdentity(userDN);
-                if (curUser != null) {
-                    existingName = curUser.getName();
-                    userNameMap.put(userKey, existingName);
-                }
-            }
-
-            if (curUser == null && userCache.containsKey(desiredName)) {
-                XUserInfo byName             = userCache.get(desiredName);
-                String    byNameDN           = resolveIdentityKey(byName.getOtherAttrsMap());
-                String    byNameSyncSource   = byName.getSyncSource();
-                String    incomingSyncSource = newUserAttrs.get(UgsyncCommonConstants.SYNC_SOURCE);
-                if (StringUtils.isEmpty(byNameDN) || userDN.equalsIgnoreCase(byNameDN) || (StringUtils.equalsIgnoreCase(byNameSyncSource, incomingSyncSource) && StringUtils.equalsIgnoreCase(byNameDN, desiredName))) {
-                    curUser      = byName;
-                    existingName = desiredName;
-                    userNameMap.put(userKey, desiredName);
-                    LOG.debug("identity-merge: name={} byNameDN={} incomingDN={} byNameSync={} incomingSync={}", desiredName, byNameDN, userDN, byNameSyncSource, incomingSyncSource);
-                } else {
-                    LOG.debug("[{}]: SyncSource update skipped, current user DN = {} new user DN = {}", desiredName, byNameDN, userDN);
+                deltaUsers.put(userName, newUser);
+                noOfNewUsers++;
+                userNameMap.put(userDN, userName);
+            } else {
+                // no updates allowed for rangerusersync and admin
+                if (StringUtils.equalsIgnoreCase(policyMgrUserName, userName) || StringUtils.equalsIgnoreCase("admin", userName)) {
+                    LOG.debug("[{}]: SyncSource update skipped!", userName);
                     continue;
                 }
-            }
 
-            if (curUser == null) {
-                XUserInfo newUser = addXUserInfo(desiredName, newUserAttrs, newUserAttrsStr);
-                deltaUsers.put(desiredName, newUser);
-                noOfNewUsers++;
-                userNameMap.put(userKey, desiredName);
-                continue;
-            }
+                XUserInfo           curUser         = userCache.get(userName);
+                String              curSyncSource   = curUser.getSyncSource();
+                String              curUserAttrsStr = curUser.getOtherAttributes();
+                Map<String, String> curUserAttrs    = curUser.getOtherAttrsMap();
+                String              curUserDN       = MapUtils.isEmpty(curUserAttrs) ? userName : curUserAttrs.get(UgsyncCommonConstants.FULL_NAME);
+                String              newSyncSource   = newUserAttrs.get(UgsyncCommonConstants.SYNC_SOURCE);
 
-            if (!StringUtils.equals(existingName, desiredName)) {
-                if (userCache.containsKey(desiredName) && userCache.get(desiredName) != curUser) {
-                    LOG.warn("[{}]: Cannot rename user '{}' -> '{}': target name already exists; updating under old name", userDN, existingName, desiredName);
-                    desiredName = existingName;
+                if (isStartupFlag && !isSyncSourceValidationEnabled && (!StringUtils.equalsIgnoreCase(curSyncSource, newSyncSource))) {
+                    LOG.debug("[{}]: SyncSource updated to {}, previous value: {}", userName, newSyncSource, curSyncSource);
+
+                    curUser = setOtherAttributes(curUser, newSyncSource, newUserAttrs, newUserAttrsStr);
+
+                    curUser.setUserSource(SOURCE_EXTERNAL);
+                    deltaUsers.put(userName, curUser);
+                    noOfModifiedGroups++;
+                    userNameMap.put(userDN, userName);
                 } else {
-                    renameUserInCache(curUser, existingName, desiredName);
-                    existingName = desiredName;
-                    userNameMap.put(userKey, desiredName);
-                }
-            }
+                    if (MapUtils.isNotEmpty(curUserAttrs) && !StringUtils.equalsIgnoreCase(userDN, curUserDN)) { // skip update
+                        // Same username with different DN already exists
+                        LOG.debug("[{}]: SyncSource update skipped, current user DN = {} new user DN  = {}", userName, curUserDN, userDN);
 
-            String              userName        = existingName;
-            String              curSyncSource   = curUser.getSyncSource();
-            String              curUserAttrsStr = curUser.getOtherAttributes();
-            Map<String, String> curUserAttrs    = curUser.getOtherAttrsMap();
-            String              curUserDN       = resolveIdentityKey(curUserAttrs);
-            if (StringUtils.isEmpty(curUserDN)) {
-                curUserDN = userName;
-            }
-            String              newSyncSource   = newUserAttrs.get(UgsyncCommonConstants.SYNC_SOURCE);
+                        if (StringUtils.equalsIgnoreCase(curUserAttrsStr, newUserAttrsStr)) {
+                            userNameMap.put(userDN, userName);
+                        }
 
-            if (isStartupFlag && !isSyncSourceValidationEnabled && (!StringUtils.equalsIgnoreCase(curSyncSource, newSyncSource))) {
-                LOG.debug("[{}]: SyncSource updated to {}, previous value: {}", userName, newSyncSource, curSyncSource);
-                curUser = setOtherAttributes(curUser, newSyncSource, newUserAttrs, newUserAttrsStr);
-                curUser.setUserSource(SOURCE_EXTERNAL);
-                deltaUsers.put(userName, curUser);
-                LOG.debug("identity-refresh: name={} oldDN={} newDN={} oldSync={} newSync={} deltaUsersSizeSoFar={}", userName, curUserDN, userDN, curSyncSource, newSyncSource, deltaUsers.size());
-                noOfModifiedUsers++;
-                if (StringUtils.isNotEmpty(curUserDN) && !StringUtils.equalsIgnoreCase(curUserDN, userDN)) {
-                    userNameMap.remove(curUserDN.toLowerCase());
+                        continue;
+                    }
+
+                    if (StringUtils.isEmpty(curSyncSource) || (!StringUtils.equalsIgnoreCase(curUserAttrsStr, newUserAttrsStr) && StringUtils.equalsIgnoreCase(curSyncSource, newSyncSource))) { // update
+                        if (StringUtils.isEmpty(curSyncSource)) {
+                            LOG.debug("[{}]: SyncSource updated to {}, previously empty", userName, newSyncSource);
+                        } else {
+                            LOG.debug("[{}]: Other Attributes updated!", userName);
+                        }
+
+                        curUser = setOtherAttributes(curUser, newSyncSource, newUserAttrs, newUserAttrsStr);
+
+                        curUser.setUserSource(SOURCE_EXTERNAL);
+                        deltaUsers.put(userName, curUser);
+                        noOfModifiedUsers++;
+                        userNameMap.put(userDN, userName);
+                    } else {
+                        if (!StringUtils.equalsIgnoreCase(curSyncSource, newSyncSource)) {
+                            LOG.debug("[{}]: Different sync source exists, update skipped!", userName);
+                        } else {
+                            LOG.debug("[{}]: No change, update skipped!", userName);
+                        }
+                    }
+
+                    if (StringUtils.equalsIgnoreCase(curUserAttrsStr, newUserAttrsStr)) {
+                        userNameMap.put(userDN, userName);
+                    }
                 }
-                userNameMap.put(userKey, userName);
-            } else if (MapUtils.isNotEmpty(curUserAttrs) && StringUtils.isNotEmpty(curUserDN) && !StringUtils.equalsIgnoreCase(userDN, curUserDN) && !StringUtils.equalsIgnoreCase(curSyncSource, newSyncSource)) {
-                LOG.debug("[{}]: SyncSource update skipped, current user DN = {} new user DN = {}", userName, curUserDN, userDN);
-                if (StringUtils.equalsIgnoreCase(curUserAttrsStr, newUserAttrsStr)) {
-                    userNameMap.put(userKey, userName);
-                }
-            } else if (StringUtils.isEmpty(curSyncSource) || (!StringUtils.equalsIgnoreCase(curUserAttrsStr, newUserAttrsStr) && StringUtils.equalsIgnoreCase(curSyncSource, newSyncSource))) {
-                if (StringUtils.isEmpty(curSyncSource)) {
-                    LOG.debug("[{}]: SyncSource updated to {}, previously empty", userName, newSyncSource);
-                } else {
-                    LOG.debug("[{}]: Other Attributes updated!", userName);
-                }
-                curUser = setOtherAttributes(curUser, newSyncSource, newUserAttrs, newUserAttrsStr);
-                curUser.setUserSource(SOURCE_EXTERNAL);
-                deltaUsers.put(userName, curUser);
-                noOfModifiedUsers++;
-                if (StringUtils.isNotEmpty(curUserDN) && !StringUtils.equalsIgnoreCase(curUserDN, userDN)) {
-                    userNameMap.remove(curUserDN.toLowerCase());
-                }
-                userNameMap.put(userKey, userName);
-            } else if (!StringUtils.equalsIgnoreCase(curSyncSource, newSyncSource)) {
-                LOG.debug("[{}]: Different sync source exists, update skipped!", userName);
-            } else {
-                LOG.debug("[{}]: No change, update skipped!", userName);
-                userNameMap.put(userKey, userName);
             }
         }
 
@@ -975,7 +905,7 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
         List<GroupUserInfo> deltaGroupUserInfoList = new ArrayList<>();
 
         for (String groupDN : sourceGroupUsers.keySet()) {
-            String groupName = groupNameMap.get(groupDN.toLowerCase());
+            String groupName = groupNameMap.get(groupDN);
 
             if (StringUtils.isEmpty(groupName)) {
                 LOG.debug("Ignoring group membership update for {}", groupDN);
@@ -992,7 +922,7 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
             }
 
             for (String userDN : sourceGroupUsers.get(groupDN)) {
-                String userName = userNameMap.get(userDN.toLowerCase());
+                String userName = userNameMap.get(userDN);
 
                 if (!StringUtils.isEmpty(userName)) {
                     newUsers.add(userName);
@@ -1852,21 +1782,15 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
         LOG.debug("PolicyMgrUserGroupBuilder.computeDeletedGroups({})", sourceGroups.keySet());
 
         deletedGroups = new HashMap<>();
-        Set<String> sourceGroupKeys = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
-        for (String key : sourceGroups.keySet()) {
-            if (key != null) {
-                sourceGroupKeys.add(key);
-            }
-        }
 
         // Check if the group from cache exists in the sourceGroups. If not, mark as deleted group.
         for (XGroupInfo groupInfo : groupCache.values()) {
             Map<String, String> groupOtherAttrs = groupInfo.getOtherAttrsMap();
-            String groupDN = resolveIdentityKey(groupOtherAttrs);
+            String              groupDN         = groupOtherAttrs != null ? groupOtherAttrs.get(UgsyncCommonConstants.FULL_NAME) : null;
 
-            if (StringUtils.isNotEmpty(groupDN) && !sourceGroupKeys.contains(groupDN)
-                    && syncSourceMatches(groupOtherAttrs, groupInfo.getSyncSource())
-                    && ldapUrlMatches(groupOtherAttrs)) {
+            if (StringUtils.isNotEmpty(groupDN) && !sourceGroups.containsKey(groupDN)
+                    && StringUtils.equalsIgnoreCase(groupOtherAttrs.get(UgsyncCommonConstants.SYNC_SOURCE), currentSyncSource) &&
+                    StringUtils.equalsIgnoreCase(groupOtherAttrs.get(UgsyncCommonConstants.LDAP_URL), ldapUrl)) {
                 if (!ISHIDDEN.equals(groupInfo.getIsVisible())) {
                     groupInfo.setIsVisible(ISHIDDEN);
                     deletedGroups.put(groupInfo.getName(), groupInfo);
@@ -1977,21 +1901,15 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
         LOG.debug("PolicyMgrUserGroupBuilder.computeDeletedUsers({})", sourceUsers.keySet());
 
         deletedUsers = new HashMap<>();
-        Set<String> sourceUserKeys = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
-        for (String key : sourceUsers.keySet()) {
-            if (key != null) {
-                sourceUserKeys.add(key);
-            }
-        }
 
         // Check if the group from cache exists in the sourceGroups. If not, mark as deleted group.
         for (XUserInfo userInfo : userCache.values()) {
             Map<String, String> userOtherAttrs = userInfo.getOtherAttrsMap();
-            String userDN = resolveIdentityKey(userOtherAttrs);
+            String              userDN         = userOtherAttrs != null ? userOtherAttrs.get(UgsyncCommonConstants.FULL_NAME) : null;
 
-            if (StringUtils.isNotEmpty(userDN) && !sourceUserKeys.contains(userDN)
-                    && syncSourceMatches(userOtherAttrs, userInfo.getSyncSource())
-                    && ldapUrlMatches(userOtherAttrs)) {
+            if (StringUtils.isNotEmpty(userDN) && !sourceUsers.containsKey(userDN)
+                    && StringUtils.equalsIgnoreCase(userOtherAttrs.get(UgsyncCommonConstants.SYNC_SOURCE), currentSyncSource)
+                    && StringUtils.equalsIgnoreCase(userOtherAttrs.get(UgsyncCommonConstants.LDAP_URL), ldapUrl)) {
                 if (!ISHIDDEN.equals(userInfo.getIsVisible())) {
                     userInfo.setIsVisible(ISHIDDEN);
                     deletedUsers.put(userInfo.getName(), userInfo);
@@ -2078,52 +1996,69 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
         return ret;
     }
 
+    // This will throw RuntimeException if Server is not Active
     @Override
     public void deleteUsersAndGroups(Map<String, Map<String, String>> deletedUsersMap, Map<String, Map<String, String>> deletedGroupsMap) throws Throwable {
         LOG.debug("==> PolicyMgrUserGroupBuilder.deleteUsersAndGroups(users={}, groups={})", MapUtils.isNotEmpty(deletedUsersMap) ? deletedUsersMap.keySet() : "[]", MapUtils.isNotEmpty(deletedGroupsMap) ? deletedGroupsMap.keySet() : "[]");
+
         if (isStartupFlag) {
             LOG.info("Skipping per-record deletes during startup cycle");
             return;
         }
+
         if (MapUtils.isNotEmpty(deletedGroupsMap)) {
             markDeletedGroupsByFullName(deletedGroupsMap.keySet());
+
             if (MapUtils.isNotEmpty(deletedGroups)) {
                 if (updateDeletedGroups() == 0) {
                     String msg = "Failed to update deleted groups to ranger admin";
+
                     LOG.error(msg);
+
                     throw new Exception(msg);
                 }
+
                 groupCache.putAll(deletedGroups);
                 noOfDeletedGroups += deletedGroups.size();
             }
+
             LOG.info("No. of groups marked for delete (per-record) = {}", deletedGroups.size());
         }
+
         if (MapUtils.isNotEmpty(deletedUsersMap)) {
             markDeletedUsersByFullName(deletedUsersMap.keySet());
+
             if (MapUtils.isNotEmpty(deletedUsers)) {
                 if (updateDeletedUsers() == 0) {
                     String msg = "Failed to update deleted users to ranger admin";
+
                     LOG.error(msg);
+
                     throw new Exception(msg);
                 }
+
                 userCache.putAll(deletedUsers);
                 noOfDeletedUsers += deletedUsers.size();
             }
+
             LOG.info("No. of users marked for delete (per-record) = {}", deletedUsers.size());
         }
+
         LOG.debug("<== PolicyMgrUserGroupBuilder.deleteUsersAndGroups()");
     }
 
     private void markDeletedGroupsByFullName(Set<String> deletedGroupFullNames) {
         LOG.debug("PolicyMgrUserGroupBuilder.markDeletedGroupsByFullName({})", deletedGroupFullNames);
+
         deletedGroups = new HashMap<>();
-        markDeletedByFullName(deletedGroupFullNames, groupCache, deletedGroups, this::resolveGroupFromNameMap,
-                this::markGroupForDelete, XGroupInfo::getName, XGroupInfo::getOtherAttrsMap, XGroupInfo::getSyncSource);
+
+        markDeletedByFullName(deletedGroupFullNames, groupCache, deletedGroups, this::resolveGroupFromNameMap, this::markGroupForDelete, XGroupInfo::getName, XGroupInfo::getOtherAttrsMap);
+
         LOG.debug("<== PolicyMgrUserGroupBuilder.markDeletedGroupsByFullName({})", deletedGroups);
     }
 
     private XGroupInfo resolveGroupFromNameMap(String identityKey) {
-        return resolveFromNameMap(identityKey, groupNameMap, groupCache, XGroupInfo::getOtherAttrsMap, XGroupInfo::getSyncSource);
+        return resolveFromNameMap(identityKey, groupNameMap, groupCache, XGroupInfo::getOtherAttrsMap);
     }
 
     private void markGroupForDelete(XGroupInfo groupInfo) {
@@ -2132,375 +2067,108 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
 
     private void markDeletedUsersByFullName(Set<String> deletedUserFullNames) {
         LOG.debug("PolicyMgrUserGroupBuilder.markDeletedUsersByFullName({})", deletedUserFullNames);
+
         deletedUsers = new HashMap<>();
-        markDeletedByFullName(deletedUserFullNames, userCache, deletedUsers, this::resolveUserFromNameMap,
-                this::markUserForDelete, XUserInfo::getName, XUserInfo::getOtherAttrsMap, XUserInfo::getSyncSource);
+
+        markDeletedByFullName(deletedUserFullNames, userCache, deletedUsers, this::resolveUserFromNameMap, this::markUserForDelete, XUserInfo::getName, XUserInfo::getOtherAttrsMap);
+
         LOG.debug("<== PolicyMgrUserGroupBuilder.markDeletedUsersByFullName({})", deletedUsers);
     }
 
-    /**
-     * Shared by markDeletedGroupsByFullName/markDeletedUsersByFullName: resolve each @removed
-     * identity via the name-map fast path first, then sweep the cache for any entry whose stored
-     * identity matches but wasn't reachable through the map (stale/empty otherAttrs).
-     */
-    private <T> void markDeletedByFullName(Set<String> deletedFullNames, Map<String, T> cache, Map<String, T> deletedMap,
-            Function<String, T> resolveByIdentity, Consumer<T> markForDelete,
-            Function<T, String> getName, Function<T, Map<String, String>> getOtherAttrsMap, Function<T, String> getSyncSource) {
-        // Case-insensitive lookup: see computeDeletedGroups().
-        Set<String> deletedKeys = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
-        for (String key : deletedFullNames) {
-            if (key != null) {
-                deletedKeys.add(key);
-            }
-        }
-
-        for (String deletedKey : deletedKeys) {
-            T mapped = resolveByIdentity.apply(deletedKey);
-            if (mapped != null) {
-                markForDelete.accept(mapped);
-            }
-        }
-
-        for (T info : cache.values()) {
-            if (deletedMap.containsKey(getName.apply(info))) {
-                continue;
-            }
-            Map<String, String> otherAttrs = getOtherAttrsMap.apply(info);
-            String dn = resolveIdentityKey(otherAttrs);
-            if (StringUtils.isNotEmpty(dn) && deletedKeys.contains(dn)
-                    && syncSourceMatches(otherAttrs, getSyncSource.apply(info)) && ldapUrlMatches(otherAttrs)) {
-                markForDelete.accept(info);
-            }
-        }
-    }
-
     private XUserInfo resolveUserFromNameMap(String identityKey) {
-        return resolveFromNameMap(identityKey, userNameMap, userCache, XUserInfo::getOtherAttrsMap, XUserInfo::getSyncSource);
-    }
-
-    private <T> T resolveFromNameMap(String identityKey, Map<String, String> nameMap, Map<String, T> cache,
-            Function<T, Map<String, String>> getOtherAttrsMap, Function<T, String> getSyncSource) {
-        if (StringUtils.isEmpty(identityKey) || MapUtils.isEmpty(nameMap)) {
-            return null;
-        }
-        String name = nameMap.get(identityKey.toLowerCase());
-        if (StringUtils.isEmpty(name)) {
-            return null;
-        }
-        T info = cache.get(name);
-        if (info == null) {
-            return null;
-        }
-        Map<String, String> attrs = getOtherAttrsMap.apply(info);
-        if (MapUtils.isNotEmpty(attrs)) {
-            if (!syncSourceMatches(attrs, getSyncSource.apply(info)) || !ldapUrlMatches(attrs)) {
-                return null;
-            }
-        } else if (StringUtils.isNotEmpty(getSyncSource.apply(info))
-                && !StringUtils.equalsIgnoreCase(getSyncSource.apply(info), currentSyncSource)) {
-            return null;
-        }
-        return info;
+        return resolveFromNameMap(identityKey, userNameMap, userCache, XUserInfo::getOtherAttrsMap);
     }
 
     private void markUserForDelete(XUserInfo userInfo) {
         markForDelete(userInfo, deletedUsers, XUserInfo::getName, XUserInfo::getIsVisible, XUserInfo::setIsVisible, "user");
     }
 
-    private <T> void markForDelete(T info, Map<String, T> deletedMap, Function<T, String> getName,
-            Function<T, String> getIsVisible, BiConsumer<T, String> setIsVisible, String kind) {
+    /**
+     * Per-record deletes for a source that already knows the stable id. full_name is matched
+     * exactly, with the same sync-source and ldap_url checks as computeDeletedUsers/computeDeletedGroups.
+     */
+    private <T> void markDeletedByFullName(Set<String> deletedFullNames, Map<String, T> cache, Map<String, T> deletedMap,
+            Function<String, T> resolveByIdentity, Consumer<T> markForDelete,
+            Function<T, String> getName, Function<T, Map<String, String>> getOtherAttrsMap) {
+        if (deletedFullNames == null || cache == null) {
+            return;
+        }
+
+        for (String deletedKey : deletedFullNames) {
+            if (StringUtils.isEmpty(deletedKey)) {
+                continue;
+            }
+
+            T mapped = resolveByIdentity.apply(deletedKey);
+
+            if (mapped != null) {
+                markForDelete.accept(mapped);
+            }
+        }
+
+        for (T info : cache.values()) {
+            if (info == null || deletedMap.containsKey(getName.apply(info))) {
+                continue;
+            }
+
+            Map<String, String> otherAttrs = getOtherAttrsMap.apply(info);
+            String              fullName   = otherAttrs != null ? otherAttrs.get(UgsyncCommonConstants.FULL_NAME) : null;
+
+            if (StringUtils.isNotEmpty(fullName) && deletedFullNames.contains(fullName) && sameSourceAndLdapUrl(otherAttrs)) {
+                markForDelete.accept(info);
+            }
+        }
+    }
+
+    private <T> T resolveFromNameMap(String identityKey, Map<String, String> nameMap, Map<String, T> cache, Function<T, Map<String, String>> getOtherAttrsMap) {
+        if (StringUtils.isEmpty(identityKey) || MapUtils.isEmpty(nameMap) || cache == null) {
+            return null;
+        }
+
+        String name = nameMap.get(identityKey);
+
+        if (StringUtils.isEmpty(name)) {
+            return null;
+        }
+
+        T info = cache.get(name);
+
+        if (info == null) {
+            return null;
+        }
+
+        Map<String, String> attrs    = getOtherAttrsMap.apply(info);
+        String              fullName = attrs != null ? attrs.get(UgsyncCommonConstants.FULL_NAME) : null;
+
+        if (!StringUtils.equals(identityKey, fullName) || !sameSourceAndLdapUrl(attrs)) {
+            return null;
+        }
+
+        return info;
+    }
+
+    /** Same gate computeDeletedUsers/computeDeletedGroups use. Blank ldap_url is not treated as null. */
+    private boolean sameSourceAndLdapUrl(Map<String, String> otherAttrs) {
+        if (otherAttrs == null) {
+            return false;
+        }
+
+        return StringUtils.equalsIgnoreCase(otherAttrs.get(UgsyncCommonConstants.SYNC_SOURCE), currentSyncSource)
+                && StringUtils.equalsIgnoreCase(otherAttrs.get(UgsyncCommonConstants.LDAP_URL), ldapUrl);
+    }
+
+    private <T> void markForDelete(T info, Map<String, T> deletedMap, Function<T, String> getName, Function<T, String> getIsVisible, BiConsumer<T, String> setIsVisible, String kind) {
         if (info == null || deletedMap.containsKey(getName.apply(info))) {
             return;
         }
+
         String name = getName.apply(info);
+
         if (!ISHIDDEN.equals(getIsVisible.apply(info))) {
             setIsVisible.accept(info, ISHIDDEN);
             deletedMap.put(name, info);
         } else {
             LOG.info("{} {} already marked for delete", kind, name);
-        }
-    }
-
-    // This will throw RuntimeException if Server is not Active
-    private void refreshMissingRangerIds() {
-        // groupCache/userCache already have this cycle's deltaGroups/deltaUsers merged in
-        // (addOrUpdateUsersGroups() does that putAll() before calling this), so scanning the
-        // cache alone is complete -- no separate delta scan needed.
-        Set<String> missingGroupNames = collectMissingNames(groupCache.values(), XGroupInfo::getId, XGroupInfo::getName);
-        Set<String> missingUserNames  = collectMissingNames(userCache.values(), XUserInfo::getId, XUserInfo::getName);
-
-        try {
-            if (!missingGroupNames.isEmpty()) {
-                mergeGroupIdsFromAdmin(missingGroupNames);
-            }
-            if (!missingUserNames.isEmpty()) {
-                mergeUserIdsFromAdmin(missingUserNames);
-            }
-        } catch (Throwable t) {
-            LOG.warn("Failed to refresh Ranger ids into Usersync cache (rename/delete may fall back to name match): {}", t.getMessage());
-            LOG.debug("refreshMissingRangerIds failure", t);
-        }
-    }
-
-    private <T> Set<String> collectMissingNames(Collection<T> cacheEntries, Function<T, String> getId, Function<T, String> getName) {
-        Set<String> missing = new HashSet<>();
-        for (T info : cacheEntries) {
-            if (info != null && StringUtils.isEmpty(getId.apply(info))) {
-                missing.add(getName.apply(info));
-            }
-        }
-        return missing;
-    }
-
-    private void mergeGroupIdsFromAdmin(Set<String> missingGroupNames) throws Throwable {
-        mergeIdsFromAdmin(missingGroupNames, groupCache, PM_GROUP_LIST_URI, GetXGroupListResponse.class,
-                GetXGroupListResponse::getTotalCount, GetXGroupListResponse::getXgroupInfoList,
-                XGroupInfo::getId, XGroupInfo::setId, XGroupInfo::getName, XGroupInfo::getOtherAttributes,
-                this::findGroupByIdentity, "group");
-    }
-
-    private void mergeUserIdsFromAdmin(Set<String> missingUserNames) throws Throwable {
-        mergeIdsFromAdmin(missingUserNames, userCache, PM_USER_LIST_URI, GetXUserListResponse.class,
-                GetXUserListResponse::getTotalCount, GetXUserListResponse::getXuserInfoList,
-                XUserInfo::getId, XUserInfo::setId, XUserInfo::getName, XUserInfo::getOtherAttributes,
-                this::findUserByIdentity, "user");
-    }
-
-    private <T, R> void mergeIdsFromAdmin(Set<String> missingNames, Map<String, T> cache, String listUri, Class<R> responseClass,
-            Function<R, Integer> getTotalCount, Function<R, List<T>> getInfoList,
-            Function<T, String> getId, BiConsumer<T, String> setId, Function<T, String> getName,
-            Function<T, String> getOtherAttributes, Function<String, T> findByIdentity, String kind) throws Throwable {
-        int filled;
-
-        if (!isRangerCookieEnabled && missingNames.size() <= MERGE_IDS_TARGETED_LOOKUP_THRESHOLD) {
-            filled = mergeIdsByTargetedLookup(missingNames, cache, listUri, responseClass, getTotalCount, getInfoList, getId, getName, setId);
-        } else {
-            filled = mergeIdsByFullPull(cache, listUri, responseClass, getTotalCount, getInfoList, getId, setId, getOtherAttributes, getName, findByIdentity);
-        }
-
-        LOG.info("PolicyMgrUserGroupBuilder.mergeIdsFromAdmin(): filled {} missing {} ids", filled, kind);
-    }
-
-    private <T, R> int mergeIdsByTargetedLookup(Set<String> missingNames, Map<String, T> cache, String listUri, Class<R> responseClass,
-            Function<R, Integer> getTotalCount, Function<R, List<T>> getInfoList,
-            Function<T, String> getId, Function<T, String> getName, BiConsumer<T, String> setId) throws Throwable {
-        int filled = 0;
-
-        for (String missingName : missingNames) {
-            T cached = cache.get(missingName);
-
-            if (cached == null || StringUtils.isNotEmpty(getId.apply(cached))) {
-                continue;
-            }
-
-            String foundId = findIdByExactName(missingName, listUri, responseClass, getTotalCount, getInfoList, getId, getName);
-
-            if (foundId != null) {
-                setId.accept(cached, foundId);
-                filled++;
-            }
-        }
-
-        return filled;
-    }
-
-    private <T, R> String findIdByExactName(String name, String listUri, Class<R> responseClass,
-            Function<R, Integer> getTotalCount, Function<R, List<T>> getInfoList,
-            Function<T, String> getId, Function<T, String> getName) throws Throwable {
-        int totalCount     = 100;
-        int retrievedCount = 0;
-
-        while (retrievedCount < totalCount) {
-            Map<String, String> queryParams = new HashMap<>();
-
-            queryParams.put("name", name);
-            queryParams.put("pageSize", recordsToPullPerCall);
-            queryParams.put("startIndex", String.valueOf(retrievedCount));
-
-            Response clientResp = ldapUgSyncClient.get(listUri, queryParams);
-            String   response   = clientResp != null ? clientResp.readEntity(String.class) : null;
-            R        parsed     = JsonUtils.jsonToObject(response, responseClass);
-
-            totalCount = getTotalCount.apply(parsed);
-
-            List<T> list = getInfoList.apply(parsed);
-            if (list == null) {
-                break;
-            }
-
-            for (T candidate : list) {
-                retrievedCount++;
-                if (candidate != null && StringUtils.equalsIgnoreCase(name, getName.apply(candidate)) && StringUtils.isNotEmpty(getId.apply(candidate))) {
-                    return getId.apply(candidate);
-                }
-            }
-
-            if (list.isEmpty()) {
-                break;
-            }
-        }
-
-        return null;
-    }
-
-    private <T, R> int mergeIdsByFullPull(Map<String, T> cache, String listUri, Class<R> responseClass,
-            Function<R, Integer> getTotalCount, Function<R, List<T>> getInfoList,
-            Function<T, String> getId, BiConsumer<T, String> setId, Function<T, String> getOtherAttributes,
-            Function<T, String> getName, Function<String, T> findByIdentity) throws Throwable {
-        int totalCount     = 100;
-        int retrievedCount = 0;
-        int filled         = 0;
-
-        while (retrievedCount < totalCount) {
-            String              response = null;
-            Response            clientResp;
-            Map<String, String> queryParams = new HashMap<>();
-
-            queryParams.put("pageSize", recordsToPullPerCall);
-            queryParams.put("startIndex", String.valueOf(retrievedCount));
-
-            if (isRangerCookieEnabled) {
-                response = cookieBasedGetEntity(listUri, retrievedCount);
-            } else {
-                clientResp = ldapUgSyncClient.get(listUri, queryParams);
-                if (clientResp != null) {
-                    response = clientResp.readEntity(String.class);
-                }
-            }
-
-            R parsed = JsonUtils.jsonToObject(response, responseClass);
-
-            totalCount = getTotalCount.apply(parsed);
-
-            List<T> list = getInfoList.apply(parsed);
-            if (list == null) {
-                break;
-            }
-
-            for (T adminEntity : list) {
-                retrievedCount++;
-                if (adminEntity == null || StringUtils.isEmpty(getId.apply(adminEntity))) {
-                    continue;
-                }
-                Map<String, String> otherAttrsMap = null;
-                String               otherAttrsStr = getOtherAttributes.apply(adminEntity);
-                if (otherAttrsStr != null) {
-                    otherAttrsMap = JsonUtils.jsonToObject(otherAttrsStr, Map.class);
-                }
-                String identity = resolveIdentityKey(otherAttrsMap);
-                T      cached   = findByIdentity.apply(identity);
-                if (cached == null && StringUtils.isNotEmpty(getName.apply(adminEntity))) {
-                    cached = cache.get(getName.apply(adminEntity));
-                }
-                if (cached != null && StringUtils.isEmpty(getId.apply(cached))) {
-                    setId.accept(cached, getId.apply(adminEntity));
-                    filled++;
-                }
-            }
-
-            if (list.isEmpty()) {
-                break;
-            }
-        }
-
-        return filled;
-    }
-
-    /** Stable cloud/LDAP identity from otherAttrs: full_name, else cloud_id. */
-    private String resolveIdentityKey(Map<String, String> otherAttrs) {
-        if (MapUtils.isEmpty(otherAttrs)) {
-            return null;
-        }
-        String fullName = otherAttrs.get(UgsyncCommonConstants.FULL_NAME);
-        if (StringUtils.isNotEmpty(fullName)) {
-            return fullName;
-        }
-        return otherAttrs.get("cloud_id");
-    }
-
-    private boolean syncSourceMatches(Map<String, String> otherAttrs, String entitySyncSource) {
-        String attrSource = otherAttrs != null ? otherAttrs.get(UgsyncCommonConstants.SYNC_SOURCE) : null;
-        if (StringUtils.isNotEmpty(attrSource)) {
-            return StringUtils.equalsIgnoreCase(attrSource, currentSyncSource);
-        }
-        return StringUtils.equalsIgnoreCase(entitySyncSource, currentSyncSource);
-    }
-
-    /** Treat null/blank ldap_url as equivalent (non-LDAP sources like EntraID). */
-    private boolean ldapUrlMatches(Map<String, String> otherAttrs) {
-        String attrUrl = otherAttrs != null ? otherAttrs.get(UgsyncCommonConstants.LDAP_URL) : null;
-        if (StringUtils.isBlank(attrUrl) && StringUtils.isBlank(ldapUrl)) {
-            return true;
-        }
-        return StringUtils.equalsIgnoreCase(attrUrl, ldapUrl);
-    }
-
-    private XGroupInfo findGroupByIdentity(String identityKey) {
-        if (StringUtils.isEmpty(identityKey)) {
-            return null;
-        }
-        String name = groupNameMap.get(identityKey.toLowerCase());
-        return StringUtils.isEmpty(name) ? null : groupCache.get(name);
-    }
-
-    private XUserInfo findUserByIdentity(String identityKey) {
-        if (StringUtils.isEmpty(identityKey)) {
-            return null;
-        }
-        String name = userNameMap.get(identityKey.toLowerCase());
-        return StringUtils.isEmpty(name) ? null : userCache.get(name);
-    }
-
-    /**
-     * Retarget cache entries when Entra/LDAP renames a principal. Preserves Ranger id
-     * and membership sets so Admin updates in place instead of creating a duplicate.
-     */
-    private void renameGroupInCache(XGroupInfo group, String oldName, String newName) {
-        if (StringUtils.equals(oldName, newName)) {
-            return;
-        }
-        LOG.info("Renaming cached group '{}' -> '{}' (identity-preserving)", oldName, newName);
-        groupCache.remove(oldName);
-        group.setName(newName);
-        groupCache.put(newName, group);
-        if (groupUsersCache.containsKey(oldName)) {
-            groupUsersCache.put(newName, groupUsersCache.remove(oldName));
-        }
-        if (deltaGroupUsers != null && deltaGroupUsers.containsKey(oldName)) {
-            deltaGroupUsers.put(newName, deltaGroupUsers.remove(oldName));
-        }
-        for (Map.Entry<String, String> e : groupNameMap.entrySet()) {
-            if (StringUtils.equals(oldName, e.getValue())) {
-                e.setValue(newName);
-            }
-        }
-    }
-
-    private void renameUserInCache(XUserInfo user, String oldName, String newName) {
-        if (StringUtils.equals(oldName, newName)) {
-            return;
-        }
-        LOG.info("Renaming cached user '{}' -> '{}' (identity-preserving)", oldName, newName);
-        userCache.remove(oldName);
-        user.setName(newName);
-        user.setFirstName(newName);
-        userCache.put(newName, user);
-        for (Map.Entry<String, String> e : userNameMap.entrySet()) {
-            if (StringUtils.equals(oldName, e.getValue())) {
-                e.setValue(newName);
-            }
-        }
-        for (Set<String> members : groupUsersCache.values()) {
-            if (members != null && members.remove(oldName)) {
-                members.add(newName);
-            }
-        }
-        if (deltaGroupUsers != null) {
-            for (Set<String> members : deltaGroupUsers.values()) {
-                if (members != null && members.remove(oldName)) {
-                    members.add(newName);
-                }
-            }
         }
     }
 

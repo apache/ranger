@@ -31,8 +31,6 @@ import org.junit.jupiter.api.TestMethodOrder;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -104,26 +102,6 @@ public class PolicyMgrUserGroupBuilderReconcileTest {
     }
 
     /**
-     * For the (Object, String, String) shape of renameGroupInCache/renameUserInCache.
-     */
-    private void invokeRename(String name, Class<?> entityType, Object entity, String oldName, String newName) throws Exception {
-        Method m = PolicyMgrUserGroupBuilder.class.getDeclaredMethod(name, entityType, String.class, String.class);
-        m.setAccessible(true);
-        try {
-            m.invoke(builder, entity, oldName, newName);
-        } catch (InvocationTargetException e) {
-            Throwable cause = e.getCause();
-            if (cause instanceof RuntimeException) {
-                throw (RuntimeException) cause;
-            }
-            if (cause instanceof Error) {
-                throw (Error) cause;
-            }
-            throw e;
-        }
-    }
-
-    /**
      * A live (or explicitly hidden) cache entry, sync-source-tagged, keyed by its own GUID.
      */
     private XGroupInfo group(String name, String fullName, String syncSource, String isVisible) {
@@ -167,58 +145,6 @@ public class PolicyMgrUserGroupBuilderReconcileTest {
         attrs.put(UgsyncCommonConstants.SYNC_SOURCE, SYNC_SOURCE_VALUE);
         attrs.put(UgsyncCommonConstants.ORIGINAL_NAME, displayName);
         return attrs;
-    }
-
-    @Test
-    public void testR1_reconcile_identityDrift_hideThenDelta_correctsIdentityButStaysHidden() throws Exception {
-        String guid = "11111111-1111-1111-1111-111111111111";
-        // Drifted: full_name == the display name, not the guid.
-        XGroupInfo cached = group("group 1", "group 1", SYNC_SOURCE_VALUE, ISVISIBLE);
-        this.<Map<String, XGroupInfo>>getField("groupCache").put("group 1", cached);
-
-        Map<String, Map<String, String>> sourceGroups = new HashMap<>();
-        sourceGroups.put(guid, attrs(guid, "group 1"));
-
-        invoke("computeDeletedGroups", Map.class, sourceGroups);
-        this.<Map<String, XGroupInfo>>getField("groupCache").putAll(this.<Map<String, XGroupInfo>>getField("deletedGroups"));
-
-        invoke("computeGroupDelta", Map.class, sourceGroups);
-
-        Map<String, XGroupInfo> deltaGroups = getField("deltaGroups");
-        Set<String> deletedKeys = this.<Map<String, XGroupInfo>>getField("deletedGroups").keySet();
-        assertTrue(deltaGroups.containsKey("group 1"),
-                "STEP 8: group's drifted identity must still be corrected this cycle; got isVisible="
-                        + cached.getIsVisible() + " deletedKeys=" + deletedKeys + " deltaKeys=" + deltaGroups.keySet());
-        assertEquals(guid, cached.getOtherAttrsMap().get(UgsyncCommonConstants.FULL_NAME),
-                "Drifted identity must be corrected to the real GUID, not left stale");
-        assertEquals(ISHIDDEN, cached.getIsVisible(),
-                "Sync must never auto-restore visibility -- the identity self-heal above is a separate "
-                        + "concern from un-hiding, which is admin-owned (e.g. the UI's Set Visibility action)");
-    }
-
-    @Test
-    public void testR2_reconcile_identityDrift_user_hideThenDelta_correctsIdentityButStaysHidden() throws Exception {
-        String guid = "22222222-2222-2222-2222-222222222222";
-        XUserInfo cached = user("user 1", "user 1", SYNC_SOURCE_VALUE, ISVISIBLE);
-        this.<Map<String, XUserInfo>>getField("userCache").put("user 1", cached);
-
-        Map<String, Map<String, String>> sourceUsers = new HashMap<>();
-        sourceUsers.put(guid, attrs(guid, "user 1"));
-
-        invoke("computeDeletedUsers", Map.class, sourceUsers);
-        this.<Map<String, XUserInfo>>getField("userCache").putAll(this.<Map<String, XUserInfo>>getField("deletedUsers"));
-
-        invoke("computeUserDelta", Map.class, sourceUsers);
-
-        Map<String, XUserInfo> deltaUsers = getField("deltaUsers");
-        assertTrue(deltaUsers.containsKey("user 1"),
-                "STEP 8: user's drifted identity must still be corrected this cycle; got isVisible="
-                        + cached.getIsVisible() + " deltaKeys=" + deltaUsers.keySet());
-        assertEquals(guid, cached.getOtherAttrsMap().get(UgsyncCommonConstants.FULL_NAME),
-                "Drifted identity must be corrected to the real GUID, not left stale");
-        assertEquals(ISHIDDEN, cached.getIsVisible(),
-                "Sync must never auto-restore visibility -- the identity self-heal above is a separate "
-                        + "concern from un-hiding, which is admin-owned (e.g. the UI's Set Visibility action)");
     }
 
     @Test
@@ -320,119 +246,6 @@ public class PolicyMgrUserGroupBuilderReconcileTest {
     }
 
     @Test
-    public void testR1e_reconcile_identityHeal_group_removesStaleOldKey() throws Exception {
-        String oldGuid = "AAAA1000-0000-0000-0000-000000000001";
-        String newGuid = "AAAA1000-0000-0000-0000-000000000002";
-        // Object's own stored identity is still the OLD guid; the map already resolves the
-        // NEW guid to this same object (e.g. left over from an earlier, partially-applied heal).
-        XGroupInfo group = liveGroup("healed_group", oldGuid);
-        this.<Map<String, XGroupInfo>>getField("groupCache").put("healed_group", group);
-        this.<Map<String, String>>getField("groupNameMap").put(oldGuid.toLowerCase(), "healed_group");
-        this.<Map<String, String>>getField("groupNameMap").put(newGuid.toLowerCase(), "healed_group");
-
-        Map<String, Map<String, String>> sourceGroups = new HashMap<>();
-        sourceGroups.put(newGuid, attrs(newGuid, "healed_group"));
-
-        invoke("computeGroupDelta", Map.class, sourceGroups);
-
-        Map<String, String> nameMap = getField("groupNameMap");
-        assertFalse(nameMap.containsKey(oldGuid.toLowerCase()), "The stale old identity key must be removed after the heal");
-        assertEquals("healed_group", nameMap.get(newGuid.toLowerCase()), "The new identity key must resolve to the group");
-        assertEquals(newGuid, group.getOtherAttrsMap().get(UgsyncCommonConstants.FULL_NAME), "The object's own identity must now be the new guid");
-    }
-
-    @Test
-    public void testR2e_reconcile_identityHeal_user_removesStaleOldKey() throws Exception {
-        String oldGuid = "BBBB1000-0000-0000-0000-000000000001";
-        String newGuid = "BBBB1000-0000-0000-0000-000000000002";
-        XUserInfo user = liveUser("healed_user", oldGuid);
-        this.<Map<String, XUserInfo>>getField("userCache").put("healed_user", user);
-        this.<Map<String, String>>getField("userNameMap").put(oldGuid.toLowerCase(), "healed_user");
-        this.<Map<String, String>>getField("userNameMap").put(newGuid.toLowerCase(), "healed_user");
-
-        Map<String, Map<String, String>> sourceUsers = new HashMap<>();
-        sourceUsers.put(newGuid, attrs(newGuid, "healed_user"));
-
-        invoke("computeUserDelta", Map.class, sourceUsers);
-
-        Map<String, String> nameMap = getField("userNameMap");
-        assertFalse(nameMap.containsKey(oldGuid.toLowerCase()), "The stale old identity key must be removed after the heal");
-        assertEquals("healed_user", nameMap.get(newGuid.toLowerCase()), "The new identity key must resolve to the user");
-        assertEquals(newGuid, user.getOtherAttrsMap().get(UgsyncCommonConstants.FULL_NAME), "The object's own identity must now be the new guid");
-    }
-
-    @Test
-    public void testR1d_renameGroupInCache_movesCacheKeyAndMembershipAndNameMap() throws Exception {
-        String guid = "EEEE0001-0000-0000-0000-000000000001";
-        XGroupInfo group = liveGroup("OldGroupName", guid);
-        this.<Map<String, XGroupInfo>>getField("groupCache").put("OldGroupName", group);
-        this.<Map<String, String>>getField("groupNameMap").put(guid.toLowerCase(), "OldGroupName");
-
-        Map<String, Set<String>> groupUsersCache = new HashMap<>();
-        groupUsersCache.put("OldGroupName", new HashSet<>(java.util.Arrays.asList("alice", "bob")));
-        setField("groupUsersCache", groupUsersCache);
-
-        Map<String, Set<String>> deltaGroupUsers = new HashMap<>();
-        deltaGroupUsers.put("OldGroupName", new HashSet<>(java.util.Collections.singletonList("alice")));
-        setField("deltaGroupUsers", deltaGroupUsers);
-
-        invokeRename("renameGroupInCache", XGroupInfo.class, group, "OldGroupName", "NewGroupName");
-
-        Map<String, XGroupInfo> cache = getField("groupCache");
-        assertFalse(cache.containsKey("OldGroupName"), "old cache key must be removed");
-        assertTrue(cache.containsKey("NewGroupName"), "new cache key must be present");
-        assertEquals("NewGroupName", cache.get("NewGroupName").getName());
-
-        Map<String, String> nameMap = getField("groupNameMap");
-        assertEquals("NewGroupName", nameMap.get(guid.toLowerCase()), "groupNameMap must be fixed up to the new name");
-
-        Map<String, Set<String>> gUsersCache = getField("groupUsersCache");
-        assertFalse(gUsersCache.containsKey("OldGroupName"));
-        assertEquals(new HashSet<>(Arrays.asList("alice", "bob")), gUsersCache.get("NewGroupName"));
-
-        Map<String, Set<String>> dGroupUsers = getField("deltaGroupUsers");
-        assertFalse(dGroupUsers.containsKey("OldGroupName"));
-        assertEquals(Collections.singleton("alice"), dGroupUsers.get("NewGroupName"));
-    }
-
-    @Test
-    public void testR2d_renameUserInCache_movesCacheKeyNameMapAndGroupMembership() throws Exception {
-        String guid = "FFFF0001-0000-0000-0000-000000000001";
-        XUserInfo user = liveUser("old_user_name", guid);
-        this.<Map<String, XUserInfo>>getField("userCache").put("old_user_name", user);
-        this.<Map<String, String>>getField("userNameMap").put(guid.toLowerCase(), "old_user_name");
-
-        // The user appears as a MEMBER (by name) inside group membership sets -- these must be
-        // relabeled to the new name, not just the userCache/userNameMap entries.
-        Map<String, Set<String>> groupUsersCache = new HashMap<>();
-        groupUsersCache.put("group_a", new HashSet<>(java.util.Arrays.asList("old_user_name", "someone_else")));
-        setField("groupUsersCache", groupUsersCache);
-
-        Map<String, Set<String>> deltaGroupUsers = new HashMap<>();
-        deltaGroupUsers.put("group_a", new HashSet<>(java.util.Collections.singletonList("old_user_name")));
-        setField("deltaGroupUsers", deltaGroupUsers);
-
-        invokeRename("renameUserInCache", XUserInfo.class, user, "old_user_name", "new_user_name");
-
-        Map<String, XUserInfo> cache = getField("userCache");
-        assertFalse(cache.containsKey("old_user_name"), "old cache key must be removed");
-        assertTrue(cache.containsKey("new_user_name"), "new cache key must be present");
-        assertEquals("new_user_name", cache.get("new_user_name").getName());
-
-        Map<String, String> nameMap = getField("userNameMap");
-        assertEquals("new_user_name", nameMap.get(guid.toLowerCase()), "userNameMap must be fixed up to the new name");
-
-        Map<String, Set<String>> gUsersCache = getField("groupUsersCache");
-        assertTrue(gUsersCache.get("group_a").contains("new_user_name"), "membership set must be relabeled to the new name");
-        assertFalse(gUsersCache.get("group_a").contains("old_user_name"), "old name must no longer appear as a member");
-        assertTrue(gUsersCache.get("group_a").contains("someone_else"), "unrelated members must be untouched");
-
-        Map<String, Set<String>> dGroupUsers = getField("deltaGroupUsers");
-        assertTrue(dGroupUsers.get("group_a").contains("new_user_name"));
-        assertFalse(dGroupUsers.get("group_a").contains("old_user_name"));
-    }
-
-    @Test
     public void testR3_reconcile_matchingGuid_isNotFalseDeleted() throws Exception {
         String guid = "33333333-3333-3333-3333-333333333333";
         XGroupInfo cached = liveGroup("group_a", guid);
@@ -524,7 +337,7 @@ public class PolicyMgrUserGroupBuilderReconcileTest {
     }
 
     @Test
-    public void testR7_perRecordDelete_userGuidCaseDrift_mustStillMatch() throws Exception {
+    public void testR7_perRecordDelete_userGuidCaseDrift_doesNotMatch() throws Exception {
         String cachedGuid = "88888888-BBBB-CCCC-DDDD-EEEEEEEEEEEE";
         String deletedGuid = cachedGuid.toLowerCase();
 
@@ -537,7 +350,9 @@ public class PolicyMgrUserGroupBuilderReconcileTest {
         invoke("markDeletedUsersByFullName", Set.class, deletedUserFullNames);
 
         Map<String, XUserInfo> deletedUsers = getField("deletedUsers");
-        assertTrue(deletedUsers.containsKey("user_b"), "A case-only difference in the @removed GUID must not prevent the per-record delete from matching");
+        assertFalse(deletedUsers.containsKey("user_b"),
+                "Per-record delete matches full_name exactly; EntraID lowercases the GUID before calling the sink");
+        assertEquals(ISVISIBLE, cached.getIsVisible());
     }
 
     @Test
@@ -560,7 +375,7 @@ public class PolicyMgrUserGroupBuilderReconcileTest {
     public void testR9_perRecordDelete_otherSyncSource_isIgnored() throws Exception {
         String guid = "AAAAAAAA-DDDD-EEEE-FFFF-000000000000";
         // Cached under a DIFFERENT sync source than currentSyncSource ("EntraID"); its GUID
-        // happens to be in this cycle's @removed set, but syncSourceMatches() must veto it.
+        // happens to be in this cycle's @removed set. The sync_source on otherAttributes must veto it.
         XGroupInfo cached = group("group_y", guid, OTHER_SYNC_SOURCE, ISVISIBLE);
         this.<Map<String, XGroupInfo>>getField("groupCache").put("group_y", cached);
 
@@ -601,7 +416,7 @@ public class PolicyMgrUserGroupBuilderReconcileTest {
     }
 
     @Test
-    public void reconcileSweep_sameGuidDifferentCase_isStillRecognizedAsPresent() throws Exception {
+    public void reconcileSweep_sameGuidDifferentCase_isTreatedAsAbsent() throws Exception {
         String cachedGuid = "CCCCCCCC-BBBB-CCCC-DDDD-EEEEEEEEEEEE";
         String sourceGuid = cachedGuid.toLowerCase();
 
@@ -614,7 +429,9 @@ public class PolicyMgrUserGroupBuilderReconcileTest {
         invoke("computeDeletedGroups", Map.class, sourceGroups);
 
         Map<String, XGroupInfo> deletedGroups = getField("deletedGroups");
-        assertTrue(deletedGroups.isEmpty(), "A case-only difference in the same GUID must not cause a live group to be hidden");
+        assertTrue(deletedGroups.containsKey("group_c"),
+                "Delete matching stays an exact key compare; a case-only GUID difference is absent from the snapshot");
+        assertEquals(ISHIDDEN, cached.getIsVisible());
     }
 
     @Test
@@ -659,46 +476,15 @@ public class PolicyMgrUserGroupBuilderReconcileTest {
         this.<Map<String, XGroupInfo>>getField("groupCache").put("group_absent", absentGroup);
 
         Map<String, Map<String, String>> sourceGroups = new HashMap<>();
-        // present, but the source's casing differs from the cached casing
-        sourceGroups.put(presentGuid.toLowerCase(), attrs(presentGuid.toLowerCase(), "group_present"));
-        // group_absent has no entry at all this cycle
+        sourceGroups.put(presentGuid, attrs(presentGuid, "group_present"));
 
         invoke("computeDeletedGroups", Map.class, sourceGroups);
 
         Map<String, XGroupInfo> deletedGroups = getField("deletedGroups");
-        assertFalse(deletedGroups.containsKey("group_present"), "group_present (case-varied but present) must not be hidden");
+        assertFalse(deletedGroups.containsKey("group_present"), "group_present must not be hidden");
         assertTrue(deletedGroups.containsKey("group_absent"), "group_absent (genuinely gone) must be hidden");
         assertEquals(ISVISIBLE, presentGroup.getIsVisible());
         assertEquals(ISHIDDEN, absentGroup.getIsVisible());
-    }
-
-    @Test
-    public void reconcileSweep_caseVariedGuid_restoresThroughFullCycleViaIdentityFallback() throws Exception {
-        String cachedGuid = "03030303-FFFF-0000-1111-222222222222";
-        String sourceGuid = cachedGuid.toLowerCase();
-
-        XGroupInfo cached = liveGroup("group_g", cachedGuid);
-        this.<Map<String, XGroupInfo>>getField("groupCache").put("group_g", cached);
-        // groupNameMap seeded under the ORIGINAL (cached) casing from a prior cycle, so a lookup
-        // keyed by the lowercase sourceGuid will miss it directly and must fall back to the
-        // case-insensitive findGroupByIdentity() scan.
-        this.<Map<String, String>>getField("groupNameMap").put(cachedGuid, "group_g");
-
-        Map<String, Map<String, String>> sourceGroups = new HashMap<>();
-        sourceGroups.put(sourceGuid, attrs(sourceGuid, "group_g"));
-
-        invoke("computeDeletedGroups", Map.class, sourceGroups);
-        assertTrue(this.<Map<String, XGroupInfo>>getField("deletedGroups").isEmpty(),
-                "Precondition: case-varied group must not have been hidden in the first place");
-
-        invoke("computeGroupDelta", Map.class, sourceGroups);
-
-        Map<String, XGroupInfo> deltaGroups = getField("deltaGroups");
-        assertTrue(deltaGroups.containsKey("group_g"),
-                "computeGroupDelta must resolve group_g via the case-insensitive findGroupByIdentity() "
-                        + "fallback and record it in deltaGroups rather than silently skipping it");
-        assertEquals(1, this.<Map<String, XGroupInfo>>getField("groupCache").size(), "group_g must still resolve to a single cache entry, not a duplicate");
-        assertEquals(ISVISIBLE, cached.getIsVisible());
     }
 
     @Test

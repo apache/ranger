@@ -82,13 +82,6 @@ public class XXGroupDao extends BaseDao<XXGroup> {
         }
     }
 
-    public List<XXGroup> findByOtherAttributesLike(String pattern) {
-        if (StringUtils.isEmpty(pattern)) {
-            return Collections.emptyList();
-        }
-        return getEntityManager().createNamedQuery("XXGroup.findByOtherAttributesLike", XXGroup.class).setParameter("pattern", pattern).getResultList();
-    }
-
     public Map<Long, String> getAllGroupIdNames() {
         Map<Long, String> groups = new HashMap<>();
 
