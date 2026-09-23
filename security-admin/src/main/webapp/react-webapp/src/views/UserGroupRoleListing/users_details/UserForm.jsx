@@ -35,7 +35,7 @@ import {
   UserTypes
 } from "Utils/XAEnums";
 import { toast } from "react-toastify";
-import { InfoIcon, getUserAccessRoleList, serverError } from "Utils/XAUtils";
+import { InfoIcon, getUserAccessRoleList, isSystemAdmin, serverError } from "Utils/XAUtils";
 import { getUserProfile, setUserProfile } from "Utils/appState";
 import { cloneDeep, has, isEmpty, isUndefined } from "lodash";
 import { SyncSourceDetails } from "Views/UserGroupRoleListing/SyncSourceDetails";
@@ -84,6 +84,7 @@ function UserForm(props) {
   const isExternalOrFederatedUser =
     userInfo?.userSource == UserTypes.USER_EXTERNAL.value ||
     userInfo?.userSource == UserTypes.USER_FEDERATED.value;
+  const isInternalUser = userInfo?.userSource == UserTypes.USER_INTERNAL.value;
 
   const handleSubmit = async (formData) => {
     let userFormData = {};
@@ -237,9 +238,7 @@ function UserForm(props) {
         loadOptions={loadOptions}
         defaultOptions
         isMulti
-        isDisabled={
-          isEditView && userInfo && isExternalOrFederatedUser ? true : false
-        }
+        isDisabled={disabledGroupField()}
         styles={selectInputCustomStyles}
       />
     );
@@ -276,6 +275,10 @@ function UserForm(props) {
       }
     }
     return disabledUserRolefield;
+  };
+
+  const disabledGroupField = () => {
+    return !(isSystemAdmin() && isEditView && isInternalUser)
   };
 
   const userRoleListData = () => {
