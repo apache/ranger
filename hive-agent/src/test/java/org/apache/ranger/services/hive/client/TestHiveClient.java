@@ -636,6 +636,13 @@ public class TestHiveClient {
         assertJdbcConfigRejected("org.apache.hive.jdbc.HiveDriver", "jdbc:hive2://localhost:10000/default%3BsocketFactory=com.example.Evil", "prohibited parameter");
     }
 
+    @Test
+    public void test35_initConnection_rejectsEmbeddedHiveUrl() throws Exception {
+        assertJdbcConfigRejected("org.apache.hive.jdbc.HiveDriver", "jdbc:hive2:///", "jdbc.url must include a host");
+        assertJdbcConfigRejected("org.apache.hive.jdbc.HiveDriver", "jdbc:hive2://;", "jdbc.url must include a host");
+        assertJdbcConfigRejected("org.apache.hive.jdbc.HiveDriver", "jdbc:hive2://?x=y", "jdbc.url must include a host");
+    }
+
     private void assertJdbcConfigRejected(String driverClassName, String url, String expectedMessage) throws Exception {
         NoopHiveClient client = new NoopHiveClient("svc", new HashMap<>());
         Field          fCfg   = Class.forName("org.apache.ranger.plugin.client.BaseClient").getDeclaredField("configHolder");

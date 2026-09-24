@@ -213,6 +213,10 @@ public class PrestoClient extends BaseClient implements Closeable {
         String     driverClassName = prop.getProperty("jdbc.driverClassName");
         String     url             = prop.getProperty("jdbc.url");
 
+        if (url != null) {
+            url = url.trim();
+        }
+
         // validate before loading the driver class: loading a class runs its initializers
         JdbcUrlValidator.validate(url, ALLOWED_JDBC_URL_PREFIXES);
         JdbcUrlValidator.validateDriverClassName(driverClassName, ALLOWED_JDBC_DRIVER_CLASSES);

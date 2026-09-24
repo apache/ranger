@@ -462,7 +462,8 @@ class JdbcUrlValidatorTest {
                 "jdbc:hive2://localhost:10000/default",
                 "jdbc:hive2://zk1:2181,zk2:2181/;serviceDiscoveryMode=zooKeeper;zooKeeperNamespace=hiveserver2",
                 "jdbc:hive2://host:10000/db;transportMode=http;httpPath=cliservice;ssl=true",
-                "jdbc:hive2://"})
+                " jdbc:hive2://localhost:10000/default ",
+                "jdbc:hive2://[::1]:10000/default"})
         void allowedScheme(String url) {
             assertDoesNotThrow(() -> JdbcUrlValidator.validate(url, hivePrefixes));
         }
@@ -477,7 +478,6 @@ class JdbcUrlValidatorTest {
                 "jdbc:h2:mem:test",
                 "jdbc:hive://localhost:10000/default",
                 "JDBC:HIVE2://localhost:10000/default",
-                " jdbc:hive2://localhost:10000/default",
                 "jdbc:presto://localhost:8080",
                 "hive2://localhost:10000"})
         void rejectedScheme(String url) {
@@ -489,6 +489,28 @@ class JdbcUrlValidatorTest {
         @DisplayName("Blocked parameters are still rejected when the scheme is allowed")
         void blockedParameterWithAllowedScheme() {
             assertThrows(HadoopException.class, () -> JdbcUrlValidator.validate("jdbc:hive2://host:10000/db;socketFactory=com.example.X", hivePrefixes));
+        }
+
+        @ParameterizedTest(name = "embedded: {0}")
+        @ValueSource(strings = {
+                "jdbc:hive2://",
+                "jdbc:hive2:///",
+                "jdbc:hive2://;",
+                "jdbc:hive2://?x=y",
+                "jdbc:hive2://#var",
+                "jdbc:hive2:///;initFile=/tmp/init.sql"
+        })
+        @DisplayName("Rejects Hive embedded mode, which has no host")
+        void rejectsEmbeddedMode(String url) {
+            HadoopException e = assertThrows(HadoopException.class, () -> JdbcUrlValidator.validate(url, hivePrefixes));
+            assertTrue(e.getMessage().contains("jdbc.url must include a host"), e.getMessage());
+        }
+
+        @Test
+        @DisplayName("Rejects a Trino dnsResolver class name")
+        void rejectsDnsResolver() {
+            HadoopException e = assertThrows(HadoopException.class, () -> JdbcUrlValidator.validate("jdbc:trino://h:8080?dnsResolver=com.example.Resolver", Collections.singletonList("jdbc:trino://")));
+            assertTrue(e.getMessage().contains("prohibited parameter"), e.getMessage());
         }
 
         @Test

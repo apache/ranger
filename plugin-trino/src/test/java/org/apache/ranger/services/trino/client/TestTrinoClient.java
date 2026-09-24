@@ -340,6 +340,10 @@ public class TestTrinoClient {
         props.put("jdbc.url", "jdbc:trino://localhost:8080/catalog%3BsocketFactory=com.example.Evil");
 
         assertRejectedBeforeDriverLoad(props, "prohibited parameter");
+
+        props.put("jdbc.url", "jdbc:trino://h:8080?dnsResolver=com.example.Resolver");
+
+        assertRejectedBeforeDriverLoad(props, "prohibited parameter");
     }
 
     private void assertRejectedBeforeDriverLoad(Map<String, String> props, String expectedMessage) {

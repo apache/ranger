@@ -34,13 +34,13 @@ public final class JdbcUrlValidator {
             new HashSet<>(Arrays.asList(
                     "socketfactory", "socketfactoryarg", "sslfactory", "sslfactoryarg",
                     "sslhostnameverifier", "authenticationpluginclassname", "loggerclassname",
-                    "kerberosservername", "gssdelegatecred", "sslpasswordcallback")));
+                    "kerberosservername", "gssdelegatecred", "sslpasswordcallback", "dnsresolver")));
     private static final String[] DANGEROUS_PATTERNS = {"socketfactory", "sslfactory", "autodeserialize"};
 
     private JdbcUrlValidator() {
     }
 
-    public static void validate(String jdbcUrl) throws HadoopException {
+    static void validate(String jdbcUrl) throws HadoopException {
         if (jdbcUrl == null || jdbcUrl.trim().isEmpty()) {
             HadoopException e = new HadoopException("jdbc.url must not be null or empty");
             e.generateResponseDataMap(false, "Validation failed", "jdbc.url is required",
@@ -57,30 +57,40 @@ public final class JdbcUrlValidator {
         LOG.debug("jdbc.url passed validation: {}", sanitizeForLog(trimmed));
     }
 
+    /**
+     * Validates jdbc.url and requires it to start with one of the given prefixes,
+     * followed by a host. The prefix check uses the trimmed URL. Callers must pass
+     * that same trimmed string to DriverManager.
+     */
     public static void validate(String jdbcUrl, Collection<String> allowedUrlPrefixes) throws HadoopException {
         validate(jdbcUrl);
 
-        boolean isAllowed = false;
+        String candidate     = jdbcUrl.trim();
+        String matchedPrefix = null;
 
         if (allowedUrlPrefixes != null) {
             for (String prefix : allowedUrlPrefixes) {
-                if (prefix != null && !prefix.isEmpty() && jdbcUrl.startsWith(prefix)) {
-                    isAllowed = true;
+                if (prefix != null && !prefix.isEmpty() && candidate.startsWith(prefix)) {
+                    matchedPrefix = prefix;
                     break;
                 }
             }
         }
 
-        if (!isAllowed) {
-            LOG.warn("Rejected jdbc.url with unsupported scheme: {}", sanitizeForLog(jdbcUrl));
+        if (matchedPrefix == null) {
+            LOG.warn("Rejected jdbc.url with unsupported scheme: {}", sanitizeForLog(candidate));
 
             HadoopException e = new HadoopException("jdbc.url must start with one of " + allowedUrlPrefixes);
             e.generateResponseDataMap(false, "Invalid jdbc.url", "jdbc.url must start with one of " + allowedUrlPrefixes, null, "jdbc.url");
             throw e;
         }
+
+        requireHost(candidate, matchedPrefix);
     }
 
     public static void validateDriverClassName(String driverClassName, Collection<String> allowedDriverClassNames) throws HadoopException {
+        // Null skips registration. DriverManager then picks a driver that accepts the URL,
+        // which the prefix and host checks already constrained.
         if (driverClassName == null) {
             return;
         }
@@ -90,6 +100,29 @@ public final class JdbcUrlValidator {
 
             HadoopException e = new HadoopException("jdbc.driverClassName must be one of " + allowedDriverClassNames);
             e.generateResponseDataMap(false, "Invalid jdbc.driverClassName", "jdbc.driverClassName must be one of " + allowedDriverClassNames, null, "jdbc.driverClassName");
+            throw e;
+        }
+    }
+
+    /**
+     * An empty host is Hive embedded mode (jdbc:hive2://, jdbc:hive2:///, jdbc:hive2://;...).
+     * That starts HiveServer2 inside the Admin JVM. The same host requirement applies to
+     * every allowed prefix.
+     */
+    private static void requireHost(String url, String prefix) throws HadoopException {
+        boolean missingHost = url.length() == prefix.length();
+
+        if (!missingHost) {
+            char next = url.charAt(prefix.length());
+
+            missingHost = next == '/' || next == ';' || next == '?' || next == '#';
+        }
+
+        if (missingHost) {
+            LOG.warn("Rejected jdbc.url without a host: {}", sanitizeForLog(url));
+
+            HadoopException e = new HadoopException("jdbc.url must include a host");
+            e.generateResponseDataMap(false, "Invalid jdbc.url", "jdbc.url must include a host", null, "jdbc.url");
             throw e;
         }
     }
@@ -133,8 +166,10 @@ public final class JdbcUrlValidator {
     private static HadoopException invalidPercentEncoding(String url) {
         LOG.warn("Rejected jdbc.url with invalid percent-encoding: {}", sanitizeForLog(url));
 
-        HadoopException e = new HadoopException("jdbc.url contains invalid percent-encoding");
-        e.generateResponseDataMap(false, "Invalid jdbc.url", "jdbc.url contains invalid percent-encoding", null, "jdbc.url");
+        String message = "jdbc.url contains invalid percent-encoding; a '%' must be followed by two hex digits (encode a literal '%' as %25)";
+
+        HadoopException e = new HadoopException(message);
+        e.generateResponseDataMap(false, "Invalid jdbc.url", message, null, "jdbc.url");
         return e;
     }
 
