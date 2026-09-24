@@ -28,6 +28,7 @@ import java.lang.reflect.Field;
 import java.security.PrivilegedAction;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
+import java.sql.Driver;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLTimeoutException;
@@ -36,18 +37,24 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 @TestMethodOrder(MethodOrderer.MethodName.class)
 public class TestTrinoClient {
+    private static final AtomicBoolean TRACKED_CLASS_INITIALIZED = new AtomicBoolean(false);
+    private static final String        TRACKED_CLASS_NAME        = TestTrinoClient.class.getName() + "$TrackedClass";
+
     private TrinoClient createMockedClient() throws Exception {
         return createMockedClient(new HashMap<>());
     }
@@ -300,6 +307,61 @@ public class TestTrinoClient {
             HadoopException ex = assertThrows(HadoopException.class,
                     () -> client.getTableList("table1", Collections.singletonList("catalog1"), Arrays.asList("schema1", "'; DROP --"), null));
             assertTrue(ex.getMessage().contains("Invalid"));
+        }
+    }
+
+    @Test
+    public void test11_initConnection_rejectsNonMatchingUrlScheme() throws Exception {
+        Map<String, String> props = new HashMap<>();
+
+        props.put("jdbc.url", "jdbc:mysql://address=(host=localhost)(port=3306)(allowLoadLocalInfile=true)/db");
+
+        assertRejectedBeforeDriverLoad(props, "jdbc.url must start with");
+    }
+
+    @Test
+    public void test12_initConnection_rejectsDriverClassNotInAllowList() throws Exception {
+        Map<String, String> props = new HashMap<>();
+
+        props.put("jdbc.driverClassName", TRACKED_CLASS_NAME);
+
+        assertRejectedBeforeDriverLoad(props, "jdbc.driverClassName must be one of");
+        assertFalse(TRACKED_CLASS_INITIALIZED.get(), "driver class must not be loaded when it is not in the allowed list");
+    }
+
+    @Test
+    public void test13_initConnection_rejectsUnsafeUrlParameter() throws Exception {
+        Map<String, String> props = new HashMap<>();
+
+        props.put("jdbc.url", "jdbc:trino://localhost:8080?socketFactory=com.example.Evil");
+
+        assertRejectedBeforeDriverLoad(props, "prohibited parameter");
+
+        props.put("jdbc.url", "jdbc:trino://localhost:8080/catalog%3BsocketFactory=com.example.Evil");
+
+        assertRejectedBeforeDriverLoad(props, "prohibited parameter");
+    }
+
+    private void assertRejectedBeforeDriverLoad(Map<String, String> props, String expectedMessage) {
+        try (MockedStatic<DriverManager> dmStatic = Mockito.mockStatic(DriverManager.class);
+                MockedStatic<Subject> subjectStatic = Mockito.mockStatic(Subject.class)) {
+            subjectStatic.when(() -> Subject.doAs(any(), any(PrivilegedAction.class)))
+                    .thenAnswer(inv -> {
+                        PrivilegedAction<?> action = inv.getArgument(1);
+                        return action.run();
+                    });
+
+            HadoopException excp = assertThrows(HadoopException.class, () -> createMockedClient(props));
+
+            assertTrue(excp.getMessage().contains(expectedMessage), excp.getMessage());
+            dmStatic.verify(() -> DriverManager.registerDriver(any(Driver.class)), never());
+            dmStatic.verify(() -> DriverManager.getConnection(anyString(), any()), never());
+        }
+    }
+
+    public static class TrackedClass {
+        static {
+            TRACKED_CLASS_INITIALIZED.set(true);
         }
     }
 

@@ -15,15 +15,15 @@
  * limitations under the License.
  */
 
-package org.apache.ranger.services.hive.client;
+package org.apache.ranger.plugin.client;
 
-import org.apache.ranger.plugin.client.HadoopException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
@@ -48,12 +48,94 @@ public final class JdbcUrlValidator {
             throw e;
         }
         String trimmed = jdbcUrl.trim();
-        int queryStart = findQueryStart(trimmed);
-        if (queryStart != -1) {
-            String queryString = trimmed.substring(queryStart + 1);
-            validateQueryString(queryString, trimmed);
+        rejectBlockedParameters(trimmed, trimmed);
+        // Hive decodes percent-escapes before splitting session variables, so a
+        // separator written as %3B or %3F is invisible to a scan of the raw URL.
+        if (trimmed.indexOf('%') >= 0) {
+            rejectBlockedParameters(percentDecode(trimmed), trimmed);
         }
         LOG.debug("jdbc.url passed validation: {}", sanitizeForLog(trimmed));
+    }
+
+    public static void validate(String jdbcUrl, Collection<String> allowedUrlPrefixes) throws HadoopException {
+        validate(jdbcUrl);
+
+        boolean isAllowed = false;
+
+        if (allowedUrlPrefixes != null) {
+            for (String prefix : allowedUrlPrefixes) {
+                if (prefix != null && !prefix.isEmpty() && jdbcUrl.startsWith(prefix)) {
+                    isAllowed = true;
+                    break;
+                }
+            }
+        }
+
+        if (!isAllowed) {
+            LOG.warn("Rejected jdbc.url with unsupported scheme: {}", sanitizeForLog(jdbcUrl));
+
+            HadoopException e = new HadoopException("jdbc.url must start with one of " + allowedUrlPrefixes);
+            e.generateResponseDataMap(false, "Invalid jdbc.url", "jdbc.url must start with one of " + allowedUrlPrefixes, null, "jdbc.url");
+            throw e;
+        }
+    }
+
+    public static void validateDriverClassName(String driverClassName, Collection<String> allowedDriverClassNames) throws HadoopException {
+        if (driverClassName == null) {
+            return;
+        }
+
+        if (allowedDriverClassNames == null || !allowedDriverClassNames.contains(driverClassName)) {
+            LOG.warn("Rejected jdbc.driverClassName not in allowed list {}", allowedDriverClassNames);
+
+            HadoopException e = new HadoopException("jdbc.driverClassName must be one of " + allowedDriverClassNames);
+            e.generateResponseDataMap(false, "Invalid jdbc.driverClassName", "jdbc.driverClassName must be one of " + allowedDriverClassNames, null, "jdbc.driverClassName");
+            throw e;
+        }
+    }
+
+    private static void rejectBlockedParameters(String candidate, String urlForLog) throws HadoopException {
+        int queryStart = findQueryStart(candidate);
+        if (queryStart != -1) {
+            validateQueryString(candidate.substring(queryStart + 1), urlForLog);
+        }
+    }
+
+    private static String percentDecode(String value) throws HadoopException {
+        StringBuilder decoded = new StringBuilder(value.length());
+
+        for (int i = 0; i < value.length(); i++) {
+            char current = value.charAt(i);
+
+            if (current != '%') {
+                decoded.append(current);
+                continue;
+            }
+
+            if (i + 2 >= value.length()) {
+                throw invalidPercentEncoding(value);
+            }
+
+            int high = Character.digit(value.charAt(i + 1), 16);
+            int low = Character.digit(value.charAt(i + 2), 16);
+
+            if (high < 0 || low < 0) {
+                throw invalidPercentEncoding(value);
+            }
+
+            decoded.append((char) ((high << 4) + low));
+            i += 2;
+        }
+
+        return decoded.toString();
+    }
+
+    private static HadoopException invalidPercentEncoding(String url) {
+        LOG.warn("Rejected jdbc.url with invalid percent-encoding: {}", sanitizeForLog(url));
+
+        HadoopException e = new HadoopException("jdbc.url contains invalid percent-encoding");
+        e.generateResponseDataMap(false, "Invalid jdbc.url", "jdbc.url contains invalid percent-encoding", null, "jdbc.url");
+        return e;
     }
 
     private static void validateQueryString(String queryString, String fullUrl) throws HadoopException {
