@@ -58,6 +58,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.StringTokenizer;
+import java.util.function.BiConsumer;
+import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.regex.Pattern;
 
 public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implements UserGroupSink {
@@ -275,6 +278,12 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
                 ugsyncAuditInfo.getFileSyncSourceInfo().setTotalGroupsSynced(noOfCachedGroups);
                 ugsyncAuditInfo.getFileSyncSourceInfo().setTotalUsersDeleted(noOfDeletedUsers);
                 ugsyncAuditInfo.getFileSyncSourceInfo().setTotalGroupsDeleted(noOfDeletedGroups);
+                break;
+            case "EntraID":
+                ugsyncAuditInfo.getEntraIdSyncSourceInfo().setTotalUsersSynced(noOfCachedUsers);
+                ugsyncAuditInfo.getEntraIdSyncSourceInfo().setTotalGroupsSynced(noOfCachedGroups);
+                ugsyncAuditInfo.getEntraIdSyncSourceInfo().setTotalUsersDeleted(noOfDeletedUsers);
+                ugsyncAuditInfo.getEntraIdSyncSourceInfo().setTotalGroupsDeleted(noOfDeletedGroups);
                 break;
             default:
                 break;
@@ -526,6 +535,11 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
                     }
 
                     groupCache.put(g.getName(), g);
+                    Map<String, String> groupOtherAttrs = g.getOtherAttrsMap();
+                    String groupIdentity = groupOtherAttrs != null ? groupOtherAttrs.get(UgsyncCommonConstants.FULL_NAME) : null;
+                    if (StringUtils.isNotEmpty(groupIdentity)) {
+                        groupNameMap.put(groupIdentity, g.getName());
+                    }
                 }
 
                 retrievedCount = groupCache.size();
@@ -580,6 +594,11 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
                     }
 
                     userCache.put(u.getName(), u);
+                    Map<String, String> userOtherAttrs = u.getOtherAttrsMap();
+                    String userIdentity = userOtherAttrs != null ? userOtherAttrs.get(UgsyncCommonConstants.FULL_NAME) : null;
+                    if (StringUtils.isNotEmpty(userIdentity)) {
+                        userNameMap.put(userIdentity, u.getName());
+                    }
                 }
 
                 retrievedCount = userCache.size();
@@ -1988,6 +2007,205 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
     }
 
     // This will throw RuntimeException if Server is not Active
+    @Override
+    public void deleteUsersAndGroups(Map<String, Map<String, String>> deletedUsersMap, Map<String, Map<String, String>> deletedGroupsMap) throws Throwable {
+        LOG.debug("==> PolicyMgrUserGroupBuilder.deleteUsersAndGroups(users={}, groups={})", MapUtils.isNotEmpty(deletedUsersMap) ? deletedUsersMap.keySet() : "[]", MapUtils.isNotEmpty(deletedGroupsMap) ? deletedGroupsMap.keySet() : "[]");
+
+        if (isStartupFlag) {
+            LOG.info("Skipping per-record deletes during startup cycle");
+            return;
+        }
+
+        if (MapUtils.isNotEmpty(deletedGroupsMap)) {
+            markDeletedGroupsByFullName(deletedGroupsMap.keySet());
+
+            if (MapUtils.isNotEmpty(deletedGroups)) {
+                try {
+                    if (updateDeletedGroups() == 0) {
+                        String msg = "Failed to update deleted groups to ranger admin";
+
+                        LOG.error(msg);
+
+                        throw new Exception(msg);
+                    }
+
+                    groupCache.putAll(deletedGroups);
+                    noOfDeletedGroups += deletedGroups.size();
+                } catch (Throwable t) {
+                    // markForDelete hides the cache row before the POST. Put visibility back
+                    // so a retry still posts. An already-hidden row is skipped and the delta
+                    // token would otherwise move past the tombstone.
+                    restoreUncommittedVisibility(deletedGroups, XGroupInfo::setIsVisible);
+                    throw t;
+                }
+            }
+
+            LOG.info("No. of groups marked for delete (per-record) = {}", deletedGroups.size());
+        }
+
+        if (MapUtils.isNotEmpty(deletedUsersMap)) {
+            markDeletedUsersByFullName(deletedUsersMap.keySet());
+
+            if (MapUtils.isNotEmpty(deletedUsers)) {
+                try {
+                    if (updateDeletedUsers() == 0) {
+                        String msg = "Failed to update deleted users to ranger admin";
+
+                        LOG.error(msg);
+
+                        throw new Exception(msg);
+                    }
+
+                    userCache.putAll(deletedUsers);
+                    noOfDeletedUsers += deletedUsers.size();
+                } catch (Throwable t) {
+                    restoreUncommittedVisibility(deletedUsers, XUserInfo::setIsVisible);
+                    throw t;
+                }
+            }
+
+            LOG.info("No. of users marked for delete (per-record) = {}", deletedUsers.size());
+        }
+
+        LOG.debug("<== PolicyMgrUserGroupBuilder.deleteUsersAndGroups()");
+    }
+
+    private void markDeletedGroupsByFullName(Set<String> deletedGroupFullNames) {
+        LOG.debug("PolicyMgrUserGroupBuilder.markDeletedGroupsByFullName({})", deletedGroupFullNames);
+
+        deletedGroups = new HashMap<>();
+
+        markDeletedByFullName(deletedGroupFullNames, groupCache, deletedGroups, this::resolveGroupFromNameMap, this::markGroupForDelete, XGroupInfo::getName, XGroupInfo::getOtherAttrsMap);
+
+        LOG.debug("<== PolicyMgrUserGroupBuilder.markDeletedGroupsByFullName({})", deletedGroups);
+    }
+
+    private XGroupInfo resolveGroupFromNameMap(String identityKey) {
+        return resolveFromNameMap(identityKey, groupNameMap, groupCache, XGroupInfo::getOtherAttrsMap);
+    }
+
+    private void markGroupForDelete(XGroupInfo groupInfo) {
+        markForDelete(groupInfo, deletedGroups, XGroupInfo::getName, XGroupInfo::getIsVisible, XGroupInfo::setIsVisible, "group");
+    }
+
+    private void markDeletedUsersByFullName(Set<String> deletedUserFullNames) {
+        LOG.debug("PolicyMgrUserGroupBuilder.markDeletedUsersByFullName({})", deletedUserFullNames);
+
+        deletedUsers = new HashMap<>();
+
+        markDeletedByFullName(deletedUserFullNames, userCache, deletedUsers, this::resolveUserFromNameMap, this::markUserForDelete, XUserInfo::getName, XUserInfo::getOtherAttrsMap);
+
+        LOG.debug("<== PolicyMgrUserGroupBuilder.markDeletedUsersByFullName({})", deletedUsers);
+    }
+
+    private XUserInfo resolveUserFromNameMap(String identityKey) {
+        return resolveFromNameMap(identityKey, userNameMap, userCache, XUserInfo::getOtherAttrsMap);
+    }
+
+    private void markUserForDelete(XUserInfo userInfo) {
+        markForDelete(userInfo, deletedUsers, XUserInfo::getName, XUserInfo::getIsVisible, XUserInfo::setIsVisible, "user");
+    }
+
+    /**
+     * Per-record deletes for a source that already knows the stable id. full_name is matched
+     * exactly, with the same sync-source and ldap_url checks as computeDeletedUsers/computeDeletedGroups.
+     */
+    private <T> void markDeletedByFullName(Set<String> deletedFullNames, Map<String, T> cache, Map<String, T> deletedMap,
+            Function<String, T> resolveByIdentity, Consumer<T> markForDelete,
+            Function<T, String> getName, Function<T, Map<String, String>> getOtherAttrsMap) {
+        if (deletedFullNames == null || cache == null) {
+            return;
+        }
+
+        for (String deletedKey : deletedFullNames) {
+            if (StringUtils.isEmpty(deletedKey)) {
+                continue;
+            }
+
+            T mapped = resolveByIdentity.apply(deletedKey);
+
+            if (mapped != null) {
+                markForDelete.accept(mapped);
+            }
+        }
+
+        for (T info : cache.values()) {
+            if (info == null || deletedMap.containsKey(getName.apply(info))) {
+                continue;
+            }
+
+            Map<String, String> otherAttrs = getOtherAttrsMap.apply(info);
+            String              fullName   = otherAttrs != null ? otherAttrs.get(UgsyncCommonConstants.FULL_NAME) : null;
+
+            if (StringUtils.isNotEmpty(fullName) && deletedFullNames.contains(fullName) && sameSourceAndLdapUrl(otherAttrs)) {
+                markForDelete.accept(info);
+            }
+        }
+    }
+
+    private <T> T resolveFromNameMap(String identityKey, Map<String, String> nameMap, Map<String, T> cache, Function<T, Map<String, String>> getOtherAttrsMap) {
+        if (StringUtils.isEmpty(identityKey) || MapUtils.isEmpty(nameMap) || cache == null) {
+            return null;
+        }
+
+        String name = nameMap.get(identityKey);
+
+        if (StringUtils.isEmpty(name)) {
+            return null;
+        }
+
+        T info = cache.get(name);
+
+        if (info == null) {
+            return null;
+        }
+
+        Map<String, String> attrs    = getOtherAttrsMap.apply(info);
+        String              fullName = attrs != null ? attrs.get(UgsyncCommonConstants.FULL_NAME) : null;
+
+        if (!StringUtils.equals(identityKey, fullName) || !sameSourceAndLdapUrl(attrs)) {
+            return null;
+        }
+
+        return info;
+    }
+
+    /** Same gate computeDeletedUsers/computeDeletedGroups use. Blank ldap_url is not treated as null. */
+    private boolean sameSourceAndLdapUrl(Map<String, String> otherAttrs) {
+        if (otherAttrs == null) {
+            return false;
+        }
+
+        return StringUtils.equalsIgnoreCase(otherAttrs.get(UgsyncCommonConstants.SYNC_SOURCE), currentSyncSource)
+                && StringUtils.equalsIgnoreCase(otherAttrs.get(UgsyncCommonConstants.LDAP_URL), ldapUrl);
+    }
+
+    private <T> void restoreUncommittedVisibility(Map<String, T> marked, BiConsumer<T, String> setIsVisible) {
+        if (marked == null) {
+            return;
+        }
+        for (T info : marked.values()) {
+            if (info != null) {
+                setIsVisible.accept(info, ISVISIBLE);
+            }
+        }
+    }
+
+    private <T> void markForDelete(T info, Map<String, T> deletedMap, Function<T, String> getName, Function<T, String> getIsVisible, BiConsumer<T, String> setIsVisible, String kind) {
+        if (info == null || deletedMap.containsKey(getName.apply(info))) {
+            return;
+        }
+
+        String name = getName.apply(info);
+
+        if (!ISHIDDEN.equals(getIsVisible.apply(info))) {
+            setIsVisible.accept(info, ISHIDDEN);
+            deletedMap.put(name, info);
+        } else {
+            LOG.info("{} {} already marked for delete", kind, name);
+        }
+    }
+
     private void checkStatus() {
         if (!UserGroupSyncConfig.isUgsyncServiceActive()) {
             LOG.error(ERR_MSG_FOR_INACTIVE_SERVER);
