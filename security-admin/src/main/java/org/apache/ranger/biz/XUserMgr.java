@@ -513,6 +513,7 @@ public class XUserMgr extends XUserMgrBase {
 		vXUser.setPassword(hiddenPasswordString);
 
 		Long userId = vXUser.getId();
+		validateGroupMembershipChangeAccess(userId, groupIdList);
 		List<Long> groupUsersToRemove = new ArrayList<Long>();
 		List<XXTrxLogV2> groupUserTrxLogs = createOrDelGrpUserWithUpdatedGrpId(vXUser, groupIdList,userId, groupUsersToRemove);
 
@@ -530,6 +531,27 @@ public class XUserMgr extends XUserMgrBase {
 
 		return vXUser;
 	}
+
+	private void validateGroupMembershipChangeAccess(Long userId, Collection<Long> groupIdList) {
+		if (groupIdList == null || userId == null) {
+			return;
+		}
+		UserSessionBase session = ContextUtil.getCurrentUserSession();
+		if (session == null || session.isUserAdmin()) {
+			return;
+		}
+		List<Long> existingGroupIds = daoManager.getXXGroupUser().findGroupIdListByUserId(userId);
+		Set<Long> requestedGroupIds = new HashSet<>(groupIdList);
+		Set<Long> currentGroupIds     = new HashSet<>();
+		if (CollectionUtils.isNotEmpty(existingGroupIds)) {
+			currentGroupIds.addAll(existingGroupIds);
+		}
+		if (!requestedGroupIds.equals(currentGroupIds)) {
+			throw restErrorUtil.create403RESTException(
+					"Logged-in user is not permitted to modify group membership.");
+		}
+	}
+
 	private List<XXTrxLogV2> createOrDelGrpUserWithUpdatedGrpId(VXUser vXUser, Collection<Long> groupIdList,Long userId, List<Long> groupUsersToRemove) {
 		Collection<String> groupNamesSet = new HashSet<String>();
 		List<XXTrxLogV2> trxLogList = new ArrayList<>();

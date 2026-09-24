@@ -816,6 +816,50 @@ public class TestXUserMgr {
 	}
 
 	@Test
+	public void testUpdateXUser_KeyAdminCannotChangeGroupMembership() {
+		destroySession();
+		setupKeyAdmin();
+
+		VXUser vxUser = vxUser();
+		vxUser.setId(userId);
+		vxUser.setFirstName("test");
+		vxUser.setUserRoleList(Collections.singletonList(RangerConstants.ROLE_USER));
+
+		VXPortalUser vXPortalUser = userProfile();
+		vXPortalUser.setUserRoleList(Collections.singletonList(RangerConstants.ROLE_USER));
+
+		Mockito.when(userMgr.getUserProfileByLoginId(vxUser.getName())).thenReturn(vXPortalUser);
+		Mockito.when(xUserService.readResource(userId)).thenReturn(vxUser);
+
+		XXPortalUser xXPortalUser = xxPortalUser(vXPortalUser);
+		Mockito.when(userMgr.updateUserWithPass(Mockito.any())).thenReturn(xXPortalUser);
+		Mockito.when(xUserService.updateResource(vxUser)).thenReturn(vxUser);
+		Mockito.when(xUserService.getTransactionLog(
+						Mockito.any(VXUser.class),
+						Mockito.any(),
+						Mockito.anyInt()))
+				.thenReturn(new ArrayList<>());
+
+		VXUser loggedInUser = vxUser();
+		loggedInUser.setName(keyadminLoginID);
+		loggedInUser.setUserRoleList(Collections.singletonList(RangerConstants.ROLE_KEY_ADMIN));
+		Mockito.when(xUserService.getXUserByUserName(keyadminLoginID)).thenReturn(loggedInUser);
+
+		XXGroupUserDao xxGroupUserDao = Mockito.mock(XXGroupUserDao.class);
+		Mockito.when(daoManager.getXXGroupUser()).thenReturn(xxGroupUserDao);
+		Mockito.when(xxGroupUserDao.findGroupIdListByUserId(userId))
+				.thenReturn(Collections.emptyList());
+
+		vxUser.setGroupIdList(Collections.singletonList(105L));
+
+		Mockito.when(restErrorUtil.create403RESTException(
+						"Logged-in user is not permitted to modify group membership."))
+				.thenThrow(new WebApplicationException());
+
+		Assertions.assertThrows(WebApplicationException.class, () -> xUserMgr.updateXUser(vxUser));
+	}
+
+	@Test
 	public void test06ModifyUserVisibilitySetOne() {
 		setup();
 		XXUserDao xxUserDao = Mockito.mock(XXUserDao.class);
