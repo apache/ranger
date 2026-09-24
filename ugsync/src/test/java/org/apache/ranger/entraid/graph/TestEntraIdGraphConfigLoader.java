@@ -150,11 +150,12 @@ public class TestEntraIdGraphConfigLoader {
     }
 
     @Test
-    public void test11_load_groupFilter_isMapped() throws Exception {
+    public void test11_load_groupFilter_isRejected() {
         stubValidCertificate();
         stub(EntraIdGraphConfigLoader.ENTRAID_GROUP_FILTER, "startswith(displayName,'ENG-')");
-        EntraIdGraphConfig result = new EntraIdGraphConfigLoader(config).load();
-        Assertions.assertEquals("startswith(displayName,'ENG-')", result.getGroupFilter());
+        EntraIdGraphConfigLoader loader = new EntraIdGraphConfigLoader(config);
+        GraphClientException ex = Assertions.assertThrows(GraphClientException.class, loader::load);
+        Assertions.assertTrue(ex.getMessage().contains("group.filter"), ex.getMessage());
     }
 
     @Test

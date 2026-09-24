@@ -192,11 +192,10 @@ public class EntraIdUserGroupSource implements UserGroupSource {
                 continue;
             }
             if (entry.isRemoved()) {
-                // @removed on /users/delta means the user was deleted/disabled in the
-                // directory. Collect for per-record deletion (keyed by GUID, with the
-                // minimal attrs the sink's scoping gate matches on). On a reconcile
-                // sweep we let the full snapshot-diff compute deletes instead.
-                if (!reconcileSweep) {
+                // @removed means the directory object is gone. Keep it out of the upsert
+                // snapshot either way. Hide it only when deletes are enabled, and not on a
+                // reconcile sweep (that sweep diffs the full snapshot instead).
+                if (deletesEnabled && !reconcileSweep) {
                     deletedUsers.put(user.getId(), buildDeleteAttributes(user.getId()));
                 }
                 continue;
@@ -229,7 +228,7 @@ public class EntraIdUserGroupSource implements UserGroupSource {
                 continue;
             }
             if (entry.isRemoved()) {
-                if (!reconcileSweep) {
+                if (deletesEnabled && !reconcileSweep) {
                     deletedGroups.put(group.getId(), buildDeleteAttributes(group.getId()));
                 }
                 continue;

@@ -309,6 +309,20 @@ public class TestEntraIdUserGroupSource {
     }
 
     @Test
+    public void test16b_deletesDisabled_removedUser_isNotHiddenOrUpserted() throws Throwable {
+        Mockito.when(ugSyncConfig.isUserSyncDeletesEnabled()).thenReturn(false);
+        Mockito.when(graphClient.getUserDelta(null)).thenReturn(userPage("uDelta", new DeltaEntry<>(user(), true)));
+        Mockito.when(graphClient.getGroupDelta(null)).thenReturn(groupPage("gDelta"));
+        EntraIdUserGroupSource source = newSource();
+        source.updateSink(sink);
+        Mockito.verify(sink, Mockito.never()).deleteUsersAndGroups(Mockito.any(), Mockito.any());
+        @SuppressWarnings("unchecked")
+        ArgumentCaptor<Map<String, Map<String, String>>> users = ArgumentCaptor.forClass(Map.class);
+        Mockito.verify(sink).addOrUpdateUsersGroups(Mockito.any(), users.capture(), Mockito.any(), Mockito.anyBoolean());
+        Assertions.assertFalse(users.getValue().containsKey(USER_GUID), "a removed user must not be recreated while deletes are disabled");
+    }
+
+    @Test
     public void test17_normalCycle_removedGroup_callsDeleteWithGuid() throws Throwable {
         Mockito.when(ugSyncConfig.isUserSyncDeletesEnabled()).thenReturn(true);
         Mockito.when(ugSyncConfig.getUserSyncDeletesFrequency()).thenReturn(100L);
@@ -324,7 +338,7 @@ public class TestEntraIdUserGroupSource {
     @Test
     public void test18_normalCycle_doesNotForceFullPull() throws Throwable {
         // Establish a delta token on cycle 1, then assert cycle 2 (normal) uses it
-        // rather than forcing a full pull -- the key scale property for Bosch.
+        // rather than forcing a full pull.
         Mockito.when(ugSyncConfig.isUserSyncDeletesEnabled()).thenReturn(true);
         Mockito.when(ugSyncConfig.getUserSyncDeletesFrequency()).thenReturn(100L);
         Mockito.when(graphClient.getUserDelta(null)).thenReturn(userPage("uDelta-1"));

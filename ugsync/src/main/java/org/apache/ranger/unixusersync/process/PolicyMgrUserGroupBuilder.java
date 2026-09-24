@@ -535,6 +535,11 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
                     }
 
                     groupCache.put(g.getName(), g);
+                    Map<String, String> groupOtherAttrs = g.getOtherAttrsMap();
+                    String groupIdentity = groupOtherAttrs != null ? groupOtherAttrs.get(UgsyncCommonConstants.FULL_NAME) : null;
+                    if (StringUtils.isNotEmpty(groupIdentity)) {
+                        groupNameMap.put(groupIdentity, g.getName());
+                    }
                 }
 
                 retrievedCount = groupCache.size();
@@ -589,6 +594,11 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
                     }
 
                     userCache.put(u.getName(), u);
+                    Map<String, String> userOtherAttrs = u.getOtherAttrsMap();
+                    String userIdentity = userOtherAttrs != null ? userOtherAttrs.get(UgsyncCommonConstants.FULL_NAME) : null;
+                    if (StringUtils.isNotEmpty(userIdentity)) {
+                        userNameMap.put(userIdentity, u.getName());
+                    }
                 }
 
                 retrievedCount = userCache.size();
@@ -2010,16 +2020,24 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
             markDeletedGroupsByFullName(deletedGroupsMap.keySet());
 
             if (MapUtils.isNotEmpty(deletedGroups)) {
-                if (updateDeletedGroups() == 0) {
-                    String msg = "Failed to update deleted groups to ranger admin";
+                try {
+                    if (updateDeletedGroups() == 0) {
+                        String msg = "Failed to update deleted groups to ranger admin";
 
-                    LOG.error(msg);
+                        LOG.error(msg);
 
-                    throw new Exception(msg);
+                        throw new Exception(msg);
+                    }
+
+                    groupCache.putAll(deletedGroups);
+                    noOfDeletedGroups += deletedGroups.size();
+                } catch (Throwable t) {
+                    // markForDelete hides the cache row before the POST. Put visibility back
+                    // so a retry still posts. An already-hidden row is skipped and the delta
+                    // token would otherwise move past the tombstone.
+                    restoreUncommittedVisibility(deletedGroups, XGroupInfo::setIsVisible);
+                    throw t;
                 }
-
-                groupCache.putAll(deletedGroups);
-                noOfDeletedGroups += deletedGroups.size();
             }
 
             LOG.info("No. of groups marked for delete (per-record) = {}", deletedGroups.size());
@@ -2029,16 +2047,21 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
             markDeletedUsersByFullName(deletedUsersMap.keySet());
 
             if (MapUtils.isNotEmpty(deletedUsers)) {
-                if (updateDeletedUsers() == 0) {
-                    String msg = "Failed to update deleted users to ranger admin";
+                try {
+                    if (updateDeletedUsers() == 0) {
+                        String msg = "Failed to update deleted users to ranger admin";
 
-                    LOG.error(msg);
+                        LOG.error(msg);
 
-                    throw new Exception(msg);
+                        throw new Exception(msg);
+                    }
+
+                    userCache.putAll(deletedUsers);
+                    noOfDeletedUsers += deletedUsers.size();
+                } catch (Throwable t) {
+                    restoreUncommittedVisibility(deletedUsers, XUserInfo::setIsVisible);
+                    throw t;
                 }
-
-                userCache.putAll(deletedUsers);
-                noOfDeletedUsers += deletedUsers.size();
             }
 
             LOG.info("No. of users marked for delete (per-record) = {}", deletedUsers.size());
@@ -2155,6 +2178,17 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
 
         return StringUtils.equalsIgnoreCase(otherAttrs.get(UgsyncCommonConstants.SYNC_SOURCE), currentSyncSource)
                 && StringUtils.equalsIgnoreCase(otherAttrs.get(UgsyncCommonConstants.LDAP_URL), ldapUrl);
+    }
+
+    private <T> void restoreUncommittedVisibility(Map<String, T> marked, BiConsumer<T, String> setIsVisible) {
+        if (marked == null) {
+            return;
+        }
+        for (T info : marked.values()) {
+            if (info != null) {
+                setIsVisible.accept(info, ISVISIBLE);
+            }
+        }
     }
 
     private <T> void markForDelete(T info, Map<String, T> deletedMap, Function<T, String> getName, Function<T, String> getIsVisible, BiConsumer<T, String> setIsVisible, String kind) {

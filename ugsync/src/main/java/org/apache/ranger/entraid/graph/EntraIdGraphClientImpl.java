@@ -298,7 +298,6 @@ public final class EntraIdGraphClientImpl implements EntraIdGraphClient {
         attrs.add("members");
         StringBuilder query = new StringBuilder();
         query.append("$select=").append(encode(String.join(",", attrs)));
-        appendAmp(query).append("$top=").append(config.getPageSize());
         return sb.append("?").append(query).toString();
     }
 
@@ -355,24 +354,18 @@ public final class EntraIdGraphClientImpl implements EntraIdGraphClient {
             attrs.addAll(selectAttrs);
         }
         query.append("$select=").append(encode(String.join(",", attrs)));
-        // NOTE: Microsoft Graph does not support attribute-based $filter on the /delta
-        // endpoints -- the only accepted $filter is "id eq {guid}" (max 50 ids). Sending
-        // any other $filter to /users/delta or /groups/delta returns 400 Request_Unsupported
-        // Query. config.getGroupFilter() is therefore NOT applied here; any group-scoping
-        // support would need to be a client-side post-filter instead.
-        appendAmp(query).append("$top=").append(config.getPageSize());
         return sb.append("?").append(query).toString();
-    }
-
-    private static StringBuilder appendAmp(StringBuilder sb) {
-        if (!sb.isEmpty()) {
-            sb.append("&");
-        }
-        return sb;
     }
 
     private static String encode(String value) {
         return URLEncoder.encode(value, StandardCharsets.UTF_8);
+    }
+
+    static String redactSyncCursor(String url) {
+        if (url == null) {
+            return null;
+        }
+        return url.replaceAll("(?i)((?:\\$)?(?:delta|skip)token=)[^&\\s]+", "$1<redacted>");
     }
 
     /**
@@ -389,12 +382,12 @@ public final class EntraIdGraphClientImpl implements EntraIdGraphClient {
             target = new URI(url);
             base = new URI(config.getGraphBaseUrl());
         } catch (URISyntaxException e) {
-            throw new GraphClientException("Refusing to fetch malformed URL: " + url, e);
+            throw new GraphClientException("Refusing to fetch malformed URL: " + redactSyncCursor(url), e);
         }
         String targetHost = target.getHost();
         String baseHost = base.getHost();
         if (targetHost == null || !targetHost.equalsIgnoreCase(baseHost) || !schemeEquals(base, target) || effectivePort(base) != effectivePort(target)) {
-            throw new GraphClientException("Refusing to follow URL outside the configured Graph host (" + baseHost + "): " + url);
+            throw new GraphClientException("Refusing to follow URL outside the configured Graph host (" + baseHost + "): " + redactSyncCursor(url));
         }
     }
 
@@ -453,20 +446,20 @@ public final class EntraIdGraphClientImpl implements EntraIdGraphClient {
                 // The Location header on a 410 is not always reliable, so recovery re-seeds
                 // from our own base delta URL rather than following it.
                 if (status == 410 || (status == 400 && body != null && (body.contains("syncStateNotFound") || body.contains("resyncRequired")))) {
-                    throw new DeltaResyncRequiredException("Graph delta link expired/invalid: GET " + url + " -> HTTP " + status + " " + truncate(body), status);
+                    throw new DeltaResyncRequiredException("Graph delta link expired/invalid: GET " + redactSyncCursor(url) + " -> HTTP " + status + " " + truncate(body), status);
                 }
-                throw new GraphClientException("Graph request failed: GET " + url + " -> HTTP " + status + " " + truncate(body), status);
+                throw new GraphClientException("Graph request failed: GET " + redactSyncCursor(url) + " -> HTTP " + status + " " + truncate(body), status);
             } catch (GraphClientException e) {
                 throw e;
             } catch (Exception e) {
                 if (attempt < config.getMaxRetries()) {
                     long waitMs = config.getRetryBaseBackoffMs() * (1L << attempt);
-                    LOG.warn("Transient error on GET {} ({}); retrying in {} ms (attempt {}/{})", url, e.toString(), waitMs, attempt + 1, config.getMaxRetries());
+                    LOG.warn("Transient error on GET {} ({}); retrying in {} ms (attempt {}/{})", redactSyncCursor(url), e.toString(), waitMs, attempt + 1, config.getMaxRetries());
                     sleep(waitMs);
                     attempt++;
                     continue;
                 }
-                throw new GraphClientException("Graph request failed after retries: GET " + url, e);
+                throw new GraphClientException("Graph request failed after retries: GET " + redactSyncCursor(url), e);
             }
         }
     }

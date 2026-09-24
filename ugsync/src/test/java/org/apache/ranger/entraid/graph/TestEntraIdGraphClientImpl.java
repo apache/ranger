@@ -645,6 +645,10 @@ public class TestEntraIdGraphClientImpl {
         Set<String> select = selectAttrsOf(capturedQuery.get());
         Assertions.assertTrue(select.containsAll(Set.of("id", "userPrincipalName", "mail", "displayName", "accountEnabled")),
                 "user delta request must always include base user attrs even with user.select.attributes unset: " + select);
+        Assertions.assertFalse(capturedQuery.get().contains("$top"),
+                "user and group delta queries reject $top: " + capturedQuery.get());
+        Assertions.assertEquals("https://graph.example.test/v1.0/users/delta?$deltatoken=<redacted>",
+                EntraIdGraphClientImpl.redactSyncCursor("https://graph.example.test/v1.0/users/delta?$deltatoken=SECRET"));
     }
 
     @Test

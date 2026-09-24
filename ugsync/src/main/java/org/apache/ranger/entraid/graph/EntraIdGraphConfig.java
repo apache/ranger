@@ -335,6 +335,10 @@ public final class EntraIdGraphConfig {
                 }
             }
 
+            if (groupFilter != null && !groupFilter.trim().isEmpty()) {
+                throw new IllegalStateException("ranger.usersync.entraid.group.filter is not applied. "
+                        + "User and group delta queries reject attribute filters. Leave the property empty.");
+            }
             if (pageSize < 1) {
                 throw new IllegalStateException("pageSize must be >= 1");
             }
