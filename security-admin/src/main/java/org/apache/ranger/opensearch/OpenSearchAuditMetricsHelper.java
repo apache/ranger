@@ -321,18 +321,9 @@ public class OpenSearchAuditMetricsHelper {
 
             request.setEntity(new NStringEntity(body, ContentType.APPLICATION_JSON));
 
-            Response response    = client.performRequest(request);
-            int      statusCode  = response.getStatusLine().getStatusCode();
+            Response response = client.performRequest(request);
 
-            if (statusCode < 200 || statusCode >= 300) {
-                LOGGER.warn("OpenSearch query failed for {} with status {}", context, statusCode);
-
-                throw restErrorUtil.createRESTException("Error querying search engine", MessageEnums.ERROR_SYSTEM);
-            }
-
-            String json = EntityUtils.toString(response.getEntity());
-
-            result = MAPPER.readTree(json);
+            result = parseMetricsSearchResponse(response, context);
         } catch (IOException e) {
             LOGGER.warn("OpenSearch query failed for {}: {}", context, e.getMessage());
 
@@ -340,6 +331,20 @@ public class OpenSearchAuditMetricsHelper {
         }
 
         return result;
+    }
+
+    private JsonNode parseMetricsSearchResponse(Response response, String context) throws IOException {
+        int statusCode = response.getStatusLine().getStatusCode();
+
+        if (statusCode < 200 || statusCode >= 300) {
+            LOGGER.warn("OpenSearch query failed for {} with status {}", context, statusCode);
+
+            throw restErrorUtil.createRESTException("Error querying search engine", MessageEnums.ERROR_SYSTEM);
+        }
+
+        String json = EntityUtils.toString(response.getEntity());
+
+        return MAPPER.readTree(json);
     }
 
     private List<RangerAuditMetrics> extractAuditMetricsList(JsonNode response, SearchFilter filter) {

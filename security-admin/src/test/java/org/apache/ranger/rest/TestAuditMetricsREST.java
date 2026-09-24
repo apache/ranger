@@ -19,16 +19,15 @@
 
 package org.apache.ranger.rest;
 
-import org.apache.ranger.biz.RangerBizUtil;
+import org.apache.ranger.audit.metrics.AccessAuditsMetricsService;
+import org.apache.ranger.audit.metrics.AccessAuditsMetricsServiceFactory;
 import org.apache.ranger.common.MessageEnums;
 import org.apache.ranger.common.RESTErrorUtil;
 import org.apache.ranger.common.RangerSearchUtil;
-import org.apache.ranger.opensearch.OpenSearchAccessAuditsService;
 import org.apache.ranger.plugin.model.RangerAuditMetrics;
 import org.apache.ranger.plugin.model.RangerAuditMetricsByDays;
 import org.apache.ranger.plugin.model.RangerAuditMetricsByHours;
 import org.apache.ranger.plugin.util.SearchFilter;
-import org.apache.ranger.solr.SolrAccessAuditsService;
 import org.apache.ranger.view.RangerAuditMetricsList;
 import org.apache.ranger.view.RangerAuditMetricsListByDays;
 import org.apache.ranger.view.RangerAuditMetricsListByHours;
@@ -75,13 +74,10 @@ class TestAuditMetricsREST {
     RangerSearchUtil searchUtil;
 
     @Mock
-    RangerBizUtil rangerBizUtil;
+    AccessAuditsMetricsServiceFactory accessAuditsMetricsServiceFactory;
 
     @Mock
-    SolrAccessAuditsService solrAccessAuditsService;
-
-    @Mock
-    OpenSearchAccessAuditsService openSearchAccessAuditsService;
+    AccessAuditsMetricsService accessAuditsMetricsService;
 
     @Mock
     HttpServletRequest httpServletRequest;
@@ -100,7 +96,7 @@ class TestAuditMetricsREST {
         testAuditMetricsByHours = createTestAuditMetricsByHours();
         testAuditMetricsByDays = createTestAuditMetricsByDays();
         testSearchFilter = new SearchFilter();
-        lenient().when(rangerBizUtil.getAuditDBType()).thenReturn(RangerBizUtil.AUDIT_STORE_SOLR);
+        lenient().when(accessAuditsMetricsServiceFactory.getAccessAuditsMetricsService()).thenReturn(accessAuditsMetricsService);
     }
 
     @Test
@@ -108,7 +104,7 @@ class TestAuditMetricsREST {
         String serviceType = "hive";
         String serviceName = "test-service";
         String timezone = "Asia/Kolkata";
-        when(solrAccessAuditsService.getLatestAuditMetrics(serviceType, serviceName, timezone)).thenReturn(testAuditMetrics);
+        when(accessAuditsMetricsService.getLatestAuditMetrics(serviceType, serviceName, timezone)).thenReturn(testAuditMetrics);
 
         RangerAuditMetrics result = auditMetricsREST.getLatestAuditMetrics(serviceType, serviceName, timezone);
 
@@ -116,7 +112,7 @@ class TestAuditMetricsREST {
         assertEquals(testAuditMetrics.getId(), result.getId());
         assertEquals(testAuditMetrics.getServiceType(), result.getServiceType());
         assertEquals(testAuditMetrics.getNumberOfAudits(), result.getNumberOfAudits());
-        verify(solrAccessAuditsService, times(1)).getLatestAuditMetrics(serviceType, serviceName, timezone);
+        verify(accessAuditsMetricsService, times(1)).getLatestAuditMetrics(serviceType, serviceName, timezone);
     }
 
     @Test
@@ -124,7 +120,7 @@ class TestAuditMetricsREST {
         String serviceType = "hive";
         String serviceName = "test-service";
         WebApplicationException webException = new WebApplicationException();
-        when(solrAccessAuditsService.getLatestAuditMetrics(serviceType, serviceName, null)).thenThrow(webException);
+        when(accessAuditsMetricsService.getLatestAuditMetrics(serviceType, serviceName, null)).thenThrow(webException);
 
         WebApplicationException exception = assertThrows(WebApplicationException.class, () ->
                 auditMetricsREST.getLatestAuditMetrics(serviceType, serviceName, null));
@@ -137,7 +133,7 @@ class TestAuditMetricsREST {
     void testGetLatestAuditMetrics_GeneralException() {
         String serviceType = "hive";
         String serviceName = "test-service";
-        when(solrAccessAuditsService.getLatestAuditMetrics(serviceType, serviceName, null))
+        when(accessAuditsMetricsService.getLatestAuditMetrics(serviceType, serviceName, null))
                 .thenThrow(new RuntimeException("General exception"));
         when(restErrorUtil.createRESTException(anyString())).thenReturn(new WebApplicationException());
 
@@ -151,21 +147,21 @@ class TestAuditMetricsREST {
     void testGetAuditMetrics_Success() {
         Long id = 1L;
         String timezone = "UTC";
-        when(solrAccessAuditsService.getAuditMetrics(id, timezone)).thenReturn(testAuditMetrics);
+        when(accessAuditsMetricsService.getAuditMetrics(id, timezone)).thenReturn(testAuditMetrics);
 
         RangerAuditMetrics result = auditMetricsREST.getAuditMetrics(id, timezone);
 
         assertNotNull(result);
         assertEquals(testAuditMetrics.getId(), result.getId());
         assertEquals(testAuditMetrics.getServiceName(), result.getServiceName());
-        verify(solrAccessAuditsService, times(1)).getAuditMetrics(id, timezone);
+        verify(accessAuditsMetricsService, times(1)).getAuditMetrics(id, timezone);
     }
 
     @Test
     void testGetAuditMetrics_WebApplicationException() {
         Long id = 1L;
         WebApplicationException webException = new WebApplicationException();
-        when(solrAccessAuditsService.getAuditMetrics(id, null)).thenThrow(webException);
+        when(accessAuditsMetricsService.getAuditMetrics(id, null)).thenThrow(webException);
 
         WebApplicationException exception = assertThrows(WebApplicationException.class, () ->
                 auditMetricsREST.getAuditMetrics(id, null));
@@ -177,7 +173,7 @@ class TestAuditMetricsREST {
     @Test
     void testGetAuditMetrics_GeneralException() {
         Long id = 1L;
-        when(solrAccessAuditsService.getAuditMetrics(id, null)).thenThrow(new RuntimeException("General exception"));
+        when(accessAuditsMetricsService.getAuditMetrics(id, null)).thenThrow(new RuntimeException("General exception"));
         when(restErrorUtil.createRESTException(anyString())).thenReturn(new WebApplicationException());
 
         assertThrows(WebApplicationException.class, () -> auditMetricsREST.getAuditMetrics(id, null));
@@ -190,21 +186,21 @@ class TestAuditMetricsREST {
         List<RangerAuditMetrics> metricsList = Collections.singletonList(testAuditMetrics);
         String timezone = "Asia/Kolkata";
         when(searchUtil.getSearchFilter(eq(httpServletRequest), eq(Collections.emptyList()))).thenReturn(testSearchFilter);
-        when(solrAccessAuditsService.getLatestAuditMetricsList(testSearchFilter, timezone)).thenReturn(metricsList);
+        when(accessAuditsMetricsService.getLatestAuditMetricsList(testSearchFilter, timezone)).thenReturn(metricsList);
 
         RangerAuditMetricsList result = auditMetricsREST.getAllLatestRangerAuditMetrics(httpServletRequest, timezone);
 
         assertNotNull(result);
         assertEquals(1, result.getListSize());
         assertEquals(testAuditMetrics, result.getRangerAuditMetricsList().get(0));
-        verify(solrAccessAuditsService, times(1)).getLatestAuditMetricsList(testSearchFilter, timezone);
+        verify(accessAuditsMetricsService, times(1)).getLatestAuditMetricsList(testSearchFilter, timezone);
     }
 
     @Test
     void testGetAllLatestRangerAuditMetrics_WebApplicationException() {
         when(searchUtil.getSearchFilter(eq(httpServletRequest), eq(Collections.emptyList()))).thenReturn(testSearchFilter);
         WebApplicationException webException = new WebApplicationException();
-        when(solrAccessAuditsService.getLatestAuditMetricsList(testSearchFilter, null)).thenThrow(webException);
+        when(accessAuditsMetricsService.getLatestAuditMetricsList(testSearchFilter, null)).thenThrow(webException);
 
         WebApplicationException exception = assertThrows(WebApplicationException.class, () ->
                 auditMetricsREST.getAllLatestRangerAuditMetrics(httpServletRequest, null));
@@ -216,7 +212,7 @@ class TestAuditMetricsREST {
     @Test
     void testGetAllLatestRangerAuditMetrics_EmptyList() {
         when(searchUtil.getSearchFilter(eq(httpServletRequest), eq(Collections.emptyList()))).thenReturn(testSearchFilter);
-        when(solrAccessAuditsService.getLatestAuditMetricsList(testSearchFilter, null)).thenReturn(Collections.emptyList());
+        when(accessAuditsMetricsService.getLatestAuditMetricsList(testSearchFilter, null)).thenReturn(Collections.emptyList());
 
         RangerAuditMetricsList result = auditMetricsREST.getAllLatestRangerAuditMetrics(httpServletRequest, null);
 
@@ -227,7 +223,7 @@ class TestAuditMetricsREST {
     @Test
     void testGetAllLatestRangerAuditMetrics_GeneralException() {
         when(searchUtil.getSearchFilter(eq(httpServletRequest), eq(Collections.emptyList()))).thenReturn(testSearchFilter);
-        when(solrAccessAuditsService.getLatestAuditMetricsList(testSearchFilter, null))
+        when(accessAuditsMetricsService.getLatestAuditMetricsList(testSearchFilter, null))
                 .thenThrow(new RuntimeException("General exception"));
         when(restErrorUtil.createRESTException(anyString())).thenReturn(new WebApplicationException());
 
@@ -242,20 +238,20 @@ class TestAuditMetricsREST {
         List<RangerAuditMetricsByHours> metricsList = Collections.singletonList(testAuditMetricsByHours);
         String timezone = "Asia/Kolkata";
         when(searchUtil.getSearchFilter(eq(httpServletRequest), eq(Collections.emptyList()))).thenReturn(testSearchFilter);
-        when(solrAccessAuditsService.getAuditMetricsByHours(testSearchFilter, timezone)).thenReturn(metricsList);
+        when(accessAuditsMetricsService.getAuditMetricsByHours(testSearchFilter, timezone)).thenReturn(metricsList);
 
         RangerAuditMetricsListByHours result = auditMetricsREST.getDailyAuditMetrics(httpServletRequest, timezone);
 
         assertNotNull(result);
         assertEquals(1, result.getListSize());
-        verify(solrAccessAuditsService, times(1)).getAuditMetricsByHours(testSearchFilter, timezone);
+        verify(accessAuditsMetricsService, times(1)).getAuditMetricsByHours(testSearchFilter, timezone);
     }
 
     @Test
     void testGetDailyAuditMetrics_WebApplicationException() {
         when(searchUtil.getSearchFilter(eq(httpServletRequest), eq(Collections.emptyList()))).thenReturn(testSearchFilter);
         WebApplicationException webException = new WebApplicationException();
-        when(solrAccessAuditsService.getAuditMetricsByHours(testSearchFilter, null)).thenThrow(webException);
+        when(accessAuditsMetricsService.getAuditMetricsByHours(testSearchFilter, null)).thenThrow(webException);
 
         WebApplicationException exception = assertThrows(WebApplicationException.class, () ->
                 auditMetricsREST.getDailyAuditMetrics(httpServletRequest, null));
@@ -267,7 +263,7 @@ class TestAuditMetricsREST {
     @Test
     void testGetDailyAuditMetrics_GeneralException() {
         when(searchUtil.getSearchFilter(eq(httpServletRequest), eq(Collections.emptyList()))).thenReturn(testSearchFilter);
-        when(solrAccessAuditsService.getAuditMetricsByHours(testSearchFilter, null))
+        when(accessAuditsMetricsService.getAuditMetricsByHours(testSearchFilter, null))
                 .thenThrow(new RuntimeException("Daily metrics failed"));
         when(restErrorUtil.createRESTException(anyString())).thenReturn(new WebApplicationException());
 
@@ -280,7 +276,7 @@ class TestAuditMetricsREST {
     @Test
     void testGetDailyAuditMetrics_EmptyList() {
         when(searchUtil.getSearchFilter(eq(httpServletRequest), eq(Collections.emptyList()))).thenReturn(testSearchFilter);
-        when(solrAccessAuditsService.getAuditMetricsByHours(testSearchFilter, null)).thenReturn(Collections.emptyList());
+        when(accessAuditsMetricsService.getAuditMetricsByHours(testSearchFilter, null)).thenReturn(Collections.emptyList());
 
         RangerAuditMetricsListByHours result = auditMetricsREST.getDailyAuditMetrics(httpServletRequest, null);
 
@@ -294,13 +290,13 @@ class TestAuditMetricsREST {
         String timezone = "Asia/Kolkata";
         List<RangerAuditMetricsByDays> metricsList = Collections.singletonList(testAuditMetricsByDays);
         when(searchUtil.getSearchFilter(eq(httpServletRequest), eq(Collections.emptyList()))).thenReturn(testSearchFilter);
-        when(solrAccessAuditsService.getAuditMetricsByDays(olderThanInDays, testSearchFilter, timezone)).thenReturn(metricsList);
+        when(accessAuditsMetricsService.getAuditMetricsByDays(olderThanInDays, testSearchFilter, timezone)).thenReturn(metricsList);
 
         RangerAuditMetricsListByDays result = auditMetricsREST.getDaysAuditMetrics(httpServletRequest, olderThanInDays, timezone);
 
         assertNotNull(result);
         assertEquals(1, result.getListSize());
-        verify(solrAccessAuditsService, times(1)).getAuditMetricsByDays(olderThanInDays, testSearchFilter, timezone);
+        verify(accessAuditsMetricsService, times(1)).getAuditMetricsByDays(olderThanInDays, testSearchFilter, timezone);
     }
 
     @Test
@@ -308,7 +304,7 @@ class TestAuditMetricsREST {
         Integer olderThanInDays = 7;
         when(searchUtil.getSearchFilter(eq(httpServletRequest), eq(Collections.emptyList()))).thenReturn(testSearchFilter);
         WebApplicationException webException = new WebApplicationException();
-        when(solrAccessAuditsService.getAuditMetricsByDays(olderThanInDays, testSearchFilter, null)).thenThrow(webException);
+        when(accessAuditsMetricsService.getAuditMetricsByDays(olderThanInDays, testSearchFilter, null)).thenThrow(webException);
 
         WebApplicationException exception = assertThrows(WebApplicationException.class, () ->
                 auditMetricsREST.getDaysAuditMetrics(httpServletRequest, olderThanInDays, null));
@@ -321,7 +317,7 @@ class TestAuditMetricsREST {
     void testGetDaysAuditMetrics_GeneralException() {
         Integer olderThanInDays = 7;
         when(searchUtil.getSearchFilter(eq(httpServletRequest), eq(Collections.emptyList()))).thenReturn(testSearchFilter);
-        when(solrAccessAuditsService.getAuditMetricsByDays(olderThanInDays, testSearchFilter, null))
+        when(accessAuditsMetricsService.getAuditMetricsByDays(olderThanInDays, testSearchFilter, null))
                 .thenThrow(new RuntimeException("Days metrics failed"));
         when(restErrorUtil.createRESTException(anyString())).thenReturn(new WebApplicationException());
 
@@ -335,7 +331,7 @@ class TestAuditMetricsREST {
     void testGetDaysAuditMetrics_EmptyList() {
         Integer olderThanInDays = 7;
         when(searchUtil.getSearchFilter(eq(httpServletRequest), eq(Collections.emptyList()))).thenReturn(testSearchFilter);
-        when(solrAccessAuditsService.getAuditMetricsByDays(olderThanInDays, testSearchFilter, null))
+        when(accessAuditsMetricsService.getAuditMetricsByDays(olderThanInDays, testSearchFilter, null))
                 .thenReturn(Collections.emptyList());
 
         RangerAuditMetricsListByDays result = auditMetricsREST.getDaysAuditMetrics(httpServletRequest, olderThanInDays, null);
@@ -355,7 +351,7 @@ class TestAuditMetricsREST {
         verify(restErrorUtil, times(1)).createRESTException(
                 contains("olderThanInDays must be between 1 and"),
                 eq(MessageEnums.INVALID_INPUT_DATA));
-        verify(solrAccessAuditsService, never()).getAuditMetricsByDays(anyInt(), any(), any());
+        verify(accessAuditsMetricsService, never()).getAuditMetricsByDays(anyInt(), any(), any());
     }
 
     @Test
@@ -369,92 +365,7 @@ class TestAuditMetricsREST {
         verify(restErrorUtil, times(1)).createRESTException(
                 contains("olderThanInDays must be between 1 and"),
                 eq(MessageEnums.INVALID_INPUT_DATA));
-        verify(solrAccessAuditsService, never()).getAuditMetricsByDays(anyInt(), any(), any());
-    }
-
-    @Test
-    void testGetLatestAuditMetrics_OpenSearch() {
-        String serviceType = "hive";
-        String serviceName = "test-service";
-        String timezone = "Asia/Kolkata";
-
-        when(rangerBizUtil.getAuditDBType()).thenReturn(RangerBizUtil.AUDIT_STORE_OPENSEARCH);
-        when(openSearchAccessAuditsService.getLatestAuditMetrics(serviceType, serviceName, timezone)).thenReturn(testAuditMetrics);
-
-        RangerAuditMetrics result = auditMetricsREST.getLatestAuditMetrics(serviceType, serviceName, timezone);
-
-        assertNotNull(result);
-        assertEquals(testAuditMetrics.getId(), result.getId());
-        verify(openSearchAccessAuditsService, times(1)).getLatestAuditMetrics(serviceType, serviceName, timezone);
-        verify(solrAccessAuditsService, never()).getLatestAuditMetrics(anyString(), anyString(), any());
-    }
-
-    @Test
-    void testGetAuditMetrics_OpenSearch() {
-        Long id = 1L;
-        String timezone = "UTC";
-
-        when(rangerBizUtil.getAuditDBType()).thenReturn(RangerBizUtil.AUDIT_STORE_OPENSEARCH);
-        when(openSearchAccessAuditsService.getAuditMetrics(id, timezone)).thenReturn(testAuditMetrics);
-
-        RangerAuditMetrics result = auditMetricsREST.getAuditMetrics(id, timezone);
-
-        assertNotNull(result);
-        assertEquals(testAuditMetrics.getId(), result.getId());
-        verify(openSearchAccessAuditsService, times(1)).getAuditMetrics(id, timezone);
-        verify(solrAccessAuditsService, never()).getAuditMetrics(any(), any());
-    }
-
-    @Test
-    void testGetAllLatestRangerAuditMetrics_OpenSearch() {
-        List<RangerAuditMetrics> metricsList = Collections.singletonList(testAuditMetrics);
-        String timezone = "Asia/Kolkata";
-
-        when(rangerBizUtil.getAuditDBType()).thenReturn(RangerBizUtil.AUDIT_STORE_OPENSEARCH);
-        when(searchUtil.getSearchFilter(eq(httpServletRequest), eq(Collections.emptyList()))).thenReturn(testSearchFilter);
-        when(openSearchAccessAuditsService.getLatestAuditMetricsList(testSearchFilter, timezone)).thenReturn(metricsList);
-
-        RangerAuditMetricsList result = auditMetricsREST.getAllLatestRangerAuditMetrics(httpServletRequest, timezone);
-
-        assertNotNull(result);
-        assertEquals(1, result.getListSize());
-        verify(openSearchAccessAuditsService, times(1)).getLatestAuditMetricsList(testSearchFilter, timezone);
-        verify(solrAccessAuditsService, never()).getLatestAuditMetricsList(any(), any());
-    }
-
-    @Test
-    void testGetDailyAuditMetrics_OpenSearch() {
-        List<RangerAuditMetricsByHours> metricsList = Collections.singletonList(testAuditMetricsByHours);
-        String timezone = "Asia/Kolkata";
-
-        when(rangerBizUtil.getAuditDBType()).thenReturn(RangerBizUtil.AUDIT_STORE_OPENSEARCH);
-        when(searchUtil.getSearchFilter(eq(httpServletRequest), eq(Collections.emptyList()))).thenReturn(testSearchFilter);
-        when(openSearchAccessAuditsService.getAuditMetricsByHours(testSearchFilter, timezone)).thenReturn(metricsList);
-
-        RangerAuditMetricsListByHours result = auditMetricsREST.getDailyAuditMetrics(httpServletRequest, timezone);
-
-        assertNotNull(result);
-        assertEquals(1, result.getListSize());
-        verify(openSearchAccessAuditsService, times(1)).getAuditMetricsByHours(testSearchFilter, timezone);
-        verify(solrAccessAuditsService, never()).getAuditMetricsByHours(any(), any());
-    }
-
-    @Test
-    void testGetDaysAuditMetrics_OpenSearch() {
-        Integer olderThanInDays = 7;
-        String timezone = "Asia/Kolkata";
-        List<RangerAuditMetricsByDays> metricsList = Collections.singletonList(testAuditMetricsByDays);
-
-        when(rangerBizUtil.getAuditDBType()).thenReturn(RangerBizUtil.AUDIT_STORE_OPENSEARCH);
-        when(searchUtil.getSearchFilter(eq(httpServletRequest), eq(Collections.emptyList()))).thenReturn(testSearchFilter);
-        when(openSearchAccessAuditsService.getAuditMetricsByDays(olderThanInDays, testSearchFilter, timezone)).thenReturn(metricsList);
-
-        RangerAuditMetricsListByDays result = auditMetricsREST.getDaysAuditMetrics(httpServletRequest, olderThanInDays, timezone);
-
-        assertNotNull(result);
-        assertEquals(1, result.getListSize());
-        verify(openSearchAccessAuditsService, times(1)).getAuditMetricsByDays(olderThanInDays, testSearchFilter, timezone);
-        verify(solrAccessAuditsService, never()).getAuditMetricsByDays(anyInt(), any(), any());
+        verify(accessAuditsMetricsService, never()).getAuditMetricsByDays(anyInt(), any(), any());
     }
 
     private RangerAuditMetrics createTestAuditMetrics() {

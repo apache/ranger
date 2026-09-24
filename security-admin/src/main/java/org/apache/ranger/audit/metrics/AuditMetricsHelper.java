@@ -149,30 +149,31 @@ public class AuditMetricsHelper {
     }
 
     public long resolveRepoType(String serviceType) {
+        long ret = MISSING_REPO_TYPE_SENTINEL;
+
         if (StringUtils.isBlank(serviceType)) {
-            return MISSING_REPO_TYPE_SENTINEL;
+            return ret;
         }
 
         String cacheKey = serviceType.trim().toLowerCase();
         Long cached = repoTypeByServiceType.get(cacheKey);
 
         if (cached != null) {
-            return cached;
+            ret = cached;
+            return ret;
         }
-
-        long resolved = MISSING_REPO_TYPE_SENTINEL;
 
         if (daoManager != null && daoManager.getXXServiceDef() != null) {
             XXServiceDef serviceDef = daoManager.getXXServiceDef().findByName(serviceType);
 
             if (serviceDef != null && serviceDef.getId() != null) {
-                resolved = serviceDef.getId();
+                ret = serviceDef.getId();
             }
         }
 
-        repoTypeByServiceType.put(cacheKey, resolved);
+        repoTypeByServiceType.put(cacheKey, ret);
 
-        return resolved;
+        return ret;
     }
 
     public ZoneId parseZoneId(String timezone) {
