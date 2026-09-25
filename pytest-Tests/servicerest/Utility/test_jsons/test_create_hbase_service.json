@@ -1,0 +1,17 @@
+{
+  "name": "hbase_test_service_{random_str}",
+  "displayName": "hbase_test_service_{random_str}",
+  "type": "hbase",
+  "tagService": "",
+  "isEnabled": true,
+  "configs": {
+    "username": "hbase_{random_str}",
+    "password": "Test@12345",
+    "hadoop.security.authentication": "simple",
+    "hbase.security.authentication": "simple",
+    "hbase.zookeeper.property.clientPort": "2181",
+    "hbase.zookeeper.quorum": "{random_str}",
+    "zookeeper.znode.parent": "/hbase",
+    "ranger.plugin.audit.filters": "[{'accessResult':'DENIED','isAudited':true},{'resources':{'table':{'values':['*-ROOT-*','*.META.*','*_acl_*','hbase:meta','hbase:acl','default','hbase'],'isExcludes':false}},'users':['hbase'],'isAudited':false},{'resources':{'table':{'values':['atlas_janus','ATLAS_ENTITY_AUDIT_EVENTS'],'isExcludes':false},'column-family':{'values':['*'],'isExcludes':false},'column':{'values':['*'],'isExcludes':false}},'users':['atlas','hbase'],'isAudited':false},{'users':['hbase'],'actions':['balance'],'isAudited':false}]"
+  }
+}

@@ -1,0 +1,73 @@
+{
+            "service": "dev_hdfs",
+            "name": "all - path - {random_str}",
+            "policyType": 0,
+            "policyPriority": 0,
+            "description": "Policy for all - path - {random_str}",
+            "isAuditEnabled": true,
+            "resources": {
+                "path": {
+                    "values": [
+                        "{random_str}"
+                    ],
+                    "isExcludes": false,
+                    "isRecursive": true
+                }
+            },
+            "policyItems": [
+                {
+                    "accesses": [
+                        {
+                            "type": "read",
+                            "isAllowed": true
+                        },
+                        {
+                            "type": "write",
+                            "isAllowed": true
+                        },
+                        {
+                            "type": "execute",
+                            "isAllowed": true
+                        }
+                    ],
+                    "users": [
+                         "hdfs"
+
+                    ],
+
+                    "groups": [],
+                    "roles": [],
+                    "conditions": [],
+                    "delegateAdmin": true
+                },
+                {
+                    "accesses": [
+                        {
+                            "type": "read",
+                            "isAllowed": true
+                        }
+                    ],
+                    "users": [
+                        "rangerlookup"
+                    ],
+                    "groups": [],
+                    "roles": [],
+                    "conditions": [],
+                    "delegateAdmin": false
+                }
+            ],
+            "denyPolicyItems": [],
+            "allowExceptions": [],
+            "denyExceptions": [],
+            "dataMaskPolicyItems": [],
+            "rowFilterPolicyItems": [],
+            "serviceType": "hdfs",
+            "options": {},
+            "validitySchedules": [],
+            "policyLabels": [],
+            "zoneName": "",
+            "isDenyAllElse": false,
+            "id": 1,
+            "isEnabled": true,
+            "version": 1
+        }
