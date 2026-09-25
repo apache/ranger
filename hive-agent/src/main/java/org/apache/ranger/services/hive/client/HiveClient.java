@@ -28,6 +28,7 @@ import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.hadoop.hive.metastore.api.MetaException;
 import org.apache.ranger.plugin.client.BaseClient;
 import org.apache.ranger.plugin.client.HadoopException;
+import org.apache.ranger.plugin.client.JdbcUrlValidator;
 import org.apache.ranger.plugin.util.PasswordUtils;
 import org.apache.thrift.TException;
 import org.slf4j.Logger;
@@ -58,6 +59,9 @@ public class HiveClient extends BaseClient implements Closeable {
     private static final String ERR_MSG = "You can still save the repository and start creating "
             + "policies, but you would not be able to use autocomplete for "
             + "resource names. Check ranger_admin.log for more info.";
+
+    private static final List<String> ALLOWED_JDBC_URL_PREFIXES   = List.of("jdbc:hive2://");
+    private static final List<String> ALLOWED_JDBC_DRIVER_CLASSES = List.of("org.apache.hive.jdbc.HiveDriver");
 
     private Connection          con;
     private HiveMetaStoreClient hiveClient;
@@ -673,7 +677,15 @@ public class HiveClient extends BaseClient implements Closeable {
             String     driverClassName = prop.getProperty("jdbc.driverClassName");
             String     url             = prop.getProperty("jdbc.url");
 
-            JdbcUrlValidator.validate(url);
+            if (url != null) {
+                url = url.trim();
+            }
+
+            JdbcUrlValidator.validate(url, ALLOWED_JDBC_URL_PREFIXES);
+            JdbcUrlValidator.validateDriverClassName(driverClassName, ALLOWED_JDBC_DRIVER_CLASSES);
+
+            // A null name skips registration. DriverManager then uses a driver that accepts
+            // jdbc:hive2://, which the prefix and host checks already constrained.
             if (driverClassName != null) {
                 try {
                     Driver driver = (Driver) Class.forName(driverClassName).newInstance();
