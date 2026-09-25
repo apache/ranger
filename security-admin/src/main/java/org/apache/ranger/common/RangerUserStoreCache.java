@@ -27,6 +27,7 @@ import org.apache.ranger.plugin.util.RangerUserStore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
@@ -42,6 +43,7 @@ public class RangerUserStoreCache {
 
     private final int             waitTimeInSeconds;
     private final boolean         dedupStrings;
+    private final boolean         includeUserGroupMappings;
     private final ReentrantLock   lock = new ReentrantLock();
     private       RangerUserStore rangerUserStore;
 
@@ -49,6 +51,7 @@ public class RangerUserStoreCache {
         RangerAdminConfig config = RangerAdminConfig.getInstance();
 
         this.waitTimeInSeconds = config.getInt("ranger.admin.userstore.download.cache.max.waittime.for.update", MAX_WAIT_TIME_FOR_UPDATE);
+        this.includeUserGroupMappings = config.getBoolean("ranger.admin.userstore.include.usergroups.mappings", false);
         this.dedupStrings      = config.getBoolean("ranger.admin.userstore.dedup.strings", Boolean.TRUE);
         this.rangerUserStore   = new RangerUserStore();
     }
@@ -93,7 +96,7 @@ public class RangerUserStoreCache {
                     final long                     startTimeMs      = System.currentTimeMillis();
                     final Set<UserInfo>            rangerUsersInDB  = xUserMgr.getUsers();
                     final Set<GroupInfo>           rangerGroupsInDB = xUserMgr.getGroups();
-                    final Map<String, Set<String>> userGroups       = xUserMgr.getUserGroups();
+                    final Map<String, Set<String>> userGroups       = includeUserGroupMappings ? xUserMgr.getUserGroups() : new HashMap<>();
                     final long                     dbLoadTime       = System.currentTimeMillis() - startTimeMs;
 
                     if (LOG.isDebugEnabled()) {
