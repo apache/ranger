@@ -37,6 +37,7 @@ import org.apache.ranger.entity.XXServiceDef;
 import org.apache.ranger.entity.XXServiceVersionInfo;
 import org.apache.ranger.plugin.model.RangerService;
 import org.apache.ranger.plugin.util.PasswordUtils;
+import org.apache.ranger.plugin.util.RangerSupportedCryptoAlgo;
 import org.apache.ranger.security.context.RangerContextHolder;
 import org.apache.ranger.security.context.RangerSecurityContext;
 import org.junit.jupiter.api.Assertions;
@@ -368,8 +369,82 @@ public class TestRangerServiceService {
 
         Map<String, String> result = serviceService.getConfigsWithDecryptedPassword(service);
 
-        Assertions.assertEquals(storedValue, result.get(configKey),
-                "mixed-case password-typed key must be resolved via case-insensitive lookup, not silently skipped");
+        Assertions.assertEquals(plainValue, result.get(configKey),
+                "mixed-case password-typed key must be resolved via case-insensitive lookup, not silently skipped, and must return the actual decrypted value");
+    }
+
+    @Test
+    public void test4cGetConfigsWithDecryptedPasswordReturnsPlaintextForV2Format() throws Exception {
+        final String configKey  = "password";
+        final String plainValue = "s3cr3t-v2-password";
+
+        String storedValue = PasswordUtils.encryptPasswordV2(plainValue, RangerSupportedCryptoAlgo.getValueOf(ServiceDBStore.CRYPT_ALGO),
+                ServiceDBStore.ENCRYPT_KEY.toCharArray(), ServiceDBStore.SALT.getBytes(), ServiceDBStore.ITERATION_COUNT);
+
+        Assertions.assertTrue(PasswordUtils.isV2Format(storedValue), "test fixture must actually be in v2 format");
+
+        XXServiceConfigMapDao xServiceConfigMapDao = Mockito.mock(XXServiceConfigMapDao.class);
+        XXServiceConfigDefDao xServiceConfigDefDao = Mockito.mock(XXServiceConfigDefDao.class);
+
+        Map<String, String> configs = new HashMap<>();
+        configs.put(configKey, ServiceDBStore.HIDDEN_PASSWORD_STR); // UI didn't change this field -> sentinel value
+
+        RangerService service = new RangerService();
+        service.setId(userId);
+        service.setType("hdfs");
+        service.setConfigs(configs);
+
+        XXServiceConfigMap storedConfigMap = new XXServiceConfigMap();
+        storedConfigMap.setConfigkey(configKey);
+        storedConfigMap.setConfigvalue(storedValue);
+
+        Mockito.when(daoManager.getXXServiceConfigDef()).thenReturn(xServiceConfigDefDao);
+        Mockito.when(xServiceConfigDefDao.findConfigNamesByServiceDefNameAndType("hdfs", ServiceDBStore.CONFIG_TYPE_PASSWORD)).thenReturn(Collections.singletonList(configKey));
+        Mockito.when(daoManager.getXXServiceConfigMap()).thenReturn(xServiceConfigMapDao);
+        Mockito.when(xServiceConfigMapDao.findByServiceAndConfigKey(userId, configKey)).thenReturn(storedConfigMap);
+
+        Mockito.when(stringUtil.isEmpty(Mockito.anyString())).thenReturn(false);
+
+        Map<String, String> result = serviceService.getConfigsWithDecryptedPassword(service);
+
+        Assertions.assertEquals(plainValue, result.get(configKey),
+                "v2-format password must be resolved to its real decrypted plaintext, not left as the stored v2 string");
+    }
+
+    @Test
+    public void test4dGetConfigsWithDecryptedPasswordFailsClosedOnV2DecryptFailure() throws Exception {
+        final String configKey = "password";
+
+        String storedValue = PasswordUtils.encryptPasswordV2("whatever", RangerSupportedCryptoAlgo.getValueOf(ServiceDBStore.CRYPT_ALGO),
+                "a-completely-different-key".toCharArray(), ServiceDBStore.SALT.getBytes(), ServiceDBStore.ITERATION_COUNT);
+
+        XXServiceConfigMapDao xServiceConfigMapDao = Mockito.mock(XXServiceConfigMapDao.class);
+        XXServiceConfigDefDao xServiceConfigDefDao = Mockito.mock(XXServiceConfigDefDao.class);
+
+        Map<String, String> configs = new HashMap<>();
+        configs.put(configKey, ServiceDBStore.HIDDEN_PASSWORD_STR);
+
+        RangerService service = new RangerService();
+        service.setId(userId);
+        service.setType("hdfs");
+        service.setConfigs(configs);
+
+        XXServiceConfigMap storedConfigMap = new XXServiceConfigMap();
+        storedConfigMap.setConfigkey(configKey);
+        storedConfigMap.setConfigvalue(storedValue);
+
+        Mockito.when(daoManager.getXXServiceConfigDef()).thenReturn(xServiceConfigDefDao);
+        Mockito.when(xServiceConfigDefDao.findConfigNamesByServiceDefNameAndType("hdfs", ServiceDBStore.CONFIG_TYPE_PASSWORD)).thenReturn(Collections.singletonList(configKey));
+        Mockito.when(daoManager.getXXServiceConfigMap()).thenReturn(xServiceConfigMapDao);
+        Mockito.when(xServiceConfigMapDao.findByServiceAndConfigKey(userId, configKey)).thenReturn(storedConfigMap);
+
+        Mockito.when(stringUtil.isEmpty(Mockito.anyString())).thenReturn(false);
+
+        Exception ex = Assertions.assertThrows(Exception.class, () -> serviceService.getConfigsWithDecryptedPassword(service),
+                "a v2-format value that fails to decrypt under the configured key must fail closed, not silently return the masked sentinel");
+
+        Assertions.assertTrue(ex.getMessage().contains(configKey), "the thrown error should name the config key that failed to decrypt");
+        Assertions.assertTrue(ex.getMessage().contains("ranger.password.encryption.key"), "the thrown error should point the operator at the property to check");
     }
 
     private XXServiceConfigMap configMap(String key, String value) {
