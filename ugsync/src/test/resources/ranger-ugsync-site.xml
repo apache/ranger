@@ -177,4 +177,16 @@
       <name>ranger.usersync.group.hierarchylevels</name>
       <value>2</value>
     </property>
+
+    <property>
+        <name>ranger.usersync.ldap.deltasync.server.type</name>
+        <value></value>
+        <description>Specifies the LDAP server type for delta sync attribute selection.
+            Accepted values:
+            - "AD"   : Uses only 'uSNChanged' attribute for delta sync (Active Directory).
+            - "LDAP" : Uses only 'modifyTimestamp' attribute for delta sync (OpenLDAP).
+            - ""     : Uses both 'uSNChanged' and 'modifyTimestamp' attributes (default behavior).
+        </description>
+    </property>
+
   </configuration>
