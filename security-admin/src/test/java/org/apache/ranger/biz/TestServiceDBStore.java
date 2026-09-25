@@ -2920,6 +2920,672 @@ public class TestServiceDBStore {
         Mockito.verify(policyService).getPopulatedViewObject(xPolicy);
     }
 
+    // ==================== S3 Bucket Policy Tests ====================
+
+    /**
+     * Helper method to create an S3 policy for testing
+     */
+    private RangerPolicy createS3Policy(Long id, String policyName, String bucketPath,
+                                        List<String> users, List<String> accessTypes) {
+        RangerPolicy policy = new RangerPolicy();
+        policy.setId(id);
+        policy.setName(policyName);
+        policy.setService("s3-service");
+        policy.setIsEnabled(true);
+
+        // Create policy items with users and access types
+        List<RangerPolicyItem> policyItems = new ArrayList<>();
+        RangerPolicyItem policyItem = new RangerPolicyItem();
+        policyItem.setUsers(users);
+
+        List<RangerPolicyItemAccess> accesses = new ArrayList<>();
+        for (String accessType : accessTypes) {
+            RangerPolicyItemAccess access = new RangerPolicyItemAccess();
+            access.setType(accessType);
+            access.setIsAllowed(true);
+            accesses.add(access);
+        }
+        policyItem.setAccesses(accesses);
+        policyItems.add(policyItem);
+        policy.setPolicyItems(policyItems);
+
+        // Create resources with bucket path
+        Map<String, RangerPolicyResource> resources = new HashMap<>();
+        RangerPolicyResource pathResource = new RangerPolicyResource();
+        pathResource.setValues(java.util.Collections.singletonList(bucketPath));
+        resources.put("path", pathResource);
+        policy.setResources(resources);
+
+        return policy;
+    }
+
+    @Test
+    public void testCombinePolicies_CreateNewPolicy() {
+        // Setup: empty service policies, new policy to add
+        List<RangerPolicy> servicePolicies = new ArrayList<>();
+        RangerPolicy newPolicy = createS3Policy(1L, "test-policy", "test-bucket/*",
+                java.util.Arrays.asList("user1"),
+                java.util.Arrays.asList("s3:GetObject"));
+
+        // Execute: CREATE action
+        List<RangerPolicy> result = serviceDBStore.combinePolicies(servicePolicies, newPolicy, "CREATE");
+
+        // Assert: new policy should be added
+        Assert.assertEquals(1, result.size());
+        Assert.assertEquals(newPolicy.getId(), result.get(0).getId());
+    }
+
+    @Test
+    public void testCombinePolicies_UpdateExistingPolicy() {
+        // Setup: existing policy in service policies
+        RangerPolicy existingPolicy = createS3Policy(1L, "test-policy", "test-bucket/*",
+                java.util.Arrays.asList("user1"),
+                java.util.Arrays.asList("s3:GetObject"));
+        List<RangerPolicy> servicePolicies = new ArrayList<>();
+        servicePolicies.add(existingPolicy);
+
+        // Updated policy with same ID but different users
+        RangerPolicy updatedPolicy = createS3Policy(1L, "test-policy", "test-bucket/*",
+                java.util.Arrays.asList("user1", "user2"),
+                java.util.Arrays.asList("s3:GetObject", "s3:PutObject"));
+
+        // Execute: UPDATE action
+        List<RangerPolicy> result = serviceDBStore.combinePolicies(servicePolicies, updatedPolicy, "UPDATE");
+
+        // Assert: policy should be updated (old removed, new added)
+        Assert.assertEquals(1, result.size());
+        Assert.assertEquals(updatedPolicy.getId(), result.get(0).getId());
+        Assert.assertEquals(2, result.get(0).getPolicyItems().get(0).getUsers().size());
+    }
+
+    @Test
+    public void testCombinePolicies_DeletePolicy() {
+        // Setup: existing policies in service
+        RangerPolicy policy1 = createS3Policy(1L, "policy-1", "bucket1/*",
+                java.util.Arrays.asList("user1"),
+                java.util.Arrays.asList("s3:GetObject"));
+        RangerPolicy policy2 = createS3Policy(2L, "policy-2", "bucket2/*",
+                java.util.Arrays.asList("user2"),
+                java.util.Arrays.asList("s3:GetObject"));
+        List<RangerPolicy> servicePolicies = new ArrayList<>();
+        servicePolicies.add(policy1);
+        servicePolicies.add(policy2);
+
+        // Execute: DELETE policy1
+        List<RangerPolicy> result = serviceDBStore.combinePolicies(servicePolicies, policy1, "DELETE");
+
+        // Assert: policy1 should be removed, only policy2 remains
+        Assert.assertEquals(1, result.size());
+        Assert.assertEquals(policy2.getId(), result.get(0).getId());
+    }
+
+    @Test
+    public void testCombinePolicies_DeleteFromEmptyList() {
+        // Setup: empty service policies
+        List<RangerPolicy> servicePolicies = new ArrayList<>();
+        RangerPolicy policyToDelete = createS3Policy(1L, "test-policy", "test-bucket/*",
+                java.util.Arrays.asList("user1"),
+                java.util.Arrays.asList("s3:GetObject"));
+
+        // Execute: DELETE action on empty list
+        List<RangerPolicy> result = serviceDBStore.combinePolicies(servicePolicies, policyToDelete, "DELETE");
+
+        // Assert: result should be empty
+        Assert.assertEquals(0, result.size());
+    }
+
+    @Test
+    public void testCombinePolicies_AddMultiplePolicies() {
+        // Setup: one existing policy
+        RangerPolicy existingPolicy = createS3Policy(1L, "policy-1", "bucket1/*",
+                java.util.Arrays.asList("user1"),
+                java.util.Arrays.asList("s3:GetObject"));
+        List<RangerPolicy> servicePolicies = new ArrayList<>();
+        servicePolicies.add(existingPolicy);
+
+        // Execute: CREATE new policy
+        RangerPolicy newPolicy = createS3Policy(2L, "policy-2", "bucket2/*",
+                java.util.Arrays.asList("user2"),
+                java.util.Arrays.asList("s3:PutObject"));
+        List<RangerPolicy> result = serviceDBStore.combinePolicies(servicePolicies, newPolicy, "CREATE");
+
+        // Assert: both policies should be present
+        Assert.assertEquals(2, result.size());
+    }
+
+    @Test
+    public void testPopulateBucketMap_SingleBucketSinglePolicy() {
+        // Setup: policy with single bucket path
+        RangerPolicy policy = createS3Policy(1L, "test-policy", "test-bucket/data/*",
+                java.util.Arrays.asList("user1"),
+                java.util.Arrays.asList("s3:GetObject"));
+        List<RangerPolicy> combinedPolicies = java.util.Arrays.asList(policy);
+        Map<String, Map<RangerPolicy, java.util.Set<String>>> bucketMap = new HashMap<>();
+
+        // Execute
+        List<RangerPolicy> affectedPolicies = serviceDBStore.populateBucketMap(
+                bucketMap, combinedPolicies, "test-bucket", policy);
+
+        // Assert: bucket map should contain the policy
+        Assert.assertTrue(bucketMap.containsKey("test-bucket"));
+        Assert.assertEquals(1, affectedPolicies.size());
+        Assert.assertEquals(policy.getId(), affectedPolicies.get(0).getId());
+    }
+
+    @Test
+    public void testPopulateBucketMap_MultipleBuckets() {
+        // Setup: policies with different buckets
+        RangerPolicy policy1 = createS3Policy(1L, "policy-1", "bucket1/data/*",
+                java.util.Arrays.asList("user1"),
+                java.util.Arrays.asList("s3:GetObject"));
+        RangerPolicy policy2 = createS3Policy(2L, "policy-2", "bucket2/logs/*",
+                java.util.Arrays.asList("user2"),
+                java.util.Arrays.asList("s3:GetObject"));
+        List<RangerPolicy> combinedPolicies = java.util.Arrays.asList(policy1, policy2);
+        Map<String, Map<RangerPolicy, java.util.Set<String>>> bucketMap = new HashMap<>();
+
+        // Execute: affected policy is policy1
+        List<RangerPolicy> affectedPolicies = serviceDBStore.populateBucketMap(
+                bucketMap, combinedPolicies, "bucket1", policy1);
+
+        // Assert: only bucket1 should be in map
+        Assert.assertTrue(bucketMap.containsKey("bucket1"));
+        Assert.assertFalse(bucketMap.containsKey("bucket2"));
+        Assert.assertEquals(1, affectedPolicies.size());
+    }
+
+    @Test
+    public void testPopulateBucketMap_WildcardPath() {
+        // Setup: policy with wildcard path
+        RangerPolicy wildcardPolicy = createS3Policy(1L, "wildcard-policy", "*",
+                java.util.Arrays.asList("user1"),
+                java.util.Arrays.asList("s3:*"));
+        List<RangerPolicy> combinedPolicies = java.util.Arrays.asList(wildcardPolicy);
+        Map<String, Map<RangerPolicy, java.util.Set<String>>> bucketMap = new HashMap<>();
+
+        // Execute
+        List<RangerPolicy> affectedPolicies = serviceDBStore.populateBucketMap(
+                bucketMap, combinedPolicies, "default-bucket", wildcardPolicy);
+
+        // Assert: default bucket should be in map
+        Assert.assertTrue(bucketMap.containsKey("default-bucket"));
+        Assert.assertEquals(1, affectedPolicies.size());
+    }
+
+    @Test
+    public void testPopulateBucketMap_EmptyPolicies() {
+        // Setup: empty policies list
+        List<RangerPolicy> combinedPolicies = new ArrayList<>();
+        Map<String, Map<RangerPolicy, java.util.Set<String>>> bucketMap = new HashMap<>();
+        RangerPolicy affectedPolicy = createS3Policy(1L, "test-policy", "test-bucket/*",
+                java.util.Arrays.asList("user1"),
+                java.util.Arrays.asList("s3:GetObject"));
+
+        // Execute
+        List<RangerPolicy> affectedPolicies = serviceDBStore.populateBucketMap(
+                bucketMap, combinedPolicies, "test-bucket", affectedPolicy);
+
+        // Assert: bucket map should be empty
+        Assert.assertTrue(bucketMap.isEmpty());
+        Assert.assertTrue(affectedPolicies.isEmpty());
+    }
+
+    @Test
+    public void testStatementsMatch_IdenticalStatements() {
+        // Setup: two identical statements
+        org.apache.ranger.s3.PolicyStatement stmt1 = new org.apache.ranger.s3.PolicyStatement();
+        stmt1.setEffect("Allow");
+        stmt1.setResource("arn:aws:s3:::test-bucket/*");
+        stmt1.setAction(java.util.Arrays.asList("s3:GetObject", "s3:PutObject"));
+
+        org.apache.ranger.s3.PolicyStatement stmt2 = new org.apache.ranger.s3.PolicyStatement();
+        stmt2.setEffect("Allow");
+        stmt2.setResource("arn:aws:s3:::test-bucket/*");
+        stmt2.setAction(java.util.Arrays.asList("s3:GetObject", "s3:PutObject"));
+
+        // Execute & Assert
+        Assert.assertTrue(serviceDBStore.statementsMatch(stmt1, stmt2));
+    }
+
+    @Test
+    public void testStatementsMatch_DifferentEffect() {
+        // Setup: statements with different effects
+        org.apache.ranger.s3.PolicyStatement stmt1 = new org.apache.ranger.s3.PolicyStatement();
+        stmt1.setEffect("Allow");
+        stmt1.setResource("arn:aws:s3:::test-bucket/*");
+        stmt1.setAction(java.util.Arrays.asList("s3:GetObject"));
+
+        org.apache.ranger.s3.PolicyStatement stmt2 = new org.apache.ranger.s3.PolicyStatement();
+        stmt2.setEffect("Deny");
+        stmt2.setResource("arn:aws:s3:::test-bucket/*");
+        stmt2.setAction(java.util.Arrays.asList("s3:GetObject"));
+
+        // Execute & Assert
+        Assert.assertFalse(serviceDBStore.statementsMatch(stmt1, stmt2));
+    }
+
+    @Test
+    public void testStatementsMatch_DifferentResource() {
+        // Setup: statements with different resources
+        org.apache.ranger.s3.PolicyStatement stmt1 = new org.apache.ranger.s3.PolicyStatement();
+        stmt1.setEffect("Allow");
+        stmt1.setResource("arn:aws:s3:::bucket1/*");
+        stmt1.setAction(java.util.Arrays.asList("s3:GetObject"));
+
+        org.apache.ranger.s3.PolicyStatement stmt2 = new org.apache.ranger.s3.PolicyStatement();
+        stmt2.setEffect("Allow");
+        stmt2.setResource("arn:aws:s3:::bucket2/*");
+        stmt2.setAction(java.util.Arrays.asList("s3:GetObject"));
+
+        // Execute & Assert
+        Assert.assertFalse(serviceDBStore.statementsMatch(stmt1, stmt2));
+    }
+
+    @Test
+    public void testStatementsMatch_NullStatements() {
+        // Setup
+        org.apache.ranger.s3.PolicyStatement stmt1 = new org.apache.ranger.s3.PolicyStatement();
+        stmt1.setEffect("Allow");
+
+        // Execute & Assert
+        Assert.assertFalse(serviceDBStore.statementsMatch(null, stmt1));
+        Assert.assertFalse(serviceDBStore.statementsMatch(stmt1, null));
+        Assert.assertFalse(serviceDBStore.statementsMatch(null, null));
+    }
+
+    @Test
+    public void testExtractIAMOnlyStatements_NoOverlap() {
+        // Setup: IAM statements that don't match Ranger statements
+        org.apache.ranger.s3.PolicyStatement iamStmt1 = new org.apache.ranger.s3.PolicyStatement();
+        iamStmt1.setEffect("Allow");
+        iamStmt1.setResource("arn:aws:s3:::iam-only-bucket/*");
+        iamStmt1.setAction(java.util.Arrays.asList("s3:GetObject"));
+
+        org.apache.ranger.s3.PolicyStatement rangerStmt1 = new org.apache.ranger.s3.PolicyStatement();
+        rangerStmt1.setEffect("Allow");
+        rangerStmt1.setResource("arn:aws:s3:::ranger-bucket/*");
+        rangerStmt1.setAction(java.util.Arrays.asList("s3:PutObject"));
+
+        List<org.apache.ranger.s3.PolicyStatement> iamStatements = java.util.Arrays.asList(iamStmt1);
+        List<org.apache.ranger.s3.PolicyStatement> rangerStatements = java.util.Arrays.asList(rangerStmt1);
+
+        // Execute
+        List<org.apache.ranger.s3.PolicyStatement> result =
+                serviceDBStore.extractIAMOnlyStatements(iamStatements, rangerStatements);
+
+        // Assert: IAM statement should be preserved
+        Assert.assertEquals(1, result.size());
+        Assert.assertEquals(iamStmt1.getResource(), result.get(0).getResource());
+    }
+
+    @Test
+    public void testExtractIAMOnlyStatements_WithOverlap() {
+        // Setup: IAM and Ranger statements with one matching
+        org.apache.ranger.s3.PolicyStatement iamStmt1 = new org.apache.ranger.s3.PolicyStatement();
+        iamStmt1.setEffect("Allow");
+        iamStmt1.setResource("arn:aws:s3:::shared-bucket/*");
+        iamStmt1.setAction(java.util.Arrays.asList("s3:GetObject"));
+
+        org.apache.ranger.s3.PolicyStatement iamStmt2 = new org.apache.ranger.s3.PolicyStatement();
+        iamStmt2.setEffect("Allow");
+        iamStmt2.setResource("arn:aws:s3:::iam-only-bucket/*");
+        iamStmt2.setAction(java.util.Arrays.asList("s3:GetObject"));
+
+        org.apache.ranger.s3.PolicyStatement rangerStmt1 = new org.apache.ranger.s3.PolicyStatement();
+        rangerStmt1.setEffect("Allow");
+        rangerStmt1.setResource("arn:aws:s3:::shared-bucket/*");
+        rangerStmt1.setAction(java.util.Arrays.asList("s3:GetObject"));
+
+        List<org.apache.ranger.s3.PolicyStatement> iamStatements = java.util.Arrays.asList(iamStmt1, iamStmt2);
+        List<org.apache.ranger.s3.PolicyStatement> rangerStatements = java.util.Arrays.asList(rangerStmt1);
+
+        // Execute
+        List<org.apache.ranger.s3.PolicyStatement> result =
+                serviceDBStore.extractIAMOnlyStatements(iamStatements, rangerStatements);
+
+        // Assert: only IAM-only statement should be preserved
+        Assert.assertEquals(1, result.size());
+        Assert.assertEquals(iamStmt2.getResource(), result.get(0).getResource());
+    }
+
+    @Test
+    public void testExtractIAMOnlyStatements_EmptyIAM() {
+        // Setup: empty IAM statements
+        List<org.apache.ranger.s3.PolicyStatement> iamStatements = new ArrayList<>();
+
+        org.apache.ranger.s3.PolicyStatement rangerStmt1 = new org.apache.ranger.s3.PolicyStatement();
+        rangerStmt1.setEffect("Allow");
+        rangerStmt1.setResource("arn:aws:s3:::ranger-bucket/*");
+        rangerStmt1.setAction(java.util.Arrays.asList("s3:GetObject"));
+        List<org.apache.ranger.s3.PolicyStatement> rangerStatements = java.util.Arrays.asList(rangerStmt1);
+
+        // Execute
+        List<org.apache.ranger.s3.PolicyStatement> result =
+                serviceDBStore.extractIAMOnlyStatements(iamStatements, rangerStatements);
+
+        // Assert: result should be empty
+        Assert.assertEquals(0, result.size());
+    }
+
+    @Test
+    public void testExtractIAMOnlyStatements_AllMatch() {
+        // Setup: all IAM statements match Ranger statements
+        org.apache.ranger.s3.PolicyStatement stmt1 = new org.apache.ranger.s3.PolicyStatement();
+        stmt1.setEffect("Allow");
+        stmt1.setResource("arn:aws:s3:::bucket/*");
+        stmt1.setAction(java.util.Arrays.asList("s3:GetObject"));
+
+        List<org.apache.ranger.s3.PolicyStatement> iamStatements = java.util.Arrays.asList(stmt1);
+        List<org.apache.ranger.s3.PolicyStatement> rangerStatements = java.util.Arrays.asList(stmt1);
+
+        // Execute
+        List<org.apache.ranger.s3.PolicyStatement> result =
+                serviceDBStore.extractIAMOnlyStatements(iamStatements, rangerStatements);
+
+        // Assert: no IAM-only statements
+        Assert.assertEquals(0, result.size());
+    }
+
+    @Test
+    public void testMergeWithIAMStatements_NoExistingIAMPolicy() throws Exception {
+        // Setup: mock S3Client with no existing policy
+        software.amazon.awssdk.services.s3.S3Client s3Client = Mockito.mock(software.amazon.awssdk.services.s3.S3Client.class);
+        Mockito.when(s3Client.getBucketPolicy(Mockito.any(software.amazon.awssdk.services.s3.model.GetBucketPolicyRequest.class)))
+                .thenThrow(software.amazon.awssdk.services.s3.model.NoSuchBucketPolicyException.class);
+
+        org.apache.ranger.s3.PolicyStatement rangerStmt = new org.apache.ranger.s3.PolicyStatement();
+        rangerStmt.setEffect("Allow");
+        rangerStmt.setResource("arn:aws:s3:::test-bucket/*");
+        rangerStmt.setAction(java.util.Arrays.asList("s3:GetObject"));
+        List<org.apache.ranger.s3.PolicyStatement> rangerStatements = java.util.Arrays.asList(rangerStmt);
+
+        // Execute
+        List<org.apache.ranger.s3.PolicyStatement> result =
+                serviceDBStore.mergeWithIAMStatements(s3Client, "test-bucket", rangerStatements, java.util.Collections.emptySet());
+
+        // Assert: only Ranger statements should be present
+        Assert.assertEquals(1, result.size());
+        Assert.assertEquals(rangerStmt.getResource(), result.get(0).getResource());
+    }
+
+    @Test
+    public void testMergeWithIAMStatements_WithExistingIAMPolicy() throws Exception {
+        // Setup: mock S3Client with existing IAM policy
+        software.amazon.awssdk.services.s3.S3Client s3Client = Mockito.mock(software.amazon.awssdk.services.s3.S3Client.class);
+
+        // Create IAM policy JSON
+        String iamPolicyJson = "{\"Version\":\"2012-10-17\",\"Statement\":[" +
+                "{\"Effect\":\"Allow\",\"Resource\":\"arn:aws:s3:::iam-bucket/*\",\"Action\":[\"s3:ListBucket\"]}" +
+                "]}";
+
+        software.amazon.awssdk.services.s3.model.GetBucketPolicyResponse response =
+                software.amazon.awssdk.services.s3.model.GetBucketPolicyResponse.builder()
+                        .policy(iamPolicyJson)
+                        .build();
+
+        Mockito.when(s3Client.getBucketPolicy(Mockito.any(software.amazon.awssdk.services.s3.model.GetBucketPolicyRequest.class)))
+                .thenReturn(response);
+
+        // Ranger statement (different from IAM)
+        org.apache.ranger.s3.PolicyStatement rangerStmt = new org.apache.ranger.s3.PolicyStatement();
+        rangerStmt.setEffect("Allow");
+        rangerStmt.setResource("arn:aws:s3:::ranger-bucket/*");
+        rangerStmt.setAction(java.util.Arrays.asList("s3:GetObject"));
+        List<org.apache.ranger.s3.PolicyStatement> rangerStatements = java.util.Arrays.asList(rangerStmt);
+
+        // Execute
+        java.util.Set<String> rangerManagedResources = new java.util.HashSet<>(java.util.Arrays.asList("arn:aws:s3:::ranger-bucket/*"));
+        List<org.apache.ranger.s3.PolicyStatement> result =
+                serviceDBStore.mergeWithIAMStatements(s3Client, "test-bucket", rangerStatements, rangerManagedResources);
+
+        // Assert: both IAM-only and Ranger statements should be present
+        Assert.assertEquals(2, result.size());
+        // First should be IAM-only statement
+        Assert.assertEquals("arn:aws:s3:::iam-bucket/*", result.get(0).getResource());
+        // Second should be Ranger statement
+        Assert.assertEquals("arn:aws:s3:::ranger-bucket/*", result.get(1).getResource());
+    }
+
+    @Test
+    public void testMergeWithIAMStatements_OverlappingStatements() throws Exception {
+        // Setup: mock S3Client with IAM policy that overlaps with Ranger
+        software.amazon.awssdk.services.s3.S3Client s3Client = Mockito.mock(software.amazon.awssdk.services.s3.S3Client.class);
+
+        // IAM policy with same resource as Ranger
+        String iamPolicyJson = "{\"Version\":\"2012-10-17\",\"Statement\":[" +
+                "{\"Effect\":\"Allow\",\"Resource\":\"arn:aws:s3:::shared-bucket/*\",\"Action\":[\"s3:GetObject\"]}" +
+                "]}";
+
+        software.amazon.awssdk.services.s3.model.GetBucketPolicyResponse response =
+                software.amazon.awssdk.services.s3.model.GetBucketPolicyResponse.builder()
+                        .policy(iamPolicyJson)
+                        .build();
+
+        Mockito.when(s3Client.getBucketPolicy(Mockito.any(software.amazon.awssdk.services.s3.model.GetBucketPolicyRequest.class)))
+                .thenReturn(response);
+
+        // Ranger statement (same as IAM - should replace)
+        org.apache.ranger.s3.PolicyStatement rangerStmt = new org.apache.ranger.s3.PolicyStatement();
+        rangerStmt.setEffect("Allow");
+        rangerStmt.setResource("arn:aws:s3:::shared-bucket/*");
+        rangerStmt.setAction(java.util.Arrays.asList("s3:GetObject"));
+        List<org.apache.ranger.s3.PolicyStatement> rangerStatements = java.util.Arrays.asList(rangerStmt);
+
+        // Execute
+        java.util.Set<String> rangerManagedResources = new java.util.HashSet<>(java.util.Arrays.asList("arn:aws:s3:::ranger-bucket/*"));
+        List<org.apache.ranger.s3.PolicyStatement> result =
+                serviceDBStore.mergeWithIAMStatements(s3Client, "test-bucket", rangerStatements, rangerManagedResources);
+
+        // Assert: only Ranger statement should be present (replaces IAM statement)
+        Assert.assertEquals(1, result.size());
+        Assert.assertEquals("arn:aws:s3:::shared-bucket/*", result.get(0).getResource());
+    }
+
+    @Test
+    public void testProcessPolicies_SingleBucket() throws Exception {
+        // Setup: Create bucket map with one bucket and one policy
+        Map<String, Map<RangerPolicy, java.util.Set<String>>> bucketMap = new HashMap<>();
+        Map<RangerPolicy, java.util.Set<String>> policyMap = new HashMap<>();
+
+        RangerPolicy policy = createS3Policy(1L, "test-policy", "test-bucket/data/*",
+                java.util.Arrays.asList("user1"),
+                java.util.Arrays.asList("s3:GetObject"));
+
+        java.util.Set<String> paths = new java.util.HashSet<>();
+        paths.add("test-bucket/data/*");
+        policyMap.put(policy, paths);
+        bucketMap.put("test-bucket", policyMap);
+
+        // Mock AWS clients
+        software.amazon.awssdk.services.s3.S3Client s3Client = Mockito.mock(software.amazon.awssdk.services.s3.S3Client.class);
+        software.amazon.awssdk.services.iam.IamClient iamClient = Mockito.mock(software.amazon.awssdk.services.iam.IamClient.class);
+
+        // Mock IAM user lookup
+        software.amazon.awssdk.services.iam.model.GetUserResponse userResponse =
+                software.amazon.awssdk.services.iam.model.GetUserResponse.builder()
+                        .user(software.amazon.awssdk.services.iam.model.User.builder()
+                                .arn("arn:aws:iam::123456789012:user/user1")
+                                .build())
+                        .build();
+        Mockito.when(iamClient.getUser(Mockito.any(software.amazon.awssdk.services.iam.model.GetUserRequest.class)))
+                .thenReturn(userResponse);
+
+        // Mock S3 getBucketPolicy to return no existing policy
+        Mockito.when(s3Client.getBucketPolicy(Mockito.any(software.amazon.awssdk.services.s3.model.GetBucketPolicyRequest.class)))
+                .thenThrow(software.amazon.awssdk.services.s3.model.NoSuchBucketPolicyException.class);
+
+        // Mock S3 putBucketPolicy
+        Mockito.when(s3Client.putBucketPolicy(Mockito.any(software.amazon.awssdk.services.s3.model.PutBucketPolicyRequest.class)))
+                .thenReturn(software.amazon.awssdk.services.s3.model.PutBucketPolicyResponse.builder().build());
+
+        // Execute: processPolicies should process the bucket map
+        serviceDBStore.processPolicies(bucketMap, s3Client, iamClient, java.util.Collections.emptySet());
+
+        // Assert: putBucketPolicy should be called once
+        Mockito.verify(s3Client, Mockito.times(1))
+                .putBucketPolicy(Mockito.any(software.amazon.awssdk.services.s3.model.PutBucketPolicyRequest.class));
+    }
+
+    @Test
+    public void testProcessPolicies_MultipleBuckets() throws Exception {
+        // Setup: Create bucket map with multiple buckets
+        Map<String, Map<RangerPolicy, java.util.Set<String>>> bucketMap = new HashMap<>();
+
+        // Bucket 1
+        Map<RangerPolicy, java.util.Set<String>> policyMap1 = new HashMap<>();
+        RangerPolicy policy1 = createS3Policy(1L, "policy-1", "bucket1/data/*",
+                java.util.Arrays.asList("user1"),
+                java.util.Arrays.asList("s3:GetObject"));
+        java.util.Set<String> paths1 = new java.util.HashSet<>();
+        paths1.add("bucket1/data/*");
+        policyMap1.put(policy1, paths1);
+        bucketMap.put("bucket1", policyMap1);
+
+        // Bucket 2
+        Map<RangerPolicy, java.util.Set<String>> policyMap2 = new HashMap<>();
+        RangerPolicy policy2 = createS3Policy(2L, "policy-2", "bucket2/logs/*",
+                java.util.Arrays.asList("user2"),
+                java.util.Arrays.asList("s3:PutObject"));
+        java.util.Set<String> paths2 = new java.util.HashSet<>();
+        paths2.add("bucket2/logs/*");
+        policyMap2.put(policy2, paths2);
+        bucketMap.put("bucket2", policyMap2);
+
+        // Mock AWS clients
+        software.amazon.awssdk.services.s3.S3Client s3Client = Mockito.mock(software.amazon.awssdk.services.s3.S3Client.class);
+        software.amazon.awssdk.services.iam.IamClient iamClient = Mockito.mock(software.amazon.awssdk.services.iam.IamClient.class);
+
+        // Mock IAM user lookups
+        software.amazon.awssdk.services.iam.model.GetUserResponse userResponse1 =
+                software.amazon.awssdk.services.iam.model.GetUserResponse.builder()
+                        .user(software.amazon.awssdk.services.iam.model.User.builder()
+                                .arn("arn:aws:iam::123456789012:user/user1")
+                                .build())
+                        .build();
+        software.amazon.awssdk.services.iam.model.GetUserResponse userResponse2 =
+                software.amazon.awssdk.services.iam.model.GetUserResponse.builder()
+                        .user(software.amazon.awssdk.services.iam.model.User.builder()
+                                .arn("arn:aws:iam::123456789012:user/user2")
+                                .build())
+                        .build();
+
+        Mockito.when(iamClient.getUser(Mockito.any(software.amazon.awssdk.services.iam.model.GetUserRequest.class)))
+                .thenReturn(userResponse1, userResponse2);
+
+        // Mock S3 getBucketPolicy to return no existing policy
+        Mockito.when(s3Client.getBucketPolicy(Mockito.any(software.amazon.awssdk.services.s3.model.GetBucketPolicyRequest.class)))
+                .thenThrow(software.amazon.awssdk.services.s3.model.NoSuchBucketPolicyException.class);
+
+        // Mock S3 putBucketPolicy
+        Mockito.when(s3Client.putBucketPolicy(Mockito.any(software.amazon.awssdk.services.s3.model.PutBucketPolicyRequest.class)))
+                .thenReturn(software.amazon.awssdk.services.s3.model.PutBucketPolicyResponse.builder().build());
+
+        // Execute: processPolicies should process both buckets
+        serviceDBStore.processPolicies(bucketMap, s3Client, iamClient, java.util.Collections.emptySet());
+
+        // Assert: putBucketPolicy should be called twice (once for each bucket)
+        Mockito.verify(s3Client, Mockito.times(2))
+                .putBucketPolicy(Mockito.any(software.amazon.awssdk.services.s3.model.PutBucketPolicyRequest.class));
+    }
+
+    @Test
+    public void testProcessPolicies_WithDenyPolicies() throws Exception {
+        // Setup: Create bucket map with both allow and deny policies
+        Map<String, Map<RangerPolicy, java.util.Set<String>>> bucketMap = new HashMap<>();
+        Map<RangerPolicy, java.util.Set<String>> policyMap = new HashMap<>();
+
+        // Create policy with both allow and deny items
+        RangerPolicy policy = new RangerPolicy();
+        policy.setId(1L);
+        policy.setName("test-policy");
+        policy.setService("s3-service");
+        policy.setIsEnabled(true);
+
+        // Allow items
+        List<RangerPolicyItem> allowItems = new ArrayList<>();
+        RangerPolicyItem allowItem = new RangerPolicyItem();
+        allowItem.setUsers(java.util.Arrays.asList("user1"));
+        List<RangerPolicyItemAccess> allowAccesses = new ArrayList<>();
+        RangerPolicyItemAccess allowAccess = new RangerPolicyItemAccess();
+        allowAccess.setType("s3:GetObject");
+        allowAccess.setIsAllowed(true);
+        allowAccesses.add(allowAccess);
+        allowItem.setAccesses(allowAccesses);
+        allowItems.add(allowItem);
+        policy.setPolicyItems(allowItems);
+
+        // Deny items
+        List<RangerPolicyItem> denyItems = new ArrayList<>();
+        RangerPolicyItem denyItem = new RangerPolicyItem();
+        denyItem.setUsers(java.util.Arrays.asList("user2"));
+        List<RangerPolicyItemAccess> denyAccesses = new ArrayList<>();
+        RangerPolicyItemAccess denyAccess = new RangerPolicyItemAccess();
+        denyAccess.setType("s3:DeleteObject");
+        denyAccess.setIsAllowed(true);
+        denyAccesses.add(denyAccess);
+        denyItem.setAccesses(denyAccesses);
+        denyItems.add(denyItem);
+        policy.setDenyPolicyItems(denyItems);
+
+        // Resources
+        Map<String, RangerPolicyResource> resources = new HashMap<>();
+        RangerPolicyResource pathResource = new RangerPolicyResource();
+        pathResource.setValues(java.util.Collections.singletonList("test-bucket/*"));
+        resources.put("path", pathResource);
+        policy.setResources(resources);
+
+        java.util.Set<String> paths = new java.util.HashSet<>();
+        paths.add("test-bucket/*");
+        policyMap.put(policy, paths);
+        bucketMap.put("test-bucket", policyMap);
+
+        // Mock AWS clients
+        software.amazon.awssdk.services.s3.S3Client s3Client = Mockito.mock(software.amazon.awssdk.services.s3.S3Client.class);
+        software.amazon.awssdk.services.iam.IamClient iamClient = Mockito.mock(software.amazon.awssdk.services.iam.IamClient.class);
+
+        // Mock IAM user lookups
+        software.amazon.awssdk.services.iam.model.GetUserResponse userResponse =
+                software.amazon.awssdk.services.iam.model.GetUserResponse.builder()
+                        .user(software.amazon.awssdk.services.iam.model.User.builder()
+                                .arn("arn:aws:iam::123456789012:user/user1")
+                                .build())
+                        .build();
+        Mockito.when(iamClient.getUser(Mockito.any(software.amazon.awssdk.services.iam.model.GetUserRequest.class)))
+                .thenReturn(userResponse);
+
+        // Mock S3 getBucketPolicy to return no existing policy
+        Mockito.when(s3Client.getBucketPolicy(Mockito.any(software.amazon.awssdk.services.s3.model.GetBucketPolicyRequest.class)))
+                .thenThrow(software.amazon.awssdk.services.s3.model.NoSuchBucketPolicyException.class);
+
+        // Mock S3 putBucketPolicy
+        Mockito.when(s3Client.putBucketPolicy(Mockito.any(software.amazon.awssdk.services.s3.model.PutBucketPolicyRequest.class)))
+                .thenReturn(software.amazon.awssdk.services.s3.model.PutBucketPolicyResponse.builder().build());
+
+        // Execute: processPolicies should handle both allow and deny items
+        serviceDBStore.processPolicies(bucketMap, s3Client, iamClient, java.util.Collections.emptySet());
+
+        // Assert: putBucketPolicy should be called once
+        Mockito.verify(s3Client, Mockito.times(1))
+                .putBucketPolicy(Mockito.any(software.amazon.awssdk.services.s3.model.PutBucketPolicyRequest.class));
+    }
+
+    @Test
+    public void testProcessPolicies_EmptyBucketMap() throws Exception {
+        // Setup: Empty bucket map
+        Map<String, Map<RangerPolicy, java.util.Set<String>>> bucketMap = new HashMap<>();
+
+        // Mock AWS clients
+        software.amazon.awssdk.services.s3.S3Client s3Client = Mockito.mock(software.amazon.awssdk.services.s3.S3Client.class);
+        software.amazon.awssdk.services.iam.IamClient iamClient = Mockito.mock(software.amazon.awssdk.services.iam.IamClient.class);
+
+        // Execute: processPolicies with empty map should not throw
+        serviceDBStore.processPolicies(bucketMap, s3Client, iamClient, java.util.Collections.emptySet());
+
+        // Assert: putBucketPolicy should never be called
+        Mockito.verify(s3Client, Mockito.never())
+                .putBucketPolicy(Mockito.any(software.amazon.awssdk.services.s3.model.PutBucketPolicyRequest.class));
+    }
+
     @Test
     public void test54init() throws Exception {
         serviceDBStore.init();
