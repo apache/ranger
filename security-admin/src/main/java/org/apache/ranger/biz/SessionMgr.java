@@ -267,7 +267,12 @@ public class SessionMgr {
             List<String> permissionList;
 
             if (userSession.isUserAdmin()) {
-                permissionList = daoManager.getXXModuleDef().getAllModuleNames();
+                permissionList = new ArrayList<>(daoManager.getXXModuleDef().getAllModuleNames());
+
+                // Config super-users get sys-admin modules only.
+                if (userSession.isSuperUser()) {
+                    permissionList.remove(RangerConstants.MODULE_KEY_MANAGER);
+                }
             } else {
                 permissionList = daoManager.getXXModuleDef().findAccessibleModulesByUserId(userSession.getUserId(), xUser.getId());
             }
@@ -804,6 +809,15 @@ public class SessionMgr {
         applyConfigSuperUserSessionFlags(userSession);
 
         if (userSession.isSuperUser()) {
+            if (strRoleList.contains(RangerConstants.ROLE_KEY_ADMIN) || strRoleList.contains(RangerConstants.ROLE_KEY_ADMIN_AUDITOR)) {
+                logger.warn("User {} is configured as a config super-user but has KMS role(s) {} in Ranger DB; KMS privileges are not granted to config super-users. Remove the user from ranger.admin.super.users/groups or remove the KMS role.", userSession.getLoginId(), strRoleList);
+            }
+
+            // Config super-users act as system admin regardless of DB portal roles.
+            userSession.setKeyAdmin(false);
+            userSession.setAuditKeyAdmin(false);
+            userSession.setAuditUserAdmin(false);
+
             strRoleList = RangerSuperUserConfig.mergeConfigSuperUserRoles(strRoleList, true);
         }
 

@@ -23,6 +23,7 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
@@ -34,10 +35,11 @@ import java.util.Set;
  * Configuration-based Ranger Admin superusers and super groups.
  * When {@code ranger.admin.super.users} or
  * {@code ranger.admin.super.groups} are set, matching authenticated users
- * receive full Ranger administrative privileges (system admin and key admin
- * capabilities) without requiring corresponding roles in the Ranger database.
+ * receive full Ranger administrative privileges (system admin) without requiring corresponding roles in the Ranger database.
  */
 public final class RangerSuperUserConfig {
+    private static final Set<String> SUPER_USER_EXCLUDED_ROLES = Collections.unmodifiableSet(new HashSet<>(Arrays.asList(RangerConstants.ROLE_KEY_ADMIN, RangerConstants.ROLE_KEY_ADMIN_AUDITOR, RangerConstants.ROLE_ADMIN_AUDITOR)));
+
     private static volatile RangerSuperUserConfig instance;
 
     private final Set<String> superUsers;
@@ -119,6 +121,8 @@ public final class RangerSuperUserConfig {
     /**
      * Merges config super-user admin roles with existing portal roles.
      * Used for Spring Security authentication and session role lists.
+     * Key-admin and auditor portal roles are dropped so that config
+     * super-users behave as system admin regardless of DB roles.
      *
      * @param existingRoles DB portal roles (may be null)
      * @param includeRoleUser when true, adds {@code ROLE_USER} (session lists)
@@ -128,14 +132,17 @@ public final class RangerSuperUserConfig {
         LinkedHashSet<String> merged = new LinkedHashSet<>();
 
         merged.add(RangerConstants.ROLE_SYS_ADMIN);
-        merged.add(RangerConstants.ROLE_KEY_ADMIN);
 
         if (includeRoleUser) {
             merged.add(RangerConstants.ROLE_USER);
         }
 
         if (existingRoles != null) {
-            merged.addAll(existingRoles);
+            for (String role : existingRoles) {
+                if (!SUPER_USER_EXCLUDED_ROLES.contains(role)) {
+                    merged.add(role);
+                }
+            }
         }
 
         return new ArrayList<>(merged);

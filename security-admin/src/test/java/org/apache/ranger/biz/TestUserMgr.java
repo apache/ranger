@@ -1691,7 +1691,7 @@ public class TestUserMgr {
 
         Assertions.assertTrue(roles.contains(RangerConstants.ROLE_USER));
         Assertions.assertTrue(roles.contains(RangerConstants.ROLE_SYS_ADMIN));
-        Assertions.assertTrue(roles.contains(RangerConstants.ROLE_KEY_ADMIN));
+        Assertions.assertFalse(roles.contains(RangerConstants.ROLE_KEY_ADMIN));
 
         PropertiesUtil.getPropertiesMap().remove(RangerConstants.RANGER_ADMIN_SUPER_USERS);
         RangerSuperUserConfig.resetForTests();
@@ -1700,6 +1700,38 @@ public class TestUserMgr {
         Assertions.assertEquals(Collections.singletonList(RangerConstants.ROLE_USER), dbRoles);
         Mockito.verify(xUserMgr, Mockito.never()).getGroupsForUser(userLoginId);
 
+        RangerSuperUserConfig.resetForTests();
+    }
+
+    @Test
+    public void testGetDBRolesByLoginId_ConfigSuperUserKeepsDBRoles() {
+        setup();
+        XXPortalUserDao     userDao = Mockito.mock(XXPortalUserDao.class);
+        XXPortalUserRoleDao roleDao = Mockito.mock(XXPortalUserRoleDao.class);
+
+        VXPortalUser userProfile = userProfile();
+        String       userLoginId = userProfile.getLoginId();
+
+        XXPortalUser user = new XXPortalUser();
+        user.setLoginId(userLoginId);
+        user.setId(userProfile.getId());
+
+        XXPortalUserRole xxPortalUserRole = new XXPortalUserRole();
+        xxPortalUserRole.setUserRole(RangerConstants.ROLE_KEY_ADMIN);
+        List<XXPortalUserRole> list = new ArrayList<>();
+        list.add(xxPortalUserRole);
+
+        Mockito.when(daoManager.getXXPortalUser()).thenReturn(userDao);
+        Mockito.when(userDao.findByLoginId(userLoginId)).thenReturn(user);
+        Mockito.when(daoManager.getXXPortalUserRole()).thenReturn(roleDao);
+        Mockito.when(roleDao.findByUserId(user.getId())).thenReturn(list);
+        RangerSuperUserConfig.resetForTests();
+        PropertiesUtil.getPropertiesMap().put(RangerConstants.RANGER_ADMIN_SUPER_USERS, userLoginId);
+
+        Assertions.assertEquals(Collections.singletonList(RangerConstants.ROLE_KEY_ADMIN), new ArrayList<>(userMgr.getDBRolesByLoginId(userLoginId)));
+        Assertions.assertEquals(Collections.singletonList(RangerConstants.ROLE_SYS_ADMIN), new ArrayList<>(userMgr.getRolesByLoginId(userLoginId)));
+
+        PropertiesUtil.getPropertiesMap().remove(RangerConstants.RANGER_ADMIN_SUPER_USERS);
         RangerSuperUserConfig.resetForTests();
     }
 
@@ -1780,8 +1812,6 @@ public class TestUserMgr {
         portalUser.setId(99L);
         portalUser.setLoginId("config-admin");
         session.setXXPortalUser(portalUser);
-        session.setUserAdmin(true);
-        session.setKeyAdmin(true);
         session.setSuperUser(true);
 
         RangerSecurityContext context = new RangerSecurityContext();
@@ -1827,10 +1857,9 @@ public class TestUserMgr {
         userMgr.gjUserToUserProfile(user, profile);
 
         Assertions.assertTrue(profile.getUserRoleList().contains(RangerConstants.ROLE_SYS_ADMIN));
-        Assertions.assertTrue(profile.getUserRoleList().contains(RangerConstants.ROLE_KEY_ADMIN));
-        Assertions.assertEquals(2, profile.getUserPermList().size());
+        Assertions.assertFalse(profile.getUserRoleList().contains(RangerConstants.ROLE_KEY_ADMIN));
+        Assertions.assertEquals(1, profile.getUserPermList().size());
         Assertions.assertEquals(RangerConstants.MODULE_AUDIT, profile.getUserPermList().get(0).getModuleName());
-        Assertions.assertEquals(RangerConstants.MODULE_KEY_MANAGER, profile.getUserPermList().get(1).getModuleName());
 
         destroySession();
     }
@@ -1843,8 +1872,6 @@ public class TestUserMgr {
         portalUser.setId(99L);
         portalUser.setLoginId("config-admin");
         session.setXXPortalUser(portalUser);
-        session.setUserAdmin(true);
-        session.setKeyAdmin(true);
         session.setSuperUser(true);
 
         RangerSecurityContext context = new RangerSecurityContext();
@@ -1887,7 +1914,7 @@ public class TestUserMgr {
         VXPortalUser profile = userMgr.mapXXPortalUserToVXPortalUser(user, null);
 
         Assertions.assertEquals(
-                Arrays.asList(RangerConstants.ROLE_SYS_ADMIN, RangerConstants.ROLE_KEY_ADMIN),
+                Collections.singletonList(RangerConstants.ROLE_SYS_ADMIN),
                 profile.getUserRoleList());
         Assertions.assertFalse(profile.getUserRoleList().contains(RangerConstants.ROLE_USER));
 

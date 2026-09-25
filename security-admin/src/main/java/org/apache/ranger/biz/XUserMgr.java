@@ -3322,7 +3322,17 @@ public class XUserMgr extends XUserMgrBase {
         UserSessionBase userSession = ContextUtil.getCurrentUserSession();
 
         if (userSession != null && userSession.isSuperUser()) {
-            return true;
+            if (requestedVXUser == null || CollectionUtils.isEmpty(requestedVXUser.getUserRoleList())) {
+                return false;
+            }
+
+            /* rangerusersync must see all users; a super user can always see self,
+             * even when its DB role is a KMS role. */
+            if ("rangerusersync".equalsIgnoreCase(userSession.getLoginId()) || StringUtils.equals(requestedVXUser.getName(), userSession.getLoginId())) {
+                return true;
+            }
+
+            return StringUtil.containsIgnoreCase(requestedVXUser.getUserRoleList(), RangerConstants.ROLE_SYS_ADMIN) || StringUtil.containsIgnoreCase(requestedVXUser.getUserRoleList(), RangerConstants.ROLE_ADMIN_AUDITOR) || StringUtil.containsIgnoreCase(requestedVXUser.getUserRoleList(), RangerConstants.ROLE_USER);
         }
 
         if (userSession != null && userSession.getLoginId() != null) {

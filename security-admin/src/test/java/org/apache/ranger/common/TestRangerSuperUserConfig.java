@@ -156,9 +156,9 @@ public class TestRangerSuperUserConfig {
         Assertions.assertEquals(
                 Arrays.asList(
                         RangerConstants.ROLE_SYS_ADMIN,
-                        RangerConstants.ROLE_KEY_ADMIN,
                         RangerConstants.ROLE_USER),
                 merged);
+        Assertions.assertFalse(merged.contains(RangerConstants.ROLE_KEY_ADMIN));
     }
 
     @Test
@@ -170,18 +170,27 @@ public class TestRangerSuperUserConfig {
         Assertions.assertEquals(
                 Arrays.asList(
                         RangerConstants.ROLE_SYS_ADMIN,
-                        RangerConstants.ROLE_KEY_ADMIN,
-                        RangerConstants.ROLE_USER,
-                        RangerConstants.ROLE_ADMIN_AUDITOR),
+                        RangerConstants.ROLE_USER),
+                merged);
+    }
+
+    @Test
+    public void testMergeConfigSuperUserRoles_DropsKeyAdminAndAuditorDbRoles() {
+        List<String> merged = RangerSuperUserConfig.mergeConfigSuperUserRoles(
+                Arrays.asList(RangerConstants.ROLE_KEY_ADMIN, RangerConstants.ROLE_KEY_ADMIN_AUDITOR, RangerConstants.ROLE_ADMIN_AUDITOR),
+                true);
+
+        Assertions.assertEquals(
+                Arrays.asList(
+                        RangerConstants.ROLE_SYS_ADMIN,
+                        RangerConstants.ROLE_USER),
                 merged);
     }
 
     @Test
     public void testGetConfigSuperUserProfileRoles() {
         Assertions.assertEquals(
-                Arrays.asList(
-                        RangerConstants.ROLE_SYS_ADMIN,
-                        RangerConstants.ROLE_KEY_ADMIN),
+                Collections.singletonList(RangerConstants.ROLE_SYS_ADMIN),
                 RangerSuperUserConfig.getConfigSuperUserProfileRoles());
     }
 
@@ -229,9 +238,7 @@ public class TestRangerSuperUserConfig {
         List<String> merged = RangerSuperUserConfig.mergeConfigSuperUserRoles(null, false);
 
         Assertions.assertEquals(
-                Arrays.asList(
-                        RangerConstants.ROLE_SYS_ADMIN,
-                        RangerConstants.ROLE_KEY_ADMIN),
+                Collections.singletonList(RangerConstants.ROLE_SYS_ADMIN),
                 merged);
     }
 

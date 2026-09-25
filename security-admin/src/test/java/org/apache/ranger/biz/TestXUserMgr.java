@@ -4622,6 +4622,68 @@ public class TestXUserMgr {
         });
     }
 
+    @Test
+    public void test136checkAccess_configSuperUserCanAccessSysAdminUser() {
+        setupConfigSuperUserSession();
+
+        VXUser requestedUser = new VXUser();
+        requestedUser.setId(2L);
+        requestedUser.setUserRoleList(Collections.singletonList(RangerConstants.ROLE_SYS_ADMIN));
+
+        Assertions.assertDoesNotThrow(() -> xUserMgr.checkAccess(requestedUser));
+    }
+
+    @Test
+    public void test137checkAccess_configSuperUserCannotAccessKeyAdminUser() {
+        setupConfigSuperUserSession();
+
+        VXUser requestedUser = new VXUser();
+        requestedUser.setId(2L);
+        requestedUser.setUserRoleList(Collections.singletonList(RangerConstants.ROLE_KEY_ADMIN));
+
+        Mockito.when(restErrorUtil.create403RESTException(Mockito.anyString())).thenReturn(new WebApplicationException());
+
+        Assertions.assertThrows(WebApplicationException.class, () -> xUserMgr.checkAccess(requestedUser));
+    }
+
+    @Test
+    public void test138checkAccess_configSuperUserCanAccessSelfWithKeyAdminDBRole() {
+        setupConfigSuperUserSession();
+
+        VXUser requestedUser = new VXUser();
+        requestedUser.setId(1L);
+        requestedUser.setName("config-admin");
+        requestedUser.setUserRoleList(Collections.singletonList(RangerConstants.ROLE_KEY_ADMIN));
+
+        Assertions.assertDoesNotThrow(() -> xUserMgr.checkAccess(requestedUser));
+    }
+
+    @Test
+    public void test139checkAccess_rangerusersyncConfigSuperUserCanAccessKeyAdminUser() {
+        setupConfigSuperUserSession();
+        ContextUtil.getCurrentUserSession().getXXPortalUser().setLoginId("rangerusersync");
+
+        VXUser requestedUser = new VXUser();
+        requestedUser.setId(2L);
+        requestedUser.setName("keyadmin");
+        requestedUser.setUserRoleList(Collections.singletonList(RangerConstants.ROLE_KEY_ADMIN));
+
+        Assertions.assertDoesNotThrow(() -> xUserMgr.checkAccess(requestedUser));
+    }
+
+    private void setupConfigSuperUserSession() {
+        RangerSecurityContext context = new RangerSecurityContext();
+        context.setUserSession(new UserSessionBase());
+        RangerContextHolder.setSecurityContext(context);
+
+        UserSessionBase currentUserSession = ContextUtil.getCurrentUserSession();
+        XXPortalUser    portalUser         = new XXPortalUser();
+        portalUser.setLoginId("config-admin");
+        portalUser.setId(1L);
+        currentUserSession.setXXPortalUser(portalUser);
+        currentUserSession.setSuperUser(true);
+    }
+
     private VXUser vxUser() {
         Collection<String> userRoleList = new ArrayList<>();
         userRoleList.add("ROLE_USER");
