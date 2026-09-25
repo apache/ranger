@@ -38,7 +38,7 @@ import static org.apache.ranger.authz.api.RangerAuthzApiErrorCode.INVALID_REQUES
 import static org.apache.ranger.authz.api.RangerAuthzApiErrorCode.INVALID_REQUEST_USER_INFO_MISSING;
 import static org.apache.ranger.authz.api.RangerAuthzApiErrorCode.INVALID_RESOURCE_TEMPLATE_EMPTY_VALUE;
 import static org.apache.ranger.authz.model.RangerResourceInfo.ResourceMatchScope.SELF;
-import static org.apache.ranger.authz.model.RangerResourceInfo.ResourceMatchScope.SELF_OR_ANY_CHILD;
+import static org.apache.ranger.authz.model.RangerResourceInfo.ResourceMatchScope.SELF_OR_ANY_DESCENDANT;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class TestAuthzApiErrorCode {
@@ -52,7 +52,7 @@ public class TestAuthzApiErrorCode {
         assertEquals("AUTHZ-400-00-004: missing access info", INVALID_REQUEST_ACCESS_INFO_MISSING.getFormattedMessage());
         assertEquals("AUTHZ-400-00-005: missing resource info", INVALID_REQUEST_RESOURCE_INFO_MISSING.getFormattedMessage());
         assertEquals("AUTHZ-400-00-006: missing resource name", INVALID_REQUEST_RESOURCE_NAME_MISSING.getFormattedMessage());
-        assertEquals("AUTHZ-400-00-007: invalid name match scope SELF_OR_ANY_CHILD. For resource with sub-resources, valid scopes are [SELF]", INVALID_REQUEST_NAME_MATCH_SCOPE_INVALID.getFormattedMessage(SELF_OR_ANY_CHILD, "resource with sub-resources", SELF));
+        assertEquals("AUTHZ-400-00-007: invalid name match scope SELF_OR_ANY_DESCENDANT. For resource with sub-resources, valid scopes are [SELF]", INVALID_REQUEST_NAME_MATCH_SCOPE_INVALID.getFormattedMessage(SELF_OR_ANY_DESCENDANT, "resource with sub-resources", SELF));
         assertEquals("AUTHZ-400-00-008: missing access context", INVALID_REQUEST_ACCESS_CONTEXT_MISSING.getFormattedMessage());
         assertEquals("AUTHZ-400-00-009: myresource: resource type not found", INVALID_REQUEST_RESOURCE_TYPE_NOT_FOUND.getFormattedMessage("myresource"));
         assertEquals("AUTHZ-400-00-010: mypath: invalid resource value for type path", INVALID_REQUEST_RESOURCE_VALUE_FOR_TYPE.getFormattedMessage("mypath", "path"));

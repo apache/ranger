@@ -21,6 +21,7 @@ package org.apache.ranger.audit.dispatcher.kafka;
 
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
+import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.clients.consumer.OffsetAndMetadata;
 import org.apache.kafka.common.TopicPartition;
 import org.apache.ranger.audit.destination.OpenSearchAuditDestination;
@@ -49,6 +50,11 @@ public class AuditOpenSearchDispatcher extends AuditDispatcherBase {
         this.openSearchAuditDestination = new OpenSearchAuditDestination();
 
         init(props, propPrefix);
+    }
+
+    AuditOpenSearchDispatcher(final OpenSearchAuditDestination destination, final String dispatcherGroupId, final KafkaConsumer<String, String> dispatcher, final String topicName) {
+        super(dispatcherGroupId, dispatcher, topicName);
+        this.openSearchAuditDestination = destination;
     }
 
     @Override

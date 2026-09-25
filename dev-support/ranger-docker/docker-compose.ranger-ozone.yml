@@ -7,14 +7,16 @@ services:
       - ./downloads/ozone-${OZONE_VERSION}:/opt/hadoop
       - ./dist/keytabs/datanode:/etc/keytabs
       - ./scripts/kdc/krb5.conf:/etc/krb5.conf:ro
+      - ./scripts/ozone/ozone-service-start.sh:/opt/ozone-service-start.sh:ro
     networks:
       - ranger
     ports:
       - 9864
     depends_on:
       ranger-kdc:
-        condition: service_started
-    command: bash -c "unset KERBEROS_ENABLED; sudo mkdir -p /data/hdds /data/metadata && sudo chown -R hadoop:hadoop /data && exec /opt/hadoop/bin/ozone datanode"
+        condition: service_healthy
+    restart: on-failure:3
+    command: bash -c "unset KERBEROS_ENABLED; export OZONE_KEYTAB_NAME=dn.keytab; bash /opt/ozone-service-start.sh bash -c 'sudo mkdir -p /data/hdds /data/metadata && sudo chown -R hadoop:hadoop /data && exec /opt/hadoop/bin/ozone datanode'"
     env_file:
       - ./scripts/ozone/docker-config
     environment:
@@ -36,6 +38,7 @@ services:
       - ./dist/ranger-${OZONE_PLUGIN_VERSION}-ozone-plugin:/opt/hadoop/ranger-ozone-plugin
       - ./dist/keytabs/om:/etc/keytabs
       - ./scripts/kdc/krb5.conf:/etc/krb5.conf:ro
+      - ./scripts/ozone/ozone-service-start.sh:/opt/ozone-service-start.sh:ro
     networks:
       - ranger
     ports:
@@ -43,7 +46,7 @@ services:
       - 9862:9862
     depends_on:
       ranger-kdc:
-        condition: service_started
+        condition: service_healthy
       scm:
         condition: service_started
       datanode:
@@ -58,8 +61,9 @@ services:
       RANGER_KERBEROS_ENABLED: ${KERBEROS_ENABLED}
     env_file:
       - ./scripts/ozone/docker-config
+    restart: on-failure:3
     # Do not pass KERBEROS_ENABLED: Ozone libexec/entrypoint.sh waits for krb5:8081.
-    command: bash -c "unset KERBEROS_ENABLED; source /opt/hadoop/ranger-ozone-plugin/ranger-ozone-setup.sh && (test -f /data/metadata/om/current/VERSION || /opt/hadoop/bin/ozone om --init) && exec /opt/hadoop/bin/ozone om"
+    command: bash -c "unset KERBEROS_ENABLED; export OZONE_KEYTAB_NAME=om.keytab; bash /opt/ozone-service-start.sh bash -c 'source /opt/hadoop/ranger-ozone-plugin/ranger-ozone-setup.sh && (test -f /data/metadata/om/current/VERSION || /opt/hadoop/bin/ozone om --init) && exec /opt/hadoop/bin/ozone om'"
   scm:
     image: ${OZONE_RUNNER_IMAGE}:${OZONE_RUNNER_VERSION}
     container_name: ozone-scm
@@ -68,6 +72,7 @@ services:
       - ./downloads/ozone-${OZONE_VERSION}:/opt/hadoop
       - ./dist/keytabs/scm:/etc/keytabs
       - ./scripts/kdc/krb5.conf:/etc/krb5.conf:ro
+      - ./scripts/ozone/ozone-service-start.sh:/opt/ozone-service-start.sh:ro
     networks:
       - ranger
     ports:
@@ -75,13 +80,14 @@ services:
       - 9860:9860
     depends_on:
       ranger-kdc:
-        condition: service_started
+        condition: service_healthy
     env_file:
       - ./scripts/ozone/docker-config
     environment:
       RANGER_KERBEROS_ENABLED: ${KERBEROS_ENABLED}
       OZONE-SITE.XML_hdds.scm.safemode.min.datanode: "${OZONE_SAFEMODE_MIN_DATANODES:-1}"
-    command: bash -c "unset KERBEROS_ENABLED; (test -f /data/metadata/scm/current/VERSION || /opt/hadoop/bin/ozone scm --init) && exec /opt/hadoop/bin/ozone scm"
+    restart: on-failure:3
+    command: bash -c "unset KERBEROS_ENABLED; export OZONE_KEYTAB_NAME=scm.keytab; bash /opt/ozone-service-start.sh bash -c '(test -f /data/metadata/scm/current/VERSION || /opt/hadoop/bin/ozone scm --init) && exec /opt/hadoop/bin/ozone scm'"
 
 networks:
   ranger:

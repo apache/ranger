@@ -149,6 +149,23 @@ class MysqlConf(BaseDB):
 		self.javax_net_ssl_keyStorePassword=javax_net_ssl_keyStorePassword
 		self.javax_net_ssl_trustStore=javax_net_ssl_trustStore
 		self.javax_net_ssl_trustStorePassword=javax_net_ssl_trustStorePassword
+		self.is_mariadb = None
+
+	def detect_server_type(self, get_cmd, db_root_password):
+		if self.is_mariadb is not None:
+			return self.is_mariadb
+		if is_unix:
+			query = get_cmd + " -query \"SELECT version();\""
+		elif os_name == "WINDOWS":
+			query = get_cmd + " -query \"SELECT version();\" -c ;"
+		jisql_log(query, db_root_password)
+		output = check_output(query).lower()
+		self.is_mariadb = "mariadb" in output
+		if self.is_mariadb:
+			log("[I] Detected MariaDB server", "info")
+		else:
+			log("[I] Detected MySQL-compatible server (non-MariaDB)", "info")
+		return self.is_mariadb
 
 	def get_jisql_cmd(self, user, password ,db_name):
 		#TODO: User array for forming command
@@ -171,6 +188,14 @@ class MysqlConf(BaseDB):
 			self.JAVA_BIN = self.JAVA_BIN.strip("'")
 			jisql_cmd = "%s %s -cp %s;%s\\jisql\\lib\\* org.apache.util.sql.Jisql -driver mysqlconj -cstring jdbc:mysql://%s/%s%s -u %s -p \"%s\" -noheader -trim" %(self.JAVA_BIN,db_ssl_cert_param,self.SQL_CONNECTOR_JAR, path, self.host, db_name,db_ssl_param, user, password)
 		return jisql_cmd
+
+	def user_hosts(self):
+		if self.host == "localhost":
+			return ["%", "localhost"]
+		if self.is_mariadb is True:
+			# Grant db_host before FLUSH from wildcard/localhost grants (MariaDB docker init issue).
+			return [self.host, "%", "localhost"]
+		return ["%", "localhost", self.host]
 
 	def verify_user(self, root_user, db_root_password, host, db_user, get_cmd,dryMode):
 		if dryMode == False:
@@ -195,8 +220,9 @@ class MysqlConf(BaseDB):
 			query = get_cmd + " -query \"SELECT version();\" -c ;"
 		jisql_log(query, db_password)
 		output = check_output(query)
-		if output.strip('Production  |'):
-			#log("[I] Checking connection passed.", "info")
+		if output.strip('Production  |') or output.strip():
+			if self.is_mariadb is None:
+				self.is_mariadb = "mariadb" in output.lower()
 			return True
 		else:
 			log("[E] Can't establish db connection.. Exiting.." ,"error")
@@ -204,8 +230,7 @@ class MysqlConf(BaseDB):
 
 	def create_rangerdb_user(self, root_user, db_user, db_password, db_root_password,dryMode):
 		if self.check_connection('mysql', root_user, db_root_password):
-			hosts_arr =["%", "localhost"]
-			hosts_arr.append(self.host)
+			hosts_arr = self.user_hosts()
 			for host in hosts_arr:
 				get_cmd = self.get_jisql_cmd(root_user, db_root_password, 'mysql')
 				if self.verify_user(root_user, db_root_password, host, db_user, get_cmd,dryMode):
@@ -303,12 +328,13 @@ class MysqlConf(BaseDB):
 				logFile("create database %s;" %(db_name))
 
 	def grant_xa_db_user(self, root_user, db_name, db_user, db_password, db_root_password, is_revoke,dryMode):
-		hosts_arr =["%", "localhost"]
-		hosts_arr.append(self.host)
+		hosts_arr = self.user_hosts()
+		get_cmd = self.get_jisql_cmd(root_user, db_root_password, 'mysql')
+		if dryMode == False:
+			self.detect_server_type(get_cmd, db_root_password)
 		for host in hosts_arr:
 			if dryMode == False:
 				log("[I] ---------- Granting privileges TO user '"+db_user+"'@'"+host+"' on db '"+db_name+"'----------" , "info")
-				get_cmd = self.get_jisql_cmd(root_user, db_root_password, 'mysql')
 				if is_unix:
 					query = get_cmd + " -query \"grant all privileges on %s.* to '%s'@'%s' with grant option;\"" %(db_name,db_user, host)
 					jisql_log(query, db_root_password)
@@ -317,16 +343,52 @@ class MysqlConf(BaseDB):
 					query = get_cmd + " -query \"grant all privileges on %s.* to '%s'@'%s' with grant option;\" -c ;" %(db_name,db_user, host)
 					jisql_log(query, db_root_password)
 					ret = subprocess.call(query)
-				if ret == 0:
-					log("[I] ---------- FLUSH PRIVILEGES ----------" , "info")
+				if ret != 0 and self.is_mariadb is True:
+					log("[I] Grant failed for '" + db_user + "'@'" + host + "', recreating user and retrying", "info")
 					if is_unix:
-						query = get_cmd + " -query \"FLUSH PRIVILEGES;\""
-						jisql_log(query, db_root_password)
-						ret = subprocess.call(shlex.split(query))
+						drop_query = get_cmd + " -query \"drop user if exists '%s'@'%s';\"" %(db_user, host)
+						jisql_log(drop_query, db_root_password)
+						subprocess.call(shlex.split(drop_query))
+						if db_password == "":
+							create_query = get_cmd + " -query \"create user '%s'@'%s';\"" %(db_user, host)
+							jisql_log(create_query, db_root_password)
+							ret = subprocess.call(shlex.split(create_query))
+						else:
+							create_query = get_cmd + " -query \"create user '%s'@'%s' identified by '%s';\"" %(db_user, host, db_password)
+							create_query_with_masked_pwd = get_cmd + " -query \"create user '%s'@'%s' identified by '%s';\"" %(db_user, host, masked_pwd_string)
+							jisql_log(create_query_with_masked_pwd, db_root_password)
+							ret = subprocess.call(shlex.split(create_query))
 					elif os_name == "WINDOWS":
-						query = get_cmd + " -query \"FLUSH PRIVILEGES;\" -c ;"
-						jisql_log(query, db_root_password)
-						ret = subprocess.call(query)
+						drop_query = get_cmd + " -query \"drop user if exists '%s'@'%s';\" -c ;" %(db_user, host)
+						jisql_log(drop_query, db_root_password)
+						subprocess.call(drop_query)
+						if db_password == "":
+							create_query = get_cmd + " -query \"create user '%s'@'%s';\" -c ;" %(db_user, host)
+							jisql_log(create_query, db_root_password)
+							ret = subprocess.call(create_query)
+						else:
+							create_query = get_cmd + " -query \"create user '%s'@'%s' identified by '%s';\" -c ;" %(db_user, host, db_password)
+							create_query_with_masked_pwd = get_cmd + " -query \"create user '%s'@'%s' identified by '%s';\" -c ;" %(db_user, host, masked_pwd_string)
+							jisql_log(create_query_with_masked_pwd, db_root_password)
+							ret = subprocess.call(create_query)
+					if ret == 0 and self.verify_user(root_user, db_root_password, host, db_user, get_cmd, dryMode):
+						if is_unix:
+							ret = subprocess.call(shlex.split(query))
+						elif os_name == "WINDOWS":
+							ret = subprocess.call(query)
+					else:
+						ret = 1
+				if ret == 0:
+					if self.is_mariadb is not True:
+						log("[I] ---------- FLUSH PRIVILEGES ----------" , "info")
+						if is_unix:
+							query = get_cmd + " -query \"FLUSH PRIVILEGES;\""
+							jisql_log(query, db_root_password)
+							ret = subprocess.call(shlex.split(query))
+						elif os_name == "WINDOWS":
+							query = get_cmd + " -query \"FLUSH PRIVILEGES;\" -c ;"
+							jisql_log(query, db_root_password)
+							ret = subprocess.call(query)
 					if ret == 0:
 						log("[I] Privileges granted to '" + db_user + "' on '"+db_name+"'", "info")
 					else:
@@ -337,11 +399,23 @@ class MysqlConf(BaseDB):
 					sys.exit(1)
 			else:
 				logFile("grant all privileges on %s.* to '%s'@'%s' with grant option;" %(db_name,db_user, host))
+		if dryMode == False and self.is_mariadb is True:
+			log("[I] ---------- FLUSH PRIVILEGES ----------" , "info")
+			if is_unix:
+				query = get_cmd + " -query \"FLUSH PRIVILEGES;\""
+				jisql_log(query, db_root_password)
+				ret = subprocess.call(shlex.split(query))
+			elif os_name == "WINDOWS":
+				query = get_cmd + " -query \"FLUSH PRIVILEGES;\" -c ;"
+				jisql_log(query, db_root_password)
+				ret = subprocess.call(query)
+			if ret != 0:
+				log("[E] Granting privileges to '" +db_user+"' failed on '"+db_name+"'", "error")
+				sys.exit(1)
 
 	def writeDrymodeCmd(self, xa_db_root_user, xa_db_root_password, db_user, db_password, db_name):
 		logFile("# Login to MySQL Server from a MySQL dba user(i.e 'root') to execute below sql statements.")
-		hosts_arr =["%", "localhost"]
-		if not self.host == "localhost": hosts_arr.append(self.host)
+		hosts_arr = self.user_hosts()
 		for host in hosts_arr:
 			logFile("create user '%s'@'%s' identified by '%s';" %(db_user, host, db_password))
 		logFile("create database %s;"%(db_name))

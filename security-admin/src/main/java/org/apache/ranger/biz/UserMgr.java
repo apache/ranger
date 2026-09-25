@@ -293,11 +293,11 @@ public class UserMgr {
         List<String> stringRolesList = new ArrayList<>();
 
         for (String userRole : rolesList) {
-            if (!VALID_ROLE_LIST.contains(userRole.toUpperCase())) {
+            if (userRole == null || !VALID_ROLE_LIST.contains(userRole.trim().toUpperCase())) {
                 throw restErrorUtil.createRESTException("Invalid user role, please provide valid user role.", MessageEnums.INVALID_INPUT_DATA);
             }
 
-            stringRolesList.add(userRole);
+            stringRolesList.add(userRole.trim().toUpperCase());
         }
 
         xUserMgr.checkAccessRoles(stringRolesList);
@@ -1175,6 +1175,14 @@ public class UserMgr {
         }
 
         return roleList;
+    }
+
+    public boolean isUserNotActive(String loginId) {
+        if (loginId == null || loginId.trim().isEmpty()) {
+            return false;
+        }
+        XXPortalUser xXPortalUser = daoManager.getXXPortalUser().findByLoginId(loginId);
+        return xXPortalUser != null && xXPortalUser.getStatus() != RangerCommonEnums.ACT_STATUS_ACTIVE;
     }
 
     @Transactional(readOnly = false, propagation = Propagation.REQUIRED)

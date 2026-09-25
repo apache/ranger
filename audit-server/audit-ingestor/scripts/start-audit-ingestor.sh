@@ -62,7 +62,10 @@ export PATH=$JAVA_HOME/bin:$PATH
 echo "[INFO] Java version:"
 java -version
 
-# Set heap size (default: 512MB to 2GB)
+# Set heap size (default: 512MB to 2GB; override with RANGER_AUDIT_INGESTOR_MAX_HEAP, e.g. 256m)
+if [ -n "${RANGER_AUDIT_INGESTOR_MAX_HEAP}" ]; then
+  AUDIT_SERVER_HEAP="-Xms${RANGER_AUDIT_INGESTOR_MAX_HEAP} -Xmx${RANGER_AUDIT_INGESTOR_MAX_HEAP}"
+fi
 AUDIT_SERVER_HEAP="${AUDIT_SERVER_HEAP:--Xms512m -Xmx2g}"
 
 # Set JVM options

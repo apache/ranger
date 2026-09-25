@@ -22,6 +22,8 @@ services:
     tty: true
     networks:
       - ranger
+    ports:
+      - "8280:8280"
     depends_on:
       ranger:
         condition: service_started
@@ -31,6 +33,9 @@ services:
       - DEBUG_USERSYNC=${DEBUG_USERSYNC:-false}
       - KERBEROS_ENABLED
       - JAVA_OPTS
+      - RANGER_USERSYNC_MAX_HEAP
+      - RANGER_JVM_METASPACE
+      - RANGER_JVM_MAX_METASPACE
 
 networks:
   ranger:

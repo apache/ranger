@@ -24,14 +24,13 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.ranger.plugin.client.BaseClient;
 import org.apache.ranger.plugin.service.ResourceLookupContext;
+import org.apache.ranger.plugin.util.RangerDefaultHostnameVerifier;
 import org.apache.ranger.plugin.util.RangerJersey2ClientBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLPeerUnverifiedException;
-import javax.net.ssl.SSLSession;
 import javax.ws.rs.ProcessingException;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.client.Client;
@@ -40,11 +39,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import java.io.InputStream;
-import java.security.cert.Certificate;
-import java.security.cert.CertificateParsingException;
-import java.security.cert.X509Certificate;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
@@ -67,7 +62,7 @@ public class NiFiClient {
     public NiFiClient(final String url, final SSLContext sslContext) {
         this.url              = url;
         this.sslContext       = sslContext;
-        this.hostnameVerifier = new NiFiHostnameVerifier();
+        this.hostnameVerifier = new RangerDefaultHostnameVerifier();
         this.client           = buildClient();
     }
 
@@ -174,52 +169,5 @@ public class NiFiClient {
 
     protected Response getResponse(WebTarget webTarget, String accept) {
         return webTarget.request(accept).get();
-    }
-
-    /**
-     * Custom hostname verifier that checks subject alternative names against the hostname of the URI.
-     */
-    private static class NiFiHostnameVerifier implements HostnameVerifier {
-        @Override
-        public boolean verify(final String hostname, final SSLSession ssls) {
-            try {
-                Certificate[] certificates = ssls.getPeerCertificates();
-                if (certificates == null || certificates.length == 0) {
-                    return false;
-                }
-                // verify hostname against server certificate[0]
-                if (certificates[0] instanceof X509Certificate) {
-                    final X509Certificate x509Cert = (X509Certificate) certificates[0];
-                    final List<String> subjectAltNames = getSubjectAlternativeNames(x509Cert);
-                    return subjectAltNames.contains(hostname.toLowerCase());
-                }
-            } catch (final SSLPeerUnverifiedException | CertificateParsingException ex) {
-                LOG.warn("Hostname Verification encountered exception verifying hostname due to: {}", ex, ex);
-            }
-
-            return false;
-        }
-
-        private List<String> getSubjectAlternativeNames(final X509Certificate certificate) throws CertificateParsingException {
-            final Collection<List<?>> altNames = certificate.getSubjectAlternativeNames();
-            if (altNames == null) {
-                return new ArrayList<>();
-            }
-
-            final List<String> result = new ArrayList<>();
-            for (final List<?> generalName : altNames) {
-                /**
-                 * generalName has the name type as the first element a String or byte array for the second element. We return any general names that are String types.
-                 * We don't inspect the numeric name type because some certificates incorrectly put IPs and DNS names under the wrong name types.
-                 */
-                if (generalName.size() > 1) {
-                    final Object value = generalName.get(1);
-                    if (value instanceof String) {
-                        result.add(((String) value).toLowerCase());
-                    }
-                }
-            }
-            return result;
-        }
     }
 }

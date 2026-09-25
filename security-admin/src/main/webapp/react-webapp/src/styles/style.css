@@ -1996,6 +1996,13 @@ tbody.drag-drop-wrap > tr > td:hover:first-child:after {
   width: 6px;
 }
 
+.btn-default-selected {
+  color: #0b7fad;
+  border-color: #0b7fad;
+  background-color: #fff;
+  outline: none;
+}
+
 /* SideBar */
 .wrapper {
   display: flex;

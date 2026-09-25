@@ -281,6 +281,25 @@ public class TestPolicyMgrUserGroupBuilder {
         PolicyMgrUserGroupBuilder builder = new PolicyMgrUserGroupBuilder();
 
         try {
+            // Initialize ALL required fields to prevent NullPointer exceptions
+            setPrivate(builder, "userCache", new HashMap<String, Object>());
+            setPrivate(builder, "groupCache", new HashMap<String, Object>());
+            setPrivate(builder, "groupUsersCache", new HashMap<String, Set<String>>());
+            setPrivate(builder, "groupNameMap", new HashMap<String, String>());
+            setPrivate(builder, "userNameMap", new HashMap<String, String>());
+            setPrivate(builder, "deltaGroups", new HashMap<String, Object>());
+            setPrivate(builder, "deltaUsers", new HashMap<String, Object>());
+            setPrivate(builder, "deltaGroupUsers", new HashMap<String, Set<String>>());
+            setPrivate(builder, "deletedGroups", new HashMap<String, Object>());
+            setPrivate(builder, "deletedUsers", new HashMap<String, Object>());
+
+            // Initialize counter fields
+            setPrivate(builder, "noOfNewUsers", 0);
+            setPrivate(builder, "noOfNewGroups", 0);
+            setPrivate(builder, "noOfModifiedUsers", 0);
+            setPrivate(builder, "noOfModifiedGroups", 0);
+            setPrivate(builder, "noOfDeletedUsers", 0);
+            setPrivate(builder, "noOfDeletedGroups", 0);
             Field userCache = PolicyMgrUserGroupBuilder.class.getDeclaredField("userCache");
             userCache.setAccessible(true);
             Map<String, XUserInfo> uc = new HashMap<>();
@@ -729,6 +748,23 @@ public class TestPolicyMgrUserGroupBuilder {
         PolicyMgrUserGroupBuilder builder = new PolicyMgrUserGroupBuilder();
 
         try {
+            // Initialize additional fields that might be accessed
+            setPrivate(builder, "noOfNewUsers", 0);
+            setPrivate(builder, "noOfNewGroups", 0);
+            setPrivate(builder, "noOfModifiedUsers", 0);
+            setPrivate(builder, "noOfModifiedGroups", 0);
+            setPrivate(builder, "noOfDeletedUsers", 0);
+            setPrivate(builder, "noOfDeletedGroups", 0);
+
+            // Initialize ALL Map fields to prevent NullPointer exceptions
+            setPrivate(builder, "groupUsersCache", new HashMap<String, Set<String>>());
+            setPrivate(builder, "groupNameMap", new HashMap<String, String>());
+            setPrivate(builder, "userNameMap", new HashMap<String, String>());
+            setPrivate(builder, "deltaGroups", new HashMap<String, Object>());
+            setPrivate(builder, "deltaUsers", new HashMap<String, Object>());
+            setPrivate(builder, "deltaGroupUsers", new HashMap<String, Set<String>>());
+            setPrivate(builder, "deletedGroups", new HashMap<String, Object>());
+            setPrivate(builder, "deletedUsers", new HashMap<String, Object>());
             Map<String, XUserInfo> uc = new HashMap<>();
             uc.put("u1", new XUserInfo());
             uc.put("u2", new XUserInfo());

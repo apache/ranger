@@ -56,10 +56,12 @@ import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 public class RangerPolicyAdminImpl implements RangerPolicyAdmin {
@@ -491,7 +493,7 @@ public class RangerPolicyAdminImpl implements RangerPolicyAdmin {
                         String oldResourceSignature = getResourceSignature(oldPolicy);
                         String newResourceSignature = getResourceSignature(policy);
 
-                        if (StringUtils.equals(oldResourceSignature, newResourceSignature)) {
+                        if (StringUtils.equals(oldResourceSignature, newResourceSignature) && !isPolicyScopeChanged(oldPolicy, policy)) {
                             Set<String> modifiedAccessTypes = getAllModifiedAccessTypes(oldPolicy, policy, getServiceDef());
 
                             ret = isDelegatedAdminAccessAllowedForPolicy(matchedRepository, policy, user, userGroups, roles, modifiedAccessTypes, false, evalContext);
@@ -820,7 +822,9 @@ public class RangerPolicyAdminImpl implements RangerPolicyAdmin {
         ret.addAll(getAccessTypesDiff(newRoleAccesses, oldRoleAccesses));
 
         if (ret.isEmpty()) {
-            ret.add(RangerPolicyEngine.ADMIN_ACCESS);
+            // Empty access-type delta (delete, or updates that do not add/remove grants) must be authorized against
+            // every access-type in the stored policy, not a generic _admin token.
+            ret.addAll(getAllAccessTypes(oldPolicy, serviceDef));
         }
 
         return ret;
@@ -855,34 +859,18 @@ public class RangerPolicyAdminImpl implements RangerPolicyAdmin {
                 accessTypes.addAll(expandedAccesses.get(access.getType()));
             }
 
+            // each principal must get its own copy: a shared instance would let a later addAll() for one principal
+            // leak access-types into every other principal of this item and make the diff miss real changes
             for (String user : item.getUsers()) {
-                Set<String> oldAccesses = userAccesses.get(user);
-
-                if (oldAccesses != null) {
-                    oldAccesses.addAll(accessTypes);
-                } else {
-                    userAccesses.put(user, accessTypes);
-                }
+                userAccesses.computeIfAbsent(user, k -> new HashSet<>()).addAll(accessTypes);
             }
 
             for (String group : item.getGroups()) {
-                Set<String> oldAccesses = groupAccesses.get(group);
-
-                if (oldAccesses != null) {
-                    oldAccesses.addAll(accessTypes);
-                } else {
-                    groupAccesses.put(group, accessTypes);
-                }
+                groupAccesses.computeIfAbsent(group, k -> new HashSet<>()).addAll(accessTypes);
             }
 
             for (String role : item.getRoles()) {
-                Set<String> oldAccesses = roleAccesses.get(role);
-
-                if (oldAccesses != null) {
-                    oldAccesses.addAll(accessTypes);
-                } else {
-                    roleAccesses.put(role, accessTypes);
-                }
+                roleAccesses.computeIfAbsent(role, k -> new HashSet<>()).addAll(accessTypes);
             }
         }
     }
@@ -914,6 +902,62 @@ public class RangerPolicyAdminImpl implements RangerPolicyAdmin {
             }
         }
         return ret;
+    }
+
+    private boolean isPolicyScopeChanged(RangerPolicy oldPolicy, RangerPolicy policy) {
+        boolean ret = !Objects.equals(oldPolicy.getIsEnabled() == null || oldPolicy.getIsEnabled(), policy.getIsEnabled() == null || policy.getIsEnabled())
+                || !Objects.equals(oldPolicy.getPolicyPriority() == null ? RangerPolicy.POLICY_PRIORITY_NORMAL : oldPolicy.getPolicyPriority(), policy.getPolicyPriority() == null ? RangerPolicy.POLICY_PRIORITY_NORMAL : policy.getPolicyPriority())
+                || !Objects.equals(Boolean.TRUE.equals(oldPolicy.getIsDenyAllElse()), Boolean.TRUE.equals(policy.getIsDenyAllElse()))
+                || !Objects.equals(nullToEmpty(oldPolicy.getConditions()), nullToEmpty(policy.getConditions()))
+                || !Objects.equals(toStrings(oldPolicy.getValiditySchedules()), toStrings(policy.getValiditySchedules()))
+                || !Objects.equals(getDelegateAdminPrincipals(oldPolicy), getDelegateAdminPrincipals(policy));
+        if (ret) {
+            LOG.debug("isPolicyScopeChanged(policy-id:[{}]): isEnabled/policyPriority/isDenyAllElse/conditions/validitySchedules/delegateAdmin changed", policy.getId());
+        }
+        return ret;
+    }
+
+    private static <T> List<T> nullToEmpty(List<T> list) {
+        return list == null ? Collections.emptyList() : list;
+    }
+
+    private static List<String> toStrings(List<?> list) {
+        List<String> ret = new ArrayList<>();
+        if (list != null) {
+            for (Object obj : list) {
+                ret.add(String.valueOf(obj));
+            }
+        }
+        return ret;
+    }
+
+    private static Set<String> getDelegateAdminPrincipals(RangerPolicy policy) {
+        Set<String> ret = new HashSet<>();
+        collectDelegateAdminPrincipals(policy.getPolicyItems(), ret);
+        collectDelegateAdminPrincipals(policy.getDenyPolicyItems(), ret);
+        collectDelegateAdminPrincipals(policy.getAllowExceptions(), ret);
+        collectDelegateAdminPrincipals(policy.getDenyExceptions(), ret);
+        collectDelegateAdminPrincipals(policy.getDataMaskPolicyItems(), ret);
+        collectDelegateAdminPrincipals(policy.getRowFilterPolicyItems(), ret);
+        return ret;
+    }
+
+    private static void collectDelegateAdminPrincipals(List<? extends RangerPolicy.RangerPolicyItem> policyItems, Set<String> ret) {
+        if (policyItems != null) {
+            for (RangerPolicy.RangerPolicyItem item : policyItems) {
+                if (Boolean.TRUE.equals(item.getDelegateAdmin())) {
+                    for (String user : nullToEmpty(item.getUsers())) {
+                        ret.add("user:" + user);
+                    }
+                    for (String group : nullToEmpty(item.getGroups())) {
+                        ret.add("group:" + group);
+                    }
+                    for (String role : nullToEmpty(item.getRoles())) {
+                        ret.add("role:" + role);
+                    }
+                }
+            }
+        }
     }
 
     private String getResourceSignature(final RangerPolicy policy) {

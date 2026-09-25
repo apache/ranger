@@ -57,6 +57,7 @@ public class RangerMetricsFetcher {
 
     private final HashMap<String, Long> summaryReusable = new HashMap<>();
     private final HashMap<Integer, Long> summaryPolicy  = new HashMap<>();
+    private final Map<Integer, Long> summaryTagPolicy   = new HashMap<>();
 
     public Long getGroupCount() {
         Long totalGroupCount = groupService.getAllGroupCount();
@@ -121,6 +122,7 @@ public class RangerMetricsFetcher {
 
         Map<String, Long> ret   = new HashMap<>();
         long              total = 0L;
+        long              totalTagPolicies = 0L;
 
         for (Map.Entry<String, Long> entry : svcStore.getPolicyCountByTypeAndServiceType(policyType).entrySet()) {
             ret.put(entry.getKey(), entry.getValue());
@@ -128,12 +130,13 @@ public class RangerMetricsFetcher {
             total += entry.getValue();
 
             if ("tag".equalsIgnoreCase(entry.getKey())) {
-                summaryReusable.put("TotalTags", entry.getValue());
+                totalTagPolicies += entry.getValue().longValue();
             }
         }
 
         ret.put("Total", total);
         summaryPolicy.put(policyType, total);
+        summaryTagPolicy.put(policyType, totalTagPolicies);
 
         return ret;
     }
@@ -174,6 +177,9 @@ public class RangerMetricsFetcher {
         //policies
         ret.put("TotalPolicies", summaryPolicy.values().stream().mapToLong(Long::longValue).sum());
 
+        //tag_policies
+        ret.put("TotalTagPolicies", summaryTagPolicy.values().stream().mapToLong(Long::longValue).sum());
+
         //roles
         ret.put("TotalRoles", daoMgr.getXXRole().getAllCount());
 
@@ -191,6 +197,9 @@ public class RangerMetricsFetcher {
 
         //x_policy_export_audit
         ret.put("TotalPluginDownloads", daoMgr.getXXPolicyExportAudit().getAllCount());
+
+        //x_tag
+        ret.put("TotalTags", daoMgr.getXXTag().getAllCount());
 
         return ret;
     }

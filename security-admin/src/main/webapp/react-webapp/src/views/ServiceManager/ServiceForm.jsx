@@ -63,7 +63,8 @@ import {
   cloneDeep,
   intersection,
   join,
-  sortBy
+  sortBy,
+  includes
 } from "lodash";
 import withRouter from "Hooks/withRouter";
 import { RangerPolicyType } from "Utils/XAEnums";
@@ -402,7 +403,13 @@ class ServiceForm extends Component {
 
     serviceJson["configs"] = {};
 
-    let serviceDefConfigs = map(this.state?.serviceDef?.configs, "name");
+    const excludedServiceConfig = map(additionalServiceConfigs, "name");
+    let serviceDefConfigs = map(
+      reject(this.state?.serviceDef?.configs, (config) =>
+        includes(excludedServiceConfig, config.name)
+      ),
+      "name"
+    );
     let serviceCustomConfigs = without(
       difference(keys(serviceResp?.data?.configs), serviceDefConfigs),
       "ranger.plugin.audit.filters"
@@ -726,9 +733,13 @@ class ServiceForm extends Component {
   getServiceConfigs = (serviceDef) => {
     if (serviceDef?.configs !== undefined) {
       let formField = [];
-      const filterServiceConfigs = reject(serviceDef.configs, {
-        name: "ranger.plugin.audit.filters"
-      });
+      const configNamesToExclude = [
+        "ranger.plugin.audit.filters",
+        ...map(additionalServiceConfigs, "name")
+      ];
+      const filterServiceConfigs = reject(serviceDef.configs, (config) =>
+        includes(configNamesToExclude, config.name)
+      );
       filterServiceConfigs.map((configParam) => {
         this.configsJson[configParam.name] = configParam.name
           .replaceAll(".", "_")

@@ -50,6 +50,7 @@ import org.apache.ranger.db.XXResourceDao;
 import org.apache.ranger.db.XXUserDao;
 import org.apache.ranger.db.XXUserPermissionDao;
 import org.apache.ranger.entity.XXAuditMap;
+import org.apache.ranger.entity.XXAuthSession;
 import org.apache.ranger.entity.XXGroup;
 import org.apache.ranger.entity.XXGroupPermission;
 import org.apache.ranger.entity.XXGroupUser;
@@ -79,6 +80,10 @@ import org.apache.ranger.plugin.model.UserInfo;
 import org.apache.ranger.plugin.store.EmbeddedServiceDefsUtil;
 import org.apache.ranger.plugin.util.PasswordUtils.PasswordGenerator;
 import org.apache.ranger.plugin.util.RangerUserStore;
+import org.apache.ranger.security.context.RangerContextHolder;
+import org.apache.ranger.security.context.RangerSecurityContext;
+import org.apache.ranger.security.web.filter.RangerAuthenticationToken;
+import org.apache.ranger.security.web.filter.RangerHeaderPreAuthFilter;
 import org.apache.ranger.service.RangerPolicyService;
 import org.apache.ranger.service.XPortalUserService;
 import org.apache.ranger.service.XResourceService;
@@ -110,6 +115,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.TransactionDefinition;
@@ -1189,6 +1197,7 @@ public class XUserMgr extends XUserMgrBase {
         vXUser.setPassword(hiddenPasswordString);
 
         Long             userId             = vXUser.getId();
+        validateGroupMembershipChangeAccess(userId, groupIdList);
         List<Long>       groupUsersToRemove = new ArrayList<>();
         List<XXTrxLogV2> groupUserTrxLogs   = createOrDelGrpUserWithUpdatedGrpId(vXUser, groupIdList, userId, groupUsersToRemove);
 
@@ -2268,9 +2277,9 @@ public class XUserMgr extends XUserMgrBase {
                 throw restErrorUtil.create403RESTException("Permission denied. LoggedInUser=" + session.getXXPortalUser().getId() + " ,isn't permitted to perform the action.");
             } else {
                 if (!"rangerusersync".equals(session.getXXPortalUser().getLoginId())) { // new logic for rangerusersync user
-                    if (session.isUserAdmin() && (stringRolesList.contains(RangerConstants.ROLE_KEY_ADMIN) || stringRolesList.contains(RangerConstants.ROLE_KEY_ADMIN_AUDITOR))) {
+                    if (session.isUserAdmin() && (StringUtil.containsIgnoreCase(stringRolesList, RangerConstants.ROLE_KEY_ADMIN) || StringUtil.containsIgnoreCase(stringRolesList, RangerConstants.ROLE_KEY_ADMIN_AUDITOR))) {
                         throw restErrorUtil.create403RESTException("Permission denied. LoggedInUser=" + session.getXXPortalUser().getId() + " isn't permitted to perform the action.");
-                    } else if (session.isKeyAdmin() && (stringRolesList.contains(RangerConstants.ROLE_SYS_ADMIN) || stringRolesList.contains(RangerConstants.ROLE_ADMIN_AUDITOR))) {
+                    } else if (session.isKeyAdmin() && (StringUtil.containsIgnoreCase(stringRolesList, RangerConstants.ROLE_SYS_ADMIN) || StringUtil.containsIgnoreCase(stringRolesList, RangerConstants.ROLE_ADMIN_AUDITOR))) {
                         throw restErrorUtil.create403RESTException("Permission denied. LoggedInUser=" + session.getXXPortalUser().getId() + " isn't permitted to perform the action.");
                     }
                 }
@@ -3193,6 +3202,26 @@ public class XUserMgr extends XUserMgrBase {
         }
     }
 
+    private void validateGroupMembershipChangeAccess(Long userId, Collection<Long> groupIdList) {
+        if (groupIdList == null || userId == null) {
+            return;
+        }
+        UserSessionBase session = ContextUtil.getCurrentUserSession();
+        if (session == null || session.isUserAdmin()) {
+            return;
+        }
+        List<Long> existingGroupIds = daoManager.getXXGroupUser().findGroupIdListByUserId(userId);
+        Set<Long> requestedGroupIds = new HashSet<>(groupIdList);
+        Set<Long> currentGroupIds     = new HashSet<>();
+        if (CollectionUtils.isNotEmpty(existingGroupIds)) {
+            currentGroupIds.addAll(existingGroupIds);
+        }
+        if (!requestedGroupIds.equals(currentGroupIds)) {
+            throw restErrorUtil.create403RESTException(
+                    "Logged-in user is not permitted to modify group membership.");
+        }
+    }
+
     private List<XXTrxLogV2> createOrDelGrpUserWithUpdatedGrpId(VXUser vXUser, Collection<Long> groupIdList, Long userId, List<Long> groupUsersToRemove) {
         Collection<String> groupNamesSet = new HashSet<>();
         List<XXTrxLogV2>   trxLogList    = new ArrayList<>();
@@ -3300,15 +3329,15 @@ public class XUserMgr extends XUserMgrBase {
             VXUser loggedInVXUser = xUserService.getXUserByUserName(userSession.getLoginId());
 
             if (requestedVXUser != null && CollectionUtils.isNotEmpty(requestedVXUser.getUserRoleList()) && loggedInVXUser != null && loggedInVXUser.getUserRoleList().size() == 1) {
-                if (loggedInVXUser.getUserRoleList().contains(RangerConstants.ROLE_USER)) {
+                if (StringUtil.containsIgnoreCase(loggedInVXUser.getUserRoleList(), RangerConstants.ROLE_USER)) {
                     return requestedVXUser.getId().equals(loggedInVXUser.getId());
-                } else if (loggedInVXUser.getUserRoleList().contains(RangerConstants.ROLE_KEY_ADMIN) || loggedInVXUser.getUserRoleList().contains(RangerConstants.ROLE_KEY_ADMIN_AUDITOR)) {
-                    return requestedVXUser.getUserRoleList().contains(RangerConstants.ROLE_KEY_ADMIN) || requestedVXUser.getUserRoleList().contains(RangerConstants.ROLE_KEY_ADMIN_AUDITOR) || requestedVXUser.getUserRoleList().contains(RangerConstants.ROLE_USER);
-                } else if (loggedInVXUser.getUserRoleList().contains(RangerConstants.ROLE_SYS_ADMIN) || loggedInVXUser.getUserRoleList().contains(RangerConstants.ROLE_ADMIN_AUDITOR)) {
-                    if (loggedInVXUser.getUserRoleList().contains(RangerConstants.ROLE_SYS_ADMIN) && "rangerusersync".equalsIgnoreCase(userSession.getLoginId())) {
+                } else if (StringUtil.containsIgnoreCase(loggedInVXUser.getUserRoleList(), RangerConstants.ROLE_KEY_ADMIN) || StringUtil.containsIgnoreCase(loggedInVXUser.getUserRoleList(), RangerConstants.ROLE_KEY_ADMIN_AUDITOR)) {
+                    return StringUtil.containsIgnoreCase(requestedVXUser.getUserRoleList(), RangerConstants.ROLE_KEY_ADMIN) || StringUtil.containsIgnoreCase(requestedVXUser.getUserRoleList(), RangerConstants.ROLE_KEY_ADMIN_AUDITOR) || StringUtil.containsIgnoreCase(requestedVXUser.getUserRoleList(), RangerConstants.ROLE_USER);
+                } else if (StringUtil.containsIgnoreCase(loggedInVXUser.getUserRoleList(), RangerConstants.ROLE_SYS_ADMIN) || StringUtil.containsIgnoreCase(loggedInVXUser.getUserRoleList(), RangerConstants.ROLE_ADMIN_AUDITOR)) {
+                    if (StringUtil.containsIgnoreCase(loggedInVXUser.getUserRoleList(), RangerConstants.ROLE_SYS_ADMIN) && "rangerusersync".equalsIgnoreCase(userSession.getLoginId())) {
                         return true;
                     } else {
-                        return requestedVXUser.getUserRoleList().contains(RangerConstants.ROLE_SYS_ADMIN) || requestedVXUser.getUserRoleList().contains(RangerConstants.ROLE_ADMIN_AUDITOR) || requestedVXUser.getUserRoleList().contains(RangerConstants.ROLE_USER);
+                        return StringUtil.containsIgnoreCase(requestedVXUser.getUserRoleList(), RangerConstants.ROLE_SYS_ADMIN) || StringUtil.containsIgnoreCase(requestedVXUser.getUserRoleList(), RangerConstants.ROLE_ADMIN_AUDITOR) || StringUtil.containsIgnoreCase(requestedVXUser.getUserRoleList(), RangerConstants.ROLE_USER);
                     }
                 }
             }
@@ -3782,6 +3811,72 @@ public class XUserMgr extends XUserMgrBase {
         }
     }
 
+    /**
+     * Resolves the roles to assign to a freshly auto-provisioned external user. When header-based
+     * authentication is enabled and the current request was authenticated through the trusted proxy,
+     * the (validated) roles carried in the {@link RangerAuthenticationToken} authorities are used.
+     * Returns {@code null} otherwise, in which case the caller falls back to the default ROLE_USER.
+     */
+    private List<String> getHeaderAuthRoles() {
+        List<String> ret = null;
+
+        if (PropertiesUtil.getBooleanProperty(RangerHeaderPreAuthFilter.PROP_HEADER_AUTH_ENABLED, false)) {
+            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+
+            if (auth instanceof RangerAuthenticationToken && ((RangerAuthenticationToken) auth).getAuthType() == XXAuthSession.AUTH_TYPE_TRUSTED_PROXY) {
+                List<String> roles = new ArrayList<>();
+
+                for (GrantedAuthority authority : auth.getAuthorities()) {
+                    String role = (authority != null) ? StringUtils.trimToNull(authority.getAuthority()) : null;
+
+                    if (role != null && RangerConstants.VALID_USER_ROLE_LIST.contains(role)) {
+                        roles.add(role);
+                    }
+                }
+
+                if (!roles.isEmpty()) {
+                    ret = roles;
+                }
+            }
+        }
+
+        return ret;
+    }
+
+    /**
+     * Creates the portal user with the supplied roles. When the roles originate from the trusted
+     * roles header ({@code trustedHeaderRoles}), the creation runs under a trusted system session
+     * (an admin session with no interactive user attached) so that non-public roles such as
+     * ROLE_SYS_ADMIN carried in the header are permitted during provisioning. No real user account
+     * is impersonated and the previous security context is always restored.
+     */
+    private XXPortalUser createExternalPortalUser(XXPortalUser xXPortalUser, List<String> roleList, boolean trustedHeaderRoles) {
+        if (!trustedHeaderRoles) {
+            return userMgr.createUser(xXPortalUser, RangerCommonEnums.STATUS_ENABLED, roleList);
+        }
+
+        RangerSecurityContext context         = RangerContextHolder.getSecurityContext();
+        UserSessionBase       originalSession = context != null ? context.getUserSession() : null;
+
+        if (context == null) {
+            context = new RangerSecurityContext();
+
+            RangerContextHolder.setSecurityContext(context);
+        }
+
+        try {
+            UserSessionBase systemSession = new UserSessionBase();
+
+            systemSession.setUserAdmin(true);
+
+            context.setUserSession(systemSession);
+
+            return userMgr.createUser(xXPortalUser, RangerCommonEnums.STATUS_ENABLED, roleList);
+        } finally {
+            context.setUserSession(originalSession);
+        }
+    }
+
     private class ExternalUserCreator implements Runnable {
         private final String userName;
 
@@ -3807,18 +3902,24 @@ public class XUserMgr extends XUserMgrBase {
                 vXPortalUser.setLoginId(userName);
                 vXPortalUser.setUserSource(RangerCommonEnums.USER_EXTERNAL);
 
-                ArrayList<String> roleList = new ArrayList<>();
+                List<String>      headerRoles       = getHeaderAuthRoles();
+                boolean           trustedHeaderRoles = CollectionUtils.isNotEmpty(headerRoles);
+                ArrayList<String> roleList          = new ArrayList<>();
 
-                roleList.add(RangerConstants.ROLE_USER);
+                if (trustedHeaderRoles) {
+                    roleList.addAll(headerRoles);
+                } else {
+                    roleList.add(RangerConstants.ROLE_USER);
+                }
 
                 vXPortalUser.setUserRoleList(roleList);
 
                 xXPortalUser = userMgr.mapVXPortalUserToXXPortalUser(vXPortalUser);
 
                 try {
-                    xXPortalUser = userMgr.createUser(xXPortalUser, RangerCommonEnums.STATUS_ENABLED, roleList);
+                    xXPortalUser = createExternalPortalUser(xXPortalUser, roleList, trustedHeaderRoles);
 
-                    logger.debug("createExternalUser(): Successfully created user in x_portal_user table {}", xXPortalUser.getLoginId());
+                    logger.debug("createExternalUser(): Successfully created user {} in x_portal_user table with roles {}", xXPortalUser.getLoginId(), roleList);
                 } catch (Exception ex) {
                     throw new RuntimeException("Failed to create user " + userName + " in x_portal_user table. retrying", ex);
                 }

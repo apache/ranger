@@ -75,10 +75,6 @@ public class RangerMasterKey implements RangerKMSMKI {
 
     private final RangerMasterKeyDao masterKeyDao;
 
-    public RangerMasterKey() {
-        this(null);
-    }
-
     public RangerMasterKey(DaoManager daoManager) {
         this.masterKeyDao = daoManager != null ? daoManager.getRangerMasterKeyDao() : null;
         init();

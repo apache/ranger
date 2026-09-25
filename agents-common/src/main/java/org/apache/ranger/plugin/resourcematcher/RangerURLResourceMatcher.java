@@ -31,7 +31,6 @@ import org.slf4j.LoggerFactory;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class RangerURLResourceMatcher extends RangerDefaultResourceMatcher {
@@ -39,6 +38,7 @@ public class RangerURLResourceMatcher extends RangerDefaultResourceMatcher {
 
     public static final String OPTION_PATH_SEPARATOR       = "pathSeparatorChar";
     public static final char   DEFAULT_PATH_SEPARATOR_CHAR = org.apache.hadoop.fs.Path.SEPARATOR_CHAR;
+    private static final Pattern PATH_URL_PATTERN          = Pattern.compile(":/{2,}");
 
     boolean policyIsRecursive;
     char    pathSeparatorChar = DEFAULT_PATH_SEPARATOR_CHAR;
@@ -97,24 +97,32 @@ public class RangerURLResourceMatcher extends RangerDefaultResourceMatcher {
         boolean ret = false;
 
         if (url != null) {
-            Pattern p1 = Pattern.compile(":/{2}");
-            Matcher m1 = p1.matcher(url);
-
-            Pattern p2 = Pattern.compile(":/{3,}");
-            Matcher m2 = p2.matcher(url);
-
-            ret = (m1.find() && !(m2.find()));
+            ret = PATH_URL_PATTERN.matcher(url).find();
         }
 
         return ret;
     }
 
+    private static int getSchemeEndIndex(String url) {
+        int colonIdx = StringUtils.indexOf(url, ":");
+        if (colonIdx < 0) {
+            return -1;
+        }
+        int idx = colonIdx + 1;
+        while (idx < url.length() && url.charAt(idx) == '/') {
+            idx++;
+        }
+        return (idx - (colonIdx + 1)) >= 2 ? idx : -1;
+    }
+
     static String getScheme(String url) {
-        return StringUtils.substring(url, 0, (StringUtils.indexOf(url, ":") + 3));
+        int schemeEnd = getSchemeEndIndex(url);
+        return schemeEnd < 0 ? StringUtils.EMPTY : StringUtils.substring(url, 0, schemeEnd);
     }
 
     static String getPathWithOutScheme(String url) {
-        return StringUtils.substring(url, (StringUtils.indexOf(url, ":") + 2));
+        int schemeEnd = getSchemeEndIndex(url);
+        return schemeEnd < 0 ? url : StringUtils.substring(url, schemeEnd);
     }
 
     @Override

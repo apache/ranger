@@ -7,7 +7,6 @@ services:
         - RANGER_BASE_IMAGE=${RANGER_BASE_IMAGE}
         - RANGER_BASE_VERSION=${RANGER_BASE_VERSION}
         - RANGER_VERSION=${RANGER_VERSION}
-        - RANGER_DB_TYPE=${RANGER_DB_TYPE}
         - KERBEROS_ENABLED=${KERBEROS_ENABLED}
     image: ranger:latest
     container_name: ranger
@@ -17,7 +16,7 @@ services:
       - ./dist/version:/home/ranger/dist/version:ro
       - ./scripts/kdc/krb5.conf:/etc/krb5.conf:ro
       - ./scripts/hadoop/core-site.xml:/home/ranger/scripts/core-site.xml:ro
-      - ./scripts/admin/ranger-admin-install-${RANGER_DB_TYPE}.properties:/opt/ranger/admin/install.properties
+      - ./scripts/admin/configs:/opt/ranger/admin/configs:ro
     stdin_open: true
     tty: true
     networks:
@@ -34,9 +33,18 @@ services:
     environment:
       - RANGER_VERSION
       - RANGER_DB_TYPE
+      - AUDIT_INDEX_STORE
       - KERBEROS_ENABLED
       - DEBUG_ADMIN=${DEBUG_ADMIN:-false}
       - JAVA_OPTS
+      - RANGER_ADMIN_MAX_HEAP
+      - RANGER_JVM_METASPACE
+      - RANGER_JVM_MAX_METASPACE
+      - RANGER_ADMIN_DB_PASSWORD
+      - RANGER_ADMIN_PASSWORD
+      - RANGER_USERSYNC_PASSWORD
+      - RANGER_TAGSYNC_PASSWORD
+      - RANGER_KEYADMIN_PASSWORD
     command:
       - /home/ranger/scripts/ranger.sh
 

@@ -33,10 +33,13 @@ import org.apache.ranger.plugin.model.RangerPolicyDelta;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerAccessTypeDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerAccessTypeDef.AccessTypeCategory;
+import org.apache.ranger.plugin.model.validation.RangerServiceDefHelper;
 import org.apache.ranger.plugin.store.EmbeddedServiceDefsUtil;
 import org.apache.ranger.plugin.util.ServicePolicies.SecurityZoneInfo;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.RepeatedTest;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Timeout;
 
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -47,6 +50,14 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.CyclicBarrier;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 
 import static org.apache.ranger.plugin.util.ServiceDefUtil.ACCESS_TYPE_MARKER_ALL;
 import static org.apache.ranger.plugin.util.ServiceDefUtil.ACCESS_TYPE_MARKER_CREATE;
@@ -57,6 +68,8 @@ import static org.apache.ranger.plugin.util.ServiceDefUtil.ACCESS_TYPE_MARKER_UP
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNotSame;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class ServiceDefUtilTest {
@@ -301,6 +314,179 @@ public class ServiceDefUtilTest {
             assertEquals(policies.getServiceDef().getDataMaskDef().getAccessTypes().size(), policies.getTagPolicies().getServiceDef().getDataMaskDef().getAccessTypes().size(), "dataMask.accessType count");
             assertEquals(0, policies.getTagPolicies().getServiceDef().getRowFilterDef().getAccessTypes().size(), "rowFilter.accessType count");
         }
+    }
+
+    @Test
+    public void testNormalizeIsThreadSafe() throws Throwable {
+        RangerServiceDef serviceDef = EmbeddedServiceDefsUtil.instance().getEmbeddedServiceDef("hive");
+
+        assertTrue(serviceDef != null && serviceDef.getDataMaskDef() != null, "hive serviceDef with dataMaskDef is required");
+
+        int                        threadCount = 8;
+        CountDownLatch startLatch  = new CountDownLatch(1);
+        CountDownLatch             doneLatch   = new CountDownLatch(threadCount);
+        AtomicReference<Throwable> failure     = new AtomicReference<>();
+
+        for (int i = 0; i < threadCount; i++) {
+            new Thread(() -> {
+                try {
+                    startLatch.await();
+
+                    RangerServiceDef result = ServiceDefUtil.normalize(serviceDef);
+
+                    assertSame(serviceDef, result, "normalize() must return the same instance");
+                } catch (Throwable t) {
+                    failure.compareAndSet(null, t);
+                } finally {
+                    doneLatch.countDown();
+                }
+            }).start();
+        }
+
+        startLatch.countDown();
+
+        assertTrue(doneLatch.await(30, TimeUnit.SECONDS), "normalize threads did not finish in time");
+
+        if (failure.get() != null) {
+            throw failure.get();
+        }
+    }
+
+    @Test
+    public void testConcurrentNormalizeAndServiceDefHelperInit() throws Throwable {
+        RangerServiceDef serviceDef = EmbeddedServiceDefsUtil.instance().getEmbeddedServiceDef("hive");
+
+        assertTrue(serviceDef != null && serviceDef.getDataMaskDef() != null, "hive serviceDef with dataMaskDef is required");
+
+        int                        threadCount = 8;
+        CountDownLatch             startLatch  = new CountDownLatch(1);
+        CountDownLatch             doneLatch   = new CountDownLatch(threadCount);
+        AtomicReference<Throwable> failure     = new AtomicReference<>();
+
+        for (int i = 0; i < threadCount; i++) {
+            new Thread(() -> {
+                try {
+                    startLatch.await();
+
+                    ServiceDefUtil.normalize(serviceDef);
+
+                    RangerServiceDefHelper helper = new RangerServiceDefHelper(serviceDef, false);
+
+                    assertTrue(helper.isResourceGraphValid(), "resource graph must be valid after normalize");
+                } catch (Throwable t) {
+                    failure.compareAndSet(null, t);
+                } finally {
+                    doneLatch.countDown();
+                }
+            }).start();
+        }
+
+        startLatch.countDown();
+
+        assertTrue(doneLatch.await(30, TimeUnit.SECONDS), "normalize/helper threads did not finish in time");
+
+        if (failure.get() != null) {
+            throw failure.get();
+        }
+    }
+
+    @Test
+    public void testNormalizeSkipsWhenAlreadyNormalized() throws Exception {
+        RangerServiceDef serviceDef = EmbeddedServiceDefsUtil.instance().getEmbeddedServiceDef("hive");
+
+        assertTrue(serviceDef != null && serviceDef.getDataMaskDef() != null, "hive serviceDef with dataMaskDef is required");
+
+        ServiceDefUtil.normalize(serviceDef);
+
+        List<RangerServiceDef.RangerResourceDef> dataMaskResourcesAfterFirst = serviceDef.getDataMaskDef().getResources();
+        List<RangerServiceDef.RangerAccessTypeDef> dataMaskAccessTypesAfterFirst = serviceDef.getDataMaskDef().getAccessTypes();
+
+        ServiceDefUtil.normalize(serviceDef);
+
+        assertSame(dataMaskResourcesAfterFirst, serviceDef.getDataMaskDef().getResources(), "second normalize() must not replace dataMask resources");
+        assertSame(dataMaskAccessTypesAfterFirst, serviceDef.getDataMaskDef().getAccessTypes(), "second normalize() must not replace dataMask accessTypes");
+    }
+
+    @Test
+    public void testSetResourcesRequiresRenormalize() throws Exception {
+        RangerServiceDef serviceDef = EmbeddedServiceDefsUtil.instance().getEmbeddedServiceDef("hive");
+
+        assertTrue(serviceDef != null && serviceDef.getDataMaskDef() != null, "hive serviceDef with dataMaskDef is required");
+
+        ServiceDefUtil.normalize(serviceDef);
+
+        RangerServiceDef.RangerResourceDef dataMaskResourceAfterFirst = serviceDef.getDataMaskDef().getResources().get(0);
+
+        serviceDef.setResources(new ArrayList<>(serviceDef.getResources()));
+        ServiceDefUtil.normalize(serviceDef);
+
+        assertNotSame(dataMaskResourceAfterFirst, serviceDef.getDataMaskDef().getResources().get(0), "setResources() must require re-normalization");
+    }
+
+    @RepeatedTest(5)
+    @Timeout(value = 90, unit = TimeUnit.SECONDS)
+    public void testConcurrentNormalizeAccessTypeDefsOnSharedServiceDef() throws Exception {
+        RangerServiceDef sharedTagServiceDef = buildTagServiceDefWithPrefixedAccessTypes("hive");
+
+        int threads = 5;
+        int itersPerThread = 100;
+        ExecutorService pool = Executors.newFixedThreadPool(threads);
+        CyclicBarrier barrier = new CyclicBarrier(threads);
+        AtomicInteger failures = new AtomicInteger();
+        List<Throwable> firstErrors = new ArrayList<>();
+        List<Future<?>> futures = new ArrayList<>();
+
+        for (int t = 0; t < threads; t++) {
+            futures.add(pool.submit(() -> {
+                for (int i = 0; i < itersPerThread; i++) {
+                    try {
+                        barrier.await();
+                    } catch (Exception ignored) {
+                    }
+                    try {
+                        // touch point #1 - mirrors PolicyEngine.normalizeServiceDefs()
+                        ServiceDefUtil.normalizeAccessTypeDefs(sharedTagServiceDef, "hive");
+                        // intervening real work - mirrors the gap between the two real call sites
+                        new RangerServiceDefHelper(sharedTagServiceDef, false);
+                        // touch point #2 - mirrors RangerPolicyRepository's tag-policies constructor
+                        ServiceDefUtil.normalizeAccessTypeDefs(sharedTagServiceDef, "hive");
+                    } catch (Throwable e) {
+                        Throwable cause = e.getCause() != null ? e.getCause() : e;
+                        failures.incrementAndGet();
+                        synchronized (firstErrors) {
+                            if (firstErrors.size() < 5) {
+                                firstErrors.add(cause);
+                            }
+                        }
+                    }
+                }
+            }));
+        }
+        for (Future<?> f : futures) {
+            f.get();
+        }
+        pool.shutdown();
+        if (!firstErrors.isEmpty()) {
+            StringBuilder sb = new StringBuilder();
+            sb.append(failures.get()).append(" failures. First errors:\n");
+            for (Throwable e : firstErrors) {
+                sb.append("  ").append(e).append('\n');
+            }
+            //System.out.println(sb);
+        }
+        assertEquals(0, failures.get(), "Expected 0 failures - concurrent normalizeAccessTypeDefs() calls on the same shared "
+                + "serviceDef (same componentType, the realistic repeated-same-service scenario) must not race");
+    }
+
+    private static RangerServiceDef buildTagServiceDefWithPrefixedAccessTypes(String componentType) {
+        RangerServiceDef sd = new RangerServiceDef();
+        sd.setName("tag");
+        List<RangerAccessTypeDef> accessTypes = new ArrayList<>();
+        for (int i = 0; i < 5000; i++) {
+            accessTypes.add(new RangerAccessTypeDef((long) i, componentType + "#type" + i, "type" + i, null, null));
+        }
+        sd.setAccessTypes(accessTypes);
+        return sd;
     }
 
     @Test

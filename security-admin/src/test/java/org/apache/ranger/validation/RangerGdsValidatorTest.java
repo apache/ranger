@@ -117,6 +117,7 @@ public class RangerGdsValidatorTest {
     public void hasPermission_checksUserGroupRoleAndPublic() {
         String user = "bob";
         when(dataProvider.isAdminUser()).thenReturn(false);
+        when(dataProvider.isAuditUser()).thenReturn(false);
         when(dataProvider.getCurrentUserLoginId()).thenReturn(user);
         when(dataProvider.getGroupsForUser(user)).thenReturn(new HashSet<>(Collections.singletonList("developers")));
         when(dataProvider.getRolesForUser(user)).thenReturn(new HashSet<>(Collections.singletonList("roleX")));
@@ -539,8 +540,33 @@ public class RangerGdsValidatorTest {
     @Test
     public void hasPermission_nullAclOrNone() {
         when(dataProvider.isAdminUser()).thenReturn(false);
+        when(dataProvider.isAuditUser()).thenReturn(false);
         when(dataProvider.getCurrentUserLoginId()).thenReturn("u");
         assertFalse(validator.hasPermission(null, GdsPermission.VIEW));
+    }
+
+    @Test
+    public void hasPermission_auditUserHasReadPermissionsWithoutAcl() {
+        when(dataProvider.isAdminUser()).thenReturn(false);
+        when(dataProvider.isAuditUser()).thenReturn(true);
+
+        assertTrue(validator.hasPermission(null, GdsPermission.VIEW));
+        assertTrue(validator.hasPermission(null, GdsPermission.LIST));
+        assertTrue(validator.hasPermission(null, GdsPermission.AUDIT));
+        assertFalse(validator.hasPermission(null, GdsPermission.POLICY_ADMIN));
+        assertFalse(validator.hasPermission(null, GdsPermission.ADMIN));
+    }
+
+    @Test
+    public void hasPermission_auditUserDoesNotBypassWritePermissions() {
+        RangerGdsObjectACL acl = new RangerGdsObjectACL();
+
+        when(dataProvider.isAdminUser()).thenReturn(false);
+        when(dataProvider.isAuditUser()).thenReturn(true);
+        when(dataProvider.getCurrentUserLoginId()).thenReturn("auditor");
+
+        assertFalse(validator.hasPermission(acl, GdsPermission.POLICY_ADMIN));
+        assertFalse(validator.hasPermission(acl, GdsPermission.ADMIN));
     }
 
     @Test

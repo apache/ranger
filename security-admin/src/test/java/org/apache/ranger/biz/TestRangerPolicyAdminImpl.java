@@ -26,6 +26,7 @@ import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemAccess;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerAccessTypeDef;
+import org.apache.ranger.plugin.model.RangerValiditySchedule;
 import org.apache.ranger.plugin.policyengine.PolicyEngine;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequestImpl;
@@ -76,6 +77,7 @@ import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anySet;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.mock;
@@ -194,15 +196,405 @@ public class TestRangerPolicyAdminImpl {
         item2.addAccess(new RangerPolicyItemAccess("read"));
         newP.setPolicyItems(Collections.singletonList(item2));
 
+        when(policyEngine.getServiceDef()).thenReturn(serviceDefWithAccessTypes("read"));
         when(serviceDBStore.getPolicy(10L)).thenReturn(oldP);
-        // allowed accesses for modifiedAccessTypes -> return containsAll
+        // no access-type changed: delegated-admin must hold all access-types in the policy (read)
+        stubDelegatedAdminAccesses("read");
+
+        boolean allowed = admin.isDelegatedAdminAccessAllowedForModify(newP, "u", Collections.emptySet(), null, null);
+        assertTrue(allowed);
+    }
+
+    @Test
+    public void testIsDelegatedAdminAccessAllowedForModify_emptyDeltaDoesNotFallBackToAdminAccess() throws Exception {
+        // Delete path: ServiceREST.deletePolicy() passes the stored policy unmodified, so the access-type delta is empty.
+        // A delegated-admin holding only 'drop' (and hence _admin) on the resource must NOT be able to delete a policy
+        // that grants/denies 'select'.
+        RangerPolicyAdminImpl admin = createAdminWithDefaultStubs();
+        when(policyEngine.getServiceDef()).thenReturn(serviceDefWithAccessTypes("select", "drop"));
+
+        RangerPolicy storedP = policyWithDenyItem(20L, "victim", "select");
+
+        when(serviceDBStore.getPolicy(20L)).thenReturn(storedP);
+        stubDelegatedAdminAccesses("drop");
+
+        assertFalse(admin.isDelegatedAdminAccessAllowedForModify(storedP, "alice", Collections.emptySet(), null, null));
+
+        // ... and IS allowed once the delegated-admin holds every access-type in the policy
+        stubDelegatedAdminAccesses("drop", "select");
+
+        assertTrue(admin.isDelegatedAdminAccessAllowedForModify(storedP, "alice", Collections.emptySet(), null, null));
+    }
+
+    @Test
+    public void testIsDelegatedAdminAccessAllowedForModify_adminAccessAloneDoesNotAuthorizeIdenticalPolicy() throws Exception {
+        // Direct restatement of holding only _admin on the resource must not authorize a delete /
+        // no-op update of a policy whose access-types the caller cannot administer.
+        RangerPolicyAdminImpl admin = createAdminWithDefaultStubs();
+        when(policyEngine.getServiceDef()).thenReturn(serviceDefWithAccessTypes("select", "drop"));
+
+        RangerPolicy storedP = policyWithDenyItem(23L, "victim", "select");
+        when(serviceDBStore.getPolicy(23L)).thenReturn(storedP);
+
         RangerPolicyEvaluator eval = mock(RangerPolicyEvaluator.class);
         when(policyRepository.getPolicyEvaluators()).thenReturn(Collections.singletonList(eval));
         when(eval.getAllowedAccesses(any(), any(), any(), any(), any(), any()))
                 .thenReturn(new HashSet<>(Collections.singletonList(RangerPolicyEngine.ADMIN_ACCESS)));
 
-        boolean allowed = admin.isDelegatedAdminAccessAllowedForModify(newP, "u", Collections.emptySet(), null, null);
-        assertTrue(allowed);
+        assertFalse(admin.isDelegatedAdminAccessAllowedForModify(policyWithDenyItem(23L, "victim", "select"), "alice", Collections.emptySet(), null, null));
+    }
+
+    @Test
+    public void testIsDelegatedAdminAccessAllowedForModify_delegateAdminToggleRequiresAllAccessTypes() throws Exception {
+        // Flipping delegateAdmin on an existing item without touching its access-types is a scope change (and, on its
+        // own, also an empty delta); a delegated-admin holding only 'drop' must not be able to hand out delegated-admin
+        // over 'select'.
+        RangerPolicyAdminImpl admin = createAdminWithDefaultStubs();
+        when(policyEngine.getServiceDef()).thenReturn(serviceDefWithAccessTypes("select", "drop"));
+
+        RangerPolicy storedP = new RangerPolicy();
+        storedP.setId(24L);
+        storedP.setResources(Collections.singletonMap("db", new RangerPolicyResource("hr")));
+        RangerPolicyItem bobItem = new RangerPolicyItem();
+        bobItem.addUser("bob");
+        bobItem.addAccess(new RangerPolicyItemAccess("select"));
+        bobItem.setDelegateAdmin(false);
+        storedP.setPolicyItems(Collections.singletonList(bobItem));
+        when(serviceDBStore.getPolicy(24L)).thenReturn(storedP);
+
+        RangerPolicy updated = new RangerPolicy();
+        updated.setId(24L);
+        updated.setResources(Collections.singletonMap("db", new RangerPolicyResource("hr")));
+        RangerPolicyItem bobDelegate = new RangerPolicyItem();
+        bobDelegate.addUser("bob");
+        bobDelegate.addAccess(new RangerPolicyItemAccess("select"));
+        bobDelegate.setDelegateAdmin(true);
+        updated.setPolicyItems(Collections.singletonList(bobDelegate));
+
+        stubDelegatedAdminAccesses("drop");
+        assertFalse(admin.isDelegatedAdminAccessAllowedForModify(updated, "alice", Collections.emptySet(), null, null));
+
+        stubDelegatedAdminAccesses("drop", "select");
+        assertTrue(admin.isDelegatedAdminAccessAllowedForModify(updated, "alice", Collections.emptySet(), null, null));
+    }
+
+    @Test
+    public void testIsDelegatedAdminAccessAllowedForModify_disableOrReprioritizeRequiresAllAccessTypes() throws Exception {
+        // isEnabled / policyPriority are not part of the access-type diff; changing only those must still require
+        // delegated-admin authority over all access-types in the policy.
+        RangerPolicyAdminImpl admin = createAdminWithDefaultStubs();
+        when(policyEngine.getServiceDef()).thenReturn(serviceDefWithAccessTypes("select", "drop"));
+
+        RangerPolicy storedP = policyWithDenyItem(21L, "victim", "select");
+        when(serviceDBStore.getPolicy(21L)).thenReturn(storedP);
+        stubDelegatedAdminAccesses("drop");
+
+        RangerPolicy disabled = policyWithDenyItem(21L, "victim", "select");
+        disabled.setIsEnabled(false);
+        assertFalse(admin.isDelegatedAdminAccessAllowedForModify(disabled, "alice", Collections.emptySet(), null, null));
+
+        RangerPolicy overridden = policyWithDenyItem(21L, "victim", "select");
+        overridden.setPolicyPriority(RangerPolicy.POLICY_PRIORITY_OVERRIDE);
+        assertFalse(admin.isDelegatedAdminAccessAllowedForModify(overridden, "alice", Collections.emptySet(), null, null));
+
+        // positive case: a delegated-admin covering every access-type in the policy may still disable / re-prioritize it
+        stubDelegatedAdminAccesses("drop", "select");
+        assertTrue(admin.isDelegatedAdminAccessAllowedForModify(disabled, "alice", Collections.emptySet(), null, null));
+        assertTrue(admin.isDelegatedAdminAccessAllowedForModify(overridden, "alice", Collections.emptySet(), null, null));
+    }
+
+    @Test
+    public void testIsDelegatedAdminAccessAllowedForModify_scopeChangeWithNonEmptyDeltaRequiresAllAccessTypes() throws Exception {
+        // bundle a legitimate access-type change (add 'drop' for bob) with isEnabled=false in one PUT.
+        // The delta is {drop}, which alice holds, but the disable affects 'select' too - must be denied.
+        RangerPolicyAdminImpl admin = createAdminWithDefaultStubs();
+        when(policyEngine.getServiceDef()).thenReturn(serviceDefWithAccessTypes("select", "drop"));
+
+        RangerPolicy storedP = policyWithDenyItem(25L, "victim", "select");
+        when(serviceDBStore.getPolicy(25L)).thenReturn(storedP);
+        stubDelegatedAdminAccesses("drop");
+
+        RangerPolicy updated = policyWithDenyItem(25L, "victim", "select");
+        RangerPolicyItem added = new RangerPolicyItem();
+        added.addUser("bob");
+        added.addAccess(new RangerPolicyItemAccess("drop"));
+        updated.setPolicyItems(Collections.singletonList(added));
+
+        // sanity: the same access-type change alone is allowed on the delta
+        assertTrue(admin.isDelegatedAdminAccessAllowedForModify(updated, "alice", Collections.emptySet(), null, null));
+
+        updated.setIsEnabled(false);
+        assertFalse(admin.isDelegatedAdminAccessAllowedForModify(updated, "alice", Collections.emptySet(), null, null));
+
+        updated.setIsEnabled(true);
+        updated.setPolicyPriority(RangerPolicy.POLICY_PRIORITY_OVERRIDE);
+        assertFalse(admin.isDelegatedAdminAccessAllowedForModify(updated, "alice", Collections.emptySet(), null, null));
+
+        updated.setPolicyPriority(RangerPolicy.POLICY_PRIORITY_NORMAL);
+        updated.setIsDenyAllElse(true);
+        assertFalse(admin.isDelegatedAdminAccessAllowedForModify(updated, "alice", Collections.emptySet(), null, null));
+
+        // delegateAdmin: add 'drop' for bob and grant delegateAdmin on the existing 'select' item
+        updated.setIsDenyAllElse(false);
+        updated.getDenyPolicyItems().get(0).setDelegateAdmin(true);
+        assertFalse(admin.isDelegatedAdminAccessAllowedForModify(updated, "alice", Collections.emptySet(), null, null));
+
+        // holding every access-type in both old and new policy makes the combined change allowed again
+        stubDelegatedAdminAccesses("drop", "select");
+        assertTrue(admin.isDelegatedAdminAccessAllowedForModify(updated, "alice", Collections.emptySet(), null, null));
+    }
+
+    @Test
+    public void testIsPolicyScopeChanged_detectsScopeFieldsAndIgnoresCosmeticOnes() throws Exception {
+        RangerPolicyAdminImpl admin = createAdminWithDefaultStubs();
+        Method m = RangerPolicyAdminImpl.class.getDeclaredMethod("isPolicyScopeChanged", RangerPolicy.class, RangerPolicy.class);
+        m.setAccessible(true);
+
+        RangerPolicy oldP = policyWithDenyItem(40L, "victim", "select");
+
+        RangerPolicy same = policyWithDenyItem(40L, "victim", "select");
+        same.setName("renamed");
+        same.setDescription("desc changed");
+        same.setValiditySchedules(new ArrayList<>()); // empty vs null must be treated as equal
+        same.setConditions(new ArrayList<>());
+        assertFalse((Boolean) m.invoke(admin, oldP, same));
+
+        RangerPolicy disabled = policyWithDenyItem(40L, "victim", "select");
+        disabled.setIsEnabled(false);
+        assertTrue((Boolean) m.invoke(admin, oldP, disabled));
+
+        RangerPolicy priority = policyWithDenyItem(40L, "victim", "select");
+        priority.setPolicyPriority(RangerPolicy.POLICY_PRIORITY_OVERRIDE);
+        assertTrue((Boolean) m.invoke(admin, oldP, priority));
+
+        RangerPolicy denyAllElse = policyWithDenyItem(40L, "victim", "select");
+        denyAllElse.setIsDenyAllElse(true);
+        assertTrue((Boolean) m.invoke(admin, oldP, denyAllElse));
+
+        RangerPolicy validity = policyWithDenyItem(40L, "victim", "select");
+        RangerValiditySchedule schedule = new RangerValiditySchedule();
+        schedule.setStartTime("2026/01/01 00:00:00");
+        schedule.setEndTime("2026/12/31 23:59:59");
+        validity.setValiditySchedules(Collections.singletonList(schedule));
+        assertTrue((Boolean) m.invoke(admin, oldP, validity));
+
+        RangerPolicy condition = policyWithDenyItem(40L, "victim", "select");
+        condition.setConditions(Collections.singletonList(new RangerPolicy.RangerPolicyItemCondition("ip-range", Collections.singletonList("10.0.0.0/8"))));
+        assertTrue((Boolean) m.invoke(admin, oldP, condition));
+
+        // equal-by-value validity schedules / conditions on distinct instances (DB copy vs request copy) are not a change
+        RangerPolicy oldWithExtras = policyWithDenyItem(41L, "victim", "select");
+        oldWithExtras.setValiditySchedules(Collections.singletonList(schedule));
+        oldWithExtras.setConditions(Collections.singletonList(new RangerPolicy.RangerPolicyItemCondition("ip-range", Collections.singletonList("10.0.0.0/8"))));
+        RangerPolicy newWithExtras = policyWithDenyItem(41L, "victim", "select");
+        RangerValiditySchedule schedule2 = new RangerValiditySchedule();
+        schedule2.setStartTime("2026/01/01 00:00:00");
+        schedule2.setEndTime("2026/12/31 23:59:59");
+        newWithExtras.setValiditySchedules(Collections.singletonList(schedule2));
+        newWithExtras.setConditions(Collections.singletonList(new RangerPolicy.RangerPolicyItemCondition("ip-range", Collections.singletonList("10.0.0.0/8"))));
+        assertFalse((Boolean) m.invoke(admin, oldWithExtras, newWithExtras));
+
+        // delegateAdmin granted to an existing principal is a scope change; unchanged delegateAdmin is not
+        RangerPolicy delegate = policyWithDenyItem(40L, "victim", "select");
+        delegate.getDenyPolicyItems().get(0).setDelegateAdmin(true);
+        assertTrue((Boolean) m.invoke(admin, oldP, delegate));
+
+        RangerPolicy oldDelegate = policyWithDenyItem(42L, "victim", "select");
+        oldDelegate.getDenyPolicyItems().get(0).setDelegateAdmin(true);
+        RangerPolicy newDelegate = policyWithDenyItem(42L, "victim", "select");
+        newDelegate.getDenyPolicyItems().get(0).setDelegateAdmin(true);
+        assertFalse((Boolean) m.invoke(admin, oldDelegate, newDelegate));
+
+        // revoking delegateAdmin is a scope change too
+        assertTrue((Boolean) m.invoke(admin, oldDelegate, policyWithDenyItem(42L, "victim", "select")));
+    }
+
+    @Test
+    public void testIsDelegatedAdminAccessAllowedForModify_realDeltaStillCheckedOnlyForChangedAccessTypes() throws Exception {
+        // Regression guard for existing semantics: adding 'drop' for a new user to a policy that already has 'select'
+        // for someone else only requires delegated-admin authority over 'drop'.
+        RangerPolicyAdminImpl admin = createAdminWithDefaultStubs();
+        when(policyEngine.getServiceDef()).thenReturn(serviceDefWithAccessTypes("select", "drop"));
+
+        RangerPolicy storedP = policyWithDenyItem(22L, "victim", "select");
+        when(serviceDBStore.getPolicy(22L)).thenReturn(storedP);
+        stubDelegatedAdminAccesses("drop");
+
+        RangerPolicy updated = policyWithDenyItem(22L, "victim", "select");
+        RangerPolicyItem added = new RangerPolicyItem();
+        added.addUser("bob");
+        added.addAccess(new RangerPolicyItemAccess("drop"));
+        updated.setPolicyItems(Collections.singletonList(added));
+
+        assertTrue(admin.isDelegatedAdminAccessAllowedForModify(updated, "alice", Collections.emptySet(), null, null));
+    }
+
+    @Test
+    public void testCollectAccessTypes_principalsDoNotShareAccessTypeSet() throws Exception {
+        // item1 grants 'read' to u1 and u2; item2 grants 'write' to u1 only. With a shared HashSet, u2 would also
+        // appear to have 'write', hiding the change from the diff.
+        RangerPolicyAdminImpl admin = createAdminWithDefaultStubs();
+        Map<String, Collection<String>> expanded = new HashMap<>();
+        expanded.put("read", Collections.singletonList("read"));
+        expanded.put("write", Collections.singletonList("write"));
+
+        RangerPolicyItem item1 = new RangerPolicyItem();
+        item1.addUser("u1");
+        item1.addUser("u2");
+        item1.addGroup("g1");
+        item1.addAccess(new RangerPolicyItemAccess("read"));
+
+        RangerPolicyItem item2 = new RangerPolicyItem();
+        item2.addUser("u1");
+        item2.addAccess(new RangerPolicyItemAccess("write"));
+
+        Map<String, Set<String>> userAcc = new HashMap<>();
+        Map<String, Set<String>> grpAcc = new HashMap<>();
+        Map<String, Set<String>> roleAcc = new HashMap<>();
+
+        Method m = RangerPolicyAdminImpl.class.getDeclaredMethod("collectAccessTypes", Map.class, List.class, Map.class, Map.class, Map.class);
+        m.setAccessible(true);
+        m.invoke(admin, expanded, Arrays.asList(item1, item2), userAcc, grpAcc, roleAcc);
+
+        assertEquals(new HashSet<>(Arrays.asList("read", "write")), userAcc.get("u1"));
+        assertEquals(Collections.singleton("read"), userAcc.get("u2"));
+        assertEquals(Collections.singleton("read"), grpAcc.get("g1"));
+        assertNotSame(userAcc.get("u1"), userAcc.get("u2"));
+        assertNotSame(userAcc.get("u2"), grpAcc.get("g1"));
+    }
+
+    @Test
+    public void testGetAllModifiedAccessTypes_emptyWhenUnchangedAndDetectsAliasedChange() throws Exception {
+        RangerPolicyAdminImpl admin = createAdminWithDefaultStubs();
+        RangerServiceDef sd = serviceDefWithAccessTypes("select", "update");
+
+        Method m = RangerPolicyAdminImpl.class.getDeclaredMethod("getAllModifiedAccessTypes", RangerPolicy.class, RangerPolicy.class, RangerServiceDef.class);
+        m.setAccessible(true);
+
+        // unchanged policy -> empty delta becomes the policy's full access-type set, never ADMIN_ACCESS
+        RangerPolicy p1 = policyWithDenyItem(30L, "victim", "select");
+        @SuppressWarnings("unchecked")
+        Set<String> unchanged = (Set<String>) m.invoke(admin, p1, policyWithDenyItem(30L, "victim", "select"), sd);
+        assertEquals(Collections.singleton("select"), unchanged);
+        assertFalse(unchanged.contains(RangerPolicyEngine.ADMIN_ACCESS));
+
+        // reporter's control case: policy has item{alice,bob:select} + item{alice:update}; granting bob 'update'
+        // must be detected even though 'update' already exists elsewhere in the policy
+        RangerPolicy oldP = new RangerPolicy();
+        oldP.setId(31L);
+        RangerPolicyItem shared = new RangerPolicyItem();
+        shared.addUser("alice");
+        shared.addUser("bob");
+        shared.addAccess(new RangerPolicyItemAccess("select"));
+        RangerPolicyItem aliceOnly = new RangerPolicyItem();
+        aliceOnly.addUser("alice");
+        aliceOnly.addAccess(new RangerPolicyItemAccess("update"));
+        oldP.setPolicyItems(Arrays.asList(shared, aliceOnly));
+
+        RangerPolicy newP = new RangerPolicy();
+        newP.setId(31L);
+        RangerPolicyItem shared2 = new RangerPolicyItem();
+        shared2.addUser("alice");
+        shared2.addUser("bob");
+        shared2.addAccess(new RangerPolicyItemAccess("select"));
+        RangerPolicyItem both = new RangerPolicyItem();
+        both.addUser("alice");
+        both.addUser("bob");
+        both.addAccess(new RangerPolicyItemAccess("update"));
+        newP.setPolicyItems(Arrays.asList(shared2, both));
+
+        @SuppressWarnings("unchecked")
+        Set<String> delta = (Set<String>) m.invoke(admin, oldP, newP, sd);
+        assertEquals(Collections.singleton("update"), delta);
+    }
+
+    @Test
+    public void testIsDelegatedAdminAccessAllowedForModify_recursiveFlipCannotExtendDelegatedScope() throws Exception {
+        // RANGER-1718: a delegated-admin whose grant covers /hr (non-recursive) must not be able to widen a policy on
+        // /hr to recursive. isRecursive is part of the resource signature, so the flip must take the strict
+        // (resource-changed) branch, which re-authorizes against the new, recursive resource.
+        RangerPolicyAdminImpl admin = createAdminWithDefaultStubs();
+        when(policyEngine.getServiceDef()).thenReturn(serviceDefWithAccessTypes("select"));
+
+        RangerPolicy storedP = new RangerPolicy();
+        storedP.setId(50L);
+        storedP.setResources(Collections.singletonMap("path", new RangerPolicyResource(Collections.singletonList("/hr"), false, false)));
+        RangerPolicyItem item = new RangerPolicyItem();
+        item.addUser("bob");
+        item.addAccess(new RangerPolicyItemAccess("select"));
+        storedP.setPolicyItems(Collections.singletonList(item));
+        when(serviceDBStore.getPolicy(50L)).thenReturn(storedP);
+
+        // alice holds delegateAdmin for 'select' on /hr only: the engine grants nothing on a recursive resource
+        RangerPolicyEvaluator eval = mock(RangerPolicyEvaluator.class);
+        when(policyRepository.getPolicyEvaluators()).thenReturn(Collections.singletonList(eval));
+        when(eval.getAllowedAccesses(any(), any(), any(), any(), any(), any())).thenAnswer(inv -> {
+            Map<String, RangerPolicyResource> resource = inv.getArgument(0);
+            Set<String> requested = inv.getArgument(4);
+            boolean recursive = resource.values().stream().anyMatch(r -> Boolean.TRUE.equals(r.getIsRecursive()));
+
+            return recursive ? Collections.<String>emptySet() : new HashSet<>(requested);
+        });
+
+        // in-scope edit on the non-recursive policy (add 'select' for carol) is allowed
+        RangerPolicy inScope = new RangerPolicy();
+        inScope.setId(50L);
+        inScope.setResources(Collections.singletonMap("path", new RangerPolicyResource(Collections.singletonList("/hr"), false, false)));
+        RangerPolicyItem carol = new RangerPolicyItem();
+        carol.addUser("carol");
+        carol.addAccess(new RangerPolicyItemAccess("select"));
+        inScope.setPolicyItems(Arrays.asList(item, carol));
+        assertTrue(admin.isDelegatedAdminAccessAllowedForModify(inScope, "alice", Collections.emptySet(), null, null));
+
+        // flipping isRecursive on the same policy, items unchanged, is denied
+        RangerPolicy widened = new RangerPolicy();
+        widened.setId(50L);
+        widened.setResources(Collections.singletonMap("path", new RangerPolicyResource(Collections.singletonList("/hr"), false, true)));
+        widened.setPolicyItems(Collections.singletonList(item));
+        assertFalse(admin.isDelegatedAdminAccessAllowedForModify(widened, "alice", Collections.emptySet(), null, null));
+
+        // and the strict branch was actually exercised against the recursive resource
+        verify(eval).getAllowedAccesses(argThat((Map<String, RangerPolicyResource> res) -> Boolean.TRUE.equals(res.get("path").getIsRecursive())), any(), any(), any(), any(), any());
+    }
+
+    private RangerServiceDef serviceDefWithAccessTypes(String... accessTypes) {
+        RangerServiceDef sd = new RangerServiceDef();
+        sd.setName("svc-def");
+        sd.setResources(new ArrayList<>());
+        List<RangerAccessTypeDef> defs = new ArrayList<>();
+        for (String accessType : accessTypes) {
+            RangerAccessTypeDef at = new RangerAccessTypeDef();
+            at.setName(accessType);
+            defs.add(at);
+        }
+        sd.setAccessTypes(defs);
+        return sd;
+    }
+
+    private RangerPolicy policyWithDenyItem(long id, String user, String accessType) {
+        RangerPolicy p = new RangerPolicy();
+        p.setId(id);
+        p.setResources(Collections.singletonMap("db", new RangerPolicyResource("hr")));
+        RangerPolicyItem item = new RangerPolicyItem();
+        item.addUser(user);
+        item.addAccess(new RangerPolicyItemAccess(accessType));
+        p.setDenyPolicyItems(Collections.singletonList(item));
+        return p;
+    }
+
+    /** Simulates a delegated-admin policy granting delegateAdmin for the given access-types (which implies _admin). */
+    private void stubDelegatedAdminAccesses(String... heldAccessTypes) {
+        Set<String> held = new HashSet<>(Arrays.asList(heldAccessTypes));
+        held.add(RangerPolicyEngine.ADMIN_ACCESS);
+
+        RangerPolicyEvaluator eval = mock(RangerPolicyEvaluator.class);
+        when(policyRepository.getPolicyEvaluators()).thenReturn(Collections.singletonList(eval));
+        when(eval.getAllowedAccesses(any(), any(), any(), any(), any(), any())).thenAnswer(inv -> {
+            Set<String> requested = inv.getArgument(4);
+            Set<String> ret       = new HashSet<>(requested);
+            ret.retainAll(held);
+            return ret;
+        });
     }
 
     @Test

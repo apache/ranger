@@ -41,7 +41,7 @@ import static org.apache.ranger.authz.api.RangerAuthzApiErrorCode.INVALID_RESOUR
 import static org.apache.ranger.authz.api.RangerAuthzApiErrorCode.INVALID_RESOURCE_TYPE_NOT_VALID;
 import static org.apache.ranger.authz.api.RangerAuthzApiErrorCode.INVALID_RESOURCE_VALUE;
 import static org.apache.ranger.authz.model.RangerResourceInfo.ResourceMatchScope.SELF;
-import static org.apache.ranger.authz.model.RangerResourceInfo.ResourceMatchScope.SELF_OR_ANY_CHILD;
+import static org.apache.ranger.authz.model.RangerResourceInfo.ResourceMatchScope.SELF_OR_ANY_DESCENDANT;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class TestAuthzException {
@@ -55,7 +55,7 @@ public class TestAuthzException {
         assertEquals("AUTHZ-400-00-004: missing access info", new RangerAuthzException(INVALID_REQUEST_ACCESS_INFO_MISSING).getMessage());
         assertEquals("AUTHZ-400-00-005: missing resource info", new RangerAuthzException(INVALID_REQUEST_RESOURCE_INFO_MISSING).getMessage());
         assertEquals("AUTHZ-400-00-006: missing resource name", new RangerAuthzException(INVALID_REQUEST_RESOURCE_NAME_MISSING).getMessage());
-        assertEquals("AUTHZ-400-00-007: invalid name match scope SELF_OR_ANY_CHILD. For resource with sub-resources, valid scopes are [SELF]", new RangerAuthzException(INVALID_REQUEST_NAME_MATCH_SCOPE_INVALID, SELF_OR_ANY_CHILD, "resource with sub-resources", SELF).getMessage());
+        assertEquals("AUTHZ-400-00-007: invalid name match scope SELF_OR_ANY_DESCENDANT. For resource with sub-resources, valid scopes are [SELF]", new RangerAuthzException(INVALID_REQUEST_NAME_MATCH_SCOPE_INVALID, SELF_OR_ANY_DESCENDANT, "resource with sub-resources", SELF).getMessage());
         assertEquals("AUTHZ-400-00-008: missing access context", new RangerAuthzException(INVALID_REQUEST_ACCESS_CONTEXT_MISSING).getMessage());
         assertEquals("AUTHZ-400-00-009: myresource: resource type not found", new RangerAuthzException(INVALID_REQUEST_RESOURCE_TYPE_NOT_FOUND, "myresource").getMessage());
         assertEquals("AUTHZ-400-00-010: mypath: invalid resource value for type path", new RangerAuthzException(INVALID_REQUEST_RESOURCE_VALUE_FOR_TYPE, "mypath", "path").getMessage());

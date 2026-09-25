@@ -169,11 +169,16 @@ public class RangerSafenetKeySecure implements RangerKMSMKI {
     public boolean setExternalKeyAsMK(String password, byte[] key) {
         if (myStore != null) {
             try {
-                Key aesKey = new SecretKeySpec(key, MK_ALGO);
+                if (!myStore.containsAlias(alias)) {
+                    Key aesKey = new SecretKeySpec(key, MK_ALGO);
 
-                myStore.setKeyEntry(alias, aesKey, password.toCharArray(), (java.security.cert.Certificate[]) null);
+                    myStore.setKeyEntry(alias, aesKey, password.toCharArray(), (java.security.cert.Certificate[]) null);
 
-                return true;
+                    return true;
+                }
+                else {
+                    logger.warn("Master key with alias '{}' already exists in Safenet, returning.", alias);
+                }
             } catch (Exception e) {
                 logger.error("setMasterKey : Exception while setting Master Key - {}", e.getMessage());
             }
