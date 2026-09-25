@@ -265,6 +265,17 @@ const KeyManager = () => {
     });
   };
 
+  // When landing via the sidebar (no service in the route), pre-select the first KMS service
+  useEffect(() => {
+    if (params.kmsManagePage == "new" && isEmpty(onChangeValue)) {
+      fetchServices().then((serviceOptions) => {
+        if (!isEmpty(serviceOptions)) {
+          selectOnchange(serviceOptions[0]);
+        }
+      });
+    }
+  }, []);
+
   const confirmKeyDelete = () => {
     handleKeyDelete();
     dispatch({
@@ -377,6 +388,22 @@ const KeyManager = () => {
         type: "SET_LOADER",
         loader: true
       });
+
+      // No KMS service selected yet (e.g. landed via the sidebar): nothing to fetch
+      if (!onChangeValue?.label) {
+        dispatch({
+          type: "SET_SEL_SERVICE",
+          keyDataList: [],
+          pageCount: 0,
+          totalCount: 0
+        });
+        dispatch({
+          type: "SET_LOADER",
+          loader: false
+        });
+        return;
+      }
+
       let selectedServicesResponse = [];
       let selectedServicesData = null;
       let totalCount = 0;
