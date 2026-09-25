@@ -20,15 +20,19 @@
 package org.apache.ranger.server.tomcat;
 
 import org.apache.catalina.LifecycleException;
+import org.apache.catalina.WebResourceRoot;
 import org.apache.catalina.connector.Connector;
 import org.apache.catalina.core.StandardContext;
 import org.apache.catalina.startup.Tomcat;
 import org.apache.catalina.valves.AccessLogValve;
 import org.apache.catalina.valves.ErrorReportValve;
+import org.apache.catalina.webresources.StandardRoot;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.security.SecureClientLogin;
 import org.apache.ranger.credentialapi.CredentialReader;
 import org.apache.tomcat.util.net.SSLHostConfig;
+import org.apache.tomcat.util.scan.StandardJarScanner;
 
 import javax.net.ssl.KeyManager;
 import javax.net.ssl.KeyManagerFactory;
@@ -51,6 +55,8 @@ import java.security.SecureRandom;
 import java.security.UnrecoverableKeyException;
 import java.security.cert.CertificateException;
 import java.util.Date;
+import java.util.Iterator;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -93,12 +99,22 @@ public class EmbeddedServer {
     public  static int                            defaultShutdownPort     = 6185;
     private static EmbeddedServerMetricsCollector serverMetricsCollector;
 
+    private final EmbeddedServerConfigUtil prefixedConfig;
+    private final String                   configPrefix;
+
     public EmbeddedServer(String[] args) {
         if (args.length > 0) {
             configFile = args[0];
         }
 
         EmbeddedServerUtil.loadRangerConfigProperties(configFile);
+        this.prefixedConfig = null;
+        this.configPrefix   = null;
+    }
+
+    protected EmbeddedServer(Configuration configuration, String configPrefix) {
+        this.prefixedConfig = new EmbeddedServerConfigUtil(configuration, configPrefix);
+        this.configPrefix   = configPrefix;
     }
 
     public static void main(String[] args) {
@@ -115,6 +131,43 @@ public class EmbeddedServer {
         return embeddedServerMetricsCollector;
     }
 
+    protected String getConnectorServerBanner() {
+        return "Apache Ranger";
+    }
+
+    protected String getDefaultAccessLogPattern(String servername) {
+        if (servername != null && servername.equalsIgnoreCase(KMS_SERVER_NAME)) {
+            return "%h %l %u %t \"%m %U\" %s %b %D %{eek_op}r";
+        }
+
+        return "%h %l %u %t \"%r\" %s %b %D";
+    }
+
+    /**
+     * Hook for module-specific webapp context configuration before {@code init()}.
+     * Default implementation is a no-op for Admin/KMS.
+     */
+    protected void configureWebappContext(StandardContext webappCtx) {
+    }
+
+    /**
+     * Configures {@code StandardRoot} resource linking and {@code StandardJarScanner} for
+     * Spring-style webapps. Intended to be called from {@link #configureWebappContext(StandardContext)}
+     * in prefixed-config subclasses such as UserSync or TagSync.
+     */
+    protected void configureWebappResourceLinking(StandardContext webappCtx) {
+        boolean allowLinking = getServiceBooleanConfig("", "allow.linking", true);
+        boolean scanManifest = getServiceBooleanConfig("", "tomcat.scan.manifest", false);
+
+        WebResourceRoot resRoot = new StandardRoot(webappCtx);
+        webappCtx.setResources(resRoot);
+        webappCtx.getResources().setAllowLinking(allowLinking);
+
+        StandardJarScanner scanner = new StandardJarScanner();
+        scanner.setScanManifest(scanManifest);
+        webappCtx.setJarScanner(scanner);
+    }
+
     public void start() {
         SSLContext sslContext = getSSLContext();
 
@@ -123,26 +176,32 @@ public class EmbeddedServer {
         }
 
         final Tomcat server = new Tomcat();
-        String       logDir = EmbeddedServerUtil.getConfig("logdir");
+
+        String logDir = getServiceConfig("logdir", "log.dir");
 
         if (logDir == null) {
-            logDir = EmbeddedServerUtil.getConfig("kms.log.dir");
+            logDir = getServiceConfig("kms.log.dir", "logdir");
         }
 
-        String servername      = EmbeddedServerUtil.getConfig("servername");
-        String hostName        = EmbeddedServerUtil.getConfig("ranger.service.host");
-        int    serverPort      = EmbeddedServerUtil.getIntConfig("ranger.service.http.port", 6181);
-        int    sslPort         = EmbeddedServerUtil.getIntConfig("ranger.service.https.port", -1);
-        int    shutdownPort    = EmbeddedServerUtil.getIntConfig("ranger.service.shutdown.port", defaultShutdownPort);
-        String shutdownCommand = EmbeddedServerUtil.getConfig("ranger.service.shutdown.command", defaultShutdownCommand);
+        String servername      = getServiceConfig("servername", "servername");
+        String hostName        = getServiceConfig("ranger.service.host", "service.host");
+        int    serverPort      = getServiceIntConfig("ranger.service.http.port", "service.http.port", isPrefixedConfigMode() ? 0 : 6181);
+        int    sslPort         = getServiceIntConfig("ranger.service.https.port", "service.https.port", isPrefixedConfigMode() ? 0 : -1);
+        int    shutdownPort    = getServiceIntConfig("ranger.service.shutdown.port", "service.shutdown.port", defaultShutdownPort);
+        String shutdownCommand = getServiceConfig("ranger.service.shutdown.command", "service.shutdown.command", defaultShutdownCommand);
+
+        if (isPrefixedConfigMode() && serverPort == 0 && sslPort == 0) {
+            LOG.severe("Tomcat Server failed to start: http and https ports are not set");
+            System.exit(1);
+        }
 
         server.setHostname(hostName);
         server.setPort(serverPort);
         server.getServer().setPort(shutdownPort);
         server.getServer().setShutdown(shutdownCommand);
 
-        boolean isHttpsEnabled = Boolean.parseBoolean(EmbeddedServerUtil.getConfig("ranger.service.https.attrib.ssl.enabled", "false"));
-        boolean ajpEnabled     = Boolean.parseBoolean(EmbeddedServerUtil.getConfig("ajp.enabled", "false"));
+        boolean isHttpsEnabled = getServiceBooleanConfig("ranger.service.https.attrib.ssl.enabled", "service.https.attrib.ssl.enabled", false);
+        boolean ajpEnabled     = getServiceBooleanConfig("ajp.enabled", "ajp.enabled", false);
 
         if (ajpEnabled) {
             Connector ajpConnector = new Connector("org.apache.coyote.ajp.AjpNioProtocol");
@@ -162,53 +221,53 @@ public class EmbeddedServer {
             ssl.setPort(sslPort);
             ssl.setSecure(true);
             ssl.setScheme("https");
-            ssl.setAttribute("SSLEnabled", "true");
-            ssl.setAttribute("sslProtocol", EmbeddedServerUtil.getConfig("ranger.service.https.attrib.ssl.protocol", DEFAULT_SSL_PROTOCOL));
-            ssl.setAttribute("keystoreType", EmbeddedServerUtil.getConfig("ranger.keystore.file.type", RANGER_KEYSTORE_FILE_TYPE_DEFAULT));
-            ssl.setAttribute("truststoreType", EmbeddedServerUtil.getConfig("ranger.truststore.file.type", RANGER_TRUSTSTORE_FILE_TYPE_DEFAULT));
 
-            String clientAuth = EmbeddedServerUtil.getConfig("ranger.service.https.attrib.clientAuth", "false");
+            String clientAuth = getServiceConfig("ranger.service.https.attrib.clientAuth", "service.https.attrib.clientAuth", "false");
 
             if ("false".equalsIgnoreCase(clientAuth)) {
-                clientAuth = EmbeddedServerUtil.getConfig("ranger.service.https.attrib.client.auth", "want");
+                clientAuth = getServiceConfig("ranger.service.https.attrib.client.auth", "service.https.attrib.client.auth", "want");
             }
 
-            ssl.setAttribute("clientAuth", clientAuth);
+            String providerPath = getServiceConfig("ranger.credential.provider.path", "credential.provider.path");
+            String keyAlias     = getServiceConfig("ranger.service.https.attrib.keystore.credential.alias", "service.https.attrib.keystore.credential.alias", "keyStoreCredentialAlias");
+            String keystorePass = null;
 
-            String providerPath    = EmbeddedServerUtil.getConfig("ranger.credential.provider.path");
-            String credentialAlias = EmbeddedServerUtil.getConfig("ranger.service.https.attrib.keystore.credential.alias", "keyStoreCredentialAlias");
-            String keystorePass    = null;
+            if (providerPath != null && keyAlias != null) {
+                keystorePass = CredentialReader.getDecryptedString(
+                        providerPath.trim(),
+                        keyAlias.trim(),
+                        getServiceConfig("ranger.keystore.file.type", "keystore.file.type", RANGER_KEYSTORE_FILE_TYPE_DEFAULT));
 
-            if (providerPath != null && credentialAlias != null) {
-                keystorePass = CredentialReader.getDecryptedString(providerPath.trim(), credentialAlias.trim(), EmbeddedServerUtil.getConfig("ranger.keystore.file.type", RANGER_KEYSTORE_FILE_TYPE_DEFAULT));
+                if (StringUtils.isBlank(keystorePass) || "none".equalsIgnoreCase(keystorePass.trim())) {
+                    keystorePass = getServiceConfig("ranger.service.https.attrib.keystore.pass", "service.https.attrib.keystore.pass");
+                }
             }
 
-            if (StringUtils.isBlank(keystorePass) || "none".equalsIgnoreCase(keystorePass.trim())) {
-                keystorePass = EmbeddedServerUtil.getConfig("ranger.service.https.attrib.keystore.pass");
-            }
-
-            String keystoreFile    = getKeystoreFile();
-            String keyAlias        = EmbeddedServerUtil.getConfig("ranger.service.https.attrib.keystore.keyalias", "rangeradmin");
-            String keystoreType    = EmbeddedServerUtil.getConfig("ranger.keystore.file.type", RANGER_KEYSTORE_FILE_TYPE_DEFAULT);
-            String validationError = validateHttpsKeystore(keystoreFile, keystorePass, keyAlias, keystoreType);
+            String keystoreKeyAlias = getServiceConfig("ranger.service.https.attrib.keystore.keyalias", "service.https.attrib.keystore.keyalias", "rangeradmin");
+            String enabledProtocols = getServiceConfig("ranger.service.https.attrib.ssl.enabled.protocols", "service.https.attrib.ssl.enabled.protocols", DEFAULT_ENABLED_PROTOCOLS);
+            String ciphers          = getServiceConfig("ranger.tomcat.ciphers", "tomcat.ciphers");
+            String keystoreFile     = getKeystoreFile();
+            String keystoreType     = getServiceConfig("ranger.keystore.file.type", "keystore.file.type", RANGER_KEYSTORE_FILE_TYPE_DEFAULT);
+            String validationError  = validateHttpsKeystore(keystoreFile, keystorePass, keystoreKeyAlias, keystoreType);
 
             if (validationError != null) {
                 LOG.severe("HTTPS configuration validation failed: " + validationError + " The HTTPS connector may not bind to port " + sslPort + " and the Ranger UI may be unavailable.");
             }
 
-            ssl.setAttribute("keyAlias", keyAlias);
-            ssl.setAttribute("keystorePass", keystorePass);
-            ssl.setAttribute("keystoreFile", keystoreFile);
-
-            String enabledProtocols        = EmbeddedServerUtil.getConfig("ranger.service.https.attrib.ssl.enabled.protocols", DEFAULT_ENABLED_PROTOCOLS);
-
-            ssl.setAttribute("sslEnabledProtocols", enabledProtocols);
-
-            String ciphers = EmbeddedServerUtil.getConfig("ranger.tomcat.ciphers");
+            ssl.setProperty("SSLEnabled", "true");
+            ssl.setProperty("sslProtocol", getServiceConfig("ranger.service.https.attrib.ssl.protocol", "service.https.attrib.ssl.protocol", DEFAULT_SSL_PROTOCOL));
+            ssl.setProperty("keystoreType", keystoreType);
+            ssl.setProperty("truststoreType", getServiceConfig("ranger.truststore.file.type", "truststore.file.type", RANGER_TRUSTSTORE_FILE_TYPE_DEFAULT));
+            ssl.setProperty("clientAuth", clientAuth);
+            ssl.setProperty("keyAlias", keystoreKeyAlias);
+            ssl.setProperty("keystorePass", keystorePass);
+            ssl.setProperty("keystoreFile", keystoreFile);
+            ssl.setProperty("sslEnabledProtocols", enabledProtocols);
 
             if (StringUtils.isNotBlank(ciphers)) {
-                ssl.setAttribute("ciphers", ciphers);
+                ssl.setProperty("ciphers", ciphers);
                 SSLHostConfig[] configs = ssl.findSslHostConfigs();
+
                 if (configs != null) {
                     for (SSLHostConfig hostConfig : configs) {
                         if (hostConfig != null) {
@@ -238,58 +297,50 @@ public class EmbeddedServer {
         valve.setRotatable(true);
         valve.setAsyncSupported(true);
         valve.setBuffered(false);
-        valve.setEnabled(EmbeddedServerUtil.getBooleanConfig(ACCESS_LOG_ENABLED, true));
-        valve.setPrefix(EmbeddedServerUtil.getConfig(ACCESS_LOG_PREFIX, "access-" + hostName));
-        valve.setFileDateFormat(EmbeddedServerUtil.getConfig(ACCESS_LOG_DATE_FORMAT, "-yyyy-MM-dd.HH"));
+
+        valve.setEnabled(getServiceBooleanConfig(ACCESS_LOG_ENABLED, "accesslog.enabled", true));
+        valve.setPrefix(getServiceConfig(ACCESS_LOG_PREFIX, "accesslog.prefix", "access-" + hostName));
+        valve.setFileDateFormat(getServiceConfig(ACCESS_LOG_DATE_FORMAT, "accesslog.dateformat", "-yyyy-MM-dd.HH"));
+        valve.setRotatable(getServiceBooleanConfig(ACCESS_LOG_ROTATE_ENABLED, "accesslog.rotate.enabled", true));
+        valve.setMaxDays(getServiceIntConfig(ACCESS_LOG_ROTATE_MAX_DAYS, "accesslog.rotate.max.days", 15));
+        valve.setRenameOnRotate(getServiceBooleanConfig(ACCESS_LOG_ROTATE_RENAME_ON_ROTATE, "accesslog.rotate.rename_on_rotate", false));
+
         valve.setDirectory(logDirectory.getAbsolutePath());
         valve.setSuffix(".log");
-        valve.setRotatable(EmbeddedServerUtil.getBooleanConfig(ACCESS_LOG_ROTATE_ENABLED, true));
-        valve.setMaxDays(EmbeddedServerUtil.getIntConfig(ACCESS_LOG_ROTATE_MAX_DAYS, 15));
-        valve.setRenameOnRotate(EmbeddedServerUtil.getBooleanConfig(ACCESS_LOG_ROTATE_RENAME_ON_ROTATE, false));
 
-        String defaultAccessLogPattern = servername.equalsIgnoreCase(KMS_SERVER_NAME) ? "%h %l %u %t \"%m %U\" %s %b %D %{eek_op}r" : "%h %l %u %t \"%r\" %s %b %D";
-        String logPattern              = EmbeddedServerUtil.getConfig(ACCESS_LOG_PATTERN, defaultAccessLogPattern);
+        String defaultAccessLogPattern = getDefaultAccessLogPattern(servername);
+        String logPattern              = getServiceConfig(ACCESS_LOG_PATTERN, "accesslog.pattern", defaultAccessLogPattern);
 
         valve.setPattern(logPattern);
-
         server.getHost().getPipeline().addValve(valve);
 
         ErrorReportValve errorReportValve = new ErrorReportValve();
-        boolean          showServerinfo   = Boolean.parseBoolean(EmbeddedServerUtil.getConfig("ranger.valve.errorreportvalve.showserverinfo", "true"));
-        boolean          showReport       = Boolean.parseBoolean(EmbeddedServerUtil.getConfig("ranger.valve.errorreportvalve.showreport", "true"));
 
-        errorReportValve.setShowServerInfo(showServerinfo);
-        errorReportValve.setShowReport(showReport);
-
+        errorReportValve.setShowServerInfo(getServiceBooleanConfig("ranger.valve.errorreportvalve.showserverinfo", "valve.errorreportvalve.showserverinfo", true));
+        errorReportValve.setShowReport(getServiceBooleanConfig("ranger.valve.errorreportvalve.showreport", "valve.errorreportvalve.showreport", true));
         server.getHost().getPipeline().addValve(errorReportValve);
 
         try {
-            String webappDir = EmbeddedServerUtil.getConfig("xa.webapp.dir");
+            String webappDir = getServiceConfig("xa.webapp.dir", "webapp.dir");
 
             if (StringUtils.isBlank(webappDir)) {
-                // If webapp location property is not set, then let's derive
-                // from catalina_base
-                String catalinaBaseDir = EmbeddedServerUtil.getConfig("catalina.base");
+                String catalinaBaseDir = getServiceConfig("catalina.base", "catalina.base");
 
                 if (StringUtils.isBlank(catalinaBaseDir)) {
-                    LOG.severe("Tomcat Server failed to start: catalina.base and/or xa.webapp.dir is not set");
-
+                    LOG.severe("Tomcat Server failed to start: catalina.base and/or webapp dir is not set");
                     System.exit(1);
                 }
 
                 webappDir = catalinaBaseDir + File.separator + "webapp";
-
                 LOG.info("Deriving webapp folder from catalina.base property. folder=" + webappDir);
             }
 
-            //String webContextName = getConfig("xa.webapp.contextName", "/");
-            String webContextName = EmbeddedServerUtil.getConfig("ranger.contextName", "/");
+            String webContextName = getServiceConfig("ranger.contextName", "contextName", "/");
 
             if (webContextName == null) {
                 webContextName = "/";
             } else if (!webContextName.startsWith("/")) {
                 LOG.info("Context Name [" + webContextName + "] is being loaded as [ /" + webContextName + "]");
-
                 webContextName = "/" + webContextName;
             }
 
@@ -310,7 +361,7 @@ public class EmbeddedServer {
             LOG.info("Adding webapp [" + webContextName + "] = path [" + webappDir + "] .....");
 
             StandardContext webappCtx   = (StandardContext) server.addWebapp(webContextName, new File(webappDir).getAbsolutePath());
-            String          workDirPath = EmbeddedServerUtil.getConfig("ranger.tomcat.work.dir", "");
+            String          workDirPath = getServiceConfig("ranger.tomcat.work.dir", "tomcat.work.dir", "");
 
             if (!workDirPath.isEmpty() && new File(workDirPath).exists()) {
                 webappCtx.setWorkDir(workDirPath);
@@ -320,60 +371,24 @@ public class EmbeddedServer {
                 }
             }
 
-            webappCtx.init();
+            configureWebappContext(webappCtx);
 
+            webappCtx.init();
             LOG.info("Finished init of webapp [" + webContextName + "] = path [" + webappDir + "].");
         } catch (LifecycleException lce) {
             LOG.severe("Tomcat Server failed to start webapp:" + lce);
-
             lce.printStackTrace();
         }
 
-        if (servername.equalsIgnoreCase(ADMIN_SERVER_NAME)) {
-            String keytab    = EmbeddedServerUtil.getConfig(ADMIN_USER_KEYTAB);
-            String principal = null;
-
-            try {
-                principal = SecureClientLogin.getPrincipal(EmbeddedServerUtil.getConfig(ADMIN_USER_PRINCIPAL), hostName);
-            } catch (IOException ignored) {
-                LOG.warning("Failed to get ranger.admin.kerberos.principal. Reason: " + ignored);
-            }
-
-            String nameRules = EmbeddedServerUtil.getConfig(ADMIN_NAME_RULES);
-
-            if (StringUtils.isBlank(nameRules)) {
-                LOG.info("Name is empty. Setting Name Rule as 'DEFAULT'");
-
-                nameRules = DEFAULT_NAME_RULE;
-            }
-
-            if (EmbeddedServerUtil.getConfig(AUTHENTICATION_TYPE) != null && EmbeddedServerUtil.getConfig(AUTHENTICATION_TYPE).trim().equalsIgnoreCase(AUTH_TYPE_KERBEROS) && SecureClientLogin.isKerberosCredentialExists(principal, keytab)) {
-                try {
-                    LOG.info("Provided Kerberos Credential : Principal = " + principal + " and Keytab = " + keytab);
-
-                    Subject sub = SecureClientLogin.loginUserFromKeytab(principal, keytab, nameRules);
-
-                    Subject.doAs(sub, (PrivilegedAction<Void>) () -> {
-                        LOG.info("Starting Server using kerberos credential");
-
-                        startServer(server);
-
-                        return null;
-                    });
-                } catch (Exception e) {
-                    LOG.severe("Tomcat Server failed to start:" + e);
-                    e.printStackTrace();
-                }
-            } else {
-                startServer(server);
-            }
+        if (shouldStartWithKerberos(servername)) {
+            startWithKerberos(server, hostName);
         } else {
             startServer(server);
         }
     }
 
     public void shutdownServer() {
-        int timeWaitForShutdownInSeconds = EmbeddedServerUtil.getIntConfig("service.waitTimeForForceShutdownInSeconds", 0);
+        int timeWaitForShutdownInSeconds = getServiceIntConfig("service.waitTimeForForceShutdownInSeconds", "service.waitTimeForForceShutdownInSeconds", 0);
 
         if (timeWaitForShutdownInSeconds > 0) {
             long endTime = System.currentTimeMillis() + (timeWaitForShutdownInSeconds * 1000L);
@@ -386,15 +401,15 @@ public class EmbeddedServer {
                 if (activeCount == 0) {
                     LOG.info("Number of active threads = " + activeCount + ".");
                     break;
-                } else {
-                    LOG.info("Number of active threads = " + activeCount + ". Waiting for all threads to shutdown ...");
+                }
 
-                    try {
-                        Thread.sleep(5000L);
-                    } catch (InterruptedException e) {
-                        LOG.warning("shutdownServer process is interrupted with exception: " + e);
-                        break;
-                    }
+                LOG.info("Number of active threads = " + activeCount + ". Waiting for all threads to shutdown ...");
+
+                try {
+                    Thread.sleep(5000L);
+                } catch (InterruptedException e) {
+                    LOG.warning("shutdownServer process is interrupted with exception: " + e);
+                    break;
                 }
             }
         }
@@ -404,85 +419,109 @@ public class EmbeddedServer {
     }
 
     public void updateHttpConnectorAttribConfig(Tomcat server) {
-        server.getConnector().setAllowTrace(Boolean.parseBoolean(EmbeddedServerUtil.getConfig("ranger.service.http.connector.attrib.allowTrace", "false")));
-        server.getConnector().setAsyncTimeout(EmbeddedServerUtil.getLongConfig("ranger.service.http.connector.attrib.asyncTimeout", 10000L));
-        server.getConnector().setEnableLookups(Boolean.parseBoolean(EmbeddedServerUtil.getConfig("ranger.service.http.connector.attrib.enableLookups", "false")));
-        server.getConnector().setMaxParameterCount(EmbeddedServerUtil.getIntConfig("ranger.service.http.connector.attrib.maxParameterCount", 10000));
-        server.getConnector().setMaxPostSize(EmbeddedServerUtil.getIntConfig("ranger.service.http.connector.attrib.maxPostSize", 2097152));
-        server.getConnector().setMaxSavePostSize(EmbeddedServerUtil.getIntConfig("ranger.service.http.connector.attrib.maxSavePostSize", 4096));
-        server.getConnector().setParseBodyMethods(EmbeddedServerUtil.getConfig("ranger.service.http.connector.attrib.methods", "POST"));
-        server.getConnector().setURIEncoding(EmbeddedServerUtil.getConfig("ranger.service.http.connector.attrib.URIEncoding", "UTF-8"));
+        server.getConnector().setAllowTrace(getServiceBooleanConfig("ranger.service.http.connector.attrib.allowTrace", "service.http.connector.attrib.allowTrace", false));
+        server.getConnector().setAsyncTimeout(getServiceLongConfig("ranger.service.http.connector.attrib.asyncTimeout", "service.http.connector.attrib.asyncTimeout", 10000L));
+        server.getConnector().setEnableLookups(getServiceBooleanConfig("ranger.service.http.connector.attrib.enableLookups", "service.http.connector.attrib.enableLookups", false));
+        server.getConnector().setMaxParameterCount(getServiceIntConfig("ranger.service.http.connector.attrib.maxParameterCount", "service.http.connector.attrib.maxParameterCount", 10000));
+        server.getConnector().setMaxPostSize(getServiceIntConfig("ranger.service.http.connector.attrib.maxPostSize", "service.http.connector.attrib.maxPostSize", 2097152));
+        server.getConnector().setMaxSavePostSize(getServiceIntConfig("ranger.service.http.connector.attrib.maxSavePostSize", "service.http.connector.attrib.maxSavePostSize", 4096));
+        server.getConnector().setParseBodyMethods(getServiceConfig("ranger.service.http.connector.attrib.methods", "service.http.connector.attrib.methods", "POST"));
+        server.getConnector().setURIEncoding(getServiceConfig("ranger.service.http.connector.attrib.URIEncoding", "service.http.connector.attrib.URIEncoding", "UTF-8"));
         server.getConnector().setXpoweredBy(false);
-        server.getConnector().setAttribute("server", "Apache Ranger");
-        server.getConnector().setProperty("sendReasonPhrase", EmbeddedServerUtil.getConfig("ranger.service.http.connector.property.sendReasonPhrase", "true"));
+        server.getConnector().setAttribute("server", getConnectorServerBanner());
+        server.getConnector().setProperty("sendReasonPhrase",
+                getServiceConfig("ranger.service.http.connector.property.sendReasonPhrase", "service.http.connector.property.sendReasonPhrase", "true"));
 
-        for (Object o : EmbeddedServerUtil.getRangerConfigProperties().keySet()) {
-            String key = o != null ? o.toString() : null;
+        if (isPrefixedConfigMode()) {
+            String connectorPropertyPrefix = configPrefix + "service.http.connector.property.";
+            Iterator<Map.Entry<String, String>> iterator = prefixedConfig.iterator();
 
-            if (key != null && key.startsWith("ranger.service.http.connector.property.")) {
-                String property = key.replace("ranger.service.http.connector.property.", "");
+            while (iterator.hasNext()) {
+                Map.Entry<String, String> entry = iterator.next();
 
-                server.getConnector().setProperty(property, EmbeddedServerUtil.getConfig(key));
-
-                LOG.info(property + ":" + server.getConnector().getProperty(property));
+                if (entry != null && entry.getKey() != null && entry.getKey().startsWith(connectorPropertyPrefix)) {
+                    String property    = entry.getKey().replace(connectorPropertyPrefix, "");
+                    String relativeKey = "service.http.connector.property." + property;
+                    server.getConnector().setProperty(property, prefixedConfig.getConfig(relativeKey));
+                }
             }
+        } else {
+            for (Object o : EmbeddedServerUtil.getRangerConfigProperties().keySet()) {
+                String key = o != null ? o.toString() : null;
+
+                if (key != null && key.startsWith("ranger.service.http.connector.property.")) {
+                    String property = key.replace("ranger.service.http.connector.property.", "");
+                    server.getConnector().setProperty(property, EmbeddedServerUtil.getConfig(key));
+                    LOG.info(property + ":" + server.getConnector().getProperty(property));
+                }
+            }
+        }
+    }
+
+    private boolean shouldStartWithKerberos(String servername) {
+        String authenticationType = getServiceConfig(AUTHENTICATION_TYPE, AUTHENTICATION_TYPE);
+
+        if (!AUTH_TYPE_KERBEROS.equalsIgnoreCase(StringUtils.trimToEmpty(authenticationType))) {
+            return false;
+        }
+
+        if (isPrefixedConfigMode()) {
+            return true;
+        }
+
+        return ADMIN_SERVER_NAME.equalsIgnoreCase(servername);
+    }
+
+    private void startWithKerberos(final Tomcat server, String hostName) {
+        String keytab    = getServiceConfig(ADMIN_USER_KEYTAB, "kerberos.keytab");
+        String principal = null;
+
+        try {
+            principal = SecureClientLogin.getPrincipal(getServiceConfig(ADMIN_USER_PRINCIPAL, "kerberos.principal"), hostName);
+        } catch (IOException ignored) {
+            LOG.warning("Failed to get kerberos principal. Reason: " + ignored);
+        }
+
+        String nameRules = getServiceConfig(ADMIN_NAME_RULES, ADMIN_NAME_RULES);
+
+        if (StringUtils.isBlank(nameRules)) {
+            LOG.info("Name is empty. Setting Name Rule as 'DEFAULT'");
+            nameRules = DEFAULT_NAME_RULE;
+        }
+
+        if (SecureClientLogin.isKerberosCredentialExists(principal, keytab)) {
+            try {
+                LOG.info("Provided Kerberos Credential : Principal = " + principal + " and Keytab = " + keytab);
+
+                Subject sub = SecureClientLogin.loginUserFromKeytab(principal, keytab, nameRules);
+
+                Subject.doAs(sub, (PrivilegedAction<Void>) () -> {
+                    LOG.info("Starting Server using kerberos credential");
+                    startServer(server);
+                    return null;
+                });
+            } catch (Exception e) {
+                LOG.severe("Tomcat Server failed to start:" + e);
+                e.printStackTrace();
+            }
+        } else {
+            startServer(server);
         }
     }
 
     private void startServer(final Tomcat server) {
         try {
-            String servername = EmbeddedServerUtil.getConfig("servername");
+            String servername = getServiceConfig("servername", "servername");
 
             LOG.info("Server Name : " + servername);
 
-            if (servername.equalsIgnoreCase(ADMIN_SERVER_NAME)) {
-                String auditSourceType = EmbeddedServerUtil.getConfig(AUDIT_SOURCE_TYPE, "db");
-
-                if (AUDIT_SOURCE_SOLR.equalsIgnoreCase(auditSourceType)) {
-                    boolean solrBootstrapEnabled = Boolean.parseBoolean(EmbeddedServerUtil.getConfig(SOLR_BOOTSTRAP_ENABLED, "true"));
-
-                    if (solrBootstrapEnabled) {
-                        try {
-                            SolrCollectionBootstrapper solrSetup = new SolrCollectionBootstrapper();
-
-                            solrSetup.start();
-                        } catch (Exception e) {
-                            LOG.severe("Error while setting solr " + e);
-                        }
-                    }
-                } else if (AUDIT_SOURCE_ES.equalsIgnoreCase(auditSourceType)) {
-                    boolean esBootstrapEnabled = Boolean.parseBoolean(EmbeddedServerUtil.getConfig(ES_BOOTSTRAP_ENABLED, "true"));
-
-                    if (esBootstrapEnabled) {
-                        try {
-                            ElasticSearchIndexBootStrapper esSchemaSetup = new ElasticSearchIndexBootStrapper();
-
-                            esSchemaSetup.start();
-                        } catch (Exception e) {
-                            LOG.severe("Error while setting elasticsearch " + e);
-                        }
-                    }
-                } else if (AUDIT_SOURCE_OPENSEARCH.equalsIgnoreCase(auditSourceType)) {
-                    boolean osBootstrapEnabled = Boolean.parseBoolean(EmbeddedServerUtil.getConfig(OS_BOOTSTRAP_ENABLED, "true"));
-
-                    if (osBootstrapEnabled) {
-                        try {
-                            OpenSearchIndexBootStrapper osSchemaSetup = new OpenSearchIndexBootStrapper();
-
-                            osSchemaSetup.start();
-                        } catch (Exception e) {
-                            LOG.severe("Error while setting opensearch " + e);
-                        }
-                    }
-                }
+            if (!isPrefixedConfigMode() && ADMIN_SERVER_NAME.equalsIgnoreCase(servername)) {
+                runAuditBootstrap();
             }
 
             serverMetricsCollector = new EmbeddedServerMetricsCollector(server);
-
             server.start();
-
             server.getServer().await();
-
             shutdownServer();
         } catch (LifecycleException e) {
             LOG.severe("Tomcat Server failed to start:" + e);
@@ -493,12 +532,41 @@ public class EmbeddedServer {
         }
     }
 
+    private void runAuditBootstrap() {
+        String auditSourceType = EmbeddedServerUtil.getConfig(AUDIT_SOURCE_TYPE, "db");
+
+        if (AUDIT_SOURCE_SOLR.equalsIgnoreCase(auditSourceType)) {
+            if (EmbeddedServerUtil.getBooleanConfig(SOLR_BOOTSTRAP_ENABLED, true)) {
+                try {
+                    new SolrCollectionBootstrapper().start();
+                } catch (Exception e) {
+                    LOG.severe("Error while setting solr " + e);
+                }
+            }
+        } else if (AUDIT_SOURCE_ES.equalsIgnoreCase(auditSourceType)) {
+            if (EmbeddedServerUtil.getBooleanConfig(ES_BOOTSTRAP_ENABLED, true)) {
+                try {
+                    new ElasticSearchIndexBootStrapper().start();
+                } catch (Exception e) {
+                    LOG.severe("Error while setting elasticsearch " + e);
+                }
+            }
+        } else if (AUDIT_SOURCE_OPENSEARCH.equalsIgnoreCase(auditSourceType)) {
+            if (EmbeddedServerUtil.getBooleanConfig(OS_BOOTSTRAP_ENABLED, true)) {
+                try {
+                    new OpenSearchIndexBootStrapper().start();
+                } catch (Exception e) {
+                    LOG.severe("Error while setting opensearch " + e);
+                }
+            }
+        }
+    }
+
     private String getKeystoreFile() {
-        String keystoreFile = EmbeddedServerUtil.getConfig("ranger.service.https.attrib.keystore.file");
+        String keystoreFile = getServiceConfig("ranger.service.https.attrib.keystore.file", "service.https.attrib.keystore.file");
 
         if (StringUtils.isBlank(keystoreFile)) {
-            // new property not configured, lets use the old property
-            keystoreFile = EmbeddedServerUtil.getConfig("ranger.https.attrib.keystore.file");
+            keystoreFile = getServiceConfig("ranger.https.attrib.keystore.file", "https.attrib.keystore.file");
         }
 
         return keystoreFile;
@@ -556,7 +624,6 @@ public class EmbeddedServer {
         if (tmList != null) {
             try {
                 sslContext = SSLContext.getInstance(RANGER_SSL_CONTEXT_ALGO_TYPE);
-
                 sslContext.init(kmList, tmList, new SecureRandom());
             } catch (NoSuchAlgorithmException e) {
                 LOG.severe("SSL algorithm is not available in the environment. Reason: " + e);
@@ -570,16 +637,16 @@ public class EmbeddedServer {
 
     private KeyManager[] getKeyManagers() {
         KeyManager[] kmList        = null;
-        String       keyStoreFile  = EmbeddedServerUtil.getConfig("ranger.keystore.file");
-        String       keyStoreAlias = EmbeddedServerUtil.getConfig("ranger.keystore.alias", "keyStoreCredentialAlias");
+        String       keyStoreFile  = getServiceConfig("ranger.keystore.file", "keystore.file");
+        String       keyStoreAlias = getServiceConfig("ranger.keystore.alias", "keystore.alias", "keyStoreCredentialAlias");
 
         if (StringUtils.isBlank(keyStoreFile)) {
             keyStoreFile  = getKeystoreFile();
-            keyStoreAlias = EmbeddedServerUtil.getConfig("ranger.service.https.attrib.keystore.credential.alias", "keyStoreCredentialAlias");
+            keyStoreAlias = getServiceConfig("ranger.service.https.attrib.keystore.credential.alias", "service.https.attrib.keystore.credential.alias", "keyStoreCredentialAlias");
         }
 
-        String keyStoreFileType       = EmbeddedServerUtil.getConfig("ranger.keystore.file.type", RANGER_KEYSTORE_FILE_TYPE_DEFAULT);
-        String credentialProviderPath = EmbeddedServerUtil.getConfig("ranger.credential.provider.path");
+        String keyStoreFileType       = getServiceConfig("ranger.keystore.file.type", "keystore.file.type", RANGER_KEYSTORE_FILE_TYPE_DEFAULT);
+        String credentialProviderPath = getServiceConfig("ranger.credential.provider.path", "credential.provider.path");
         String keyStoreFilepwd        = CredentialReader.getDecryptedString(credentialProviderPath, keyStoreAlias, keyStoreFileType);
 
         if (StringUtils.isNotEmpty(keyStoreFile) && StringUtils.isNotEmpty(keyStoreFilepwd)) {
@@ -633,10 +700,10 @@ public class EmbeddedServer {
 
     private TrustManager[] getTrustManagers() {
         TrustManager[] tmList                 = null;
-        String         truststoreFile         = EmbeddedServerUtil.getConfig("ranger.truststore.file");
-        String         truststoreAlias        = EmbeddedServerUtil.getConfig("ranger.truststore.alias");
-        String         credentialProviderPath = EmbeddedServerUtil.getConfig("ranger.credential.provider.path");
-        String         truststoreFileType     = EmbeddedServerUtil.getConfig("ranger.truststore.file.type", RANGER_TRUSTSTORE_FILE_TYPE_DEFAULT);
+        String         truststoreFile         = getServiceConfig("ranger.truststore.file", "truststore.file");
+        String         truststoreAlias        = getServiceConfig("ranger.truststore.alias", "truststore.alias");
+        String         credentialProviderPath = getServiceConfig("ranger.credential.provider.path", "credential.provider.path");
+        String         truststoreFileType     = getServiceConfig("ranger.truststore.file.type", "truststore.file.type", RANGER_TRUSTSTORE_FILE_TYPE_DEFAULT);
         String         trustStoreFilepwd      = CredentialReader.getDecryptedString(credentialProviderPath, truststoreAlias, truststoreFileType);
 
         if (StringUtils.isNotEmpty(truststoreFile) && StringUtils.isNotEmpty(trustStoreFilepwd)) {
@@ -684,6 +751,51 @@ public class EmbeddedServer {
         }
 
         return tmList;
+    }
+
+    private boolean isPrefixedConfigMode() {
+        return prefixedConfig != null;
+    }
+
+    /**
+     * Reads a config property using Admin/KMS full keys or a prefixed service relative key.
+     */
+    private String getServiceConfig(String adminPropertyKey, String prefixedPropertyKey) {
+        if (isPrefixedConfigMode()) {
+            return prefixedConfig.getConfig(prefixedPropertyKey);
+        }
+
+        return EmbeddedServerUtil.getConfig(adminPropertyKey);
+    }
+
+    private String getServiceConfig(String adminPropertyKey, String prefixedPropertyKey, String defaultValue) {
+        String value = getServiceConfig(adminPropertyKey, prefixedPropertyKey);
+
+        return value != null ? value : defaultValue;
+    }
+
+    private int getServiceIntConfig(String adminPropertyKey, String prefixedPropertyKey, int defaultValue) {
+        if (isPrefixedConfigMode()) {
+            return prefixedConfig.getIntConfig(prefixedPropertyKey, defaultValue);
+        }
+
+        return EmbeddedServerUtil.getIntConfig(adminPropertyKey, defaultValue);
+    }
+
+    private long getServiceLongConfig(String adminPropertyKey, String prefixedPropertyKey, long defaultValue) {
+        if (isPrefixedConfigMode()) {
+            return prefixedConfig.getLongConfig(prefixedPropertyKey, defaultValue);
+        }
+
+        return EmbeddedServerUtil.getLongConfig(adminPropertyKey, defaultValue);
+    }
+
+    private boolean getServiceBooleanConfig(String adminPropertyKey, String prefixedPropertyKey, boolean defaultValue) {
+        if (isPrefixedConfigMode()) {
+            return prefixedConfig.getBooleanConfig(prefixedPropertyKey, defaultValue);
+        }
+
+        return EmbeddedServerUtil.getBooleanConfig(adminPropertyKey, defaultValue);
     }
 
     private static InputStream getFileInputStream(String fileName) throws IOException {
