@@ -640,7 +640,8 @@ public class UserMgr {
             if (userRoleList == null) {
                 userRoleList = new ArrayList<>();
 
-                if (sess.isSuperUser()) {
+                // Config roles apply only to the super user's own profile; other users keep their DB roles.
+                if (sess.isSuperUser() && sess.getXXPortalUser() != null && sess.getXXPortalUser().getId().equals(user.getId())) {
                     userRoleList.addAll(RangerSuperUserConfig.getConfigSuperUserProfileRoles());
                 } else {
                     List<XXPortalUserRole> gjUserRoleList = daoManager.getXXPortalUserRole().findByParentId(user.getId());
