@@ -51,6 +51,14 @@
 	</property>
 
 	<property>
+		<name>ranger.plugin.kafka.access.eval.batch.size</name>
+		<value>1000</value>
+		<description>
+			Maximum number of access-requests evaluated per batch in bulk authorization
+		</description>
+	</property>
+
+	<property>
 		<name>ranger.plugin.kafka.policy.cache.dir</name>
 		<value>${project.build.directory}</value>
 		<description>

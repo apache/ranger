@@ -40,6 +40,7 @@ public class RangerPluginConfig extends RangerConfiguration {
     private static final Logger LOG = LoggerFactory.getLogger(RangerPluginConfig.class);
 
     private static final char RANGER_TRUSTED_PROXY_IPADDRESSES_SEPARATOR_CHAR = ',';
+    private static final String ACCESS_EVAL_BATCH_SIZE_PROP_SUFFIX = ".access.eval.batch.size";
 
     private final String                    serviceType;
     private final String                    serviceName;
@@ -290,6 +291,10 @@ public class RangerPluginConfig extends RangerConfiguration {
 
     public RangerPolicyEngineOptions getPolicyEngineOptions() {
         return policyEngineOptions;
+    }
+
+    public int getAccessEvalBatchSize(int defaultValue) {
+        return this.getInt(propertyPrefix + ACCESS_EVAL_BATCH_SIZE_PROP_SUFFIX, defaultValue);
     }
 
     public void setAuditExcludedUsersGroupsRoles(Set<String> users, Set<String> groups, Set<String> roles) {
