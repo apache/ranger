@@ -641,6 +641,7 @@ public class TestHiveClient {
         assertJdbcConfigRejected("org.apache.hive.jdbc.HiveDriver", "jdbc:hive2:///", "jdbc.url must include a host");
         assertJdbcConfigRejected("org.apache.hive.jdbc.HiveDriver", "jdbc:hive2://;", "jdbc.url must include a host");
         assertJdbcConfigRejected("org.apache.hive.jdbc.HiveDriver", "jdbc:hive2://?x=y", "jdbc.url must include a host");
+        assertJdbcConfigRejected("org.apache.hive.jdbc.HiveDriver", "jdbc:hive2://:10000/default", "jdbc.url must include a host");
     }
 
     private void assertJdbcConfigRejected(String driverClassName, String url, String expectedMessage) throws Exception {

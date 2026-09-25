@@ -106,25 +106,76 @@ public final class JdbcUrlValidator {
 
     /**
      * An empty host is Hive embedded mode (jdbc:hive2://, jdbc:hive2:///, jdbc:hive2://;...).
-     * That starts HiveServer2 inside the Admin JVM. The same host requirement applies to
-     * every allowed prefix.
+     * That starts HiveServer2 inside the Admin JVM. A port with no hostname
+     * (jdbc:hive2://:10000/..., including one percent-encoded colon) is not a host either.
+     * The same requirement applies to every allowed prefix. Hive also accepts a
+     * comma-separated ZooKeeper ensemble, and each entry must have a host.
      */
     private static void requireHost(String url, String prefix) throws HadoopException {
-        boolean missingHost = url.length() == prefix.length();
+        String rest = url.substring(prefix.length());
 
-        if (!missingHost) {
-            char next = url.charAt(prefix.length());
-
-            missingHost = next == '/' || next == ';' || next == '?' || next == '#';
+        // java.net.URI decodes the authority once. Decode here so %3A10000 is the same empty host as :10000.
+        if (rest.indexOf('%') >= 0) {
+            rest = percentDecode(rest);
         }
 
-        if (missingHost) {
+        if (!hasNonEmptyHost(rest)) {
             LOG.warn("Rejected jdbc.url without a host: {}", sanitizeForLog(url));
 
             HadoopException e = new HadoopException("jdbc.url must include a host");
             e.generateResponseDataMap(false, "Invalid jdbc.url", "jdbc.url must include a host", null, "jdbc.url");
             throw e;
         }
+    }
+
+    private static boolean hasNonEmptyHost(String rest) {
+        int authorityEnd = rest.length();
+
+        for (int i = 0; i < rest.length(); i++) {
+            char c = rest.charAt(i);
+
+            if (c == '/' || c == ';' || c == '?' || c == '#') {
+                authorityEnd = i;
+                break;
+            }
+        }
+
+        String authority = rest.substring(0, authorityEnd).trim();
+
+        if (authority.isEmpty()) {
+            return false;
+        }
+
+        for (String entry : authority.split(",", -1)) {
+            if (hostToken(entry).isEmpty()) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    private static String hostToken(String entry) {
+        String token = entry.trim();
+        int at = token.lastIndexOf('@');
+
+        if (at >= 0) {
+            token = token.substring(at + 1).trim();
+        }
+
+        if (token.startsWith("[")) {
+            int end = token.indexOf(']');
+
+            return end > 1 ? token.substring(1, end).trim() : "";
+        }
+
+        int colon = token.indexOf(':');
+
+        if (colon >= 0) {
+            token = token.substring(0, colon);
+        }
+
+        return token.trim();
     }
 
     private static void rejectBlockedParameters(String candidate, String urlForLog) throws HadoopException {

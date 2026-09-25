@@ -463,7 +463,8 @@ class JdbcUrlValidatorTest {
                 "jdbc:hive2://zk1:2181,zk2:2181/;serviceDiscoveryMode=zooKeeper;zooKeeperNamespace=hiveserver2",
                 "jdbc:hive2://host:10000/db;transportMode=http;httpPath=cliservice;ssl=true",
                 " jdbc:hive2://localhost:10000/default ",
-                "jdbc:hive2://[::1]:10000/default"})
+                "jdbc:hive2://[::1]:10000/default",
+                "jdbc:hive2://user:pass@host:10000/db"})
         void allowedScheme(String url) {
             assertDoesNotThrow(() -> JdbcUrlValidator.validate(url, hivePrefixes));
         }
@@ -491,19 +492,34 @@ class JdbcUrlValidatorTest {
             assertThrows(HadoopException.class, () -> JdbcUrlValidator.validate("jdbc:hive2://host:10000/db;socketFactory=com.example.X", hivePrefixes));
         }
 
-        @ParameterizedTest(name = "embedded: {0}")
+        @ParameterizedTest(name = "no host: {0}")
         @ValueSource(strings = {
                 "jdbc:hive2://",
                 "jdbc:hive2:///",
                 "jdbc:hive2://;",
                 "jdbc:hive2://?x=y",
                 "jdbc:hive2://#var",
-                "jdbc:hive2:///;initFile=/tmp/init.sql"
+                "jdbc:hive2:///;initFile=/tmp/init.sql",
+                "jdbc:hive2://:10000",
+                "jdbc:hive2://:10000/default",
+                "jdbc:hive2://:10000/;initFile=/tmp/init.sql",
+                "jdbc:hive2://%3A10000/default",
+                "jdbc:hive2://user:pass@:10000/db",
+                "jdbc:hive2://:2181,zk:2181/;serviceDiscoveryMode=zooKeeper"
         })
-        @DisplayName("Rejects Hive embedded mode, which has no host")
-        void rejectsEmbeddedMode(String url) {
+        @DisplayName("Rejects a jdbc url that does not include a host")
+        void rejectsMissingHost(String url) {
             HadoopException e = assertThrows(HadoopException.class, () -> JdbcUrlValidator.validate(url, hivePrefixes));
             assertTrue(e.getMessage().contains("jdbc.url must include a host"), e.getMessage());
+        }
+
+        @Test
+        @DisplayName("Rejects a port with an empty hostname for Trino and Presto")
+        void rejectsPortWithoutHostForOtherSchemes() {
+            HadoopException trino = assertThrows(HadoopException.class, () -> JdbcUrlValidator.validate("jdbc:trino://:8080/catalog", Collections.singletonList("jdbc:trino://")));
+            assertTrue(trino.getMessage().contains("jdbc.url must include a host"), trino.getMessage());
+            HadoopException presto = assertThrows(HadoopException.class, () -> JdbcUrlValidator.validate("jdbc:presto://:8080", Collections.singletonList("jdbc:presto://")));
+            assertTrue(presto.getMessage().contains("jdbc.url must include a host"), presto.getMessage());
         }
 
         @Test
