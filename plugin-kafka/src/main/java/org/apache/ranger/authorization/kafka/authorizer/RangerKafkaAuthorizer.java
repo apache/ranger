@@ -45,6 +45,7 @@ import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequestImpl;
 import org.apache.ranger.plugin.policyengine.RangerAccessResourceImpl;
 import org.apache.ranger.plugin.policyengine.RangerAccessResult;
+import org.apache.ranger.plugin.service.RangerAuthContext;
 import org.apache.ranger.plugin.service.RangerBasePlugin;
 import org.apache.ranger.plugin.util.RangerPerfTracer;
 import org.slf4j.Logger;
@@ -327,9 +328,13 @@ public class RangerKafkaAuthorizer implements Authorizer {
 
         String      userName    = requestContext.principal() == null ? null : requestContext.principal().getName();
         Set<String> userGroups  = MiscUtil.getGroupsForRequestUser(userName);
+        RangerAuthContext authContext = rangerPlugin != null ? rangerPlugin.getCurrentRangerAuthContext() : null;
+        Set<String> userRoles = authContext != null ? authContext.getRolesForUserAndGroups(userName, userGroups) : null;
         String      hostAddress = requestContext.clientAddress() == null ? null : requestContext.clientAddress().getHostAddress();
         String      ip          = StringUtils.isNotEmpty(hostAddress) && hostAddress.charAt(0) == '/' ? hostAddress.substring(1) : hostAddress;
         Date        eventTime   = new Date();
+
+        logger.debug("wrappedAuthorization(): rolesResolvedCount={}", userRoles != null ? userRoles.size() : 0);
 
         List<RangerAccessRequest> rangerRequests = new ArrayList<>();
 
@@ -351,6 +356,10 @@ public class RangerKafkaAuthorizer implements Authorizer {
             }
 
             RangerAccessRequestImpl rangerAccessRequest = createRangerAccessRequest(userName, userGroups, ip, eventTime, resourceTypeKey, action.resourcePattern().name(), accessType);
+
+            if (CollectionUtils.isNotEmpty(userRoles)) {
+                rangerAccessRequest.setUserRoles(userRoles);
+            }
 
             rangerRequests.add(rangerAccessRequest);
         }

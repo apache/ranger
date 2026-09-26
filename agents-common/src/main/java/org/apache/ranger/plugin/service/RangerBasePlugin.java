@@ -90,6 +90,7 @@ import java.util.function.Supplier;
 
 public class RangerBasePlugin {
     private static final Logger LOG = LoggerFactory.getLogger(RangerBasePlugin.class);
+    private static final int    ACCESS_EVAL_BATCH_SIZE_DEFAULT = 1000;
 
     private final RangerPluginConfig        pluginConfig;
     private final RangerPluginContext       pluginContext;
@@ -712,11 +713,32 @@ public class RangerBasePlugin {
             refreshPoliciesAndTags();
         }
 
-        Collection<RangerAccessResult> ret          = null;
+        Collection<RangerAccessResult> ret          = Collections.emptyList();
         RangerPolicyEngine             policyEngine = this.policyEngine;
 
-        if (policyEngine != null) {
-            ret = policyEngine.evaluatePolicies(requests, RangerPolicy.POLICY_TYPE_ACCESS, null);
+        if (policyEngine != null && CollectionUtils.isNotEmpty(requests)) {
+            int batchSize = pluginConfig != null ? pluginConfig.getAccessEvalBatchSize(ACCESS_EVAL_BATCH_SIZE_DEFAULT) : ACCESS_EVAL_BATCH_SIZE_DEFAULT;
+
+            if (batchSize <= 0) {
+                batchSize = ACCESS_EVAL_BATCH_SIZE_DEFAULT;
+            }
+
+            List<RangerAccessRequest> requestList = requests instanceof List ? (List<RangerAccessRequest>) requests : new ArrayList<>(requests);
+            List<RangerAccessResult>  allResults  = new ArrayList<>();
+            int                       totalBatches = (requestList.size() + batchSize - 1) / batchSize;
+
+            LOG.debug("isAccessAllowed(): totalRequests={}, batchSize={}, totalBatches={}", requestList.size(), batchSize, totalBatches);
+
+            for (int i = 0; i < requestList.size(); i += batchSize) {
+                int end = Math.min(i + batchSize, requestList.size());
+                Collection<RangerAccessResult> batchResults = policyEngine.evaluatePolicies(requestList.subList(i, end), RangerPolicy.POLICY_TYPE_ACCESS, null);
+
+                if (CollectionUtils.isNotEmpty(batchResults)) {
+                    allResults.addAll(batchResults);
+                }
+            }
+
+            ret = allResults;
         }
 
         if (CollectionUtils.isNotEmpty(ret)) {
