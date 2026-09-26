@@ -88,6 +88,7 @@ When configuring inbound PDP authentication in `ranger-pdp-site.xml`, use the
 - `ranger.pdp.authn.jwt.public.key`
 - `ranger.pdp.authn.jwt.cookie.name`
 - `ranger.pdp.authn.jwt.audiences`
+- `ranger.pdp.authn.jwt.issuer`
 - `ranger.pdp.authn.kerberos.enabled`
 - `ranger.pdp.authn.kerberos.spnego.principal`
 - `ranger.pdp.authn.kerberos.spnego.keytab`

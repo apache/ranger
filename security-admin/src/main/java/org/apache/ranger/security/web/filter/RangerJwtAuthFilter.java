@@ -18,6 +18,7 @@
  */
 package org.apache.ranger.security.web.filter;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.security.authorize.AuthorizationException;
@@ -26,11 +27,10 @@ import org.apache.ranger.authz.handler.RangerAuth;
 import org.apache.ranger.authz.handler.jwt.RangerDefaultJwtAuthHandler;
 import org.apache.ranger.authz.handler.jwt.RangerJwtAuthHandler;
 import org.apache.ranger.common.PropertiesUtil;
+import org.apache.ranger.entity.XXAuthSession;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Lazy;
-import org.springframework.security.authentication.AbstractAuthenticationToken;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -71,10 +71,18 @@ public class RangerJwtAuthFilter extends RangerDefaultJwtAuthHandler implements 
          * DelegatingFilterProxy} does not invoke init method (like Servlet container).
          */
         try {
+            String providerUrl = PropertiesUtil.getProperty(RangerSSOAuthenticationFilter.JWT_AUTH_PROVIDER_URL, "");
+
+            /* Ranger Admin verifies bearer tokens against a JWKS endpoint only; ranger.sso.publicKey belongs to the Knox SSO filter */
+            if (StringUtils.isBlank(providerUrl)) {
+                LOG.error("Ranger Admin JWT authentication is not initialized: mandatory config '{}' is not set.", RangerSSOAuthenticationFilter.JWT_AUTH_PROVIDER_URL);
+
+                return;
+            }
+
             Properties config = new Properties();
 
-            config.setProperty(RangerJwtAuthHandler.KEY_PROVIDER_URL, PropertiesUtil.getProperty(RangerSSOAuthenticationFilter.JWT_AUTH_PROVIDER_URL));
-            config.setProperty(RangerJwtAuthHandler.KEY_JWT_PUBLIC_KEY, PropertiesUtil.getProperty(RangerSSOAuthenticationFilter.JWT_PUBLIC_KEY, ""));
+            config.setProperty(RangerJwtAuthHandler.KEY_PROVIDER_URL, providerUrl);
             config.setProperty(RangerJwtAuthHandler.KEY_JWT_AUDIENCES, PropertiesUtil.getProperty(RangerSSOAuthenticationFilter.JWT_AUDIENCES, ""));
             config.setProperty(RangerJwtAuthHandler.KEY_JWT_ISS, PropertiesUtil.getProperty(RangerSSOAuthenticationFilter.JWT_ISSUER, ""));
 
@@ -102,10 +110,10 @@ public class RangerJwtAuthFilter extends RangerDefaultJwtAuthHandler implements 
         RangerAuth         rangerAuth         = authenticate(httpServletRequest);
 
         if (rangerAuth != null) {
-            final List<GrantedAuthority>      grantedAuths        = Collections.singletonList(new SimpleGrantedAuthority(DEFAULT_RANGER_ROLE));
-            final UserDetails                 principal           = new User(rangerAuth.getUserName(), "", grantedAuths);
-            final AbstractAuthenticationToken finalAuthentication = new UsernamePasswordAuthenticationToken(principal, "", grantedAuths);
-            final WebAuthenticationDetails    webDetails          = new WebAuthenticationDetails(httpServletRequest);
+            final List<GrantedAuthority>    grantedAuths        = Collections.singletonList(new SimpleGrantedAuthority(DEFAULT_RANGER_ROLE));
+            final UserDetails               principal           = new User(rangerAuth.getUserName(), "", grantedAuths);
+            final RangerAuthenticationToken finalAuthentication = new RangerAuthenticationToken(principal, grantedAuths, XXAuthSession.AUTH_TYPE_JWT);
+            final WebAuthenticationDetails  webDetails          = new WebAuthenticationDetails(httpServletRequest);
 
             finalAuthentication.setDetails(webDetails);
 
@@ -116,9 +124,7 @@ public class RangerJwtAuthFilter extends RangerDefaultJwtAuthHandler implements 
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
 
         if (auth != null) {
-            if (LOG.isDebugEnabled()) {
-                LOG.debug("<<<=== RangerJwtAuthFilter.doFilter() - user=[{}], isUserAuthenticated? [{}]", auth.getPrincipal(), auth.isAuthenticated());
-            }
+            LOG.debug("<<<=== RangerJwtAuthFilter.doFilter() - user=[{}], isUserAuthenticated? [{}]", auth.getPrincipal(), auth.isAuthenticated());
         } else {
             LOG.warn("<<<=== RangerJwtAuthFilter.doFilter() - Failed to authenticate request using Ranger JWT authentication framework.");
         }

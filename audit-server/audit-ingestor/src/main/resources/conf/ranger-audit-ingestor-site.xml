@@ -179,7 +179,13 @@
     <property>
         <name>ranger.audit.jwt.auth.audiences</name>
         <value></value>
-        <description>Expected audiences for JWT validation (comma-separated)</description>
+        <description>Comma-separated list of accepted JWT audiences (aud claim). Mandatory: JWT authentication fails to initialize when unset.</description>
+    </property>
+
+    <property>
+        <name>ranger.audit.jwt.auth.issuer</name>
+        <value></value>
+        <description>Expected JWT issuer (iss claim). Mandatory: JWT authentication fails to initialize when unset.</description>
     </property>
 
     <property>
