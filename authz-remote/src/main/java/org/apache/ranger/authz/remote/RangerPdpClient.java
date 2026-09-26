@@ -44,6 +44,8 @@ import org.apache.http.util.EntityUtils;
 import org.apache.ranger.authz.api.RangerAuthzException;
 import org.apache.ranger.authz.model.RangerAuthzRequest;
 import org.apache.ranger.authz.model.RangerAuthzResult;
+import org.apache.ranger.authz.model.RangerFilterResourcesRequest;
+import org.apache.ranger.authz.model.RangerFilterResourcesResult;
 import org.apache.ranger.authz.model.RangerMultiAuthzRequest;
 import org.apache.ranger.authz.model.RangerMultiAuthzResult;
 import org.apache.ranger.authz.model.RangerResourcePermissions;
@@ -77,6 +79,7 @@ class RangerPdpClient implements Closeable {
     private static final String PATH_AUTHORIZE            = "/authorize";
     private static final String PATH_AUTHORIZE_MULTI      = "/authorizeMulti";
     private static final String PATH_RESOURCE_PERMISSIONS = "/permissions";
+    private static final String PATH_FILTER_RESOURCES     = "/filterResources";
 
     private final RangerRemoteAuthzConfig     config;
     private final CloseableHttpClient         httpClient;
@@ -86,6 +89,7 @@ class RangerPdpClient implements Closeable {
     private final String                      apiEndpointAuthorize;
     private final String                      apiEndpointAuthorizeMulti;
     private final String                      apiEndpointResourcePermissions;
+    private final String                      apiEndpointFilterResources;
 
     RangerPdpClient(RangerRemoteAuthzConfig config) throws RangerAuthzException {
         this.config                         = config;
@@ -96,6 +100,7 @@ class RangerPdpClient implements Closeable {
         this.apiEndpointAuthorize           = config.getEndpointUrl(PATH_AUTHORIZE);
         this.apiEndpointAuthorizeMulti      = config.getEndpointUrl(PATH_AUTHORIZE_MULTI);
         this.apiEndpointResourcePermissions = config.getEndpointUrl(PATH_RESOURCE_PERMISSIONS);
+        this.apiEndpointFilterResources     = config.getEndpointUrl(PATH_FILTER_RESOURCES);
         this.httpClient                     = createHttpClient(config, kerberosContext);
     }
 
@@ -109,6 +114,10 @@ class RangerPdpClient implements Closeable {
 
     RangerResourcePermissions getResourcePermissions(RangerResourcePermissionsRequest request) throws RangerAuthzException {
         return post(apiEndpointResourcePermissions, request, RangerResourcePermissions.class);
+    }
+
+    RangerFilterResourcesResult filterResources(RangerFilterResourcesRequest request) throws RangerAuthzException {
+        return post(apiEndpointFilterResources, request, RangerFilterResourcesResult.class);
     }
 
     private <T> T post(String endpoint, Object payload, Class<T> responseType) throws RangerAuthzException {

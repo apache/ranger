@@ -21,8 +21,10 @@ package org.apache.ranger.tagsync.source.file;
 
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.hadoop.util.StopWatch;
 import org.apache.ranger.authorization.utils.JsonUtils;
 import org.apache.ranger.plugin.util.ServiceTags;
+import org.apache.ranger.tagsync.metrics.source.RangerTagSyncMetricsSourceTags;
 import org.apache.ranger.tagsync.model.AbstractTagSource;
 import org.apache.ranger.tagsync.model.TagSink;
 import org.apache.ranger.tagsync.process.TagSyncConfig;
@@ -42,6 +44,7 @@ import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
 import java.util.Properties;
+import java.util.concurrent.TimeUnit;
 
 public class FileTagSource extends AbstractTagSource implements Runnable {
     private static final Logger LOG = LoggerFactory.getLogger(FileTagSource.class);
@@ -206,14 +209,14 @@ public class FileTagSource extends AbstractTagSource implements Runnable {
             try {
                 if (TagSyncConfig.isTagSyncServiceActive()) {
                     LOG.debug("==> FileTagSource is running as server is active");
-
                     synchUp();
+                } else {
+                    LOG.debug("==> This server is running passive mode");
                 }
             } catch (Exception e) {
                 LOG.error("Caught exception..", e);
             } finally {
                 LOG.debug("Sleeping for [{}] milliSeconds", fileModTimeCheckIntervalInMs);
-
                 try {
                     Thread.sleep(fileModTimeCheckIntervalInMs);
                 } catch (InterruptedException exception) {
@@ -231,7 +234,16 @@ public class FileTagSource extends AbstractTagSource implements Runnable {
 
             ServiceTags serviceTags = readFromFile();
 
-            updateSink(serviceTags);
+            if (serviceTags != null) {
+                StopWatch uploadStopWatch = new StopWatch().start();
+                try {
+                    updateSink(serviceTags);
+                } finally {
+                    uploadStopWatch.stop();
+                    RangerTagSyncMetricsSourceTags.updateTotalUploadsTime(TimeUnit.MILLISECONDS.convert(uploadStopWatch.now(), TimeUnit.NANOSECONDS));
+                    uploadStopWatch.close();
+                }
+            }
 
             lastModifiedTimeInMillis = getModificationTime();
 

@@ -739,6 +739,10 @@ public class RangerGdsValidator {
     public boolean hasPermission(RangerGdsObjectACL acl, GdsPermission permission) {
         boolean ret = dataProvider.isAdminUser();
 
+        if (!ret && isReadPermission(permission) && dataProvider.isAuditUser()) {
+            ret = true;
+        }
+
         if (!ret && acl != null) {
             String userName = dataProvider.getCurrentUserLoginId();
 
@@ -1036,6 +1040,28 @@ public class RangerGdsValidator {
                         }
                     }
                 }
+            }
+        }
+
+        return ret;
+    }
+
+    private boolean isReadPermission(GdsPermission permission) {
+        boolean ret = false;
+
+        if (permission != null) {
+            switch (permission) {
+                case VIEW:
+                case LIST:
+                case AUDIT:
+                    ret = true;
+                    break;
+
+                case NONE:
+                case ADMIN:
+                case POLICY_ADMIN:
+                default:
+                    break;
             }
         }
 

@@ -435,7 +435,7 @@ public class TestRoleDBStore {
         Mockito.when(roleService.create(rangerRole)).thenReturn(rangerRole);
         Mockito.when(roleService.read(xxRole.getId())).thenReturn(rangerRole);
         Mockito.doNothing().when(transactionSynchronizationAdapter).executeOnTransactionCommit(Mockito.any());
-        Mockito.doNothing().when(roleRefUpdater).createNewRoleMappingForRefTable(Mockito.any(), Mockito.anyBoolean(), Mockito.anyBoolean());
+        Mockito.doNothing().when(roleRefUpdater).createNewRoleMappingForRefTable(Mockito.any(), Mockito.anyBoolean(), Mockito.anyBoolean(), Mockito.anyBoolean());
         Mockito.doNothing().when(roleService).createTransactionLog(Mockito.any(), Mockito.any(), Mockito.anyInt());
 
         roleDBStore.createRole(rangerRole, true, false);
@@ -462,7 +462,7 @@ public class TestRoleDBStore {
         Mockito.when(xxRoleDao.findByRoleId(rangerRole.getId())).thenReturn(xxRole);
         Mockito.doNothing().when(transactionSynchronizationAdapter).executeOnTransactionCommit(Mockito.any());
         Mockito.when(roleService.update(rangerRole)).thenReturn(rangerRole);
-        Mockito.doNothing().when(roleRefUpdater).createNewRoleMappingForRefTable(Mockito.any(), Mockito.anyBoolean(), Mockito.anyBoolean());
+        Mockito.doNothing().when(roleRefUpdater).createNewRoleMappingForRefTable(Mockito.any(), Mockito.anyBoolean(), Mockito.anyBoolean(), Mockito.anyBoolean());
         Mockito.doNothing().when(roleService).updatePolicyVersions(rangerRole.getId());
         Mockito.doNothing().when(roleService).createTransactionLog(Mockito.any(), Mockito.any(), Mockito.anyInt());
 

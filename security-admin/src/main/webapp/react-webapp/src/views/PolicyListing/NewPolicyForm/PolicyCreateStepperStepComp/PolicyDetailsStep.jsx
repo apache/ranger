@@ -459,6 +459,12 @@ const PolicyDetailsStep = ({ values, form, selectedServiceComponentDef }) => {
                         {/* Policy Conditions Modal */}
                         {showConditionsModal && (
                           <PolicyConditionsComp
+                            // Visibility & Control
+                            showModal={showConditionsModal}
+                            handleCloseModal={() =>
+                              setShowConditionsModal(false)
+                            }
+                            // Data & Value Binding
                             policyConditionDetails={policyConditionUpdatedJSON(
                               selectedServiceComponentDef.policyConditions
                             )}
@@ -468,10 +474,6 @@ const PolicyDetailsStep = ({ values, form, selectedServiceComponentDef }) => {
                                 form.change("conditions", newValue);
                               }
                             }}
-                            showModal={showConditionsModal}
-                            handleCloseModal={() =>
-                              setShowConditionsModal(false)
-                            }
                           />
                         )}
                       </Col>

@@ -1,0 +1,92 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package org.apache.ranger.plugin.util;
+
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
+
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.Map;
+import java.util.Properties;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+public class PluginHeaderAuthConfigTest {
+    private static final String VALID_SPIFFE =
+            "spiffe://prod-cluster.k8s.example.com/ns/ranger/sa/om";
+
+    @Test
+    public void buildTrustedAuthHeadersUsesLiteralHeaderValue() {
+        Properties props = new Properties();
+        props.setProperty("ranger.ozone.authn.header.enabled", "true");
+        props.setProperty("ranger.ozone.authn.header.X-Spiffe-Id", VALID_SPIFFE);
+
+        Map<String, String> headers = PluginHeaderAuthConfig.buildTrustedAuthHeaders(props, "ranger.ozone");
+
+        assertEquals(VALID_SPIFFE, headers.get("X-Spiffe-Id"));
+    }
+
+    @Test
+    public void buildTrustedAuthHeadersUsesFileValueSpec(@TempDir Path tempDir) throws Exception {
+        Path spiffeFile = tempDir.resolve("spiffe");
+        Files.writeString(spiffeFile, VALID_SPIFFE + "\n", StandardCharsets.UTF_8);
+
+        Properties props = new Properties();
+        props.setProperty("ranger.ozone.authn.header.enabled", "true");
+        props.setProperty("ranger.ozone.authn.header.X-Spiffe-Id", "file:" + spiffeFile);
+
+        Map<String, String> headers = PluginHeaderAuthConfig.buildTrustedAuthHeaders(props, "ranger.ozone");
+
+        assertEquals(VALID_SPIFFE, headers.get("X-Spiffe-Id"));
+    }
+
+    @Test
+    public void buildTrustedAuthHeadersEmptyWhenDisabled() {
+        Properties props = new Properties();
+        props.setProperty("ranger.ozone.authn.header.enabled", "false");
+        props.setProperty("ranger.ozone.authn.header.X-Spiffe-Id", VALID_SPIFFE);
+
+        assertTrue(PluginHeaderAuthConfig.buildTrustedAuthHeaders(props, "ranger.ozone").isEmpty());
+    }
+
+    @Test
+    public void isHeaderAuthEnabledFalseForMissingPrefix() {
+        assertFalse(PluginHeaderAuthConfig.isHeaderAuthEnabled(new Properties(), "ranger.ozone"));
+    }
+
+    @Test
+    public void buildTrustedAuthHeadersEmptyWhenNoHeadersConfigured() {
+        Properties props = new Properties();
+        props.setProperty("ranger.ozone.authn.header.enabled", "true");
+
+        assertTrue(PluginHeaderAuthConfig.buildTrustedAuthHeaders(props, "ranger.ozone").isEmpty());
+    }
+
+    @Test
+    public void buildTrustedAuthHeadersEmptyWhenSpiffeIdUnresolved() {
+        Properties props = new Properties();
+        props.setProperty("ranger.ozone.authn.header.enabled", "true");
+        props.setProperty("ranger.ozone.authn.header.X-Spiffe-Id", "env:UNSET_SPIFFE_ID_VAR");
+
+        assertTrue(PluginHeaderAuthConfig.buildTrustedAuthHeaders(props, "ranger.ozone").isEmpty());
+    }
+}

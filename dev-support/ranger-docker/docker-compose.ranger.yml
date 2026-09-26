@@ -7,7 +7,6 @@ services:
         - RANGER_BASE_IMAGE=${RANGER_BASE_IMAGE}
         - RANGER_BASE_VERSION=${RANGER_BASE_VERSION}
         - RANGER_VERSION=${RANGER_VERSION}
-        - RANGER_DB_TYPE=${RANGER_DB_TYPE}
         - KERBEROS_ENABLED=${KERBEROS_ENABLED}
     image: ranger:latest
     container_name: ranger
@@ -17,7 +16,7 @@ services:
       - ./dist/version:/home/ranger/dist/version:ro
       - ./scripts/kdc/krb5.conf:/etc/krb5.conf:ro
       - ./scripts/hadoop/core-site.xml:/home/ranger/scripts/core-site.xml:ro
-      - ./scripts/admin/ranger-admin-install-${RANGER_DB_TYPE}.properties:/opt/ranger/admin/install.properties
+      - ./scripts/admin/configs:/opt/ranger/admin/configs:ro
     stdin_open: true
     tty: true
     networks:
@@ -31,14 +30,21 @@ services:
         condition: service_started
       ranger-db:
         condition: service_healthy
-      ranger-solr:
-        condition: service_started
     environment:
       - RANGER_VERSION
       - RANGER_DB_TYPE
+      - AUDIT_INDEX_STORE
       - KERBEROS_ENABLED
       - DEBUG_ADMIN=${DEBUG_ADMIN:-false}
       - JAVA_OPTS
+      - RANGER_ADMIN_MAX_HEAP
+      - RANGER_JVM_METASPACE
+      - RANGER_JVM_MAX_METASPACE
+      - RANGER_ADMIN_DB_PASSWORD
+      - RANGER_ADMIN_PASSWORD
+      - RANGER_USERSYNC_PASSWORD
+      - RANGER_TAGSYNC_PASSWORD
+      - RANGER_KEYADMIN_PASSWORD
     command:
       - /home/ranger/scripts/ranger.sh
 
@@ -96,52 +102,6 @@ services:
       - "2181:2181"
     environment:
       - KERBEROS_ENABLED
-
-  ranger-solr:
-    build:
-      context: .
-      dockerfile: Dockerfile.ranger-solr
-      args:
-        - RANGER_BASE_IMAGE=${RANGER_BASE_IMAGE}
-        - RANGER_BASE_VERSION=${RANGER_BASE_VERSION}
-        - SOLR_VERSION=${SOLR_VERSION}
-        - SOLR_PLUGIN_VERSION=${SOLR_PLUGIN_VERSION}
-        - KERBEROS_ENABLED=${KERBEROS_ENABLED}
-    image: ranger-solr
-    container_name: ranger-solr
-    hostname: ranger-solr.rangernw
-    volumes:
-      - ./dist/keytabs/ranger-solr:/etc/keytabs
-      - ./scripts/solr/solr-ranger_audits:/opt/solr/server/solr/configsets/ranger_audits/conf
-      # Core conf is copied once by solr-precreate; mount so Solr 9 cache updates apply without recreating the core
-      - ./scripts/solr/solr-ranger_audits:/var/solr/data/ranger_audits/conf
-      - ./scripts/solr/ranger_audits/core.properties:/var/solr/data/ranger_audits/core.properties
-      - ./scripts/solr/ranger-solr-plugin-install.properties:/opt/ranger/ranger-solr-plugin/install.properties
-      # Keep enable templates in sync with repo (image tarball may be stale)
-      - ../../plugin-solr/conf/ranger-solr-security-changes.cfg:/opt/ranger/ranger-solr-plugin/install/conf.templates/enable/ranger-solr-security-changes.cfg:ro
-      - ./scripts/solr/core-site.xml:/opt/solr/server/resources/core-site.xml
-      - ./scripts/solr/solr-jaas.conf:/var/solr/data/jaas.conf
-      - ./scripts/solr/solr-security.json:/var/solr/data/security.json
-      - ./scripts/solr/ranger-solr.sh:/opt/ranger/ranger-solr.sh
-      - ./scripts/kdc/krb5.conf:/etc/krb5.conf
-    networks:
-      - ranger
-    ports:
-      - "8983:8983"
-    depends_on:
-      ranger-kdc:
-        condition: service_started
-      ranger-zk:
-        condition: service_started
-    environment:
-      - KERBEROS_ENABLED
-      - KRB5_CONFIG=/etc/krb5.conf
-      # Solr 9 enables Java SecurityManager by default; Ranger keytab login and policy cache need broader access
-      - SOLR_SECURITY_MANAGER_ENABLED=false
-    command:
-      - solr-precreate
-      - ranger_audits
-      - /opt/solr/server/solr/configsets/ranger_audits/
 
 networks:
   ranger:

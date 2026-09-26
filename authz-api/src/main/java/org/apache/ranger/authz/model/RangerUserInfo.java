@@ -43,6 +43,18 @@ public class RangerUserInfo {
         this(name, null, null, null);
     }
 
+    public RangerUserInfo(String name, Set<String> groups) {
+        this(name, null, groups, null);
+    }
+
+    public RangerUserInfo(String name, Map<String, Object> attributes) {
+        this(name, attributes, null, null);
+    }
+
+    public RangerUserInfo(String name, Map<String, Object> attributes, Set<String> groups) {
+        this(name, attributes, groups, null);
+    }
+
     public RangerUserInfo(String name, Map<String, Object> attributes, Set<String> groups, Set<String> roles) {
         this.name       = name;
         this.attributes = attributes;

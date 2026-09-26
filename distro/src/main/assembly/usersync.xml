@@ -37,7 +37,7 @@
 				<fileMode>644</fileMode>
 				<dependencySets>
 					<dependencySet>
-						<outputDirectory>lib</outputDirectory>
+						<outputDirectory>ews/lib</outputDirectory>
 						<unpack>false</unpack>
 						<includes>
 							<include>ch.qos.logback:logback-classic:jar:${logback.version}</include>
@@ -123,6 +123,18 @@
 				<unpack>false</unpack>
 			</binaries>
 		</moduleSet>
+
+        <moduleSet>
+            <useAllReactorProjects>true</useAllReactorProjects>
+            <includes>
+                <include>org.apache.ranger:unixauthservice</include>
+            </includes>
+            <binaries>
+                <outputDirectory>ews/webapp</outputDirectory>
+                <includeDependencies>false</includeDependencies>
+                <unpack>true</unpack>
+            </binaries>
+        </moduleSet>
 	</moduleSets>
 
 	<fileSets>

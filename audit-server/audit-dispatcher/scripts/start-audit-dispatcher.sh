@@ -41,9 +41,13 @@ if [ -n "${DISPATCHER_TYPE}" ] && [ -f "${AUDIT_DISPATCHER_CONF_DIR}/logback-${D
   LOGBACK_CONFIG_FILE="${AUDIT_DISPATCHER_CONF_DIR}/logback-${DISPATCHER_TYPE}.xml"
 fi
 
-# Set default heap size if not set
+# Set default heap size if not set (override with RANGER_AUDIT_DISPATCHER_MAX_HEAP, e.g. 256m)
 if [ -z "${AUDIT_DISPATCHER_HEAP}" ]; then
-  AUDIT_DISPATCHER_HEAP="-Xms512m -Xmx2g"
+  if [ -n "${RANGER_AUDIT_DISPATCHER_MAX_HEAP}" ]; then
+    AUDIT_DISPATCHER_HEAP="-Xms${RANGER_AUDIT_DISPATCHER_MAX_HEAP} -Xmx${RANGER_AUDIT_DISPATCHER_MAX_HEAP}"
+  else
+    AUDIT_DISPATCHER_HEAP="-Xms512m -Xmx2g"
+  fi
 fi
 
 # Set default Java options if not set

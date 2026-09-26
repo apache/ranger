@@ -175,21 +175,30 @@ public class EmbeddedServer {
 
             ssl.setAttribute("clientAuth", clientAuth);
 
-            String providerPath = EmbeddedServerUtil.getConfig("ranger.credential.provider.path");
-            String keyAlias     = EmbeddedServerUtil.getConfig("ranger.service.https.attrib.keystore.credential.alias", "keyStoreCredentialAlias");
-            String keystorePass = null;
+            String providerPath    = EmbeddedServerUtil.getConfig("ranger.credential.provider.path");
+            String credentialAlias = EmbeddedServerUtil.getConfig("ranger.service.https.attrib.keystore.credential.alias", "keyStoreCredentialAlias");
+            String keystorePass    = null;
 
-            if (providerPath != null && keyAlias != null) {
-                keystorePass = CredentialReader.getDecryptedString(providerPath.trim(), keyAlias.trim(), EmbeddedServerUtil.getConfig("ranger.keystore.file.type", RANGER_KEYSTORE_FILE_TYPE_DEFAULT));
-
-                if (StringUtils.isBlank(keystorePass) || "none".equalsIgnoreCase(keystorePass.trim())) {
-                    keystorePass = EmbeddedServerUtil.getConfig("ranger.service.https.attrib.keystore.pass");
-                }
+            if (providerPath != null && credentialAlias != null) {
+                keystorePass = CredentialReader.getDecryptedString(providerPath.trim(), credentialAlias.trim(), EmbeddedServerUtil.getConfig("ranger.keystore.file.type", RANGER_KEYSTORE_FILE_TYPE_DEFAULT));
             }
 
-            ssl.setAttribute("keyAlias", EmbeddedServerUtil.getConfig("ranger.service.https.attrib.keystore.keyalias", "rangeradmin"));
+            if (StringUtils.isBlank(keystorePass) || "none".equalsIgnoreCase(keystorePass.trim())) {
+                keystorePass = EmbeddedServerUtil.getConfig("ranger.service.https.attrib.keystore.pass");
+            }
+
+            String keystoreFile    = getKeystoreFile();
+            String keyAlias        = EmbeddedServerUtil.getConfig("ranger.service.https.attrib.keystore.keyalias", "rangeradmin");
+            String keystoreType    = EmbeddedServerUtil.getConfig("ranger.keystore.file.type", RANGER_KEYSTORE_FILE_TYPE_DEFAULT);
+            String validationError = validateHttpsKeystore(keystoreFile, keystorePass, keyAlias, keystoreType);
+
+            if (validationError != null) {
+                LOG.severe("HTTPS configuration validation failed: " + validationError + " The HTTPS connector may not bind to port " + sslPort + " and the Ranger UI may be unavailable.");
+            }
+
+            ssl.setAttribute("keyAlias", keyAlias);
             ssl.setAttribute("keystorePass", keystorePass);
-            ssl.setAttribute("keystoreFile", getKeystoreFile());
+            ssl.setAttribute("keystoreFile", keystoreFile);
 
             String enabledProtocols        = EmbeddedServerUtil.getConfig("ranger.service.https.attrib.ssl.enabled.protocols", DEFAULT_ENABLED_PROTOCOLS);
 
@@ -495,6 +504,50 @@ public class EmbeddedServer {
         return keystoreFile;
     }
 
+    static String validateHttpsKeystore(String keystoreFile, String keystorePass, String keyAlias, String keystoreType) {
+        if (StringUtils.isBlank(keystoreFile)) {
+            return "Keystore file is not configured. Check 'ranger.service.https.attrib.keystore.file'.";
+        }
+
+        if (StringUtils.isBlank(keystorePass)) {
+            return "Keystore password could not be resolved. Check 'ranger.service.https.attrib.keystore.credential.alias' or 'ranger.service.https.attrib.keystore.pass'.";
+        }
+
+        if (StringUtils.isBlank(keyAlias)) {
+            return "Keystore key alias is not configured. Check 'ranger.service.https.attrib.keystore.keyalias'.";
+        }
+
+        if (StringUtils.isBlank(keystoreType)) {
+            return "Keystore type is not configured. Check 'ranger.keystore.file.type'.";
+        }
+
+        try (InputStream in = getFileInputStream(keystoreFile)) {
+            if (in == null) {
+                return "Keystore file [" + keystoreFile + "] was not found or is not readable. Check 'ranger.service.https.attrib.keystore.file'.";
+            }
+
+            KeyStore keyStore = KeyStore.getInstance(keystoreType);
+
+            keyStore.load(in, keystorePass.toCharArray());
+
+            if (!keyStore.containsAlias(keyAlias)) {
+                return "Keystore key alias [" + keyAlias + "] was not found in keystore [" + keystoreFile + "]. Check 'ranger.service.https.attrib.keystore.keyalias'.";
+            }
+
+            if (!keyStore.entryInstanceOf(keyAlias, KeyStore.PrivateKeyEntry.class)) {
+                return "Keystore alias [" + keyAlias + "] in keystore [" + keystoreFile + "] is not a private-key entry required for HTTPS. Check 'ranger.service.https.attrib.keystore.keyalias'.";
+            }
+        } catch (KeyStoreException e) {
+            return "Keystore [" + keystoreFile + "] could not be inspected using type [" + keystoreType + "]. Check 'ranger.keystore.file.type'.";
+        } catch (NoSuchAlgorithmException | CertificateException e) {
+            return "Keystore [" + keystoreFile + "] could not be loaded because its algorithm or certificate data is invalid.";
+        } catch (IOException e) {
+            return "Keystore [" + keystoreFile + "] could not be loaded. The file may be unreadable, its format may be invalid, or its password may be incorrect.";
+        }
+
+        return null;
+    }
+
     private SSLContext getSSLContext() {
         KeyManager[]   kmList     = getKeyManagers();
         TrustManager[] tmList     = getTrustManagers();
@@ -633,7 +686,7 @@ public class EmbeddedServer {
         return tmList;
     }
 
-    private InputStream getFileInputStream(String fileName) throws IOException {
+    private static InputStream getFileInputStream(String fileName) throws IOException {
         InputStream in = null;
 
         if (StringUtils.isNotEmpty(fileName)) {

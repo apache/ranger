@@ -841,6 +841,7 @@ export default function EditPolicyForm() {
                       values={values}
                       form={form}
                       selectedServiceComponentDef={serviceCompDef}
+                      enableResourcePruneDefer
                     />
                   </Accordion.Body>
                 </Accordion.Item>

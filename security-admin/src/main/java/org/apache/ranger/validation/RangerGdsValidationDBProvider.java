@@ -153,6 +153,10 @@ public class RangerGdsValidationDBProvider extends RangerGdsValidationDataProvid
         return bizUtil.isAdmin();
     }
 
+    public boolean isAuditUser() {
+        return bizUtil.isAuditAdmin();
+    }
+
     public boolean isServiceAdmin(String name) {
         XXService     xService = daoMgr.getXXService().findByName(name);
         RangerService service  = xService != null ? svcService.getPopulatedViewObject(xService) : null;

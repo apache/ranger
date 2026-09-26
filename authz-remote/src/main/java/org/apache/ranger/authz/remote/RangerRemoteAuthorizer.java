@@ -25,6 +25,8 @@ import org.apache.ranger.authz.api.RangerAuthzException;
 import org.apache.ranger.authz.model.RangerAccessContext;
 import org.apache.ranger.authz.model.RangerAuthzRequest;
 import org.apache.ranger.authz.model.RangerAuthzResult;
+import org.apache.ranger.authz.model.RangerFilterResourcesRequest;
+import org.apache.ranger.authz.model.RangerFilterResourcesResult;
 import org.apache.ranger.authz.model.RangerMultiAuthzRequest;
 import org.apache.ranger.authz.model.RangerMultiAuthzResult;
 import org.apache.ranger.authz.model.RangerResourcePermissions;
@@ -86,6 +88,13 @@ public class RangerRemoteAuthorizer extends RangerAuthorizer {
         validateRequest(request);
 
         return getClient().getResourcePermissions(request);
+    }
+
+    @Override
+    public RangerFilterResourcesResult filterResources(RangerFilterResourcesRequest request) throws RangerAuthzException {
+        validateRequest(request);
+
+        return getClient().filterResources(request);
     }
 
     @Override

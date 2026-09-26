@@ -26,7 +26,6 @@ import org.apache.ranger.authorization.hadoop.config.RangerPluginConfig;
 import org.apache.ranger.authorization.hadoop.utils.RangerCredentialProvider;
 import org.apache.ranger.authorization.utils.JsonUtils;
 import org.apache.ranger.authorization.utils.StringUtil;
-import org.apache.ranger.plugin.authn.JwtProvider;
 import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.client.ClientProperties;
 import org.slf4j.Logger;
@@ -60,11 +59,14 @@ import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.security.UnrecoverableKeyException;
 import java.security.cert.CertificateException;
+import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Supplier;
 
 public class RangerRESTClient {
     private static final Logger LOG = LoggerFactory.getLogger(RangerRESTClient.class);
@@ -119,30 +121,31 @@ public class RangerRESTClient {
     public static final String RANGER_DT_OPERATION_TYPE_RENEW  = "RENEWDELEGATIONTOKEN";
     public static final String RANGER_DT_OPERATION_TYPE_CANCEL = "CANCELDELEGATIONTOKEN";
 
-    private final    List<String> configuredURLs;
-    private final    String       propertyPrefix;
-    private          String       mUrl;
-    private final    String       mSslConfigFileName;
-    private          String       mUsername;
-    private          String       mPassword;
-    private          boolean      mIsSSL;
-    private          String       mKeyStoreURL;
-    private          String       mKeyStoreAlias;
-    private          String       mKeyStoreFile;
-    private          String       mKeyStoreType;
-    private          String       mTrustStoreURL;
-    private          String       mTrustStoreAlias;
-    private          String       mTrustStoreFile;
-    private          String       mTrustStoreType;
-    private          int          mRestClientConnTimeOutMs;
-    private          int          mRestClientReadTimeOutMs;
-    private          int          maxRetryAttempts;
-    private          int          retryIntervalMs;
-    private          int          lastKnownActiveUrlIndex;
-    private volatile Client       client;
-    private volatile Client       cookieAuthClient;
-    private          JwtProvider  jwtProvider;
-    private volatile String       authHeader;
+    private final    List<String>        configuredURLs;
+    private final    String              propertyPrefix;
+    private          String              mUrl;
+    private final    String              mSslConfigFileName;
+    private          String              mUsername;
+    private          String              mPassword;
+    private          boolean             mIsSSL;
+    private          String              mKeyStoreURL;
+    private          String              mKeyStoreAlias;
+    private          String              mKeyStoreFile;
+    private          String              mKeyStoreType;
+    private          String              mTrustStoreURL;
+    private          String              mTrustStoreAlias;
+    private          String              mTrustStoreFile;
+    private          String              mTrustStoreType;
+    private          int                 mRestClientConnTimeOutMs;
+    private          int                 mRestClientReadTimeOutMs;
+    private          int                 maxRetryAttempts;
+    private          int                 retryIntervalMs;
+    private          int                 lastKnownActiveUrlIndex;
+    private volatile Client              client;
+    private volatile Client              cookieAuthClient;
+    private volatile Supplier<String>    tokenSupplier;
+    private volatile String              authHeader;
+    private volatile Map<String, String> trustedAuthHeaders = Collections.emptyMap();
 
     public RangerRESTClient(String url, String sslConfigFileName, Configuration config) {
         this(url, sslConfigFileName, config, getPropertyPrefix(config));
@@ -180,7 +183,7 @@ public class RangerRESTClient {
     }
 
     public boolean isAuthFilterPresent() {
-        return jwtProvider != null || hasBasicAuth();
+        return tokenSupplier != null || hasBasicAuth();
     }
 
     public int getRestClientConnTimeOutMs() {
@@ -215,12 +218,25 @@ public class RangerRESTClient {
         this.retryIntervalMs = retryIntervalMs;
     }
 
+    /**
+     * Trusted HTTP headers for SPIFFE or other header-based auth.
+     * Applied to every REST request from this client.
+     */
+    public void setTrustedAuthHeaders(Map<String, String> headers) {
+        if (headers == null || headers.isEmpty()) {
+            trustedAuthHeaders = Collections.emptyMap();
+        } else {
+            trustedAuthHeaders = Collections.unmodifiableMap(new LinkedHashMap<>(headers));
+        }
+        resetClient();
+    }
+
     public void setBasicAuthInfo(String username, String password) {
         setBasicAuthFilter(username, password);
     }
 
-    public void setJwtProvider(JwtProvider jwtProvider) {
-        this.jwtProvider = jwtProvider;
+    public void setTokenSupplier(Supplier<String> tokenSupplier) {
+        this.tokenSupplier = tokenSupplier;
         resetClient();
     }
 
@@ -494,7 +510,15 @@ public class RangerRESTClient {
             builder = builder.cookie(sessionId);
         }
 
+        applyTrustedAuthHeaders(builder);
+
         return builder;
+    }
+
+    private void applyTrustedAuthHeaders(Invocation.Builder builder) {
+        for (Map.Entry<String, String> entry : trustedAuthHeaders.entrySet()) {
+            builder.header(entry.getKey(), entry.getValue());
+        }
     }
 
     private Response performRequest(HttpMethod method, String relativeUrl, Map<String, String> params, Object requestBody, Cookie sessionId) throws Exception {
@@ -640,7 +664,7 @@ public class RangerRESTClient {
         // Validate that MOXy prevention is properly configured
         RangerJersey2ClientBuilder.validateAntiMoxyConfiguration(config);
 
-        if (jwtProvider != null) {
+        if (tokenSupplier != null) {
             config.register(new javax.ws.rs.client.ClientRequestFilter() {
                 @Override
                 public void filter(javax.ws.rs.client.ClientRequestContext requestContext) {
@@ -671,7 +695,7 @@ public class RangerRESTClient {
     }
 
     private void setJWTFilter() {
-        JwtProvider provider = jwtProvider;
+        Supplier<String> provider = tokenSupplier;
 
         if (provider != null) {
             LOG.info("Registering JWT auth header in REST client");
@@ -794,9 +818,9 @@ public class RangerRESTClient {
     }
 
     private String getCurrentJwt() {
-        JwtProvider provider = jwtProvider;
+        Supplier<String> provider = tokenSupplier;
 
-        return provider != null ? StringUtils.trimToNull(provider.getJwt()) : null;
+        return provider != null ? StringUtils.trimToNull(provider.get()) : null;
     }
 
     private boolean hasBasicAuth() {

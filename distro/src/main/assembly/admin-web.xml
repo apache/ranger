@@ -321,6 +321,7 @@
         <fileMode>644</fileMode>
         <includes>
           <include>org.apache.ranger:ranger-kafka-plugin</include>
+          <include>org.apache.kafka:kafka-clients:jar:${kafka.version}</include>
         </includes>
       </binaries>
     </moduleSet>

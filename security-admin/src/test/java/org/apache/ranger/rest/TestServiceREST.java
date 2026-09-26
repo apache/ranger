@@ -857,6 +857,35 @@ public class TestServiceREST {
     }
 
     @Test
+    public void testDeletePolicy_delegatedAdminWithoutModifyAccessIsForbidden() throws Exception {
+        // DELETE /service/plugins/policies/{id} by a non-admin delegated-admin whose grants do not
+        // cover the policy's access-types. deletePolicy() must route the stored policy through the modify check and
+        // must not delete when that check fails.
+        RangerPolicy rangerPolicy = rangerPolicy();
+        ServiceREST  spy          = Mockito.spy(serviceREST);
+
+        Mockito.when(validatorFactory.getPolicyValidator(svcStore)).thenReturn(policyValidator);
+        Mockito.when(svcStore.getPolicy(Id)).thenReturn(rangerPolicy);
+        Mockito.when(bizUtil.getCurrentUserLoginId()).thenReturn("alice");
+        Mockito.when(bizUtil.isAdmin()).thenReturn(false);
+        Mockito.when(bizUtil.isKeyAdmin()).thenReturn(false);
+        Mockito.when(svcStore.isServiceAdminUser(Mockito.anyString(), Mockito.anyString())).thenReturn(false);
+        Mockito.when(userMgr.getGroupsForUser(Mockito.anyString())).thenReturn(new HashSet<>());
+
+        RangerPolicyAdmin policyAdmin = Mockito.mock(RangerPolicyAdmin.class);
+        Mockito.doReturn(policyAdmin).when(spy).getPolicyAdminForDelegatedAdmin(Mockito.anyString());
+        Mockito.when(policyAdmin.getRolesFromUserAndGroups(Mockito.anyString(), Mockito.anySet())).thenReturn(new HashSet<>());
+        Mockito.when(policyAdmin.isDelegatedAdminAccessAllowedForModify(Mockito.same(rangerPolicy), Mockito.eq("alice"), Mockito.anySet(), Mockito.anySet(), Mockito.anyMap())).thenReturn(false);
+        Mockito.when(restErrorUtil.createRESTException(Mockito.eq(HttpServletResponse.SC_FORBIDDEN), Mockito.anyString(), Mockito.eq(true)))
+                .thenReturn(new WebApplicationException(HttpServletResponse.SC_FORBIDDEN));
+
+        Assertions.assertThrows(WebApplicationException.class, () -> spy.deletePolicy(Id));
+
+        Mockito.verify(policyAdmin).isDelegatedAdminAccessAllowedForModify(Mockito.same(rangerPolicy), Mockito.eq("alice"), Mockito.anySet(), Mockito.anySet(), Mockito.anyMap());
+        Mockito.verify(svcStore, Mockito.never()).deletePolicy(Mockito.any(RangerPolicy.class));
+    }
+
+    @Test
     public void test19getPolicyFalse() throws Exception {
         RangerPolicy rangerPolicy = rangerPolicy();
         Mockito.when(svcStore.getPolicy(rangerPolicy.getId())).thenReturn(rangerPolicy);
@@ -3914,6 +3943,34 @@ public class TestServiceREST {
         Assertions.assertThrows(WebApplicationException.class, () -> serviceREST.grantAccess("HDFS_1", grantRequest, request));
     }
 
+    @Test
+    void test157GrantAccessRejectsNullRequest() {
+        HttpServletRequest request = Mockito.mock(HttpServletRequest.class);
+
+        Mockito.when(restErrorUtil.createRESTException(Mockito.eq(HttpServletResponse.SC_BAD_REQUEST), Mockito.anyString(), Mockito.eq(false)))
+                .thenReturn(new WebApplicationException());
+
+        Assertions.assertThrows(WebApplicationException.class, () -> serviceREST.grantAccess("cm_hive", null, request));
+
+        Mockito.verify(restErrorUtil).createRESTException(HttpServletResponse.SC_BAD_REQUEST,
+                "Grant request object is null or missing body in grant access api", false);
+        Mockito.verifyNoInteractions(serviceUtil);
+    }
+
+    @Test
+    void test158SecureGrantAccessRejectsNullRequest() {
+        HttpServletRequest request = Mockito.mock(HttpServletRequest.class);
+
+        Mockito.when(restErrorUtil.createRESTException(Mockito.eq(HttpServletResponse.SC_BAD_REQUEST), Mockito.anyString(), Mockito.eq(false)))
+                .thenReturn(new WebApplicationException());
+
+        Assertions.assertThrows(WebApplicationException.class, () -> serviceREST.secureGrantAccess("cm_hive", null, request));
+
+        Mockito.verify(restErrorUtil).createRESTException(HttpServletResponse.SC_BAD_REQUEST,
+                "Grant request object is null or missing body in grant access api", false);
+        Mockito.verifyNoInteractions(bizUtil);
+    }
+
     RangerPolicy rangerPolicy() {
         List<RangerPolicyItemAccess>    accesses         = new ArrayList<>();
         List<String>                    users            = new ArrayList<>();
@@ -4671,5 +4728,110 @@ public class TestServiceREST {
                 HttpServletResponse.SC_BAD_REQUEST,
                 "serviceDef Id mismatch or service name not provided",
                 true);
+    }
+
+    @Test
+    public void testIsGdsPolicy_ByServiceType() throws Exception {
+        Method m = ServiceREST.class.getDeclaredMethod("isGdsPolicy", RangerPolicy.class);
+        m.setAccessible(true);
+        RangerPolicy policy = new RangerPolicy();
+        policy.setServiceType(EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_GDS_NAME);
+
+        Assertions.assertTrue((Boolean) m.invoke(serviceREST, policy));
+    }
+
+    @Test
+    public void testIsGdsPolicy_ByServiceNameOnlyReturnsFalse() throws Exception {
+        Method m = ServiceREST.class.getDeclaredMethod("isGdsPolicy", RangerPolicy.class);
+        m.setAccessible(true);
+        RangerPolicy policy = new RangerPolicy();
+        policy.setService(ServiceDBStore.GDS_SERVICE_NAME);
+
+        Assertions.assertFalse((Boolean) m.invoke(serviceREST, policy));
+    }
+
+    @Test
+    public void testIsGdsPolicy_NonGdsPolicy() throws Exception {
+        Method m = ServiceREST.class.getDeclaredMethod("isGdsPolicy", RangerPolicy.class);
+        m.setAccessible(true);
+        RangerPolicy policy = rangerPolicy();
+        policy.setServiceType("hive");
+        policy.setService("dev_hive");
+
+        Assertions.assertFalse((Boolean) m.invoke(serviceREST, policy));
+    }
+
+    @Test
+    public void testGetAllFilteredPolicyList_ExcludesGdsPolicies() throws Exception {
+        ServiceREST spy = Mockito.spy(serviceREST);
+        HttpServletRequest request = Mockito.mock(HttpServletRequest.class);
+        SearchFilter filter = new SearchFilter();
+
+        RangerPolicy hivePolicy = new RangerPolicy();
+        hivePolicy.setId(1L);
+        hivePolicy.setService("dev_hive");
+        hivePolicy.setServiceType("hive");
+        hivePolicy.setName("hive-policy");
+
+        RangerPolicy gdsPolicy = new RangerPolicy();
+        gdsPolicy.setId(2L);
+        gdsPolicy.setService(ServiceDBStore.GDS_SERVICE_NAME);
+        gdsPolicy.setServiceType(EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_GDS_NAME);
+        gdsPolicy.setName("DATASET: dataset_test1");
+
+        Mockito.doReturn(new ArrayList<>(Arrays.asList(hivePolicy, gdsPolicy))).when(spy).getPolicies(Mockito.any(SearchFilter.class));
+
+        Method m = ServiceREST.class.getDeclaredMethod("getAllFilteredPolicyList", SearchFilter.class, HttpServletRequest.class, List.class);
+        m.setAccessible(true);
+        @SuppressWarnings("unchecked")
+        List<RangerPolicy> out = (List<RangerPolicy>) m.invoke(spy, filter, request, new ArrayList<>());
+
+        Assertions.assertNotNull(out);
+        Assertions.assertEquals(1, out.size());
+        Assertions.assertEquals(hivePolicy.getId(), out.get(0).getId());
+    }
+
+    @Test
+    public void testGetAllFilteredPolicyList_ExcludesOnlyGdsPoliciesReturnsEmpty() throws Exception {
+        ServiceREST spy = Mockito.spy(serviceREST);
+        HttpServletRequest request = Mockito.mock(HttpServletRequest.class);
+        SearchFilter filter = new SearchFilter();
+
+        RangerPolicy gdsPolicy = new RangerPolicy();
+        gdsPolicy.setId(2L);
+        gdsPolicy.setService(ServiceDBStore.GDS_SERVICE_NAME);
+        gdsPolicy.setServiceType(EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_GDS_NAME);
+        gdsPolicy.setName("DATASET: dataset_test1");
+
+        Mockito.doReturn(new ArrayList<>(Collections.singletonList(gdsPolicy))).when(spy).getPolicies(Mockito.any(SearchFilter.class));
+
+        Method m = ServiceREST.class.getDeclaredMethod("getAllFilteredPolicyList", SearchFilter.class, HttpServletRequest.class, List.class);
+        m.setAccessible(true);
+        @SuppressWarnings("unchecked")
+        List<RangerPolicy> out = (List<RangerPolicy>) m.invoke(spy, filter, request, new ArrayList<>());
+
+        Assertions.assertNotNull(out);
+        Assertions.assertTrue(out.isEmpty());
+    }
+
+    @Test
+    public void testCreatePolicesBasedOnPolicyMap_SkipsGdsPolicy() throws Exception {
+        ServiceREST spy = Mockito.spy(serviceREST);
+        Method m = ServiceREST.class.getDeclaredMethod("createPolicesBasedOnPolicyMap", HttpServletRequest.class, Map.class, List.class, boolean.class, int.class);
+        m.setAccessible(true);
+        HttpServletRequest request = Mockito.mock(HttpServletRequest.class);
+
+        RangerPolicy gdsPolicy = new RangerPolicy();
+        gdsPolicy.setService(ServiceDBStore.GDS_SERVICE_NAME);
+        gdsPolicy.setServiceType(EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_GDS_NAME);
+        gdsPolicy.setName("DATASET: dataset_test1");
+
+        Map<String, RangerPolicy> map = new HashMap<>();
+        map.put("gds", gdsPolicy);
+
+        int ret = (int) m.invoke(spy, request, map, Collections.emptyList(), false, 0);
+
+        Assertions.assertEquals(0, ret);
+        Mockito.verify(spy, Mockito.never()).createPolicy(Mockito.any(RangerPolicy.class), Mockito.eq(request));
     }
 }

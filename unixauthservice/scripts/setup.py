@@ -70,7 +70,7 @@ nativeAuthProgramName = join(nativeAuthFolderName, 'credValidator.uexe')
 pamAuthProgramName = join(nativeAuthFolderName, 'pamCredValidator.uexe')
 
 defaultKSPassword = 'UnIx529p'
-defaultDNAME = 'cn=unixauthservice,ou=authenticator,o=mycompany,c=US'
+defaultDNAME = 'cn=Ranger Usersync Unixauthservice, ST=CA, C=US'
 
 unixUserProp = 'unix_user'
 unixGroupProp = 'unix_group'
@@ -212,11 +212,11 @@ def updatePropertyInJCKSFile(jcksFileName, propName, value):
     fn = jcksFileName
     if (value == ''):
         value = ' '
-    cmd = "java -cp './lib/*' %s create '%s' -value '%s' -provider jceks://file%s 2>&1" % (
+    cmd = "java -cp './ews/lib/*' %s create '%s' -value '%s' -provider jceks://file%s 2>&1" % (
     credUpdateClassName, propName, value, fn)
     ret = os.system(cmd)
     if (ret != 0):
-        print("ERROR: Unable update the JCKSFile(%s) for aliasName (%s)" % (fn, propName))
+        print("ERROR: Unable to update the JCKSFile(%s) for aliasName (%s)" % (fn, propName))
         sys.exit(1)
     return ret
 
@@ -256,7 +256,8 @@ def convertInstallPropsToXML(props):
             #	if (key.startswith("ranger.usersync.ldap") or key.startswith("ranger.usersync.group") or key.startswith("ranger.usersync.paged")):
             #		del ret[key]
         elif (syncSource == SYNC_SOURCE_LDAP):
-            ret['ranger.usersync.ldap.deltasync'] = "true"
+            if ('ranger.usersync.ldap.deltasync' not in ret or len(str(ret['ranger.usersync.ldap.deltasync'])) == 0):
+                ret['ranger.usersync.ldap.deltasync'] = "true"
             ldapPass = ret[SYNC_LDAP_BIND_PASSWORD_KEY]
             password_validation(ldapPass, SYNC_LDAP_BIND_PASSWORD_KEY)
             ret['ranger.usersync.source.impl.class'] = 'org.apache.ranger.ldapusersync.process.LdapUserGroupBuilder'
@@ -437,17 +438,22 @@ def main():
         if (localLogFolderName != ugsyncLogFolderName):
             os.symlink(ugsyncLogFolderName, localLogFolderName)
 
-    if (not 'ranger.usersync.keystore.file' in mergeProps):
-        mergeProps['ranger.usersync.keystore.file'] = defaultKSFileName
+    enableUnixAuth = globalDict.get('ENABLE_UNIX_AUTH', 'false').lower() == 'true'
+    if enableUnixAuth:
+        mergeProps['ranger.usersync.unix.backend'] = 'passwd'
+        if (not 'ranger.usersync.keystore.file' in mergeProps):
+            mergeProps['ranger.usersync.keystore.file'] = defaultKSFileName
 
-    ksFileName = mergeProps['ranger.usersync.keystore.file']
+        ksFileName = mergeProps['ranger.usersync.keystore.file']
 
-    if (not isfile(ksFileName)):
-        mergeProps['ranger.usersync.keystore.password'] = defaultKSPassword
-        createJavaKeystoreForSSL(ksFileName, defaultKSPassword)
+        if (not isfile(ksFileName)):
+            mergeProps['ranger.usersync.keystore.password'] = defaultKSPassword
+            createJavaKeystoreForSSL(ksFileName, defaultKSPassword)
 
-    if ('ranger.usersync.keystore.password' not in mergeProps):
-        mergeProps['ranger.usersync.keystore.password'] = defaultKSPassword
+        if ('ranger.usersync.keystore.password' not in mergeProps):
+            mergeProps['ranger.usersync.keystore.password'] = defaultKSPassword
+    else:
+        mergeProps['ranger.usersync.unix.backend'] = 'nss'
 
     fn = join(installTemplateDirName, templateFileName)
     outfn = join(confFolderName, outputFileName)

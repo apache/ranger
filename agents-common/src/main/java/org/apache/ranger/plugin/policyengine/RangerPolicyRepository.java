@@ -259,7 +259,7 @@ public class RangerPolicyRepository {
         this.serviceName          = tagPolicies.getServiceName();
         this.componentServiceName = componentServiceName;
         this.zoneName             = null;
-        this.serviceDef           = ServiceDefUtil.normalizeAccessTypeDefs(ServiceDefUtil.normalize(tagPolicies.getServiceDef()), componentServiceDef.getName());
+        this.serviceDef           = tagPolicies.getServiceDef().normalize().normalizeAccessTypeDefs(componentServiceDef.getName());
         this.componentServiceDef  = componentServiceDef;
         this.appId                = pluginContext.getConfig().getAppId();
         this.options              = new RangerPolicyEngineOptions(pluginContext.getConfig().getPolicyEngineOptions(), new RangerServiceDefHelper(serviceDef, false));
@@ -1077,10 +1077,16 @@ public class RangerPolicyRepository {
 
             if (!StringUtils.isEmpty(clsName)) {
                 try {
-                    @SuppressWarnings("unchecked")
-                    Class<RangerContextEnricher> enricherClass = (Class<RangerContextEnricher>) Class.forName(clsName);
+                    Class<?> cls = Class.forName(clsName, false, RangerPolicyRepository.class.getClassLoader());
 
-                    ret = enricherClass.newInstance();
+                    if (!RangerContextEnricher.class.isAssignableFrom(cls)) {
+                        throw new ClassCastException("class " + clsName + " is not assignable to " + RangerContextEnricher.class.getName());
+                    }
+
+                    @SuppressWarnings("unchecked")
+                    Class<? extends RangerContextEnricher> enricherClass = (Class<? extends RangerContextEnricher>) cls;
+
+                    ret = enricherClass.getDeclaredConstructor().newInstance();
                 } catch (Exception excp) {
                     LOG.error("failed to instantiate context enricher '{}' for '{}'", clsName, name, excp);
                 }

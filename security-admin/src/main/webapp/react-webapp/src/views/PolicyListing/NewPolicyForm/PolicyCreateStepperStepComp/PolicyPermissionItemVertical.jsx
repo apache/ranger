@@ -17,7 +17,7 @@
  * under the License.
  */
 
-import React, { useMemo, useState } from "react";
+import React, { useState } from "react";
 import { FieldArray } from "react-final-form-arrays";
 import {
   Row,
@@ -31,7 +31,6 @@ import { Field, useForm } from "react-final-form";
 import { RangerPolicyType } from "Utils/XAEnums";
 import { find, isEmpty, isArray, toUpper, map } from "lodash";
 import PolicyConditionsComp from "../../PolicyConditionsComp";
-import { policyConditionUpdatedJSON } from "Utils/XAUtils";
 import UsersGroupsAndRolesSelectionComponent from "./UsersGroupsAndRolesSelectionComponent";
 import TagBasePermissionItem from "../../TagBasePermissionItem";
 import {
@@ -39,17 +38,14 @@ import {
   getPolicyConditionDisplayLbl
 } from "Utils/XAUtils";
 import { CustomTooltip } from "Components/CommonComponents";
-import {
-  getSelectedAccessTypesForRow,
-  getSelectedLeafResourceTypes,
-  buildActionReqsMapFromConditionDef
-} from "Utils/policyConditionUtils";
-import { usePruneStaleConditions } from "../../../../hooks/usePruneStaleConditions";
+import { getSelectedAccessTypesForRow } from "Utils/policyConditionUtils";
+import { usePolicyPermissionConditionContext } from "Hooks/usePolicyPermissionConditionContext";
 
 export default function PolicyPermissionItemVertical({
   attrName,
   serviceCompDetails,
-  formValues
+  formValues,
+  enableResourcePruneDefer = false
 }) {
   const [showConditionsModalIndex, setShowConditionsModalIndex] =
     useState(null);
@@ -57,30 +53,14 @@ export default function PolicyPermissionItemVertical({
     useState(null);
   const form = useForm(); // Get form instance
 
-  const conditionDefVal = useMemo(
-    () => policyConditionUpdatedJSON(serviceCompDetails?.policyConditions),
-    [serviceCompDetails?.policyConditions]
-  );
-
-  const actionReqsMap = useMemo(
-    () => buildActionReqsMapFromConditionDef(conditionDefVal),
-    [conditionDefVal]
-  );
-
-  const leafResourceTypes = useMemo(
-    () => getSelectedLeafResourceTypes(serviceCompDetails, formValues),
-    [serviceCompDetails, formValues]
-  );
-
-  usePruneStaleConditions({
-    formValues,
-    attrName,
-    form,
-    leafResourceTypes,
-    serviceCompDetails,
-    conditionDefVal,
-    actionReqsMap
-  });
+  const { conditionDefVal, actionReqsMap, leafResourceTypes } =
+    usePolicyPermissionConditionContext({
+      serviceCompDetails,
+      formValues,
+      attrName,
+      form,
+      enableResourcePruneDefer
+    });
 
   const accessTypeOptions = getAccessTypesByResource(
     formValues,
@@ -553,6 +533,14 @@ export default function PolicyPermissionItemVertical({
                           )}
                           {showConditionsModalIndex === index && (
                             <PolicyConditionsComp
+                              // Visibility & Control
+                              showModal={true}
+                              modalHeader="Rule Conditions"
+                              handleCloseModal={() =>
+                                setShowConditionsModalIndex(null)
+                              }
+                              // Data & Value Binding
+                              scope="policyItem"
                               policyConditionDetails={conditionDefVal}
                               inputVal={{
                                 value: fields.value[index]?.conditions || {},
@@ -560,23 +548,20 @@ export default function PolicyPermissionItemVertical({
                                   form.change(`${name}.conditions`, newValue);
                                 }
                               }}
-                              showModal={true}
-                              handleCloseModal={() =>
-                                setShowConditionsModalIndex(null)
-                              }
-                              modalHeader="Rule Conditions"
-                              scope="policyItem"
+                              // Service & Actions Metadata
                               servicedefName={serviceCompDetails?.name}
+                              serviceDefOptions={serviceCompDetails?.options}
                               actionReqsMap={actionReqsMap}
+                              // Filter Context Evaluation
                               actionFilterContext={{
+                                leafResourceTypes,
+                                accessTypeDefs: serviceCompDetails?.accessTypes,
                                 selectedAccessTypes:
                                   getSelectedAccessTypesForRow(
                                     formValues,
                                     attrName,
                                     index
-                                  ),
-                                leafResourceTypes,
-                                accessTypeDefs: serviceCompDetails?.accessTypes
+                                  )
                               }}
                             />
                           )}

@@ -21,6 +21,7 @@ package org.apache.ranger.metrics.source;
 import org.apache.hadoop.metrics2.MetricsSystem;
 import org.apache.hadoop.metrics2.lib.DefaultMetricsSystem;
 import org.apache.ranger.metrics.RangerMetricsSystemWrapper;
+import org.apache.ranger.metrics.wrapper.RangerMetricsSourceWrapper;
 import org.apache.ranger.server.tomcat.EmbeddedServerMetricsCollector;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
@@ -29,16 +30,17 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 public class TestRangerMetricsContainerSource {
-    private static final String                     CONTAINER_METRIC_SOURCE_NAME = "RangerContainer";
-    private static       RangerMetricsSystemWrapper rangerMetricsSystemWrapper;
-    private static       MetricsSystem metricsSystem;
-    private EmbeddedServerMetricsCollector embeddedServerMetricsCollector;
+    private static final String                         CONTAINER_METRIC_SOURCE_NAME = "RangerContainer";
+    private static       RangerMetricsSystemWrapper     rangerMetricsSystemWrapper;
+    private static       MetricsSystem                  metricsSystem;
+    private              EmbeddedServerMetricsCollector embeddedServerMetricsCollector;
 
     public TestRangerMetricsContainerSource() {
     }
@@ -47,7 +49,9 @@ public class TestRangerMetricsContainerSource {
     public static void init() {
         metricsSystem                                               = DefaultMetricsSystem.instance();
         TestRangerMetricsContainerSource.rangerMetricsSystemWrapper = new RangerMetricsSystemWrapper();
-        TestRangerMetricsContainerSource.rangerMetricsSystemWrapper.init("test", null, (List) null);
+        List<RangerMetricsSourceWrapper> sourceWrappers = new ArrayList<>();
+        sourceWrappers.add(new RangerMetricsSourceWrapper("RangerContainer", "Ranger web container metric source (RangerMetricsContainerSource)", "test", new RangerMetricsContainerSource("test")));
+        TestRangerMetricsContainerSource.rangerMetricsSystemWrapper.init("test", sourceWrappers, null);
     }
 
     @AfterAll

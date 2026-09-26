@@ -24,8 +24,13 @@ import { getServiceDef } from "Utils/appState";
 import { fetchApi } from "Utils/fetchAPI";
 import {
   getResourcesDefVal,
-  prunePolicyItemAccessesToAllowedTypes
+  prunePolicyItemAccessesToAllowedTypes,
+  policyConditionUpdatedJSON
 } from "Utils/XAUtils";
+import {
+  buildActionReqsMapFromConditionDef,
+  pruneStaleActionMatcherInPolicyItemCondition
+} from "Utils/policyConditionUtils";
 import { isEmpty, isArray, map, reject, groupBy } from "lodash";
 import moment from "moment";
 import StepperForm from "../../../components/StepperFormComponents";
@@ -629,6 +634,27 @@ const CreateNewPolicyForm = () => {
                         form,
                         selectedServiceComponentDef
                       );
+
+                      const conditionDefVal = policyConditionUpdatedJSON(
+                        selectedServiceComponentDef?.policyConditions
+                      );
+                      const actionReqsMap =
+                        buildActionReqsMapFromConditionDef(conditionDefVal);
+                      const isDenyAllElse =
+                        form.getState().values?.isDenyAllElse;
+                      pruneStaleActionMatcherInPolicyItemCondition({
+                        form,
+                        attrNames: [
+                          "policyItems",
+                          "allowExceptions",
+                          ...(isDenyAllElse
+                            ? []
+                            : ["denyPolicyItems", "denyExceptions"])
+                        ],
+                        serviceCompDetails: selectedServiceComponentDef,
+                        conditionDefVal,
+                        actionReqsMap
+                      });
                     }
                   }}
                   initialValues={{

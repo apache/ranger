@@ -852,6 +852,24 @@ public class RangerAuthorizationCoprocessor implements AccessControlService.Inte
         return tableName;
     }
 
+    private boolean isSystemOrSuperUser(User activeUser) {
+        if (activeUser == null) {
+            return false;
+        }
+        if (userUtils.isSuperUser(activeUser)) {
+            return true;
+        }
+        try {
+            User currentUser = User.getCurrent();
+            if (currentUser != null) {
+                return Objects.equals(currentUser.getShortName(), activeUser.getShortName());
+            }
+        } catch (IOException e) {
+            LOG.warn("Unable to obtain the current user", e);
+        }
+        return false;
+    }
+
     protected void requireSystemOrSuperUser(ObserverContext<?> ctx) throws IOException {
         User user = User.getCurrent();
 
@@ -859,10 +877,9 @@ public class RangerAuthorizationCoprocessor implements AccessControlService.Inte
             throw new IOException("Unable to obtain the current user, authorization checks for internal operations will not work correctly!");
         }
 
-        String systemUser = user.getShortName();
-        User   activeUser = getActiveUser(ctx);
+        User activeUser = getActiveUser(ctx);
 
-        if (!Objects.equals(systemUser, activeUser.getShortName()) && !userUtils.isSuperUser(activeUser)) {
+        if (activeUser == null || !isSystemOrSuperUser(activeUser)) {
             throw new AccessDeniedException("User '" + user.getShortName() + "is not system or super user.");
         }
     }
@@ -1390,7 +1407,7 @@ public class RangerAuthorizationCoprocessor implements AccessControlService.Inte
             LOG.warn("canSkipAccessCheck: exiting{}", "Unexpeceted: User is null: access denied, not audited!");
 
             throw new AccessDeniedException("No user associated with request (" + operation + ") for action: " + access + "on table:" + table);
-        } else if (isAccessForMetadataRead(access, table)) {
+        } else if (isAccessForMetadataRead(access, table, user)) {
             LOG.debug("canSkipAccessCheck: true: metadata read access always allowed, not audited");
 
             result = true;
@@ -1434,9 +1451,15 @@ public class RangerAuthorizationCoprocessor implements AccessControlService.Inte
 
     /* ---- EndpointObserver implementation ---- */
 
-    boolean isAccessForMetadataRead(String access, String table) {
+    boolean isAccessForMetadataRead(String access, String table, User user) {
         if (authUtils.isReadAccess(access) && isSpecialTable(table)) {
-            LOG.debug("isAccessForMetadataRead: Metadata tables read: access allowed!");
+            if (StringUtils.equals(table, "hbase:acl")) {
+                if (!isSystemOrSuperUser(user)) {
+                    LOG.debug("isAccessForMetadataRead: Metadata tables read: not access allowed for user: {}!", (user != null ? user.getShortName() : ""));
+                    return false;
+                }
+            }
+            LOG.debug("isAccessForMetadataRead: Metadata tables read: access allowed for user: {}!", (user != null ? user.getShortName() : ""));
 
             return true;
         }

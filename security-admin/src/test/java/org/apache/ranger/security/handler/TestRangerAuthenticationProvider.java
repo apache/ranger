@@ -26,6 +26,7 @@ import org.junit.jupiter.api.TestMethodOrder;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
@@ -40,11 +41,13 @@ import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.atLeastOnce;
@@ -289,6 +292,51 @@ public class TestRangerAuthenticationProvider {
 
         assertNotNull(result);
         assertTrue(result.isAuthenticated());
+    }
+
+    @Test
+    public void blockActiveUser() throws Exception {
+        String username = "erin";
+        when(userMgr.isUserNotActive(username)).thenReturn(true);
+        Method m = provider.getClass().getDeclaredMethod("blockNotActiveUser", String.class);
+        m.setAccessible(true);
+        Exception thrown = null;
+        try {
+            m.invoke(provider, username);
+        } catch (java.lang.reflect.InvocationTargetException e) {
+            thrown = (Exception) e.getCause();
+        }
+        assertNotNull(thrown, "expected blockNotActiveUser to reject a disabled account");
+        assertTrue(thrown instanceof DisabledException);
+    }
+
+    @Test
+    public void blockEnabledOrUnknown() throws Exception {
+        String username = "frank";
+        when(userMgr.isUserNotActive(username)).thenReturn(false);
+        Method m = provider.getClass().getDeclaredMethod("blockNotActiveUser", String.class);
+        m.setAccessible(true);
+        // should not throw
+        m.invoke(provider, username);
+    }
+
+    @Test
+    public void authenticate_activeDirectory_rejectsDisabledLocalAccount_evenWithValidDirectoryCredentials() {
+        String username = "gina";
+        RangerAuthenticationProvider adProvider = new RangerAuthenticationProvider() {
+            @Override
+            public Authentication getADAuthentication(Authentication authentication) {
+                List<GrantedAuthority> auths = Collections.singletonList(new SimpleGrantedAuthority("ROLE_USER"));
+                return new UsernamePasswordAuthenticationToken(new User(username, "pw", auths), "pw", auths);
+            }
+        };
+        adProvider.userMgr    = userMgr;
+        adProvider.sessionMgr = sessionMgr;
+        adProvider.setRangerAuthenticationMethod("ACTIVE_DIRECTORY");
+        when(userMgr.isUserNotActive(username)).thenReturn(true);
+        UsernamePasswordAuthenticationToken input = new UsernamePasswordAuthenticationToken(username, "pw");
+        DisabledException thrown = assertThrows(DisabledException.class, () -> adProvider.authenticate(input));
+        assertNotNull(thrown);
     }
 
     private static void setPrivateField(Object target, String fieldName, Object value) throws Exception {

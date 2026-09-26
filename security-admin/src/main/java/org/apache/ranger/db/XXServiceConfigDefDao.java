@@ -59,4 +59,32 @@ public class XXServiceConfigDefDao extends BaseDao<XXServiceConfigDef> {
             return new ArrayList<>();
         }
     }
+
+    public List<String> findConfigNamesByServiceDefIdAndType(Long serviceDefId, String configType) {
+        if (serviceDefId == null) {
+            return new ArrayList<>();
+        }
+        try {
+            return getEntityManager()
+                    .createNamedQuery("XXServiceConfigDef.findConfigNamesByServiceDefIdAndType", String.class)
+                    .setParameter("serviceDefId", serviceDefId)
+                    .setParameter("configType", configType).getResultList();
+        } catch (NoResultException e) {
+            return new ArrayList<>();
+        }
+    }
+
+    public List<String> findConfigNamesByServiceDefNameAndType(String serviceDef, String configType) {
+        if (serviceDef == null) {
+            return new ArrayList<>();
+        }
+        try {
+            return getEntityManager()
+                    .createNamedQuery("XXServiceConfigDef.findConfigNamesByServiceDefNameAndType", String.class)
+                    .setParameter("serviceDef", serviceDef)
+                    .setParameter("configType", configType).getResultList();
+        } catch (NoResultException e) {
+            return new ArrayList<>();
+        }
+    }
 }

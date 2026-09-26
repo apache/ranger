@@ -66,7 +66,6 @@ import {
 } from "react-router-dom";
 import PolicyValidityPeriodComp from "./PolicyValidityPeriodComp";
 import PolicyConditionsComp from "./PolicyConditionsComp";
-import { isPerRowCondition } from "Utils/policyConditionUtils";
 import moment from "moment";
 import {
   InfoIcon,
@@ -1362,15 +1361,17 @@ export default function AddUpdatePolicyForm() {
                                       name="conditions"
                                       render={({ input }) => (
                                         <PolicyConditionsComp
-                                          policyConditionDetails={policyConditionUpdatedJSON(
-                                            serviceCompDetails.policyConditions
-                                          )}
-                                          inputVal={input}
+                                          // Visibility & Control
                                           showModal={showModal}
+                                          modalHeader="Policy Conditions"
                                           handleCloseModal={
                                             policyConditionState
                                           }
-                                          modalHeader="Policy Conditions"
+                                          // Data & Value Binding
+                                          inputVal={input}
+                                          policyConditionDetails={policyConditionUpdatedJSON(
+                                            serviceCompDetails.policyConditions
+                                          )}
                                         />
                                       )}
                                     />
@@ -1394,9 +1395,6 @@ export default function AddUpdatePolicyForm() {
                                 !isEmpty(values.conditions) ? (
                                   Object.keys(values.conditions).map(
                                     (keyName) => {
-                                      if (isPerRowCondition(keyName)) {
-                                        return null;
-                                      }
                                       if (
                                         values.conditions[keyName] != "" &&
                                         values.conditions[keyName] != null

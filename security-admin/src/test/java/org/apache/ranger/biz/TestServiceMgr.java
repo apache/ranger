@@ -289,4 +289,42 @@ public class TestServiceMgr {
         mgr.lookupResource("s", ctx, store);
         Assertions.assertTrue(true);
     }
+
+    @Test
+    public void test11_getRangerServiceByService_rejectsImplClassNotAssignableToRangerBaseService() throws Exception {
+        ServiceMgr mgr = new ServiceMgr();
+        ServiceStore store = mock(ServiceStore.class);
+        RangerService svc = new RangerService();
+        svc.setType("evil");
+        svc.setName("s");
+        RangerServiceDef def = new RangerServiceDef();
+        def.setName("evil");
+        def.setImplClass(Thread.class.getName());
+        when(store.getServiceDefByName("evil")).thenReturn(def);
+
+        RangerBaseService built = mgr.getRangerServiceByService(svc, store);
+
+        Assertions.assertNotNull(built);
+        Assertions.assertEquals(RangerDefaultService.class, built.getClass());
+        Assertions.assertEquals("s", built.getServiceName());
+    }
+
+    @Test
+    public void test12_getRangerServiceByService_acceptsImplClassAssignableToRangerBaseService() throws Exception {
+        // Sanity check: a legitimate implClass that does extend RangerBaseService still works.
+        ServiceMgr mgr = new ServiceMgr();
+        ServiceStore store = mock(ServiceStore.class);
+        RangerService svc = new RangerService();
+        svc.setType("legit");
+        svc.setName("s2");
+        RangerServiceDef def = new RangerServiceDef();
+        def.setName("legit");
+        def.setImplClass(RangerDefaultService.class.getName());
+        when(store.getServiceDefByName("legit")).thenReturn(def);
+
+        RangerBaseService built = mgr.getRangerServiceByService(svc, store);
+
+        Assertions.assertNotNull(built);
+        Assertions.assertEquals(RangerDefaultService.class, built.getClass());
+    }
 }

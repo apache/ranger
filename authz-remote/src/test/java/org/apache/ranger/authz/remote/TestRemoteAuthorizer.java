@@ -32,6 +32,8 @@ import org.apache.ranger.authz.model.RangerAuthzResult.AccessDecision;
 import org.apache.ranger.authz.model.RangerAuthzResult.AccessResult;
 import org.apache.ranger.authz.model.RangerAuthzResult.PermissionResult;
 import org.apache.ranger.authz.model.RangerAuthzResult.PolicyInfo;
+import org.apache.ranger.authz.model.RangerFilterResourcesRequest;
+import org.apache.ranger.authz.model.RangerFilterResourcesResult;
 import org.apache.ranger.authz.model.RangerMultiAuthzRequest;
 import org.apache.ranger.authz.model.RangerMultiAuthzResult;
 import org.apache.ranger.authz.model.RangerResourceInfo;
@@ -59,8 +61,10 @@ import java.util.Base64;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -151,6 +155,27 @@ public class TestRemoteAuthorizer {
                 RangerResourcePermissions result = authorizer.getResourcePermissions(permissionsRequest);
 
                 assertEquals(expectedResourcePermissions(), result);
+            } finally {
+                authorizer.close();
+            }
+        }
+    }
+
+    @Test
+    public void testFilterResources() throws Exception {
+        try (StubPdpServer server = StubPdpServer.createHttp()) {
+            server.respond("/authz/v1/filterResources", 200,
+                    "{\"resources\":[{\"name\":\"table:default/sales\"}]}");
+
+            RangerRemoteAuthorizer authorizer = new RangerRemoteAuthorizer(createNoAuthProperties(server.getBaseUrl()));
+
+            try {
+                authorizer.init();
+
+                RangerFilterResourcesRequest request = new RangerFilterResourcesRequest("req-3", Arrays.asList("table:default/sales", "table:default/mktg"), "_any", "hive", "dev_hive");
+                RangerFilterResourcesResult  result  = authorizer.filterResources(request);
+
+                assertEquals(expectedFilterResources(), result);
             } finally {
                 authorizer.close();
             }
@@ -334,6 +359,14 @@ public class TestRemoteAuthorizer {
         return ret;
     }
 
+    private static RangerFilterResourcesResult expectedFilterResources() {
+        RangerFilterResourcesResult ret = new RangerFilterResourcesResult();
+
+        ret.setResources(resources("table:default/sales"));
+
+        return ret;
+    }
+
     private static PermissionResult permission(String permission, AccessDecision decision) {
         PermissionResult ret = new PermissionResult();
         AccessResult     access = new AccessResult();
@@ -355,6 +388,10 @@ public class TestRemoteAuthorizer {
         }
 
         return ret;
+    }
+
+    private static List<RangerResourceInfo> resources(String... resources) {
+        return Arrays.stream(resources).map(RangerResourceInfo::new).collect(Collectors.toList());
     }
 
     private static LinkedHashSet<String> linkedSet(String... values) {

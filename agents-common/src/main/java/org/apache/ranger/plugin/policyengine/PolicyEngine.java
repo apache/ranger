@@ -568,7 +568,7 @@ public class PolicyEngine {
             RangerServiceDef tagServiceDef = servicePolicies.getTagPolicies() != null ? servicePolicies.getTagPolicies().getServiceDef() : null;
 
             if (tagServiceDef != null) {
-                ServiceDefUtil.normalizeAccessTypeDefs(ServiceDefUtil.normalize(tagServiceDef), serviceDef.getName());
+                tagServiceDef.normalize().normalizeAccessTypeDefs(serviceDef.getName());
             }
         }
     }

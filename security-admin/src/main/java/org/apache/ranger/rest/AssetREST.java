@@ -43,7 +43,6 @@ import org.apache.ranger.service.XAccessAuditService;
 import org.apache.ranger.service.XAssetService;
 import org.apache.ranger.service.XCredentialStoreService;
 import org.apache.ranger.service.XPolicyExportAuditService;
-import org.apache.ranger.service.XPolicyService;
 import org.apache.ranger.service.XResourceService;
 import org.apache.ranger.util.RestUtil;
 import org.apache.ranger.view.VXAccessAuditList;
@@ -111,9 +110,6 @@ public class AssetREST {
 
     @Autowired
     XResourceService xResourceService;
-
-    @Autowired
-    XPolicyService xPolicyService;
 
     @Autowired
     XCredentialStoreService xCredentialStoreService;

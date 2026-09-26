@@ -14,6 +14,7 @@
   See the License for the specific language governing permissions and
   limitations under the License.
 -->
+<%@ page import="org.apache.ranger.common.StringUtil" %>
 <!DOCTYPE html>
 <!--[if lt IE 7]><html class="no-js lt-ie9 lt-ie8 lt-ie7"><![endif]-->
 <!--[if IE 7]><html class="no-js lt-ie9 lt-ie8"><![endif]-->
@@ -32,6 +33,9 @@
         <link rel="stylesheet" href="styles/font-awesome.min.css">
         <link href="styles/xa.css" media="all" rel="stylesheet" type="text/css" >
         <script src="libs/bower/jquery/js/core-lib.js" ></script>
+        <script type="text/javascript">
+            window.rangerSpiffeAsUsernameEnabled = <%= StringUtil.isSpiffeAsUsernameEnabled() %>;
+        </script>
         <script src="scripts/prelogin/XAPrelogin.js" ></script>
         <script type="text/javascript">
             $(document).ready(function() {

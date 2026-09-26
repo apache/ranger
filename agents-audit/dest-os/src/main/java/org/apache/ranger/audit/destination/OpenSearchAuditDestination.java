@@ -19,40 +19,42 @@
 
 package org.apache.ranger.audit.destination;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.http.HttpHost;
+import org.apache.hc.client5.http.auth.AuthScope;
+import org.apache.hc.client5.http.auth.UsernamePasswordCredentials;
+import org.apache.hc.client5.http.impl.auth.BasicCredentialsProvider;
 import org.apache.http.auth.AuthSchemeProvider;
-import org.apache.http.auth.AuthScope;
-import org.apache.http.auth.UsernamePasswordCredentials;
-import org.apache.http.client.CredentialsProvider;
 import org.apache.http.client.config.AuthSchemes;
 import org.apache.http.config.Lookup;
 import org.apache.http.config.RegistryBuilder;
-import org.apache.http.entity.ContentType;
 import org.apache.http.impl.auth.SPNegoSchemeFactory;
-import org.apache.http.impl.client.BasicCredentialsProvider;
-import org.apache.http.nio.entity.NStringEntity;
-import org.apache.http.util.EntityUtils;
 import org.apache.ranger.audit.model.AuditEventBase;
 import org.apache.ranger.audit.model.AuthzAuditEvent;
 import org.apache.ranger.audit.provider.MiscUtil;
 import org.apache.ranger.authorization.credutils.CredentialsProviderUtil;
 import org.apache.ranger.authorization.credutils.kerberos.KerberosCredentialsProvider;
-import org.elasticsearch.client.Request;
-import org.elasticsearch.client.Response;
-import org.elasticsearch.client.RestClient;
-import org.elasticsearch.client.RestClientBuilder;
+import org.opensearch.client.RestClient;
+import org.opensearch.client.RestClientBuilder;
+import org.opensearch.client.json.jackson.JacksonJsonpMapper;
+import org.opensearch.client.opensearch.OpenSearchClient;
+import org.opensearch.client.opensearch.core.BulkRequest;
+import org.opensearch.client.opensearch.core.BulkResponse;
+import org.opensearch.client.opensearch.core.bulk.BulkOperation;
+import org.opensearch.client.opensearch.core.bulk.IndexOperation;
+import org.opensearch.client.transport.OpenSearchTransport;
+import org.opensearch.client.transport.httpclient5.ApacheHttpClient5TransportBuilder;
+import org.opensearch.client.transport.rest_client.RestClientTransport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
-import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Properties;
@@ -78,7 +80,6 @@ public class OpenSearchAuditDestination extends AuditDestination {
     public static final String AUTH_TYPE_BASIC    = "basic";
     public static final String AUTH_TYPE_NONE     = "none";
 
-    private static final ObjectMapper                  MAPPER      = new ObjectMapper();
     private static final ThreadLocal<SimpleDateFormat> DATE_FORMAT = ThreadLocal.withInitial(() -> {
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
 
@@ -87,7 +88,8 @@ public class OpenSearchAuditDestination extends AuditDestination {
         return sdf;
     });
 
-    private volatile RestClient client;
+    private volatile OpenSearchClient    client;
+    private volatile OpenSearchTransport transport;
 
     private String index;
     private String user;
@@ -127,17 +129,13 @@ public class OpenSearchAuditDestination extends AuditDestination {
     public void stop() {
         logStatus();
 
-        if (client != null) {
+        if (transport != null) {
             try {
-                client.close();
+                transport.close();
             } catch (Exception e) {
                 LOG.error("Error closing OpenSearch client", e);
             }
         }
-    }
-
-    @Override
-    public void flush() {
     }
 
     @Override
@@ -146,14 +144,14 @@ public class OpenSearchAuditDestination extends AuditDestination {
             return true;
         }
 
-        boolean    ret           = false;
-        RestClient currentClient = getClient();
+        boolean           ret           = false;
+        OpenSearchClient  currentClient = getClient();
 
         if (currentClient == null) {
             LOG.error("OpenSearch client is null. Cannot write audit events.");
         } else {
             try {
-                StringBuilder bulk = new StringBuilder();
+                List<BulkOperation> operations = new ArrayList<>();
 
                 for (AuditEventBase event : events) {
                     AuthzAuditEvent     auditEvent = (AuthzAuditEvent) event;
@@ -166,35 +164,19 @@ public class OpenSearchAuditDestination extends AuditDestination {
                         doc.put("id", id);
                     }
 
-                    Map<String, Object> indexProps = new HashMap<>();
+                    final String              documentId = id;
+                    final Map<String, Object> document   = doc;
 
-                    indexProps.put("_index", index);
-                    indexProps.put("_id", id);
-
-                    bulk.append(MAPPER.writeValueAsString(Map.of("index", indexProps))).append('\n');
-                    bulk.append(MAPPER.writeValueAsString(doc)).append('\n');
+                    operations.add(BulkOperation.of(b -> b.index(IndexOperation.of(io -> io.index(index).id(documentId).document(document)))));
                 }
 
-                Request request = new Request("POST", "/_bulk");
+                BulkRequest  bulkRequest  = BulkRequest.of(b -> b.operations(operations));
+                BulkResponse bulkResponse = currentClient.bulk(bulkRequest);
 
-                request.setEntity(new NStringEntity(bulk.toString(), ContentType.create("application/x-ndjson", StandardCharsets.UTF_8)));
-
-                Response response   = currentClient.performRequest(request);
-                int      statusCode = response.getStatusLine().getStatusCode();
-
-                if (statusCode >= 400) {
-                    LOG.error("OpenSearch bulk request failed: HTTP {}", statusCode);
+                if (bulkResponse.errors()) {
+                    LOG.error("OpenSearch bulk response contains item-level errors");
                 } else {
-                    String responseBody = EntityUtils.toString(response.getEntity());
-
-                    @SuppressWarnings("unchecked")
-                    Map<String, Object> responseMap = MAPPER.readValue(responseBody, Map.class);
-
-                    if (Boolean.TRUE.equals(responseMap.get("errors"))) {
-                        LOG.error("OpenSearch bulk response contains item-level errors");
-                    } else {
-                        ret = true;
-                    }
+                    ret = true;
                 }
             } catch (Exception e) {
                 LOG.error("Failed to write audit events to OpenSearch", e);
@@ -214,7 +196,7 @@ public class OpenSearchAuditDestination extends AuditDestination {
         return true;
     }
 
-    synchronized RestClient getClient() {
+    synchronized OpenSearchClient getClient() {
         if (client == null) {
             if (StringUtils.isBlank(urls) || "NONE".equalsIgnoreCase(urls)) {
                 LOG.error("OpenSearch URLs not configured");
@@ -222,33 +204,26 @@ public class OpenSearchAuditDestination extends AuditDestination {
                 return null;
             }
 
-            HttpHost[]        hosts            = Arrays.stream(urls.split(",")).map(String::trim).filter(h -> !h.isEmpty()).map(h -> new HttpHost(h, port, protocol)).toArray(HttpHost[]::new);
-            RestClientBuilder builder          = RestClient.builder(hosts);
-            String            resolvedAuthType = resolveAuthType(authType, user, password);
+            String resolvedAuthType = resolveAuthType(authType, user, password);
 
             if (AUTH_TYPE_KERBEROS.equals(resolvedAuthType)) {
                 String principal = isConfigured(kerberosPrincipal) ? kerberosPrincipal : user;
                 String keytab    = isConfigured(kerberosKeytab) ? kerberosKeytab : password;
 
-                KerberosCredentialsProvider credentialsProvider = CredentialsProviderUtil.getKerberosCredentials(principal, keytab);
-                Lookup<AuthSchemeProvider>  authRegistry        = RegistryBuilder.<AuthSchemeProvider>create().register(AuthSchemes.SPNEGO, new SPNegoSchemeFactory()).build();
-
-                builder.setHttpClientConfigCallback(httpClientBuilder -> httpClientBuilder.setDefaultCredentialsProvider(credentialsProvider).setDefaultAuthSchemeRegistry(authRegistry));
+                transport = createKerberosTransport(principal, keytab);
+                client    = new OpenSearchClient(transport);
 
                 LOG.info("OpenSearch client configured with Kerberos authentication for principal: {}", principal);
-            } else if (AUTH_TYPE_BASIC.equals(resolvedAuthType)) {
-                CredentialsProvider credentialsProvider = new BasicCredentialsProvider();
-
-                credentialsProvider.setCredentials(AuthScope.ANY, new UsernamePasswordCredentials(user, password));
-
-                builder.setHttpClientConfigCallback(httpClientBuilder -> httpClientBuilder.setDefaultCredentialsProvider(credentialsProvider));
-
-                LOG.info("OpenSearch client configured with basic authentication for user: {}", user);
             } else {
-                LOG.info("OpenSearch client configured without authentication");
-            }
+                transport = createHttpClient5Transport(resolvedAuthType);
+                client    = new OpenSearchClient(transport);
 
-            client = builder.build();
+                if (AUTH_TYPE_BASIC.equals(resolvedAuthType)) {
+                    LOG.info("OpenSearch client configured with basic authentication for user: {}", user);
+                } else {
+                    LOG.info("OpenSearch client configured without authentication");
+                }
+            }
         }
 
         return client;
@@ -313,6 +288,37 @@ public class OpenSearchAuditDestination extends AuditDestination {
         doc.put("policyVersion", event.getPolicyVersion());
 
         return doc;
+    }
+
+    private OpenSearchTransport createKerberosTransport(String principal, String keytab) {
+        org.apache.http.HttpHost[] hosts   = Arrays.stream(urls.split(",")).map(String::trim).filter(h -> !h.isEmpty()).map(h -> new org.apache.http.HttpHost(h, port, protocol)).toArray(org.apache.http.HttpHost[]::new);
+        RestClientBuilder          builder = RestClient.builder(hosts);
+
+        KerberosCredentialsProvider credentialsProvider = CredentialsProviderUtil.getKerberosCredentials(principal, keytab);
+        Lookup<AuthSchemeProvider>  authRegistry        = RegistryBuilder.<AuthSchemeProvider>create().register(AuthSchemes.SPNEGO, new SPNegoSchemeFactory()).build();
+
+        builder.setHttpClientConfigCallback(httpClientBuilder -> httpClientBuilder.setDefaultCredentialsProvider(credentialsProvider).setDefaultAuthSchemeRegistry(authRegistry));
+
+        RestClient restClient = builder.build();
+
+        return new RestClientTransport(restClient, new JacksonJsonpMapper());
+    }
+
+    private OpenSearchTransport createHttpClient5Transport(String resolvedAuthType) {
+        org.apache.hc.core5.http.HttpHost[] hosts   = Arrays.stream(urls.split(",")).map(String::trim).filter(h -> !h.isEmpty()).map(h -> new org.apache.hc.core5.http.HttpHost(protocol, h, port)).toArray(org.apache.hc.core5.http.HttpHost[]::new);
+        ApacheHttpClient5TransportBuilder   builder = ApacheHttpClient5TransportBuilder.builder(hosts);
+
+        builder.setMapper(new JacksonJsonpMapper());
+
+        if (AUTH_TYPE_BASIC.equals(resolvedAuthType)) {
+            BasicCredentialsProvider credentialsProvider = new BasicCredentialsProvider();
+
+            credentialsProvider.setCredentials(new AuthScope(null, null, -1, null, null), new UsernamePasswordCredentials(user, password.toCharArray()));
+
+            builder.setHttpClientConfigCallback(httpClientBuilder -> httpClientBuilder.setDefaultCredentialsProvider(credentialsProvider));
+        }
+
+        return builder.build();
     }
 
     private static String formatDate(Date date) {

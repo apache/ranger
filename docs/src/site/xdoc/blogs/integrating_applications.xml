@@ -1,0 +1,440 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one or more
+  contributor license agreements.  See the NOTICE file distributed with
+  this work for additional information regarding copyright ownership.
+  The ASF licenses this file to You under the Apache License, Version 2.0
+  (the "License"); you may not use this file except in compliance with
+  the License.  You may obtain a copy of the License at
+
+      http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+<document>
+  <body>
+    <section name="Integrating Applications with Apache Ranger">
+<div class="ranger-blog-post">
+<div class="ranger-blog__header">
+        <p class="ranger-blog__back"><a href="../blogs.html">&larr; All blogs</a></p>
+<p class="ranger-blog__meta">Madhan Neethiraj, Apache Ranger committer &middot; Aug 24, 2026</p>
+      </div>
+<div class="ranger-blog__body">
+        <h1>Introduction</h1><p>
+            Apache Ranger provides a centralized framework for managing authorization policies and controlling access to resources in services such as HDFS, Ozone, HMS, Hive, Impala, Kafka, Solr, KMS, Atlas, Trino and Polaris. Enterprises use Ranger to address their data access governance needs, access auditing, delegated policy management by business users through an intuitive UI. This guide describes how an application can integrate with Apache Ranger to authorize access to its resources.
+        </p><h2>Contents</h2><p><a href="#s1">1. Apache Ranger</a></p>
+        <p><a href="#s2">2. Integration: Overview</a></p>
+        <p><a href="#s3">3. Integration: Service Definition</a></p>
+        <p><a href="#s4">4. Integration: Plugin</a></p>
+        <p><a href="#s5">5. Integration: PDP Server</a></p>
+        <p><a href="#s6">6. Policy Administration</a></p>
+        <p><a href="#references">References</a></p><h1 id="s1">1. Apache Ranger</h1><p>
+            Apache Ranger provides policy-based authorization for resources managed by applications. An application submits an authorization request identifying the user, resource, and requested access. Ranger evaluates the request against the applicable policies and returns an authorization decision.
+        </p><p>
+            Apache Ranger provides centralized policy administration through APIs and UI. Policies can be managed by Ranger administrators, designated administrators for each application and users delegated to manage policies for a limited resource scope.
+        </p><p>
+            Apache Ranger can audit access requests and authorization decisions. Audit records can include information such as the user, resource, requested access, authorization result, and request context.
+        </p><p>
+            Apache Ranger policies can control access based on:
+        </p><p class="ranger-blog__list-item">1. resource names and resource hierarchies.</p>
+        <p class="ranger-blog__list-item">2. tags associated with resources.</p>
+        <p class="ranger-blog__list-item">3. attributes and groups associated with users.</p>
+        <p class="ranger-blog__list-item">4. attributes associated with resources.</p>
+        <p class="ranger-blog__list-item">5. request context and policy conditions.</p><p>
+            Apache Ranger supports several types of data-access policies:
+        </p><p class="ranger-blog__list-item">1. Access policies determine whether a user is allowed or denied access to a resource.</p>
+        <p class="ranger-blog__list-item">2. Data masking policies determine how data should be masked when returned to an authorized user.</p>
+        <p class="ranger-blog__list-item">3. Row-filtering policies determine which rows of a dataset are visible to a user.</p><p>
+            The application is responsible for enforcing the authorization, masking, and filtering decisions returned by Ranger. For more on Ranger policy concepts, see the <a href="policy_model.html">Apache Ranger Policy Model</a> blog.
+        </p><h1 id="s2">2. Integration: Overview</h1><p>
+            An application integrates with Ranger in three basic steps:
+        </p><p class="ranger-blog__list-item">1. Register the application&rsquo;s authorization model with Ranger.</p>
+        <p class="ranger-blog__list-item">2. Request authorization decisions from Ranger.</p>
+        <p class="ranger-blog__list-item">3. Enforce the decisions returned by Ranger.</p><p>
+            The application&rsquo;s authorization model is represented by a Ranger service definition. A service definition describes the resources protected by the application, the access types that can be authorized, and optional data-masking and row-filtering capabilities. Ranger&rsquo;s service-definition model includes resources, access types, service configurations, context enrichers, custom conditions, data-mask definitions, and row-filter definitions.
+        </p>
+        <h2>2.1 Register Application’s Service Definition</h2><p>The application defines its authorization model using a Ranger service definition.</p><p>The service definition describes:</p><p class="ranger-blog__list-item">- resources</p>
+        <p class="ranger-blog__list-item">- access types</p>
+        <p class="ranger-blog__list-item">- data-masking capabilities</p>
+        <p class="ranger-blog__list-item">- row-filtering capabilities</p>
+        <p class="ranger-blog__list-item">- service configuration properties</p><p>A service definition can be registered and managed through Apache Ranger’s service-definition APIs. Apache Ranger exposes APIs for creating, retrieving, updating, and deleting service definitions.</p><p>For example, an application managing datasets might define:</p><pre class="ranger-blog-pre">Resources:
+    catalog
+    database
+    table
+    column
+
+Access types:
+    create
+    alter
+    drop
+    select
+    update
+        </pre><p>Once the service definition is registered, administrators can create policies using these resources and access types.</p><h2>2.2 Request Authorization Decisions</h2><p>An application can obtain authorization decisions using either a Ranger plugin or the Ranger PDP APIs.</p><h3>Ranger Plugin</h3><p>Ranger plugin integration approach is typically used by Java applications. The plugin is embedded in the application and evaluates authorization requests locally using policies obtained from Ranger admin server. The plugin can generate audit events that are delivered to configured audit destinations.</p><p class="ranger-blog-caption">
+          <img width="780" height="259" src="integrating_applications.files/image1.png" alt="Fig 1. Apache Ranger embedded plugin authorization flow" />
+        </p>
+        <p class="ranger-blog-caption">Fig 1. Apache Ranger embedded plugin authorization flow</p><h3>Ranger PDP</h3><p>Apache Ranger PDP server provides authorization service that applications can invoke through REST APIs. This integration approach is suitable for:</p><p class="ranger-blog__list-item">- non-Java applications</p>
+        <p class="ranger-blog__list-item">- applications that do not want to embed Ranger libraries</p>
+        <p class="ranger-blog__list-item">- applications requiring a smaller client-side footprint</p><p class="ranger-blog-caption">
+          <img width="780" height="231" src="integrating_applications.files/image2.png" alt="Fig 2. Apache Ranger PDP server authorization flow" />
+        </p>
+        <p class="ranger-blog-caption">Fig 2. Apache Ranger PDP server authorization flow</p><h2>2.3 Enforce the Authorization Decision</h2><p>Ranger returns an authorization decision; it does not enforce the decision on behalf of the application. The application must ensure that a denied request does not proceed.</p><h1 id="s3">3. Integration: Service Definition</h1><p>A Ranger service definition describes the authorization model exposed by an application or service. It tells Ranger what resources can be protected, what operations can be authorized, and what additional authorization capabilities the service supports.</p><p>The primary Java model is <a href="https://github.com/apache/ranger/blob/release-ranger-2.9.0/agents-common/src/main/java/org/apache/ranger/plugin/model/RangerServiceDef.java">RangerServiceDef</a>, containing definitions for resources, access types, service configurations, context enrichers, custom conditions, data masking, and row filtering. A service definition can be registered with Apache Ranger using the service-definition APIs. Ranger provides REST APIs to create, retrieve, update, and delete service definitions.</p><p>A good way to design a service definition is to start with the application’s authorization model and then map that model to Apache Ranger concepts.</p><p>Refer to following service-definitions for existing integrations, in JSON files, for details of available options:</p><p class="ranger-blog__list-item">- <a href="https://github.com/apache/ranger/blob/master/agents-common/src/main/resources/service-defs/ranger-servicedef-hdfs.json">HDFS</a></p>
+        <p class="ranger-blog__list-item">- <a href="https://github.com/apache/ranger/blob/master/agents-common/src/main/resources/service-defs/ranger-servicedef-ozone.json">Ozone</a></p>
+        <p class="ranger-blog__list-item">- <a href="https://github.com/apache/ranger/blob/master/agents-common/src/main/resources/service-defs/ranger-servicedef-hive.json">Hive</a></p>
+        <p class="ranger-blog__list-item">- <a href="https://github.com/apache/ranger/blob/master/agents-common/src/main/resources/service-defs/ranger-servicedef-trino.json">Trino</a></p>
+        <p class="ranger-blog__list-item">- <a href="https://github.com/apache/ranger/blob/master/agents-common/src/main/resources/service-defs/ranger-servicedef-polaris.json">Polaris</a></p><h2>3.1 Resources</h2><p>A resource definition identifies a resource that can appear in a Ranger policy. For example, here are few resources in Apache Hive service definition:</p><pre class="ranger-blog-pre">"resources": [
+  {
+    "itemId":         1,
+    "name":           "database",
+    "parent":         "",
+    "matcherOptions": { "wildCard": true, "ignoreCase": true },
+    "label":          "Hive Database",
+    "isValidLeaf":    true
+  },
+  {
+    "itemId":         2,
+    "name":           "table",
+    "parent":         "database",
+    "matcherOptions": { "wildCard": true, "ignoreCase": true },
+    "label":          "Hive Table",
+    "isValidLeaf":    true
+  },
+  {
+    "itemId":         3,
+    "name":           "column",
+    "parent":         "table",
+    "matcherOptions": { "wildCard": true, "ignoreCase": true },
+    "label":          "Hive Column",
+    "isValidLeaf":    true
+  }
+]</pre><h2>3.2 Access Types</h2><p>Access types define the operations that can appear in a Ranger policy. For example, here are few access types in Apache Hive service definition:</p><pre class="ranger-blog-pre">"accessTypes": [
+  { "itemId": 1, "name": "select", "label": "Select" },
+  { "itemId": 2, "name": "update", "label": "Update" },
+  { "itemId": 3, "name": "create", "label": "Create" },
+  { "itemId": 4, "name": "drop",   "label": "Drop" },
+  { "itemId": 5, "name": "alter",  "label": "Alter" },
+  { "itemId": 6, "name": "all",    "label": "All",
+    "impliedGrants": [ "select", "update", "create", "drop", "alter" ]
+  }
+]</pre><p>impliedGrants enable grouping of multiple accessTypes with a logical name, such as all in the example above. Reference to an accessTypes in policies are equivalent to referencing all its impliedGrants.</p><h2>3.3 Data Masking</h2><p>A service can expose data-masking capabilities through the dataMaskDef section in its service definition. This section defines:</p><p class="ranger-blog__list-item">- resources to which masking can apply</p>
+        <p class="ranger-blog__list-item">- supported mask types</p>
+        <p class="ranger-blog__list-item">- access types for which masking is relevant</p><p>For example, here is a sample dataMaskDef section from Apache Hive service definition:</p><pre class="ranger-blog-pre">"dataMaskDef": {
+  "resources": [
+    {
+      "name":           "database",
+      "matcherOptions": { "wildCard": "false" },
+      "uiHint":         "{ \"singleValue\":true }"
+    },
+    {
+      "name":           "table",
+      "matcherOptions": { "wildCard": "false" },
+      "uiHint":         "{ \"singleValue\":true }"
+    },
+    {
+      "name":           "column",
+      "matcherOptions": { "wildCard": "false" },
+      "uiHint":         "{ \"singleValue\":true }"
+    }
+  ],
+  "maskTypes": [
+    {
+      "itemId":      1,
+      "name":        "MASK",
+      "label":       "Redact",
+      "transformer": "mask({col})"
+    },
+    {
+      "itemId":      2,
+      "name":        "MASK_SHOW_LAST_4",
+      "label":       "Partial mask: show last 4",
+      "transformer": "mask_show_last_n({col}, 4, 'x', 'x', 'x', -1, '1')"
+    },
+    {
+      "itemId":      3,
+      "name":        "MASK_SHOW_FIRST_4",
+      "label":       "Partial mask: show first 4",
+      "transformer": "mask_show_first_n({col}, 4, 'x', 'x', 'x', -1, '1')"
+    },
+    {
+      "itemId":      4,
+      "name":        "MASK_HASH",
+      "label":       "Hash",
+      "transformer": "mask_hash({col})"
+    },
+    {
+      "itemId":      5,
+      "name":        "MASK_DATE_SHOW_YEAR",
+      "label":       "Date: show only year",
+      "transformer": "mask({col}, 'x', 'x', 'x', -1, '1', 1, 0, -1)"
+    },
+    {
+      "itemId": 6,
+      "name":   "MASK_NULL",
+      "label":  "Nullify"
+    },
+    {
+      "itemId": 7,
+      "name":   "MASK_NONE",
+      "label":  "Unmasked (retain original value)"
+    },
+    {
+      "itemId": 8,
+      "name":   "CUSTOM",
+      "label":  "Custom"
+    }
+  ],
+  "accessTypes": [
+    { "name": "select" }
+  ]
+}</pre><h2>3.4 Row Filtering</h2><p>A service can expose row-filtering capabilities through the rowFilterDef section in its service definition. This section defines:</p><p class="ranger-blog__list-item">- Resources to which row-filtering can apply</p>
+        <p class="ranger-blog__list-item">- Access types for which row-filtering is relevant</p><p>For example, here is a sample rowFilterDef section from Apache Hive service definition:</p><pre class="ranger-blog-pre">"rowFilterDef": {
+  "resources": [
+    {
+      "name":           "database",
+      "matcherOptions": { "wildCard": "false" },
+      "uiHint":         "{ \"singleValue\":true }"
+    },
+    {
+      "name":           "table",
+      "matcherOptions": { "wildCard": "false" },
+      "uiHint":         "{ \"singleValue\":true }"
+    }
+  ],
+  "accessTypes": [
+    { "name": "select" }
+  ]
+}</pre><h2>3.5 Service Configurations</h2><p>A service definition can define configuration properties required to lookup resources in the application, for auto-completion in policy UI as users enter resource values. These configurations include the endpoint (JDBC, HTTP, ..) the application can be reached at, credentials to use while connecting to the application.</p><pre class="ranger-blog-pre">"configs": [
+  {
+    "itemId":    1,
+    "name":      "username",
+    "type":      "string",
+    "mandatory": true,
+    "label":     "Username"
+  },
+  {
+    "itemId":    2,
+    "name":      "password",
+    "type":      "password",
+    "mandatory": true,
+    "label":     "Password"
+  },
+  {
+    "itemId":       3,
+    "name":         "jdbc.driverClassName",
+    "type":         "string",
+    "mandatory":    true,
+    "defaultValue": "org.apache.hive.jdbc.HiveDriver"
+  },
+  {
+    "itemId":       4,
+    "name":         "jdbc.url",
+    "type":         "string",
+    "mandatory":    true,
+    "defaultValue": ""
+  }
+]</pre><h1 id="s4">4. Integration: Plugin</h1><p>Ranger plugin is the preferred integration mechanism for Java applications that want to perform authorization locally i.e. in-process. The core APIs, including following classes, are provided by Ranger libraries <a href="https://mvnrepository.com/artifact/org.apache.ranger/ranger-authz-api">org.apache.ranger:ranger-authz-api</a> and <a href="https://mvnrepository.com/artifact/org.apache.ranger/authz-embedded">org.apache.ranger:authz-embedded</a>.</p><pre class="ranger-blog-pre">org.apache.ranger.authz.api.RangerAuthorizer
+org.apache.ranger.authz.embedded.RangerEmbeddedAuthorizer
+org.apache.ranger.authz.model.RangerAccessContext
+org.apache.ranger.authz.model.RangerAccessInfo
+org.apache.ranger.authz.model.RangerAuthzRequest
+org.apache.ranger.authz.model.RangerAuthzResult
+org.apache.ranger.authz.model.RangerAuthzResult.AccessDecision
+org.apache.ranger.authz.model.RangerUserInfo</pre><h2>4.1 Initializing the Plugin</h2><p>Ranger plugin instance is typically created and initialized during initialization of the application. Here is an example of Polaris plugin initialization:</p><pre class="ranger-blog-pre">RangerAuthorizer authorizer = new RangerEmbeddedAuthorizer(properties);
+authorizer.init();</pre><p>Ranger plugin downloads policies from Ranger admin server during initialization, builds a policy engine in-memory for faster evaluation. The plugin periodically polls the Ranger admin server, asynchronously, for any policy changes and keeps its policy engine updated.</p><h2>4.2 Creating an Authorization Request</h2><p>The application converts its native access request into a Ranger authorization request. For example:</p><pre class="ranger-blog-pre">String              table  = "table:sales/customers/accounts";
+RangerUserInfo      user   = new RangerUserInfo("alice");
+RangerAccessInfo    access = new RangerAccessInfo(table, "QUERY", "select");
+RangerAccessContext ctx    = new RangerAccessContext("trino", "sales_trino");
+RangerAuthzRequest request = new RangerAuthzRequest(user, access, ctx);</pre><p>Notes:</p><p class="ranger-blog__list-item">- <samp>alice</samp>, the username referenced must represent the authenticated caller of the application.</p>
+        <p class="ranger-blog__list-item">- <samp>trino</samp>, the serviceType referenced is the name of the service-definition registered with Ranger.</p>
+        <p class="ranger-blog__list-item">- <samp>select</samp>, the permission referenced must be one of accessTypes in the service-definition.</p>
+        <p class="ranger-blog__list-item">- <samp>sales_trino</samp>, the serviceName referenced represents a deployment of the Trino application. Remember, Ranger can support multiple deployments of an application type, such as <samp>marketing_trino</samp>, <samp>support_trino</samp>, <samp>test_trino</samp> - each with a different set of policies, policy administrators.</p><p>Additional information can be included in the authorization request, for example:</p><p>Context can include the following:</p><p class="ranger-blog__list-item">- client IP</p>
+        <p class="ranger-blog__list-item">- client type</p>
+        <p class="ranger-blog__list-item">- request time</p>
+        <p class="ranger-blog__list-item">- cluster name</p><p>User can include the following:</p><p class="ranger-blog__list-item">- groups the user belongs to</p>
+        <p class="ranger-blog__list-item">- user attributes, like department, location</p><p>Resource can include the following:</p><p class="ranger-blog__list-item">- subResources, such as column names</p>
+        <p class="ranger-blog__list-item">- resource attributes, such as OWNER</p>
+        <p class="ranger-blog__list-item">- matchingScope, such as SELF, SELF_OR_ANY_DESCENDANT</p><h2>4.3 Evaluating the Request</h2><p>The plugin evaluates the request:</p><pre class="ranger-blog-pre">RangerAuthzResult result = authorizer.authorize(request);</pre>
+        <p>The result contains the authorization decision and additional information that can be used by the application or audit subsystem.</p><p>When the result doesn’t allow the requested access, applications should treat it as an authorization failure and must enforce that decision before accessing the protected resource.</p><pre class="ranger-blog-pre">if (!AccessDecision.ALLOW.equals(result.getDecision())) {
+  throw new AccessDeniedException();
+}</pre><p>When the result includes masking and/or row-filter expression, the application must include these into the query before executing.</p><pre class="ranger-blog-pre">RowFilterResult rowFilter = result.getPermissions("select").getRowFilter();
+
+if (rowFilter != null &amp;&amp; StringUtils.isNotBlank(rowFilter.getFilterExpr())) {
+  // application must include the returned filter expression into the query
+}
+
+DataMaskResult dataMask = result.getPermissions("select").getDataMask();
+
+if (dataMask != null &amp;&amp; StringUtils.isNotBlank(dataMask.getMaskType())) {
+  // application must apply the returned data mask expression into the query
+}</pre><p>authorize() method is thread-safe, hence can be called from multiple threads simultaneously.</p><h2>4.4 Plugin Configuration</h2><p>Ranger plugin requires configuration identifying:</p><p class="ranger-blog__list-item">- Ranger Admin endpoint</p>
+        <p class="ranger-blog__list-item">- Policy refresh settings</p>
+        <p class="ranger-blog__list-item">- Authentication configuration</p>
+        <p class="ranger-blog__list-item">- Audit configuration</p><p>Depending on the Ranger version and deployment configuration, the plugin's Ranger Admin client can use authentication mechanisms such as Basic authentication, JWT, or Kerberos, together with SSL/TLS.</p><p>A typical deployment would include following configurations:</p><pre class="ranger-blog-pre">ranger.authz.service.sales_trino.policy.rest.url=https://ranger.example.com
+ranger.authz.service.sales_trino.policy.pollIntervalMs=30000
+ranger.authz.service.sales_trino.policy.cache.dir=/etc/trino/policy_cache
+# Choose the authentication mechanism appropriate for the deployment
+# Basic authentication
+ranger.authz.service.sales_trino.policy.rest.client.username=
+ranger.authz.service.sales_trino.policy.rest.client.password=</pre><pre class="ranger-blog-pre"># JWT authentication
+ranger.authz.service.sales_trino.policy.rest.client.jwt.source=env|file|cred
+ranger.authz.service.sales_trino.policy.rest.client.jwt.env=TRINO_JWT
+ranger.authz.service.sales_trino.policy.rest.client.jwt.file=/etc/trino/trino.jwt
+ranger.authz.service.sales_trino.policy.rest.client.jwt.cred.file=
+ranger.authz.service.sales_trino.policy.rest.client.jwt.cred.alias=
+# Kerberos authentication
+ranger.authz.service.sales_trino.ugi.initialize=true
+ranger.authz.service.sales_trino.ugi.login.type=keytab
+ranger.authz.service.sales_trino.ugi.keytab.principal=trino@MYDOMAIN.COM
+ranger.authz.service.sales_trino.ugi.keytab.file=/etc/keytabs/trino.keytab</pre><pre class="ranger-blog-pre"># audit configuration
+ranger.authz.audit.is.enabled=true
+ranger.authz.audit.destination.solr=true
+ranger.authz.audit.destination.solr.urls=
+ranger.authz.audit.destination.hdfs=true
+ranger.authz.audit.destination.hdfs.dir=</pre><h2>4.5 Existing Authorizer Implementations</h2><p>Several complete authorizer implementations are available in Apache Ranger repository and other application repositories. Here are a few that can be good references for anyone looking to use the Ranger plugin approach.</p><p>API version note: Apache Ranger currently has two integration patterns in use. The newer authorization API introduced in Apache Ranger 2.9.0 uses authz-api/authz-embedded API shown in this guide. Polaris authorizer implementation uses this new API. Many existing Ranger plugins, including HDFS, Hive, HBase, Kafka, and Ozone, use the older ranger-plugins-common/RangerBasePlugin API.</p><p>For new integrations, use the authorization API appropriate to the Ranger version being integrated with. The examples in this guide use the newer authz-api/authz-embedded API.</p><table>
+          <tr>
+            <td><p><b>Application</b></p></td>
+            <td><p><b>Implementation Classes</b></p></td>
+            <td><p><b>Notes</b></p></td>
+          </tr>
+          <tr>
+            <td><p>Polaris</p></td>
+            <td><p><a href="https://github.com/apache/polaris/blob/main/extensions/auth/ranger/src/main/java/org/apache/polaris/extension/auth/ranger/RangerPolarisAuthorizer.java">RangerPolarisAuthorizer</a></p></td>
+            <td><p>Iceberg catalog authorization</p></td>
+          </tr>
+          <tr>
+            <td><p>Trino</p></td>
+            <td><p><a href="https://github.com/trinodb/trino/blob/master/plugin/trino-ranger/src/main/java/io/trino/plugin/ranger/RangerSystemAccessControl.java">RangerSystemAccessControl</a></p></td>
+            <td><p>SQL engine authorization, column-masking, row-filtering</p></td>
+          </tr>
+          <tr>
+            <td><p>HDFS</p></td>
+            <td><p><a href="https://github.com/apache/ranger/blob/master/hdfs-agent/src/main/java/org/apache/ranger/authorization/hadoop/RangerHdfsAuthorizer.java">RangerHdfsAuthorizer</a></p></td>
+            <td><p>Authorize access to path resources</p></td>
+          </tr>
+          <tr>
+            <td><p>Ozone</p></td>
+            <td><p><a href="https://github.com/apache/ranger/blob/master/plugin-ozone/src/main/java/org/apache/ranger/authorization/ozone/authorizer/RangerOzoneAuthorizer.java">RangerOzoneAuthorizer</a></p></td>
+            <td><p>Relatively compact RangerBasePlugin integration</p></td>
+          </tr>
+          <tr>
+            <td><p>Hive</p></td>
+            <td><p><a href="https://github.com/apache/ranger/blob/master/hive-agent/src/main/java/org/apache/ranger/authorization/hive/authorizer/RangerHiveAuthorizer.java">RangerHiveAuthorizer</a></p></td>
+            <td><p>Authorize access to hierarchical resources, resource filtering, column masking, row filtering</p></td>
+          </tr>
+          <tr>
+            <td><p>HBase</p></td>
+            <td><p><a href="https://github.com/apache/ranger/blob/master/hbase-agent/src/main/java/org/apache/ranger/authorization/hbase/RangerAuthorizationCoprocessor.java">RangerAuthorizationCoprocessor</a></p></td>
+            <td><p>Authorize access to columnar data</p></td>
+          </tr>
+          <tr>
+            <td><p>Kafka</p></td>
+            <td><p><a href="https://github.com/apache/ranger/blob/master/plugin-kafka/src/main/java/org/apache/ranger/authorization/kafka/authorizer/RangerKafkaAuthorizer.java">RangerKafkaAuthorizer</a></p></td>
+            <td><p>Authorize event streaming in Kafka</p></td>
+          </tr>
+        </table><h1 id="s5">5. Integration: PDP Server</h1><p>Ranger PDP server provides a remote authorization model, using REST APIs, for applications that can’t or don’t prefer embedding a Ranger authorizer. For example:</p><p class="ranger-blog__list-item">- The application is not written in Java.</p>
+        <p class="ranger-blog__list-item">- Embedding Ranger plugin Java libraries is undesirable or not feasible.</p>
+        <p class="ranger-blog__list-item">- A small client-side footprint is preferred.</p><p>The tradeoff is that each authorization request involves communication with the Ranger PDP server via REST APIs. Applications should therefore consider latency, availability, connection management, and timeout behavior. Unlike embedded plugin authorization, remote authorization introduces a network dependency into the authorization path. An application must define how it behaves when the PDP is unavailable or a request times out.</p><p>A PDP communication failure is not an authorization decision. Applications should not treat failure to obtain a decision as an implicit allow. For protected operations, a fail-closed approach is generally appropriate unless the application has an explicitly designed alternative.</p><p>Applications can use the supported PDP APIs appropriate to their implementation language.</p><p class="ranger-blog__list-item">- A non-Java application can use the REST APIs defined in <a href="https://github.com/apache/ranger/blob/master/pdp/src/main/java/org/apache/ranger/pdp/rest/RangerPdpREST.java">RangerPdpREST</a> directly.</p>
+        <p class="ranger-blog__list-item">- Java applications can use Java APIs in <a href="https://mvnrepository.com/artifact/org.apache.ranger/authz-remote">org.apache.ranger:authz-remote</a> library.</p>
+        <p class="ranger-blog__list-item">- Python applications can use Python APIs in <a href="https://pypi.org/project/apache-ranger/">apache-ranger</a> library.</p><h2>5.1 PDP REST APIs</h2><p>Applications that prefer a minimal footprint in using Ranger policies to authorize access should consider directly calling REST APIs provided by Ranger PDP server.  The PDP request contains essentially the same authorization information used by the embedded plugin:</p><p class="ranger-blog__list-item">- user</p>
+        <p class="ranger-blog__list-item">- resource</p>
+        <p class="ranger-blog__list-item">- permissions (access types defined in service definitions)</p>
+        <p class="ranger-blog__list-item">- context</p><pre class="ranger-blog-pre">For example:
+POST /v1/authorize
+{
+  "user": { "name": "alice" },
+  "access": {
+    "resource":    { "name": "table:sales/customers/accounts" },
+    "action":      "QUERY",
+    "permissions": [ "select" ]
+  },
+  "context": {
+    "serviceType": "trino",
+    "serviceName": "sales_trino"
+  }
+}</pre><p>Response:</p><pre class="ranger-blog-pre">{
+  "decision": "ALLOW"
+}</pre>
+        <p>Ranger PDP server evaluates the request against the applicable Ranger policies and returns the authorization result. The exact wire format should follow the PDP API supported by the Ranger version being deployed.</p><p>Note that only trusted users, as configured in PDP server, are allowed the following:</p><p class="ranger-blog__list-item">1. authorize for other users i.e, "user.name" is different from the caller</p>
+        <p class="ranger-blog__list-item">2. provide groups the user belongs to</p>
+        <p class="ranger-blog__list-item">3. provide attributes of the user or the resource</p><p>This distinction is important because the PDP server must not blindly trust a caller to assert another user's identity, groups, or attributes. Such fields should only be accepted from callers that are explicitly trusted by the PDP configuration.</p><h2>5.2 PDP Java APIs</h2><p>Ranger PDP client Java APIs provide convenient wrappers over corresponding Ranger PDP REST APIs. These are provided by libraries <a href="https://mvnrepository.com/artifact/org.apache.ranger/ranger-authz-api">org.apache.ranger:ranger-authz-api</a> and <a href="https://mvnrepository.com/artifact/org.apache.ranger/authz-remote">org.apache.ranger:authz-remote</a>.</p><p>These APIs look very similar to the APIs used in plugin integration detailed earlier - except for the authorizer initialization, as seen in the example below:</p><pre class="ranger-blog-pre">// initialize once during application startup
+RangerAuthorizer authorizer = new RangerRemoteAuthorizer(properties);</pre><pre class="ranger-blog-pre">authorizer.init();</pre><pre class="ranger-blog-pre">// authorize an access
+String              table  = "table:sales/customers/accounts";
+RangerUserInfo      user   = new RangerUserInfo("alice");
+RangerAccessInfo    access = new RangerAccessInfo(table, "QUERY", "select");
+RangerAccessContext ctx    = new RangerAccessContext("trino", "sales_trino");
+
+RangerAuthzRequest request = new RangerAuthzRequest(user, access, ctx);
+
+RangerAuthzResult result = authorizer.authorize(request);</pre><pre class="ranger-blog-pre">if (!AccessDecision.ALLOW.equals(result.getDecision())) {
+  throw new AccessDeniedException();
+}
+
+RowFilterResult rowFilter = result.getPermissions("select").getRowFilter();
+
+if (rowFilter != null &amp;&amp; StringUtils.isNotBlank(rowFilter.getFilterExpr())) {
+  // application must include the returned filter expression into the query
+}
+
+DataMaskResult dataMask = result.getPermissions("select").getDataMask();
+
+if (dataMask != null &amp;&amp; StringUtils.isNotBlank(dataMask.getMaskType())) {
+  // application must apply the returned data mask expression into the query
+}</pre><p>Configurations to connect to Ranger PDP server, including authentication details, must be populated in properties referenced above:</p><pre class="ranger-blog-pre">ranger.authz.remote.pdp.url=https://ranger-pdp.example.com
+ranger.authz.remote.authn.type=jwt|kerberos|header
+ranger.authz.remote.authn.jwt.source=
+ranger.authz.remote.authn.jwt.env=
+ranger.authz.remote.authn.kerberos.principal=
+ranger.authz.remote.authn.kerberos.keytab=
+ranger.authz.remote.authn.header.&lt;trusted-header&gt;=</pre><h2>5.3 PDP Python APIs</h2><p>Ranger PDP Python APIs are provided by RangerPdpClient class in <a href="https://pypi.org/project/apache-ranger/">apache-ranger</a> library.</p><p>Here is an example of PDP Python APIs to authorize access to Hive table:</p><pre class="ranger-blog-pre">from apache_ranger.client.ranger_pdp_client import RangerPDPClient
+from apache_ranger.model.ranger_authz import (
+RangerAccessContext,
+RangerAccessInfo,
+RangerAuthzRequest,
+RangerResourceInfo,
+RangerUserInfo,
+)
+from requests_kerberos import HTTPKerberosAuth</pre><pre class="ranger-blog-pre">pdp = RangerPDPClient("https://ranger-pdp.example.com", auth=HTTPKerberosAuth())</pre><pre class="ranger-blog-pre">user     = RangerUserInfo({"name": "alice"})
+resource = RangerResourceInfo({"name": "table:sales/customers/accounts"})
+access   = RangerAccessInfo({"resource":    resource,
+                             "action":      "QUERY",
+                             "permissions": [ "select" ]})
+
+ctx = RangerAccessContext({"serviceType": "trino", "serviceName": "sales_trino"})</pre><pre class="ranger-blog-pre">req = RangerAuthzRequest({"user": user, "access": access, "context": ctx })
+res = pdp.authorize(req)</pre><pre class="ranger-blog-pre">print(res.decision)</pre><h1 id="s6">6. Policy Administration</h1><p>Before an application can use Ranger policies, the Ranger service corresponding to the application must be registered and configured. This involves three administrative steps.</p><h2>6.1 Register service definition</h2><p>The application's service definition must first be registered with Ranger Admin. The service definition describes the application's authorization model, including:</p><p class="ranger-blog__list-item">- resources that can be protected</p>
+        <p class="ranger-blog__list-item">- access types</p>
+        <p class="ranger-blog__list-item">- data-masking capabilities</p>
+        <p class="ranger-blog__list-item">- row-filtering capabilities</p>
+        <p class="ranger-blog__list-item">- configuration properties used by the service</p><p>Registering, updating, or deleting a service definition requires Ranger administrator privileges. Typically, the application/integration developer provides the service definition, while a Ranger administrator registers it in the Ranger Admin service. Another option is to include the service definition in Apache Ranger git repository, which will be loaded by Ranger admin service during its initialization.</p><p>Once registered, the service definition becomes the template from which Ranger service instances can be created.</p><h2>6.2 Create a Ranger service</h2><p>A Ranger service represents a particular instance of an application or service for which policies are managed. For example, an application might have separate Ranger services for different environments:</p><pre class="ranger-blog-pre">Service definition: trino
+Services:           dev_trino, prod_trino, sales_trino, mktg_trino</pre><p>Creating a Ranger service requires Ranger administrator privileges. When creating a service, the administrator provides application specific configurations, including the details required by Ranger admin to connect to the application for resource lookup. Following configurations can be used to specify list of users and groups whose members can create, update, delete, and read policies for the service:</p><pre class="ranger-blog-pre">service.admin.users
+service.admin.groups</pre><h2>6.3 Delegated policy administration</h2><p>Ranger supports delegated administration, which allows policy management privileges to be restricted to a subset of resources and permissions within a service. For example, consider prod_hive service containing resources from several business domains:</p><pre class="ranger-blog-pre">prod_hive
+  |
+  |--- finance
+  |     +-- payroll
+  |     +-- expenses
+  |
+  |___ hr
+  |     +-- employees
+  |     +-- benefits</pre><p>A service administrator can create a policy with delegated-administration privileges for the contents of a database named finance, granting users in the finance-admin group permission to manage policies. Users in the finance-admin group can then create and modify policies for resources within their delegated resource and permissions scope only.</p><h2>6.4 Roles</h2><p>Ranger supports roles as a way to manage grants to a set of users and groups. A role can contain multiple users, groups or other roles. Roles are useful when the same set of permissions needs to be assigned to multiple users or groups without creating separate policies for each user.</p><p>For example, a Ranger administrator can create roles and assign users and groups to roles:</p><pre class="ranger-blog-pre">sales-data-reader
+      |
+      +-- add group analysts
+      +-- add group reporting users
+
+sales-data-writer
+      |
+      +-- add group data-engineers</pre><p>A user with service policy administrator privileges can grant permissions a role:</p><pre class="ranger-blog-pre">sales-data
+      |
+      +-- grant read  permission to sales-data-reader and sales-data-writer
+      +-- grant write permission to sales-data-writer</pre><p>The application does not need to implement role evaluation itself. Ranger evaluates the roles associated with the requesting user when determining whether an access request is allowed.</p><h2>6.5 Security Zones</h2><p>For larger deployments, Ranger can also organize services and resources into <a href="https://cwiki.apache.org/confluence/display/RANGER/Introduction+of+Security+Zones+in+Ranger">security zones</a>. A security zone can provide an additional administrative boundary spanning resources, potentially across multiple services.</p><p>Applications do not need to implement anything special for security-zone support; the important consideration is that the service definition and resource model expose the resources in a way that allows administrators to place them into the appropriate policy scope.</p><h1 id="references">References</h1>
+        <p class="ranger-blog__list-item">-<a href="https://cwiki.apache.org/confluence/display/RANGER/Ranger+Client+Libraries">Apache Ranger: Java client libraries</a></p>
+        <p class="ranger-blog__list-item">-<a href="https://pypi.org/project/apache-ranger/">Apache Ranger: Python client library</a></p>
+        <p class="ranger-blog__list-item">-<a href="https://ranger.apache.org/apidocs/index.html">Apache Ranger: REST API documentation</a></p>
+        <p class="ranger-blog__list-item">-<a href="https://cwiki.apache.org/confluence/display/RANGER/Introduction+of+Security+Zones+in+Ranger">Apache Ranger: security zones</a></p>
+        <p class="ranger-blog__list-item">-<a href="https://cwiki.apache.org/confluence/pages/viewpage.action?pageId=65868896">Apache Ranger: row-filter and data-masking policies</a></p>
+        <p class="ranger-blog__list-item">-<a href="policy_model.html">Apache Ranger Policy Model</a></p></div>
+</div>
+    </section>
+  </body>
+</document>

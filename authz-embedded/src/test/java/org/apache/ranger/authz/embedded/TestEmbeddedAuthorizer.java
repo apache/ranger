@@ -26,6 +26,8 @@ import org.apache.ranger.audit.model.AuthzAuditEvent;
 import org.apache.ranger.authz.model.RangerAccessContext;
 import org.apache.ranger.authz.model.RangerAuthzRequest;
 import org.apache.ranger.authz.model.RangerAuthzResult;
+import org.apache.ranger.authz.model.RangerFilterResourcesRequest;
+import org.apache.ranger.authz.model.RangerFilterResourcesResult;
 import org.apache.ranger.authz.model.RangerMultiAuthzRequest;
 import org.apache.ranger.authz.model.RangerMultiAuthzResult;
 import org.apache.ranger.authz.model.RangerResourceInfo;
@@ -42,9 +44,10 @@ import java.util.Properties;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class TestEmbeddedAuthorizer {
-    private static final TypeReference<List<TestAuthzData>>               TYPE_LIST_TEST_AUTHZ_DATA                = new TypeReference<List<TestAuthzData>>() {};
-    private static final TypeReference<List<TestMultiAuthzData>>          TYPE_LIST_TEST_MULTI_AUTHZ_DATA          = new TypeReference<List<TestMultiAuthzData>>() {};
-    private static final TypeReference<List<TestResourcePermissionsData>> TYPE_LIST_TEST_RESOURCE_PERMISSIONS_DATA = new TypeReference<List<TestResourcePermissionsData>>() {};
+    private static final TypeReference<List<TestAuthzData>>               TYPE_LIST_TEST_AUTHZ_DATA                = new TypeReference<>() {};
+    private static final TypeReference<List<TestMultiAuthzData>>          TYPE_LIST_TEST_MULTI_AUTHZ_DATA          = new TypeReference<>() {};
+    private static final TypeReference<List<TestResourcePermissionsData>> TYPE_LIST_TEST_RESOURCE_PERMISSIONS_DATA = new TypeReference<>() {};
+    private static final TypeReference<List<TestFilterResourcesData>>     TYPE_LIST_TEST_FILTER_RESOURCES_DATA     = new TypeReference<>() {};
 
     @Test
     public void testAuthzS3() throws Exception {
@@ -69,6 +72,16 @@ public class TestEmbeddedAuthorizer {
     @Test
     public void testResourcePermissionsHive() throws Exception {
         runResourcePermissionsTest("test_hive");
+    }
+
+    @Test
+    public void testFilterResourcesHive() throws Exception {
+        runFilterResourcesTest("test_hive");
+    }
+
+    @Test
+    public void testFilterResourcesS3() throws Exception {
+        runFilterResourcesTest("test_s3");
     }
 
     private void runResourcePermissionsTest(String testName) throws Exception {
@@ -176,6 +189,36 @@ public class TestEmbeddedAuthorizer {
         }
     }
 
+    private void runFilterResourcesTest(String testName) throws Exception {
+        String propertiesPath = "/" + testName + "/ranger-embedded-authz.properties";
+        String testsPath      = "/" + testName + "/tests_filter_resources.json";
+
+        RangerEmbeddedAuthorizer authorizer = null;
+
+        try {
+            authorizer = new RangerEmbeddedAuthorizer(loadProperties(propertiesPath));
+
+            authorizer.init();
+
+            for (TestFilterResourcesData test : loadTestFilterResourcesData(testsPath)) {
+                if (test.request == null || test.result == null) {
+                    continue;
+                }
+
+                RangerFilterResourcesRequest request  = test.request;
+                RangerFilterResourcesResult  expected = test.result;
+
+                RangerFilterResourcesResult result = authorizer.filterResources(request);
+
+                assertEquals(expected, result);
+            }
+        } finally {
+            if (authorizer != null) {
+                authorizer.close();
+            }
+        }
+    }
+
     private Properties loadProperties(String resourcePath) throws Exception {
         Properties properties = new Properties();
 
@@ -207,6 +250,14 @@ public class TestEmbeddedAuthorizer {
 
         try (InputStream in = getClass().getResourceAsStream(resourcePath)) {
             return in != null ? mapper.readValue(in, TYPE_LIST_TEST_RESOURCE_PERMISSIONS_DATA) : Collections.emptyList();
+        }
+    }
+
+    private List<TestFilterResourcesData> loadTestFilterResourcesData(String resourcePath) throws Exception {
+        ObjectMapper mapper = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+
+        try (InputStream in = getClass().getResourceAsStream(resourcePath)) {
+            return in != null ? mapper.readValue(in, TYPE_LIST_TEST_FILTER_RESOURCES_DATA) : Collections.emptyList();
         }
     }
 
@@ -249,6 +300,11 @@ public class TestEmbeddedAuthorizer {
         public RangerResourceInfo        resource;
         public RangerAccessContext       context;
         public RangerResourcePermissions permissions;
+    }
+
+    private static class TestFilterResourcesData {
+        public RangerFilterResourcesRequest request;
+        public RangerFilterResourcesResult  result;
     }
 
     private static class TestAuthzAuditHandler extends RangerAuthzAuditHandler {

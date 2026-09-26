@@ -499,10 +499,6 @@ export const scrollToError = (selector) => {
 };
 
 export const selectInputCustomStyles = {
-  multiValue: (base) => ({
-    ...base,
-    maxWidth: "100%"
-  }),
   option: (base) => ({
     ...base,
     textOverflow: "unset",
@@ -523,7 +519,7 @@ export const selectInputCustomStyles = {
   })
 };
 
-/** Multi-value select styles that wrap chips (e.g. action-matches in permission rows). */
+// Multi-value select styles that wrap chips (e.g. action-matches in permission rows).
 export const selectInputWrappingCustomStyles = {
   ...selectInputCustomStyles,
   control: (base) => ({

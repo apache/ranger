@@ -59,8 +59,7 @@ const TYPE_CUSTOM = "custom";
  * Callers may pass selectProps to merge or override (PolicyPermissionItem does).
  */
 const CONDITION_POPOVER_SELECT_PROPS = {
-  menuPortalTarget:
-    typeof document !== "undefined" ? document.body : undefined,
+  menuPortalTarget: typeof document !== "undefined" ? document.body : undefined,
   menuPosition: "fixed",
   menuPlacement: "auto",
   menuShouldScrollIntoView: false
@@ -243,15 +242,9 @@ const ConditionRow = ({
           return mOp;
         }
       });
-      setCondSelect(
-        !isEmpty(e) ? (e?.length > 1 ? filterVal : e) : null
-      );
+      setCondSelect(!isEmpty(e) ? (e?.length > 1 ? filterVal : e) : null);
       tagAccessData(
-        !isEmpty(e)
-          ? e?.length > 1
-            ? filterVal[0].value
-            : e[0].value
-          : null,
+        !isEmpty(e) ? (e?.length > 1 ? filterVal[0].value : e[0].value) : null,
         name
       );
     };
@@ -321,9 +314,7 @@ const ConditionRow = ({
                 isInvalid={validExpression.state}
               />
               {validExpression.state && (
-                <div className="text-danger">
-                  {validExpression.errorMSG}
-                </div>
+                <div className="text-danger">{validExpression.errorMSG}</div>
               )}
             </Col>
           </Row>
@@ -528,6 +519,23 @@ const Editable = (props) => {
       document?.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
+
+  useEffect(() => {
+    if (!initialLoad.current) {
+      onChange(editableValue);
+      dispatch({
+        type: "SET_VALUE",
+        value: editableValue,
+        show: false,
+        target: null
+      });
+    } else {
+      initialLoad.current = false;
+    }
+    type === TYPE_CUSTOM
+      ? (selectValRef.current = { ...editableValue })
+      : (selectValRef.current = editableValue);
+  }, [editableValue]);
 
   const displayValue = () => {
     let val = "--";
@@ -759,23 +767,6 @@ const Editable = (props) => {
     return val;
   };
 
-  useEffect(() => {
-    if (!initialLoad.current) {
-      onChange(editableValue);
-      dispatch({
-        type: "SET_VALUE",
-        value: editableValue,
-        show: false,
-        target: null
-      });
-    } else {
-      initialLoad.current = false;
-    }
-    type === TYPE_CUSTOM
-      ? (selectValRef.current = { ...editableValue })
-      : (selectValRef.current = editableValue);
-  }, [editableValue]);
-
   const handleApply = () => {
     let errors, uiHintVal;
     if (selectValRef?.current) {
@@ -795,7 +786,7 @@ const Editable = (props) => {
             actionFilterContext?.selectedAccessTypes?.length > 0
           ) {
             const current = selectValRef.current[conditionObj.name];
-            
+
             if (Array.isArray(current)) {
               const { prunedSelection } = getAllowedActionMatchesForCondition({
                 conditionName: conditionObj.name,
@@ -805,7 +796,7 @@ const Editable = (props) => {
                 uiHintAttb: uiHintVal,
                 currentSelection: current
               });
-              
+
               if (prunedSelection && prunedSelection.length > 0) {
                 selectValRef.current[conditionObj.name] = prunedSelection;
               } else {
@@ -840,6 +831,16 @@ const Editable = (props) => {
       });
       onChange(selectValRef.current);
     }
+  };
+
+  const handleClick = (e) => {
+    setValidated({ state: false, errorMSG: "" });
+    let display = !show;
+    dispatch({
+      type: "SET_POPOVER",
+      show: display,
+      target: e.target
+    });
   };
 
   const handleClose = () => {
@@ -905,16 +906,6 @@ const Editable = (props) => {
       </div>
     </Popover>
   );
-
-  const handleClick = (e) => {
-    setValidated({ state: false, errorMSG: "" });
-    let display = !show;
-    dispatch({
-      type: "SET_POPOVER",
-      show: display,
-      target: e.target
-    });
-  };
 
   return (
     <div ref={popoverRef}>

@@ -23,7 +23,11 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.collections.MapUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.ranger.authorization.utils.StringUtil;
+import org.apache.ranger.plugin.store.AbstractServiceStore;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -63,6 +67,9 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
     private RangerDataMaskDef              dataMaskDef;
     private RangerRowFilterDef             rowFilterDef;
     private List<RangerAccessTypeDef>      markerAccessTypes; // read-only
+
+    private transient volatile boolean normalized;
+    private transient volatile String  accessTypesNormalizedForComponent;
 
     public RangerServiceDef() {
         this(null, null, null, null, null, null, null, null, null, null, null, null, null);
@@ -120,6 +127,8 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
     public void updateFrom(RangerServiceDef other) {
         super.updateFrom(other);
 
+        clearNormalized();
+
         setName(other.getName());
         setDisplayName(other.getDisplayName());
         setImplClass(other.getImplClass());
@@ -137,6 +146,37 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
         setDataMaskDef(other.getDataMaskDef());
         setRowFilterDef(other.getRowFilterDef());
         setMarkerAccessTypes(other.getMarkerAccessTypes());
+    }
+
+    public RangerServiceDef normalize() {
+        if (!normalized) {
+            synchronized (this) {
+                if (!normalized) {
+                    normalizeInPlace();
+
+                    normalized = true;
+                }
+            }
+        }
+
+        return this;
+    }
+
+    private void clearNormalized() {
+        normalized = false;
+        accessTypesNormalizedForComponent = null;
+    }
+
+    public RangerServiceDef normalizeAccessTypeDefs(String componentType) {
+        if (StringUtils.isNotBlank(componentType) && !componentType.equals(accessTypesNormalizedForComponent)) {
+            synchronized (this) {
+                if (!componentType.equals(accessTypesNormalizedForComponent)) {
+                    normalizeAccessTypeDefsInPlace(componentType);
+                    accessTypesNormalizedForComponent = componentType;
+                }
+            }
+        }
+        return this;
     }
 
     /**
@@ -295,6 +335,8 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
         if (resources != null) {
             this.resources.addAll(resources);
         }
+
+        clearNormalized();
     }
 
     /**
@@ -321,6 +363,8 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
         if (accessTypes != null) {
             this.accessTypes.addAll(accessTypes);
         }
+
+        clearNormalized();
     }
 
     /**
@@ -407,6 +451,8 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 
     public void setDataMaskDef(RangerDataMaskDef dataMaskDef) {
         this.dataMaskDef = dataMaskDef == null ? new RangerDataMaskDef() : dataMaskDef;
+
+        clearNormalized();
     }
 
     public RangerRowFilterDef getRowFilterDef() {
@@ -415,6 +461,8 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 
     public void setRowFilterDef(RangerRowFilterDef rowFilterDef) {
         this.rowFilterDef = rowFilterDef == null ? new RangerRowFilterDef() : rowFilterDef;
+
+        clearNormalized();
     }
 
     public List<RangerAccessTypeDef> getMarkerAccessTypes() {
@@ -443,6 +491,263 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 
     public void setDisplayName(String displayName) {
         this.displayName = displayName;
+    }
+
+    private void normalizeInPlace() {
+        normalizeDataMaskDef();
+        normalizeRowFilterDef();
+    }
+
+    private void normalizeDataMaskDef() {
+        if (dataMaskDef != null) {
+            List<RangerResourceDef>   dataMaskResources   = dataMaskDef.getResources();
+            List<RangerAccessTypeDef> dataMaskAccessTypes = dataMaskDef.getAccessTypes();
+
+            if (CollectionUtils.isNotEmpty(dataMaskResources)) {
+                List<RangerResourceDef> processedDefs = new ArrayList<>(dataMaskResources.size());
+
+                for (RangerResourceDef dataMaskResource : dataMaskResources) {
+                    RangerResourceDef processedDef = dataMaskResource;
+
+                    for (RangerResourceDef resourceDef : resources) {
+                        if (StringUtils.equals(resourceDef.getName(), dataMaskResource.getName())) {
+                            processedDef = mergeResourceDef(resourceDef, dataMaskResource);
+
+                            break;
+                        }
+                    }
+
+                    processedDefs.add(processedDef);
+                }
+
+                dataMaskDef.setResources(processedDefs);
+            }
+
+            if (CollectionUtils.isNotEmpty(dataMaskAccessTypes)) {
+                List<RangerAccessTypeDef> processedDefs = new ArrayList<>(accessTypes.size());
+
+                for (RangerAccessTypeDef dataMaskAccessType : dataMaskAccessTypes) {
+                    RangerAccessTypeDef processedDef = dataMaskAccessType;
+
+                    for (RangerAccessTypeDef accessType : accessTypes) {
+                        if (StringUtils.equals(accessType.getName(), dataMaskAccessType.getName())) {
+                            processedDef = mergeAccessTypeDef(accessType, dataMaskAccessType);
+
+                            break;
+                        }
+                    }
+
+                    processedDefs.add(processedDef);
+                }
+
+                dataMaskDef.setAccessTypes(processedDefs);
+            }
+        }
+    }
+
+    private void normalizeRowFilterDef() {
+        if (rowFilterDef != null) {
+            List<RangerResourceDef>   rowFilterResources   = rowFilterDef.getResources();
+            List<RangerAccessTypeDef> rowFilterAccessTypes = rowFilterDef.getAccessTypes();
+
+            if (CollectionUtils.isNotEmpty(rowFilterResources)) {
+                List<RangerResourceDef> processedDefs = new ArrayList<>(rowFilterResources.size());
+
+                for (RangerResourceDef rowFilterResource : rowFilterResources) {
+                    RangerResourceDef processedDef = rowFilterResource;
+
+                    for (RangerResourceDef resourceDef : resources) {
+                        if (StringUtils.equals(resourceDef.getName(), rowFilterResource.getName())) {
+                            processedDef = mergeResourceDef(resourceDef, rowFilterResource);
+
+                            break;
+                        }
+                    }
+
+                    processedDefs.add(processedDef);
+                }
+
+                rowFilterDef.setResources(processedDefs);
+            }
+
+            if (CollectionUtils.isNotEmpty(rowFilterAccessTypes)) {
+                List<RangerAccessTypeDef> processedDefs = new ArrayList<>(accessTypes.size());
+
+                for (RangerAccessTypeDef rowFilterAccessType : rowFilterAccessTypes) {
+                    RangerAccessTypeDef processedDef = rowFilterAccessType;
+
+                    for (RangerAccessTypeDef accessType : accessTypes) {
+                        if (StringUtils.equals(accessType.getName(), rowFilterAccessType.getName())) {
+                            processedDef = mergeAccessTypeDef(accessType, rowFilterAccessType);
+
+                            break;
+                        }
+                    }
+
+                    processedDefs.add(processedDef);
+                }
+
+                rowFilterDef.setAccessTypes(processedDefs);
+            }
+        }
+    }
+
+    private void normalizeAccessTypeDefsInPlace(String componentType) {
+        normalizeAccessTypeDefList(this.accessTypes, componentType);
+        normalizeAccessTypeDefList(this.markerAccessTypes, componentType);
+
+        if (this.dataMaskDef != null) {
+            normalizeAccessTypeDefList(this.dataMaskDef.getAccessTypes(), componentType);
+        }
+
+        if (this.rowFilterDef != null) {
+            normalizeAccessTypeDefList(this.rowFilterDef.getAccessTypes(), componentType);
+        }
+    }
+
+    private static void normalizeAccessTypeDefList(List<RangerAccessTypeDef> accessTypeDefs, String componentType) {
+        if (CollectionUtils.isNotEmpty(accessTypeDefs)) {
+            String                    prefix                 = componentType + AbstractServiceStore.COMPONENT_ACCESSTYPE_SEPARATOR;
+            List<RangerAccessTypeDef> unneededAccessTypeDefs = null;
+
+            for (RangerAccessTypeDef accessTypeDef : accessTypeDefs) {
+                String accessType = accessTypeDef.getName();
+
+                if (StringUtils.startsWith(accessType, prefix)) {
+                    String newAccessType = StringUtils.removeStart(accessType, prefix);
+
+                    accessTypeDef.setName(newAccessType);
+                } else if (StringUtils.contains(accessType, AbstractServiceStore.COMPONENT_ACCESSTYPE_SEPARATOR)) {
+                    if (unneededAccessTypeDefs == null) {
+                        unneededAccessTypeDefs = new ArrayList<>();
+                    }
+
+                    unneededAccessTypeDefs.add(accessTypeDef);
+
+                    continue;
+                }
+
+                Collection<String> impliedGrants = accessTypeDef.getImpliedGrants();
+
+                if (CollectionUtils.isNotEmpty(impliedGrants)) {
+                    Set<String> newImpliedGrants = new HashSet<>();
+
+                    for (String impliedGrant : impliedGrants) {
+                        if (StringUtils.startsWith(impliedGrant, prefix)) {
+                            String newImpliedGrant = StringUtils.removeStart(impliedGrant, prefix);
+
+                            newImpliedGrants.add(newImpliedGrant);
+                        } else if (!StringUtils.contains(impliedGrant, AbstractServiceStore.COMPONENT_ACCESSTYPE_SEPARATOR)) {
+                            newImpliedGrants.add(impliedGrant);
+                        }
+                    }
+
+                    accessTypeDef.setImpliedGrants(newImpliedGrants);
+                }
+            }
+
+            if (unneededAccessTypeDefs != null) {
+                accessTypeDefs.removeAll(unneededAccessTypeDefs);
+            }
+        }
+    }
+
+    private RangerResourceDef mergeResourceDef(RangerResourceDef base, RangerResourceDef delta) {
+        RangerResourceDef ret = new RangerResourceDef(base);
+
+        // retain base values for: itemId, name, type, level, parent, lookupSupported
+
+        if (Boolean.TRUE.equals(delta.getMandatory())) {
+            ret.setMandatory(delta.getMandatory());
+        }
+
+        if (delta.getRecursiveSupported() != null) {
+            ret.setRecursiveSupported(delta.getRecursiveSupported());
+        }
+
+        if (delta.getExcludesSupported() != null) {
+            ret.setExcludesSupported(delta.getExcludesSupported());
+        }
+
+        if (StringUtils.isNotEmpty(delta.getMatcher())) {
+            ret.setMatcher(delta.getMatcher());
+        }
+
+        if (MapUtils.isNotEmpty(delta.getMatcherOptions())) {
+            if (ret.getMatcherOptions() == null) {
+                ret.setMatcherOptions(new HashMap<>());
+            }
+
+            for (Map.Entry<String, String> e : delta.getMatcherOptions().entrySet()) {
+                ret.getMatcherOptions().put(e.getKey(), e.getValue());
+            }
+        }
+
+        if (StringUtils.isNotEmpty(delta.getValidationRegEx())) {
+            ret.setValidationRegEx(delta.getValidationRegEx());
+        }
+
+        if (StringUtils.isNotEmpty(delta.getValidationMessage())) {
+            ret.setValidationMessage(delta.getValidationMessage());
+        }
+
+        ret.setUiHint(delta.getUiHint());
+
+        if (StringUtils.isNotEmpty(delta.getLabel())) {
+            ret.setLabel(delta.getLabel());
+        }
+
+        if (StringUtils.isNotEmpty(delta.getDescription())) {
+            ret.setDescription(delta.getDescription());
+        }
+
+        if (StringUtils.isNotEmpty(delta.getRbKeyLabel())) {
+            ret.setRbKeyLabel(delta.getRbKeyLabel());
+        }
+
+        if (StringUtils.isNotEmpty(delta.getRbKeyDescription())) {
+            ret.setRbKeyDescription(delta.getRbKeyDescription());
+        }
+
+        if (StringUtils.isNotEmpty(delta.getRbKeyValidationMessage())) {
+            ret.setRbKeyValidationMessage(delta.getRbKeyValidationMessage());
+        }
+
+        if (CollectionUtils.isNotEmpty(delta.getAccessTypeRestrictions())) {
+            ret.setAccessTypeRestrictions(delta.getAccessTypeRestrictions());
+        }
+
+        boolean copyLeafValue = false;
+
+        if (ret.getIsValidLeaf() != null) {
+            if (!ret.getIsValidLeaf().equals(delta.getIsValidLeaf())) {
+                copyLeafValue = true;
+            }
+        } else if (delta.getIsValidLeaf() != null) {
+            copyLeafValue = true;
+        }
+
+        if (copyLeafValue) {
+            ret.setIsValidLeaf(delta.getIsValidLeaf());
+        }
+
+        return ret;
+    }
+
+    private RangerAccessTypeDef mergeAccessTypeDef(RangerAccessTypeDef base, RangerAccessTypeDef delta) {
+        RangerAccessTypeDef ret = new RangerAccessTypeDef(base);
+
+        // retain base values for: itemId, name, impliedGrants
+
+        if (StringUtils.isNotEmpty(delta.getLabel())) {
+            ret.setLabel(delta.getLabel());
+        }
+
+        if (StringUtils.isNotEmpty(delta.getRbKeyLabel())) {
+            ret.setRbKeyLabel(delta.getRbKeyLabel());
+        }
+
+        return ret;
     }
 
     public void dedupStrings(Map<String, String> strTbl) {

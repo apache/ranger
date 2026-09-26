@@ -20,6 +20,7 @@
 
 from apache_ranger.client.ranger_kms_client import RangerKMSClient
 from apache_ranger.client.ranger_client     import HadoopSimpleAuth
+from requests_kerberos import HTTPKerberosAuth, DISABLED
 from apache_ranger.model.ranger_kms         import RangerKey
 from threading                              import Thread
 from datetime                               import datetime
@@ -29,7 +30,7 @@ import logging
 # This script requires Python package apache_ranger to be present.
 # The package can be installed using following command:
 #    pip3 install --upgrade apache_ranger
-#
+#    pip3 install requests-kerberos
 
 ##
 ## This script calls KMS APIs from multiple-threads
@@ -42,14 +43,25 @@ import logging
 ##  encrypted_key_count: number of encrypted keys to generate per key
 ##  thread_count:        number of threads to call Apache Ranger APIs from
 ##
+kms_user            = 'keyadmin'          # used only when kms auth is 'simple'
+
+## Following instructions may be useful when KMS is running in Docker and auth_type is Kerberos :
+##   Use Docker network hostname in URL instead of localhost, like, 'http://ranger-kms.rangernw:9292'
+##   Docker network hostname should be resolved to an IP.
+##       On local system, update '/etc/hosts' to contain following entry:
+##         127.0.0.1       ranger-kms.rangernw ranger-kdc.rangernw ranger.rangernw
 kms_url             = 'http://localhost:9292'
-kms_auth            = HadoopSimpleAuth('keyadmin')
 key_count           = 320
 rollover_key_count  = 10
 encrypted_key_count = 6
 thread_count        = 16
 delete_on_exit      = True
 key_prefix          = 'test_'
+
+# for simple:
+kms_auth = HadoopSimpleAuth(kms_user)
+# for kerberos:
+# kms_auth = HTTPKerberosAuth(mutual_authentication=DISABLED)
 
 
 ##

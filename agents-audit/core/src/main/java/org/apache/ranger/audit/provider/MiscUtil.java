@@ -843,7 +843,7 @@ public class MiscUtil {
     public static Date getUTCDateForLocalDate(Date date) {
         TimeZone          gmtTimeZone = TimeZone.getTimeZone("GMT+0");
         Calendar          local       = Calendar.getInstance();
-        int               offset      = local.getTimeZone().getOffset(local.getTimeInMillis());
+        int               offset      = local.getTimeZone().getOffset(date.getTime());
         GregorianCalendar utc         = new GregorianCalendar(gmtTimeZone);
 
         utc.setTimeInMillis(date.getTime());
