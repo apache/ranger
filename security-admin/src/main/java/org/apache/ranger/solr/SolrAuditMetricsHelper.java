@@ -48,6 +48,8 @@ import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -110,6 +112,29 @@ public class SolrAuditMetricsHelper {
         applyTimezone(query, timezone);
 
         return extractAuditMetricsByDays(runMetricsQuery(query, "audit metrics by days"), filter);
+    }
+
+    public List<Map<String, Object>> getAuditAccessMetricsByDays(int olderThanInDays, String timezone) {
+        List<RangerAuditMetricsByDays> metrics = getAuditMetricsByDays(olderThanInDays, new SearchFilter(), timezone);
+        List<Map<String, Object>> ret          = new ArrayList<>();
+        Map<Long, Long> aggregatedByDate       = new LinkedHashMap<>();
+
+        for (RangerAuditMetricsByDays metric : metrics) {
+            Long auditDate = metric.getAuditDate();
+            if (auditDate != null) {
+                Long count = metric.getNumberOfAudits() != null ? metric.getNumberOfAudits() : 0L;
+                aggregatedByDate.merge(auditDate, count, Long::sum);
+            }
+        }
+
+        for (Map.Entry<Long, Long> entry : aggregatedByDate.entrySet()) {
+            Map<String, Object> row = new HashMap<>();
+            row.put("auditDate", entry.getKey());
+            row.put("numberOfAudits", entry.getValue());
+            ret.add(row);
+        }
+
+        return ret;
     }
 
     public List<RangerAuditMetricsByHours> getAuditMetricsByHours(SearchFilter filter, String timezone) {
