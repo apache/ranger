@@ -627,10 +627,11 @@ public class TestSessionMgr {
         sessionMgr.resetUserSessionForProfiles(userSession);
 
         assertTrue(userSession.isUserAdmin());
-        assertTrue(userSession.isKeyAdmin());
+        assertFalse(userSession.isKeyAdmin());
+        assertFalse(userSession.isAuditKeyAdmin());
         assertTrue(userSession.isSuperUser());
         assertTrue(userSession.getUserRoleList().contains(RangerConstants.ROLE_SYS_ADMIN));
-        assertTrue(userSession.getUserRoleList().contains(RangerConstants.ROLE_KEY_ADMIN));
+        assertFalse(userSession.getUserRoleList().contains(RangerConstants.ROLE_KEY_ADMIN));
         assertTrue(userSession.getUserRoleList().contains(RangerConstants.ROLE_USER));
         assertFalse(userSession.isSingleRoleUserSession());
         verify(xUserMgr, never()).getGroupsForUser(anyString());
@@ -648,7 +649,7 @@ public class TestSessionMgr {
         sessionMgr.resetUserSessionForProfiles(userSession);
 
         assertTrue(userSession.isUserAdmin());
-        assertTrue(userSession.isKeyAdmin());
+        assertFalse(userSession.isKeyAdmin());
         assertTrue(userSession.isSuperUser());
 
         PropertiesUtil.getPropertiesMap().remove(RangerConstants.RANGER_ADMIN_SUPER_GROUPS);
@@ -704,7 +705,7 @@ public class TestSessionMgr {
     }
 
     @Test
-    public void testSetUserRoles_ConfigSuperUserGrantsKeyAdminForSysAdmin() {
+    public void testSetUserRoles_ConfigSuperUserDoesNotGrantKeyAdminForSysAdmin() {
         RangerSuperUserConfig.resetForTests();
         PropertiesUtil.getPropertiesMap().put(RangerConstants.RANGER_ADMIN_SUPER_USERS, "config-admin");
 
@@ -732,11 +733,100 @@ public class TestSessionMgr {
         sessionMgr.resetUserSessionForProfiles(userSession);
 
         assertTrue(userSession.isUserAdmin());
-        assertTrue(userSession.isKeyAdmin());
+        assertFalse(userSession.isKeyAdmin());
         assertTrue(userSession.isSuperUser());
+        assertFalse(userSession.getUserRoleList().contains(RangerConstants.ROLE_KEY_ADMIN));
         verify(xUserMgr, never()).getGroupsForUser(anyString());
 
         PropertiesUtil.getPropertiesMap().remove(RangerConstants.RANGER_ADMIN_SUPER_USERS);
+    }
+
+    @Test
+    public void testResetUserModulePermission_ConfigSuperUserExcludesKeyManager() {
+        UserSessionBase userSession = superUserSessionWithModules();
+
+        sessionMgr.resetUserModulePermission(userSession);
+
+        Set<String> permissions = userSession.getRangerUserPermission().getUserPermissions();
+
+        assertTrue(permissions.contains(RangerConstants.MODULE_AUDIT));
+        assertFalse(permissions.contains(RangerConstants.MODULE_KEY_MANAGER));
+    }
+
+    @Test
+    public void testResetUserModulePermission_ConfigSuperUserExcludesKeyManagerEvenWithKeyAdminFlag() {
+        UserSessionBase userSession = superUserSessionWithModules();
+
+        userSession.setKeyAdmin(true);
+
+        sessionMgr.resetUserModulePermission(userSession);
+
+        Set<String> permissions = userSession.getRangerUserPermission().getUserPermissions();
+
+        assertTrue(permissions.contains(RangerConstants.MODULE_AUDIT));
+        assertFalse(permissions.contains(RangerConstants.MODULE_KEY_MANAGER));
+    }
+
+    @Test
+    public void testSetUserRoles_ConfigSuperUserIgnoresDbKeyAdminRole() {
+        RangerSuperUserConfig.resetForTests();
+        PropertiesUtil.getPropertiesMap().put(RangerConstants.RANGER_ADMIN_SUPER_USERS, "config-admin");
+
+        UserSessionBase userSession = new UserSessionBase();
+        XXPortalUser    portalUser  = new XXPortalUser();
+
+        portalUser.setId(45L);
+        portalUser.setLoginId("config-admin");
+        userSession.setXXPortalUser(portalUser);
+
+        XXPortalUserDao portalDao = mock(XXPortalUserDao.class);
+
+        when(daoManager.getXXPortalUser()).thenReturn(portalDao);
+        when(portalDao.findByLoginId("config-admin")).thenReturn(portalUser);
+
+        XXPortalUserRole keyAdminRole = new XXPortalUserRole();
+
+        keyAdminRole.setUserRole(RangerConstants.ROLE_KEY_ADMIN);
+
+        XXPortalUserRoleDao roleDao = mock(XXPortalUserRoleDao.class);
+
+        when(daoManager.getXXPortalUserRole()).thenReturn(roleDao);
+        when(roleDao.findByUserId(45L)).thenReturn(Collections.singletonList(keyAdminRole));
+
+        sessionMgr.resetUserSessionForProfiles(userSession);
+
+        assertTrue(userSession.isSuperUser());
+        assertTrue(userSession.isUserAdmin());
+        assertFalse(userSession.isKeyAdmin());
+        assertFalse(userSession.isAuditKeyAdmin());
+        assertEquals(Arrays.asList(RangerConstants.ROLE_SYS_ADMIN, RangerConstants.ROLE_USER), userSession.getUserRoleList());
+
+        PropertiesUtil.getPropertiesMap().remove(RangerConstants.RANGER_ADMIN_SUPER_USERS);
+        RangerSuperUserConfig.resetForTests();
+    }
+
+    private UserSessionBase superUserSessionWithModules() {
+        UserSessionBase userSession = new UserSessionBase();
+        XXPortalUser    portalUser  = new XXPortalUser();
+
+        portalUser.setId(44L);
+        portalUser.setLoginId("config-admin");
+        userSession.setXXPortalUser(portalUser);
+        userSession.setSuperUser(true);
+
+        XXUser xUser = new XXUser();
+
+        xUser.setId(144L);
+
+        XXUserDao      xUserDao     = mock(XXUserDao.class);
+        XXModuleDefDao moduleDefDao = mock(XXModuleDefDao.class);
+
+        when(daoManager.getXXUser()).thenReturn(xUserDao);
+        when(xUserDao.findByUserName("config-admin")).thenReturn(xUser);
+        when(daoManager.getXXModuleDef()).thenReturn(moduleDefDao);
+        when(moduleDefDao.getAllModuleNames()).thenReturn(Arrays.asList(RangerConstants.MODULE_AUDIT, RangerConstants.MODULE_KEY_MANAGER));
+
+        return userSession;
     }
 
     @Test
