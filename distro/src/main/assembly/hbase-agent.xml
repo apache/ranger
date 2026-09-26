@@ -67,10 +67,6 @@
           <include>jakarta.ws.rs:jakarta.ws.rs-api</include>
           <include>joda-time:joda-time</include>
           <include>org.apache.hadoop.thirdparty:hadoop-shaded-guava:jar:${hadoop-shaded-guava.version}</include>
-          <include>org.apache.httpcomponents:httpasyncclient:jar:${httpcomponents.httpasyncclient.version}</include>
-          <include>org.apache.httpcomponents:httpmime:jar:${httpcomponents.httpmime.version}</include>
-          <include>org.apache.solr:solr-solrj:jar:${solr.version}</include>
-          <include>org.eclipse.jetty:jetty-client:jar:${jetty-client.version}</include>
           <include>org.glassfish.jersey.core:jersey-client</include>
           <include>org.glassfish.jersey.core:jersey-common</include>
           <include>org.glassfish.jersey.ext:jersey-entity-filtering:jar:${jersey-client.version}</include>
