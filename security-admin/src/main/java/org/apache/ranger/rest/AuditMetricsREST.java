@@ -20,6 +20,8 @@
 package org.apache.ranger.rest;
 
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.ranger.audit.metrics.AccessAuditsMetricsService;
+import org.apache.ranger.audit.metrics.AccessAuditsMetricsServiceFactory;
 import org.apache.ranger.authorization.hadoop.config.RangerAdminConfig;
 import org.apache.ranger.common.MessageEnums;
 import org.apache.ranger.common.RESTErrorUtil;
@@ -29,7 +31,6 @@ import org.apache.ranger.plugin.model.RangerAuditMetricsByDays;
 import org.apache.ranger.plugin.model.RangerAuditMetricsByHours;
 import org.apache.ranger.plugin.util.SearchFilter;
 import org.apache.ranger.security.context.RangerAPIList;
-import org.apache.ranger.solr.SolrAccessAuditsService;
 import org.apache.ranger.view.RangerAuditMetricsList;
 import org.apache.ranger.view.RangerAuditMetricsListByDays;
 import org.apache.ranger.view.RangerAuditMetricsListByHours;
@@ -73,7 +74,7 @@ public class AuditMetricsREST {
     RangerSearchUtil searchUtil;
 
     @Autowired
-    SolrAccessAuditsService solrAccessAuditsService;
+    AccessAuditsMetricsServiceFactory accessAuditsMetricsServiceFactory;
 
     @GET
     @Path("/metrics/servicetype/{servicetype}/servicename/{servicename}")
@@ -84,7 +85,9 @@ public class AuditMetricsREST {
         LOG.debug("==> AuditMetricsREST.getLatestAuditMetrics(serviceType={} serviceName={})", serviceType, serviceName);
         RangerAuditMetrics ret;
         try {
-            ret = solrAccessAuditsService.getLatestAuditMetrics(serviceType, serviceName, timezone);
+            AccessAuditsMetricsService accessAuditsMetricsService = accessAuditsMetricsServiceFactory.getAccessAuditsMetricsService();
+
+            ret = accessAuditsMetricsService.getLatestAuditMetrics(serviceType, serviceName, timezone);
         } catch (WebApplicationException excp) {
             throw excp;
         } catch (Throwable excp) {
@@ -104,7 +107,9 @@ public class AuditMetricsREST {
         LOG.debug("==> AuditMetricsREST.getAuditMetrics(id={})", id);
         RangerAuditMetrics ret;
         try {
-            ret = solrAccessAuditsService.getAuditMetrics(id, timezone);
+            AccessAuditsMetricsService accessAuditsMetricsService = accessAuditsMetricsServiceFactory.getAccessAuditsMetricsService();
+
+            ret = accessAuditsMetricsService.getAuditMetrics(id, timezone);
         } catch (WebApplicationException excp) {
             throw excp;
         } catch (Throwable excp) {
@@ -128,7 +133,9 @@ public class AuditMetricsREST {
         SearchFilter filter = searchUtil.getSearchFilter(request, Collections.emptyList());
 
         try {
-            rangerAuditMetrics = solrAccessAuditsService.getLatestAuditMetricsList(filter, timezone);
+            AccessAuditsMetricsService accessAuditsMetricsService = accessAuditsMetricsServiceFactory.getAccessAuditsMetricsService();
+
+            rangerAuditMetrics = accessAuditsMetricsService.getLatestAuditMetricsList(filter, timezone);
         } catch (WebApplicationException excp) {
             throw excp;
         } catch (Throwable excp) {
@@ -156,7 +163,9 @@ public class AuditMetricsREST {
 
         SearchFilter filter = searchUtil.getSearchFilter(request, Collections.emptyList());
         try {
-            rangerAuditMetricsByHours = solrAccessAuditsService.getAuditMetricsByHours(filter, timezone);
+            AccessAuditsMetricsService accessAuditsMetricsService = accessAuditsMetricsServiceFactory.getAccessAuditsMetricsService();
+
+            rangerAuditMetricsByHours = accessAuditsMetricsService.getAuditMetricsByHours(filter, timezone);
         } catch (WebApplicationException excp) {
             throw excp;
         } catch (Throwable excp) {
@@ -191,7 +200,9 @@ public class AuditMetricsREST {
         List<RangerAuditMetricsByDays> rangerAuditMetricsByDays;
         SearchFilter                   filter = searchUtil.getSearchFilter(request, Collections.emptyList());
         try {
-            rangerAuditMetricsByDays = solrAccessAuditsService.getAuditMetricsByDays(olderThanInDays, filter, timezone);
+            AccessAuditsMetricsService accessAuditsMetricsService = accessAuditsMetricsServiceFactory.getAccessAuditsMetricsService();
+
+            rangerAuditMetricsByDays = accessAuditsMetricsService.getAuditMetricsByDays(olderThanInDays, filter, timezone);
         } catch (WebApplicationException excp) {
             throw excp;
         } catch (Throwable excp) {

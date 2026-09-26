@@ -20,6 +20,7 @@
 package org.apache.ranger.solr;
 
 import org.apache.ranger.AccessAuditsService;
+import org.apache.ranger.audit.metrics.AccessAuditsMetricsService;
 import org.apache.ranger.audit.provider.MiscUtil;
 import org.apache.ranger.common.MessageEnums;
 import org.apache.ranger.common.PropertiesUtil;
@@ -51,7 +52,7 @@ import java.util.Map;
 
 @Service
 @Scope("singleton")
-public class SolrAccessAuditsService extends AccessAuditsService {
+public class SolrAccessAuditsService extends AccessAuditsService implements AccessAuditsMetricsService {
     private static final Logger LOGGER = LoggerFactory.getLogger(SolrAccessAuditsService.class);
 
     @Autowired
