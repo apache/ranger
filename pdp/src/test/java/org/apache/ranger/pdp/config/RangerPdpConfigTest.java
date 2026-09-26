@@ -29,6 +29,16 @@ public class RangerPdpConfigTest {
     public void clearSystemOverrides() {
         System.clearProperty(RangerPdpConstants.PROP_AUTHN_HEADER_USERNAME);
         System.clearProperty(RangerPdpConstants.PROP_PORT);
+        System.clearProperty(RangerPdpConstants.PROP_AUTHN_JWT_ISSUER);
+    }
+
+    @Test
+    public void testJwtIssuerCanBeOverriddenBySystemProperty() {
+        assertEquals("", new RangerPdpConfig().getJwtIssuer());
+
+        System.setProperty(RangerPdpConstants.PROP_AUTHN_JWT_ISSUER, "https://idp.example.com/realms/ranger");
+
+        assertEquals("https://idp.example.com/realms/ranger", new RangerPdpConfig().getJwtIssuer());
     }
 
     @Test

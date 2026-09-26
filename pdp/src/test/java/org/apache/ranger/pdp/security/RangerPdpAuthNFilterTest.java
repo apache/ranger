@@ -49,6 +49,49 @@ public class RangerPdpAuthNFilterTest {
     }
 
     @Test
+    public void testInit_registersJwtHandlerWhenProviderIssuerAndAudiencesConfigured() throws Exception {
+        RangerPdpAuthNFilter filter = new RangerPdpAuthNFilter();
+        Map<String, String>  params = jwtParams();
+
+        filter.init(new TestFilterConfig(params));
+
+        Field handlersField = RangerPdpAuthNFilter.class.getDeclaredField("handlers");
+
+        handlersField.setAccessible(true);
+
+        @SuppressWarnings("unchecked")
+        List<PdpAuthNHandler> handlers = (List<PdpAuthNHandler>) handlersField.get(filter);
+
+        assertEquals(1, handlers.size());
+        assertEquals(JwtAuthNHandler.class, handlers.get(0).getClass());
+    }
+
+    @Test
+    public void testInit_disablesJwtHandlerWhenIssuerOrAudiencesMissing() {
+        for (String missing : new String[] {RangerPdpConstants.PROP_AUTHN_JWT_ISSUER, RangerPdpConstants.PROP_AUTHN_JWT_AUDIENCES}) {
+            RangerPdpAuthNFilter filter = new RangerPdpAuthNFilter();
+            Map<String, String>  params = jwtParams();
+
+            params.remove(missing);
+
+            /* jwt is the only handler configured, so a disabled handler leaves none */
+            assertThrows(ServletException.class, () -> filter.init(new TestFilterConfig(params)));
+        }
+    }
+
+    private static Map<String, String> jwtParams() {
+        Map<String, String> params = new HashMap<>();
+
+        params.put(RangerPdpConstants.PROP_AUTHN_TYPES, "jwt");
+        params.put(RangerPdpConstants.PROP_AUTHN_JWT_ENABLED, "true");
+        params.put(RangerPdpConstants.PROP_AUTHN_JWT_PROVIDER_URL, "http://localhost:1/jwks.json");
+        params.put(RangerPdpConstants.PROP_AUTHN_JWT_ISSUER, "https://idp.example.com/realms/ranger");
+        params.put(RangerPdpConstants.PROP_AUTHN_JWT_AUDIENCES, "ranger-pdp");
+
+        return params;
+    }
+
+    @Test
     public void testInit_registersHeaderHandlerWhenEnabled() throws Exception {
         RangerPdpAuthNFilter filter = new RangerPdpAuthNFilter();
         Map<String, String>  params = new HashMap<>();

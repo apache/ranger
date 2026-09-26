@@ -56,9 +56,7 @@ public class AuditJwtAuthFilter extends RangerDefaultJwtAuthHandler implements F
 
     @PostConstruct
     public void initialize() {
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("==> AuditJwtAuthFilter.initialize()");
-        }
+        LOG.debug("==> AuditJwtAuthFilter.initialize()");
 
         AuditServerConfig auditConfig = AuditServerConfig.getInstance();
 
@@ -67,12 +65,8 @@ public class AuditJwtAuthFilter extends RangerDefaultJwtAuthHandler implements F
         boolean jwtEnabled   = auditConfig.getBoolean(configPrefix + "enabled", false);
 
         if (!jwtEnabled) {
-            if (LOG.isDebugEnabled()) {
-                LOG.debug("JWT authentication is disabled, skipping initialization");
-            }
-            if (LOG.isDebugEnabled()) {
-                LOG.debug("<<<=== AuditJwtAuthFilter.initialize()");
-            }
+            LOG.debug("JWT authentication is disabled, skipping initialization");
+            LOG.debug("<<<=== AuditJwtAuthFilter.initialize()");
             return;
         }
 
@@ -97,23 +91,21 @@ public class AuditJwtAuthFilter extends RangerDefaultJwtAuthHandler implements F
                         mappedKey = "jwt.cookie-name";
                     } else if ("audiences".equals(mappedKey)) {
                         mappedKey = "jwt.audiences";
+                    } else if ("issuer".equals(mappedKey)) {
+                        mappedKey = "jwt.issuer";
                     }
                     config.put(mappedKey, auditConfig.get(key));
                 }
             }
 
-            if (LOG.isDebugEnabled()) {
-                LOG.debug("JWT Auth configs : {}", config.toString());
-            }
+            LOG.debug("JWT Auth configs : {}", config);
 
             super.initialize(config);
         } catch (Exception e) {
             LOG.error("Failed to initialize Audit JWT Auth Filter.", e);
         }
 
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("<== AuditJwtAuthFilter.initialize()");
-        }
+        LOG.debug("<== AuditJwtAuthFilter.initialize()");
     }
 
     @Override
@@ -123,9 +115,7 @@ public class AuditJwtAuthFilter extends RangerDefaultJwtAuthHandler implements F
     @Override
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
             throws IOException, ServletException {
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("==> AuditJwtAuthFilter.doFilter({}, {}, {})", request, response, chain);
-        }
+        LOG.debug("==> AuditJwtAuthFilter.doFilter({}, {}, {})", request, response, chain);
 
         // Check if JWT authentication is enabled
         AuditServerConfig auditConfig  = AuditServerConfig.getInstance();
@@ -133,9 +123,7 @@ public class AuditJwtAuthFilter extends RangerDefaultJwtAuthHandler implements F
         boolean           jwtEnabled   = auditConfig.getBoolean(configPrefix + "enabled", false);
 
         if (!jwtEnabled) {
-            if (LOG.isDebugEnabled()) {
-                LOG.debug("JWT authentication is disabled, passing request to next filter");
-            }
+            LOG.debug("JWT authentication is disabled, passing request to next filter");
             chain.doFilter(request, response);
             return;
         }
@@ -161,32 +149,24 @@ public class AuditJwtAuthFilter extends RangerDefaultJwtAuthHandler implements F
                     }
                 } else {
                     // Already authenticated
-                    if (LOG.isDebugEnabled()) {
-                        LOG.debug("User [{}] is already authenticated, proceeding with filter chain.", previousAuth.getPrincipal());
-                    }
+                    LOG.debug("User [{}] is already authenticated, proceeding with filter chain.", previousAuth.getPrincipal());
                 }
 
                 // Log final status of request.
                 Authentication finalAuth = SecurityContextHolder.getContext().getAuthentication();
                 if (finalAuth != null) {
-                    if (LOG.isDebugEnabled()) {
-                        LOG.debug("AuditJwtAuthFilter.doFilter() - user=[{}], isUserAuthenticated? [{}]", finalAuth.getPrincipal(), finalAuth.isAuthenticated());
-                    }
+                    LOG.debug("AuditJwtAuthFilter.doFilter() - user=[{}], isUserAuthenticated? [{}]", finalAuth.getPrincipal(), finalAuth.isAuthenticated());
                 } else {
                     LOG.warn("AuditJwtAuthFilter.doFilter() - Failed to authenticate request using Audit JWT authentication framework.");
                 }
             } else {
-                if (LOG.isDebugEnabled()) {
-                    LOG.debug("Skipping JWT Audit auth for request.");
-                }
+                LOG.debug("Skipping JWT Audit auth for request.");
             }
         }
 
         chain.doFilter(request, response); // proceed with filter chain
 
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("<== AuditJwtAuthFilter.doFilter()");
-        }
+        LOG.debug("<== AuditJwtAuthFilter.doFilter()");
     }
 
     @Override

@@ -98,6 +98,21 @@ docker compose --profile ${AUDIT_DESTINATIONS} -f docker-compose.ranger.yml -f d
 
 # Ranger Admin can be accessed at http://localhost:6080 (admin/rangerR0cks!)
 ~~~
+
+#### JWT bearer-token authentication
+Ranger Admin and Ranger PDP REST APIs accept `Authorization: Bearer <jwt>`. Tokens are verified against the JWKS of the
+configured provider and must carry `exp`, `sub`, the configured `iss` and one of the configured `aud` values; the token
+subject is the Ranger user, and Ranger Admin records such logins with login type `JWT` under Audits > Login Sessions.
+The shipped configuration points at [jwkserve.com](https://jwkserve.com), a public development service that signs any
+claims posted to it, so a test token is one request away (never use it outside development):
+~~~
+TOKEN=$(curl -s -X POST https://jwkserve.com/sign/RS256 -H 'Content-Type: application/json' \
+  -d "{\"sub\":\"admin\",\"aud\":[\"ranger-admin\",\"ranger-pdp\"],\"exp\":$(( $(date +%s) + 3600 ))}" | sed 's/.*"token":"\([^"]*\)".*/\1/')
+curl -H "Authorization: Bearer ${TOKEN}" http://localhost:6080/service/public/v2/api/service
+~~~
+To use your own provider, change `ranger.sso.providerurl` (JWKS URL), `ranger.sso.issuer` and `ranger.sso.audiences` in
+`scripts/admin/configs/ranger-admin-site-<db>.yaml` for Ranger Admin, and `ranger.pdp.authn.jwt.provider.url`,
+`ranger.pdp.authn.jwt.issuer` and `ranger.pdp.authn.jwt.audiences` in `scripts/pdp/ranger-pdp-site.xml` for Ranger PDP.
 #### Bring up hive container
 ~~~
 docker compose --profile ${AUDIT_DESTINATIONS} -f docker-compose.ranger.yml -f docker-compose.ranger-audit-service.yml -f docker-compose.ranger-hadoop.yml -f docker-compose.ranger-hive.yml up -d

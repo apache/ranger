@@ -490,6 +490,12 @@ export const AuthType = {
     label: "Trusted Proxy",
     rbkey: "xa.enum.AuthType.AUTH_TYPE_TRUSTED_PROXY",
     tt: "lbl.AuthType_AUTH_TYPE_TRUSTED_PROXY"
+  },
+  AUTH_TYPE_JWT: {
+    value: 5,
+    label: "JWT",
+    rbkey: "xa.enum.AuthType.AUTH_TYPE_JWT",
+    tt: "lbl.AuthType_AUTH_TYPE_JWT"
   }
 };
 

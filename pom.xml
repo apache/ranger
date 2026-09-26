@@ -702,6 +702,7 @@
                         <exclude>**/test/resources/**/*.csv</exclude>
                         <exclude>**/test/resources/**/*.yaml</exclude>
                         <exclude>**/test/resources/**/*.avcs</exclude>
+                        <exclude>**/test/resources/**/*.pem</exclude>
                         <exclude>**/main/resources/**/*.json</exclude>
                         <exclude>**/samples/**/*.json</exclude>
                         <exclude>**/.externalToolBuilders/*</exclude>

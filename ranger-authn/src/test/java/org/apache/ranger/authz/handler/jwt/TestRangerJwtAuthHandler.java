@@ -18,124 +18,337 @@
  */
 package org.apache.ranger.authz.handler.jwt;
 
+import com.nimbusds.jose.JOSEObjectType;
 import com.nimbusds.jose.JWSAlgorithm;
 import com.nimbusds.jose.JWSHeader;
-import com.nimbusds.jose.proc.JWSKeySelector;
-import com.nimbusds.jose.proc.SecurityContext;
+import com.nimbusds.jose.JWSSigner;
+import com.nimbusds.jose.crypto.MACSigner;
+import com.nimbusds.jose.crypto.RSASSASigner;
+import com.nimbusds.jose.jwk.JWKSet;
+import com.nimbusds.jose.jwk.RSAKey;
+import com.nimbusds.jose.jwk.gen.RSAKeyGenerator;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
-import com.nimbusds.jwt.proc.ConfigurableJWTProcessor;
-import org.apache.ranger.authz.handler.RangerAuth;
+import com.sun.net.httpserver.HttpServer;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
-import javax.servlet.http.HttpServletRequest;
-
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.UncheckedIOException;
+import java.net.InetSocketAddress;
+import java.nio.charset.StandardCharsets;
+import java.security.KeyFactory;
+import java.security.PrivateKey;
+import java.security.spec.PKCS8EncodedKeySpec;
 import java.util.Arrays;
+import java.util.Base64;
 import java.util.Date;
+import java.util.Properties;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class TestRangerJwtAuthHandler {
-    static class TestHandler extends RangerJwtAuthHandler {
-        @Override
-        public ConfigurableJWTProcessor<SecurityContext> getJwtProcessor(JWSKeySelector<SecurityContext> keySelector) {
-            return null;
-        }
+    private static final String ISSUER   = "https://idp.example.com/realms/ranger";
+    private static final String AUDIENCE = "ranger-admin";
 
-        @Override
-        public RangerAuth authenticate(HttpServletRequest request) {
-            return null;
-        }
+    /* throwaway self-signed RSA-2048 key pair generated for these tests only; never used anywhere else */
+    private static final String TEST_CERT_PEM = readResource("jwt-test-only-cert.pem");
+    private static final String TEST_KEY_PEM  = readResource("jwt-test-only-key.pem");
 
-        boolean callValidateIssuer(SignedJWT jwt) {
-            return validateIssuer(jwt);
-        }
+    private static RSAKey     jwksKey;
+    private static RSAKey     rogueKey;
+    private static PrivateKey pemPrivateKey;
+    private static HttpServer jwksServer;
+    private static String     jwksUrl;
 
-        boolean callValidateAudiences(SignedJWT jwt) {
-            return validateAudiences(jwt);
-        }
+    @BeforeAll
+    static void startJwksServer() throws Exception {
+        jwksKey  = new RSAKeyGenerator(2048).keyID("kid-1").generate();
+        rogueKey = new RSAKeyGenerator(2048).keyID("kid-1").generate();
 
-        String callSafeJwtLogContext(SignedJWT jwt) {
-            return safeJwtLogContext(jwt);
+        byte[] jwks = new JWKSet(jwksKey.toPublicJWK()).toString().getBytes(StandardCharsets.UTF_8);
+
+        jwksServer = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0);
+        jwksServer.createContext("/jwks", exchange -> {
+            exchange.getResponseHeaders().add("Content-Type", "application/json");
+            exchange.sendResponseHeaders(200, jwks.length);
+
+            try (OutputStream os = exchange.getResponseBody()) {
+                os.write(jwks);
+            }
+        });
+        jwksServer.start();
+
+        jwksUrl = "http://127.0.0.1:" + jwksServer.getAddress().getPort() + "/jwks";
+
+        String base64 = TEST_KEY_PEM.replace("-----BEGIN PRIVATE KEY-----", "").replace("-----END PRIVATE KEY-----", "").replaceAll("\\s", "");
+
+        pemPrivateKey = KeyFactory.getInstance("RSA").generatePrivate(new PKCS8EncodedKeySpec(Base64.getDecoder().decode(base64)));
+    }
+
+    @AfterAll
+    static void stopJwksServer() {
+        jwksServer.stop(0);
+    }
+
+    private static String readResource(String name) {
+        try (InputStream in = TestRangerJwtAuthHandler.class.getClassLoader().getResourceAsStream(name)) {
+            return new String(in.readAllBytes(), StandardCharsets.UTF_8);
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
         }
     }
 
-    private static SignedJWT jwtWithIssuer(String issuer) {
-        JWTClaimsSet claims = new JWTClaimsSet.Builder()
-                .issuer(issuer)
-                .subject("user")
-                .expirationTime(new Date(System.currentTimeMillis() + 60_000))
-                .build();
+    private static Properties jwksConfig() {
+        Properties config = new Properties();
 
-        // Header alg value doesn't matter for validateIssuer()
-        return new SignedJWT(new JWSHeader(JWSAlgorithm.RS256), claims);
+        config.setProperty(RangerJwtAuthHandler.KEY_PROVIDER_URL, jwksUrl);
+        config.setProperty(RangerJwtAuthHandler.KEY_JWT_AUDIENCES, AUDIENCE);
+        config.setProperty(RangerJwtAuthHandler.KEY_JWT_ISS, ISSUER);
+
+        return config;
+    }
+
+    private static Properties pemConfig() {
+        Properties config = new Properties();
+
+        config.setProperty(RangerJwtAuthHandler.KEY_JWT_PUBLIC_KEY, TEST_CERT_PEM);
+        config.setProperty(RangerJwtAuthHandler.KEY_JWT_AUDIENCES, AUDIENCE);
+        config.setProperty(RangerJwtAuthHandler.KEY_JWT_ISS, ISSUER);
+
+        return config;
+    }
+
+    private static RangerDefaultJwtAuthHandler handler(Properties config) throws Exception {
+        RangerDefaultJwtAuthHandler handler = new RangerDefaultJwtAuthHandler();
+
+        handler.initialize(config);
+
+        return handler;
+    }
+
+    private static JWTClaimsSet.Builder validClaims() {
+        return new JWTClaimsSet.Builder()
+                .issuer(ISSUER)
+                .audience(AUDIENCE)
+                .subject("alice")
+                .issueTime(new Date())
+                .expirationTime(new Date(System.currentTimeMillis() + 60_000));
+    }
+
+    private static String sign(JWSHeader header, JWTClaimsSet claims, JWSSigner signer) throws Exception {
+        SignedJWT jwt = new SignedJWT(header, claims);
+
+        jwt.sign(signer);
+
+        return jwt.serialize();
+    }
+
+    private static String bearerFromJwks(JWTClaimsSet claims) throws Exception {
+        return "Bearer " + sign(new JWSHeader.Builder(JWSAlgorithm.RS256).keyID(jwksKey.getKeyID()).build(), claims, new RSASSASigner(jwksKey));
+    }
+
+    private static String bearerFromPem(JWTClaimsSet claims) throws Exception {
+        return "Bearer " + sign(new JWSHeader.Builder(JWSAlgorithm.RS256).keyID("some-kid-the-cert-does-not-have").build(), claims, new RSASSASigner(pemPrivateKey));
     }
 
     @Test
-    void validateIssuerTrue_whenIssuerNotConfigured() {
-        TestHandler handler = new TestHandler();
-        handler.issuer = null; // StringUtils.isBlank(null) => true
+    void initialize_failsWithoutKeySource() {
+        Properties config = jwksConfig();
 
-        SignedJWT jwt = jwtWithIssuer("any-issuer");
+        config.remove(RangerJwtAuthHandler.KEY_PROVIDER_URL);
 
-        assertTrue(handler.callValidateIssuer(jwt));
+        Exception e = assertThrows(Exception.class, () -> handler(config));
+
+        assertTrue(e.getMessage().contains(RangerJwtAuthHandler.KEY_PROVIDER_URL));
     }
 
     @Test
-    void validateIssuerTrue_whenIssuerMatches() {
-        TestHandler handler = new TestHandler();
-        handler.issuer = "expected-issuer";
+    void initialize_failsWithoutAudiences() {
+        for (String value : new String[] {null, "", " , "}) {
+            Properties config = jwksConfig();
 
-        SignedJWT jwt = jwtWithIssuer("expected-issuer");
+            if (value == null) {
+                config.remove(RangerJwtAuthHandler.KEY_JWT_AUDIENCES);
+            } else {
+                config.setProperty(RangerJwtAuthHandler.KEY_JWT_AUDIENCES, value);
+            }
 
-        assertTrue(handler.callValidateIssuer(jwt));
+            Exception e = assertThrows(Exception.class, () -> handler(config));
+
+            assertTrue(e.getMessage().contains(RangerJwtAuthHandler.KEY_JWT_AUDIENCES));
+        }
     }
 
     @Test
-    void validateIssuerFalse_whenIssuerDoesNotMatch() {
-        TestHandler handler = new TestHandler();
-        handler.issuer = "expected-issuer";
+    void initialize_failsWithoutIssuer() {
+        for (String value : new String[] {null, "", "  "}) {
+            Properties config = jwksConfig();
 
-        SignedJWT jwt = jwtWithIssuer("different-issuer");
+            if (value == null) {
+                config.remove(RangerJwtAuthHandler.KEY_JWT_ISS);
+            } else {
+                config.setProperty(RangerJwtAuthHandler.KEY_JWT_ISS, value);
+            }
 
-        assertFalse(handler.callValidateIssuer(jwt));
+            Exception e = assertThrows(Exception.class, () -> handler(config));
+
+            assertTrue(e.getMessage().contains(RangerJwtAuthHandler.KEY_JWT_ISS));
+        }
     }
 
     @Test
-    void validateIssuerFalse_whenJwtClaimsCannotBeParsed() throws Exception {
-        TestHandler handler = new TestHandler();
-        handler.issuer = "expected-issuer";
+    void initialize_trimsAudiencesAndIssuer() throws Exception {
+        Properties config = jwksConfig();
 
-        String header = "eyJhbGciOiJIUzI1NiJ9"; // Header: {"alg":"HS256"}  (valid JWS header for SignedJWT)
-        String payload = "buyevwv678";          // Payload: "not-json"      (NOT a JSON object => getJWTClaimsSet() will throw ParseException)
-        String signature = "abcd";              // Signature: "sig"         (any base64url string works for parsing)
+        config.setProperty(RangerJwtAuthHandler.KEY_JWT_AUDIENCES, " other , ," + AUDIENCE + " ");
+        config.setProperty(RangerJwtAuthHandler.KEY_JWT_ISS, " " + ISSUER + " ");
 
-        SignedJWT badJwt = SignedJWT.parse(header + "." + payload + "." + signature);
+        RangerDefaultJwtAuthHandler handler = handler(config);
 
-        assertFalse(handler.callValidateIssuer(badJwt));
+        assertEquals(Arrays.asList("other", AUDIENCE), handler.audiences);
+        assertEquals(ISSUER, handler.issuer);
+        assertEquals("alice", handler.authenticate(bearerFromJwks(validClaims().build())));
     }
 
     @Test
-    void validateAudiencesFalse_whenTokenAudienceMissingAndAudiencesConfigured() {
-        TestHandler handler = new TestHandler();
-        handler.audiences = Arrays.asList("service-a");
+    void authenticate_acceptsValidTokenViaJwks() throws Exception {
+        RangerDefaultJwtAuthHandler handler = handler(jwksConfig());
 
-        SignedJWT jwt = jwtWithIssuer("test-issuer");
+        assertEquals("alice", handler.authenticate(bearerFromJwks(validClaims().build())));
+        assertEquals("alice", handler.authenticate(bearerFromJwks(validClaims().audience(Arrays.asList("other", AUDIENCE)).build())));
+    }
 
-        assertFalse(handler.callValidateAudiences(jwt));
+    @Test
+    void authenticate_acceptsValidTokenViaPinnedPublicKeyIgnoringKid() throws Exception {
+        RangerDefaultJwtAuthHandler handler = handler(pemConfig());
+
+        assertEquals("alice", handler.authenticate(bearerFromPem(validClaims().build())));
+    }
+
+    @Test
+    void authenticate_rejectsTokenSignedByWrongKey() throws Exception {
+        RangerDefaultJwtAuthHandler jwksHandler = handler(jwksConfig());
+        RangerDefaultJwtAuthHandler pemHandler  = handler(pemConfig());
+
+        String rogueViaJwks = "Bearer " + sign(new JWSHeader.Builder(JWSAlgorithm.RS256).keyID("kid-1").build(), validClaims().build(), new RSASSASigner(rogueKey));
+
+        assertNull(jwksHandler.authenticate(rogueViaJwks));
+        assertNull(pemHandler.authenticate(rogueViaJwks));
+        assertNull(jwksHandler.authenticate(bearerFromPem(validClaims().build())));
+    }
+
+    @Test
+    void authenticate_rejectsUnknownKid() throws Exception {
+        RangerDefaultJwtAuthHandler handler = handler(jwksConfig());
+
+        String unknownKid = "Bearer " + sign(new JWSHeader.Builder(JWSAlgorithm.RS256).keyID("kid-2").build(), validClaims().build(), new RSASSASigner(jwksKey));
+
+        assertNull(handler.authenticate(unknownKid));
+    }
+
+    @Test
+    void authenticate_rejectsHmacAlgorithm() throws Exception {
+        RangerDefaultJwtAuthHandler handler = handler(jwksConfig());
+
+        /* an HS256 token must never be verified against public key material */
+        byte[] secret = new byte[32];
+        String hmac   = "Bearer " + sign(new JWSHeader.Builder(JWSAlgorithm.HS256).keyID("kid-1").build(), validClaims().build(), new MACSigner(secret));
+
+        assertNull(handler.authenticate(hmac));
+    }
+
+    @Test
+    void authenticate_rejectsMissingOrPastExpiry() throws Exception {
+        RangerDefaultJwtAuthHandler handler = handler(jwksConfig());
+
+        assertNull(handler.authenticate(bearerFromJwks(validClaims().expirationTime(null).build())));
+        assertNull(handler.authenticate(bearerFromJwks(validClaims().expirationTime(new Date(System.currentTimeMillis() - 5 * 60_000)).build())));
+    }
+
+    @Test
+    void authenticate_rejectsTokenNotYetValid() throws Exception {
+        RangerDefaultJwtAuthHandler handler = handler(jwksConfig());
+
+        assertNull(handler.authenticate(bearerFromJwks(validClaims().notBeforeTime(new Date(System.currentTimeMillis() + 5 * 60_000)).build())));
+    }
+
+    @Test
+    void authenticate_rejectsTokenForOtherAudience() throws Exception {
+        RangerDefaultJwtAuthHandler handler = handler(jwksConfig());
+
+        assertNull(handler.authenticate(bearerFromJwks(validClaims().audience("other-service").build())));
+        assertNull(handler.authenticate(bearerFromJwks(validClaims().audience((String) null).build())));
+    }
+
+    @Test
+    void authenticate_rejectsTokenFromOtherIssuer() throws Exception {
+        RangerDefaultJwtAuthHandler handler = handler(jwksConfig());
+
+        assertNull(handler.authenticate(bearerFromJwks(validClaims().issuer("https://idp.example.com/realms/other").build())));
+        assertNull(handler.authenticate(bearerFromJwks(validClaims().issuer(null).build())));
+    }
+
+    @Test
+    void authenticate_rejectsMissingOrBlankSubject() throws Exception {
+        RangerDefaultJwtAuthHandler handler = handler(jwksConfig());
+
+        assertNull(handler.authenticate(bearerFromJwks(validClaims().subject(null).build())));
+        assertNull(handler.authenticate(bearerFromJwks(validClaims().subject("  ").build())));
+    }
+
+    @Test
+    void authenticate_acceptsJwtAndAccessTokenTypesOnly() throws Exception {
+        RangerDefaultJwtAuthHandler handler = handler(jwksConfig());
+
+        for (String typ : new String[] {"JWT", "at+jwt"}) {
+            String token = "Bearer " + sign(new JWSHeader.Builder(JWSAlgorithm.RS256).keyID("kid-1").type(new JOSEObjectType(typ)).build(), validClaims().build(), new RSASSASigner(jwksKey));
+
+            assertEquals("alice", handler.authenticate(token), typ);
+        }
+
+        String wrongType = "Bearer " + sign(new JWSHeader.Builder(JWSAlgorithm.RS256).keyID("kid-1").type(new JOSEObjectType("secevent+jwt")).build(), validClaims().build(), new RSASSASigner(jwksKey));
+
+        assertNull(handler.authenticate(wrongType));
+    }
+
+    @Test
+    void authenticate_returnsNullForMissingOrMalformedHeader() throws Exception {
+        RangerDefaultJwtAuthHandler handler = handler(jwksConfig());
+
+        assertNull(handler.authenticate((String) null));
+        assertNull(handler.authenticate(""));
+        assertNull(handler.authenticate("Basic abc"));
+        assertNull(handler.authenticate("Bearer "));
+        assertNull(handler.authenticate("Bearer not-a-jwt"));
+        assertNull(handler.authenticate("Bearer eyJhbGciOiJIUzI1NiJ9.buyevwv678.abcd"));
+    }
+
+    @Test
+    void validateToken_rejectsWhenHandlerNotInitialized() throws Exception {
+        RangerDefaultJwtAuthHandler handler = new RangerDefaultJwtAuthHandler();
+
+        assertFalse(handler.validateToken(SignedJWT.parse(bearerFromJwks(validClaims().build()).substring("Bearer ".length()))));
+        assertNull(handler.authenticate(bearerFromJwks(validClaims().build())));
     }
 
     @Test
     void safeJwtLogContext_includesMetadataWithoutRawToken() throws Exception {
-        TestHandler handler = new TestHandler();
+        RangerDefaultJwtAuthHandler handler = new RangerDefaultJwtAuthHandler();
         String header = "eyJhbGciOiJSUzI1NiIsImtpZCI6ImtpZC1hYmMifQ";
         String payload = "eyJzdWIiOiJmMDE1X3JlcGxheV91c2VyIiwiYXVkIjoic2VydmljZS1hIiwiaXNzIjoidGVzdC1pc3N1ZXIiLCJqdGkiOiJqdGktMTIzIiwiZXhwIjoxOTk5OTk5OTk5fQ";
         String signature = "abcd";
         String serialized = header + "." + payload + "." + signature;
 
-        String context = handler.callSafeJwtLogContext(SignedJWT.parse(serialized));
+        String context = handler.safeJwtLogContext(SignedJWT.parse(serialized));
 
         assertNotNull(context);
         assertTrue(context.contains("subject=f015_replay_user"));
