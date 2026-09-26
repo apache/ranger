@@ -58,7 +58,8 @@ public abstract class AbstractRangerAdminClient implements RangerAdminClient {
 
         this.gson             = gson;
         this.forceNonKerberos          = config.getBoolean(configPropertyPrefix + ".forceNonKerberos", false);
-        this.forceSecureEndpointAccess = config.getBoolean(configPropertyPrefix + ".forceSecureEndpointAccess", false);
+        /* secure endpoints by default; forceNonKerberos (non-kerberized Ranger Admin) keeps the non-secure ones */
+        this.forceSecureEndpointAccess = config.getBoolean(configPropertyPrefix + ".forceSecureEndpointAccess", !forceNonKerberos);
     }
 
     @Override

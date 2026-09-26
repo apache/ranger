@@ -316,6 +316,7 @@ public class TestRangerAdminRESTClient {
         RangerAdminRESTClient client = new RangerAdminRESTClient();
         Configuration cfg = new Configuration(false);
         cfg.set("p.policy.rest.url", "http://localhost:6080");
+        cfg.setBoolean("p.forceSecureEndpointAccess", false);
         client.init("svc", "app", "p", cfg);
         RangerRESTClient rest = Mockito.mock(RangerRESTClient.class);
         setPrivateField(client, "restClient", rest);
@@ -955,6 +956,7 @@ public class TestRangerAdminRESTClient {
         RangerAdminRESTClient client = new RangerAdminRESTClient();
         Configuration cfg = new Configuration(false);
         cfg.set("p.policy.rest.url", "http://localhost:6080");
+        cfg.setBoolean("p.forceSecureEndpointAccess", false);
         client.init("svc", "app", "p", cfg);
         RangerRESTClient rest = Mockito.mock(RangerRESTClient.class);
         setPrivateField(client, "restClient", rest);
@@ -988,6 +990,7 @@ public class TestRangerAdminRESTClient {
         RangerAdminRESTClient client = new RangerAdminRESTClient();
         Configuration cfg = new Configuration(false);
         cfg.set("p.policy.rest.url", "http://localhost:6080");
+        cfg.setBoolean("p.forceSecureEndpointAccess", false);
         client.init("svc", "app", "p", cfg);
         RangerRESTClient rest = Mockito.mock(RangerRESTClient.class);
         setPrivateField(client, "restClient", rest);
@@ -1021,6 +1024,7 @@ public class TestRangerAdminRESTClient {
         RangerAdminRESTClient client = new RangerAdminRESTClient();
         Configuration cfg = new Configuration(false);
         cfg.set("p.policy.rest.url", "http://localhost:6080");
+        cfg.setBoolean("p.forceSecureEndpointAccess", false);
         client.init("svc", "app", "p", cfg);
         RangerRESTClient rest = Mockito.mock(RangerRESTClient.class);
         setPrivateField(client, "restClient", rest);
@@ -1054,6 +1058,7 @@ public class TestRangerAdminRESTClient {
         RangerAdminRESTClient client = new RangerAdminRESTClient();
         Configuration cfg = new Configuration(false);
         cfg.set("p.policy.rest.url", "http://localhost:6080");
+        cfg.setBoolean("p.forceSecureEndpointAccess", false);
         client.init("svc", "app", "p", cfg);
         RangerRESTClient rest = Mockito.mock(RangerRESTClient.class);
         setPrivateField(client, "restClient", rest);
@@ -1105,6 +1110,63 @@ public class TestRangerAdminRESTClient {
 
             Assertions.assertNull(client.getRolesIfUpdated(1L, 2L));
             Assertions.assertEquals("/service/roles/download/svc", url.getValue());
+        }
+    }
+
+    @Test
+    public void test41_defaultConfig_withoutKerberos_usesSecureUrl() throws Exception {
+        RangerAdminRESTClient client = new RangerAdminRESTClient();
+        Configuration cfg = new Configuration(false);
+        cfg.set("p.policy.rest.url", "http://localhost:6080");
+        client.init("svc", "app", "p", cfg);
+        RangerRESTClient rest = Mockito.mock(RangerRESTClient.class);
+        setPrivateField(client, "restClient", rest);
+
+        try (MockedStatic<MiscUtil> misc = Mockito.mockStatic(MiscUtil.class)) {
+            misc.when(() -> MiscUtil.executePrivilegedAction(Mockito.<PrivilegedExceptionAction<Response>>any()))
+                    .thenAnswer(inv -> {
+                        PrivilegedExceptionAction<Response> action = inv.getArgument(0);
+                        return action.run();
+                    });
+
+            Response notModified = Mockito.mock(Response.class);
+            Mockito.when(notModified.getStatus()).thenReturn(304);
+            Mockito.when(rest.get(Mockito.anyString(), Mockito.anyMap(), Mockito.any())).thenReturn(notModified);
+
+            Assertions.assertNull(client.getServicePoliciesIfUpdated(1L, 2L));
+
+            ArgumentCaptor<String> url = ArgumentCaptor.forClass(String.class);
+            Mockito.verify(rest).get(url.capture(), Mockito.anyMap(), Mockito.any());
+            Assertions.assertEquals("/service/plugins/secure/policies/download/svc", url.getValue());
+        }
+    }
+
+    @Test
+    public void test42_secureEndpointAccessDisabled_withoutKerberos_usesNonSecureUrl() throws Exception {
+        RangerAdminRESTClient client = new RangerAdminRESTClient();
+        Configuration cfg = new Configuration(false);
+        cfg.set("p.policy.rest.url", "http://localhost:6080");
+        cfg.setBoolean("p.forceSecureEndpointAccess", false);
+        client.init("svc", "app", "p", cfg);
+        RangerRESTClient rest = Mockito.mock(RangerRESTClient.class);
+        setPrivateField(client, "restClient", rest);
+
+        UserGroupInformation ugi = Mockito.mock(UserGroupInformation.class);
+        try (MockedStatic<MiscUtil> misc = Mockito.mockStatic(MiscUtil.class);
+                MockedStatic<UserGroupInformation> ugiStatic = Mockito.mockStatic(UserGroupInformation.class)) {
+            misc.when(MiscUtil::getUGILoginUser).thenReturn(ugi);
+            ugiStatic.when(UserGroupInformation::isSecurityEnabled).thenReturn(false);
+
+            Response notModified = Mockito.mock(Response.class);
+            Mockito.when(notModified.getStatus()).thenReturn(304);
+            Mockito.when(rest.get(Mockito.anyString(), Mockito.anyMap(), Mockito.any())).thenReturn(notModified);
+
+            Assertions.assertNull(client.getServicePoliciesIfUpdated(1L, 2L));
+
+            ArgumentCaptor<String> url = ArgumentCaptor.forClass(String.class);
+            Mockito.verify(rest).get(url.capture(), Mockito.anyMap(), Mockito.any());
+            Assertions.assertEquals("/service/plugins/policies/download/svc", url.getValue());
+            misc.verify(() -> MiscUtil.executePrivilegedAction(Mockito.<PrivilegedExceptionAction<Response>>any()), Mockito.never());
         }
     }
 }

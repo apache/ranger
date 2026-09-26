@@ -415,6 +415,7 @@ public class TestRangerAdminJersey2RESTClient {
 
         Configuration conf = buildBaseConfig(BASE_URL);
         conf.setBoolean(PREFIX + ".forceNonKerberos", false);
+        conf.setBoolean(PREFIX + ".forceSecureEndpointAccess", false);
         RangerAdminJersey2RESTClient underTest = spy(new RangerAdminJersey2RESTClient());
         underTest.client = clientMock;
         underTest.init(SERVICE, APPID, PREFIX, conf);
@@ -454,6 +455,7 @@ public class TestRangerAdminJersey2RESTClient {
 
         Configuration conf = buildBaseConfig(BASE_URL);
         conf.setBoolean(PREFIX + ".forceNonKerberos", false);
+        conf.setBoolean(PREFIX + ".forceSecureEndpointAccess", false);
         RangerAdminJersey2RESTClient underTest = spy(new RangerAdminJersey2RESTClient());
         underTest.client = clientMock;
         underTest.init(SERVICE, APPID, PREFIX, conf);
@@ -492,6 +494,7 @@ public class TestRangerAdminJersey2RESTClient {
 
         Configuration conf = buildBaseConfig(BASE_URL);
         conf.setBoolean(PREFIX + ".forceNonKerberos", false);
+        conf.setBoolean(PREFIX + ".forceSecureEndpointAccess", false);
         RangerAdminJersey2RESTClient underTest = spy(new RangerAdminJersey2RESTClient());
         underTest.client = clientMock;
         underTest.init(SERVICE, APPID, PREFIX, conf);
@@ -530,6 +533,7 @@ public class TestRangerAdminJersey2RESTClient {
 
         Configuration conf = buildBaseConfig(BASE_URL);
         conf.setBoolean(PREFIX + ".forceNonKerberos", false);
+        conf.setBoolean(PREFIX + ".forceSecureEndpointAccess", false);
         RangerAdminJersey2RESTClient underTest = spy(new RangerAdminJersey2RESTClient());
         underTest.client = clientMock;
         underTest.init(SERVICE, APPID, PREFIX, conf);
@@ -776,5 +780,32 @@ public class TestRangerAdminJersey2RESTClient {
         assertNull(second);
         ServiceTags third = underTest.getServiceTagsIfUpdated(1L, 2L);
         assertNull(third);
+    }
+
+    @Test
+    public void test23_policies_default_uses_secure_url_without_kerberos() throws Exception {
+        Client clientMock = mock(Client.class);
+        WebTarget targetMock = mock(WebTarget.class);
+        Invocation.Builder builderMock = mock(Invocation.Builder.class);
+        Response response200 = mock(Response.class);
+
+        Configuration conf = buildBaseConfig(BASE_URL);
+        conf.unset(PREFIX + ".forceNonKerberos");
+        RangerAdminJersey2RESTClient underTest = new RangerAdminJersey2RESTClient();
+        initWithMockClient(underTest, clientMock, conf);
+
+        when(response200.getStatus()).thenReturn(200);
+        when(response200.readEntity(String.class)).thenReturn("{}");
+
+        ArgumentCaptor<String> urlCaptor = ArgumentCaptor.forClass(String.class);
+
+        when(clientMock.target(urlCaptor.capture())).thenReturn(targetMock);
+        when(targetMock.queryParam(ArgumentMatchers.anyString(), ArgumentMatchers.any())).thenReturn(targetMock);
+        when(targetMock.request(MediaType.APPLICATION_JSON_TYPE)).thenReturn(builderMock);
+        when(builderMock.cookie(ArgumentMatchers.nullable(Cookie.class))).thenReturn(builderMock);
+        when(builderMock.get()).thenReturn(response200);
+
+        assertNotNull(underTest.getServicePoliciesIfUpdated(1L, 2L));
+        Assertions.assertTrue(urlCaptor.getValue().contains(RangerRESTUtils.REST_URL_POLICY_GET_FOR_SECURE_SERVICE_IF_UPDATED + SERVICE));
     }
 }
