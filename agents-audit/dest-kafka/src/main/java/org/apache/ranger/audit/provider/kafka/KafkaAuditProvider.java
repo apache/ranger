@@ -18,6 +18,7 @@ package org.apache.ranger.audit.provider.kafka;
 
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.Producer;
+import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.ranger.audit.destination.AuditDestination;
 import org.apache.ranger.audit.model.AuditEventBase;
@@ -35,10 +36,8 @@ import java.util.Properties;
 public class KafkaAuditProvider extends AuditDestination {
     private static final Logger LOG = LoggerFactory.getLogger(KafkaAuditProvider.class);
 
-    public static final String AUDIT_MAX_QUEUE_SIZE_PROP     = "xasecure.audit.kafka.async.max.queue.size";
-    public static final String AUDIT_MAX_FLUSH_INTERVAL_PROP = "xasecure.audit.kafka.async.max.flush.interval.ms";
-    public static final String AUDIT_KAFKA_BROKER_LIST       = "xasecure.audit.kafka.broker_list";
     public static final String AUDIT_KAFKA_TOPIC_NAME        = "xasecure.audit.kafka.topic_name";
+    public static final String KAFKA_PROP_PREFIX             = "xasecure.audit.kafka";
 
     boolean                  initDone;
     Producer<String, String> producer;
@@ -48,7 +47,7 @@ public class KafkaAuditProvider extends AuditDestination {
     public void init(Properties props) {
         LOG.info("init() called");
 
-        super.init(props);
+        super.init(props, null);
 
         topic = MiscUtil.getStringProperty(props, AUDIT_KAFKA_TOPIC_NAME);
 
@@ -58,18 +57,7 @@ public class KafkaAuditProvider extends AuditDestination {
 
         try {
             if (!initDone) {
-                String brokerList = MiscUtil.getStringProperty(props, AUDIT_KAFKA_BROKER_LIST);
-
-                if (brokerList == null || brokerList.isEmpty()) {
-                    brokerList = "localhost:9092";
-                }
-
-                final Map<String, Object> kakfaProps = new HashMap<>();
-
-                kakfaProps.put("metadata.broker.list", brokerList);
-                kakfaProps.put("serializer.class", "kafka.serializer.StringEncoder");
-                // kakfaProps.put("partitioner.class", "example.producer.SimplePartitioner");
-                kakfaProps.put("request.required.acks", "1");
+                final Map<String, Object> kakfaProps = buildKafkaProducerProperties(props);
 
                 LOG.info("Connecting to Kafka producer using properties:{}", kakfaProps);
 
@@ -79,6 +67,12 @@ public class KafkaAuditProvider extends AuditDestination {
         } catch (Throwable t) {
             LOG.error("Error initializing kafka:", t);
         }
+    }
+
+    @Override
+    public void init(Properties props, String basePropertyName) {
+        LOG.info("init(props, basePropertyName) called");
+        init(props);
     }
 
     @Override
@@ -188,4 +182,25 @@ public class KafkaAuditProvider extends AuditDestination {
     public boolean isAsync() {
         return true;
     }
+
+    private Map<String, Object> buildKafkaProducerProperties(Properties props) {
+        Map<String, Object> kafkaProps = new HashMap<>();
+
+        // default properties for Kafka producer
+        kafkaProps.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9092");
+        kafkaProps.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, "org.apache.kafka.common.serialization.StringSerializer");
+        kafkaProps.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, "org.apache.kafka.common.serialization.StringSerializer");
+        kafkaProps.put(ProducerConfig.ACKS_CONFIG, "1");
+
+        // only add properties that start with "xasecure.audit.kafka." & properties that are in ProducerConfig
+        String prefix = KAFKA_PROP_PREFIX + ".";
+        props.stringPropertyNames().stream()
+                .filter(name -> name.startsWith(prefix))
+                .map(name -> name.substring(prefix.length()))
+                .filter(ProducerConfig.confignames()::contains)
+                .forEach(name -> kafkaProps.put(name, props.getProperty(prefix + name)));
+                
+        return kafkaProps;
+    }
+
 }
