@@ -23,18 +23,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.script.ScriptEngine;
-
-import java.lang.reflect.InvocationHandler;
-import java.lang.reflect.Method;
-import java.lang.reflect.Proxy;
+import jdk.nashorn.api.scripting.ClassFilter;
+import jdk.nashorn.api.scripting.NashornScriptEngineFactory;
 
 public class NashornScriptEngineCreator implements ScriptEngineCreator {
     private static final Logger LOG = LoggerFactory.getLogger(NashornScriptEngineCreator.class);
 
     private static final String[] SCRIPT_ENGINE_ARGS = new String[] { "--no-java", "--no-syntax-extensions" };
     private static final String   ENGINE_NAME        = "NashornScriptEngine";
-    private static final String   NASHORN_FACTORY    = "jdk.nashorn.api.scripting.NashornScriptEngineFactory";
-    private static final String   CLASS_FILTER       = "jdk.nashorn.api.scripting.ClassFilter";
 
     @Override
     public ScriptEngine getScriptEngine(ClassLoader clsLoader) {
@@ -45,13 +41,9 @@ public class NashornScriptEngineCreator implements ScriptEngineCreator {
         }
 
         try {
-            Class<?> classFilterType = Class.forName(CLASS_FILTER, true, clsLoader);
-            Class<?> factoryClass    = Class.forName(NASHORN_FACTORY, true, clsLoader);
-            Object   classFilter     = Proxy.newProxyInstance(clsLoader, new Class<?>[] { classFilterType }, RangerClassFilterHandler.INSTANCE);
-            Object   factory         = factoryClass.getDeclaredConstructor().newInstance();
-            Method   getScriptEngine = factoryClass.getMethod("getScriptEngine", String[].class, ClassLoader.class, classFilterType);
+            NashornScriptEngineFactory factory = new NashornScriptEngineFactory();
 
-            ret = (ScriptEngine) getScriptEngine.invoke(factory, SCRIPT_ENGINE_ARGS, clsLoader, classFilter);
+            ret = factory.getScriptEngine(SCRIPT_ENGINE_ARGS, clsLoader, RangerClassFilter.INSTANCE);
         } catch (Throwable t) {
             LOG.debug("NashornScriptEngineCreator.getScriptEngine(): failed to create engine type {}", ENGINE_NAME, t);
         }
@@ -59,20 +51,17 @@ public class NashornScriptEngineCreator implements ScriptEngineCreator {
         return ret;
     }
 
-    private static final class RangerClassFilterHandler implements InvocationHandler {
-        static final RangerClassFilterHandler INSTANCE = new RangerClassFilterHandler();
+    private static class RangerClassFilter implements ClassFilter {
+        static final RangerClassFilter INSTANCE = new RangerClassFilter();
 
-        private RangerClassFilterHandler() {
+        private RangerClassFilter() {
         }
 
         @Override
-        public Object invoke(Object proxy, Method method, Object[] args) {
-            if ("exposeToScripts".equals(method.getName()) && args != null && args.length == 1 && args[0] instanceof String) {
-                LOG.warn("script blocked: attempt to use Java class {}", args[0]);
-                return Boolean.FALSE;
-            }
+        public boolean exposeToScripts(String className) {
+            LOG.warn("script blocked: attempt to use Java class {}", className);
 
-            return null;
+            return false;
         }
     }
 }
