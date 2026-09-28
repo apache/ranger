@@ -42,8 +42,7 @@
       <useAllReactorProjects>true</useAllReactorProjects>
       <includes>
         <include>org.apache.ranger:ranger-audit-core</include>
-        <include>org.apache.ranger:ranger-audit-dest-hdfs</include>
-        <include>org.apache.ranger:ranger-audit-dest-solr</include>
+        <include>org.apache.ranger:ranger-audit-dest-auditserver</include>
         <include>org.apache.ranger:ranger-authz-api</include>
         <include>org.apache.ranger:ranger-common-utils</include>
         <include>org.apache.ranger:ranger-plugins-cred</include>
@@ -61,6 +60,11 @@
           <include>org.apache.commons:commons-configuration2:jar:${commons.configuration.version}</include>
           <include>org.apache.hadoop:hadoop-common:jar:${hadoop.version}</include>
           <include>com.google.code.gson:gson</include>
+          <include>com.sun.jersey:jersey-bundle:jar:${jersey-bundle.version}</include>
+          <include>javax.ws.rs:jsr311-api:jar:${jsr311-api.version}</include>
+          <include>com.fasterxml.jackson.jaxrs:jackson-jaxrs-base</include>
+          <include>com.fasterxml.jackson.jaxrs:jackson-jaxrs-json-provider</include>
+          <include>com.fasterxml.jackson.module:jackson-module-jaxb-annotations</include>
           <include>org.eclipse.jetty:jetty-client:jar:${jetty-client.version}</include>
           <include>commons-collections:commons-collections</include>
           <include>commons-logging:commons-logging:jar:${commons.logging.version}</include>
@@ -76,6 +80,16 @@
           <include>io.airlift:aircompressor:jar:${aircompressor.version}</include>
           <include>org.apache.hadoop.thirdparty:hadoop-shaded-guava:jar:${hadoop-shaded-guava.version}</include>
         </includes>
+        <excludes>
+          <exclude>com.fasterxml.jackson.core:*</exclude>
+          <exclude>com.fasterxml.jackson.dataformat:*</exclude>
+          <exclude>org.glassfish.jersey.core:*</exclude>
+          <exclude>org.glassfish.jersey.ext:*</exclude>
+          <exclude>org.glassfish.jersey.inject:*</exclude>
+          <exclude>org.glassfish.jersey.media:*</exclude>
+          <exclude>org.glassfish.hk2:*</exclude>
+          <exclude>jakarta.ws.rs:jakarta.ws.rs-api</exclude>
+        </excludes>
       </binaries>
     </moduleSet>
 
