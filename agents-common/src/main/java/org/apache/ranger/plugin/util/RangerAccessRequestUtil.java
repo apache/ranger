@@ -256,8 +256,8 @@ public class RangerAccessRequestUtil {
         return value instanceof RangerBatchEvalContext ? (RangerBatchEvalContext) value : null;
     }
 
-    public static void removeBatchEvalContext(Map<String, Object> context, RangerBatchEvalContext batchEvalContext) {
-        if (context != null && batchEvalContext != null && context.get(KEY_CONTEXT_BATCH_EVAL_CONTEXT) == batchEvalContext) {
+    public static void removeBatchEvalContext(Map<String, Object> context) {
+        if (context != null) {
             context.remove(KEY_CONTEXT_BATCH_EVAL_CONTEXT);
         }
     }

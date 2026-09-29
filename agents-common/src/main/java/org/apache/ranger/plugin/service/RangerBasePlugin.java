@@ -777,7 +777,7 @@ public class RangerBasePlugin {
 
         for (RangerAccessRequest request : requests) {
             if (request != null) {
-                RangerAccessRequestUtil.removeBatchEvalContext(request.getContext(), batchEvalContext);
+                RangerAccessRequestUtil.removeBatchEvalContext(request.getContext());
             }
         }
     }

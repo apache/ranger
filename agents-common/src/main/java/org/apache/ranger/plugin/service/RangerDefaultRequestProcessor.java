@@ -121,14 +121,14 @@ public class RangerDefaultRequestProcessor implements RangerAccessRequestProcess
 
         Set<String> roles = request.getUserRoles();
         if (pluginContext != null && CollectionUtils.isEmpty(roles)) {
-            if (batchEvalContext != null && batchEvalContext.hasUserRoles(originalUser, originalGroups)) {
-                roles = batchEvalContext.getUserRoles(originalUser, originalGroups);
+            if (batchEvalContext != null && batchEvalContext.hasMappingForUserRoles(originalUser, originalGroups)) {
+                roles = batchEvalContext.getMappedUserRoles(originalUser, originalGroups);
             } else {
                 roles = pluginContext.getAuthContext().getRolesForUserAndGroups(request.getUser(), request.getUserGroups());
 
                 if (batchEvalContext != null) {
                     roles = shareRoles(roles);
-                    batchEvalContext.putUserRoles(originalUser, originalGroups, roles);
+                    batchEvalContext.setUserRolesMapping(originalUser, originalGroups, roles);
                 }
             }
 
@@ -179,8 +179,8 @@ public class RangerDefaultRequestProcessor implements RangerAccessRequestProcess
 
         LOG.debug("isNameTransformationSupported = {}", isNameTransformationSupported);
 
-        if (batchEvalContext != null && batchEvalContext.hasUserName(originalUser)) {
-            reqImpl.setUser(batchEvalContext.getUserName(originalUser));
+        if (batchEvalContext != null && batchEvalContext.hasMappingForUserName(originalUser)) {
+            reqImpl.setUser(batchEvalContext.getMappedUserName(originalUser));
         } else {
             if (isNameTransformationSupported) {
                 reqImpl.setUser(getTransformedUser(policyEngine, reqImpl));
@@ -189,12 +189,12 @@ public class RangerDefaultRequestProcessor implements RangerAccessRequestProcess
             convertEmailToUsername(reqImpl);
 
             if (batchEvalContext != null) {
-                batchEvalContext.putUserName(originalUser, reqImpl.getUser());
+                batchEvalContext.setUserNameMapping(originalUser, reqImpl.getUser());
             }
         }
 
-        if (batchEvalContext != null && batchEvalContext.hasUserGroups(originalUser, originalGroups)) {
-            Set<String> cachedGroups = batchEvalContext.getUserGroups(originalUser, originalGroups);
+        if (batchEvalContext != null && batchEvalContext.hasMappingForUserGroups(originalUser, originalGroups)) {
+            Set<String> cachedGroups = batchEvalContext.getMappedUserGroups(originalUser, originalGroups);
 
             if (cachedGroups != null) {
                 reqImpl.setUserGroups(cachedGroups);
@@ -210,7 +210,7 @@ public class RangerDefaultRequestProcessor implements RangerAccessRequestProcess
                 Set<String> normalizedGroups = reqImpl.getUserGroups();
                 Set<String> sharedGroups     = normalizedGroups == null ? null : shareGroups(normalizedGroups);
 
-                batchEvalContext.putUserGroups(originalUser, originalGroups, sharedGroups);
+                batchEvalContext.setUserGroupsMapping(originalUser, originalGroups, sharedGroups);
 
                 if (sharedGroups != null) {
                     reqImpl.setUserGroups(sharedGroups);

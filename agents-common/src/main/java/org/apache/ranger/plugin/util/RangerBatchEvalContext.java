@@ -40,39 +40,39 @@ public class RangerBatchEvalContext {
     private String hotUser;
     private Set<String> hotGroupsRef;
 
-    public boolean hasUserName(String user) {
+    public boolean hasMappingForUserName(String user) {
         return userNameMappings.containsKey(user);
     }
 
-    public String getUserName(String user) {
+    public String getMappedUserName(String user) {
         return userNameMappings.get(user);
     }
 
-    public void putUserName(String user, String normalizedUser) {
+    public void setUserNameMapping(String user, String normalizedUser) {
         userNameMappings.put(user, normalizedUser);
     }
 
-    public boolean hasUserGroups(String user, Set<String> groups) {
+    public boolean hasMappingForUserGroups(String user, Set<String> groups) {
         return userGroupsMappings.containsKey(keyFor(user, groups));
     }
 
-    public Set<String> getUserGroups(String user, Set<String> groups) {
+    public Set<String> getMappedUserGroups(String user, Set<String> groups) {
         return userGroupsMappings.get(keyFor(user, groups));
     }
 
-    public void putUserGroups(String user, Set<String> groups, Set<String> normalizedGroups) {
+    public void setUserGroupsMapping(String user, Set<String> groups, Set<String> normalizedGroups) {
         userGroupsMappings.put(storedKey(user, groups), normalizedGroups);
     }
 
-    public boolean hasUserRoles(String user, Set<String> groups) {
+    public boolean hasMappingForUserRoles(String user, Set<String> groups) {
         return userRolesMappings.containsKey(keyFor(user, groups));
     }
 
-    public Set<String> getUserRoles(String user, Set<String> groups) {
+    public Set<String> getMappedUserRoles(String user, Set<String> groups) {
         return userRolesMappings.get(keyFor(user, groups));
     }
 
-    public void putUserRoles(String user, Set<String> groups, Set<String> roles) {
+    public void setUserRolesMapping(String user, Set<String> groups, Set<String> roles) {
         userRolesMappings.put(storedKey(user, groups), roles);
     }
 
