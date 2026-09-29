@@ -42,7 +42,7 @@
 # by defining comma separated optional services as following:
 #       ENABLED_RANGER_SERVICES="hadoop,hive,hbase,knox,kms"
 # List of optional services:
-#       tagsync,hadoop,hbase,kafka,hive,knox,kms
+#       tagsync,hadoop,hbase,kafka,hive,knox,kms,elasticsearch
 #
 if [ -z "${RANGER_HOME}" ]
 then
