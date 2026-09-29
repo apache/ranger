@@ -15,30 +15,27 @@
  * limitations under the License.
  */
 
-package org.apache.hadoop.crypto.key;
+package org.apache.hadoop.crypto.key.common;
 
-import java.security.Key;
+import java.util.Optional;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
-public interface RangerKMSMKI {
-    boolean generateMasterKey(String password) throws Throwable;
+public interface RangerCryptoKDFSuite {
+    String getKeyDerivationAlgoName();
 
-    String getMasterKey(String password) throws Throwable;
+    Optional<Integer> getKeyLength();
 
-    default byte[] decryptZoneKey(byte[] encryptedByte) throws Exception {
-        return null;
-    }
+    Optional<Integer> getMinSaltSize();
 
-    default byte[] encryptZoneKey(Key zoneKey) throws Exception {
-        return null;
-    }
+    Optional<Integer> getMinPwdLength();
 
-    default void onInitialization() throws Exception {}
+    static boolean canKDFAlgoBeUsedAsCipher(String kdfAlgoName) {
+        String regexForPBEWithHashAndCipherKDFAlgoName = "^PBEWith(.+?)And(.+)$";
 
-    default boolean reencryptOrUpdateMK(String mkPassword) throws Exception {
-        return  false;
-    }
+        Pattern pattern = Pattern.compile(regexForPBEWithHashAndCipherKDFAlgoName, Pattern.CASE_INSENSITIVE);
+        Matcher matcher = pattern.matcher(kdfAlgoName);
 
-    default boolean setExternalKeyAsMK(String password, byte[] key) throws Throwable {
-        throw new UnsupportedOperationException("This method is not supported for current MK provider");
+        return matcher.matches();
     }
 }

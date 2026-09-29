@@ -41,7 +41,7 @@
 
         <property>
                 <name>ranger.kms.service.masterkey.password.cipher</name>
-                <value>AES</value>
+                <value>AES/CTR/NoPadding</value>
                 <description>
                         Cipher used for encrypting Master Key
                 </description>

@@ -15,30 +15,14 @@
  * limitations under the License.
  */
 
-package org.apache.hadoop.crypto.key;
+package org.apache.hadoop.crypto.key.common;
 
-import java.security.Key;
-
-public interface RangerKMSMKI {
-    boolean generateMasterKey(String password) throws Throwable;
-
-    String getMasterKey(String password) throws Throwable;
-
-    default byte[] decryptZoneKey(byte[] encryptedByte) throws Exception {
-        return null;
+public class RangerKMSCryptoException extends Exception {
+    public RangerKMSCryptoException(String msg) {
+        super(msg);
     }
 
-    default byte[] encryptZoneKey(Key zoneKey) throws Exception {
-        return null;
-    }
-
-    default void onInitialization() throws Exception {}
-
-    default boolean reencryptOrUpdateMK(String mkPassword) throws Exception {
-        return  false;
-    }
-
-    default boolean setExternalKeyAsMK(String password, byte[] key) throws Throwable {
-        throw new UnsupportedOperationException("This method is not supported for current MK provider");
+    public RangerKMSCryptoException(String msg, Throwable cause) {
+        super(msg, cause);
     }
 }
