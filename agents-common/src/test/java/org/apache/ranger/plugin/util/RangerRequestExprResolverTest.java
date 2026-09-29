@@ -28,6 +28,11 @@ import org.apache.ranger.plugin.policyengine.RangerAccessResource;
 import org.apache.ranger.plugin.policyresourcematcher.RangerPolicyResourceMatcher;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.mockito.MockedStatic;
+
+import javax.script.Bindings;
+import javax.script.ScriptEngine;
+import javax.script.SimpleBindings;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -38,10 +43,44 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.when;
 
 public class RangerRequestExprResolverTest {
+    @Test
+    public void testRequestExpressionClosesEngineAfterEvaluation() throws Exception {
+        ScriptEngine engine = mock(ScriptEngine.class);
+
+        try (MockedStatic<ScriptEngineUtil> scriptEngineUtil = mockStatic(ScriptEngineUtil.class)) {
+            scriptEngineUtil.when(() -> ScriptEngineUtil.createScriptEngine(null)).thenReturn(engine);
+            when(engine.createBindings()).thenReturn(new SimpleBindings());
+            when(engine.eval(anyString(), any(Bindings.class))).thenReturn(2);
+
+            RangerRequestExprResolver resolver = new RangerRequestExprResolver("${{1 + 1}}", null);
+
+            Assertions.assertEquals("2", resolver.resolveExpressions(createRequest(null)));
+            scriptEngineUtil.verify(() -> ScriptEngineUtil.closeScriptEngine(engine));
+        }
+    }
+
+    @Test
+    public void testRequestExpressionClosesEngineWhenEvaluatorInitializationFails() {
+        ScriptEngine engine = mock(ScriptEngine.class);
+
+        try (MockedStatic<ScriptEngineUtil> scriptEngineUtil = mockStatic(ScriptEngineUtil.class)) {
+            scriptEngineUtil.when(() -> ScriptEngineUtil.createScriptEngine(null)).thenReturn(engine);
+            when(engine.createBindings()).thenThrow(new IllegalStateException("binding failure"));
+
+            RangerRequestExprResolver resolver = new RangerRequestExprResolver("${{1 + 1}}", null);
+
+            Assertions.assertThrows(IllegalStateException.class, () -> resolver.resolveExpressions(createRequest(null)));
+            scriptEngineUtil.verify(() -> ScriptEngineUtil.closeScriptEngine(engine));
+        }
+    }
+
     @Test
     public void testRequestAttributes() {
         RangerAccessRequest request = createRequest(Arrays.asList("PII", "PCI"));
