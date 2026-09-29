@@ -31,6 +31,7 @@ import org.apache.ranger.plugin.policyengine.RangerAccessResource;
 import org.apache.ranger.plugin.policyengine.RangerMutableResource;
 import org.apache.ranger.plugin.policyengine.RangerPluginContext;
 import org.apache.ranger.plugin.util.RangerAccessRequestUtil;
+import org.apache.ranger.plugin.util.RangerBatchEvalContext;
 import org.apache.ranger.plugin.util.RangerCommonConstants;
 import org.apache.ranger.plugin.util.RangerPerfTracer;
 import org.apache.ranger.plugin.util.RangerUserStoreUtil;
@@ -84,8 +85,11 @@ public class RangerDefaultRequestProcessor implements RangerAccessRequestProcess
 
         setResourceServiceDef(request);
 
-        RangerPluginContext     pluginContext = policyEngine.getPluginContext();
-        RangerAccessRequestImpl reqImpl       = null;
+        RangerPluginContext     pluginContext    = policyEngine.getPluginContext();
+        RangerAccessRequestImpl reqImpl          = null;
+        RangerBatchEvalContext  batchEvalContext = RangerAccessRequestUtil.getBatchEvalContext(request.getContext());
+        String                  originalUser     = request.getUser();
+        Set<String>             originalGroups   = request.getUserGroups();
 
         if (request instanceof RangerAccessRequestImpl) {
             reqImpl = (RangerAccessRequestImpl) request;
@@ -103,20 +107,7 @@ public class RangerDefaultRequestProcessor implements RangerAccessRequestProcess
                     reqImpl.setClusterType(pluginContext.getClusterType());
                 }
 
-                RangerPluginConfig config = policyEngine.getPluginContext().getConfig();
-
-                boolean isNameTransformationSupported = config.getBoolean(config.getPropertyPrefix() + RangerCommonConstants.PLUGIN_CONFIG_SUFFIX_NAME_TRANSFORMATION, false);
-
-                LOG.debug("isNameTransformationSupported = {}", isNameTransformationSupported);
-
-                if (isNameTransformationSupported) {
-                    reqImpl.setUser(getTransformedUser(policyEngine, request));
-                    reqImpl.setUserGroups(getTransformedGroups(policyEngine, request));
-                }
-
-                convertEmailToUsername(reqImpl);
-
-                updateUserGroups(reqImpl);
+                normalizeUserAndGroups(reqImpl, pluginContext, batchEvalContext, originalUser, originalGroups);
             }
         }
 
@@ -130,9 +121,18 @@ public class RangerDefaultRequestProcessor implements RangerAccessRequestProcess
 
         Set<String> roles = request.getUserRoles();
         if (pluginContext != null && CollectionUtils.isEmpty(roles)) {
-            roles = pluginContext.getAuthContext().getRolesForUserAndGroups(request.getUser(), request.getUserGroups());
+            if (batchEvalContext != null && batchEvalContext.hasUserRoles(originalUser, originalGroups)) {
+                roles = batchEvalContext.getUserRoles(originalUser, originalGroups);
+            } else {
+                roles = pluginContext.getAuthContext().getRolesForUserAndGroups(request.getUser(), request.getUserGroups());
 
-            if (reqImpl != null && roles != null && !roles.isEmpty()) {
+                if (batchEvalContext != null) {
+                    roles = shareRoles(roles);
+                    batchEvalContext.putUserRoles(originalUser, originalGroups, roles);
+                }
+            }
+
+            if (reqImpl != null && CollectionUtils.isNotEmpty(roles)) {
                 reqImpl.setUserRoles(roles);
             }
         }
@@ -171,6 +171,68 @@ public class RangerDefaultRequestProcessor implements RangerAccessRequestProcess
         } else {
             LOG.debug("No context-enrichers!!!");
         }
+    }
+
+    private void normalizeUserAndGroups(RangerAccessRequestImpl reqImpl, RangerPluginContext pluginContext, RangerBatchEvalContext batchEvalContext, String originalUser, Set<String> originalGroups) {
+        RangerPluginConfig config                        = pluginContext.getConfig();
+        boolean            isNameTransformationSupported = config.getBoolean(config.getPropertyPrefix() + RangerCommonConstants.PLUGIN_CONFIG_SUFFIX_NAME_TRANSFORMATION, false);
+
+        LOG.debug("isNameTransformationSupported = {}", isNameTransformationSupported);
+
+        if (batchEvalContext != null && batchEvalContext.hasUserName(originalUser)) {
+            reqImpl.setUser(batchEvalContext.getUserName(originalUser));
+        } else {
+            if (isNameTransformationSupported) {
+                reqImpl.setUser(getTransformedUser(policyEngine, reqImpl));
+            }
+
+            convertEmailToUsername(reqImpl);
+
+            if (batchEvalContext != null) {
+                batchEvalContext.putUserName(originalUser, reqImpl.getUser());
+            }
+        }
+
+        if (batchEvalContext != null && batchEvalContext.hasUserGroups(originalUser, originalGroups)) {
+            Set<String> cachedGroups = batchEvalContext.getUserGroups(originalUser, originalGroups);
+
+            if (cachedGroups != null) {
+                reqImpl.setUserGroups(cachedGroups);
+            }
+        } else {
+            if (isNameTransformationSupported) {
+                reqImpl.setUserGroups(getTransformedGroups(policyEngine, reqImpl));
+            }
+
+            updateUserGroups(reqImpl);
+
+            if (batchEvalContext != null) {
+                Set<String> normalizedGroups = reqImpl.getUserGroups();
+                Set<String> sharedGroups     = normalizedGroups == null ? null : shareGroups(normalizedGroups);
+
+                batchEvalContext.putUserGroups(originalUser, originalGroups, sharedGroups);
+
+                if (sharedGroups != null) {
+                    reqImpl.setUserGroups(sharedGroups);
+                }
+            }
+        }
+    }
+
+    private static Set<String> shareRoles(Set<String> roles) {
+        if (CollectionUtils.isEmpty(roles)) {
+            return Collections.emptySet();
+        }
+
+        return Collections.unmodifiableSet(roles);
+    }
+
+    private static Set<String> shareGroups(Set<String> groups) {
+        if (CollectionUtils.isEmpty(groups)) {
+            return Collections.emptySet();
+        }
+
+        return Collections.unmodifiableSet(new HashSet<>(groups));
     }
 
     private String getTransformedUser(PolicyEngine policyEngine, RangerAccessRequest request) {

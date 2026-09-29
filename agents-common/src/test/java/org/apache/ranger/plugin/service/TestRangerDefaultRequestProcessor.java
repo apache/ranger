@@ -29,6 +29,7 @@ import org.apache.ranger.plugin.policyengine.RangerMutableResource;
 import org.apache.ranger.plugin.policyengine.RangerPluginContext;
 import org.apache.ranger.plugin.policyengine.RangerPolicyEngineOptions;
 import org.apache.ranger.plugin.util.RangerAccessRequestUtil;
+import org.apache.ranger.plugin.util.RangerBatchEvalContext;
 import org.apache.ranger.plugin.util.RangerCommonConstants;
 import org.apache.ranger.plugin.util.RangerRoles;
 import org.apache.ranger.plugin.util.RangerUserStore;
@@ -40,6 +41,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -48,7 +50,11 @@ import java.util.Map;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNotSame;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
@@ -331,5 +337,235 @@ public class TestRangerDefaultRequestProcessor {
         assertEquals("userx", req.getUser());
         assertTrue(req.getUserGroups().contains("GRP"));
         assertTrue(req.getUserGroups().contains("GRP2"));
+    }
+
+    @Test
+    public void test5_BatchEvalContextSharesNormalizedUserGroupsAndRoles() {
+        RangerUserStore userStore = new RangerUserStore();
+        Map<String, Map<String, String>> userAttrs = new HashMap<>();
+        Map<String, String> attrs = new HashMap<>();
+        attrs.put(RangerCommonConstants.SCRIPT_FIELD__EMAIL_ADDRESS, "u2@example.com");
+        userAttrs.put("u2", attrs);
+        userStore.setUserAttrMapping(userAttrs);
+        Map<String, Set<String>> userGroups = new HashMap<>();
+        userGroups.put("u2", new HashSet<>(Collections.singletonList("rg9")));
+        userStore.setUserGroupMapping(userGroups);
+
+        RangerRole role = new RangerRole();
+        role.setName("roleX");
+        role.setUsers(Collections.singletonList(new RangerRole.RoleMember("u2", false)));
+        ProcessorFixture fixture = newFixture(true, true, true, true, "ranger.plugin.dummy", userStore, roles(role));
+
+        RangerAccessRequestImpl first = newRequest(fixture.serviceDef, "u2@example.com", Collections.singleton("g1"));
+        RangerAccessRequestImpl second = newRequest(fixture.serviceDef, "u2@example.com", Collections.singleton("g1"));
+        attach(fixture.batchEvalContext, first, second);
+
+        fixture.processor.preProcess(first);
+        fixture.processor.preProcess(second);
+
+        assertEquals("u2", first.getUser());
+        assertEquals("u2", second.getUser());
+        assertEquals("clA", first.getClusterName());
+        assertEquals("clA", second.getClusterName());
+        assertSame(first.getUserGroups(), second.getUserGroups());
+        assertTrue(first.getUserGroups().contains("rg9"));
+        assertSame(first.getUserRoles(), second.getUserRoles());
+        assertTrue(first.getUserRoles().contains("roleX"));
+        assertSame(first.getUserRoles(), RangerAccessRequestUtil.getCurrentUserRolesFromContext(second.getContext()));
+        Mockito.verify(fixture.authContext, Mockito.times(1)).getRolesForUserAndGroups(Mockito.eq("u2"), Mockito.any());
+    }
+
+    @Test
+    public void test6_BatchEvalContextKeepsSeparateRolesForDifferentGroups() {
+        RangerRole readers = new RangerRole();
+        readers.setName("readers");
+        readers.setGroups(Collections.singletonList(new RangerRole.RoleMember("g1", false)));
+        RangerRole writers = new RangerRole();
+        writers.setName("writers");
+        writers.setGroups(Collections.singletonList(new RangerRole.RoleMember("g2", false)));
+        ProcessorFixture fixture = newFixture(false, false, false, false, "ranger.plugin.svc", new RangerUserStore(), roles(readers, writers));
+
+        RangerAccessRequestImpl readersRequest = newRequest(fixture.serviceDef, "alice", Collections.singleton("g1"));
+        RangerAccessRequestImpl writersRequest = newRequest(fixture.serviceDef, "alice", Collections.singleton("g2"));
+        RangerAccessRequestImpl readersAgain = newRequest(fixture.serviceDef, "alice", Collections.singleton("g1"));
+        attach(fixture.batchEvalContext, readersRequest, writersRequest, readersAgain);
+
+        fixture.processor.preProcess(readersRequest);
+        fixture.processor.preProcess(writersRequest);
+        fixture.processor.preProcess(readersAgain);
+
+        assertSame(readersRequest.getUserRoles(), readersAgain.getUserRoles());
+        assertNotSame(readersRequest.getUserRoles(), writersRequest.getUserRoles());
+        assertSame(readersRequest.getUserGroups(), readersAgain.getUserGroups());
+        assertTrue(readersRequest.getUserRoles().contains("readers"));
+        assertFalse(readersRequest.getUserRoles().contains("writers"));
+        assertTrue(writersRequest.getUserRoles().contains("writers"));
+        assertFalse(writersRequest.getUserRoles().contains("readers"));
+        Mockito.verify(fixture.authContext, Mockito.times(2)).getRolesForUserAndGroups(Mockito.eq("alice"), Mockito.any());
+    }
+
+    @Test
+    public void test7_BatchEvalContextDoesNotReplacePresetRoles() {
+        RangerRole role = new RangerRole();
+        role.setName("roleX");
+        role.setUsers(Collections.singletonList(new RangerRole.RoleMember("alice", false)));
+        ProcessorFixture fixture = newFixture(false, false, false, false, "ranger.plugin.svc", new RangerUserStore(), roles(role));
+
+        Set<String> presetRoles = new HashSet<>(Collections.singleton("preset"));
+        RangerAccessRequestImpl preset = newRequest(fixture.serviceDef, "alice", Collections.singleton("g1"));
+        RangerAccessRequestImpl resolved = newRequest(fixture.serviceDef, "alice", Collections.singleton("g1"));
+        RangerAccessRequestImpl resolvedAgain = newRequest(fixture.serviceDef, "alice", Collections.singleton("g1"));
+        preset.setUserRoles(presetRoles);
+        attach(fixture.batchEvalContext, preset, resolved, resolvedAgain);
+
+        fixture.processor.preProcess(preset);
+        fixture.processor.preProcess(resolved);
+        fixture.processor.preProcess(resolvedAgain);
+
+        assertSame(presetRoles, preset.getUserRoles());
+        assertSame(resolved.getUserRoles(), resolvedAgain.getUserRoles());
+        assertTrue(resolved.getUserRoles().contains("roleX"));
+        assertFalse(resolved.getUserRoles().contains("preset"));
+        Mockito.verify(fixture.authContext, Mockito.times(1)).getRolesForUserAndGroups(Mockito.eq("alice"), Mockito.any());
+    }
+
+    @Test
+    public void test8_BatchEvalContextDoesNotReplaceEmptyRoleSet() {
+        ProcessorFixture fixture = newFixture(false, false, false, false, "ranger.plugin.svc", new RangerUserStore(), new RangerRoles());
+
+        RangerAccessRequestImpl first = newRequest(fixture.serviceDef, "alice", Collections.singleton("g1"));
+        RangerAccessRequestImpl second = newRequest(fixture.serviceDef, "alice", Collections.singleton("g1"));
+        Set<String> firstRoles = first.getUserRoles();
+        Set<String> secondRoles = second.getUserRoles();
+        attach(fixture.batchEvalContext, first, second);
+
+        fixture.processor.preProcess(first);
+        fixture.processor.preProcess(second);
+
+        assertTrue(first.getUserRoles().isEmpty());
+        assertSame(firstRoles, first.getUserRoles());
+        assertSame(secondRoles, second.getUserRoles());
+        assertNotSame(first.getUserRoles(), second.getUserRoles());
+        Mockito.verify(fixture.authContext, Mockito.times(1)).getRolesForUserAndGroups(Mockito.eq("alice"), Mockito.any());
+    }
+
+    @Test
+    public void test9_BatchEvalContextKeepsSeparateRolesForDifferentUsers() {
+        RangerRole aliceRole = new RangerRole();
+        aliceRole.setName("aliceRole");
+        aliceRole.setUsers(Collections.singletonList(new RangerRole.RoleMember("alice", false)));
+        RangerRole bobRole = new RangerRole();
+        bobRole.setName("bobRole");
+        bobRole.setUsers(Collections.singletonList(new RangerRole.RoleMember("bob", false)));
+        ProcessorFixture fixture = newFixture(false, false, false, false, "ranger.plugin.svc", new RangerUserStore(), roles(aliceRole, bobRole));
+
+        RangerAccessRequestImpl alice = newRequest(fixture.serviceDef, "alice", Collections.singleton("g1"));
+        RangerAccessRequestImpl aliceAgain = newRequest(fixture.serviceDef, "alice", Collections.singleton("g1"));
+        RangerAccessRequestImpl bob = newRequest(fixture.serviceDef, "bob", Collections.singleton("g1"));
+        RangerAccessRequestImpl bobAgain = newRequest(fixture.serviceDef, "bob", Collections.singleton("g1"));
+        attach(fixture.batchEvalContext, alice, bob, aliceAgain, bobAgain);
+
+        fixture.processor.preProcess(alice);
+        fixture.processor.preProcess(bob);
+        fixture.processor.preProcess(aliceAgain);
+        fixture.processor.preProcess(bobAgain);
+
+        assertSame(alice.getUserRoles(), aliceAgain.getUserRoles());
+        assertSame(bob.getUserRoles(), bobAgain.getUserRoles());
+        assertNotSame(alice.getUserRoles(), bob.getUserRoles());
+        assertTrue(alice.getUserRoles().contains("aliceRole"));
+        assertFalse(alice.getUserRoles().contains("bobRole"));
+        assertTrue(bob.getUserRoles().contains("bobRole"));
+        Mockito.verify(fixture.authContext, Mockito.times(1)).getRolesForUserAndGroups(Mockito.eq("alice"), Mockito.any());
+        Mockito.verify(fixture.authContext, Mockito.times(1)).getRolesForUserAndGroups(Mockito.eq("bob"), Mockito.any());
+    }
+
+    @Test
+    public void test10_BatchEvalContextAllowsNullUser() {
+        RangerRole groupRole = new RangerRole();
+        groupRole.setName("fromGroup");
+        groupRole.setGroups(Collections.singletonList(new RangerRole.RoleMember("g1", false)));
+        ProcessorFixture fixture = newFixture(false, false, false, false, "ranger.plugin.svc", new RangerUserStore(), roles(groupRole));
+
+        RangerAccessRequestImpl first = newRequest(fixture.serviceDef, null, Collections.singleton("g1"));
+        RangerAccessRequestImpl second = newRequest(fixture.serviceDef, null, Collections.singleton("g1"));
+        RangerAccessRequestImpl otherGroups = newRequest(fixture.serviceDef, null, Collections.singleton("g2"));
+        attach(fixture.batchEvalContext, first, second, otherGroups);
+
+        fixture.processor.preProcess(first);
+        fixture.processor.preProcess(second);
+        fixture.processor.preProcess(otherGroups);
+
+        assertNull(first.getUser());
+        assertSame(first.getUserRoles(), second.getUserRoles());
+        assertTrue(first.getUserRoles().contains("fromGroup"));
+        assertFalse(otherGroups.getUserRoles().contains("fromGroup"));
+        assertNotSame(first.getUserRoles(), otherGroups.getUserRoles());
+        Mockito.verify(fixture.authContext, Mockito.times(2)).getRolesForUserAndGroups(Mockito.isNull(), Mockito.any());
+    }
+
+    private static RangerAccessRequestImpl newRequest(RangerServiceDef serviceDef, String user, Set<String> groups) {
+        RangerAccessRequestImpl request = new RangerAccessRequestImpl();
+        TestResource resource = new TestResource();
+        resource.setServiceDef(serviceDef);
+        request.setResource(resource);
+        request.setUser(user);
+        request.setUserGroups(new HashSet<>(groups));
+
+        return request;
+    }
+
+    private static void attach(RangerBatchEvalContext batchEvalContext, RangerAccessRequestImpl... requests) {
+        for (RangerAccessRequestImpl request : requests) {
+            RangerAccessRequestUtil.setBatchEvalContext(request.getContext(), batchEvalContext);
+        }
+    }
+
+    private static RangerRoles roles(RangerRole... roleArray) {
+        RangerRoles roles = new RangerRoles();
+        roles.setRangerRoles(new HashSet<>(Arrays.asList(roleArray)));
+
+        return roles;
+    }
+
+    private static ProcessorFixture newFixture(boolean useRangerGroups, boolean useOnlyRangerGroups, boolean convertEmail, boolean nameTransformation, String prefix, RangerUserStore userStore, RangerRoles roles) {
+        RangerPluginConfig config = Mockito.mock(RangerPluginConfig.class);
+        Mockito.when(config.isUseRangerGroups()).thenReturn(useRangerGroups);
+        Mockito.when(config.isUseOnlyRangerGroups()).thenReturn(useOnlyRangerGroups);
+        Mockito.when(config.isConvertEmailToUsername()).thenReturn(convertEmail);
+        Mockito.when(config.getPropertyPrefix()).thenReturn(prefix);
+        Mockito.when(config.getBoolean(prefix + RangerCommonConstants.PLUGIN_CONFIG_SUFFIX_NAME_TRANSFORMATION, false)).thenReturn(nameTransformation);
+
+        RangerPluginContext pluginContext = Mockito.mock(RangerPluginContext.class);
+        Mockito.when(pluginContext.getConfig()).thenReturn(config);
+        Mockito.when(pluginContext.getClusterName()).thenReturn("clA");
+        Mockito.when(pluginContext.getClusterType()).thenReturn("typeB");
+
+        PolicyEngine policyEngine = Mockito.mock(PolicyEngine.class);
+        Mockito.when(policyEngine.getPluginContext()).thenReturn(pluginContext);
+        Mockito.when(policyEngine.getUseForwardedIPAddress()).thenReturn(false);
+        Mockito.when(policyEngine.getTrustedProxyAddresses()).thenReturn(null);
+
+        RangerAuthContext authContext = Mockito.spy(new RangerAuthContext(new HashMap<>(), null, roles, userStore));
+        Mockito.when(pluginContext.getAuthContext()).thenReturn(authContext);
+
+        RangerServiceDef serviceDef = new RangerServiceDef();
+        serviceDef.setName("dummy");
+
+        return new ProcessorFixture(new RangerDefaultRequestProcessor(policyEngine), authContext, serviceDef, new RangerBatchEvalContext());
+    }
+
+    private static final class ProcessorFixture {
+        private final RangerDefaultRequestProcessor processor;
+        private final RangerAuthContext             authContext;
+        private final RangerServiceDef              serviceDef;
+        private final RangerBatchEvalContext        batchEvalContext;
+
+        private ProcessorFixture(RangerDefaultRequestProcessor processor, RangerAuthContext authContext, RangerServiceDef serviceDef, RangerBatchEvalContext batchEvalContext) {
+            this.processor        = processor;
+            this.authContext      = authContext;
+            this.serviceDef       = serviceDef;
+            this.batchEvalContext = batchEvalContext;
+        }
     }
 }

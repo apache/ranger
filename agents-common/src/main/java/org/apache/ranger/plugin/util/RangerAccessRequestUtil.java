@@ -57,6 +57,7 @@ public class RangerAccessRequestUtil {
     public static final  String KEY_CONTEXT_REQUEST                          = "_REQUEST";
     public static final  String KEY_CONTEXT_GDS_RESULT                       = "_GDS_RESULT";
     public static final  String KEY_CONTEXT_IS_REQUEST_PREPROCESSED          = "ISREQUESTPREPROCESSED";
+    public static final  String KEY_CONTEXT_BATCH_EVAL_CONTEXT               = "BATCH_EVAL_CONTEXT";
     public static final  String KEY_CONTEXT_RESOURCE_ZONE_NAMES              = "RESOURCE_ZONE_NAMES";
     public static final  String KEY_CONTEXT_ACL_ENFORCER                     = "_ACL_ENFORCER";
 
@@ -237,6 +238,28 @@ public class RangerAccessRequestUtil {
     public static boolean getIsRequestPreprocessed(Map<String, Object> context) {
         Boolean value = (Boolean) context.get(KEY_CONTEXT_IS_REQUEST_PREPROCESSED);
         return value != null && value;
+    }
+
+    public static void setBatchEvalContext(Map<String, Object> context, RangerBatchEvalContext batchEvalContext) {
+        if (context != null && batchEvalContext != null) {
+            context.put(KEY_CONTEXT_BATCH_EVAL_CONTEXT, batchEvalContext);
+        }
+    }
+
+    public static RangerBatchEvalContext getBatchEvalContext(Map<String, Object> context) {
+        if (context == null) {
+            return null;
+        }
+
+        Object value = context.get(KEY_CONTEXT_BATCH_EVAL_CONTEXT);
+
+        return value instanceof RangerBatchEvalContext ? (RangerBatchEvalContext) value : null;
+    }
+
+    public static void removeBatchEvalContext(Map<String, Object> context, RangerBatchEvalContext batchEvalContext) {
+        if (context != null && batchEvalContext != null && context.get(KEY_CONTEXT_BATCH_EVAL_CONTEXT) == batchEvalContext) {
+            context.remove(KEY_CONTEXT_BATCH_EVAL_CONTEXT);
+        }
     }
 
     public static void setAllRequestedAccessTypes(Map<String, Object> context, Set<String> accessTypes) {
