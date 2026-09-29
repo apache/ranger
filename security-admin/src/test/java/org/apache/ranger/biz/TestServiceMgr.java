@@ -35,6 +35,9 @@ import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.lang.reflect.Field;
@@ -47,6 +50,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Stream;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
@@ -184,14 +188,6 @@ public class TestServiceMgr {
     }
 
     @Test
-    public void test06_getValidURL_validAndInvalid() throws Exception {
-        Method m = ServiceMgr.class.getDeclaredMethod("getValidURL", String.class);
-        m.setAccessible(true);
-        Assertions.assertNotNull(m.invoke(null, "http://example.com"));
-        Assertions.assertNull(m.invoke(null, "not_a_url"));
-    }
-
-    @Test
     public void test07_getFilesInDirectory_existingAndMissing() throws Exception {
         ServiceMgr mgr = new ServiceMgr();
         Method m = ServiceMgr.class.getDeclaredMethod("getFilesInDirectory", String.class, List.class);
@@ -326,5 +322,67 @@ public class TestServiceMgr {
 
         Assertions.assertNotNull(built);
         Assertions.assertEquals(RangerDefaultService.class, built.getClass());
+    }
+
+    static Stream<Arguments> ssrfBypassConfigValues() {
+        return Stream.of(
+                Arguments.of("jdbc.url", "jdbc:mysql://127.1:3306/db"),
+                Arguments.of("api.endpoint", "http://0x7f000001:8080"),
+                Arguments.of("redis.host", "2130706433:6379"),
+                Arguments.of("service.url", "http://::1:8080"),
+                Arguments.of("api.endpoint", "http://127.0.0.1@external.example.com:8080"));
+    }
+
+    @ParameterizedTest
+    @MethodSource("ssrfBypassConfigValues")
+    public void test11_validateConfig_rejectsSSRFBypassAttempts(String configKey, String configValue) throws Exception {
+        ServiceMgr mgr = new ServiceMgr();
+        RangerServiceService svcService = mock(RangerServiceService.class);
+        TimedExecutor exec = mock(TimedExecutor.class);
+        setField(mgr, ServiceMgr.class, "rangerSvcService", svcService);
+        setField(mgr, ServiceMgr.class, "timedExecutor", exec);
+
+        Map<String, String> bypassConfigs = new HashMap<>();
+        bypassConfigs.put(configKey, configValue);
+
+        RangerService svc = new RangerService();
+        svc.setType("hive");
+        svc.setName("test-service");
+        svc.setConfigs(bypassConfigs);
+
+        ServiceStore store = mock(ServiceStore.class);
+        RangerServiceDef def = new RangerServiceDef();
+        def.setName("hive");
+        def.setImplClass(RangerDefaultService.class.getName());
+        when(store.getServiceDefByName("hive")).thenReturn(def);
+        when(svcService.getConfigsWithDecryptedPassword(any(RangerService.class))).thenReturn(bypassConfigs);
+
+        Exception thrown = Assertions.assertThrows(Exception.class, () -> mgr.validateConfig(svc, store));
+        Assertions.assertTrue(
+                thrown.getMessage().contains("is not allowed") || thrown.getMessage().contains("blocked host detected"),
+                "Unexpected message: " + thrown.getMessage());
+    }
+
+    @Test
+    public void test13_validateConfig_allowsLegitimateExternalUrls() throws Exception {
+        ServiceMgr mgr = new ServiceMgr();
+        RangerServiceService svcService = mock(RangerServiceService.class);
+        setField(mgr, ServiceMgr.class, "rangerSvcService", svcService);
+
+        Map<String, String> legitimateConfigs = new HashMap<>();
+        legitimateConfigs.put("jdbc.url", "jdbc:mysql://db.company.com:3306/prod");
+        legitimateConfigs.put("api.endpoint", "https://api.github.com:443");
+        legitimateConfigs.put("user.list", "hive,impala,trino");  // Non-URL config
+
+        RangerService svc = new RangerService();
+        svc.setType("hive");
+        svc.setName("test-service");
+        svc.setConfigs(legitimateConfigs);
+
+        when(svcService.getConfigsWithDecryptedPassword(any(RangerService.class))).thenReturn(legitimateConfigs);
+
+        VXResponse response = mgr.validateConfig(svc, null);
+        Assertions.assertNotNull(response);
+        Assertions.assertNotEquals(VXResponse.STATUS_ERROR, response.getStatusCode());
     }
 }
