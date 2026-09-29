@@ -17,6 +17,7 @@
 
 package org.apache.ranger.biz;
 
+import org.apache.ranger.common.PropertiesUtil;
 import org.apache.ranger.common.TimedExecutor;
 import org.apache.ranger.db.XXGroupUserDao;
 import org.apache.ranger.plugin.model.RangerRole;
@@ -53,6 +54,7 @@ import java.util.Set;
 import java.util.stream.Stream;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -67,6 +69,20 @@ public class TestServiceMgr {
         Field f = declaring.getDeclaredField(fieldName);
         f.setAccessible(true);
         f.set(target, value);
+    }
+
+    private static void wireValidateConfigSuccessPipeline(ServiceMgr mgr, ServiceStore store, String serviceType) throws Exception {
+        TimedExecutor exec = mock(TimedExecutor.class);
+        setField(mgr, ServiceMgr.class, "timedExecutor", exec);
+
+        RangerServiceDef def = new RangerServiceDef();
+        def.setName(serviceType);
+        def.setImplClass(RangerDefaultService.class.getName());
+        when(store.getServiceDefByName(serviceType)).thenReturn(def);
+
+        Map<String, Object> resp = new HashMap<>();
+        resp.put("connectivityStatus", true);
+        when(exec.timedTask(any(ServiceMgr.ValidateCallable.class), anyLong(), any())).thenReturn(resp);
     }
 
     @Test
@@ -384,5 +400,484 @@ public class TestServiceMgr {
         VXResponse response = mgr.validateConfig(svc, null);
         Assertions.assertNotNull(response);
         Assertions.assertNotEquals(VXResponse.STATUS_ERROR, response.getStatusCode());
+    }
+
+    @ParameterizedTest
+    @MethodSource("ssrfBypassConfigValues")
+    public void test14_lookupResource_rejectsSSRFBypassAttempts(String configKey, String configValue) throws Exception {
+        ServiceMgr mgr = new ServiceMgr();
+        ServiceDBStore svcDBStore = mock(ServiceDBStore.class);
+        RangerServiceService svcService = mock(RangerServiceService.class);
+        TimedExecutor exec = mock(TimedExecutor.class);
+        setField(mgr, ServiceMgr.class, "svcDBStore", svcDBStore);
+        setField(mgr, ServiceMgr.class, "rangerSvcService", svcService);
+        setField(mgr, ServiceMgr.class, "timedExecutor", exec);
+
+        Map<String, String> bypassConfigs = new HashMap<>();
+        bypassConfigs.put(configKey, configValue);
+
+        RangerService svc = new RangerService();
+        svc.setType("knox");
+        svc.setName("knox-test");
+        svc.setConfigs(bypassConfigs);
+
+        when(svcDBStore.getServiceByName("knox-test")).thenReturn(svc);
+        when(svcService.getConfigsWithDecryptedPassword(any(RangerService.class))).thenReturn(bypassConfigs);
+
+        ResourceLookupContext ctx = new ResourceLookupContext();
+        Exception thrown = Assertions.assertThrows(Exception.class, () -> mgr.lookupResource("knox-test", ctx, null));
+        Assertions.assertTrue(
+                thrown.getMessage().contains("is not allowed") || thrown.getMessage().contains("blocked host detected"),
+                "Unexpected message: " + thrown.getMessage());
+    }
+
+    @Test
+    public void test15_validateConfig_requireSavedService_rejectsMissingService() throws Exception {
+        ServiceMgr mgr = new ServiceMgr();
+        ServiceDBStore db = mock(ServiceDBStore.class);
+        RangerServiceService svcService = mock(RangerServiceService.class);
+        setField(mgr, ServiceMgr.class, "svcDBStore", db);
+        setField(mgr, ServiceMgr.class, "rangerSvcService", svcService);
+
+        PropertiesUtil.getPropertiesMap().put(ServiceMgr.PROP_SERVICE_CONFIG_VALIDATE_REQUIRE_SAVED_SERVICE, "true");
+        try {
+            Map<String, String> cfg = new HashMap<>();
+            cfg.put("knox.url", "https://knox.example.com:8443/gateway");
+
+            RangerService svc = new RangerService();
+            svc.setName("knox-prod");
+            svc.setType("knox");
+            svc.setConfigs(cfg);
+
+            when(svcService.getConfigsWithDecryptedPassword(any(RangerService.class))).thenReturn(cfg);
+            when(db.getServiceByName("knox-prod")).thenReturn(null);
+
+            Exception thrown = Assertions.assertThrows(Exception.class, () -> mgr.validateConfig(svc, null));
+            Assertions.assertTrue(thrown.getMessage().contains("requires a saved service"));
+        } finally {
+            PropertiesUtil.getPropertiesMap().remove(ServiceMgr.PROP_SERVICE_CONFIG_VALIDATE_REQUIRE_SAVED_SERVICE);
+        }
+    }
+
+    @Test
+    public void test16_validateConfig_requireSavedService_rejectsEndpointMismatch() throws Exception {
+        ServiceMgr mgr = new ServiceMgr();
+        ServiceDBStore db = mock(ServiceDBStore.class);
+        RangerServiceService svcService = mock(RangerServiceService.class);
+        setField(mgr, ServiceMgr.class, "svcDBStore", db);
+        setField(mgr, ServiceMgr.class, "rangerSvcService", svcService);
+
+        PropertiesUtil.getPropertiesMap().put(ServiceMgr.PROP_SERVICE_CONFIG_VALIDATE_REQUIRE_SAVED_SERVICE, "true");
+        try {
+            Map<String, String> savedCfg = new HashMap<>();
+            savedCfg.put("knox.url", "https://knox.example.com:8443/gateway");
+
+            Map<String, String> requestCfg = new HashMap<>();
+            requestCfg.put("knox.url", "https://attacker.example.com:8443/gateway");
+
+            RangerService saved = new RangerService();
+            saved.setName("knox-prod");
+            saved.setType("knox");
+            saved.setConfigs(savedCfg);
+
+            RangerService request = new RangerService();
+            request.setName("knox-prod");
+            request.setType("knox");
+            request.setConfigs(requestCfg);
+
+            when(db.getServiceByName("knox-prod")).thenReturn(saved);
+            when(svcService.getConfigsWithDecryptedPassword(saved)).thenReturn(savedCfg);
+            when(svcService.getConfigsWithDecryptedPassword(request)).thenReturn(requestCfg);
+
+            Exception thrown = Assertions.assertThrows(Exception.class, () -> mgr.validateConfig(request, null));
+            Assertions.assertTrue(thrown.getMessage().contains("must match the saved service configuration"));
+        } finally {
+            PropertiesUtil.getPropertiesMap().remove(ServiceMgr.PROP_SERVICE_CONFIG_VALIDATE_REQUIRE_SAVED_SERVICE);
+        }
+    }
+
+    @Test
+    public void test17_validateConfig_requireSavedService_allowsMatchingEndpoint() throws Exception {
+        ServiceMgr mgr = new ServiceMgr();
+        ServiceDBStore db = mock(ServiceDBStore.class);
+        RangerServiceService svcService = mock(RangerServiceService.class);
+        ServiceStore store = mock(ServiceStore.class);
+        setField(mgr, ServiceMgr.class, "svcDBStore", db);
+        setField(mgr, ServiceMgr.class, "rangerSvcService", svcService);
+        wireValidateConfigSuccessPipeline(mgr, store, "knox");
+
+        PropertiesUtil.getPropertiesMap().put(ServiceMgr.PROP_SERVICE_CONFIG_VALIDATE_REQUIRE_SAVED_SERVICE, "true");
+        try {
+            Map<String, String> cfg = new HashMap<>();
+            cfg.put("knox.url", "https://knox.example.com:8443/gateway");
+            cfg.put("username", "admin");
+
+            RangerService saved = new RangerService();
+            saved.setName("knox-prod");
+            saved.setType("knox");
+            saved.setConfigs(cfg);
+
+            RangerService request = new RangerService();
+            request.setName("knox-prod");
+            request.setType("knox");
+            request.setConfigs(new HashMap<>(cfg));
+
+            when(db.getServiceByName("knox-prod")).thenReturn(saved);
+            when(svcService.getConfigsWithDecryptedPassword(any(RangerService.class)))
+                    .thenAnswer(invocation -> new HashMap<>(invocation.<RangerService>getArgument(0).getConfigs()));
+
+            VXResponse response = mgr.validateConfig(request, store);
+            Assertions.assertNotNull(response);
+            Assertions.assertEquals(VXResponse.STATUS_SUCCESS, response.getStatusCode());
+        } finally {
+            PropertiesUtil.getPropertiesMap().remove(ServiceMgr.PROP_SERVICE_CONFIG_VALIDATE_REQUIRE_SAVED_SERVICE);
+        }
+    }
+
+    @Test
+    public void test18_validateConfig_requireSavedService_rejectsPortOrPathChange() throws Exception {
+        ServiceMgr mgr = new ServiceMgr();
+        ServiceDBStore db = mock(ServiceDBStore.class);
+        RangerServiceService svcService = mock(RangerServiceService.class);
+        setField(mgr, ServiceMgr.class, "svcDBStore", db);
+        setField(mgr, ServiceMgr.class, "rangerSvcService", svcService);
+
+        PropertiesUtil.getPropertiesMap().put(ServiceMgr.PROP_SERVICE_CONFIG_VALIDATE_REQUIRE_SAVED_SERVICE, "true");
+        try {
+            Map<String, String> savedCfg = new HashMap<>();
+            savedCfg.put("knox.url", "https://knox.example.com:8443/gateway");
+
+            RangerService saved = new RangerService();
+            saved.setName("knox-prod");
+            saved.setType("knox");
+            saved.setConfigs(savedCfg);
+
+            when(db.getServiceByName("knox-prod")).thenReturn(saved);
+            when(svcService.getConfigsWithDecryptedPassword(saved)).thenReturn(savedCfg);
+
+            Map<String, String> wrongPort = new HashMap<>();
+            wrongPort.put("knox.url", "https://knox.example.com:9/gateway");
+            RangerService requestPort = new RangerService();
+            requestPort.setName("knox-prod");
+            requestPort.setType("knox");
+            requestPort.setConfigs(wrongPort);
+            when(svcService.getConfigsWithDecryptedPassword(requestPort)).thenReturn(wrongPort);
+
+            Exception portEx = Assertions.assertThrows(Exception.class, () -> mgr.validateConfig(requestPort, null));
+            Assertions.assertTrue(portEx.getMessage().contains("must match the saved service configuration"));
+
+            Map<String, String> wrongPath = new HashMap<>();
+            wrongPath.put("knox.url", "https://knox.example.com:8443/other");
+            RangerService requestPath = new RangerService();
+            requestPath.setName("knox-prod");
+            requestPath.setType("knox");
+            requestPath.setConfigs(wrongPath);
+            when(svcService.getConfigsWithDecryptedPassword(requestPath)).thenReturn(wrongPath);
+
+            Exception pathEx = Assertions.assertThrows(Exception.class, () -> mgr.validateConfig(requestPath, null));
+            Assertions.assertTrue(pathEx.getMessage().contains("must match the saved service configuration"));
+        } finally {
+            PropertiesUtil.getPropertiesMap().remove(ServiceMgr.PROP_SERVICE_CONFIG_VALIDATE_REQUIRE_SAVED_SERVICE);
+        }
+    }
+
+    @Test
+    public void test19_validateConfig_requireSavedService_rejectsUserInfoBypass() throws Exception {
+        ServiceMgr mgr = new ServiceMgr();
+        ServiceDBStore db = mock(ServiceDBStore.class);
+        RangerServiceService svcService = mock(RangerServiceService.class);
+        setField(mgr, ServiceMgr.class, "svcDBStore", db);
+        setField(mgr, ServiceMgr.class, "rangerSvcService", svcService);
+
+        PropertiesUtil.getPropertiesMap().put(ServiceMgr.PROP_SERVICE_CONFIG_VALIDATE_REQUIRE_SAVED_SERVICE, "true");
+        try {
+            Map<String, String> savedCfg = new HashMap<>();
+            savedCfg.put("knox.url", "https://knox.example.com:8443/gateway");
+
+            Map<String, String> requestCfg = new HashMap<>();
+            requestCfg.put("knox.url", "https://evil.example@knox.example.com:8443/gateway");
+
+            RangerService saved = new RangerService();
+            saved.setName("knox-prod");
+            saved.setType("knox");
+            saved.setConfigs(savedCfg);
+
+            RangerService request = new RangerService();
+            request.setName("knox-prod");
+            request.setType("knox");
+            request.setConfigs(requestCfg);
+
+            when(db.getServiceByName("knox-prod")).thenReturn(saved);
+            when(svcService.getConfigsWithDecryptedPassword(saved)).thenReturn(savedCfg);
+            when(svcService.getConfigsWithDecryptedPassword(request)).thenReturn(requestCfg);
+
+            Exception thrown = Assertions.assertThrows(Exception.class, () -> mgr.validateConfig(request, null));
+            Assertions.assertTrue(thrown.getMessage().contains("must match the saved service configuration"));
+        } finally {
+            PropertiesUtil.getPropertiesMap().remove(ServiceMgr.PROP_SERVICE_CONFIG_VALIDATE_REQUIRE_SAVED_SERVICE);
+        }
+    }
+
+    @Test
+    public void test20_validateConfig_requireSavedService_rejectsJdbcMultiHostMismatch() throws Exception {
+        ServiceMgr mgr = new ServiceMgr();
+        ServiceDBStore db = mock(ServiceDBStore.class);
+        RangerServiceService svcService = mock(RangerServiceService.class);
+        setField(mgr, ServiceMgr.class, "svcDBStore", db);
+        setField(mgr, ServiceMgr.class, "rangerSvcService", svcService);
+
+        PropertiesUtil.getPropertiesMap().put(ServiceMgr.PROP_SERVICE_CONFIG_VALIDATE_REQUIRE_SAVED_SERVICE, "true");
+        try {
+            Map<String, String> savedCfg = new HashMap<>();
+            savedCfg.put("jdbc.url", "jdbc:mysql://knox.example.com:3306/db");
+
+            Map<String, String> requestCfg = new HashMap<>();
+            requestCfg.put("jdbc.url", "jdbc:mysql://knox.example.com:3306,evil.example.com:3306/db");
+
+            RangerService saved = new RangerService();
+            saved.setName("hive-prod");
+            saved.setType("hive");
+            saved.setConfigs(savedCfg);
+
+            RangerService request = new RangerService();
+            request.setName("hive-prod");
+            request.setType("hive");
+            request.setConfigs(requestCfg);
+
+            when(db.getServiceByName("hive-prod")).thenReturn(saved);
+            when(svcService.getConfigsWithDecryptedPassword(saved)).thenReturn(savedCfg);
+            when(svcService.getConfigsWithDecryptedPassword(request)).thenReturn(requestCfg);
+
+            Exception thrown = Assertions.assertThrows(Exception.class, () -> mgr.validateConfig(request, null));
+            Assertions.assertTrue(thrown.getMessage().contains("must match the saved service configuration"));
+        } finally {
+            PropertiesUtil.getPropertiesMap().remove(ServiceMgr.PROP_SERVICE_CONFIG_VALIDATE_REQUIRE_SAVED_SERVICE);
+        }
+    }
+
+    @Test
+    public void test21_validateConfig_requireSavedService_allowsUsernameChange() throws Exception {
+        ServiceMgr mgr = new ServiceMgr();
+        ServiceDBStore db = mock(ServiceDBStore.class);
+        RangerServiceService svcService = mock(RangerServiceService.class);
+        ServiceStore store = mock(ServiceStore.class);
+        setField(mgr, ServiceMgr.class, "svcDBStore", db);
+        setField(mgr, ServiceMgr.class, "rangerSvcService", svcService);
+        wireValidateConfigSuccessPipeline(mgr, store, "knox");
+
+        PropertiesUtil.getPropertiesMap().put(ServiceMgr.PROP_SERVICE_CONFIG_VALIDATE_REQUIRE_SAVED_SERVICE, "true");
+        try {
+            Map<String, String> savedCfg = new HashMap<>();
+            savedCfg.put("knox.url", "https://knox.example.com:8443/gateway");
+            savedCfg.put("username", "admin");
+
+            Map<String, String> requestCfg = new HashMap<>(savedCfg);
+            requestCfg.put("username", "admin2");
+
+            RangerService saved = new RangerService();
+            saved.setName("knox-prod");
+            saved.setType("knox");
+            saved.setConfigs(savedCfg);
+
+            RangerService request = new RangerService();
+            request.setName("knox-prod");
+            request.setType("knox");
+            request.setConfigs(requestCfg);
+
+            when(db.getServiceByName("knox-prod")).thenReturn(saved);
+            when(svcService.getConfigsWithDecryptedPassword(any(RangerService.class)))
+                    .thenAnswer(invocation -> new HashMap<>(invocation.<RangerService>getArgument(0).getConfigs()));
+
+            VXResponse response = mgr.validateConfig(request, store);
+            Assertions.assertNotNull(response);
+            Assertions.assertEquals(VXResponse.STATUS_SUCCESS, response.getStatusCode());
+        } finally {
+            PropertiesUtil.getPropertiesMap().remove(ServiceMgr.PROP_SERVICE_CONFIG_VALIDATE_REQUIRE_SAVED_SERVICE);
+        }
+    }
+
+    @Test
+    public void test22_validateConfig_requireSavedService_rejectsOpaqueJdbcUrlChange() throws Exception {
+        ServiceMgr mgr = new ServiceMgr();
+        ServiceDBStore db = mock(ServiceDBStore.class);
+        RangerServiceService svcService = mock(RangerServiceService.class);
+        setField(mgr, ServiceMgr.class, "svcDBStore", db);
+        setField(mgr, ServiceMgr.class, "rangerSvcService", svcService);
+
+        PropertiesUtil.getPropertiesMap().put(ServiceMgr.PROP_SERVICE_CONFIG_VALIDATE_REQUIRE_SAVED_SERVICE, "true");
+        try {
+            Map<String, String> savedCfg = new HashMap<>();
+            savedCfg.put("jdbc.url", "jdbc:mysql:loadbalance://knox.example.com:3306/db");
+
+            Map<String, String> requestCfg = new HashMap<>();
+            requestCfg.put("jdbc.url", "jdbc:mysql:loadbalance://evil.example.com:3306/db");
+
+            RangerService saved = new RangerService();
+            saved.setName("hive-prod");
+            saved.setType("hive");
+            saved.setConfigs(savedCfg);
+
+            RangerService request = new RangerService();
+            request.setName("hive-prod");
+            request.setType("hive");
+            request.setConfigs(requestCfg);
+
+            when(db.getServiceByName("hive-prod")).thenReturn(saved);
+            when(svcService.getConfigsWithDecryptedPassword(saved)).thenReturn(savedCfg);
+            when(svcService.getConfigsWithDecryptedPassword(request)).thenReturn(requestCfg);
+
+            Exception thrown = Assertions.assertThrows(Exception.class, () -> mgr.validateConfig(request, null));
+            Assertions.assertTrue(thrown.getMessage().contains("must match the saved service configuration"));
+        } finally {
+            PropertiesUtil.getPropertiesMap().remove(ServiceMgr.PROP_SERVICE_CONFIG_VALIDATE_REQUIRE_SAVED_SERVICE);
+        }
+    }
+
+    @Test
+    public void test23_validateConfig_requireSavedService_rejectsHive2PathWhenHostNotParsed() throws Exception {
+        ServiceMgr mgr = new ServiceMgr();
+        ServiceDBStore db = mock(ServiceDBStore.class);
+        RangerServiceService svcService = mock(RangerServiceService.class);
+        setField(mgr, ServiceMgr.class, "svcDBStore", db);
+        setField(mgr, ServiceMgr.class, "rangerSvcService", svcService);
+
+        PropertiesUtil.getPropertiesMap().put(ServiceMgr.PROP_SERVICE_CONFIG_VALIDATE_REQUIRE_SAVED_SERVICE, "true");
+        try {
+            Map<String, String> savedCfg = new HashMap<>();
+            savedCfg.put("jdbc.url", "jdbc:hive2:///default");
+
+            Map<String, String> requestCfg = new HashMap<>();
+            requestCfg.put("jdbc.url", "jdbc:hive2:///attacker");
+
+            RangerService saved = new RangerService();
+            saved.setName("hive-prod");
+            saved.setType("hive");
+            saved.setConfigs(savedCfg);
+
+            RangerService request = new RangerService();
+            request.setName("hive-prod");
+            request.setType("hive");
+            request.setConfigs(requestCfg);
+
+            when(db.getServiceByName("hive-prod")).thenReturn(saved);
+            when(svcService.getConfigsWithDecryptedPassword(saved)).thenReturn(savedCfg);
+            when(svcService.getConfigsWithDecryptedPassword(request)).thenReturn(requestCfg);
+
+            Exception thrown = Assertions.assertThrows(Exception.class, () -> mgr.validateConfig(request, null));
+            Assertions.assertTrue(thrown.getMessage().contains("must match the saved service configuration"));
+        } finally {
+            PropertiesUtil.getPropertiesMap().remove(ServiceMgr.PROP_SERVICE_CONFIG_VALIDATE_REQUIRE_SAVED_SERVICE);
+        }
+    }
+
+    @Test
+    public void test24_validateConfig_requireSavedService_rejectsHostPortWithoutScheme() throws Exception {
+        ServiceMgr mgr = new ServiceMgr();
+        ServiceDBStore db = mock(ServiceDBStore.class);
+        RangerServiceService svcService = mock(RangerServiceService.class);
+        setField(mgr, ServiceMgr.class, "svcDBStore", db);
+        setField(mgr, ServiceMgr.class, "rangerSvcService", svcService);
+
+        PropertiesUtil.getPropertiesMap().put(ServiceMgr.PROP_SERVICE_CONFIG_VALIDATE_REQUIRE_SAVED_SERVICE, "true");
+        try {
+            Map<String, String> savedCfg = new HashMap<>();
+            savedCfg.put("knox.url", "https://knox.example.com:8443/gateway");
+
+            Map<String, String> requestCfg = new HashMap<>();
+            requestCfg.put("knox.url", "evil.example.com:8443");
+
+            RangerService saved = new RangerService();
+            saved.setName("knox-prod");
+            saved.setType("knox");
+            saved.setConfigs(savedCfg);
+
+            RangerService request = new RangerService();
+            request.setName("knox-prod");
+            request.setType("knox");
+            request.setConfigs(requestCfg);
+
+            when(db.getServiceByName("knox-prod")).thenReturn(saved);
+            when(svcService.getConfigsWithDecryptedPassword(saved)).thenReturn(savedCfg);
+            when(svcService.getConfigsWithDecryptedPassword(request)).thenReturn(requestCfg);
+
+            Exception thrown = Assertions.assertThrows(Exception.class, () -> mgr.validateConfig(request, null));
+            Assertions.assertTrue(thrown.getMessage().contains("must match the saved service configuration"));
+        } finally {
+            PropertiesUtil.getPropertiesMap().remove(ServiceMgr.PROP_SERVICE_CONFIG_VALIDATE_REQUIRE_SAVED_SERVICE);
+        }
+    }
+
+    @Test
+    public void test25_validateConfig_requireSavedService_rejectsOracleThinHostChange() throws Exception {
+        ServiceMgr mgr = new ServiceMgr();
+        ServiceDBStore db = mock(ServiceDBStore.class);
+        RangerServiceService svcService = mock(RangerServiceService.class);
+        setField(mgr, ServiceMgr.class, "svcDBStore", db);
+        setField(mgr, ServiceMgr.class, "rangerSvcService", svcService);
+
+        PropertiesUtil.getPropertiesMap().put(ServiceMgr.PROP_SERVICE_CONFIG_VALIDATE_REQUIRE_SAVED_SERVICE, "true");
+        try {
+            Map<String, String> savedCfg = new HashMap<>();
+            savedCfg.put("jdbc.url", "jdbc:oracle:thin:@knox.example.com:1521:ORCL");
+
+            Map<String, String> requestCfg = new HashMap<>();
+            requestCfg.put("jdbc.url", "jdbc:oracle:thin:@evil.example.com:1521:ORCL");
+
+            RangerService saved = new RangerService();
+            saved.setName("oracle-prod");
+            saved.setType("oracle");
+            saved.setConfigs(savedCfg);
+
+            RangerService request = new RangerService();
+            request.setName("oracle-prod");
+            request.setType("oracle");
+            request.setConfigs(requestCfg);
+
+            when(db.getServiceByName("oracle-prod")).thenReturn(saved);
+            when(svcService.getConfigsWithDecryptedPassword(saved)).thenReturn(savedCfg);
+            when(svcService.getConfigsWithDecryptedPassword(request)).thenReturn(requestCfg);
+
+            Exception thrown = Assertions.assertThrows(Exception.class, () -> mgr.validateConfig(request, null));
+            Assertions.assertTrue(thrown.getMessage().contains("must match the saved service configuration"));
+        } finally {
+            PropertiesUtil.getPropertiesMap().remove(ServiceMgr.PROP_SERVICE_CONFIG_VALIDATE_REQUIRE_SAVED_SERVICE);
+        }
+    }
+
+    @Test
+    public void test26_validateConfig_requireSavedService_rejectsZkQuorumChange() throws Exception {
+        ServiceMgr mgr = new ServiceMgr();
+        ServiceDBStore db = mock(ServiceDBStore.class);
+        RangerServiceService svcService = mock(RangerServiceService.class);
+        setField(mgr, ServiceMgr.class, "svcDBStore", db);
+        setField(mgr, ServiceMgr.class, "rangerSvcService", svcService);
+
+        PropertiesUtil.getPropertiesMap().put(ServiceMgr.PROP_SERVICE_CONFIG_VALIDATE_REQUIRE_SAVED_SERVICE, "true");
+        try {
+            Map<String, String> savedCfg = new HashMap<>();
+            savedCfg.put("zookeeper.connect", "zk1.example.com:2181,zk2.example.com:2181");
+
+            Map<String, String> requestCfg = new HashMap<>();
+            requestCfg.put("zookeeper.connect", "zk1.example.com:2181,evil.example.com:2181");
+
+            RangerService saved = new RangerService();
+            saved.setName("kafka-prod");
+            saved.setType("kafka");
+            saved.setConfigs(savedCfg);
+
+            RangerService request = new RangerService();
+            request.setName("kafka-prod");
+            request.setType("kafka");
+            request.setConfigs(requestCfg);
+
+            when(db.getServiceByName("kafka-prod")).thenReturn(saved);
+            when(svcService.getConfigsWithDecryptedPassword(saved)).thenReturn(savedCfg);
+            when(svcService.getConfigsWithDecryptedPassword(request)).thenReturn(requestCfg);
+
+            Exception thrown = Assertions.assertThrows(Exception.class, () -> mgr.validateConfig(request, null));
+            Assertions.assertTrue(thrown.getMessage().contains("must match the saved service configuration"));
+        } finally {
+            PropertiesUtil.getPropertiesMap().remove(ServiceMgr.PROP_SERVICE_CONFIG_VALIDATE_REQUIRE_SAVED_SERVICE);
+        }
     }
 }

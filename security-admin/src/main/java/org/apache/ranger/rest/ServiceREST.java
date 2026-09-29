@@ -1135,6 +1135,15 @@ public class ServiceREST {
         RangerPerfTracer perf = null;
 
         try {
+            XXService xxService = daoManager.getXXService().findByName(serviceName);
+            if (xxService == null) {
+                throw restErrorUtil.createRESTException(HttpServletResponse.SC_NOT_FOUND, "Not found", true);
+            }
+            if (!Boolean.TRUE.equals(bizUtil.hasAccess(xxService, null))) {
+                throw restErrorUtil.createRESTException(HttpServletResponse.SC_FORBIDDEN,
+                        "Operation denied. User is not permitted to lookup resources for service " + serviceName, true);
+            }
+
             if (RangerPerfTracer.isPerfTraceEnabled(PERF_LOG)) {
                 perf = RangerPerfTracer.getPerfTracer(PERF_LOG, "ServiceREST.lookupResource(serviceName=" + serviceName + ")");
             }
