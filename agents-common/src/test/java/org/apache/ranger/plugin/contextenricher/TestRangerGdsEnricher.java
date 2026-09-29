@@ -21,6 +21,7 @@ package org.apache.ranger.plugin.contextenricher;
 
 import org.apache.ranger.authorization.hadoop.config.RangerPluginConfig;
 import org.apache.ranger.plugin.model.RangerServiceDef;
+import org.apache.ranger.plugin.model.RangerServiceDef.RangerContextEnricherDef;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequestImpl;
 import org.apache.ranger.plugin.policyengine.RangerPluginContext;
 import org.apache.ranger.plugin.policyengine.gds.GdsAccessResult;
@@ -32,6 +33,9 @@ import org.junit.jupiter.api.TestMethodOrder;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
+
+import java.lang.reflect.Field;
+import java.util.Collections;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -84,5 +88,24 @@ public class TestRangerGdsEnricher {
 
         // No need to construct a real GdsPolicyEngine here; verify preCleanup path executes safely
         assertTrue(enricher.preCleanup());
+    }
+
+    @Test
+    public void test03_init_rejectsRetrieverClassNameNotAssignableToRangerGdsInfoRetriever() throws Exception {
+        RangerGdsEnricher enricher = new RangerGdsEnricher();
+        RangerServiceDef serviceDef = new RangerServiceDef();
+        serviceDef.setName("hive");
+        enricher.setServiceDef(serviceDef);
+        enricher.setEnricherDef(new RangerContextEnricherDef(1L, "gds", RangerGdsEnricher.class.getName(),
+                Collections.singletonMap(RangerGdsEnricher.RETRIEVER_CLASSNAME_OPTION, Thread.class.getName())));
+
+        RangerPluginConfig cfg = new RangerPluginConfig("hive", "svc", "appid", null, null, null);
+        RangerPluginContext ctx = new RangerPluginContext(cfg);
+        enricher.setPluginContext(ctx);
+        enricher.init();
+
+        Field f = RangerGdsEnricher.class.getDeclaredField("gdsInfoRetriever");
+        f.setAccessible(true);
+        assertNull(f.get(enricher));
     }
 }

@@ -47,7 +47,6 @@ import org.apache.ranger.plugin.model.validation.RangerValidator.Action;
 import org.apache.ranger.plugin.store.EmbeddedServiceDefsUtil;
 import org.apache.ranger.service.RangerPolicyService;
 import org.apache.ranger.service.XPermMapService;
-import org.apache.ranger.service.XPolicyService;
 import org.apache.ranger.util.CLIUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -95,9 +94,6 @@ public class PatchForKafkaServiceDefUpdate_J10025 extends BaseLoader {
 
     @Autowired
     GUIDUtil guidUtil;
-
-    @Autowired
-    XPolicyService xPolService;
 
     @Autowired
     XPermMapService xPermMapService;

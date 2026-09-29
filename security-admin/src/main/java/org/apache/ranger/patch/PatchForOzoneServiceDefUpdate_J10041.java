@@ -36,7 +36,6 @@ import org.apache.ranger.plugin.store.EmbeddedServiceDefsUtil;
 import org.apache.ranger.plugin.util.SearchFilter;
 import org.apache.ranger.service.RangerPolicyService;
 import org.apache.ranger.service.XPermMapService;
-import org.apache.ranger.service.XPolicyService;
 import org.apache.ranger.util.CLIUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -73,9 +72,6 @@ public class PatchForOzoneServiceDefUpdate_J10041 extends BaseLoader {
 
     @Autowired
     StringUtil stringUtil;
-
-    @Autowired
-    XPolicyService xPolService;
 
     @Autowired
     XPermMapService xPermMapService;

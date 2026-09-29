@@ -17,113 +17,128 @@ under the License.
 # Apache Ranger
 
 [![License](https://img.shields.io/:license-Apache%202-green.svg)](https://www.apache.org/licenses/LICENSE-2.0.txt)
-[![PyPI Downloads](https://static.pepy.tech/personalized-badge/apache-ranger?period=month&units=international_system&left_color=black&right_color=orange&left_text=PyPI%20downloads)](https://pypi.org/project/apache-ranger/)
+[![CI](https://github.com/apache/ranger/actions/workflows/ci.yml/badge.svg)](https://github.com/apache/ranger/actions/workflows/ci.yml)
 [![Documentation](https://img.shields.io/badge/docs-apache.org-blue.svg)](https://ranger.apache.org)
-[![Wiki](https://img.shields.io/badge/ranger-wiki-orange)](https://cwiki.apache.org/confluence/display/RANGER/Index)
+[![Docker Pulls](https://img.shields.io/docker/pulls/apache/ranger)](https://hub.docker.com/r/apache/ranger)
+[![PyPI Downloads](https://static.pepy.tech/personalized-badge/apache-ranger?period=month&units=international_system&left_color=black&right_color=orange&left_text=PyPI%20downloads)](https://pypi.org/project/apache-ranger/)
 
+Apache Ranger is a framework for centralized, fine-grained authorization and auditing across data and AI
+platforms. Policies are managed in one place, Ranger Admin, through its web UI or REST API, and are enforced by
+Ranger plugins inside the protected services, which also record an audit trail of access decisions. Policies can
+be based on resources, tags or attributes, and can filter rows and mask columns.
 
-#### NOTE
-Apache Ranger allows contributions via pull requests (PRs) on GitHub.  
-Alternatively, use [this](https://reviews.apache.org) to submit changes for review using the Review Board.
-Also create a [ranger jira](https://issues.apache.org/jira/browse/RANGER) to go along with the review and mention it in the review board review.
+Documentation, release notes and downloads: <https://ranger.apache.org/>
 
+## Quick start
 
-## Building Ranger in Docker (Sandbox Install)
+Released versions of Ranger Admin are published on Docker Hub as
+[`apache/ranger`](https://hub.docker.com/r/apache/ranger). It runs with a database,
+[`apache/ranger-db`](https://hub.docker.com/r/apache/ranger-db) (PostgreSQL), and an audit store,
+[`apache/ranger-solr`](https://hub.docker.com/r/apache/ranger-solr); the `apache/ranger` page has the commands to
+start all three. Then open <http://localhost:6080> and log in as `admin` / `rangerR0cks!`.
 
-Ranger is built using [Apache Maven](https://maven.apache.org/). To run Ranger:
+These images are for evaluation and development; they use well-known default passwords.
 
-1. Check out the code from GIT [repository](https://github.com/apache/ranger.git)
+## Plugins
 
-2. Ensure that docker & docker-compose is installed and running on your system.
+Ranger Admin stores policies; each service enforces them through a Ranger plugin that runs inside it. To protect a
+service, set up its plugin. The plugin downloads the service's policies from Ranger Admin, authorizes each request
+locally and sends audit events to the audit store.
 
-3. Ensure that JDK 1.8+ is installed on your system.
+| Service | Plugin runs in | Plugin ships with |
+|---|---|---|
+| Apache Polaris | Polaris server | Apache Polaris |
+| Trino | Trino coordinator | Trino |
+| Apache Impala | `impalad` and `catalogd` | Apache Impala |
+| Apache Ozone | Ozone Manager | Apache Ranger |
+| Apache Kudu | Kudu master | Apache Kudu |
+| Schema Registry | Schema Registry server | Schema Registry |
+| Presto | Presto coordinator | Apache Ranger |
+| Elasticsearch | Elasticsearch nodes | Apache Ranger |
+| Apache Kylin | Kylin server | Apache Ranger |
+| Apache Sqoop | Sqoop 2 server | Apache Ranger |
+| Apache NiFi Registry | NiFi Registry server | Apache NiFi |
+| Apache NiFi | NiFi nodes | Apache NiFi |
+| Apache Atlas | Atlas server | Apache Ranger |
+| Apache Kafka | Kafka brokers | Apache Ranger |
+| Apache Solr | Solr nodes | Apache Ranger |
+| Apache Ranger KMS | Ranger KMS server | Apache Ranger |
+| Apache Hadoop YARN | ResourceManager | Apache Ranger |
+| Apache Knox | Knox gateway | Apache Ranger |
+| Apache Storm | Nimbus | Apache Ranger |
+| Apache HBase | HBase Master and RegionServers | Apache Ranger |
+| Apache Hive | HiveServer2 | Apache Ranger |
+| Apache Hadoop HDFS | NameNode | Apache Ranger |
 
-4. Ensure that Apache Maven is installed on your system.
+Plugins that ship with Apache Ranger are released as `ranger-<version>-<service>-plugin.tar.gz` archives, also
+written to `target/` by a source build; the KMS plugin is part of this repo. The other services ship the
+plugin themselves and enable it in their own configuration. Applications not listed above can authorize requests
+with the Ranger authorization API (`authz-api`), either evaluating policies in process (`authz-embedded`) or
+sending each request to the PDP server (`authz-remote`, available from the 2.9 release onwards).
 
-5. Run the following command to build & run Ranger from Docker
+## Build from source
 
-   `./ranger_in_docker up`
+### Requirements
 
-6. After successful completion of the above command, you should be able to view Ranger Admin Console by using URL:
-   ```
-    http://<hostname-of-system>:6080/
+- Linux or macOS
+- JDK 17
+- Apache Maven 3.6.3 or newer
+- Git
+- Python 3, for the Python client tests (not needed with `-DskipTests`)
+- Docker with Compose v2, only to build or run Ranger in containers
 
-    UserName: admin
-    Password: rangerR0cks!
-   ```
+### Build
 
-## Regular Build Process
+```bash
+git clone https://github.com/apache/ranger.git
+cd ranger
+mvn clean install                # full build: unit tests and code checks
+mvn clean package -DskipTests    # faster: skips unit tests and code checks
+```
 
-1. Check out the code from GIT repository and make sure JAVA_HOME & PATH environment variables are properly set (JDK17).
+The build writes a `ranger-<version>-<component>.tar.gz` archive for each service, plugin and tool to `target/`,
+for example `ranger-<version>-admin.tar.gz`.
 
-2. On the root folder, please execute the following Maven command:
+To build without a local JDK or Maven, use the build container in
+[`dev-support/ranger-docker`](dev-support/ranger-docker/README.md#in-containers-using-docker-compose); it writes
+the archives to `dev-support/ranger-docker/dist/`.
 
-   `mvn clean install`
+To work in an IDE, open the root `pom.xml` as a Maven project. An IntelliJ IDEA code style scheme is in
+[`dev-support/RangerCodeScheme-IntelliJ.xml`](dev-support/RangerCodeScheme-IntelliJ.xml).
 
-   `mvn eclipse:eclipse`
+## Run your build in Docker
 
-3. After the above build command execution, you should see the following TAR files in the target folder:
-   ```
-   ranger-<version>-admin.tar.gz
-   ranger-<version>-atlas-plugin.tar.gz
-   ranger-<version>-hbase-plugin.tar.gz
-   ranger-<version>-hdfs-plugin.tar.gz
-   ranger-<version>-hive-plugin.tar.gz
-   ranger-<version>-kafka-plugin.tar.gz
-   ranger-<version>-kms.tar.gz
-   ranger-<version>-knox-plugin.tar.gz
-   ranger-<version>-migration-util.tar.gz
-   ranger-<version>-ranger-tools.tar.gz
-   ranger-<version>-solr-plugin.tar.gz
-   ranger-<version>-sqoop-plugin.tar.gz
-   ranger-<version>-src.tar.gz
-   ranger-<version>-storm-plugin.tar.gz
-   ranger-<version>-tagsync.tar.gz
-   ranger-<version>-usersync.tar.gz
-   ranger-<version>-yarn-plugin.tar.gz
-   ranger-<version>-kylin-plugin.tar.gz
-   ranger-<version>-elasticsearch-plugin.tar.gz
-   ```
+[`dev-support/ranger-docker`](dev-support/ranger-docker/README.md) builds images from these archives and runs
+Ranger Admin with its database and audit store, the other Ranger services, and services with Ranger plugins
+enabled, such as Trino, Ozone, Kafka, Hive and HBase. CI uses the same setup. Its README has the steps; like the
+Docker Hub images, it is meant for development only.
 
-## Importing Apache Ranger Project into Eclipse
+## Contributing
 
-1. Create an Eclipse workspace called 'ranger'
+Contributions are accepted as GitHub pull requests.
 
-2. Import maven project from the root directory where ranger source code is downloaded (and build)
+1. Find or file an issue in the [RANGER JIRA project](https://issues.apache.org/jira/browse/RANGER). Discuss
+   larger changes on dev@ranger.apache.org first.
+2. Open a pull request against `master` titled `RANGER-XXXX: <subject>` and fill in the template.
+3. Keep CI green. It runs `mvn clean verify` on JDK 17 (unit tests, checkstyle, PMD, SpotBugs, RAT) and checks
+   that the Docker containers start.
 
+A committer merges the pull request once it is approved. See the
+[contributing guide](mkdocs/docs/project/contributing.md) and the
+[code style guide](mkdocs/docs/project/java-code-style.md).
 
-## Deployment Process
+## Reporting security issues
 
+Report suspected vulnerabilities privately to security@apache.org, not in JIRA, GitHub or the mailing lists.
+See [SECURITY.md](SECURITY.md).
 
-### Installation Host Information
-1. Ranger Admin Tool Component  (ranger-<version-number>-admin.tar.gz) should be installed on a host where Policy Admin Tool web application runs on port 6080 (default).
-2. Ranger User Synchronization Component (ranger-<version-number>-usersync.tar.gz) should be installed on a host to synchronize the external user/group information into Ranger database via Ranger Admin Tool.
-3. Ranger Component plugin should be installed on the component boxes:
-   - HDFS Plugin needs to be installed on Name Node hosts.
-   - Hive Plugin needs to be installed on HiveServer2 hosts.
-   - HBase Plugin needs to be installed on both Master and Regional Server nodes.
-   - Knox Plugin needs to be installed on Knox gateway host.
-   - Storm Plugin needs to be installed on Storm hosts.
-   - Kafka/Solr Plugin needs to be installed on their respective component hosts.
-   - YARN plugin needs to be installed on YARN Resource Manager hosts.
-   - Sqoop plugin needs to be installed on Sqoop2 hosts.
-   - Kylin plugin needs to be installed on Kylin hosts.
-   - Elasticsearch plugin needs to be installed on Elasticsearch hosts.
+## Community
 
-### Installation Process
+- Questions about using Ranger: user@ranger.apache.org ([subscribe](mailto:user-subscribe@ranger.apache.org))
+- Development: dev@ranger.apache.org ([subscribe](mailto:dev-subscribe@ranger.apache.org))
+- Chat: [Ranger channel on the ASF Slack](https://the-asf.slack.com/archives/C4SC5NXAA)
+- Issues: [RANGER JIRA project](https://issues.apache.org/jira/browse/RANGER)
 
-1. Download the tar.gz file into a temporary folder in the box where it needs to be installed.
+## License
 
-2. Expand the tar.gz file into /usr/lib/ranger/ folder
-
-3. Go to the component name under the expanded folder (e.g. /usr/lib/ranger/ranger-<version-number>-admin/)
-
-4. Modify the install.properties file with appropriate variables 
-
-5. - export/ set JAVA_OPTS environment variable.
-   ```
-   JAVA_OPTS="--add-opens=java.base/java.nio=ALL-UNNAMED --add-exports=java.base/sun.net.dns=ALL-UNNAMED --add-exports=java.base/sun.net.util=ALL-UNNAMED --add-opens=java.base/java.lang=ALL-UNNAMED --add-exports=java.xml.crypto/com.sun.org.apache.xml.internal.security.utils=ALL-UNNAMED"
-   ```
-   - If the module has setup.sh, execute ./setup.sh
-   - If the install.sh file does not exists, execute ./enable-<component>-plugin.sh
-
+Apache Ranger is licensed under the [Apache License, Version 2.0](LICENSE.txt).

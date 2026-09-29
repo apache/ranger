@@ -27,10 +27,7 @@ import org.apache.ranger.common.RangerConstants;
 import org.apache.ranger.common.RangerSearchUtil;
 import org.apache.ranger.common.RangerValidatorFactory;
 import org.apache.ranger.db.RangerDaoManager;
-import org.apache.ranger.db.XXServiceDao;
 import org.apache.ranger.db.XXServiceDefDao;
-import org.apache.ranger.entity.XXService;
-import org.apache.ranger.entity.XXServiceDef;
 import org.apache.ranger.plugin.model.RangerSecurityZone;
 import org.apache.ranger.plugin.model.RangerSecurityZone.RangerSecurityZoneService;
 import org.apache.ranger.plugin.model.RangerSecurityZone.SecurityZoneSummary;
@@ -39,6 +36,7 @@ import org.apache.ranger.plugin.model.RangerSecurityZoneV2;
 import org.apache.ranger.plugin.model.RangerSecurityZoneV2.RangerSecurityZoneChangeRequest;
 import org.apache.ranger.plugin.model.validation.RangerSecurityZoneValidator;
 import org.apache.ranger.plugin.model.validation.RangerValidator;
+import org.apache.ranger.plugin.store.EmbeddedServiceDefsUtil;
 import org.apache.ranger.plugin.store.PList;
 import org.apache.ranger.plugin.util.SearchFilter;
 import org.apache.ranger.service.RangerSecurityZoneServiceService;
@@ -79,6 +77,7 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.spy;
@@ -114,7 +113,7 @@ public class TestSecurityZoneREST {
     @Mock
     RangerDaoManager                 daoManager;
     @Mock
-    XXServiceDef                     xServiceDef;
+    XXServiceDefDao                  xxServiceDefDao;
     @Mock
     ServiceREST                      serviceRest;
     @Mock
@@ -123,15 +122,8 @@ public class TestSecurityZoneREST {
     @Test
     public void testCreateSecurityZone() throws Exception {
         RangerSecurityZone rangerSecurityZone = createRangerSecurityZone();
-        XXServiceDao       xServiceDao        = Mockito.mock(XXServiceDao.class);
-        XXService          xService           = Mockito.mock(XXService.class);
-        XXServiceDefDao    xServiceDefDao     = Mockito.mock(XXServiceDefDao.class);
         when(rangerBizUtil.isAdmin()).thenReturn(true);
-        when(daoManager.getXXService()).thenReturn(xServiceDao);
-        when(xServiceDao.findByName("test_service_1")).thenReturn(xService);
-
-        when(daoManager.getXXServiceDef()).thenReturn(xServiceDefDao);
-        when(xServiceDefDao.getById(xService.getType())).thenReturn(xServiceDef);
+        mockNonKmsServiceLookupForZoneCheck();
 
         when(validatorFactory.getSecurityZoneValidator(svcStore, securityZoneStore)).thenReturn(validator);
         doNothing().when(validator).validate(rangerSecurityZone, RangerValidator.Action.CREATE);
@@ -146,9 +138,6 @@ public class TestSecurityZoneREST {
     @Test
     public void createSecurityZone_AdminAccessDenied() throws Exception {
         RangerSecurityZone rangerSecurityZone = createRangerSecurityZone();
-        XXServiceDao       xServiceDao        = Mockito.mock(XXServiceDao.class);
-        XXService          xService           = Mockito.mock(XXService.class);
-        XXServiceDefDao    xServiceDefDao     = Mockito.mock(XXServiceDefDao.class);
         when(rangerBizUtil.isAdmin()).thenReturn(false);
         when(rangerBizUtil.getCurrentUserLoginId()).thenReturn("nonAdminUser");
 
@@ -166,15 +155,8 @@ public class TestSecurityZoneREST {
     @Test
     public void testCreateSecurityZoneOptimisticLockException() throws Exception {
         RangerSecurityZone rangerSecurityZone = createRangerSecurityZone();
-        XXServiceDao       xServiceDao        = Mockito.mock(XXServiceDao.class);
-        XXService          xService           = Mockito.mock(XXService.class);
-        XXServiceDefDao    xServiceDefDao     = Mockito.mock(XXServiceDefDao.class);
         when(rangerBizUtil.isAdmin()).thenReturn(true);
-        when(daoManager.getXXService()).thenReturn(xServiceDao);
-        when(xServiceDao.findByName("test_service_1")).thenReturn(xService);
-
-        when(daoManager.getXXServiceDef()).thenReturn(xServiceDefDao);
-        when(xServiceDefDao.getById(xService.getType())).thenReturn(xServiceDef);
+        mockNonKmsServiceLookupForZoneCheck();
 
         when(validatorFactory.getSecurityZoneValidator(svcStore, securityZoneStore)).thenReturn(validator);
         doNothing().when(validator).validate(rangerSecurityZone, RangerValidator.Action.CREATE);
@@ -194,15 +176,8 @@ public class TestSecurityZoneREST {
     @Test
     public void testCreateSecurityZoneException() throws Exception {
         RangerSecurityZone rangerSecurityZone = createRangerSecurityZone();
-        XXServiceDao       xServiceDao        = Mockito.mock(XXServiceDao.class);
-        XXService          xService           = Mockito.mock(XXService.class);
-        XXServiceDefDao    xServiceDefDao     = Mockito.mock(XXServiceDefDao.class);
         when(rangerBizUtil.isAdmin()).thenReturn(true);
-        when(daoManager.getXXService()).thenReturn(xServiceDao);
-        when(xServiceDao.findByName("test_service_1")).thenReturn(xService);
-
-        when(daoManager.getXXServiceDef()).thenReturn(xServiceDefDao);
-        when(xServiceDefDao.getById(xService.getType())).thenReturn(xServiceDef);
+        mockNonKmsServiceLookupForZoneCheck();
 
         when(validatorFactory.getSecurityZoneValidator(svcStore, securityZoneStore)).thenThrow(new RuntimeException("General exception"));
         when(restErrorUtil.createRESTException(Mockito.anyString())).thenReturn(new WebApplicationException());
@@ -216,14 +191,62 @@ public class TestSecurityZoneREST {
     }
 
     @Test
+    void testCreateSecurityZone_AdminBlockedFromKMSService() throws Exception {
+        String             kmsServiceName = "dev_kms";
+        RangerSecurityZone zone             = createRangerSecurityZoneWithKmsService(kmsServiceName);
+
+        when(rangerBizUtil.isAdmin()).thenReturn(true);
+        mockMixedKmsAndNonKmsServiceLookupForZoneCheck(kmsServiceName);
+
+        assertThrows(WebApplicationException.class, () -> securityZoneREST.createSecurityZone(zone));
+
+        verify(validator, never()).validate(any(RangerSecurityZone.class), any());
+        verify(securityZoneStore, never()).createSecurityZone(any());
+    }
+
+    @Test
+    void testCreateSecurityZone_AllowedForCustomNamedKMSServiceDef() throws Exception {
+        String             customKmsServiceName = "my_kms_instance";
+        RangerSecurityZone zone                 = createRangerSecurityZoneWithKmsService(customKmsServiceName);
+
+        when(rangerBizUtil.isAdmin()).thenReturn(true);
+        mockServiceDefTypeLookup("test_service_1", "hdfs", customKmsServiceName, "my-kms");
+
+        when(validatorFactory.getSecurityZoneValidator(svcStore, securityZoneStore)).thenReturn(validator);
+        doNothing().when(validator).validate(any(RangerSecurityZone.class), eq(RangerValidator.Action.CREATE));
+        when(securityZoneStore.createSecurityZone(any(RangerSecurityZone.class))).thenReturn(zone);
+
+        securityZoneREST.createSecurityZone(zone);
+
+        verify(securityZoneStore, times(1)).createSecurityZone(any(RangerSecurityZone.class));
+    }
+
+    @Test
+    public void testCreateSecurityZone_AllowedWhenServiceTypeLookupReturnsNull() throws Exception {
+        String             unknownServiceName = "unknown_service";
+        RangerSecurityZone zone               = createRangerSecurityZone();
+
+        zone.getServices().put(unknownServiceName, new RangerSecurityZoneService());
+
+        when(rangerBizUtil.isAdmin()).thenReturn(true);
+        mockServiceDefTypeLookup("test_service_1", "hdfs", unknownServiceName, null);
+
+        when(validatorFactory.getSecurityZoneValidator(svcStore, securityZoneStore)).thenReturn(validator);
+        doNothing().when(validator).validate(any(RangerSecurityZone.class), eq(RangerValidator.Action.CREATE));
+        when(securityZoneStore.createSecurityZone(any(RangerSecurityZone.class))).thenReturn(zone);
+
+        securityZoneREST.createSecurityZone(zone);
+
+        verify(securityZoneStore, times(1)).createSecurityZone(any(RangerSecurityZone.class));
+    }
+
+    @Test
     public void testUpdateSecurityZone() throws Exception {
         RangerSecurityZone rangerSecurityZoneToUpdate = createRangerSecurityZone();
         Long               securityZoneId             = 2L;
-        XXServiceDao       xServiceDao                = Mockito.mock(XXServiceDao.class);
-        XXService          xService                   = Mockito.mock(XXService.class);
-        XXServiceDefDao    xServiceDefDao             = Mockito.mock(XXServiceDefDao.class);
         rangerSecurityZoneToUpdate.setId(securityZoneId);
         when(rangerBizUtil.isAdmin()).thenReturn(true);
+        mockNonKmsServiceLookupForZoneCheck();
         when(validatorFactory.getSecurityZoneValidator(svcStore, securityZoneStore)).thenReturn(validator);
 
         doNothing().when(validator).validate(rangerSecurityZoneToUpdate, RangerValidator.Action.UPDATE);
@@ -238,9 +261,6 @@ public class TestSecurityZoneREST {
         Assertions.assertThrows(WebApplicationException.class, () -> {
             RangerSecurityZone rangerSecurityZoneToUpdate = createRangerSecurityZone();
             Long               securityZoneId             = 2L;
-            XXServiceDefDao    xServiceDefDao             = Mockito.mock(XXServiceDefDao.class);
-            XXServiceDao       xServiceDao                = Mockito.mock(XXServiceDao.class);
-            XXService          xService                   = Mockito.mock(XXService.class);
 
             rangerSecurityZoneToUpdate.setId(securityZoneId);
             when(rangerBizUtil.isAdmin()).thenReturn(true);
@@ -256,11 +276,9 @@ public class TestSecurityZoneREST {
     public void testUpdateSecurityZoneOptimisticLockException() throws Exception {
         RangerSecurityZone rangerSecurityZoneToUpdate = createRangerSecurityZone();
         Long               securityZoneId             = 2L;
-        XXServiceDao       xServiceDao                = Mockito.mock(XXServiceDao.class);
-        XXService          xService                   = Mockito.mock(XXService.class);
-        XXServiceDefDao    xServiceDefDao             = Mockito.mock(XXServiceDefDao.class);
         rangerSecurityZoneToUpdate.setId(securityZoneId);
         when(rangerBizUtil.isAdmin()).thenReturn(true);
+        mockNonKmsServiceLookupForZoneCheck();
         when(validatorFactory.getSecurityZoneValidator(svcStore, securityZoneStore)).thenReturn(validator);
 
         doNothing().when(validator).validate(rangerSecurityZoneToUpdate, RangerValidator.Action.UPDATE);
@@ -280,11 +298,9 @@ public class TestSecurityZoneREST {
     public void testUpdateSecurityZoneException() throws Exception {
         RangerSecurityZone rangerSecurityZoneToUpdate = createRangerSecurityZone();
         Long               securityZoneId             = 2L;
-        XXServiceDao       xServiceDao                = Mockito.mock(XXServiceDao.class);
-        XXService          xService                   = Mockito.mock(XXService.class);
-        XXServiceDefDao    xServiceDefDao             = Mockito.mock(XXServiceDefDao.class);
         rangerSecurityZoneToUpdate.setId(securityZoneId);
         when(rangerBizUtil.isAdmin()).thenReturn(true);
+        mockNonKmsServiceLookupForZoneCheck();
         when(validatorFactory.getSecurityZoneValidator(svcStore, securityZoneStore)).thenReturn(validator);
 
         doNothing().when(validator).validate(rangerSecurityZoneToUpdate, RangerValidator.Action.UPDATE);
@@ -301,6 +317,43 @@ public class TestSecurityZoneREST {
     }
 
     @Test
+    void testUpdateSecurityZone_AdminBlockedFromKMSService() throws Exception {
+        Long               zoneId = 2L;
+        RangerSecurityZone zone   = createRangerSecurityZone();
+        zone.setId(zoneId);
+
+        Map<String, RangerSecurityZoneService> services = new HashMap<>();
+        services.put("dev_kms", new RangerSecurityZoneService());
+        zone.setServices(services);
+
+        when(rangerBizUtil.isAdmin()).thenReturn(true);
+        mockKmsServiceLookupForZoneCheck("dev_kms");
+
+        assertThrows(WebApplicationException.class, () -> securityZoneREST.updateSecurityZone(zoneId, zone));
+
+        verify(securityZoneStore, never()).updateSecurityZoneById(any());
+    }
+
+    @Test
+    void testUpdateSecurityZone_AllowedWhenRemovingKMSServiceFromExistingZone() throws Exception {
+        Long               zoneId        = 2L;
+        RangerSecurityZone submittedZone = createRangerSecurityZone();
+        submittedZone.setId(zoneId);
+
+        when(rangerBizUtil.isAdmin()).thenReturn(true);
+        mockNonKmsServiceLookupForZoneCheck();
+        when(validatorFactory.getSecurityZoneValidator(svcStore, securityZoneStore)).thenReturn(validator);
+        doNothing().when(validator).validate(submittedZone, RangerValidator.Action.UPDATE);
+        when(securityZoneStore.updateSecurityZoneById(submittedZone)).thenReturn(submittedZone);
+
+        RangerSecurityZone updatedZone = securityZoneREST.updateSecurityZone(zoneId, submittedZone);
+
+        Assertions.assertEquals(zoneId, updatedZone.getId());
+        verify(securityZoneStore, never()).getSecurityZone(anyLong());
+        verify(securityZoneStore, times(1)).updateSecurityZoneById(submittedZone);
+    }
+
+    @Test
     public void testUpdateUnzonedSecurityZone() throws Exception {
         RangerSecurityZone rangerSecurityZone = createRangerSecurityZone();
         when(restErrorUtil.createRESTException("Cannot update unzoned zone")).thenReturn(new WebApplicationException());
@@ -309,6 +362,42 @@ public class TestSecurityZoneREST {
             securityZoneREST.updateSecurityZone(RangerSecurityZone.RANGER_UNZONED_SECURITY_ZONE_ID, rangerSecurityZone);
         });
         verify(restErrorUtil).createRESTException("Cannot update unzoned zone");
+    }
+
+    @Test
+    void testDeleteSecurityZoneById_AdminBlockedWhenZoneContainsKMSService() throws Exception {
+        Long               zoneId = 2L;
+        RangerSecurityZone zone   = createRangerSecurityZone();
+        zone.setId(zoneId);
+
+        Map<String, RangerSecurityZoneService> services = new HashMap<>();
+        services.put("dev_kms", new RangerSecurityZoneService());
+        zone.setServices(services);
+
+        when(rangerBizUtil.isAdmin()).thenReturn(true);
+        mockKmsServiceLookupForZoneCheck("dev_kms");
+        when(securityZoneStore.getSecurityZone(zoneId)).thenReturn(zone);
+
+        assertThrows(WebApplicationException.class, () -> securityZoneREST.deleteSecurityZone(zoneId));
+
+        verify(securityZoneStore, never()).deleteSecurityZoneById(anyLong());
+    }
+
+    @Test
+    void testDeleteSecurityZoneById_AdminBlockedWhenZoneContainsMixedServices() throws Exception {
+        String             kmsServiceName = "dev_kms";
+        Long               zoneId         = 2L;
+        RangerSecurityZone zone           = createRangerSecurityZoneWithKmsService(kmsServiceName);
+
+        zone.setId(zoneId);
+
+        when(rangerBizUtil.isAdmin()).thenReturn(true);
+        mockMixedKmsAndNonKmsServiceLookupForZoneCheck(kmsServiceName);
+        when(securityZoneStore.getSecurityZone(zoneId)).thenReturn(zone);
+
+        assertThrows(WebApplicationException.class, () -> securityZoneREST.deleteSecurityZone(zoneId));
+
+        verify(securityZoneStore, never()).deleteSecurityZoneById(anyLong());
     }
 
     @Test
@@ -553,8 +642,12 @@ public class TestSecurityZoneREST {
     @Test
     public void testDeleteSecurityZoneByIdOptimisticLockException() throws Exception {
         Long zoneId = 2L;
+        RangerSecurityZone zone   = createRangerSecurityZone();
+        zone.setId(zoneId);
 
         when(rangerBizUtil.isAdmin()).thenReturn(true);
+        mockNonKmsServiceLookupForZoneCheck();
+        when(securityZoneStore.getSecurityZone(zoneId)).thenReturn(zone);
         when(validatorFactory.getSecurityZoneValidator(svcStore, securityZoneStore)).thenReturn(validator);
         doNothing().when(validator).validate(zoneId, RangerValidator.Action.DELETE);
         Mockito.doThrow(new OptimisticLockException()).when(securityZoneStore).deleteSecurityZoneById(zoneId);
@@ -572,8 +665,12 @@ public class TestSecurityZoneREST {
     @Test
     public void testDeleteSecurityZoneByIdException() throws Exception {
         Long zoneId = 2L;
+        RangerSecurityZone zone   = createRangerSecurityZone();
+        zone.setId(zoneId);
 
         when(rangerBizUtil.isAdmin()).thenReturn(true);
+        mockNonKmsServiceLookupForZoneCheck();
+        when(securityZoneStore.getSecurityZone(zoneId)).thenReturn(zone);
         when(validatorFactory.getSecurityZoneValidator(svcStore, securityZoneStore)).thenReturn(validator);
         doNothing().when(validator).validate(zoneId, RangerValidator.Action.DELETE);
         Mockito.doThrow(new RuntimeException("General exception")).when(securityZoneStore).deleteSecurityZoneById(zoneId);
@@ -611,10 +708,45 @@ public class TestSecurityZoneREST {
         securityZone.setId(securityZoneId);
         String securityZoneName = securityZone.getName();
         when(rangerBizUtil.isAdmin()).thenReturn(true);
+        mockNonKmsServiceLookupForZoneCheck();
+        when(securityZoneStore.getSecurityZoneByName(securityZoneName)).thenReturn(securityZone);
         when(validatorFactory.getSecurityZoneValidator(svcStore, securityZoneStore)).thenReturn(validator);
         doNothing().when(validator).validate(securityZoneName, RangerValidator.Action.DELETE);
         securityZoneREST.deleteSecurityZone(securityZoneName);
         verify(securityZoneStore, times(1)).deleteSecurityZoneByName(securityZoneName);
+    }
+
+    @Test
+    void testDeleteSecurityZoneByName_AdminBlockedWhenZoneContainsKMSService() throws Exception {
+        RangerSecurityZone zone     = createRangerSecurityZone();
+        String             zoneName = zone.getName();
+
+        Map<String, RangerSecurityZoneService> services = new HashMap<>();
+        services.put("dev_kms", new RangerSecurityZoneService());
+        zone.setServices(services);
+
+        when(rangerBizUtil.isAdmin()).thenReturn(true);
+        mockKmsServiceLookupForZoneCheck("dev_kms");
+        when(securityZoneStore.getSecurityZoneByName(zoneName)).thenReturn(zone);
+
+        assertThrows(WebApplicationException.class, () -> securityZoneREST.deleteSecurityZone(zoneName));
+
+        verify(securityZoneStore, never()).deleteSecurityZoneByName(anyString());
+    }
+
+    @Test
+    void testDeleteSecurityZoneByName_AdminBlockedWhenZoneContainsMixedServices() throws Exception {
+        String             kmsServiceName = "dev_kms";
+        RangerSecurityZone zone           = createRangerSecurityZoneWithKmsService(kmsServiceName);
+        String             zoneName       = zone.getName();
+
+        when(rangerBizUtil.isAdmin()).thenReturn(true);
+        mockMixedKmsAndNonKmsServiceLookupForZoneCheck(kmsServiceName);
+        when(securityZoneStore.getSecurityZoneByName(zoneName)).thenReturn(zone);
+
+        assertThrows(WebApplicationException.class, () -> securityZoneREST.deleteSecurityZone(zoneName));
+
+        verify(securityZoneStore, never()).deleteSecurityZoneByName(anyString());
     }
 
     @Test
@@ -635,9 +767,13 @@ public class TestSecurityZoneREST {
 
     @Test
     public void deleteSecurityZoneByNameOptimisticLockException() throws Exception {
-        String zoneName = "testZoneToDelete";
+        String             zoneName = "testZoneToDelete";
+        RangerSecurityZone zone     = createRangerSecurityZone();
+        zone.setName(zoneName);
 
         when(rangerBizUtil.isAdmin()).thenReturn(true);
+        mockNonKmsServiceLookupForZoneCheck();
+        when(securityZoneStore.getSecurityZoneByName(zoneName)).thenReturn(zone);
         when(validatorFactory.getSecurityZoneValidator(svcStore, securityZoneStore)).thenReturn(validator);
         Mockito.doNothing().when(validator).validate(Mockito.eq(zoneName), Mockito.eq(RangerValidator.Action.DELETE));
         Mockito.doThrow(new OptimisticLockException()).when(securityZoneStore).deleteSecurityZoneByName(zoneName);
@@ -993,6 +1129,31 @@ public class TestSecurityZoneREST {
     }
 
     @Test
+    public void testUpdateSecurityZoneWithChangeRequest_AdminBlockedWhenAddingKMSService() throws Exception {
+        Long                            zoneId          = 2L;
+        String                          kmsServiceName  = "dev_kms";
+        RangerSecurityZoneChangeRequest changeRequest   = new RangerSecurityZoneChangeRequest();
+        Map<String, RangerSecurityZoneV2.RangerSecurityZoneServiceV2> resourcesToUpdate = new HashMap<>();
+
+        resourcesToUpdate.put(kmsServiceName, new RangerSecurityZoneV2.RangerSecurityZoneServiceV2());
+        changeRequest.setResourcesToUpdate(resourcesToUpdate);
+
+        RangerSecurityZone existingZone = createRangerSecurityZone();
+        existingZone.setId(zoneId);
+
+        when(rangerBizUtil.hasModuleAccess(anyString())).thenReturn(true);
+        when(rangerBizUtil.isAdmin()).thenReturn(true);
+        mockMixedKmsAndNonKmsServiceLookupForZoneCheck(kmsServiceName);
+
+        SecurityZoneREST spySecurityZoneREST = Mockito.spy(securityZoneREST);
+        when(spySecurityZoneREST.getSecurityZone(zoneId)).thenReturn(existingZone);
+
+        assertThrows(WebApplicationException.class, () -> spySecurityZoneREST.updateSecurityZone(zoneId, changeRequest));
+
+        verify(securityZoneStore, never()).updateSecurityZoneById(any(RangerSecurityZone.class));
+    }
+
+    @Test
     public void testUpdateSecurityZoneWithChangeRequestException() throws Exception {
         Long zoneId = 2L;
         RangerSecurityZoneChangeRequest changeRequest = new RangerSecurityZoneChangeRequest();
@@ -1003,6 +1164,7 @@ public class TestSecurityZoneREST {
         when(rangerBizUtil.hasModuleAccess(Mockito.anyString())).thenReturn(true);
         when(spySecurityZoneREST.getSecurityZone(zoneId)).thenReturn(existingZone);
         when(rangerBizUtil.isAdmin()).thenReturn(true);
+        mockNonKmsServiceLookupForZoneCheck();
         when(validatorFactory.getSecurityZoneValidator(svcStore, securityZoneStore)).thenReturn(validator);
         doNothing().when(validator).validate(any(RangerSecurityZone.class), any());
         when(securityZoneStore.updateSecurityZoneById(any(RangerSecurityZone.class))).thenThrow(new RuntimeException("General exception"));
@@ -1027,6 +1189,7 @@ public class TestSecurityZoneREST {
         when(rangerBizUtil.hasModuleAccess(Mockito.anyString())).thenReturn(true);
         when(spySecurityZoneREST.getSecurityZone(zoneId)).thenReturn(existingZone);
         when(rangerBizUtil.isAdmin()).thenReturn(true);
+        mockNonKmsServiceLookupForZoneCheck();
         when(validatorFactory.getSecurityZoneValidator(svcStore, securityZoneStore)).thenReturn(validator);
         doNothing().when(validator).validate(any(RangerSecurityZone.class), any());
         when(securityZoneStore.updateSecurityZoneById(any(RangerSecurityZone.class))).thenThrow(new WebApplicationException());
@@ -1288,6 +1451,44 @@ public class TestSecurityZoneREST {
         assertThrows(WebApplicationException.class, () -> {
             spySecurityZoneREST.updateSecurityZone(zoneId, changeRequest);
         });
+    }
+
+    private void mockNonKmsServiceLookupForZoneCheck() {
+        when(daoManager.getXXServiceDef()).thenReturn(xxServiceDefDao);
+        when(xxServiceDefDao.findServiceDefTypeByServiceName("test_service_1")).thenReturn("hdfs");
+    }
+
+    private void mockKmsServiceLookupForZoneCheck(String kmsServiceName) {
+        when(daoManager.getXXServiceDef()).thenReturn(xxServiceDefDao);
+        when(xxServiceDefDao.findServiceDefTypeByServiceName(kmsServiceName))
+                .thenReturn(EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_KMS_NAME);
+        when(restErrorUtil.createRESTException(
+                eq("KMS Services/Service-Defs are not accessible for Zone operations"),
+                eq(MessageEnums.OPER_NOT_ALLOWED_FOR_ENTITY))).thenReturn(new WebApplicationException());
+    }
+
+    private void mockMixedKmsAndNonKmsServiceLookupForZoneCheck(String kmsServiceName) {
+        when(daoManager.getXXServiceDef()).thenReturn(xxServiceDefDao);
+        lenient().when(xxServiceDefDao.findServiceDefTypeByServiceName("test_service_1")).thenReturn("hdfs");
+        when(xxServiceDefDao.findServiceDefTypeByServiceName(kmsServiceName))
+                .thenReturn(EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_KMS_NAME);
+        when(restErrorUtil.createRESTException(
+                eq("KMS Services/Service-Defs are not accessible for Zone operations"),
+                eq(MessageEnums.OPER_NOT_ALLOWED_FOR_ENTITY))).thenReturn(new WebApplicationException());
+    }
+
+    private void mockServiceDefTypeLookup(String serviceName1, String serviceType1, String serviceName2, String serviceType2) {
+        when(daoManager.getXXServiceDef()).thenReturn(xxServiceDefDao);
+        when(xxServiceDefDao.findServiceDefTypeByServiceName(serviceName1)).thenReturn(serviceType1);
+        when(xxServiceDefDao.findServiceDefTypeByServiceName(serviceName2)).thenReturn(serviceType2);
+    }
+
+    private RangerSecurityZone createRangerSecurityZoneWithKmsService(String kmsServiceName) {
+        RangerSecurityZone zone = createRangerSecurityZone();
+
+        zone.getServices().put(kmsServiceName, new RangerSecurityZoneService());
+
+        return zone;
     }
 
     private RangerSecurityZone createRangerSecurityZone() {

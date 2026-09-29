@@ -43,8 +43,6 @@ import org.apache.ranger.view.VXDataObject;
 import org.apache.ranger.view.VXPermMap;
 import org.apache.ranger.view.VXPermObj;
 import org.apache.ranger.view.VXPolicy;
-import org.apache.ranger.view.VXPolicyList;
-import org.apache.ranger.view.VXRepository;
 import org.apache.ranger.view.VXResource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -77,7 +75,6 @@ public class ServiceUtil {
 
     static Map<String, Integer> mapServiceTypeToAssetType = new HashMap<>();
     static Map<String, Integer> mapAccessTypeToPermType   = new HashMap<>();
-    static String               version;
 
     @Autowired
     JSONUtil jsonUtil;
@@ -161,25 +158,6 @@ public class ServiceUtil {
         ret.setDescription(service.getDescription());
         ret.setActiveStatus(service.getIsEnabled() ? RangerCommonEnums.STATUS_ENABLED : RangerCommonEnums.STATUS_DISABLED);
         ret.setConfig(jsonUtil.readMapToString(service.getConfigs()));
-
-        return ret;
-    }
-
-    public VXRepository toVXRepository(RangerService service) {
-        if (service == null || toAssetType(service.getType()) == null) {
-            return null;
-        }
-
-        VXRepository ret = new VXRepository();
-
-        rangerObjectToDataObject(service, ret);
-
-        ret.setRepositoryType(service.getType());
-        ret.setName(service.getName());
-        ret.setDescription(service.getDescription());
-        ret.setIsActive(service.getIsEnabled());
-        ret.setConfig(jsonUtil.readMapToString(service.getConfigs()));
-        ret.setVersion(Long.toString(service.getVersion()));
 
         return ret;
     }
@@ -355,125 +333,6 @@ public class ServiceUtil {
         return ret;
     }
 
-    public VXAsset publicObjecttoVXAsset(VXRepository vXRepository) {
-        VXAsset ret = new VXAsset();
-
-        publicDataObjectTovXDataObject(vXRepository, ret);
-
-        Integer assetType = toAssetType(vXRepository.getRepositoryType());
-
-        ret.setAssetType(assetType == null ? -1 : assetType);
-        ret.setName(vXRepository.getName());
-        ret.setDescription(vXRepository.getDescription());
-        ret.setActiveStatus(vXRepository.getIsActive() ? RangerCommonEnums.STATUS_ENABLED : RangerCommonEnums.STATUS_DISABLED);
-        ret.setConfig(vXRepository.getConfig());
-
-        return ret;
-    }
-
-    public VXRepository vXAssetToPublicObject(VXAsset asset) {
-        VXRepository ret = new VXRepository();
-
-        vXDataObjectToPublicDataObject(ret, asset);
-
-        ret.setRepositoryType(toServiceType(asset.getAssetType()));
-        ret.setName(asset.getName());
-        ret.setDescription(asset.getDescription());
-        ret.setIsActive(asset.getActiveStatus() == RangerCommonEnums.STATUS_ENABLED);
-        ret.setConfig(asset.getConfig());
-        ret.setVersion(version);
-
-        return ret;
-    }
-
-    public SearchCriteria getMappedSearchParams(HttpServletRequest request, SearchCriteria searchCriteria) {
-        Object             typeObj    = searchCriteria.getParamValue("type");
-        Object             statusObj  = searchCriteria.getParamValue("status");
-        ArrayList<Integer> statusList = new ArrayList<>();
-
-        if (statusObj == null) {
-            statusList.add(RangerCommonEnums.STATUS_DISABLED);
-            statusList.add(RangerCommonEnums.STATUS_ENABLED);
-        } else {
-            Boolean status     = restErrorUtil.parseBoolean(request.getParameter("status"), "Invalid value for status", MessageEnums.INVALID_INPUT_DATA, null, "status");
-            int     statusEnum = (status == null || !status) ? AppConstants.STATUS_DISABLED : AppConstants.STATUS_ENABLED;
-
-            statusList.add(statusEnum);
-        }
-
-        searchCriteria.addParam("status", statusList);
-
-        if (typeObj != null) {
-            String type     = typeObj.toString();
-            int    typeEnum = AppConstants.getEnumFor_AssetType(type);
-
-            searchCriteria.addParam("type", typeEnum);
-        }
-
-        return searchCriteria;
-    }
-
-    public VXPolicy toVXPolicy(RangerPolicy policy, RangerService service) {
-        if (policy == null || service == null || toAssetType(service.getType()) == null) {
-            return null;
-        }
-
-        VXPolicy ret = new VXPolicy();
-
-        rangerObjectToDataObject(policy, ret);
-
-        ret.setPolicyName(StringUtils.trim(policy.getName()));
-        ret.setDescription(policy.getDescription());
-        ret.setRepositoryName(policy.getService());
-        ret.setIsEnabled(policy.getIsEnabled());
-        ret.setRepositoryType(service.getType());
-        ret.setIsAuditEnabled(policy.getIsAuditEnabled());
-
-        if (policy.getVersion() != null) {
-            ret.setVersion(policy.getVersion().toString());
-        } else {
-            ret.setVersion(version);
-        }
-
-        for (Map.Entry<String, RangerPolicyResource> e : policy.getResources().entrySet()) {
-            RangerPolicyResource res       = e.getValue();
-            String               resType   = e.getKey();
-            String               resString = getResourceString(res.getValues());
-
-            if ("path".equalsIgnoreCase(resType)) {
-                ret.setResourceName(resString);
-                ret.setIsRecursive(Boolean.TRUE.equals(res.getIsRecursive()));
-            } else if ("table".equalsIgnoreCase(resType)) {
-                ret.setTables(resString);
-                ret.setTableType(Boolean.TRUE.equals(res.getIsExcludes()) ? toVxPolicyIncExc(RangerCommonEnums.POLICY_EXCLUSION) : toVxPolicyIncExc(RangerCommonEnums.POLICY_INCLUSION));
-            } else if ("column-family".equalsIgnoreCase(resType)) {
-                ret.setColumnFamilies(resString);
-            } else if ("column".equalsIgnoreCase(resType)) {
-                ret.setColumns(resString);
-                ret.setColumnType(Boolean.TRUE.equals(res.getIsExcludes()) ? toVxPolicyIncExc(RangerCommonEnums.POLICY_EXCLUSION) : toVxPolicyIncExc(RangerCommonEnums.POLICY_INCLUSION));
-            } else if ("database".equalsIgnoreCase(resType)) {
-                ret.setDatabases(resString);
-            } else if ("udf".equalsIgnoreCase(resType)) {
-                ret.setUdfs(resString);
-            } else if ("topology".equalsIgnoreCase(resType)) {
-                ret.setTopologies(resString);
-            } else if ("service".equalsIgnoreCase(resType)) {
-                ret.setServices(resString);
-            } else if (resType.equalsIgnoreCase("hiveservice")) {
-                ret.setHiveServices(resString);
-            }
-        }
-
-        updateResourceName(ret);
-
-        List<VXPermMap> vXPermMapList = getVXPermMapList(policy);
-        List<VXPermObj> vXPermObjList = mapPermMapToPermObj(vXPermMapList);
-
-        ret.setPermMapList(vXPermObjList);
-
-        return ret;
-    }
-
     public List<VXPermMap> getVXPermMapList(RangerPolicy policy) {
         List<VXPermMap> permMapList = new ArrayList<>();
         int             permGroup   = 0;
@@ -566,245 +425,6 @@ public class ServiceUtil {
         }
 
         return permMapList;
-    }
-
-    public List<VXPermObj> mapPermMapToPermObj(List<VXPermMap> permMapList) {
-        List<VXPermObj>                  permObjList  = new ArrayList<>();
-        HashMap<String, List<VXPermMap>> sortedPemMap = new HashMap<>();
-
-        if (permMapList != null) {
-            for (VXPermMap vXPermMap : permMapList) {
-                String          permGrp    = vXPermMap.getPermGroup();
-                List<VXPermMap> sortedList = sortedPemMap.computeIfAbsent(permGrp, k -> new ArrayList<>());
-
-                sortedList.add(vXPermMap);
-            }
-        }
-
-        for (Entry<String, List<VXPermMap>> entry : sortedPemMap.entrySet()) {
-            VXPermObj       vXPermObj      = new VXPermObj();
-            List<String>    userList       = new ArrayList<>();
-            List<String>    groupList      = new ArrayList<>();
-            List<String>    permList       = new ArrayList<>();
-            String          ipAddress      = "";
-            List<VXPermMap> permListForGrp = entry.getValue();
-
-            for (VXPermMap permMap : permListForGrp) {
-                if (permMap.getPermFor() == AppConstants.XA_PERM_FOR_USER) {
-                    if (!userList.contains(permMap.getUserName())) {
-                        userList.add(permMap.getUserName());
-                    }
-                } else if (permMap.getPermFor() == AppConstants.XA_PERM_FOR_GROUP) {
-                    if (!groupList.contains(permMap.getGroupName())) {
-                        groupList.add(permMap.getGroupName());
-                    }
-                }
-
-                String perm = AppConstants.getLabelFor_XAPermType(permMap.getPermType());
-
-                if (!permList.contains(perm)) {
-                    permList.add(perm);
-                }
-
-                ipAddress = permMap.getIpAddress();
-            }
-
-            vXPermObj.setUserList(userList);
-            vXPermObj.setGroupList(groupList);
-            vXPermObj.setPermList(permList);
-            vXPermObj.setIpAddress(ipAddress);
-
-            permObjList.add(vXPermObj);
-        }
-
-        return permObjList;
-    }
-
-    public RangerPolicy toRangerPolicy(VXPolicy vXPolicy, RangerService service) {
-        if (vXPolicy == null || service == null || toAssetType(service.getType()) == null) {
-            return null;
-        }
-
-        RangerPolicy ret = new RangerPolicy();
-
-        ret = (RangerPolicy) dataObjectToRangerObject(vXPolicy, ret);
-
-        ret.setService(service.getName());
-        ret.setName(StringUtils.trim(vXPolicy.getPolicyName()));
-        ret.setDescription(vXPolicy.getDescription());
-        ret.setIsEnabled(vXPolicy.getIsEnabled());
-        ret.setIsAuditEnabled(vXPolicy.getIsAuditEnabled());
-
-        Integer assetType   = toAssetType(service.getType());
-        Boolean isRecursive = Boolean.FALSE;
-
-        if (assetType == RangerCommonEnums.ASSET_HDFS && vXPolicy.getIsRecursive() != null) {
-            isRecursive = vXPolicy.getIsRecursive();
-        }
-
-        Boolean isTableExcludes = Boolean.FALSE;
-
-        if (vXPolicy.getTableType() != null) {
-            isTableExcludes = vXPolicy.getTableType().equals(RangerCommonEnums.getLabelFor_PolicyType(RangerCommonEnums.POLICY_EXCLUSION));
-        }
-
-        Boolean isColumnExcludes = Boolean.FALSE;
-
-        if (vXPolicy.getColumnType() != null) {
-            isColumnExcludes = vXPolicy.getColumnType().equals(RangerCommonEnums.getLabelFor_PolicyType(RangerCommonEnums.POLICY_EXCLUSION));
-        }
-
-        if (assetType == RangerCommonEnums.ASSET_HDFS && vXPolicy.getResourceName() != null) {
-            toRangerResourceList(vXPolicy.getResourceName(), "path", Boolean.FALSE, isRecursive, ret);
-        }
-
-        if (vXPolicy.getTables() != null) {
-            toRangerResourceList(vXPolicy.getTables(), "table", isTableExcludes, isRecursive, ret);
-        }
-
-        if (vXPolicy.getColumnFamilies() != null) {
-            toRangerResourceList(vXPolicy.getColumnFamilies(), "column-family", Boolean.FALSE, isRecursive, ret);
-        }
-
-        if (vXPolicy.getColumns() != null) {
-            toRangerResourceList(vXPolicy.getColumns(), "column", isColumnExcludes, isRecursive, ret);
-        }
-
-        if (vXPolicy.getDatabases() != null) {
-            toRangerResourceList(vXPolicy.getDatabases(), "database", Boolean.FALSE, isRecursive, ret);
-        }
-
-        if (vXPolicy.getUdfs() != null) {
-            toRangerResourceList(vXPolicy.getUdfs(), "udf", Boolean.FALSE, isRecursive, ret);
-        }
-
-        if (vXPolicy.getTopologies() != null) {
-            toRangerResourceList(vXPolicy.getTopologies(), "topology", Boolean.FALSE, isRecursive, ret);
-        }
-
-        if (vXPolicy.getServices() != null) {
-            toRangerResourceList(vXPolicy.getServices(), "service", Boolean.FALSE, isRecursive, ret);
-        }
-
-        if (vXPolicy.getHiveServices() != null) {
-            toRangerResourceList(vXPolicy.getHiveServices(), "hiveservice", Boolean.FALSE, isRecursive, ret);
-        }
-
-        if (vXPolicy.getPermMapList() != null) {
-            List<VXPermObj> vXPermObjList = vXPolicy.getPermMapList();
-
-            for (VXPermObj vXPermObj : vXPermObjList) {
-                List<String>                 userList       = new ArrayList<>();
-                List<String>                 groupList      = new ArrayList<>();
-                List<RangerPolicyItemAccess> accessList     = new ArrayList<>();
-                String                       ipAddress      = null;
-                boolean                      delegatedAdmin = false;
-
-                if (vXPermObj.getUserList() != null) {
-                    for (String user : vXPermObj.getUserList()) {
-                        if (user.contains(getUserName(user))) {
-                            userList.add(user);
-                        }
-                    }
-                }
-
-                if (vXPermObj.getGroupList() != null) {
-                    for (String group : vXPermObj.getGroupList()) {
-                        if (group.contains(getGroupName(group))) {
-                            groupList.add(group);
-                        }
-                    }
-                }
-
-                if (vXPermObj.getPermList() != null) {
-                    for (String perm : vXPermObj.getPermList()) {
-                        if (AppConstants.getEnumFor_XAPermType(perm) != 0) {
-                            if ("Admin".equalsIgnoreCase(perm)) {
-                                delegatedAdmin = true;
-
-                                if (assetType != RangerCommonEnums.ASSET_HBASE) {
-                                    continue;
-                                }
-                            }
-
-                            accessList.add(new RangerPolicyItemAccess(perm));
-                        }
-                    }
-                }
-
-                if (vXPermObj.getIpAddress() != null) {
-                    ipAddress = vXPermObj.getIpAddress();
-                }
-
-                RangerPolicyItem policyItem = new RangerPolicyItem();
-
-                policyItem.setUsers(userList);
-                policyItem.setGroups(groupList);
-                policyItem.setAccesses(accessList);
-
-                if (delegatedAdmin) {
-                    policyItem.setDelegateAdmin(Boolean.TRUE);
-                } else {
-                    policyItem.setDelegateAdmin(Boolean.FALSE);
-                }
-
-                if (ipAddress != null && !ipAddress.isEmpty()) {
-                    RangerPolicyItemCondition ipCondition = new RangerPolicyItemCondition("ipaddress", Collections.singletonList(ipAddress));
-
-                    policyItem.addCondition(ipCondition);
-                }
-
-                ret.addPolicyItem(policyItem);
-            }
-        }
-
-        return ret;
-    }
-
-    public VXPolicyList rangerPolicyListToPublic(List<RangerPolicy> rangerPolicyList, SearchFilter filter) {
-        RangerService  service;
-        List<VXPolicy> vXPolicyList    = new ArrayList<>();
-        VXPolicyList   vXPolicyListObj = new VXPolicyList(new ArrayList<>());
-
-        if (CollectionUtils.isNotEmpty(rangerPolicyList)) {
-            int    totalCount = rangerPolicyList.size();
-            int    startIndex = filter.getStartIndex();
-            int    pageSize   = filter.getMaxRows();
-            int    toIndex    = Math.min(startIndex + pageSize, totalCount);
-            String sortType   = filter.getSortType();
-            String sortBy     = filter.getSortBy();
-
-            for (int i = startIndex; i < toIndex; i++) {
-                RangerPolicy policy = rangerPolicyList.get(i);
-
-                try {
-                    service = svcStore.getServiceByName(policy.getService());
-                } catch (Exception excp) {
-                    throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST, excp.getMessage(), true);
-                }
-
-                if (service == null) {
-                    throw restErrorUtil.createRESTException(HttpServletResponse.SC_NOT_FOUND, RangerServiceNotFoundException.buildExceptionMsg(policy.getService()), true);
-                }
-
-                VXPolicy vXPolicy = toVXPolicy(policy, service);
-
-                if (vXPolicy != null) {
-                    vXPolicyList.add(vXPolicy);
-                }
-            }
-
-            vXPolicyListObj = new VXPolicyList(vXPolicyList);
-
-            vXPolicyListObj.setPageSize(pageSize);
-            vXPolicyListObj.setResultSize(vXPolicyList.size());
-            vXPolicyListObj.setStartIndex(startIndex);
-            vXPolicyListObj.setTotalCount(totalCount);
-            vXPolicyListObj.setSortBy(sortBy);
-            vXPolicyListObj.setSortType(sortType);
-        }
-
-        return vXPolicyListObj;
     }
 
     public GrantRevokeRequest toGrantRevokeRequest(VXPolicy vXPolicy) {
@@ -1159,18 +779,6 @@ public class ServiceUtil {
         return policyLists;
     }
 
-    protected VXDataObject publicDataObjectTovXDataObject(VXDataObject publicDataObject, VXDataObject vXDataObject) {
-        VXDataObject ret = vXDataObject;
-
-        ret.setId(publicDataObject.getId());
-        ret.setCreateDate(publicDataObject.getCreateDate());
-        ret.setUpdateDate(publicDataObject.getUpdateDate());
-        ret.setOwner(publicDataObject.getOwner());
-        ret.setUpdatedBy(publicDataObject.getUpdatedBy());
-
-        return ret;
-    }
-
     private void toRangerResourceList(String resourceString, String resourceType, Boolean isExcludes, Boolean isRecursive, RangerPolicy policy) {
         if (StringUtils.isNotBlank(resourceString)) {
             RangerPolicyResource resource = policy.getResources().get(resourceType);
@@ -1250,37 +858,6 @@ public class ServiceUtil {
         ret.setUpdatedBy(rangerObject.getUpdatedBy());
 
         return ret;
-    }
-
-    private String toVxPolicyIncExc(int policyIncExc) {
-        String ret = "";
-
-        switch (policyIncExc) {
-            case 0:
-                ret = "Inclusion";
-                break;
-            case 1:
-                ret = "Exclusion";
-                break;
-        }
-        return ret;
-    }
-
-    private void updateResourceName(VXPolicy policy) {
-        if (policy == null || toAssetType(policy.getRepositoryType()) == null) {
-            return;
-        }
-
-        String resourceName = getResourceName(toAssetType(policy.getRepositoryType()),
-                policy.getResourceName(),
-                policy.getTables(),
-                policy.getColumnFamilies(),
-                policy.getColumns(),
-                policy.getDatabases(),
-                policy.getTopologies(),
-                policy.getServices());
-
-        policy.setResourceName(resourceName);
     }
 
     private void updateResourceName(VXResource resource) {
@@ -1458,18 +1035,6 @@ public class ServiceUtil {
         return groupId;
     }
 
-    private VXDataObject vXDataObjectToPublicDataObject(VXDataObject publicDataObject, VXDataObject vXdataObject) {
-        VXDataObject ret = publicDataObject;
-
-        ret.setId(vXdataObject.getId());
-        ret.setCreateDate(vXdataObject.getCreateDate());
-        ret.setUpdateDate(vXdataObject.getUpdateDate());
-        ret.setOwner(vXdataObject.getOwner());
-        ret.setUpdatedBy(vXdataObject.getUpdatedBy());
-
-        return ret;
-    }
-
     private String getUserName(String userName) {
         if (userName == null || userName.isEmpty()) {
             XXUser xxUser = xaDaoMgr.getXXUser().findByUserName(userName);
@@ -1631,7 +1196,5 @@ public class ServiceUtil {
         mapAccessTypeToPermType.put("describe_configs", 36);
         mapAccessTypeToPermType.put("alter_configs", 37);
         mapAccessTypeToPermType.put("cluster_action", 38);
-
-        version = "0";
     }
 }

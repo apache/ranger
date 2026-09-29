@@ -177,4 +177,26 @@
       <name>ranger.usersync.group.hierarchylevels</name>
       <value>2</value>
     </property>
+
+    <property>
+        <name>ranger.usersync.ldap.deltasync.server.type</name>
+        <value></value>
+        <description>Specifies the LDAP server type for delta sync attribute selection.
+            Accepted values:
+            - "AD"   : Uses only 'uSNChanged' attribute for delta sync (Active Directory).
+            - "LDAP" : Uses only 'modifyTimestamp' attribute for delta sync (OpenLDAP).
+            - ""     : Uses both 'uSNChanged' and 'modifyTimestamp' attributes (default behavior).
+        </description>
+    </property>
+    <property>
+        <name>ranger.usersync.dn.validation.enabled</name>
+        <value></value>
+        <description>
+            Controls whether LDAP DN changes (e.g. OU moves) are synced to Ranger.
+            Accepted values:
+            - true  : DN changes are allowed and synced
+            - false : DN mismatch causes update to be skipped
+            - empty : treated as false (default); DN changes are skipped
+        </description>
+    </property>
   </configuration>

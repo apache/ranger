@@ -49,7 +49,6 @@ import org.apache.ranger.service.XAccessAuditService;
 import org.apache.ranger.service.XAuditMapService;
 import org.apache.ranger.service.XGroupService;
 import org.apache.ranger.service.XPermMapService;
-import org.apache.ranger.service.XPolicyService;
 import org.apache.ranger.service.XUgsyncAuditInfoService;
 import org.apache.ranger.service.XUserService;
 import org.apache.ranger.solr.SolrAccessAuditsService;
@@ -150,9 +149,6 @@ public class AssetMgr extends AssetMgrBase {
 
     @Autowired
     CloudWatchAccessAuditsService cloudWatchAccessAuditsService;
-
-    @Autowired
-    XPolicyService xPolicyService;
 
     @Autowired
     RangerTransactionSynchronizationAdapter transactionSynchronizationAdapter;

@@ -30,7 +30,6 @@ import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.model.validation.RangerServiceDefHelper;
 import org.apache.ranger.service.RangerPolicyService;
 import org.apache.ranger.service.XPermMapService;
-import org.apache.ranger.service.XPolicyService;
 import org.apache.ranger.util.CLIUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -58,9 +57,6 @@ public class PatchForAllServiceDefUpdateForResourceSpecificAccesses_J10012 exten
 
     @Autowired
     StringUtil stringUtil;
-
-    @Autowired
-    XPolicyService xPolService;
 
     @Autowired
     XPermMapService xPermMapService;

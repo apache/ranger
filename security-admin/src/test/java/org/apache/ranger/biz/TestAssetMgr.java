@@ -52,7 +52,6 @@ import org.apache.ranger.service.XAuditMapService;
 import org.apache.ranger.service.XGroupService;
 import org.apache.ranger.service.XPermMapService;
 import org.apache.ranger.service.XPolicyExportAuditService;
-import org.apache.ranger.service.XPolicyService;
 import org.apache.ranger.service.XResourceService;
 import org.apache.ranger.service.XUgsyncAuditInfoService;
 import org.apache.ranger.service.XUserService;
@@ -169,9 +168,6 @@ public class TestAssetMgr {
 
     @Mock
     CloudWatchAccessAuditsService cloudWatchAccessAuditsService;
-
-    @Mock
-    XPolicyService xPolicyService;
 
     @Mock
     RangerTransactionSynchronizationAdapter transactionSynchronizationAdapter;

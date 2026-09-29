@@ -31,7 +31,6 @@ import org.apache.ranger.plugin.store.AbstractServiceStore;
 import org.apache.ranger.plugin.store.EmbeddedServiceDefsUtil;
 import org.apache.ranger.service.RangerPolicyService;
 import org.apache.ranger.service.XPermMapService;
-import org.apache.ranger.service.XPolicyService;
 import org.apache.ranger.services.tag.RangerServiceTag;
 import org.apache.ranger.util.CLIUtil;
 import org.slf4j.Logger;
@@ -63,9 +62,6 @@ public class PatchForTagServiceDefUpdate_J10028 extends BaseLoader {
 
     @Autowired
     StringUtil stringUtil;
-
-    @Autowired
-    XPolicyService xPolService;
 
     @Autowired
     XPermMapService xPermMapService;

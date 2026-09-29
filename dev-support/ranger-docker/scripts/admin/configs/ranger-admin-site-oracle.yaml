@@ -1,0 +1,117 @@
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# Complete Ranger Admin configuration for oracle: dba.py renders conf/ranger-admin-site.xml from this file
+# when RANGER_DB_TYPE=oracle, without taking any property from the Ranger Admin distribution
+
+# Database: the password is not kept here, dba.py stores env RANGER_ADMIN_DB_PASSWORD in the credential store
+ranger.jpa.jdbc.driver: oracle.jdbc.OracleDriver
+ranger.jpa.jdbc.url: jdbc:oracle:thin:@//ranger-db:1521/FREEPDB1
+ranger.jpa.jdbc.user: rangeradmin
+ranger.jpa.jdbc.password: _
+ranger.jpa.jdbc.dialect: org.eclipse.persistence.platform.database.OraclePlatform
+ranger.jpa.jdbc.preferredtestquery: select 1 from dual
+ranger.jpa.audit.jdbc.driver: oracle.jdbc.OracleDriver
+ranger.jpa.audit.jdbc.dialect: org.eclipse.persistence.platform.database.OraclePlatform
+ranger.jdbc.sqlconnectorjar: /usr/share/java/oracle.jar
+
+# Ranger Admin service
+ranger.admin.cookie.name: RANGERADMINSESSIONID
+ranger.admin.init.purge.login_records: false
+ranger.admin.init.purge.login_records.retention.days: 0
+ranger.admin.init.purge.transaction_records: false
+ranger.admin.init.purge.transaction_records.retention.days: 0
+ranger.downloadpolicy.session.log.enabled: false
+ranger.externalurl: http://ranger-admin:6080
+ranger.scheduler.enabled: true
+ranger.service.host: localhost
+ranger.service.http.enabled: true
+ranger.service.http.port: 6080
+ranger.service.https.attrib.keystore.credential.alias: keyStoreCredentialAlias
+ranger.service.https.attrib.keystore.file: /etc/ranger/admin/keys/server.jks
+ranger.service.https.attrib.keystore.keyalias: myKey
+ranger.service.https.attrib.keystore.pass: _
+ranger.service.https.attrib.ssl.enabled: false
+ranger.service.https.port: 6182
+ranger.servicedef.ozone.enableActionMatcherInPoliciesCondition: false
+ranger.supportedcomponents: ''
+ranger.tomcat.ciphers: ''
+
+# Authentication: trusted header authentication is used by readiness probes as user healthcheck;
+# enable it only behind a trusted proxy outside of this development setup
+ranger.admin.authn.header.enabled: true
+ranger.admin.authn.header.requestid: ''
+ranger.admin.authn.header.roles: ''
+ranger.admin.authn.header.spiffe: ''
+ranger.admin.authn.header.username: X-Forwarded-User
+ranger.admin.healthcheck.username: healthcheck
+ranger.admin.kerberos.cookie.domain: ''
+ranger.admin.kerberos.cookie.path: /
+ranger.admin.kerberos.keytab: /etc/keytabs/rangeradmin.keytab
+ranger.admin.kerberos.principal: rangeradmin/ranger.rangernw@EXAMPLE.COM
+ranger.admin.kerberos.token.valid.seconds: 30
+ranger.admin.spiffe.as.username.enabled: false
+ranger.admin.super.groups: ''
+ranger.admin.super.users: ''
+ranger.authentication.method: PAM
+ranger.lookup.kerberos.keytab: /etc/keytabs/rangerlookup.keytab
+ranger.lookup.kerberos.principal: rangerlookup/ranger.rangernw@EXAMPLE.COM
+ranger.spnego.kerberos.keytab: /etc/keytabs/HTTP.keytab
+ranger.spnego.kerberos.principal: HTTP/ranger.rangernw@EXAMPLE.COM
+ranger.sso.browser.useragent: Mozilla,chrome
+ranger.sso.enabled: false
+ranger.sso.providerurl: https://127.0.0.1:8443/gateway/knoxsso/api/v1/websso
+
+# Audit: ranger.audit.source.type is overridden by env AUDIT_INDEX_STORE, when set
+ranger.audit.hive.query.visibility: true
+ranger.audit.opensearch.authentication.type: ''
+ranger.audit.opensearch.bootstrap.enabled: true
+ranger.audit.opensearch.index: ranger_audits
+ranger.audit.opensearch.kerberos.keytab: ''
+ranger.audit.opensearch.kerberos.principal: ''
+ranger.audit.opensearch.password: admin
+ranger.audit.opensearch.port: 9200
+ranger.audit.opensearch.protocol: http
+ranger.audit.opensearch.urls: ranger-opensearch
+ranger.audit.opensearch.user: admin
+ranger.audit.solr.acl.user.list.sasl: ''
+ranger.audit.solr.bootstrap.enabled: ''
+ranger.audit.solr.collection.name: ranger_audits
+ranger.audit.solr.config.name: ''
+ranger.audit.solr.configset.location: ''
+ranger.audit.solr.max.retry: ''
+ranger.audit.solr.max.shards.per.node: ''
+ranger.audit.solr.no.replica: ''
+ranger.audit.solr.no.shards: ''
+ranger.audit.solr.urls: http://ranger-solr.rangernw:8983/solr/ranger_audits
+ranger.audit.solr.zookeepers: ''
+ranger.audit.source.type: opensearch
+ranger.solr.audit.user: ''
+ranger.solr.audit.user.password: ''
+xasecure.audit.jaas.Client.loginModuleControlFlag: required
+xasecure.audit.jaas.Client.loginModuleName: com.sun.security.auth.module.Krb5LoginModule
+xasecure.audit.jaas.Client.option.keyTab: /etc/keytabs/rangeradmin.keytab
+xasecure.audit.jaas.Client.option.principal: rangeradmin/ranger.rangernw@EXAMPLE.COM
+xasecure.audit.jaas.Client.option.serviceName: ''
+xasecure.audit.jaas.Client.option.storeKey: true
+xasecure.audit.jaas.Client.option.useKeyTab: true
+xasecure.audit.jaas.Client.option.useTicketCache: false
+
+# Service users of Ranger KMS
+ranger.kms.service.user.hbase: hbase
+ranger.kms.service.user.hdfs: hdfs
+ranger.kms.service.user.hive: hive
+ranger.kms.service.user.om: om

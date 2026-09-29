@@ -38,6 +38,7 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.Reader;
 import java.io.Writer;
+import java.lang.reflect.InvocationTargetException;
 import java.util.Timer;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -68,11 +69,16 @@ public class RangerGdsEnricher extends RangerAbstractContextEnricher {
 
         if (StringUtils.isNotBlank(retrieverClassName)) {
             try {
-                @SuppressWarnings("unchecked")
-                Class<RangerGdsInfoRetriever> retriverClass = (Class<RangerGdsInfoRetriever>) Class.forName(retrieverClassName);
+                Class<?> cls = Class.forName(retrieverClassName, false, RangerGdsEnricher.class.getClassLoader());
+                if (!RangerGdsInfoRetriever.class.isAssignableFrom(cls)) {
+                    throw new ClassCastException("class " + retrieverClassName + " is not assignable to " + RangerGdsInfoRetriever.class.getName());
+                }
 
-                gdsInfoRetriever = retriverClass.newInstance();
-            } catch (ClassNotFoundException | ClassCastException | IllegalAccessException | InstantiationException excp) {
+                @SuppressWarnings("unchecked")
+                Class<RangerGdsInfoRetriever> retriverClass = (Class<RangerGdsInfoRetriever>) cls;
+
+                gdsInfoRetriever = retriverClass.getDeclaredConstructor().newInstance();
+            } catch (ClassNotFoundException | ClassCastException | IllegalAccessException | InstantiationException | NoSuchMethodException | InvocationTargetException excp) {
                 LOG.error("Failed to instantiate retriever (className={})", retrieverClassName, excp);
             }
         }

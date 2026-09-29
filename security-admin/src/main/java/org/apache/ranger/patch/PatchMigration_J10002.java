@@ -46,7 +46,6 @@ import org.apache.ranger.plugin.model.RangerService;
 import org.apache.ranger.plugin.store.EmbeddedServiceDefsUtil;
 import org.apache.ranger.service.RangerPolicyService;
 import org.apache.ranger.service.XPermMapService;
-import org.apache.ranger.service.XPolicyService;
 import org.apache.ranger.util.CLIUtil;
 import org.apache.ranger.view.VXPermMap;
 import org.slf4j.Logger;
@@ -86,9 +85,6 @@ public class PatchMigration_J10002 extends BaseLoader {
 
     @Autowired
     StringUtil stringUtil;
-
-    @Autowired
-    XPolicyService xPolService;
 
     @Autowired
     XPermMapService xPermMapService;

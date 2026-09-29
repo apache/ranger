@@ -380,6 +380,13 @@ public class TestPolicyEngine {
     }
 
     @Test
+    void testPolicyEngine_hive_any_access_priority() {
+        String[] hiveTestResourceFiles = {"/policyengine/test_policyengine_hive_any_access_priority.json"};
+
+        runTestsFromResourceFiles(hiveTestResourceFiles);
+    }
+
+    @Test
     public void testPolicyEngine_hive_incremental_add() {
         String[] hiveTestResourceFiles = {"/policyengine/test_policyengine_hive_incremental_add.json"};
 

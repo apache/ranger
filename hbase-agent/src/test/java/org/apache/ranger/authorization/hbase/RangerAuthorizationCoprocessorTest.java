@@ -391,12 +391,36 @@ public class RangerAuthorizationCoprocessorTest {
     }
 
     @Test
-    public void test19_isSpecialTable_and_metadataRead() {
+    public void test19_isSpecialTable_and_metadataRead() throws Exception {
         RangerAuthorizationCoprocessor cp = new RangerAuthorizationCoprocessor();
         Assertions.assertTrue(cp.isSpecialTable("hbase:meta"));
         Assertions.assertFalse(cp.isSpecialTable("normal"));
-        Assertions.assertTrue(cp.isAccessForMetadataRead("read", "hbase:acl"));
-        Assertions.assertFalse(cp.isAccessForMetadataRead("write", "hbase:acl"));
+        Assertions.assertFalse(cp.isAccessForMetadataRead("read", "hbase:acl", null));
+        Assertions.assertFalse(cp.isAccessForMetadataRead("write", "hbase:acl", null));
+
+        // Test for system user bypass on hbase:acl
+        User systemUser = mock(User.class);
+        when(systemUser.getShortName()).thenReturn(User.getCurrent().getShortName());
+        Assertions.assertTrue(cp.isAccessForMetadataRead("read", "hbase:acl", systemUser));
+
+        // Test for super user bypass on hbase:acl
+        User superUser = mock(User.class);
+        when(superUser.getShortName()).thenReturn("some_super_user");
+        HbaseUserUtils userUtils = mock(HbaseUserUtils.class);
+        lenient().when(userUtils.isSuperUser(superUser)).thenReturn(true);
+        Field userUtilsField = RangerAuthorizationCoprocessor.class.getDeclaredField("userUtils");
+        userUtilsField.setAccessible(true);
+        userUtilsField.set(cp, userUtils);
+        Assertions.assertTrue(cp.isAccessForMetadataRead("read", "hbase:acl", superUser));
+
+        // Test for normal user on hbase:acl (should be denied)
+        User normalUser = mock(User.class);
+        when(normalUser.getShortName()).thenReturn("normal_user");
+        lenient().when(userUtils.isSuperUser(normalUser)).thenReturn(false);
+        Assertions.assertFalse(cp.isAccessForMetadataRead("read", "hbase:acl", normalUser));
+
+        // Test for normal user on hbase:meta (should be allowed)
+        Assertions.assertTrue(cp.isAccessForMetadataRead("read", "hbase:meta", normalUser));
     }
 
     @Test
