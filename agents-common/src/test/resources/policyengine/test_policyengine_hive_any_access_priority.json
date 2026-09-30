@@ -1,0 +1,126 @@
+{
+  "serviceName":"hivedev",
+
+  "serviceDef":{
+    "name":"hive",
+    "id":3,
+    "resources":[
+      {"name":"database","level":1,"mandatory":true,"lookupSupported":true,"matcher":"org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher","matcherOptions":{"wildCard":true, "ignoreCase":true},"label":"Hive Database","description":"Hive Database"},
+      {"name":"url","level":1,"mandatory":true,"lookupSupported":false,"recursiveSupported":true,"matcher":"org.apache.ranger.plugin.resourcematcher.RangerURLResourceMatcher","matcherOptions":{"wildCard":true, "ignoreCase":true},"label":"URL","description":"URL"},
+      {"name":"hiveservice","level":1,"mandatory":true,"lookupSupported":false,"matcher":"org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher","matcherOptions":{"wildCard":true, "ignoreCase":true},"label":"HiveService","description":"HiveService"},
+      {"name":"table","level":2,"parent":"database","mandatory":true,"lookupSupported":true,"matcher":"org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher","matcherOptions":{"wildCard":true, "ignoreCase":true},"label":"Hive Table","description":"Hive Table"},
+      {"name":"udf","level":2,"parent":"database","mandatory":true,"lookupSupported":true,"matcher":"org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher","matcherOptions":{"wildCard":true, "ignoreCase":true},"label":"Hive UDF","description":"Hive UDF"},
+      {"name":"column","level":3,"parent":"table","mandatory":true,"lookupSupported":true,"matcher":"org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher","matcherOptions":{"wildCard":true, "ignoreCase":true},"label":"Hive Column","description":"Hive Column"}
+    ],
+    "accessTypes":[
+      {"name":"select","label":"Select"},
+      {"name":"update","label":"Update"},
+      {"name":"create","label":"Create"},
+      {"name":"drop","label":"Drop"},
+      {"name":"alter","label":"Alter"},
+      {"name":"index","label":"Index"},
+      {"name":"lock","label":"Lock"},
+      {"name":"read","label":"Read"},
+      {"name":"write","label":"Write"},
+      {"name":"repladmin","label":"ReplAdmin"},
+      {"name":"serviceadmin","label":"ServiceAdmin"},
+      {"name":"all","label":"All",
+        "impliedGrants": [
+        "select",
+        "update",
+        "create",
+        "drop",
+        "alter",
+        "index",
+        "lock",
+        "read",
+        "write",
+        "repladmin",
+        "serviceadmin"
+      ]
+      }
+    ]
+  },
+
+  "policies":[
+    {"id":101,"name":"case1 deny create/drop/alter for public","isEnabled":true,"isAuditEnabled":true,"policyPriority":1,
+      "resources":{"database":{"values":["case1_db"]},"table":{"values":["*"]},"column":{"values":["*"]}},
+      "denyPolicyItems":[
+        {"accesses":[{"type":"create","isAllowed":true},{"type":"drop","isAllowed":true},{"type":"alter","isAllowed":true}],"users":[],"groups":["public"],"delegateAdmin":false}
+      ]
+    },
+    {"id":102,"name":"case1 allow select/update/drop/read/write for hrt15","isEnabled":true,"isAuditEnabled":true,"policyPriority":0,
+      "resources":{"database":{"values":["case1_db"]},"table":{"values":["test1"]},"column":{"values":["*"]}},
+      "policyItems":[
+        {"accesses":[{"type":"select","isAllowed":true},{"type":"update","isAllowed":true},{"type":"drop","isAllowed":true},{"type":"read","isAllowed":true},{"type":"write","isAllowed":true}],"users":["hrt15"],"groups":[],"delegateAdmin":false}
+      ]
+    },
+    {"id":201,"name":"case2 deny create/drop/alter for public","isEnabled":true,"isAuditEnabled":true,"policyPriority":0,
+      "resources":{"database":{"values":["case2_db"]},"table":{"values":["*"]},"column":{"values":["*"]}},
+      "denyPolicyItems":[
+        {"accesses":[{"type":"create","isAllowed":true},{"type":"drop","isAllowed":true},{"type":"alter","isAllowed":true}],"users":[],"groups":["public"],"delegateAdmin":false}
+      ]
+    },
+    {"id":202,"name":"case2 allow select/update/drop/read/write for hrt15","isEnabled":true,"isAuditEnabled":true,"policyPriority":0,
+      "resources":{"database":{"values":["case2_db"]},"table":{"values":["test1"]},"column":{"values":["*"]}},
+      "policyItems":[
+        {"accesses":[{"type":"select","isAllowed":true},{"type":"update","isAllowed":true},{"type":"drop","isAllowed":true},{"type":"read","isAllowed":true},{"type":"write","isAllowed":true}],"users":["hrt15"],"groups":[],"delegateAdmin":false}
+      ]
+    },
+    {"id":301,"name":"case3 deny create/drop/alter for public","isEnabled":true,"isAuditEnabled":true,"policyPriority":1,
+      "resources":{"database":{"values":["case3_db"]},"table":{"values":["*"]},"column":{"values":["*"]}},
+      "denyPolicyItems":[
+        {"accesses":[{"type":"create","isAllowed":true},{"type":"drop","isAllowed":true},{"type":"alter","isAllowed":true}],"users":[],"groups":["public"],"delegateAdmin":false}
+      ]
+    },
+    {"id":302,"name":"case3 allow select/update/create/alter/index/lock/read/write for hrt15","isEnabled":true,"isAuditEnabled":true,"policyPriority":0,
+      "resources":{"database":{"values":["case3_db"]},"table":{"values":["test1"]},"column":{"values":["*"]}},
+      "policyItems":[
+        {"accesses":[{"type":"select","isAllowed":true},{"type":"update","isAllowed":true},{"type":"create","isAllowed":true},{"type":"alter","isAllowed":true},{"type":"index","isAllowed":true},{"type":"lock","isAllowed":true},{"type":"read","isAllowed":true},{"type":"write","isAllowed":true}],"users":["hrt15"],"groups":[],"delegateAdmin":false}
+      ]
+    },
+    {"id":401,"name":"case4 deny create/drop/alter for public","isEnabled":true,"isAuditEnabled":true,"policyPriority":1,
+      "resources":{"database":{"values":["case4_db"]},"table":{"values":["*"]},"column":{"values":["*"]}},
+      "denyPolicyItems":[
+        {"accesses":[{"type":"create","isAllowed":true},{"type":"drop","isAllowed":true},{"type":"alter","isAllowed":true}],"users":[],"groups":["public"],"delegateAdmin":false}
+      ]
+    },
+    {"id":402,"name":"case4 allow create/drop/alter for hrt15","isEnabled":true,"isAuditEnabled":true,"policyPriority":1,
+      "resources":{"database":{"values":["case4_db"]},"table":{"values":["test1"]},"column":{"values":["*"]}},
+      "policyItems":[
+        {"accesses":[{"type":"create","isAllowed":true},{"type":"drop","isAllowed":true},{"type":"alter","isAllowed":true}],"users":["hrt15"],"groups":[],"delegateAdmin":false}
+      ]
+    }
+  ],
+
+  "tests":[
+    {"name":"CASE-1: higher-priority deny, _any allowed via select",
+      "request":{
+        "resource":{"elements":{"database":"case1_db"}},
+        "accessType":"","user":"hrt15","userGroups":["public"],"requestData":"use case1_db"
+      },
+      "result":{"isAudited":true,"isAllowed":true,"policyId":102}
+    },
+    {"name":"CASE-2: same-priority deny, deny wins per type, _any allowed via select",
+      "request":{
+        "resource":{"elements":{"database":"case2_db"}},
+        "accessType":"","user":"hrt15","userGroups":["public"],"requestData":"use case2_db"
+      },
+      "result":{"isAudited":true,"isAllowed":true,"policyId":202}
+    },
+    {"name":"CASE-3: higher-priority deny, allow policy skips denied types to find select",
+      "request":{
+        "resource":{"elements":{"database":"case3_db"}},
+        "accessType":"","user":"hrt15","userGroups":["public"],"requestData":"use case3_db"
+      },
+      "result":{"isAudited":true,"isAllowed":true,"policyId":302}
+    },
+    {"name":"CASE-4: same-priority deny+allow for all allowed types, _any denied",
+      "request":{
+        "resource":{"elements":{"database":"case4_db"}},
+        "accessType":"","user":"hrt15","userGroups":["public"],"requestData":"use case4_db"
+      },
+      "result":{"isAudited":true,"isAllowed":false,"policyId":-1}
+    }
+  ]
+}
