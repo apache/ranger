@@ -179,30 +179,20 @@ public class RangerDefaultRequestProcessor implements RangerAccessRequestProcess
         if (batchEvalContext != null) {
             String      mappedUser       = batchEvalContext.getMappedUserName(originalUser);
             Set<String> mappedUserGroups = batchEvalContext.getMappedUserGroups(originalUser, originalGroups);
-            // A mapped user or group set can be null, so a null return is a hit when the key is present.
+            // A mapped user can be null, so a null user is a hit when the key is present.
             boolean     userMissing      = mappedUser == null && !batchEvalContext.hasMappingForUserName(originalUser);
-            boolean     groupsMissing    = mappedUserGroups == null && !batchEvalContext.hasMappingForUserGroups(originalUser, originalGroups);
 
-            if (userMissing || groupsMissing) {
+            if (userMissing || mappedUserGroups == null) {
                 mapUserAndGroups(reqImpl, pluginContext);
 
+                Set<String> groups = copyReadOnly(reqImpl.getUserGroups());
+
                 batchEvalContext.setUserNameMapping(originalUser, reqImpl.getUser());
-
-                Set<String> groups = reqImpl.getUserGroups();
-
-                if (groups != null) {
-                    groups = copyReadOnly(groups);
-
-                    reqImpl.setUserGroups(groups);
-                }
-
                 batchEvalContext.setUserGroupsMapping(originalUser, originalGroups, groups);
+                reqImpl.setUserGroups(groups);
             } else {
                 reqImpl.setUser(mappedUser);
-
-                if (mappedUserGroups != null) {
-                    reqImpl.setUserGroups(mappedUserGroups);
-                }
+                reqImpl.setUserGroups(mappedUserGroups);
             }
         } else {
             mapUserAndGroups(reqImpl, pluginContext);
