@@ -1190,7 +1190,7 @@ public class ServiceREST {
                 Set<String>          accessTypes = grantRequest.getAccessTypes();
                 VXUser               vxUser      = xUserService.getXUserByUserName(userName);
 
-                if (vxUser.getUserRoleList().contains(RangerConstants.ROLE_ADMIN_AUDITOR) || vxUser.getUserRoleList().contains(RangerConstants.ROLE_KEY_ADMIN_AUDITOR)) {
+                if ((vxUser.getUserRoleList().contains(RangerConstants.ROLE_ADMIN_AUDITOR) || vxUser.getUserRoleList().contains(RangerConstants.ROLE_KEY_ADMIN_AUDITOR)) && !bizUtil.isConfigSuperUser(userName)) {
                     VXResponse vXResponse = new VXResponse();
 
                     vXResponse.setStatusCode(HttpServletResponse.SC_FORBIDDEN);
@@ -1435,7 +1435,7 @@ public class ServiceREST {
                     Set<String>          accessTypes = revokeRequest.getAccessTypes();
                     VXUser               vxUser      = xUserService.getXUserByUserName(userName);
 
-                    if (vxUser.getUserRoleList().contains(RangerConstants.ROLE_ADMIN_AUDITOR) || vxUser.getUserRoleList().contains(RangerConstants.ROLE_KEY_ADMIN_AUDITOR)) {
+                    if ((vxUser.getUserRoleList().contains(RangerConstants.ROLE_ADMIN_AUDITOR) || vxUser.getUserRoleList().contains(RangerConstants.ROLE_KEY_ADMIN_AUDITOR)) && !bizUtil.isConfigSuperUser(userName)) {
                         VXResponse vXResponse = new VXResponse();
 
                         vXResponse.setStatusCode(HttpServletResponse.SC_FORBIDDEN);

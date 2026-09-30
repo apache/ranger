@@ -24,7 +24,6 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -149,40 +148,14 @@ public class TestRangerSuperUserConfig {
     }
 
     @Test
-    public void testMergeConfigSuperUserRoles_ForAuthentication() {
-        List<String> merged = RangerSuperUserConfig.mergeConfigSuperUserRoles(
-                Collections.singletonList(RangerConstants.ROLE_USER), false);
+    public void testGetSuperUserRoles() {
+        List<String> roles = RangerSuperUserConfig.getSuperUserRoles();
 
-        Assertions.assertEquals(
-                Arrays.asList(
-                        RangerConstants.ROLE_SYS_ADMIN,
-                        RangerConstants.ROLE_KEY_ADMIN,
-                        RangerConstants.ROLE_USER),
-                merged);
-    }
+        Assertions.assertEquals(Collections.singletonList(RangerConstants.ROLE_SYS_ADMIN), roles);
 
-    @Test
-    public void testMergeConfigSuperUserRoles_ForSession() {
-        List<String> merged = RangerSuperUserConfig.mergeConfigSuperUserRoles(
-                Collections.singletonList(RangerConstants.ROLE_ADMIN_AUDITOR),
-                true);
+        roles.add(RangerConstants.ROLE_USER);
 
-        Assertions.assertEquals(
-                Arrays.asList(
-                        RangerConstants.ROLE_SYS_ADMIN,
-                        RangerConstants.ROLE_KEY_ADMIN,
-                        RangerConstants.ROLE_USER,
-                        RangerConstants.ROLE_ADMIN_AUDITOR),
-                merged);
-    }
-
-    @Test
-    public void testGetConfigSuperUserProfileRoles() {
-        Assertions.assertEquals(
-                Arrays.asList(
-                        RangerConstants.ROLE_SYS_ADMIN,
-                        RangerConstants.ROLE_KEY_ADMIN),
-                RangerSuperUserConfig.getConfigSuperUserProfileRoles());
+        Assertions.assertEquals(Collections.singletonList(RangerConstants.ROLE_SYS_ADMIN), RangerSuperUserConfig.getSuperUserRoles());
     }
 
     @Test
@@ -222,17 +195,6 @@ public class TestRangerSuperUserConfig {
 
         Assertions.assertTrue(RangerSuperUserConfig.isEnabled());
         Assertions.assertTrue(RangerSuperUserConfig.isSuperUser("*", Collections.emptySet()));
-    }
-
-    @Test
-    public void testMergeConfigSuperUserRoles_NullExistingRoles() {
-        List<String> merged = RangerSuperUserConfig.mergeConfigSuperUserRoles(null, false);
-
-        Assertions.assertEquals(
-                Arrays.asList(
-                        RangerConstants.ROLE_SYS_ADMIN,
-                        RangerConstants.ROLE_KEY_ADMIN),
-                merged);
     }
 
     @Test

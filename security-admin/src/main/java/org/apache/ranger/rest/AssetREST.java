@@ -568,17 +568,14 @@ public class AssetREST {
         searchUtil.extractString(request, searchCriteria, "datasets", "DataSets", null);
         searchUtil.extractLong(request, searchCriteria, "datasetIds", "Dataset Ids");
 
-        // Config super-users see all audit logs (same as full admin), not KMS-only filtering.
-        if (!msBizUtil.isSuperUser()) {
-            XXServiceDef xxServiceDef = daoManager.getXXServiceDef().findByName(EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_KMS_NAME);
+        XXServiceDef xxServiceDef = daoManager.getXXServiceDef().findByName(EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_KMS_NAME);
 
-            if (xxServiceDef != null) {
-                // Key admin / audit key admin: KMS audits only; others: exclude KMS.
-                if (msBizUtil.isKeyAdmin() || msBizUtil.isAuditKeyAdmin()) {
-                    searchCriteria.getParamList().put("repoType", xxServiceDef.getId());
-                } else if (xxServiceDef != null) {
-                    searchCriteria.getParamList().put("-repoType", xxServiceDef.getId());
-                }
+        if (xxServiceDef != null) {
+            // Key admin / audit key admin: KMS audits only; others: exclude KMS.
+            if (msBizUtil.isKeyAdmin() || msBizUtil.isAuditKeyAdmin()) {
+                searchCriteria.getParamList().put("repoType", xxServiceDef.getId());
+            } else if (xxServiceDef != null) {
+                searchCriteria.getParamList().put("-repoType", xxServiceDef.getId());
             }
         }
 

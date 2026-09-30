@@ -620,16 +620,19 @@ public class TestAssetREST {
         Mockito.when(searchUtil.extractInt(Mockito.any(), Mockito.any(), Mockito.anyString(), Mockito.anyString())).thenReturn(8);
         Mockito.when(searchUtil.extractDate(Mockito.any(), Mockito.any(), Mockito.anyString(), Mockito.anyString(), Mockito.anyString())).thenReturn(new Date());
         Mockito.when(searchUtil.extractLong(Mockito.any(), Mockito.any(), Mockito.anyString(), Mockito.anyString())).thenReturn(8L);
-        Mockito.when(msBizUtil.isSuperUser()).thenReturn(true);
+        Mockito.when(msBizUtil.isKeyAdmin()).thenReturn(false);
+        Mockito.when(msBizUtil.isAuditKeyAdmin()).thenReturn(false);
+        Mockito.when(daoManager.getXXServiceDef()).thenReturn(xxServiceDefDao);
+        XXServiceDef xServiceDef = new XXServiceDef();
+        xServiceDef.setId(Id);
+        Mockito.when(xxServiceDefDao.findByName(EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_KMS_NAME)).thenReturn(xServiceDef);
         ArgumentCaptor<SearchCriteria> criteriaCaptor = ArgumentCaptor.forClass(SearchCriteria.class);
         Mockito.when(assetMgr.getAccessLogs(criteriaCaptor.capture())).thenReturn(vXAccessAuditList);
         VXAccessAuditList expectedVXAccessAuditList = assetREST.getAccessLogs(request, null);
         Assertions.assertEquals(vXAccessAuditList, expectedVXAccessAuditList);
         Assertions.assertFalse(criteriaCaptor.getValue().getParamList().containsKey("repoType"));
-        Assertions.assertFalse(criteriaCaptor.getValue().getParamList().containsKey("-repoType"));
-        Mockito.verify(msBizUtil).isSuperUser();
-        Mockito.verify(msBizUtil, Mockito.never()).isKeyAdmin();
-        Mockito.verify(daoManager, Mockito.never()).getXXServiceDef();
+        Assertions.assertEquals(Id, criteriaCaptor.getValue().getParamList().get("-repoType"));
+        Mockito.verify(msBizUtil, Mockito.never()).isSuperUser();
         Mockito.verify(assetMgr).getAccessLogs(searchCriteria);
     }
 
