@@ -214,8 +214,7 @@ public class RangerRequestExprResolver {
         if (hasTokens) {
             ScriptEngine scriptEngine = ScriptEngineUtil.createScriptEngine(serviceType);
 
-            try {
-                RangerRequestScriptEvaluator scriptEvaluator = new RangerRequestScriptEvaluator(request, scriptEngine, RangerRequestScriptEvaluator.needsJsonCtxEnabled(str));
+            try (RangerRequestScriptEvaluator scriptEvaluator = new RangerRequestScriptEvaluator(request, scriptEngine, RangerRequestScriptEvaluator.needsJsonCtxEnabled(str))) {
                 StringBuffer                 sb              = new StringBuffer();
                 Matcher                      matcher         = PATTERN.matcher(str);
 
@@ -232,8 +231,6 @@ public class RangerRequestExprResolver {
                 ret = sb.toString();
 
                 LOG.debug("RangerRequestExprResolver.processExpressions({}): ret={}", str, ret);
-            } finally {
-                ScriptEngineUtil.closeScriptEngine(scriptEngine);
             }
         }
 

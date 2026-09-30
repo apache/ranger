@@ -51,33 +51,52 @@ import static org.mockito.Mockito.when;
 
 public class RangerRequestExprResolverTest {
     @Test
-    public void testRequestExpressionClosesEngineAfterEvaluation() throws Exception {
+    public void testRequestExpressionClosesBindingsAfterEvaluation() throws Exception {
         ScriptEngine engine = mock(ScriptEngine.class);
+        TrackingBindings bindings = new TrackingBindings();
 
         try (MockedStatic<ScriptEngineUtil> scriptEngineUtil = mockStatic(ScriptEngineUtil.class)) {
             scriptEngineUtil.when(() -> ScriptEngineUtil.createScriptEngine(null)).thenReturn(engine);
-            when(engine.createBindings()).thenReturn(new SimpleBindings());
+            when(engine.createBindings()).thenReturn(bindings);
             when(engine.eval(anyString(), any(Bindings.class))).thenReturn(2);
 
             RangerRequestExprResolver resolver = new RangerRequestExprResolver("${{1 + 1}}", null);
 
             Assertions.assertEquals("2", resolver.resolveExpressions(createRequest(null)));
-            scriptEngineUtil.verify(() -> ScriptEngineUtil.closeScriptEngine(engine));
+            Assertions.assertTrue(bindings.closed);
         }
     }
 
     @Test
-    public void testRequestExpressionClosesEngineWhenEvaluatorInitializationFails() {
+    public void testRequestExpressionClosesBindingsWhenEvaluatorInitializationFails() {
         ScriptEngine engine = mock(ScriptEngine.class);
+        FailingBindings bindings = new FailingBindings();
 
         try (MockedStatic<ScriptEngineUtil> scriptEngineUtil = mockStatic(ScriptEngineUtil.class)) {
             scriptEngineUtil.when(() -> ScriptEngineUtil.createScriptEngine(null)).thenReturn(engine);
-            when(engine.createBindings()).thenThrow(new IllegalStateException("binding failure"));
+            when(engine.createBindings()).thenReturn(bindings);
 
             RangerRequestExprResolver resolver = new RangerRequestExprResolver("${{1 + 1}}", null);
 
             Assertions.assertThrows(IllegalStateException.class, () -> resolver.resolveExpressions(createRequest(null)));
-            scriptEngineUtil.verify(() -> ScriptEngineUtil.closeScriptEngine(engine));
+            Assertions.assertTrue(bindings.closed);
+        }
+    }
+
+    private static class TrackingBindings extends SimpleBindings implements AutoCloseable {
+        boolean closed;
+
+        @Override
+        public void close() {
+            closed = true;
+        }
+    }
+
+    private static class FailingBindings extends TrackingBindings {
+
+        @Override
+        public Object put(String name, Object value) {
+            throw new IllegalStateException("binding failure");
         }
     }
 

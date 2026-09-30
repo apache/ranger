@@ -78,16 +78,6 @@ public class ScriptEngineUtil {
         return ret;
     }
 
-    static void closeScriptEngine(ScriptEngine engine) {
-        if (engine instanceof AutoCloseable) {
-            try {
-                ((AutoCloseable) engine).close();
-            } catch (Exception e) {
-                LOG.warn("closeScriptEngine(): failed to close script engine", e);
-            }
-        }
-    }
-
     private static ScriptEngineCreator getScriptEngineCreator(String serviceType) {
         boolean isInitialized = scriptEngineCreatorInitialized;
 
@@ -150,8 +140,6 @@ public class ScriptEngineUtil {
 
             if (engine != null) {
                 scriptEngineCreator = creator;
-
-                closeScriptEngine(engine);
 
                 break;
             }
