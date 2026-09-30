@@ -861,15 +861,11 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 								}
 							}
 						} else { // Earlier evaluator denied this access
-							if (getPolicyPriority() >= oldPriority && allowResult != null && (oneRequest.isAccessTypeAny() || RangerAccessRequestUtil.getIsAnyAccessInContext(oneRequest.getContext()))) {
-								accessTypeResults.put(accessType, allowResult);
-							} else {
-								if (getPolicyPriority() > oldPriority) {
-									if (allowResult != null) {
-										accessTypeResults.put(accessType, allowResult);
-									} else if (denyResult != null) {
-										accessTypeResults.put(accessType, denyResult);
-									}
+							if (getPolicyPriority() > oldPriority) {
+								if (allowResult != null) {
+									accessTypeResults.put(accessType, allowResult);
+								} else if (denyResult != null) {
+									accessTypeResults.put(accessType, denyResult);
 								}
 							}
 						}
@@ -879,7 +875,10 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 					 */
 					if (oneRequest.isAccessTypeAny() || RangerAccessRequestUtil.getIsAnyAccessInContext(oneRequest.getContext())) {
 						if (oneRequest.ignoreDescendantDeny() && allowResult != null) {
-							break;
+							RangerAccessResult storedResult = accessTypeResults.get(accessType);
+							if (storedResult != null && storedResult.getIsAllowed()) {
+								break;
+							}
 						} else if (!oneRequest.ignoreDescendantDeny() && denyResult != null) {
 							break;
 						}
