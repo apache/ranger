@@ -21,11 +21,20 @@ package org.apache.ranger.db;
 
 import org.apache.ranger.common.db.BaseDao;
 import org.apache.ranger.entity.XXPolicyExportAudit;
+import org.apache.ranger.util.TimezoneAdjustedDateUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
+import javax.persistence.NoResultException;
+import javax.persistence.Query;
+
+import java.time.ZoneId;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 @Service
@@ -44,6 +53,54 @@ public class XXPolicyExportAuditDao extends BaseDao<XXPolicyExportAudit> {
         long ret = getEntityManager().createNamedQuery("XXPolicyExportAudit.deleteOlderThan").setParameter("olderThan", since).executeUpdate();
 
         logger.info("Deleted x_policy_export_audit {} records", ret);
+
+        return ret;
+    }
+
+    public List<Map<String, Object>> getRangerPluginPolicySyncMetricsByDays(int days, ZoneId zoneId) {
+        Date since = new Date(System.currentTimeMillis() - TimeUnit.DAYS.toMillis(days));
+        String auditDateExpr    = TimezoneAdjustedDateUtil.getTimezoneAdjustedDateExpression("create_time", zoneId);
+        String groupByAuditDate = auditDateExpr.contains("?") ? "auditDate" : auditDateExpr;
+
+        List<Map<String, Object>> ret = new ArrayList<>();
+
+        try {
+            String sql =
+                    "SELECT auditDate, COUNT(repository_name) AS audit_count FROM (" +
+                    "SELECT repository_name, " + auditDateExpr + " AS auditDate " +
+                    "FROM x_policy_export_audit " +
+                    "WHERE create_time >= ? " +
+                    "GROUP BY repository_name, agent_id, client_ip, http_ret_code, " + groupByAuditDate +
+                    ") t " +
+                    "GROUP BY auditDate " +
+                    "ORDER BY auditDate";
+
+            Query query = getEntityManager().createNativeQuery(sql);
+
+            int index = 1;
+            Object timezoneParameter = TimezoneAdjustedDateUtil.getTimezoneParameter(zoneId);
+            if (timezoneParameter != null) {
+                query.setParameter(index++, timezoneParameter);
+            }
+            query.setParameter(index++, since);
+
+            List<Object[]> rows = query.getResultList();
+
+            if (rows != null) {
+                for (Object[] row : rows) {
+                    Date auditDate = (Date) row[0];
+                    Long numberOfAudits = ((Number) row[1]).longValue();
+
+                    Map<String, Object> metric = new HashMap<>();
+                    metric.put("auditDate", auditDate.getTime());
+                    metric.put("numberOfPolicySyncCount", numberOfAudits);
+
+                    ret.add(metric);
+                }
+            }
+        } catch (NoResultException e) {
+            logger.debug(e.getMessage());
+        }
 
         return ret;
     }

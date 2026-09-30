@@ -191,6 +191,14 @@ public class SolrAccessAuditsService extends AccessAuditsService {
         return auditMetricsHelper.getAuditMetricsByHours(filter, timezone);
     }
 
+    public List<Map<String, Object>> getAuditAccessMetricsByDays(int olderThanInDays) {
+        return getAuditAccessMetricsByDays(olderThanInDays, null);
+    }
+
+    public List<Map<String, Object>> getAuditAccessMetricsByDays(int olderThanInDays, String timezone) {
+        return auditMetricsHelper.getAuditAccessMetricsByDays(olderThanInDays, timezone);
+    }
+
     /**
      * @param doc
      * @return
