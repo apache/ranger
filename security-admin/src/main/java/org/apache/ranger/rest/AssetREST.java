@@ -650,16 +650,14 @@ public class AssetREST {
 
 		searchUtil.extractString(request, searchCriteria, "eventId", "Event Id", null);
 
-		if (!msBizUtil.isSuperUser()) {
-			boolean isKeyAdmin = msBizUtil.isKeyAdmin();
-			boolean isAuditKeyAdmin = msBizUtil.isAuditKeyAdmin();
-			XXServiceDef xxServiceDef = daoManager.getXXServiceDef().findByName(EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_KMS_NAME);
-			if(isKeyAdmin && xxServiceDef != null || isAuditKeyAdmin && xxServiceDef != null){
-				searchCriteria.getParamList().put("repoType", xxServiceDef.getId());
-			}
-			else if (xxServiceDef != null) {
-				searchCriteria.getParamList().put("-repoType", xxServiceDef.getId());
-			}
+		boolean isKeyAdmin = msBizUtil.isKeyAdmin();
+		boolean isAuditKeyAdmin = msBizUtil.isAuditKeyAdmin();
+		XXServiceDef xxServiceDef = daoManager.getXXServiceDef().findByName(EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_KMS_NAME);
+		if(isKeyAdmin && xxServiceDef != null || isAuditKeyAdmin && xxServiceDef != null){
+			searchCriteria.getParamList().put("repoType", xxServiceDef.getId());
+		}
+		else if (xxServiceDef != null) {
+			searchCriteria.getParamList().put("-repoType", xxServiceDef.getId());
 		}
 		VXAccessAuditList vxAccessAuditList = assetMgr.getAccessLogs(searchCriteria);
 

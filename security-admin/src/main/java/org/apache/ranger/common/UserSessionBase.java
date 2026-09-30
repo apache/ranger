@@ -119,7 +119,7 @@ public class UserSessionBase implements Serializable {
 	}
 
 	public boolean isKeyAdmin() {
-		return superUser || keyAdmin;
+		return keyAdmin;
 	}
 
 	public boolean isSuperUser() {
@@ -146,7 +146,7 @@ public class UserSessionBase implements Serializable {
 	}
 
     public boolean isAuditKeyAdmin() {
-        return superUser || auditKeyAdmin;
+        return auditKeyAdmin;
     }
 
     public void setAuditKeyAdmin(boolean auditKeyAdmin) {

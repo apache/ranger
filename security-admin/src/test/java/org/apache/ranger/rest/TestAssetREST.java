@@ -676,7 +676,6 @@ public class TestAssetREST {
 				.thenReturn(new Date());
 		Mockito.when(searchUtil.extractLong((HttpServletRequest) Mockito.any(),
 				(SearchCriteria) Mockito.any(), Mockito.anyString(), Mockito.anyString())).thenReturn((Long) 8l);
-		Mockito.when(msBizUtil.isSuperUser()).thenReturn(false);
 		Mockito.when(msBizUtil.isKeyAdmin()).thenReturn(false);
 		Mockito.when(daoManager.getXXServiceDef()).thenReturn(xxServiceDefDao);
 		XXServiceDef xServiceDef = new XXServiceDef();
@@ -730,16 +729,19 @@ public class TestAssetREST {
 				.thenReturn(new Date());
 		Mockito.when(searchUtil.extractLong((HttpServletRequest) Mockito.any(),
 				(SearchCriteria) Mockito.any(), Mockito.anyString(), Mockito.anyString())).thenReturn((Long) 8l);
-		Mockito.when(msBizUtil.isSuperUser()).thenReturn(true);
+		Mockito.when(msBizUtil.isKeyAdmin()).thenReturn(false);
+		Mockito.when(msBizUtil.isAuditKeyAdmin()).thenReturn(false);
+		Mockito.when(daoManager.getXXServiceDef()).thenReturn(xxServiceDefDao);
+		XXServiceDef xServiceDef = new XXServiceDef();
+		xServiceDef.setId(Id);
+		Mockito.when(xxServiceDefDao.findByName(EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_KMS_NAME)).thenReturn(xServiceDef);
 		ArgumentCaptor<SearchCriteria> criteriaCaptor = ArgumentCaptor.forClass(SearchCriteria.class);
 		Mockito.when(assetMgr.getAccessLogs(criteriaCaptor.capture())).thenReturn(vXAccessAuditList);
 		VXAccessAuditList expectedVXAccessAuditList = assetREST.getAccessLogs(request, null);
 		Assert.assertEquals(vXAccessAuditList, expectedVXAccessAuditList);
 		Assert.assertFalse(criteriaCaptor.getValue().getParamList().containsKey("repoType"));
-		Assert.assertFalse(criteriaCaptor.getValue().getParamList().containsKey("-repoType"));
-		Mockito.verify(msBizUtil).isSuperUser();
-		Mockito.verify(msBizUtil, Mockito.never()).isKeyAdmin();
-		Mockito.verify(daoManager, Mockito.never()).getXXServiceDef();
+		Assert.assertEquals(Id, criteriaCaptor.getValue().getParamList().get("-repoType"));
+		Mockito.verify(msBizUtil, Mockito.never()).isSuperUser();
 		Mockito.verify(assetMgr).getAccessLogs(searchCriteria);
 	}
 
@@ -764,7 +766,6 @@ public class TestAssetREST {
 				(SearchCriteria) Mockito.any(), Mockito.anyString(), Mockito.anyString())).thenReturn((Long) 8l);
 		Mockito.when(searchUtil.extractLong((HttpServletRequest) Mockito.any(),
 				(SearchCriteria) Mockito.any(), Mockito.anyString(), Mockito.anyString())).thenReturn((Long) 8l);
-		Mockito.when(msBizUtil.isSuperUser()).thenReturn(false);
 		Mockito.when(msBizUtil.isKeyAdmin()).thenReturn(true);
 		Mockito.when(daoManager.getXXServiceDef()).thenReturn(xxServiceDefDao);
 		XXServiceDef xServiceDef = new XXServiceDef();
@@ -774,7 +775,6 @@ public class TestAssetREST {
 		Mockito.when(assetMgr.getAccessLogs(searchCriteria)).thenReturn(vXAccessAuditList);
 		VXAccessAuditList expectedVXAccessAuditList = assetREST.getAccessLogs(request, null);
 		Assert.assertEquals(vXAccessAuditList, expectedVXAccessAuditList);
-		Mockito.verify(msBizUtil).isSuperUser();
 		Mockito.verify(msBizUtil).isKeyAdmin();
 		Mockito.verify(assetMgr).getAccessLogs(searchCriteria);
 		Mockito.verify(daoManager).getXXServiceDef();

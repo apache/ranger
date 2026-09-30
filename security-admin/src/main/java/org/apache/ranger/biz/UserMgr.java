@@ -578,8 +578,9 @@ public class UserMgr {
 			if (userRoleList == null) {
 				userRoleList = new ArrayList<String>();
 
-				if (sess.isSuperUser()) {
-					userRoleList.addAll(RangerSuperUserConfig.getConfigSuperUserProfileRoles());
+				// Config roles apply only to the super user's own profile; other users keep their DB roles.
+				if (sess.isSuperUser() && sess.getXXPortalUser() != null && sess.getXXPortalUser().getId().equals(user.getId())) {
+					userRoleList.addAll(RangerSuperUserConfig.getSuperUserRoles());
 				} else {
 					List<XXPortalUserRole> gjUserRoleList = daoManager
 							.getXXPortalUserRole().findByParentId(user.getId());
@@ -1131,7 +1132,7 @@ public class UserMgr {
                     && userProfile.getUserRoleList().size() > 0
                     && ((List<String>) userProfile.getUserRoleList()).get(0) != null) {
                 reqRoleList = userProfile.getUserRoleList();
-                existingRoleList = this.getRolesByLoginId(loginId);
+                existingRoleList = this.getDBRolesByLoginId(loginId);
                 XXPortalUser xxPortalUser = daoManager.getXXPortalUser()
                         .findByLoginId(userProfile.getLoginId());
                 if (xxPortalUser != null
@@ -1300,26 +1301,8 @@ public class UserMgr {
 	}
 
 	public Collection<String> getRolesByLoginId(String loginId) {
-		if (loginId == null || loginId.trim().isEmpty()){
-			return DEFAULT_ROLE_LIST;
-		}
-		XXPortalUser xXPortalUser=daoManager.getXXPortalUser().findByLoginId(loginId);
-		if(xXPortalUser==null){
-			return DEFAULT_ROLE_LIST;
-        }
-		Collection<XXPortalUserRole> xXPortalUserRoles = daoManager
-                        .getXXPortalUserRole().findByUserId(xXPortalUser.getId());
-		if(xXPortalUserRoles==null){
-			return DEFAULT_ROLE_LIST;
-		}
-		Collection<String> roleList = new ArrayList<String>();
-		for (XXPortalUserRole role : xXPortalUserRoles) {
-			if(role!=null && VALID_ROLE_LIST.contains(role.getUserRole())){
-				if(!roleList.contains(role.getUserRole())){
-					roleList.add(role.getUserRole());
-				}
-			}
-        }
+		Collection<String> roleList = findDBRolesByLoginId(loginId);
+
 		if(roleList==null || roleList.size()==0){
 			return DEFAULT_ROLE_LIST;
 		}
@@ -1339,10 +1322,18 @@ public class UserMgr {
 		}
 
 		if (configSuperUser) {
-			return RangerSuperUserConfig.mergeConfigSuperUserRoles(roleList, false);
+			return RangerSuperUserConfig.getSuperUserRoles();
 		}
 
 		return roleList;
+	}
+
+	/* Portal roles stored in Ranger DB, without config super-user roles; use when
+	 * checking or updating the roles of a user other than the logged-in one. */
+	public Collection<String> getDBRolesByLoginId(String loginId) {
+		Collection<String> roleList = findDBRolesByLoginId(loginId);
+
+		return roleList.isEmpty() ? DEFAULT_ROLE_LIST : roleList;
 	}
 
 	public boolean isUserNotActive(String loginId) {
@@ -1366,7 +1357,7 @@ public class UserMgr {
 			return;
 		}
 
-		List<String> effectiveRoles = RangerSuperUserConfig.getConfigSuperUserProfileRoles();
+		List<String> effectiveRoles = RangerSuperUserConfig.getSuperUserRoles();
 
 		userProfile.setUserRoleList(effectiveRoles);
 
@@ -1378,14 +1369,17 @@ public class UserMgr {
 			Long xUserId = xUser != null ? xUser.getId() : null;
 
 			for (XXModuleDef moduleDef : moduleDefs) {
-				VXUserPermission vxUserPermission = new VXUserPermission();
+				// Config super-users get sys-admin modules only.
+				if (!RangerConstants.MODULE_KEY_MANAGER.equals(moduleDef.getModule())) {
+					VXUserPermission vxUserPermission = new VXUserPermission();
 
-				vxUserPermission.setModuleId(moduleDef.getId());
-				vxUserPermission.setModuleName(moduleDef.getModule());
-				vxUserPermission.setUserId(xUserId);
-				vxUserPermission.setIsAllowed(RangerCommonEnums.IS_ALLOWED);
+					vxUserPermission.setModuleId(moduleDef.getId());
+					vxUserPermission.setModuleName(moduleDef.getModule());
+					vxUserPermission.setUserId(xUserId);
+					vxUserPermission.setIsAllowed(RangerCommonEnums.IS_ALLOWED);
 
-				effectiveModules.add(vxUserPermission);
+					effectiveModules.add(vxUserPermission);
+				}
 			}
 		}
 
@@ -1484,8 +1478,44 @@ public class UserMgr {
 		}
 	}
 
+	private Collection<String> findDBRolesByLoginId(String loginId) {
+		Collection<String> roleList = new ArrayList<>();
+
+		if (loginId == null || loginId.trim().isEmpty()) {
+			return roleList;
+		}
+
+		XXPortalUser xXPortalUser = daoManager.getXXPortalUser().findByLoginId(loginId);
+
+		if (xXPortalUser == null) {
+			return roleList;
+		}
+
+		Collection<XXPortalUserRole> xXPortalUserRoles = daoManager.getXXPortalUserRole().findByUserId(xXPortalUser.getId());
+
+		if (xXPortalUserRoles != null) {
+			for (XXPortalUserRole role : xXPortalUserRoles) {
+				if (role != null && VALID_ROLE_LIST.contains(role.getUserRole()) && !roleList.contains(role.getUserRole())) {
+					roleList.add(role.getUserRole());
+				}
+			}
+		}
+
+		return roleList;
+	}
+
 	private boolean hasAccessToGetUserInfo(VXPortalUser requestedVXUser) {
 		UserSessionBase userSession = ContextUtil.getCurrentUserSession();
+
+		if (userSession != null && userSession.isSuperUser()) {
+			/* rangerusersync must see all users; a super user can always see self. */
+			if ("rangerusersync".equalsIgnoreCase(userSession.getLoginId()) || StringUtils.equals(requestedVXUser.getLoginId(), userSession.getLoginId())) {
+				return true;
+			}
+
+			return requestedVXUser.getUserRoleList().contains(RangerConstants.ROLE_SYS_ADMIN) || requestedVXUser.getUserRoleList().contains(RangerConstants.ROLE_ADMIN_AUDITOR) || requestedVXUser.getUserRoleList().contains(RangerConstants.ROLE_USER);
+		}
+
 		if (userSession != null && userSession.getLoginId() != null) {
 			VXPortalUser loggedInVXUser = getUserProfileByLoginId(userSession.getLoginId());
 			if (loggedInVXUser != null && loggedInVXUser.getUserRoleList().size() == 1) {

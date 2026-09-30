@@ -1339,28 +1339,22 @@ public class RangerBizUtil {
 					+ objType, MessageEnums.OPER_NO_PERMISSION);
 		}
 
-		if (!session.isSuperUser()) {
-			boolean isKmsServiceType = EmbeddedServiceDefsUtil.KMS_IMPL_CLASS_NAME.equals(implClassName);
+		boolean isKmsServiceType = EmbeddedServiceDefsUtil.KMS_IMPL_CLASS_NAME.equals(implClassName);
 
-			if (session.isKeyAdmin() && !isKmsServiceType) {
-				throw restErrorUtil.createRESTException("KeyAdmin can create/update/delete only KMS " + objType,
-						MessageEnums.OPER_NO_PERMISSION);
-			}
+		if (session.isKeyAdmin() && !isKmsServiceType) {
+			throw restErrorUtil.createRESTException("KeyAdmin can create/update/delete only KMS " + objType,
+					MessageEnums.OPER_NO_PERMISSION);
+		}
 
-			if (session.isUserAdmin() && isKmsServiceType && "Service-Def".equalsIgnoreCase(objType)) {
-				throw restErrorUtil.createRESTException("System Admin cannot create/update/delete KMS " + objType,
-						MessageEnums.OPER_NO_PERMISSION);
-			}
+		if (session.isUserAdmin() && isKmsServiceType && "Service-Def".equalsIgnoreCase(objType)) {
+			throw restErrorUtil.createRESTException("System Admin cannot create/update/delete KMS " + objType,
+					MessageEnums.OPER_NO_PERMISSION);
 		}
 	}
 
 	public boolean checkUserAccessible(VXUser vXUser) {
-		if (isSuperUser()) {
-			return true;
-		}
-
                 boolean isAccessible = true;
-                Collection<String> roleList = userMgr.getRolesByLoginId(vXUser
+                Collection<String> roleList = userMgr.getDBRolesByLoginId(vXUser
                                 .getName());
                 Collection<String> payloadRoles = vXUser.getUserRoleList();
                 if (isKeyAdmin()) {
@@ -1434,17 +1428,8 @@ public class RangerBizUtil {
 			return true;
 		}
 
-		final boolean configSuperUser;
-
-		if (RangerSuperUserConfig.isSuperUser(username)) {
-			configSuperUser = true;
-		} else if (RangerSuperUserConfig.isSuperGroupsConfigured() && xUserMgr != null) {
-			configSuperUser = RangerSuperUserConfig.isSuperUser(username, xUserMgr.getGroupsForUser(username));
-		} else {
-			configSuperUser = false;
-		}
-
-		if (configSuperUser) {
+		// Config super-user when no session context (e.g. grantor checks).
+		if (isConfigSuperUser(username)) {
 			return true;
 		}
 
@@ -1457,6 +1442,20 @@ public class RangerBizUtil {
 		} catch (Exception ex) {
 		}
 		return isAdmin;
+	}
+
+	/* True when username matches ranger.admin.super.users/groups, regardless of
+	 * the current session and of the user's DB portal roles. */
+	public boolean isConfigSuperUser(String username) {
+		if (StringUtils.isBlank(username)) {
+			return false;
+		} else if (RangerSuperUserConfig.isSuperUser(username)) {
+			return true;
+		} else if (RangerSuperUserConfig.isSuperGroupsConfigured() && xUserMgr != null) {
+			return RangerSuperUserConfig.isSuperUser(username, xUserMgr.getGroupsForUser(username));
+		}
+
+		return false;
 	}
 
 	public boolean isSuperUser() {
@@ -1515,14 +1514,16 @@ public class RangerBizUtil {
         public void blockAuditorRoleUser() {
                 UserSessionBase session = ContextUtil.getCurrentUserSession();
                 if (session != null) {
-                        if (session.isAuditKeyAdmin() || session.isAuditUserAdmin()) {
-                                VXResponse vXResponse = new VXResponse();
-                                vXResponse.setStatusCode(HttpServletResponse.SC_FORBIDDEN);
-                                vXResponse.setMsgDesc("Operation"
-                                                + " denied. LoggedInUser="
-                                                +  session.getXXPortalUser().getId()
-                                                + " ,isn't permitted to perform the action.");
-                                throw restErrorUtil.generateRESTException(vXResponse);
+                        if (!session.isSuperUser()) {
+                                if (session.isAuditKeyAdmin() || session.isAuditUserAdmin()) {
+                                        VXResponse vXResponse = new VXResponse();
+                                        vXResponse.setStatusCode(HttpServletResponse.SC_FORBIDDEN);
+                                        vXResponse.setMsgDesc("Operation"
+                                                        + " denied. LoggedInUser="
+                                                        +  session.getXXPortalUser().getId()
+                                                        + " ,isn't permitted to perform the action.");
+                                        throw restErrorUtil.generateRESTException(vXResponse);
+                                }
                         }
                 } else {
                         VXResponse vXResponse = new VXResponse();

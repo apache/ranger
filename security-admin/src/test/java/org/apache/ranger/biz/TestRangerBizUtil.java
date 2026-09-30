@@ -19,6 +19,7 @@ package org.apache.ranger.biz;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
 import javax.servlet.http.HttpServletResponse;
@@ -42,6 +43,7 @@ import org.apache.ranger.entity.XXAsset;
 import org.apache.ranger.entity.XXPortalUser;
 import org.apache.ranger.entity.XXResource;
 import org.apache.ranger.entity.XXUser;
+import org.apache.ranger.plugin.store.EmbeddedServiceDefsUtil;
 import org.apache.ranger.security.context.RangerContextHolder;
 import org.apache.ranger.security.context.RangerSecurityContext;
 import org.apache.ranger.view.VXPortalUser;
@@ -415,7 +417,7 @@ public class TestRangerBizUtil {
 
                 Collection<String> roleList = new ArrayList<String>();
                 roleList.add(RangerConstants.ROLE_SYS_ADMIN);
-                Mockito.when(userMgr.getRolesByLoginId(vXUser.getName())).thenReturn(
+                Mockito.when(userMgr.getDBRolesByLoginId(vXUser.getName())).thenReturn(
                                 roleList);
                 Mockito.when(vXUser.getUserRoleList()).thenReturn(roleList);
 
@@ -449,7 +451,7 @@ public class TestRangerBizUtil {
 
                 Collection<String> roleList = new ArrayList<String>();
                 roleList.add(RangerConstants.ROLE_ADMIN_AUDITOR);
-                Mockito.when(userMgr.getRolesByLoginId(vXUser.getName())).thenReturn(
+                Mockito.when(userMgr.getDBRolesByLoginId(vXUser.getName())).thenReturn(
                                 roleList);
                 Mockito.when(vXUser.getUserRoleList()).thenReturn(roleList);
 
@@ -482,7 +484,7 @@ public class TestRangerBizUtil {
                 Collection<String> roleList = new ArrayList<String>();
                 roleList.add(RangerConstants.ROLE_KEY_ADMIN);
                 roleList.add(RangerConstants.ROLE_KEY_ADMIN_AUDITOR);
-                Mockito.when(userMgr.getRolesByLoginId(vXUser.getName())).thenReturn(
+                Mockito.when(userMgr.getDBRolesByLoginId(vXUser.getName())).thenReturn(
                                 roleList);
                 Mockito.when(vXUser.getUserRoleList()).thenReturn(roleList);
 
@@ -505,7 +507,7 @@ public class TestRangerBizUtil {
 
                 Collection<String> roleList = new ArrayList<String>();
                 roleList.add(RangerConstants.ROLE_KEY_ADMIN);
-                Mockito.when(userMgr.getRolesByLoginId(vXUser.getName())).thenReturn(
+                Mockito.when(userMgr.getDBRolesByLoginId(vXUser.getName())).thenReturn(
                                 roleList);
                 Mockito.when(vXUser.getUserRoleList()).thenReturn(roleList);
 
@@ -540,7 +542,7 @@ public class TestRangerBizUtil {
 
                 Collection<String> roleList = new ArrayList<String>();
                 roleList.add(RangerConstants.ROLE_KEY_ADMIN_AUDITOR);
-                Mockito.when(userMgr.getRolesByLoginId(vXUser.getName())).thenReturn(
+                Mockito.when(userMgr.getDBRolesByLoginId(vXUser.getName())).thenReturn(
                                 roleList);
                 Mockito.when(vXUser.getUserRoleList()).thenReturn(roleList);
 
@@ -573,7 +575,7 @@ public class TestRangerBizUtil {
         public void testCheckUserAccessibleSuccessForAdmin(){
                 Collection<String> roleList = new ArrayList<String>();
                 roleList.add(RangerConstants.ROLE_SYS_ADMIN);
-                Mockito.when(userMgr.getRolesByLoginId(vXUser.getName())).thenReturn(
+                Mockito.when(userMgr.getDBRolesByLoginId(vXUser.getName())).thenReturn(
                                 roleList);
                 Mockito.when(vXUser.getUserRoleList()).thenReturn(roleList);
 
@@ -672,6 +674,32 @@ public class TestRangerBizUtil {
         }
 
         @Test
+        public void testIsConfigSuperUser() {
+                RangerSuperUserConfig.resetForTests();
+                PropertiesUtil.getPropertiesMap().put(RangerConstants.RANGER_ADMIN_SUPER_USERS, "config-admin");
+                PropertiesUtil.getPropertiesMap().put(RangerConstants.RANGER_ADMIN_SUPER_GROUPS, "super-group");
+
+                Mockito.when(xUserMgr.getGroupsForUser("group-member")).thenReturn(Collections.singleton("super-group"));
+                Mockito.when(xUserMgr.getGroupsForUser("db-admin")).thenReturn(Collections.emptySet());
+
+                XXPortalUser portalUser = new XXPortalUser();
+                portalUser.setLoginId("db-admin");
+
+                UserSessionBase session = RangerContextHolder.getSecurityContext().getUserSession();
+                session.setXXPortalUser(portalUser);
+                session.setUserAdmin(true);
+
+                Assert.assertTrue(rangerBizUtil.isConfigSuperUser("config-admin"));
+                Assert.assertTrue(rangerBizUtil.isConfigSuperUser("group-member"));
+                Assert.assertFalse(rangerBizUtil.isConfigSuperUser("db-admin"));
+                Assert.assertFalse(rangerBizUtil.isConfigSuperUser(" "));
+
+                PropertiesUtil.getPropertiesMap().remove(RangerConstants.RANGER_ADMIN_SUPER_USERS);
+                PropertiesUtil.getPropertiesMap().remove(RangerConstants.RANGER_ADMIN_SUPER_GROUPS);
+                RangerSuperUserConfig.resetForTests();
+        }
+
+        @Test
         public void testIsUserRangerAdmin_ConfigDisabledSkipsGroupLookup() {
                 Assert.assertFalse(rangerBizUtil.isUserRangerAdmin("any-user"));
                 Mockito.verify(xUserMgr, Mockito.never()).getGroupsForUser(Mockito.anyString());
@@ -700,6 +728,45 @@ public class TestRangerBizUtil {
                 RangerContextHolder.setSecurityContext(context);
 
                 Assert.assertTrue(rangerBizUtil.checkUserAccessible(vXUser));
+        }
+
+        @Test
+        public void testHasKMSPermissions_DeniesConfigSuperUserOnServiceDefKMS() {
+                RangerContextHolder.getSecurityContext().getUserSession().setSuperUser(true);
+
+                WebApplicationException webExp = new WebApplicationException();
+
+                Mockito.when(restErrorUtil.createRESTException("System Admin cannot create/update/delete KMS Service-Def", MessageEnums.OPER_NO_PERMISSION)).thenReturn(webExp);
+
+                Assert.assertThrows(WebApplicationException.class, () -> rangerBizUtil.hasKMSPermissions("Service-Def", EmbeddedServiceDefsUtil.KMS_IMPL_CLASS_NAME));
+        }
+
+        @Test
+        public void testHasKMSPermissions_AllowsConfigSuperUserOnKMSService() {
+                RangerContextHolder.getSecurityContext().getUserSession().setSuperUser(true);
+
+                rangerBizUtil.hasKMSPermissions("Service", EmbeddedServiceDefsUtil.KMS_IMPL_CLASS_NAME);
+        }
+
+        @Test
+        public void testCheckUserAccessible_ConfigSuperUserCannotManageKeyAdminUser() {
+                List<String> roleList = new ArrayList<>();
+                roleList.add(RangerConstants.ROLE_KEY_ADMIN);
+                Mockito.when(userMgr.getDBRolesByLoginId(vXUser.getName())).thenReturn(roleList);
+                Mockito.when(vXUser.getUserRoleList()).thenReturn(roleList);
+
+                UserSessionBase session = new UserSessionBase();
+                session.setSuperUser(true);
+
+                RangerSecurityContext context = new RangerSecurityContext();
+                context.setUserSession(session);
+                RangerContextHolder.setSecurityContext(context);
+
+                WebApplicationException webExp = new WebApplicationException();
+
+                Mockito.when(restErrorUtil.createRESTException("Logged in user is not allowed to create/update user", MessageEnums.OPER_NO_PERMISSION)).thenReturn(webExp);
+
+                Assert.assertThrows(WebApplicationException.class, () -> rangerBizUtil.checkUserAccessible(vXUser));
         }
 
 	@Test

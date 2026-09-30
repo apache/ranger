@@ -1771,9 +1771,7 @@ public class TestUserMgr {
 
 		Collection<String> roles = userMgr.getRolesByLoginId(userLoginId);
 
-		Assert.assertTrue(roles.contains(RangerConstants.ROLE_USER));
-		Assert.assertTrue(roles.contains(RangerConstants.ROLE_SYS_ADMIN));
-		Assert.assertTrue(roles.contains(RangerConstants.ROLE_KEY_ADMIN));
+		Assert.assertEquals(Collections.singletonList(RangerConstants.ROLE_SYS_ADMIN), new ArrayList<>(roles));
 
 		PropertiesUtil.getPropertiesMap().remove(RangerConstants.RANGER_ADMIN_SUPER_USERS);
 		RangerSuperUserConfig.resetForTests();
@@ -1783,6 +1781,98 @@ public class TestUserMgr {
 		Mockito.verify(xUserMgr, Mockito.never()).getGroupsForUser(userLoginId);
 
 		RangerSuperUserConfig.resetForTests();
+	}
+
+	@Test
+	public void testGetDBRolesByLoginId_ConfigSuperUserKeepsDBRoles() {
+		setup();
+		XXPortalUserDao userDao = Mockito.mock(XXPortalUserDao.class);
+		XXPortalUserRoleDao roleDao = Mockito.mock(XXPortalUserRoleDao.class);
+
+		VXPortalUser userProfile = userProfile();
+		String userLoginId = userProfile.getLoginId();
+
+		XXPortalUser user = new XXPortalUser();
+		user.setLoginId(userLoginId);
+		user.setId(userProfile.getId());
+
+		XXPortalUserRole xxPortalUserRole = new XXPortalUserRole();
+		xxPortalUserRole.setUserRole(RangerConstants.ROLE_KEY_ADMIN);
+		List<XXPortalUserRole> list = new ArrayList<XXPortalUserRole>();
+		list.add(xxPortalUserRole);
+
+		Mockito.when(daoManager.getXXPortalUser()).thenReturn(userDao);
+		Mockito.when(userDao.findByLoginId(userLoginId)).thenReturn(user);
+		Mockito.when(daoManager.getXXPortalUserRole()).thenReturn(roleDao);
+		Mockito.when(roleDao.findByUserId(user.getId())).thenReturn(list);
+		RangerSuperUserConfig.resetForTests();
+		PropertiesUtil.getPropertiesMap().put(RangerConstants.RANGER_ADMIN_SUPER_USERS, userLoginId);
+
+		Assert.assertEquals(Collections.singletonList(RangerConstants.ROLE_KEY_ADMIN), new ArrayList<>(userMgr.getDBRolesByLoginId(userLoginId)));
+		Assert.assertEquals(Collections.singletonList(RangerConstants.ROLE_SYS_ADMIN), new ArrayList<>(userMgr.getRolesByLoginId(userLoginId)));
+
+		PropertiesUtil.getPropertiesMap().remove(RangerConstants.RANGER_ADMIN_SUPER_USERS);
+		RangerSuperUserConfig.resetForTests();
+	}
+
+	@Test
+	public void testMapXXPortalUserToVXPortalUser_ConfigSuperUserKeepsOtherUserDbRoles() {
+		XXPortalUser keyAdminUser = configSuperUserSessionAndKeyAdminUser();
+
+		VXPortalUser profile = userMgr.mapXXPortalUserToVXPortalUser(keyAdminUser, null);
+
+		Assert.assertEquals(Collections.singletonList(RangerConstants.ROLE_KEY_ADMIN), profile.getUserRoleList());
+
+		destroySession();
+	}
+
+	@Test
+	public void testCheckAccess_ConfigSuperUserCannotAccessKeyAdminUser() {
+		XXPortalUser keyAdminUser = configSuperUserSessionAndKeyAdminUser();
+		XXPortalUserDao userDao = Mockito.mock(XXPortalUserDao.class);
+
+		Mockito.when(daoManager.getXXPortalUser()).thenReturn(userDao);
+		Mockito.when(userDao.findByLoginId("keyadmin-user")).thenReturn(keyAdminUser);
+		Mockito.when(restErrorUtil.createRESTException(HttpServletResponse.SC_FORBIDDEN, "Logged-In user is not allowed to access requested user data", true)).thenReturn(new WebApplicationException());
+
+		Assert.assertThrows(WebApplicationException.class, () -> userMgr.checkAccess(keyAdminUser));
+
+		destroySession();
+	}
+
+	private XXPortalUser configSuperUserSessionAndKeyAdminUser() {
+		UserSessionBase session = new UserSessionBase();
+		XXPortalUser portalUser = new XXPortalUser();
+
+		portalUser.setId(99L);
+		portalUser.setLoginId("config-admin");
+		session.setXXPortalUser(portalUser);
+		session.setSuperUser(true);
+
+		RangerSecurityContext context = new RangerSecurityContext();
+		context.setUserSession(session);
+		RangerContextHolder.setSecurityContext(context);
+
+		XXPortalUser keyAdminUser = new XXPortalUser();
+		keyAdminUser.setId(100L);
+		keyAdminUser.setLoginId("keyadmin-user");
+		keyAdminUser.setUserSource(RangerCommonEnums.USER_APP);
+
+		XXPortalUserRole keyAdminRole = new XXPortalUserRole();
+		keyAdminRole.setUserRole(RangerConstants.ROLE_KEY_ADMIN);
+
+		XXPortalUserRoleDao roleDao = Mockito.mock(XXPortalUserRoleDao.class);
+		XXUserPermissionDao userPermissionDao = Mockito.mock(XXUserPermissionDao.class);
+		XXGroupPermissionDao groupPermissionDao = Mockito.mock(XXGroupPermissionDao.class);
+
+		Mockito.when(daoManager.getXXPortalUserRole()).thenReturn(roleDao);
+		Mockito.when(roleDao.findByParentId(100L)).thenReturn(Collections.singletonList(keyAdminRole));
+		Mockito.when(daoManager.getXXUserPermission()).thenReturn(userPermissionDao);
+		Mockito.when(daoManager.getXXGroupPermission()).thenReturn(groupPermissionDao);
+		Mockito.when(userPermissionDao.findByUserPermissionIdAndIsAllowed(100L)).thenReturn(Collections.emptyList());
+		Mockito.when(groupPermissionDao.findbyVXPortalUserId(100L)).thenReturn(Collections.emptyList());
+
+		return keyAdminUser;
 	}
 
 	@Test
