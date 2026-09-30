@@ -10,7 +10,7 @@ itsdangerous==2.2.0
 Jinja2==3.1.6
 MarkupSafe==3.0.3
 packaging==26.0
-pip==26.0
+pip==26.2
 pluggy==1.6.0
 Pygments==2.19.2
 pytest==9.0.2
