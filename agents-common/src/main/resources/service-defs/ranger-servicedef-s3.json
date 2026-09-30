@@ -1,0 +1,144 @@
+{
+  "id":21,
+  "name": "s3",
+  "displayName": "S3",
+  "implClass": "org.apache.ranger.services.s3.RangerServiceS3",
+  "label": "S3 Repository",
+  "description": "S3 Repository",
+  "guid": "",
+  "resources":
+  [
+    {
+      "itemId": 1,
+      "name": "path",
+      "type": "path",
+      "level": 10,
+      "parent": "",
+      "mandatory": true,
+      "lookupSupported": true,
+      "recursiveSupported": true,
+      "excludesSupported": false,
+      "matcher": "org.apache.ranger.plugin.resourcematcher.RangerPathResourceMatcher",
+      "matcherOptions": { "wildCard":true, "ignoreCase":false },
+      "validationRegEx":"",
+      "validationMessage": "",
+      "uiHint":"",
+      "label": "S3 Bucket/Object Path",
+      "description": "S3 Bucket or object path"
+    }
+  ],
+
+  "accessTypes":
+  [
+    {
+      "itemId": 1,
+      "name": "s3:ListBucket",
+      "label": "ListBucket"
+    },
+
+    {
+      "itemId": 2,
+      "name": "s3:PutObject",
+      "label": "PutObject"
+    },
+
+    {
+      "itemId": 3,
+      "name": "s3:GetObject",
+      "label": "GetObject"
+    },
+
+    {
+      "itemId": 4,
+      "name": "s3:DeleteObject",
+      "label": "DeleteObject"
+    }
+  ],
+
+  "configs":
+  [
+    {
+      "itemId": 1,
+      "name": "username",
+      "type": "string",
+      "subType": "",
+      "mandatory": true,
+      "validationRegEx":"",
+      "validationMessage": "",
+      "uiHint":"",
+      "label": "Username"
+    },
+    {
+      "itemId": 2,
+      "name": "accesskey",
+      "type": "string",
+      "subType": "",
+      "mandatory": true,
+      "validationRegEx":"",
+      "validationMessage": "",
+      "uiHint":"",
+      "label": "Access key"
+    },
+
+    {
+      "itemId": 3,
+      "name": "secretkey",
+      "type": "password",
+      "subType": "",
+      "mandatory": true,
+      "validationRegEx":"",
+      "validationMessage": "",
+      "uiHint":"",
+      "label": "Secret key"
+    },
+
+    {
+      "itemId": 4,
+      "name": "endpoint",
+      "type": "string",
+      "subType": "",
+      "mandatory": true,
+      "validationRegEx":"",
+      "validationMessage": "",
+      "uiHint":"",
+      "label": "End Point URL"
+    },
+    {
+      "itemId": 5,
+      "name": "region",
+      "type": "string",
+      "subType": "",
+      "mandatory": true,
+      "validationRegEx":"",
+      "validationMessage": "",
+      "uiHint":"",
+      "label": "Region"
+    },
+
+    {
+      "itemId": 6,
+      "name": "bucketname",
+      "type": "string",
+      "subType": "",
+      "mandatory": true,
+      "validationRegEx":"",
+      "validationMessage": "",
+      "uiHint":"",
+      "label": "Bucket Name"
+    }
+  ],
+
+  "enums":
+  [
+  ],
+
+  "contextEnrichers":
+  [
+
+  ],
+
+  "policyConditions":
+  [
+
+  ]
+}
