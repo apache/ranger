@@ -82,6 +82,14 @@ cd dev-support/ranger-docker
 
 ### Run Ranger Services in Containers
 
+Every container declares a healthcheck, so `docker ps` reports each service as `healthy` only
+once it is actually serving. Add `--wait` to any of the `up -d` commands below to block until
+that is true (and fail if a container never gets there) instead of polling `docker ps`:
+
+~~~
+docker compose ... up -d --wait --wait-timeout 900
+~~~
+
 #### Bring up ranger-core services: ranger, usersync, tagsync, pdp, kms and audit in containers
 ~~~
 # To enable file based sync source for usersync do:

@@ -27,6 +27,13 @@ services:
     depends_on:
       ranger:
         condition: service_started
+    healthcheck:
+      # /api/metrics is security="none" in the usersync webapp; a 200 means the webapp is up.
+      test: ["CMD-SHELL", "curl -sf -o /dev/null http://localhost:8280/api/metrics/status"]
+      interval: 20s
+      timeout: 10s
+      retries: 20
+      start_period: 40s
     environment:
       - USERSYNC_VERSION
       - ENABLE_FILE_SYNC_SOURCE

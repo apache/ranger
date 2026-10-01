@@ -33,6 +33,14 @@ services:
         condition: service_healthy
       ranger-zk:
         condition: service_started
+    healthcheck:
+      # The master turns active only after meta is assigned; the rs-status page then confirms
+      # the regionserver in this container is serving too.
+      test: ["CMD-SHELL", "curl -sf 'http://localhost:16010/jmx?qry=Hadoop:service=HBase,name=Master,sub=Server' | grep -qE '\"tag.isActiveMaster\"[[:space:]]*:[[:space:]]*\"true\"' && curl -sf -o /dev/null http://localhost:16030/rs-status"]
+      interval: 20s
+      timeout: 10s
+      retries: 30
+      start_period: 40s
     environment:
       - HBASE_VERSION
       - HBASE_PLUGIN_VERSION

@@ -30,6 +30,14 @@ services:
         condition: service_started
       ranger-db:
         condition: service_healthy
+    healthcheck:
+      # /service/actuator/health is unauthenticated (security-applicationContext.xml) and
+      # reports UP only once the DB is reachable and the webapp is serving requests.
+      test: ["CMD-SHELL", "curl -sf http://localhost:6080/service/actuator/health | grep -q '\"status\":\"UP\"'"]
+      interval: 20s
+      timeout: 15s
+      retries: 30
+      start_period: 60s
     environment:
       - RANGER_VERSION
       - RANGER_DB_TYPE
@@ -100,8 +108,16 @@ services:
       - ranger
     ports:
       - "2181:2181"
+    healthcheck:
+      test: ["CMD-SHELL", "echo ruok | nc -w 2 localhost 2181 | grep -q imok"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+      start_period: 10s
     environment:
       - KERBEROS_ENABLED
+      # ZooKeeper whitelists only srvr by default; the healthcheck needs ruok as well.
+      - ZOO_4LW_COMMANDS_WHITELIST=srvr,ruok
 
 networks:
   ranger:
