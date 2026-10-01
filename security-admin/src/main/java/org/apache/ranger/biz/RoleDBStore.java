@@ -118,11 +118,6 @@ public class RoleDBStore implements RoleStore {
 
     @Override
     public RangerRole createRole(RangerRole role, Boolean createNonExistUserGroupRole, Boolean isRefTableCleanupRequired) throws Exception {
-        return createRole(role, createNonExistUserGroupRole, createNonExistUserGroupRole, isRefTableCleanupRequired);
-    }
-
-    @Override
-    public RangerRole createRole(RangerRole role, Boolean createNonExistUserGroup, Boolean createNonExistRole, Boolean isRefTableCleanupRequired) throws Exception {
         if (LOG.isDebugEnabled()) {
             LOG.debug("==> RoleDBStore.createRole()");
         }
@@ -142,7 +137,7 @@ public class RoleDBStore implements RoleStore {
             throw new Exception("Cannot create role:[" + role + "]");
         }
 
-        roleRefUpdater.createNewRoleMappingForRefTable(createdRole, createNonExistUserGroup, createNonExistRole, isRefTableCleanupRequired);
+        roleRefUpdater.createNewRoleMappingForRefTable(createdRole, createNonExistUserGroupRole, isRefTableCleanupRequired);
 
         roleService.createTransactionLog(createdRole, null, RangerBaseModelService.OPERATION_CREATE_CONTEXT);
         return createdRole;
@@ -150,11 +145,6 @@ public class RoleDBStore implements RoleStore {
 
     @Override
     public RangerRole updateRole(RangerRole role, Boolean createNonExistUserGroupRole, Boolean isRefTableCleanupRequired) throws Exception {
-        return updateRole(role, createNonExistUserGroupRole, createNonExistUserGroupRole, isRefTableCleanupRequired);
-    }
-
-    @Override
-    public RangerRole updateRole(RangerRole role, Boolean createNonExistUserGroup, Boolean createNonExistRole, Boolean isRefTableCleanupRequired) throws Exception {
         XXRole xxRole = daoMgr.getXXRole().findByRoleId(role.getId());
         if (xxRole == null) {
             throw restErrorUtil.createRESTException("role with id: " + role.getId() + " does not exist");
@@ -177,7 +167,7 @@ public class RoleDBStore implements RoleStore {
             throw new Exception("Cannot update role:[" + role + "]");
         }
 
-        roleRefUpdater.createNewRoleMappingForRefTable(updatedRole, createNonExistUserGroup, createNonExistRole, isRefTableCleanupRequired);
+        roleRefUpdater.createNewRoleMappingForRefTable(updatedRole, createNonExistUserGroupRole, isRefTableCleanupRequired);
 
         roleService.updatePolicyVersions(updatedRole.getId());
 
