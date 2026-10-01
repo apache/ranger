@@ -1,0 +1,10 @@
+{
+  "type": "tagdef_test_{random_str}",
+  "attributes": {
+    "sensitivity": "high",
+    "expiry_date": "2081-12-31"
+  },
+  "options": {
+    "description": "Test tag for tagdef_test"
+  }
+}
