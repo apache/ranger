@@ -155,7 +155,7 @@
   <fileSets>
     <!-- conf.templates for enable -->
     <fileSet>
-      <outputDirectory>/install/conf.templates/enable</outputDirectory>
+      <outputDirectory>install/conf.templates/enable</outputDirectory>
       <directory>${project.parent.basedir}/plugin-elasticsearch/conf</directory>
       <excludes>
         <exclude>*.sh</exclude>
@@ -163,18 +163,18 @@
       <fileMode>700</fileMode>
     </fileSet>
     <fileSet>
-      <outputDirectory>/install/conf.templates/disable</outputDirectory>
+      <outputDirectory>install/conf.templates/disable</outputDirectory>
       <directory>${project.parent.basedir}/plugin-elasticsearch/disable-conf</directory>
       <fileMode>700</fileMode>
     </fileSet>
     <fileSet>
-      <outputDirectory>/install/conf.templates/default</outputDirectory>
+      <outputDirectory>install/conf.templates/default</outputDirectory>
       <directory>${project.parent.basedir}/plugin-elasticsearch/template</directory>
       <fileMode>700</fileMode>
     </fileSet>
     <!-- version file -->
     <fileSet>
-      <outputDirectory>/</outputDirectory>
+      <outputDirectory></outputDirectory>
       <directory>${project.build.outputDirectory}</directory>
       <includes>
         <include>version</include>
@@ -186,36 +186,36 @@
   <files>
     <file>
       <source>${project.parent.basedir}/agents-common/scripts/enable-agent.sh</source>
-      <outputDirectory>/</outputDirectory>
+      <outputDirectory></outputDirectory>
       <destName>enable-elasticsearch-plugin.sh</destName>
       <fileMode>755</fileMode>
     </file>
     <file>
       <source>${project.parent.basedir}/agents-common/scripts/enable-agent.sh</source>
-      <outputDirectory>/</outputDirectory>
+      <outputDirectory></outputDirectory>
       <destName>disable-elasticsearch-plugin.sh</destName>
       <fileMode>755</fileMode>
     </file>
     <file>
       <source>${project.parent.basedir}/plugin-elasticsearch/scripts/install.properties</source>
-      <outputDirectory>/</outputDirectory>
+      <outputDirectory></outputDirectory>
       <destName>install.properties</destName>
       <fileMode>755</fileMode>
     </file>
     <file>
       <source>${project.parent.basedir}/security-admin/scripts/ranger_credential_helper.py</source>
-      <outputDirectory>/</outputDirectory>
+      <outputDirectory></outputDirectory>
       <fileMode>755</fileMode>
     </file>
     <file>
       <source>${project.parent.basedir}/ranger-elasticsearch-plugin-shim/conf/plugin-descriptor.properties</source>
-      <outputDirectory>/lib/ranger-elasticsearch-plugin</outputDirectory>
+      <outputDirectory>lib/ranger-elasticsearch-plugin</outputDirectory>
       <fileMode>755</fileMode>
       <filtered>true</filtered>
     </file>
     <file>
       <source>${project.parent.basedir}/ranger-elasticsearch-plugin-shim/conf/plugin-security.policy</source>
-      <outputDirectory>/lib/ranger-elasticsearch-plugin</outputDirectory>
+      <outputDirectory>lib/ranger-elasticsearch-plugin</outputDirectory>
       <fileMode>755</fileMode>
     </file>
   </files>
