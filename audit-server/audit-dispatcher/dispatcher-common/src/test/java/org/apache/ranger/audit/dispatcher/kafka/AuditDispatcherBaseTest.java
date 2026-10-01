@@ -42,6 +42,7 @@ import static org.mockito.Mockito.mock;
 public class AuditDispatcherBaseTest {
     private TestAuditDispatcher           dispatcher;
     private KafkaConsumer<String, String> mockConsumer;
+    private static KafkaConsumer<String, String> currentMockConsumer;
 
     @BeforeEach
     public void setup() throws Exception {
@@ -53,7 +54,8 @@ public class AuditDispatcherBaseTest {
         props.setProperty("ranger.audit.dispatcher.test." + AuditServerConstants.PROP_DISPATCHER_POLL_ERROR_RETRY_DELAY_MS, "100");
 
         mockConsumer = mock(KafkaConsumer.class);
-        dispatcher   = new TestAuditDispatcher(props, "ranger.audit.dispatcher.test", "test-group", mockConsumer);
+        currentMockConsumer = mockConsumer;
+        dispatcher   = new TestAuditDispatcher(props, "ranger.audit.dispatcher.test", "test-group");
     }
 
     @AfterEach
@@ -98,8 +100,13 @@ public class AuditDispatcherBaseTest {
     }
 
     private static class TestAuditDispatcher extends AuditDispatcherBase {
-        public TestAuditDispatcher(Properties props, String propPrefix, String dispatcherGroupId, KafkaConsumer<String, String> mockConsumer) throws Exception {
-            super(dispatcherGroupId, mockConsumer, "test-topic", 100L, 100L, 100L);
+        public TestAuditDispatcher(Properties props, String propPrefix, String dispatcherGroupId) throws Exception {
+            super(props, propPrefix, dispatcherGroupId);
+        }
+
+        @Override
+        protected KafkaConsumer<String, String> createDispatcher(Properties props) {
+            return currentMockConsumer;
         }
 
         @Override

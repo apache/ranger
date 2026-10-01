@@ -117,17 +117,12 @@ public abstract class AuditDispatcherBase implements AuditDispatcher {
         LOG.info("Re-balancing config - session.timeout.ms: {}, max.poll.interval.ms: {}, heartbeat.interval.ms: {}", sessionTimeoutMs, maxPollIntervalMs, heartbeatIntervalMs);
         LOG.info("Partition assignment strategy: {}", partitionAssignmentStrategy);
 
-        dispatcher = new KafkaConsumer<>(dispatcherProps);
+        dispatcher = createDispatcher(dispatcherProps);
         topicName  = MiscUtil.getStringProperty(props, propPrefix + "." + AuditServerConstants.PROP_TOPIC_NAME, AuditServerConstants.DEFAULT_TOPIC);
     }
 
-    AuditDispatcherBase(String dispatcherGroupId, KafkaConsumer<String, String> dispatcher, String topicName, long authzRetryDelayMs, long authnRetryDelayMs, long pollErrorRetryDelayMs) {
-        this.dispatcherGroupId     = dispatcherGroupId;
-        this.dispatcher            = dispatcher;
-        this.topicName             = topicName;
-        this.authzRetryDelayMs     = authzRetryDelayMs;
-        this.authnRetryDelayMs     = authnRetryDelayMs;
-        this.pollErrorRetryDelayMs = pollErrorRetryDelayMs;
+    protected KafkaConsumer<String, String> createDispatcher(Properties props) {
+        return new KafkaConsumer<>(props);
     }
 
     @Override
