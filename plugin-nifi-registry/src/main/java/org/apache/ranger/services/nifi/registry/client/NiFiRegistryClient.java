@@ -105,8 +105,12 @@ public class NiFiRegistryClient {
         if (connectivityStatus) {
             BaseClient.generateResponseDataMap(connectivityStatus, SUCCESS_MSG, SUCCESS_MSG, null, null, responseData);
         } else {
-            String errorMsg = FAILURE_MSG + errMsg;
-            BaseClient.generateResponseDataMap(connectivityStatus, FAILURE_MSG, errorMsg, null, null, responseData);
+            // Keep low-level exception/status details in logs only to avoid host/port reachability disclosure in the UI
+            if (StringUtils.isNotBlank(errMsg)) {
+                LOG.error("Connection to NiFi Registry failed: {}", errMsg);
+            }
+
+            BaseClient.generateResponseDataMap(connectivityStatus, FAILURE_MSG, FAILURE_MSG, null, null, responseData);
         }
 
         if (LOG.isDebugEnabled()) {

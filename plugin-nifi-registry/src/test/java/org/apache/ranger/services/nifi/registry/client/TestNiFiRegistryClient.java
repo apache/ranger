@@ -156,6 +156,8 @@ public class TestNiFiRegistryClient {
         HashMap<String, Object> ret = registryClient.connectionTest();
         Assertions.assertNotNull(ret);
         Assertions.assertEquals(NiFiRegistryClient.FAILURE_MSG, ret.get("message"));
+        Assertions.assertEquals(NiFiRegistryClient.FAILURE_MSG, ret.get("description"));
+        Assertions.assertFalse(String.valueOf(ret.get("description")).contains(errorMsg));
     }
 
     /**
