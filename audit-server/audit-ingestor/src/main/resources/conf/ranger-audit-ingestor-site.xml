@@ -182,6 +182,29 @@
         <description>Expected audiences for JWT validation (comma-separated)</description>
     </property>
 
+    <!-- Trusted Header Auth Configs -->
+    <property>
+        <name>ranger.audit.ingestor.authn.header.enabled</name>
+        <value>false</value>
+        <description>
+            Enable authentication using identity headers set by a trusted proxy (e.g. service mesh or ingress gateway).
+            Enable only when all requests reach the audit ingestor through that proxy, and the proxy strips these headers from client requests.
+            The authenticated user must be listed in ranger.audit.ingestor.service.&lt;serviceName&gt;.allowed.users to post audits.
+        </description>
+    </property>
+
+    <property>
+        <name>ranger.audit.ingestor.authn.header.username</name>
+        <value></value>
+        <description>Name of the HTTP header (e.g. X-Forwarded-User) carrying the authenticated username. Takes precedence over the SPIFFE header(s).</description>
+    </property>
+
+    <property>
+        <name>ranger.audit.ingestor.authn.header.spiffe</name>
+        <value></value>
+        <description>Comma-separated list of HTTP header name(s) carrying a SPIFFE ID (e.g. spiffe://cluster/ns/&lt;ns&gt;/sa/&lt;service-account&gt;). A single header name is also valid. The full SPIFFE ID is used as the authenticated principal. When multiple headers are configured, the first one carrying a well-formed SPIFFE ID is used. Consulted only when the username header is absent.</description>
+    </property>
+
     <property>
         <name>ranger.audit.ingestor.service.dev_hdfs.allowed.users</name>
         <value>hdfs</value>

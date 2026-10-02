@@ -188,7 +188,7 @@ public class AuditREST {
                     .entity(buildErrorResponse("Authentication required to send audit events"))
                     .build();
         } else if (!isAllowedServiceUser(serviceName, authenticatedUser)) {
-            LOG.error("Unauthorized user: user={} is authorized report audit logs for service={}. Rejecting audit request.", authenticatedUser, serviceName);
+            LOG.error("Unauthorized user: user={} is not authorized to report audit logs for service={}. Rejecting audit request.", authenticatedUser, serviceName);
 
             ret = Response.status(Response.Status.FORBIDDEN)
                     .entity(buildErrorResponse("User is not authorized to send audit events"))
