@@ -112,53 +112,47 @@ public class OpenSearchMgr {
         RestClient me = client;
 
         if (me == null) {
-            synchronized (OpenSearchMgr.class) {
-                me = client;
+            String urls     = PropertiesUtil.getProperty(CONFIG_PREFIX + "." + CONFIG_URLS);
+            String protocol = PropertiesUtil.getProperty(CONFIG_PREFIX + "." + CONFIG_PROTOCOL, "http");
 
-                if (me == null) {
-                    String urls     = PropertiesUtil.getProperty(CONFIG_PREFIX + "." + CONFIG_URLS);
-                    String protocol = PropertiesUtil.getProperty(CONFIG_PREFIX + "." + CONFIG_PROTOCOL, "http");
+            user     = PropertiesUtil.getProperty(CONFIG_PREFIX + "." + CONFIG_USER, "");
+            password = PropertiesUtil.getProperty(CONFIG_PREFIX + "." + CONFIG_PASSWORD, "");
 
-                    user     = PropertiesUtil.getProperty(CONFIG_PREFIX + "." + CONFIG_USER, "");
-                    password = PropertiesUtil.getProperty(CONFIG_PREFIX + "." + CONFIG_PASSWORD, "");
+            String authType          = PropertiesUtil.getProperty(CONFIG_PREFIX + "." + CONFIG_AUTH_TYPE, "");
+            String kerberosPrincipal = PropertiesUtil.getProperty(CONFIG_PREFIX + "." + CONFIG_KERBEROS_PRINCIPAL, "");
+            String kerberosKeytab    = PropertiesUtil.getProperty(CONFIG_PREFIX + "." + CONFIG_KERBEROS_KEYTAB, "");
 
-                    String authType          = PropertiesUtil.getProperty(CONFIG_PREFIX + "." + CONFIG_AUTH_TYPE, "");
-                    String kerberosPrincipal = PropertiesUtil.getProperty(CONFIG_PREFIX + "." + CONFIG_KERBEROS_PRINCIPAL, "");
-                    String kerberosKeytab    = PropertiesUtil.getProperty(CONFIG_PREFIX + "." + CONFIG_KERBEROS_KEYTAB, "");
+            int port = PropertiesUtil.getIntProperty(CONFIG_PREFIX + "." + CONFIG_PORT, 9200);
 
-                    int port = Integer.parseInt(PropertiesUtil.getProperty(CONFIG_PREFIX + "." + CONFIG_PORT, "9200"));
+            this.index = PropertiesUtil.getProperty(CONFIG_PREFIX + "." + CONFIG_INDEX, "ranger_audits");
 
-                    this.index = PropertiesUtil.getProperty(CONFIG_PREFIX + "." + CONFIG_INDEX, "ranger_audits");
+            String parameterString = String.format(Locale.ROOT, "User:%s, %s://%s:%s/%s", user, protocol, urls, port, index);
 
-                    String parameterString = String.format(Locale.ROOT, "User:%s, %s://%s:%s/%s", user, protocol, urls, port, index);
+            LOG.info("Initializing OpenSearch connection: {}", parameterString);
 
-                    LOG.info("Initializing OpenSearch connection: {}", parameterString);
+            if (urls != null) {
+                urls = urls.trim();
+            }
 
-                    if (urls != null) {
-                        urls = urls.trim();
-                    }
+            if (StringUtils.isBlank(urls) || "NONE".equalsIgnoreCase(urls)) {
+                LOG.warn("OpenSearch URLs not configured or set to NONE");
 
-                    if (StringUtils.isBlank(urls) || "NONE".equalsIgnoreCase(urls)) {
-                        LOG.warn("OpenSearch URLs not configured or set to NONE");
+                return null;
+            }
 
-                        return null;
-                    }
-
-                    try {
-                        if (OpenSearchAuditDestination.AUTH_TYPE_KERBEROS.equals(OpenSearchAuditDestination.resolveAuthType(authType, user, password))) {
-                            loginPrincipal = OpenSearchAuditDestination.isConfigured(kerberosPrincipal) ? kerberosPrincipal : user;
-                            loginKeytab    = OpenSearchAuditDestination.isConfigured(kerberosKeytab) ? kerberosKeytab : password;
-                            subject        = CredentialsProviderUtil.login(loginPrincipal, loginKeytab);
-                        }
-
-                        RestClientBuilder builder = buildRestClientBuilder(urls, protocol, user, password, port, authType, kerberosPrincipal, kerberosKeytab);
-
-                        client = builder.build();
-                        me     = client;
-                    } catch (Throwable t) {
-                        LOG.error("Cannot connect to OpenSearch: {}", parameterString, t);
-                    }
+            try {
+                if (OpenSearchAuditDestination.AUTH_TYPE_KERBEROS.equals(OpenSearchAuditDestination.resolveAuthType(authType, user, password))) {
+                    loginPrincipal = OpenSearchAuditDestination.isConfigured(kerberosPrincipal) ? kerberosPrincipal : user;
+                    loginKeytab    = OpenSearchAuditDestination.isConfigured(kerberosKeytab) ? kerberosKeytab : password;
+                    subject        = CredentialsProviderUtil.login(loginPrincipal, loginKeytab);
                 }
+
+                RestClientBuilder builder = buildRestClientBuilder(urls, protocol, user, password, port, authType, kerberosPrincipal, kerberosKeytab);
+
+                client = builder.build();
+                me     = client;
+            } catch (Throwable t) {
+                LOG.error("Cannot connect to OpenSearch: {}", parameterString, t);
             }
         }
 

@@ -19,6 +19,7 @@
 
 package org.apache.ranger.opensearch;
 
+import org.apache.ranger.AccessAuditsService;
 import org.apache.ranger.audit.provider.MiscUtil;
 import org.apache.ranger.common.MessageEnums;
 import org.apache.ranger.common.PropertiesUtil;
@@ -46,7 +47,7 @@ import java.util.Map;
 
 @Service
 @Scope("singleton")
-public class OpenSearchAccessAuditsService extends org.apache.ranger.AccessAuditsService {
+public class OpenSearchAccessAuditsService extends AccessAuditsService {
     private static final Logger LOG = LoggerFactory.getLogger(OpenSearchAccessAuditsService.class);
 
     @Autowired

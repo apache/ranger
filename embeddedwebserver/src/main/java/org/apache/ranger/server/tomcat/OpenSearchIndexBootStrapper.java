@@ -19,6 +19,14 @@
 
 package org.apache.ranger.server.tomcat;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.Arrays;
+import java.util.logging.Logger;
+
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpHost;
 import org.apache.http.auth.AuthScope;
@@ -32,13 +40,6 @@ import org.elasticsearch.client.Request;
 import org.elasticsearch.client.Response;
 import org.elasticsearch.client.RestClient;
 import org.elasticsearch.client.RestClientBuilder;
-
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.util.Arrays;
-import java.util.logging.Logger;
 
 public class OpenSearchIndexBootStrapper extends Thread {
     private static final Logger LOG = Logger.getLogger(OpenSearchIndexBootStrapper.class.getName());
@@ -122,12 +123,12 @@ public class OpenSearchIndexBootStrapper extends Thread {
         protocol     = EmbeddedServerUtil.getConfig(CONFIG_PROTOCOL, "http");
         user         = EmbeddedServerUtil.getConfig(CONFIG_USER, "");
         password     = EmbeddedServerUtil.getConfig(CONFIG_PASSWORD, "");
-        port         = Integer.parseInt(EmbeddedServerUtil.getConfig(CONFIG_PORT, "9200"));
+        port         = EmbeddedServerUtil.getIntConfig(CONFIG_PORT, 9200);
         index        = EmbeddedServerUtil.getConfig(CONFIG_INDEX, "ranger_audits");
-        noOfShards   = Integer.parseInt(EmbeddedServerUtil.getConfig(CONFIG_SHARDS, "1"));
-        noOfReplicas = Integer.parseInt(EmbeddedServerUtil.getConfig(CONFIG_REPLICAS, "1"));
-        maxRetry     = Integer.parseInt(EmbeddedServerUtil.getConfig(CONFIG_MAX_RETRY, "30"));
-        timeInterval = Long.parseLong(EmbeddedServerUtil.getConfig(CONFIG_INTERVAL, "60000"));
+        noOfShards   = EmbeddedServerUtil.getIntConfig(CONFIG_SHARDS, 1);
+        noOfReplicas = EmbeddedServerUtil.getIntConfig(CONFIG_REPLICAS, 1);
+        maxRetry     = EmbeddedServerUtil.getIntConfig(CONFIG_MAX_RETRY, 30);
+        timeInterval = EmbeddedServerUtil.getLongConfig(CONFIG_INTERVAL, 60000L);
     }
 
     private void connect() {
@@ -199,7 +200,7 @@ public class OpenSearchIndexBootStrapper extends Thread {
             throw new IOException("OpenSearch schema file not found: " + schemaPath);
         }
 
-        return new String(Files.readAllBytes(Paths.get(schemaPath)));
+        return new String(Files.readAllBytes(Paths.get(schemaPath)), StandardCharsets.UTF_8);
     }
 
     private void logErrorAndWait(int retryCounter, String message) {

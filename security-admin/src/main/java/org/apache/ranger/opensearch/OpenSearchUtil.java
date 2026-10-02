@@ -61,7 +61,7 @@ public class OpenSearchUtil {
 
     private static final ThreadLocal<DateFormat> DATE_FORMAT = ThreadLocal.withInitial(() -> {
         SimpleDateFormat dateFormat = new SimpleDateFormat(DATE_FORMAT_STR);
-        String           timeZone   = PropertiesUtil.getProperty("xa.elasticSearch.timezone");
+        String           timeZone   = PropertiesUtil.getProperty("ranger.audit.opensearch.timezone");
 
         if (timeZone != null) {
             LOG.info("Setting timezone to {}", timeZone);
