@@ -694,9 +694,8 @@ public class KmsKeyMgr {
     private String getKMSPassword(String srvName) throws Exception {
         XXService          rangerService = rangerDaoManagerBase.getXXService().findByName(srvName);
         XXServiceConfigMap xxConfigMap   = rangerDaoManagerBase.getXXServiceConfigMap().findByServiceAndConfigKey(rangerService.getId(), KMS_PASSWORD);
-        String             encryptedPwd  = xxConfigMap.getConfigvalue();
-
-        return PasswordUtils.decryptPassword(encryptedPwd);
+        String             storedValue   = xxConfigMap.getConfigvalue();
+        return PasswordUtils.isV2Format(storedValue) ? PasswordUtils.decryptPasswordV2(storedValue, ServiceDBStore.ENCRYPT_KEY.toCharArray()) : PasswordUtils.decryptPassword(storedValue);
     }
 
     private String getKMSUserName(String srvName) throws Exception {

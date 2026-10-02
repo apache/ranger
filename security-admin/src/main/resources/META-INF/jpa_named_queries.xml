@@ -736,6 +736,10 @@
 		<query>select obj from XXServiceConfigMap obj where obj.configKey = :configKey</query>
 	</named-query>
 
+	<named-query name="XXServiceConfigMap.findByConfigValueLike">
+		<query>select obj from XXServiceConfigMap obj where obj.configValue LIKE :configValuePrefix</query>
+	</named-query>
+
 	<named-query name="XXServiceConfigMap.findByServiceAndConfigKey">
 		<query>select obj from XXServiceConfigMap obj where
 			obj.serviceId = :serviceId and obj.configKey = :configKey</query>

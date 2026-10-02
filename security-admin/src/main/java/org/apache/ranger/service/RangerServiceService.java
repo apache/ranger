@@ -33,6 +33,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -94,19 +95,31 @@ public class RangerServiceService extends RangerServiceServiceBase<XXService, Ra
 
                 if (pwdConfig != null) {
                     String encryptedPwd = pwdConfig.getConfigvalue();
-                    if (encryptedPwd.contains(",")) {
+
+                    if (PasswordUtils.isV2Format(encryptedPwd)) {
+                        String decryptedPwd;
+                        try {
+                            decryptedPwd = PasswordUtils.decryptPasswordV2(encryptedPwd, ServiceDBStore.ENCRYPT_KEY.toCharArray());
+                        } catch (IllegalArgumentException e) {
+                            throw new Exception("Stored password value for config key [" + configKey + "] on service [" + service.getName() +
+                                    "] is malformed or corrupted — this is a data integrity problem, not a key mismatch.", e);
+                        } catch (IOException e) {
+                            throw new Exception("Failed to decrypt password for config key [" + configKey + "] on service [" + service.getName() +
+                                    "] using this node's configured ranger.password.encryption.key. " + ServiceDBStore.ENCRYPT_KEY_MISMATCH_REMEDIATION, e);
+                        }
+
+                        configs.put(configKey, decryptedPwd);
+                    } else if (encryptedPwd.contains(",")) {
                         PasswordUtils util                     = PasswordUtils.build(encryptedPwd);
                         String        freeTextPasswordMetaData = Joiner.on(",").skipNulls().join(util.getCryptAlgo(), new String(util.getEncryptKey()), new String(util.getSalt()), util.getIterationCount(), PasswordUtils.needsIv(util.getCryptAlgo()) ? util.getIvAsString() : null);
                         String        decryptedPwd             = PasswordUtils.decryptPassword(encryptedPwd);
                         if (StringUtils.equalsIgnoreCase(freeTextPasswordMetaData + "," + PasswordUtils.encryptPassword(freeTextPasswordMetaData + "," + decryptedPwd), encryptedPwd)) {
-                            configs.put(configKey, encryptedPwd);
-                            // XXX: method name is getConfigsWithDecryptedPassword, then why do we store the encryptedPwd?
+                            configs.put(configKey, decryptedPwd);
                         }
                     } else {
                         String decryptedPwd = PasswordUtils.decryptPassword(encryptedPwd);
                         if (StringUtils.equalsIgnoreCase(PasswordUtils.encryptPassword(decryptedPwd), encryptedPwd)) {
-                            configs.put(configKey, encryptedPwd);
-                            // XXX: method name is getConfigsWithDecryptedPassword, then why do we store the encryptedPwd?
+                            configs.put(configKey, decryptedPwd);
                         }
                     }
                 }
