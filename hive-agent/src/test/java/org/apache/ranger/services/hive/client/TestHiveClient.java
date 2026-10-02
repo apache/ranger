@@ -43,6 +43,7 @@ import java.security.PrivilegedExceptionAction;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.Driver;
+import java.sql.DriverManager;
 import java.sql.DriverPropertyInfo;
 import java.sql.ResultSet;
 import java.sql.SQLFeatureNotSupportedException;
@@ -53,10 +54,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Logger;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -71,6 +74,9 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 @TestMethodOrder(MethodOrderer.MethodName.class)
 public class TestHiveClient {
+    private static final AtomicBoolean TRACKED_CLASS_INITIALIZED = new AtomicBoolean(false);
+    private static final String        TRACKED_CLASS_NAME        = TestHiveClient.class.getName() + "$TrackedClass";
+
     @Test
     public void test01_connectionTestEmptyDbListSetsFailureMessage() throws Exception {
         try (MockedConstruction<HiveClient> cons = Mockito.mockConstruction(HiveClient.class, (mock, ctx) -> {
@@ -609,6 +615,68 @@ public class TestHiveClient {
         fCon.set(client, con);
 
         assertThrows(HadoopException.class, () -> client.getColumnList("valid", Collections.singletonList("db1"), Collections.singletonList("test'; DROP TABLE users; --"), null), "Should reject SQL injection in table name");
+    }
+
+    @Test
+    public void test32_initConnection_rejectsNonHiveUrlScheme() throws Exception {
+        assertJdbcConfigRejected("org.apache.hive.jdbc.HiveDriver", "jdbc:mysql://address=(host=localhost)(port=3306)(autoDeserialize=true)/db", "jdbc.url must start with");
+        assertJdbcConfigRejected("org.apache.hive.jdbc.HiveDriver", "jdbc:postgresql://localhost:5432/db", "jdbc.url must start with");
+        assertJdbcConfigRejected("org.apache.hive.jdbc.HiveDriver", "JDBC:HIVE2://localhost:10000", "jdbc.url must start with");
+    }
+
+    @Test
+    public void test33_initConnection_rejectsDriverClassNotInAllowList() throws Exception {
+        assertJdbcConfigRejected(TRACKED_CLASS_NAME, "jdbc:hive2://localhost:10000", "jdbc.driverClassName must be one of");
+        assertFalse(TRACKED_CLASS_INITIALIZED.get(), "driver class must not be loaded when it is not in the allowed list");
+    }
+
+    @Test
+    public void test34_initConnection_rejectsUnsafeUrlParameter() throws Exception {
+        assertJdbcConfigRejected("org.apache.hive.jdbc.HiveDriver", "jdbc:hive2://localhost:10000/default;socketFactory=com.example.Evil", "prohibited parameter");
+        assertJdbcConfigRejected("org.apache.hive.jdbc.HiveDriver", "jdbc:hive2://localhost:10000/default%3BsocketFactory=com.example.Evil", "prohibited parameter");
+    }
+
+    @Test
+    public void test35_initConnection_rejectsEmbeddedHiveUrl() throws Exception {
+        assertJdbcConfigRejected("org.apache.hive.jdbc.HiveDriver", "jdbc:hive2:///", "jdbc.url must include a host");
+        assertJdbcConfigRejected("org.apache.hive.jdbc.HiveDriver", "jdbc:hive2://;", "jdbc.url must include a host");
+        assertJdbcConfigRejected("org.apache.hive.jdbc.HiveDriver", "jdbc:hive2://?x=y", "jdbc.url must include a host");
+        assertJdbcConfigRejected("org.apache.hive.jdbc.HiveDriver", "jdbc:hive2://:10000/default", "jdbc.url must include a host");
+    }
+
+    private void assertJdbcConfigRejected(String driverClassName, String url, String expectedMessage) throws Exception {
+        NoopHiveClient client = new NoopHiveClient("svc", new HashMap<>());
+        Field          fCfg   = Class.forName("org.apache.ranger.plugin.client.BaseClient").getDeclaredField("configHolder");
+        fCfg.setAccessible(true);
+        HadoopConfigHolder cfg         = Mockito.mock(HadoopConfigHolder.class);
+        Properties         rangerProps = new Properties();
+        rangerProps.setProperty("jdbc.driverClassName", driverClassName);
+        rangerProps.setProperty("jdbc.url", url);
+        when(cfg.getRangerSection()).thenReturn(rangerProps);
+        fCfg.set(client, cfg);
+        Method m = HiveClient.class.getDeclaredMethod("initConnection", String.class, String.class);
+        m.setAccessible(true);
+
+        try (MockedStatic<DriverManager> dmStatic = Mockito.mockStatic(DriverManager.class)) {
+            HadoopException excp = assertThrows(HadoopException.class, () -> {
+                try {
+                    m.invoke(client, "u", "p");
+                } catch (InvocationTargetException ite) {
+                    throw ite.getCause();
+                }
+            });
+
+            assertTrue(excp.getMessage().contains(expectedMessage), excp.getMessage());
+            dmStatic.verify(() -> DriverManager.registerDriver(Mockito.any(Driver.class)), Mockito.never());
+            dmStatic.verify(() -> DriverManager.getConnection(Mockito.anyString()), Mockito.never());
+            dmStatic.verify(() -> DriverManager.getConnection(Mockito.anyString(), Mockito.anyString(), Mockito.anyString()), Mockito.never());
+        }
+    }
+
+    public static class TrackedClass {
+        static {
+            TRACKED_CLASS_INITIALIZED.set(true);
+        }
     }
 
     public static class NoopHiveClient extends HiveClient {

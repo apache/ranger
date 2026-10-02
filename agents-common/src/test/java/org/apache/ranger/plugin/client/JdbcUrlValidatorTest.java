@@ -17,14 +17,17 @@
  * under the License.
  */
 
-package org.apache.ranger.services.hive.client;
+package org.apache.ranger.plugin.client;
 
-import org.apache.ranger.plugin.client.HadoopException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
+
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -164,17 +167,46 @@ class JdbcUrlValidatorTest {
             assertThrows(HadoopException.class, () -> JdbcUrlValidator.validate(url));
         }
 
+        @ParameterizedTest(name = "encoded separator: {0}")
+        @ValueSource(strings = {
+                "jdbc:hive2://host:10000/default%3BsocketFactory=com.example.X",
+                "jdbc:hive2://host:10000/default%3bsocketFactory=com.example.X",
+                "jdbc:hive2://host:10000/default%3Bsocket%46actory=com.example.X",
+                "jdbc:hive2://host:10000/db%3BsocketFactory=com.example.X?foo=bar"
+        })
+        @DisplayName("Rejects a blocked parameter hidden behind a percent-encoded separator")
+        void rejectsEncodedSeparator(String url) {
+            HadoopException exception = assertThrows(HadoopException.class, () -> JdbcUrlValidator.validate(url, Collections.singletonList("jdbc:hive2://")));
+            assertTrue(exception.getMessage().contains("prohibited parameter"), exception.getMessage());
+        }
+
         @Test
-        @DisplayName("Handles malformed URL encoding gracefully")
-        void handlesMalformedEncoding() {
-            String url = "jdbc:hive2://host:10000/db?socket%ZZfactory=test";
-            assertDoesNotThrow(() -> {
-                try {
-                    JdbcUrlValidator.validate(url);
-                } catch (HadoopException e) {
-                    assertTrue(e.getMessage().contains("prohibited parameter"));
-                }
-            });
+        @DisplayName("Allows a safe session variable behind a percent-encoded separator")
+        void allowsSafeEncodedSeparator() {
+            assertDoesNotThrow(() -> JdbcUrlValidator.validate("jdbc:hive2://host:10000/default%3Bssl=true%3BtransportMode=http", Collections.singletonList("jdbc:hive2://")));
+        }
+
+        @Test
+        @DisplayName("Allows a percent-encoded character inside a safe parameter value")
+        void allowsEncodedSafeValue() {
+            assertDoesNotThrow(() -> JdbcUrlValidator.validate("jdbc:hive2://host:10000/default;principal=hive%2Fhost@REALM"));
+        }
+
+        @Test
+        @DisplayName("Decodes percent-escapes only once")
+        void decodesPercentEscapesOnce() {
+            assertDoesNotThrow(() -> JdbcUrlValidator.validate("jdbc:hive2://host:10000/default%253BsocketFactory=com.example.X", Collections.singletonList("jdbc:hive2://")));
+        }
+
+        @ParameterizedTest(name = "malformed encoding: {0}")
+        @ValueSource(strings = {
+                "jdbc:hive2://host:10000/default%",
+                "jdbc:hive2://host:10000/default;ssl=%ZZ"
+        })
+        @DisplayName("Rejects malformed percent-encoding")
+        void rejectsMalformedEncoding(String url) {
+            HadoopException exception = assertThrows(HadoopException.class, () -> JdbcUrlValidator.validate(url));
+            assertTrue(exception.getMessage().contains("invalid percent-encoding"), exception.getMessage());
         }
     }
 
@@ -417,6 +449,133 @@ class JdbcUrlValidatorTest {
             String url = "jdbc:postgresql://pg-server:5432/mydb" +
                     "?user=admin&password=secret&ssl=true&sslmode=require";
             assertDoesNotThrow(() -> JdbcUrlValidator.validate(url));
+        }
+    }
+
+    @Nested
+    @DisplayName("URL scheme allow-list")
+    class UrlSchemeAllowList {
+        private final List<String> hivePrefixes = Collections.singletonList("jdbc:hive2://");
+
+        @ParameterizedTest(name = "allowed: {0}")
+        @ValueSource(strings = {
+                "jdbc:hive2://localhost:10000/default",
+                "jdbc:hive2://zk1:2181,zk2:2181/;serviceDiscoveryMode=zooKeeper;zooKeeperNamespace=hiveserver2",
+                "jdbc:hive2://host:10000/db;transportMode=http;httpPath=cliservice;ssl=true",
+                " jdbc:hive2://localhost:10000/default ",
+                "jdbc:hive2://[::1]:10000/default",
+                "jdbc:hive2://user:pass@host:10000/db"})
+        void allowedScheme(String url) {
+            assertDoesNotThrow(() -> JdbcUrlValidator.validate(url, hivePrefixes));
+        }
+
+        @ParameterizedTest(name = "rejected: {0}")
+        @ValueSource(strings = {
+                "jdbc:mysql://localhost:3306/db",
+                "jdbc:mysql://address=(host=localhost)(port=3306)(autoDeserialize=true)(queryInterceptors=com.example.X)/db",
+                "jdbc:mysql://(host=localhost,port=3306,allowLoadLocalInfile=true)/db",
+                "jdbc:mysql://localhost:3306/db?allowLoadLocalInfile=true",
+                "jdbc:postgresql://localhost:5432/db",
+                "jdbc:h2:mem:test",
+                "jdbc:hive://localhost:10000/default",
+                "JDBC:HIVE2://localhost:10000/default",
+                "jdbc:presto://localhost:8080",
+                "hive2://localhost:10000"})
+        void rejectedScheme(String url) {
+            HadoopException e = assertThrows(HadoopException.class, () -> JdbcUrlValidator.validate(url, hivePrefixes));
+            assertTrue(e.getMessage().contains("jdbc.url must start with"), e.getMessage());
+        }
+
+        @Test
+        @DisplayName("Blocked parameters are still rejected when the scheme is allowed")
+        void blockedParameterWithAllowedScheme() {
+            assertThrows(HadoopException.class, () -> JdbcUrlValidator.validate("jdbc:hive2://host:10000/db;socketFactory=com.example.X", hivePrefixes));
+        }
+
+        @ParameterizedTest(name = "no host: {0}")
+        @ValueSource(strings = {
+                "jdbc:hive2://",
+                "jdbc:hive2:///",
+                "jdbc:hive2://;",
+                "jdbc:hive2://?x=y",
+                "jdbc:hive2://#var",
+                "jdbc:hive2:///;initFile=/tmp/init.sql",
+                "jdbc:hive2://:10000",
+                "jdbc:hive2://:10000/default",
+                "jdbc:hive2://:10000/;initFile=/tmp/init.sql",
+                "jdbc:hive2://%3A10000/default",
+                "jdbc:hive2://user:pass@:10000/db",
+                "jdbc:hive2://:2181,zk:2181/;serviceDiscoveryMode=zooKeeper"
+        })
+        @DisplayName("Rejects a jdbc url that does not include a host")
+        void rejectsMissingHost(String url) {
+            HadoopException e = assertThrows(HadoopException.class, () -> JdbcUrlValidator.validate(url, hivePrefixes));
+            assertTrue(e.getMessage().contains("jdbc.url must include a host"), e.getMessage());
+        }
+
+        @Test
+        @DisplayName("Rejects a port with an empty hostname for Trino and Presto")
+        void rejectsPortWithoutHostForOtherSchemes() {
+            HadoopException trino = assertThrows(HadoopException.class, () -> JdbcUrlValidator.validate("jdbc:trino://:8080/catalog", Collections.singletonList("jdbc:trino://")));
+            assertTrue(trino.getMessage().contains("jdbc.url must include a host"), trino.getMessage());
+            HadoopException presto = assertThrows(HadoopException.class, () -> JdbcUrlValidator.validate("jdbc:presto://:8080", Collections.singletonList("jdbc:presto://")));
+            assertTrue(presto.getMessage().contains("jdbc.url must include a host"), presto.getMessage());
+        }
+
+        @Test
+        @DisplayName("Rejects a Trino dnsResolver class name")
+        void rejectsDnsResolver() {
+            HadoopException e = assertThrows(HadoopException.class, () -> JdbcUrlValidator.validate("jdbc:trino://h:8080?dnsResolver=com.example.Resolver", Collections.singletonList("jdbc:trino://")));
+            assertTrue(e.getMessage().contains("prohibited parameter"), e.getMessage());
+        }
+
+        @Test
+        @DisplayName("Null or empty prefix list rejects every URL")
+        void nullOrEmptyPrefixes() {
+            assertThrows(HadoopException.class, () -> JdbcUrlValidator.validate("jdbc:hive2://host:10000", null));
+            assertThrows(HadoopException.class, () -> JdbcUrlValidator.validate("jdbc:hive2://host:10000", Collections.emptyList()));
+            assertThrows(HadoopException.class, () -> JdbcUrlValidator.validate("jdbc:hive2://host:10000", Collections.singletonList("")));
+        }
+
+        @Test
+        @DisplayName("Null URL is rejected")
+        void nullUrl() {
+            assertThrows(HadoopException.class, () -> JdbcUrlValidator.validate(null, hivePrefixes));
+        }
+    }
+
+    @Nested
+    @DisplayName("Driver class allow-list")
+    class DriverClassAllowList {
+        private final List<String> allowed = Arrays.asList("io.prestosql.jdbc.PrestoDriver", "com.facebook.presto.jdbc.PrestoDriver");
+
+        @Test
+        @DisplayName("Allowed driver class is accepted")
+        void allowedDriver() {
+            assertDoesNotThrow(() -> JdbcUrlValidator.validateDriverClassName("io.prestosql.jdbc.PrestoDriver", allowed));
+            assertDoesNotThrow(() -> JdbcUrlValidator.validateDriverClassName("com.facebook.presto.jdbc.PrestoDriver", allowed));
+        }
+
+        @Test
+        @DisplayName("Null driver class is accepted (no explicit registration)")
+        void nullDriver() {
+            assertDoesNotThrow(() -> JdbcUrlValidator.validateDriverClassName(null, allowed));
+        }
+
+        @ParameterizedTest(name = "rejected: [{0}]")
+        @ValueSource(strings = {
+                "", "java.lang.Thread", "com.mysql.cj.jdbc.Driver", "org.postgresql.Driver",
+                "IO.PRESTOSQL.JDBC.PRESTODRIVER", " io.prestosql.jdbc.PrestoDriver", "io.prestosql.jdbc.PrestoDriver "})
+        void rejectedDriver(String driverClassName) {
+            HadoopException e = assertThrows(HadoopException.class, () -> JdbcUrlValidator.validateDriverClassName(driverClassName, allowed));
+            assertTrue(e.getMessage().contains("jdbc.driverClassName must be one of"), e.getMessage());
+        }
+
+        @Test
+        @DisplayName("Null or empty allow-list rejects every driver class")
+        void nullOrEmptyAllowList() {
+            assertThrows(HadoopException.class, () -> JdbcUrlValidator.validateDriverClassName("io.prestosql.jdbc.PrestoDriver", null));
+            assertThrows(HadoopException.class, () -> JdbcUrlValidator.validateDriverClassName("io.prestosql.jdbc.PrestoDriver", Collections.emptyList()));
         }
     }
 }
