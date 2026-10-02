@@ -186,7 +186,7 @@
         <netty-all.version>4.1.130.Final</netty-all.version>
         <nimbus-jose-jwt.version>10.0.1</nimbus-jose-jwt.version>
         <noggit.version>0.8</noggit.version>
-        <opensearch.client.java.version>3.9.0</opensearch.client.java.version>
+        <opensearch.client.java.version>3.10.0</opensearch.client.java.version>
         <opensearch.client.rest.version>2.19.6</opensearch.client.rest.version>
         <orc.core.version>2.0.3</orc.core.version>
         <orc.version>2.0.3</orc.version>
