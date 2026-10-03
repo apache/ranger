@@ -121,15 +121,27 @@
     <value>X-Spiffe-Id</value>
   </property>
 
-  <!-- JWT bearer token authentication for incoming REST requests -->
+  <!-- JWT bearer token authentication for incoming REST requests: tokens are verified against the JWKS at provider.url
+       and must carry exp, sub, iss equal to issuer and an aud listed in audiences. https://jwkserve.com signs any claims
+       sent to POST https://jwkserve.com/sign, so it is only suitable for development; point at your own provider otherwise -->
   <property>
     <name>ranger.pdp.authn.jwt.enabled</name>
     <value>true</value>
   </property>
 
-    <property>
+  <property>
     <name>ranger.pdp.authn.jwt.provider.url</name>
     <value>https://jwkserve.com/.well-known/jwks.json</value>
+  </property>
+
+  <property>
+    <name>ranger.pdp.authn.jwt.issuer</name>
+    <value>https://jwkserve.com</value>
+  </property>
+
+  <property>
+    <name>ranger.pdp.authn.jwt.audiences</name>
+    <value>ranger-pdp</value>
   </property>
 
   <!-- Kerberos / SPNEGO authentication for incoming REST requests -->

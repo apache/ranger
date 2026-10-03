@@ -164,6 +164,10 @@ public class RangerPdpConfig {
         return get(RangerPdpConstants.PROP_AUTHN_JWT_AUDIENCES, "");
     }
 
+    public String getJwtIssuer() {
+        return get(RangerPdpConstants.PROP_AUTHN_JWT_ISSUER, "");
+    }
+
     // --- Kerberos / SPNEGO ---
     public boolean isKerberosAuthnEnabled() {
         return getBoolean(RangerPdpConstants.PROP_AUTHN_KERBEROS_ENABLED, false);

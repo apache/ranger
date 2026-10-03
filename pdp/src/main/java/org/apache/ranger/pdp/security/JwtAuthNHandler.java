@@ -41,7 +41,8 @@ import java.util.Properties;
  * <ul>
  *   <li>{@code provider.url}  – JWKS endpoint URL (optional if public key is set)
  *   <li>{@code public.key}    – PEM-encoded public key (optional if provider URL is set)
- *   <li>{@code audiences}     – comma-separated list of accepted audiences (optional)
+ *   <li>{@code audiences}     – comma-separated list of accepted audiences (mandatory)
+ *   <li>{@code issuer}        – expected token issuer (mandatory)
  * </ul>
  */
 public class JwtAuthNHandler implements PdpAuthNHandler {
@@ -58,6 +59,7 @@ public class JwtAuthNHandler implements PdpAuthNHandler {
         copyIfPresent(config, RangerPdpConstants.PROP_AUTHN_JWT_PROVIDER_URL, jwtConfig, RangerDefaultJwtAuthHandler.KEY_PROVIDER_URL);
         copyIfPresent(config, RangerPdpConstants.PROP_AUTHN_JWT_PUBLIC_KEY, jwtConfig, RangerDefaultJwtAuthHandler.KEY_JWT_PUBLIC_KEY);
         copyIfPresent(config, RangerPdpConstants.PROP_AUTHN_JWT_AUDIENCES, jwtConfig, RangerDefaultJwtAuthHandler.KEY_JWT_AUDIENCES);
+        copyIfPresent(config, RangerPdpConstants.PROP_AUTHN_JWT_ISSUER, jwtConfig, RangerDefaultJwtAuthHandler.KEY_JWT_ISS);
 
         delegate = new RangerDefaultJwtAuthHandler();
 

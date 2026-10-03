@@ -73,7 +73,14 @@ ranger.spnego.kerberos.keytab: /etc/keytabs/HTTP.keytab
 ranger.spnego.kerberos.principal: HTTP/ranger.rangernw@EXAMPLE.COM
 ranger.sso.browser.useragent: Mozilla,chrome
 ranger.sso.enabled: false
-ranger.sso.providerurl: https://127.0.0.1:8443/gateway/knoxsso/api/v1/websso
+# JWT bearer-token authentication of REST requests (Authorization: Bearer <jwt>): tokens are verified against the JWKS at
+# ranger.sso.providerurl and must carry exp, sub, iss equal to ranger.sso.issuer and an aud listed in ranger.sso.audiences.
+# https://jwkserve.com signs any claims sent to POST https://jwkserve.com/sign, so it is only suitable for development;
+# point these three properties at your own provider otherwise. With Knox SSO (ranger.sso.enabled: true) set
+# ranger.sso.providerurl to the Knox websso URL, e.g. https://ranger-knox.rangernw:8443/gateway/knoxsso/api/v1/websso
+ranger.sso.providerurl: https://jwkserve.com/.well-known/jwks.json
+ranger.sso.issuer: https://jwkserve.com
+ranger.sso.audiences: ranger-admin
 
 # Audit: ranger.audit.source.type is overridden by env AUDIT_INDEX_STORE, when set
 ranger.audit.hive.query.visibility: true
