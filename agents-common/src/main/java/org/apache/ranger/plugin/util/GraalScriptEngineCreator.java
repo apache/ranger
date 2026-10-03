@@ -49,31 +49,37 @@ public class GraalScriptEngineCreator implements ScriptEngineCreator {
             "org.apache.ranger.plugin.contextenricher.RangerTagForEval"
     };
     private final Method createMethod;
-    private final Object ctxBuilder;
+    private final Object hostAccess;
+    private final Object sharedEngine;
 
     public GraalScriptEngineCreator() {
         Method createMethod = null;
-        Object builder = null;
+        Object hostAccess = null;
+        Object sharedEngine = null;
         try {
-            Object hostAccess = buildHostAccess();
-            builder = buildContextBuilder(hostAccess);
+            hostAccess = buildHostAccess();
             Class<?> engineCls = Class.forName(CLS_ENGINE);
             Class<?> graalJsCls = Class.forName(CLS_GRAAL_JS_ENGINE);
             Class<?> ctxBldCls = Class.forName(CLS_CONTEXT_BUILDER);
             createMethod = graalJsCls.getMethod("create", engineCls, ctxBldCls);
+            Object engineBuilder = engineCls.getMethod("newBuilder").invoke(null);
+            engineBuilder.getClass().getMethod("allowExperimentalOptions", boolean.class).invoke(engineBuilder, true);
+            sharedEngine = engineBuilder.getClass().getMethod("build").invoke(engineBuilder);
         } catch (Throwable t) {
             LOG.warn("GraalScriptEngineCreator(): failed to initialize", t);
         } finally {
             this.createMethod = createMethod;
-            this.ctxBuilder = builder;
+            this.hostAccess = hostAccess;
+            this.sharedEngine = sharedEngine;
         }
     }
 
     public ScriptEngine getScriptEngine(ClassLoader clsLoader) {
         ScriptEngine ret = null;
         try {
-            if (createMethod != null && ctxBuilder != null) {
-                ret = (ScriptEngine) createMethod.invoke(null, null, ctxBuilder);
+            if (createMethod != null && hostAccess != null && sharedEngine != null) {
+                // GraalJSScriptEngine mutates the builder; each caller needs its own.
+                ret = (ScriptEngine) createMethod.invoke(null, sharedEngine, buildContextBuilder(hostAccess));
             }
         } catch (Throwable t) {
             LOG.debug("GraalScriptEngineCreator.getScriptEngine(): failed to create engine type {}", ENGINE_NAME, t);

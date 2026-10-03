@@ -149,7 +149,7 @@ import static org.apache.ranger.plugin.util.RangerCommonConstants.SCRIPT_VAR_ctx
 import static org.apache.ranger.plugin.util.RangerCommonConstants.SCRIPT_VAR_tag;
 import static org.apache.ranger.plugin.util.RangerCommonConstants.SCRIPT_VAR_tagAttr;
 
-public final class RangerRequestScriptEvaluator {
+public final class RangerRequestScriptEvaluator implements AutoCloseable {
     private static final Logger LOG = LoggerFactory.getLogger(RangerRequestScriptEvaluator.class);
 
     private static final Logger  PERF_POLICY_CONDITION_SCRIPT_TOJSON          = RangerPerfTracer.getPerfLogger("policy.condition.script.tojson");
@@ -224,26 +224,42 @@ public final class RangerRequestScriptEvaluator {
         this.scriptEngine  = scriptEngine;
         this.bindings      = scriptEngine.createBindings();
 
-        RangerTagForEval    currentTag = this.getCurrentTag();
-        Map<String, String> tagAttribs = currentTag != null ? currentTag.getAttributes() : Collections.emptyMap();
+        try {
+            RangerTagForEval    currentTag = this.getCurrentTag();
+            Map<String, String> tagAttribs = currentTag != null ? currentTag.getAttributes() : Collections.emptyMap();
 
-        bindings.put(SCRIPT_VAR_ctx, this);
-        bindings.put(SCRIPT_VAR_tag, currentTag);
-        bindings.put(SCRIPT_VAR_tagAttr, tagAttribs);
+            bindings.put(SCRIPT_VAR_ctx, this);
+            bindings.put(SCRIPT_VAR_tag, currentTag);
+            bindings.put(SCRIPT_VAR_tagAttr, tagAttribs);
 
-        String preExecScript = "";
+            String preExecScript = "";
 
-        if (enableJsonCtx) {
-            bindings.put(SCRIPT_VAR__CTX_JSON, this.toJson());
+            if (enableJsonCtx) {
+                bindings.put(SCRIPT_VAR__CTX_JSON, this.toJson());
 
-            preExecScript += SCRIPT_PREEXEC;
+                preExecScript += SCRIPT_PREEXEC;
+            }
+
+            if (StringUtils.isNotBlank(preExecScript)) {
+                try {
+                    scriptEngine.eval(preExecScript, bindings);
+                } catch (ScriptException excp) {
+                    LOG.error("RangerRequestScriptEvaluator(): initialization failed", excp);
+                }
+            }
+        } catch (RuntimeException | Error excp) {
+            close();
+            throw excp;
         }
+    }
 
-        if (StringUtils.isNotBlank(preExecScript)) {
+    @Override
+    public void close() {
+        if (bindings instanceof AutoCloseable) {
             try {
-                scriptEngine.eval(preExecScript, bindings);
-            } catch (ScriptException excp) {
-                LOG.error("RangerRequestScriptEvaluator(): initialization failed", excp);
+                ((AutoCloseable) bindings).close();
+            } catch (Exception excp) {
+                LOG.warn("RangerRequestScriptEvaluator.close(): failed to close script bindings", excp);
             }
         }
     }

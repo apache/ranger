@@ -72,10 +72,11 @@ public class TestRangerScriptConditionEvaluator {
         when(request.getReadOnlyCopy()).thenReturn(request);
 
         ScriptEngine engine = mock(ScriptEngine.class);
+        TrackingBindings bindings = new TrackingBindings();
 
         try (MockedStatic<ScriptEngineUtil> ignored = mockStatic(ScriptEngineUtil.class)) {
             when(ScriptEngineUtil.createScriptEngine("hive")).thenReturn(engine);
-            when(engine.createBindings()).thenReturn(new SimpleBindings());
+            when(engine.createBindings()).thenReturn(bindings);
             when(engine.eval(anyString(), any(Bindings.class))).thenReturn(Boolean.TRUE);
 
             RangerScriptConditionEvaluator evaluator = new RangerScriptConditionEvaluator();
@@ -85,6 +86,16 @@ public class TestRangerScriptConditionEvaluator {
             evaluator.init();
 
             Assertions.assertTrue(evaluator.isMatched(request));
+            Assertions.assertTrue(bindings.closed);
+        }
+    }
+
+    private static class TrackingBindings extends SimpleBindings implements AutoCloseable {
+        private boolean closed;
+
+        @Override
+        public void close() {
+            closed = true;
         }
     }
 
