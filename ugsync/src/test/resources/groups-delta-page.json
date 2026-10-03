@@ -1,0 +1,24 @@
+{
+  "@odata.context": "https://graph.microsoft.com/v1.0/$metadata#groups",
+  "value": [
+    {
+      "id": "22222222-aaaa-bbbb-cccc-000000000001",
+      "displayName": "Engineering",
+      "mailNickname": "engineering",
+      "securityEnabled": true
+    },
+    {
+      "id": "22222222-aaaa-bbbb-cccc-000000000002",
+      "displayName": "Data Platform",
+      "mailNickname": "data-platform",
+      "securityEnabled": true
+    },
+    {
+      "id": "22222222-aaaa-bbbb-cccc-000000000099",
+      "@removed": {
+        "reason": "deleted"
+      }
+    }
+  ],
+  "@odata.deltaLink": "https://graph.microsoft.com/v1.0/groups/delta?$deltatoken=SAMPLE_GROUP_DELTA_TOKEN"
+}

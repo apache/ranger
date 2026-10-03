@@ -1,0 +1,17 @@
+{
+  "@odata.context": "https://graph.microsoft.com/v1.0/$metadata#groups",
+  "value": [
+    {
+      "id": "G1",
+      "members@delta": [
+        { "@odata.type": "#microsoft.graph.user", "id": "u4" },
+        { "@odata.type": "#microsoft.graph.user", "id": "u5" }
+      ]
+    },
+    {
+      "id": "G3",
+      "displayName": "Empty Group"
+    }
+  ],
+  "@odata.deltaLink": "__BASE_URL__/v1.0/groups/delta?$deltatoken=MEMBERS_TOKEN"
+}
