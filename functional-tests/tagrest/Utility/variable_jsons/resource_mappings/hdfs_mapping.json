@@ -1,0 +1,9 @@
+{
+  "serviceName": "dev_hdfs",
+  "resourceElements": {
+    "path": {
+      "values": ["random_path_{random_str}"],
+      "isRecursive": true
+    }
+  }
+}
