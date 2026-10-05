@@ -41,12 +41,15 @@ public class TestRecordFilterJavaScript {
         try {
             RecordFilterJavaScript.filterRow("user", "bufferedWriter = new java.io.BufferedWriter(new java.io.FileWriter('omg.txt'));\n" +
                     "            bufferedWriter.write(\"Writing line one to file\"); bufferedWriter.close;", TestJsonManipulator.bigTester);
-
+            Assert.fail("Java access from a row-filter expression must fail");
         } catch (MaskingException e) {
-            Assert.assertTrue(e.getCause() instanceof RuntimeException);
-            Assert.assertTrue(e.getCause().getCause() instanceof ClassNotFoundException);
+            Assert.assertFalse(Files.exists(Paths.get("omg.txt")));
         }
-        Assert.assertFalse(Files.exists(Paths.get("omg.txt")));
+    }
+
+    @Test
+    public void testEngineAndContextAreCleared() {
+        Assert.assertTrue(RecordFilterJavaScript.filterRow("user", "engine === null && context === null", TestJsonManipulator.bigTester));
     }
 
     @AfterTest

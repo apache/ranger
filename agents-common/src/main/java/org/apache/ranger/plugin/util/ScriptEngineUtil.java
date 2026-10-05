@@ -31,6 +31,12 @@ import javax.script.ScriptEngine;
 public class ScriptEngineUtil {
     private static final Logger LOG = LoggerFactory.getLogger(RangerScriptConditionEvaluator.class);
 
+    /**
+     * Evaluated before a policy-condition or row-filter script, on the same bindings as that script.
+     * Supplements the engine from {@link NashornScriptEngineCreator} or {@link GraalScriptEngineCreator}.
+     */
+    public static final String SCRIPT_SAFE_PREEXEC = "Object.defineProperty(this,'engine',{value:null,writable:false});Object.defineProperty(this,'context',{value:null,writable:false});Object.defineProperty(this,'__noSuchProperty__',{value:null,writable:false});Object.defineProperty(this,'loadWithNewGlobal',{value:null,writable:false});exit=null;quit=null;";
+
     private static final String   SCRIPT_ENGINE_CREATOR_NASHHORN = "org.apache.ranger.plugin.util.NashornScriptEngineCreator";
     private static final String   SCRIPT_ENGINE_CREATOR_GRAAL    = "org.apache.ranger.plugin.util.GraalScriptEngineCreator";
     private static final String   SCRIPT_ENGINE_CREATOR_JS       = "org.apache.ranger.plugin.util.JavaScriptEngineCreator";

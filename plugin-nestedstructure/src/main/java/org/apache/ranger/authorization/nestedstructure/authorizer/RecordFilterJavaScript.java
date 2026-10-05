@@ -20,8 +20,8 @@
 
 package org.apache.ranger.authorization.nestedstructure.authorizer;
 
-import jdk.nashorn.api.scripting.ClassFilter;
-import jdk.nashorn.api.scripting.NashornScriptEngineFactory;
+import org.apache.ranger.plugin.util.NashornScriptEngineCreator;
+import org.apache.ranger.plugin.util.ScriptEngineUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -29,7 +29,8 @@ import javax.script.Bindings;
 import javax.script.ScriptEngine;
 
 /**
- * Executes an injected javascript command to determine if the user has access to the selected record
+ * Executes a row-filter expression to determine if the user has access to the selected record.
+ * The engine is created by {@link NashornScriptEngineCreator}, the same configuration policy-condition scripts use.
  */
 public class RecordFilterJavaScript {
     private static final Logger logger = LoggerFactory.getLogger(RecordFilterJavaScript.class);
@@ -46,30 +47,20 @@ public class RecordFilterJavaScript {
             "&& isNaN(x) && isNaN(y)); } while (k < len) { if (sameValueZero(o[k], valueToFind)) { return true; } k++; }" +
             " return false; } }); }";
 
-
     /**
-     * This class filter prevents javascript from importing, using or reflecting any java classes
-     * Helps keep javascript clean of injections.  It also contains other checks to ensure that injected
-     * javascript is reasonably safe.
+     * Checks applied before evaluation, in addition to the engine configuration.
      */
-    static class SecurityFilter implements ClassFilter {
-        @Override
-        public boolean exposeToScripts(String s) {
-            return false;
-        }
-
+    static class SecurityFilter {
         /**
-         *
-          * @param filterExpr the javascript to check if it contains potentially harmful commands
+         * @param filterExpr the javascript to check if it contains potentially harmful commands
          * @return if this script is likely bad
          */
-        boolean containsMalware(String filterExpr){
+        boolean containsMalware(String filterExpr) {
             //this.engine is the javascript notation for getting access to runtime that is executing the script
             //more checks can be added here
             return filterExpr.contains("this.engine");
         }
     }
-
 
     public static boolean filterRow(String user, String filterExpr, String jsonString) {
         SecurityFilter securityFilter = new SecurityFilter();
@@ -78,15 +69,18 @@ public class RecordFilterJavaScript {
             throw new MaskingException("cannot process filter expression due to security concern \"this.engine\": " + filterExpr);
         }
 
-        NashornScriptEngineFactory factory = new NashornScriptEngineFactory();
-        ScriptEngine               engine  = factory.getScriptEngine(securityFilter);
+        ScriptEngine engine = new NashornScriptEngineCreator().getScriptEngine(null);
+
+        if (engine == null) {
+            throw new MaskingException("unable to evaluate filter expression: script engine is not available");
+        }
 
         if (logger.isDebugEnabled()) {
             logger.debug("filterExpr: " + filterExpr);
         }
 
         // convert the given JSON string to JavaScript object, which the filterExpr expects, and then exec the filterExpr
-        String script = " jsonAttr = JSON.parse(jsonString); " + NASHORN_POLYFILL_ARRAY_PROTOTYPE_INCLUDES + " " + filterExpr;
+        String script = ScriptEngineUtil.SCRIPT_SAFE_PREEXEC + " jsonAttr = JSON.parse(jsonString); " + NASHORN_POLYFILL_ARRAY_PROTOTYPE_INCLUDES + " " + filterExpr;
 
         try {
             Bindings bindings = engine.createBindings();
