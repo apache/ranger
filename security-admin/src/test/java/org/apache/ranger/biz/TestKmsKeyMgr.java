@@ -61,6 +61,7 @@ import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -878,6 +879,62 @@ public class TestKmsKeyMgr {
             String result = (String) getKMSPasswordMethod.invoke(kmsKeyMgr, TEST_REPO_NAME);
 
             Assertions.assertEquals(TEST_PASSWORD, result);
+        }
+    }
+
+    @Test
+    public void testGetKMSPassword_V2Format() throws Exception {
+        // getKMSPassword() reads x_service_config_map directly, bypassing
+        // RangerServiceService.getConfigsWithDecryptedPassword() - it needs its own
+        // isV2Format(...) ? decryptPasswordV2(...) : decryptPassword(...) dispatch, exercised here.
+        XXService xxService = new XXService();
+        xxService.setId(1L);
+        XXServiceConfigMap xxServiceConfigMap = new XXServiceConfigMap();
+        xxServiceConfigMap.setConfigvalue("v2,PBEWithMD5AndTripleDES,c29tZXNhbHQ=,17,ZW5jcnlwdGVk");
+
+        try (MockedStatic<PasswordUtils> passwordUtilsMock = Mockito.mockStatic(PasswordUtils.class)) {
+            passwordUtilsMock.when(() -> PasswordUtils.isV2Format("v2,PBEWithMD5AndTripleDES,c29tZXNhbHQ=,17,ZW5jcnlwdGVk")).thenReturn(true);
+            passwordUtilsMock.when(() -> PasswordUtils.decryptPasswordV2(Mockito.eq("v2,PBEWithMD5AndTripleDES,c29tZXNhbHQ=,17,ZW5jcnlwdGVk"), Mockito.any(char[].class))).thenReturn(TEST_PASSWORD);
+
+            Mockito.when(rangerDaoManagerBase.getXXService()).thenReturn(xxServiceDao);
+            Mockito.when(xxServiceDao.findByName(TEST_REPO_NAME)).thenReturn(xxService);
+            Mockito.when(rangerDaoManagerBase.getXXServiceConfigMap()).thenReturn(xxServiceConfigMapDao);
+            Mockito.when(xxServiceConfigMapDao.findByServiceAndConfigKey(1L, "password")).thenReturn(xxServiceConfigMap);
+
+            Method getKMSPasswordMethod = KmsKeyMgr.class.getDeclaredMethod("getKMSPassword", String.class);
+            getKMSPasswordMethod.setAccessible(true);
+
+            String result = (String) getKMSPasswordMethod.invoke(kmsKeyMgr, TEST_REPO_NAME);
+
+            Assertions.assertEquals(TEST_PASSWORD, result);
+            passwordUtilsMock.verify(() -> PasswordUtils.decryptPasswordV2(Mockito.eq("v2,PBEWithMD5AndTripleDES,c29tZXNhbHQ=,17,ZW5jcnlwdGVk"), Mockito.any(char[].class)));
+            passwordUtilsMock.verify(() -> PasswordUtils.decryptPassword(Mockito.anyString()), Mockito.never());
+        }
+    }
+
+    @Test
+    public void testGetKMSPassword_V2Format_KeyMismatchFailsClosed() throws Exception {
+        // Unlike RangerServiceService's read path, getKMSPassword() has no try/catch around the
+        // v2 decrypt call - a key mismatch must propagate, not silently fall back to a bad value.
+        XXService xxService = new XXService();
+        xxService.setId(1L);
+        XXServiceConfigMap xxServiceConfigMap = new XXServiceConfigMap();
+        xxServiceConfigMap.setConfigvalue("v2,PBEWithMD5AndTripleDES,c29tZXNhbHQ=,17,ZW5jcnlwdGVk");
+
+        try (MockedStatic<PasswordUtils> passwordUtilsMock = Mockito.mockStatic(PasswordUtils.class)) {
+            passwordUtilsMock.when(() -> PasswordUtils.isV2Format("v2,PBEWithMD5AndTripleDES,c29tZXNhbHQ=,17,ZW5jcnlwdGVk")).thenReturn(true);
+            passwordUtilsMock.when(() -> PasswordUtils.decryptPasswordV2(Mockito.anyString(), Mockito.any(char[].class)))
+                    .thenThrow(new IOException("decryptPasswordV2() failed — wrong key or corrupted value (decrypted output was not in the expected format)"));
+
+            Mockito.when(rangerDaoManagerBase.getXXService()).thenReturn(xxServiceDao);
+            Mockito.when(xxServiceDao.findByName(TEST_REPO_NAME)).thenReturn(xxService);
+            Mockito.when(rangerDaoManagerBase.getXXServiceConfigMap()).thenReturn(xxServiceConfigMapDao);
+            Mockito.when(xxServiceConfigMapDao.findByServiceAndConfigKey(1L, "password")).thenReturn(xxServiceConfigMap);
+
+            Method getKMSPasswordMethod = KmsKeyMgr.class.getDeclaredMethod("getKMSPassword", String.class);
+            getKMSPasswordMethod.setAccessible(true);
+
+            Assertions.assertThrows(InvocationTargetException.class, () -> getKMSPasswordMethod.invoke(kmsKeyMgr, TEST_REPO_NAME));
         }
     }
 

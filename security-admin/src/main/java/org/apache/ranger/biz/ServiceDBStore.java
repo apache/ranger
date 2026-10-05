@@ -24,7 +24,6 @@ import org.apache.commons.collections.MapUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.SerializationUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.hadoop.thirdparty.com.google.common.base.Joiner;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellStyle;
@@ -141,6 +140,7 @@ import org.apache.ranger.plugin.util.PasswordUtils;
 import org.apache.ranger.plugin.util.RangerCommonConstants;
 import org.apache.ranger.plugin.util.RangerPolicyDeltaUtil;
 import org.apache.ranger.plugin.util.RangerPurgeResult;
+import org.apache.ranger.plugin.util.RangerSupportedCryptoAlgo;
 import org.apache.ranger.plugin.util.SearchFilter;
 import org.apache.ranger.plugin.util.ServiceDefUtil;
 import org.apache.ranger.plugin.util.ServicePolicies;
@@ -195,6 +195,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.UnknownHostException;
+import java.nio.charset.StandardCharsets;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -232,6 +233,9 @@ public class ServiceDBStore extends AbstractServiceStore {
     public static final     String                        RANGER_PLUGIN_AUDIT_FILTERS       = "ranger.plugin.audit.filters";
     public static final     String                        RANGER_PLUGINS_CONFIG_CONF_PREFIX = "ranger.plugins.conf.";
     public static final     String                        HIDDEN_PASSWORD_STR               = "*****";
+    public static final     String                        ENCRYPT_KEY_MISMATCH_REMEDIATION  = "In a multi-node deployment, ALL Admin nodes must share the exact same value for ranger.password.encryption.key." +
+            "If they don't — including if the key was rotated on some nodes without re-encrypting existing data — service passwords written or migrated under a different key will " +
+            "not work on this node. Check that ranger.password.encryption.key is identical across every Admin node in this cluster.";
     public static final     String                        CONFIG_KEY_PASSWORD               = "password";
     public static final     String                        CONFIG_TYPE_PASSWORD              = "password";
     public static final     String                        ACCESS_TYPE_DECRYPT_EEK           = "decrypteek";
@@ -269,7 +273,7 @@ public class ServiceDBStore extends AbstractServiceStore {
     public static           Integer                       TRANSACTION_RECORDS_RETENTION_PERIOD_IN_DAYS;
     public static           boolean                       SUPPORTS_PURGE_POLICY_EXPORT_LOGS;
     public static           Integer                       POLICY_EXPORT_LOGS_RETENTION_PERIOD_IN_DAYS;
-    private static          String                        LOCAL_HOSTNAME;
+    public  static          String                        LOCAL_HOSTNAME;
     private static          boolean                       isRolesDownloadedByService;
     private static volatile boolean                       legacyServiceDefsInitDone;
     private final           String                        optionUgsyncConfigChange          = "ugsyncConfigChange";
@@ -1008,16 +1012,14 @@ public class ServiceDBStore extends AbstractServiceStore {
             }
 
             if (isPasswordConfigKey(passwordConfigKeys, configKey)) {
-                Joiner joiner             = Joiner.on(",").skipNulls();
-                String iv                 = PasswordUtils.generateIvIfNeeded(CRYPT_ALGO);
-                String cryptConfigString  = joiner.join(CRYPT_ALGO, ENCRYPT_KEY, SALT, ITERATION_COUNT, iv, configValue);
-                String encryptedPwd       = PasswordUtils.encryptPassword(cryptConfigString);
-                String paddedEncryptedPwd = joiner.join(CRYPT_ALGO, ENCRYPT_KEY, SALT, ITERATION_COUNT, iv, encryptedPwd);
-                String decryptedPwd       = PasswordUtils.decryptPassword(paddedEncryptedPwd);
+                String storedValue  = PasswordUtils.encryptPasswordV2(configValue, RangerSupportedCryptoAlgo.getValueOf(CRYPT_ALGO), ENCRYPT_KEY.toCharArray(), SALT.getBytes(StandardCharsets.UTF_8), ITERATION_COUNT);
+                String decryptedPwd = PasswordUtils.decryptPasswordV2(storedValue, ENCRYPT_KEY.toCharArray());
 
-                if (StringUtils.equals(decryptedPwd, configValue)) {
-                    configValue = paddedEncryptedPwd;
+                if (!StringUtils.equals(decryptedPwd, configValue)) {
+                    throw new IllegalStateException("Failed to verify v2-encrypted value for password config key [" + configKey + "] on service [" + service.getName() + "] — refusing to store it");
                 }
+
+                configValue = storedValue;
             }
 
             XXServiceConfigMap xConfMap = new XXServiceConfigMap();
@@ -1201,17 +1203,19 @@ public class ServiceDBStore extends AbstractServiceStore {
 
                 if (StringUtils.equalsIgnoreCase(configValue, HIDDEN_PASSWORD_STR)) {
                     if (oldPassword != null && oldPassword.contains(",")) {
-                        PasswordUtils util = PasswordUtils.build(oldPassword);
+                        boolean oldIsV2      = PasswordUtils.isV2Format(oldPassword);
+                        String  oldCryptAlgo = oldIsV2 ? PasswordUtils.getCryptAlgoV2(oldPassword) : PasswordUtils.build(oldPassword).getCryptAlgo();
 
-                        if (!util.getCryptAlgo().equalsIgnoreCase(CRYPT_ALGO)) {
-                            String decryptedPwd    = PasswordUtils.decryptPassword(oldPassword);
-                            String paddingString   = Joiner.on(",").skipNulls().join(CRYPT_ALGO, new String(util.getEncryptKey()), new String(util.getSalt()), util.getIterationCount(), PasswordUtils.generateIvIfNeeded(CRYPT_ALGO));
-                            String encryptedPwd    = PasswordUtils.encryptPassword(paddingString + "," + decryptedPwd);
-                            String newDecryptedPwd = PasswordUtils.decryptPassword(paddingString + "," + encryptedPwd);
+                        if (!oldCryptAlgo.equalsIgnoreCase(CRYPT_ALGO)) {
+                            String decryptedPwd    = oldIsV2 ? PasswordUtils.decryptPasswordV2(oldPassword, ENCRYPT_KEY.toCharArray()) : PasswordUtils.decryptPassword(oldPassword);
+                            String newStoredValue  = PasswordUtils.encryptPasswordV2(decryptedPwd, RangerSupportedCryptoAlgo.getValueOf(CRYPT_ALGO), ENCRYPT_KEY.toCharArray(), SALT.getBytes(StandardCharsets.UTF_8), ITERATION_COUNT);
+                            String newDecryptedPwd = PasswordUtils.decryptPasswordV2(newStoredValue, ENCRYPT_KEY.toCharArray());
 
-                            if (StringUtils.equals(newDecryptedPwd, decryptedPwd)) {
-                                configValue = paddingString + "," + encryptedPwd;
+                            if (!StringUtils.equals(newDecryptedPwd, decryptedPwd)) {
+                                throw new IllegalStateException("Failed to verify re-encrypted value for password config key [" + configKey + "] on service [" + service.getName() + "] — refusing to store it");
                             }
+
+                            configValue = newStoredValue;
                         } else {
                             configValue = oldPassword;
                         }
@@ -1219,13 +1223,14 @@ public class ServiceDBStore extends AbstractServiceStore {
                         configValue = oldPassword;
                     }
                 } else {
-                    String paddingString = Joiner.on(",").skipNulls().join(CRYPT_ALGO, ENCRYPT_KEY, SALT, ITERATION_COUNT, PasswordUtils.generateIvIfNeeded(CRYPT_ALGO));
-                    String encryptedPwd  = PasswordUtils.encryptPassword(paddingString + "," + configValue);
-                    String decryptedPwd  = PasswordUtils.decryptPassword(paddingString + "," + encryptedPwd);
+                    String storedValue  = PasswordUtils.encryptPasswordV2(configValue, RangerSupportedCryptoAlgo.getValueOf(CRYPT_ALGO), ENCRYPT_KEY.toCharArray(), SALT.getBytes(StandardCharsets.UTF_8), ITERATION_COUNT);
+                    String decryptedPwd = PasswordUtils.decryptPasswordV2(storedValue, ENCRYPT_KEY.toCharArray());
 
-                    if (StringUtils.equals(decryptedPwd, configValue)) {
-                        configValue = paddingString + "," + encryptedPwd;
+                    if (!StringUtils.equals(decryptedPwd, configValue)) {
+                        throw new IllegalStateException("Failed to verify v2-encrypted value for password config key [" + configKey + "] on service [" + service.getName() + "] — refusing to store it");
                     }
+
+                    configValue = storedValue;
                 }
             }
 
