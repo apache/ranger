@@ -59,9 +59,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -90,7 +88,6 @@ public class TestRangerAdminJersey2RESTClient {
         conf.set(PREFIX + ".access.cluster.name", "");
         conf.setBoolean(PREFIX + ".policy.rest.client.cookie.enabled", true);
         conf.set(PREFIX + ".policy.rest.client.session.cookie.name", COOKIE_NAME);
-        conf.setBoolean(PREFIX + ".forceNonKerberos", true);
         return conf;
     }
 
@@ -324,7 +321,7 @@ public class TestRangerAdminJersey2RESTClient {
     }
 
     @Test
-    public void test07_getUserStore_paths_non_secure() throws Exception {
+    public void test07_getUserStore_paths() throws Exception {
         Client clientMock = mock(Client.class);
         WebTarget targetMock = mock(WebTarget.class);
         Invocation.Builder builderMock = mock(Invocation.Builder.class);
@@ -334,7 +331,6 @@ public class TestRangerAdminJersey2RESTClient {
         Response response500 = mock(Response.class);
 
         Configuration conf = buildBaseConfig(BASE_URL);
-        conf.setBoolean(PREFIX + ".forceNonKerberos", true);
         RangerAdminJersey2RESTClient underTest = new RangerAdminJersey2RESTClient();
         initWithMockClient(underTest, clientMock, conf);
 
@@ -414,11 +410,8 @@ public class TestRangerAdminJersey2RESTClient {
         Response response200 = mock(Response.class);
 
         Configuration conf = buildBaseConfig(BASE_URL);
-        conf.setBoolean(PREFIX + ".forceNonKerberos", false);
-        RangerAdminJersey2RESTClient underTest = spy(new RangerAdminJersey2RESTClient());
-        underTest.client = clientMock;
-        underTest.init(SERVICE, APPID, PREFIX, conf);
-        doReturn(true).when(underTest).isKerberosEnabled();
+        RangerAdminJersey2RESTClient underTest = new RangerAdminJersey2RESTClient();
+        initWithMockClient(underTest, clientMock, conf);
 
         Map<String, NewCookie> cookies = new HashMap<>();
         cookies.put(COOKIE_NAME, new NewCookie(COOKIE_NAME, "v"));
@@ -453,11 +446,8 @@ public class TestRangerAdminJersey2RESTClient {
         Response response200 = mock(Response.class);
 
         Configuration conf = buildBaseConfig(BASE_URL);
-        conf.setBoolean(PREFIX + ".forceNonKerberos", false);
-        RangerAdminJersey2RESTClient underTest = spy(new RangerAdminJersey2RESTClient());
-        underTest.client = clientMock;
-        underTest.init(SERVICE, APPID, PREFIX, conf);
-        doReturn(true).when(underTest).isKerberosEnabled();
+        RangerAdminJersey2RESTClient underTest = new RangerAdminJersey2RESTClient();
+        initWithMockClient(underTest, clientMock, conf);
 
         Map<String, NewCookie> cookies = new HashMap<>();
         cookies.put(COOKIE_NAME, new NewCookie(COOKIE_NAME, "v"));
@@ -491,11 +481,8 @@ public class TestRangerAdminJersey2RESTClient {
         Response response200 = mock(Response.class);
 
         Configuration conf = buildBaseConfig(BASE_URL);
-        conf.setBoolean(PREFIX + ".forceNonKerberos", false);
-        RangerAdminJersey2RESTClient underTest = spy(new RangerAdminJersey2RESTClient());
-        underTest.client = clientMock;
-        underTest.init(SERVICE, APPID, PREFIX, conf);
-        doReturn(true).when(underTest).isKerberosEnabled();
+        RangerAdminJersey2RESTClient underTest = new RangerAdminJersey2RESTClient();
+        initWithMockClient(underTest, clientMock, conf);
 
         Map<String, NewCookie> cookies = new HashMap<>();
         cookies.put(COOKIE_NAME, new NewCookie(COOKIE_NAME, "v"));
@@ -529,11 +516,8 @@ public class TestRangerAdminJersey2RESTClient {
         Response response200 = mock(Response.class);
 
         Configuration conf = buildBaseConfig(BASE_URL);
-        conf.setBoolean(PREFIX + ".forceNonKerberos", false);
-        RangerAdminJersey2RESTClient underTest = spy(new RangerAdminJersey2RESTClient());
-        underTest.client = clientMock;
-        underTest.init(SERVICE, APPID, PREFIX, conf);
-        doReturn(true).when(underTest).isKerberosEnabled();
+        RangerAdminJersey2RESTClient underTest = new RangerAdminJersey2RESTClient();
+        initWithMockClient(underTest, clientMock, conf);
 
         when(response200.getStatus()).thenReturn(200);
         when(response200.readEntity(String.class)).thenReturn("{}");
@@ -776,5 +760,32 @@ public class TestRangerAdminJersey2RESTClient {
         assertNull(second);
         ServiceTags third = underTest.getServiceTagsIfUpdated(1L, 2L);
         assertNull(third);
+    }
+
+    @Test
+    public void test23_policies_secureEndpointAccessDisabled_uses_non_secure_url() throws Exception {
+        Client clientMock = mock(Client.class);
+        WebTarget targetMock = mock(WebTarget.class);
+        Invocation.Builder builderMock = mock(Invocation.Builder.class);
+        Response response200 = mock(Response.class);
+
+        Configuration conf = buildBaseConfig(BASE_URL);
+        conf.setBoolean(PREFIX + ".forceSecureEndpointAccess", false);
+        RangerAdminJersey2RESTClient underTest = new RangerAdminJersey2RESTClient();
+        initWithMockClient(underTest, clientMock, conf);
+
+        when(response200.getStatus()).thenReturn(200);
+        when(response200.readEntity(String.class)).thenReturn("{}");
+
+        ArgumentCaptor<String> urlCaptor = ArgumentCaptor.forClass(String.class);
+
+        when(clientMock.target(urlCaptor.capture())).thenReturn(targetMock);
+        when(targetMock.queryParam(ArgumentMatchers.anyString(), ArgumentMatchers.any())).thenReturn(targetMock);
+        when(targetMock.request(MediaType.APPLICATION_JSON_TYPE)).thenReturn(builderMock);
+        when(builderMock.cookie(ArgumentMatchers.nullable(Cookie.class))).thenReturn(builderMock);
+        when(builderMock.get()).thenReturn(response200);
+
+        assertNotNull(underTest.getServicePoliciesIfUpdated(1L, 2L));
+        Assertions.assertTrue(urlCaptor.getValue().contains(RangerRESTUtils.REST_URL_POLICY_GET_FOR_SERVICE_IF_UPDATED + SERVICE));
     }
 }

@@ -1,0 +1,8 @@
+{
+  "serviceName": "dev_hbase",
+  "resourceElements": {
+    "table": { "values": ["hbase_table_{random_str}"] },
+    "column-family": { "values": ["hbase_column_family_{random_str}"] },
+    "column": { "values": ["hbase_column_{random_str}"] }
+  }
+}

@@ -36,6 +36,7 @@ import java.lang.reflect.Field;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNotSame;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -117,6 +118,34 @@ public class TestGraalScriptEngineCreator {
         assertThrows(IllegalStateException.class, () -> context.eval("js", "1 + 1"));
         try (RangerRequestScriptEvaluator evaluator = new RangerRequestScriptEvaluator(request, engine, false)) {
             assertEquals(3, ((Number) evaluator.evaluateScript("1 + 2")).intValue());
+        }
+    }
+
+    @Test
+    public void test05_closingNoHostAccessEngineKeepsSharedEngineUsable() throws Exception {
+        GraalScriptEngineCreator creator = new GraalScriptEngineCreator();
+        GraalJSScriptEngine sharedEngine = (GraalJSScriptEngine) creator.getScriptEngine(null);
+        GraalJSScriptEngine noHostEngine = (GraalJSScriptEngine) GraalScriptEngineCreator.createNoHostAccessScriptEngine();
+        assertNotNull(sharedEngine);
+        assertNotNull(noHostEngine);
+
+        RangerAccessRequest request = mock(RangerAccessRequest.class);
+        when(request.getReadOnlyCopy()).thenReturn(request);
+        when(request.getUser()).thenReturn("test-user");
+
+        try (RangerRequestScriptEvaluator evaluator = new RangerRequestScriptEvaluator(request, sharedEngine, false)) {
+            Context noHostContext;
+            try {
+                assertNotSame(sharedEngine.getPolyglotEngine(), noHostEngine.getPolyglotEngine());
+                noHostEngine.put("ctx", evaluator);
+                assertEquals("undefined", noHostEngine.eval("typeof ctx.getUser"));
+                noHostContext = noHostEngine.getPolyglotContext(noHostEngine.getContext());
+            } finally {
+                GraalScriptEngineCreator.closeScriptEngine(noHostEngine);
+            }
+
+            assertThrows(IllegalStateException.class, () -> noHostContext.eval("js", "1 + 1"));
+            assertEquals("test-user", evaluator.evaluateScript("ctx.getUser()"));
         }
     }
 

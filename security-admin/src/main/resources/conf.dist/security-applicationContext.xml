@@ -41,12 +41,12 @@ http://www.springframework.org/schema/security/spring-security-oauth2-2.0.xsd">
 	<security:http pattern="/images/ranger_logo.png" security="none" />
 	<security:http pattern="/images/favicon.ico" security="none"/>
 	<security:http pattern="/service/assets/policyList/*" security="none"/>
-	<security:http pattern="/service/assets/resources/grant" security="none"/>
-	<security:http pattern="/service/assets/resources/revoke" security="none"/>
+	<security:http pattern="/service/assets/resources/grant/**" security="none"/>
+	<security:http pattern="/service/assets/resources/revoke/**" security="none"/>
 	<security:http pattern="/service/gds/download/**" security="none"/>
 	<security:http pattern="/service/plugins/policies/download/**" security="none"/>
-	<security:http pattern="/service/plugins/services/grant/*" security="none"/>
-	<security:http pattern="/service/plugins/services/revoke/*" security="none"/>
+	<security:http pattern="/service/plugins/services/grant/**" security="none"/>
+	<security:http pattern="/service/plugins/services/revoke/**" security="none"/>
 	<security:http pattern="/service/tags/download/**" security="none"/>
 	<security:http pattern="/service/roles/download/**" security="none"/>
 	<security:http pattern="/service/xusers/download/**" security="none"/>

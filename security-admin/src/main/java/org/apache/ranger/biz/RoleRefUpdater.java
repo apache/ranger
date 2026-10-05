@@ -84,21 +84,7 @@ public class RoleRefUpdater {
         return daoMgr;
     }
 
-    /**
-     * Creates role-user/group/role ref mappings.
-     * When {@code createNonExistUserGroupRole} is true, missing users, groups, and nested roles may be created
-     * (existing create/update role API behavior).
-     */
     public void createNewRoleMappingForRefTable(RangerRole rangerRole, Boolean createNonExistUserGroupRole, Boolean isRefTableCleanupRequired) {
-        createNewRoleMappingForRefTable(rangerRole, createNonExistUserGroupRole, createNonExistUserGroupRole, isRefTableCleanupRequired);
-    }
-
-    /**
-     * Creates role-user/group/role ref mappings with separate controls for creating missing users/groups vs nested roles.
-     * Role import uses createNonExistUserGroup=false and createNonExistRole=true so nested roles can be created
-     * without forcing creation of missing users or groups.
-     */
-    public void createNewRoleMappingForRefTable(RangerRole rangerRole, Boolean createNonExistUserGroup, Boolean createNonExistRole, Boolean isRefTableCleanupRequired) {
         if (rangerRole == null) {
             return;
         }
@@ -123,13 +109,11 @@ public class RoleRefUpdater {
             roleRoles.add(role.getName());
         }
 
-        if (Boolean.TRUE.equals(isRefTableCleanupRequired)) {
+        if (isRefTableCleanupRequired) {
             cleanupRefTablesForUpdate(rangerRole, roleUsers, roleGroups, roleRoles);
         }
 
-        final boolean adminAccess              = xaBizUtil.checkAdminAccess();
-        final boolean isCreateNonExistentUGs   = Boolean.TRUE.equals(createNonExistUserGroup) && adminAccess;
-        final boolean isCreateNonExistentRoles = Boolean.TRUE.equals(createNonExistRole) && adminAccess;
+        final boolean isCreateNonExistentUGRs = createNonExistUserGroupRole && xaBizUtil.checkAdminAccess();
 
         if (CollectionUtils.isNotEmpty(roleUsers)) {
             LOG.debug("New user entries to be inserted into x_role_ref_user for role ID {}: {}", roleId, roleUsers);
@@ -151,7 +135,7 @@ public class RoleRefUpdater {
                     if (userRef != null) {
                         xxRoleRefUsers.add(userRef);
                     }
-                } else if (isCreateNonExistentUGs) {
+                } else if (isCreateNonExistentUGRs) {
                     rangerTransactionSynchronizationAdapter.executeOnTransactionCommit(associator);
                 } else {
                     throw restErrorUtil.createRESTException("user with name: " + userName + " does not exist ", MessageEnums.INVALID_INPUT_DATA);
@@ -181,7 +165,7 @@ public class RoleRefUpdater {
                     if (groupRef != null) {
                         xxRoleRefGroups.add(groupRef);
                     }
-                } else if (isCreateNonExistentUGs) {
+                } else if (isCreateNonExistentUGRs) {
                     rangerTransactionSynchronizationAdapter.executeOnTransactionCommit(associator);
                 } else {
                     throw restErrorUtil.createRESTException("Group with name: " + groupName + " does not exist ", MessageEnums.INVALID_INPUT_DATA);
@@ -211,7 +195,7 @@ public class RoleRefUpdater {
                     if (roleRef != null) {
                         xxRoleRefRoles.add(roleRef);
                     }
-                } else if (isCreateNonExistentRoles) {
+                } else if (isCreateNonExistentUGRs) {
                     rangerTransactionSynchronizationAdapter.executeOnTransactionCommit(associator);
                 } else {
                     throw restErrorUtil.createRESTException("Role with name: " + subRoleName + " does not exist ", MessageEnums.INVALID_INPUT_DATA);

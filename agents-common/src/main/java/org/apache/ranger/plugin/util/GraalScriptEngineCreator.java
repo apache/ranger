@@ -79,7 +79,7 @@ public class GraalScriptEngineCreator implements ScriptEngineCreator {
         try {
             if (createMethod != null && hostAccess != null && sharedEngine != null) {
                 // GraalJSScriptEngine mutates the builder; each caller needs its own.
-                ret = (ScriptEngine) createMethod.invoke(null, sharedEngine, buildContextBuilder(hostAccess));
+                ret = (ScriptEngine) createMethod.invoke(null, sharedEngine, newContextBuilder(hostAccess));
             }
         } catch (Throwable t) {
             LOG.debug("GraalScriptEngineCreator.getScriptEngine(): failed to create engine type {}", ENGINE_NAME, t);
@@ -89,6 +89,50 @@ public class GraalScriptEngineCreator implements ScriptEngineCreator {
             LOG.debug("GraalScriptEngineCreator.getScriptEngine(): failed to create engine type {}", ENGINE_NAME);
         }
         return ret;
+    }
+
+    /**
+     * Graal.js engine that exposes no host classes and no host methods.
+     * A new context builder is used for each engine. Returns null when Graal.js cannot be created.
+     */
+    public static ScriptEngine createNoHostAccessScriptEngine() {
+        ScriptEngine ret = null;
+
+        try {
+            Class<?> hostAccessCls = Class.forName(CLS_HOST_ACCESS);
+            Object   hostAccess    = hostAccessCls.getField("NONE").get(null);
+            Object   builder       = newContextBuilder(hostAccess);
+            Class<?> engineCls     = Class.forName(CLS_ENGINE);
+            Class<?> graalJsCls    = Class.forName(CLS_GRAAL_JS_ENGINE);
+            Class<?> ctxBuilderCls = Class.forName(CLS_CONTEXT_BUILDER);
+            Method   createMethod  = graalJsCls.getMethod("create", engineCls, ctxBuilderCls);
+
+            ret = (ScriptEngine) createMethod.invoke(null, null, builder);
+        } catch (Throwable t) {
+            LOG.debug("GraalScriptEngineCreator.createNoHostAccessScriptEngine(): failed to create engine type {}", ENGINE_NAME, t);
+        }
+
+        return ret;
+    }
+
+    /**
+     * Closes the polyglot engine behind an engine from {@link #createNoHostAccessScriptEngine()},
+     * including every context created from it.
+     */
+    public static void closeScriptEngine(ScriptEngine engine) {
+        if (engine == null) {
+            return;
+        }
+
+        try {
+            Object polyglotEngine = engine.getClass().getMethod("getPolyglotEngine").invoke(engine);
+
+            if (polyglotEngine instanceof AutoCloseable) {
+                ((AutoCloseable) polyglotEngine).close();
+            }
+        } catch (Throwable t) {
+            LOG.debug("GraalScriptEngineCreator.closeScriptEngine(): failed to close engine", t);
+        }
     }
 
     private Object buildHostAccess() throws Exception {
@@ -111,7 +155,7 @@ public class GraalScriptEngineCreator implements ScriptEngineCreator {
         return haBuilderCls.getMethod("build").invoke(haBuilder);
     }
 
-    private Object buildContextBuilder(Object hostAccess) throws Exception {
+    private static Object newContextBuilder(Object hostAccess) throws Exception {
         Class<?> hostAccessCls = Class.forName(CLS_HOST_ACCESS);
         Class<?> contextCls = Class.forName(CLS_CONTEXT);
         Class<?> ctxBuilderCls = Class.forName(CLS_CONTEXT_BUILDER);

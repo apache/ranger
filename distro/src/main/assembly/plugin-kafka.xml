@@ -70,14 +70,9 @@
 					<include>org.apache.hadoop:hadoop-auth:jar:${hadoop.version}</include>
 					<include>org.apache.hadoop:hadoop-client-api:jar:${hadoop.version}</include>
 					<include>org.apache.hadoop:hadoop-client-runtime:jar:${hadoop.version}</include>
-					<include>org.apache.httpcomponents:httpasyncclient:jar:${httpcomponents.httpasyncclient.version}</include>
 					<include>org.apache.httpcomponents:httpclient:jar:${httpcomponents.httpclient.version}</include>
-					<include>org.apache.httpcomponents:httpcore-nio:jar:${httpcomponents.httpcore.version}</include>
 					<include>org.apache.httpcomponents:httpcore:jar:${httpcomponents.httpcore.version}</include>
-					<include>org.apache.httpcomponents:httpmime:jar:${httpcomponents.httpmime.version}</include>
-					<include>org.apache.solr:solr-solrj:jar:${solr.version}</include>
 					<include>org.codehaus.woodstox:stax2-api</include>
-					<include>org.eclipse.jetty:jetty-client:jar:${jetty-client.version}</include>
 					<!-- GraalJS 25.x runtime (js is now a POM, not a JAR) -->
 					<include>org.graalvm.js:js-language:jar:${graalvm.version}</include>
 					<include>org.graalvm.js:js-scriptengine:jar:${graalvm.version}</include>
@@ -94,23 +89,6 @@
 					<include>org.graalvm.shadowed:xz:jar:${graalvm.version}</include>
 
 				</includes>
-                <excludes>
-					<exclude>com.fasterxml.jackson.core:*</exclude>
-					<exclude>com.fasterxml.jackson.jaxrs:*</exclude>
-					<exclude>com.fasterxml.jackson.module:*</exclude>
-					<exclude>com.fasterxml.jackson.dataformat:*</exclude>
-					<exclude>org.apache.kafka:kafka-clients</exclude>
-					<exclude>org.glassfish.jersey.core:*</exclude>
-					<exclude>org.glassfish.jersey.ext:*</exclude>
-					<exclude>org.glassfish.jersey.inject:*</exclude>
-					<exclude>org.glassfish.jersey.media:*</exclude>
-					<exclude>org.glassfish.hk2:*</exclude>
-					<exclude>javax.ws.rs:javax.ws.rs-api</exclude>
-					<exclude>jakarta.ws.rs:jakarta.ws.rs-api</exclude>
-					<exclude>org.slf4j:*</exclude>
-					<exclude>org.apache.logging.log4j:*</exclude>
-					<exclude>ch.qos.reload4j:*</exclude>
-				</excludes>
 			</binaries>
 		</moduleSet>
 
