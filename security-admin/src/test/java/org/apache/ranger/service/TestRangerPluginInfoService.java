@@ -31,6 +31,7 @@ import org.apache.ranger.entity.XXPluginInfo;
 import org.apache.ranger.entity.XXService;
 import org.apache.ranger.entity.XXServiceDef;
 import org.apache.ranger.entity.XXServiceVersionInfo;
+import org.apache.ranger.entity.view.VXXPluginInfo;
 import org.apache.ranger.plugin.model.RangerPluginInfo;
 import org.apache.ranger.plugin.store.PList;
 import org.apache.ranger.plugin.util.SearchFilter;
@@ -39,7 +40,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 
 import javax.persistence.EntityManager;
@@ -109,7 +109,7 @@ public class TestRangerPluginInfoService {
     }
 
     @Test
-    void testPopulateViewObject_setsServiceTypeAndInfo() {
+    void testPopulateViewObject_setsInfoWithoutServiceTypeLookup() {
         XXPluginInfo x = new XXPluginInfo();
         x.setId(1L);
         x.setServiceName("s1");
@@ -117,11 +117,10 @@ public class TestRangerPluginInfoService {
         x.setAppType("app");
         x.setIpAddress("ip");
         x.setInfo("{}");
-        when(xxServiceDefDao.findServiceDefTypeByServiceName("s1")).thenReturn("hive");
         when(jsonUtil.jsonToMap("{}")).thenReturn(new HashMap<>());
         RangerPluginInfo out = svc.populateViewObject(x);
-        assertEquals("hive", out.getServiceType());
         assertEquals("s1", out.getServiceName());
+        assertNotNull(out.getInfo());
     }
 
     @Test
@@ -221,19 +220,16 @@ public class TestRangerPluginInfoService {
         when(searchUtil.constructSortClause(eq(f), any())).thenReturn(" ORDER BY obj.serviceName asc");
         when(query.getFirstResult()).thenReturn(0);
         when(query.getMaxResults()).thenReturn(1000);
-        when(xxPluginInfoDao.executeCountQueryInSecurityContext(eq(XXPluginInfo.class), eq(query))).thenReturn(1L);
-        XXPluginInfo x = new XXPluginInfo();
+        when(query.getSingleResult()).thenReturn(1L);
+        VXXPluginInfo x = new VXXPluginInfo();
         x.setServiceName("svc");
         x.setInfo("{}");
-        when(xxPluginInfoDao.executeQueryInSecurityContext(eq(XXPluginInfo.class), eq(query))).thenReturn(Collections.singletonList(x));
-        // also stub internal count query creation used by getCountForSearchQuery
-        Mockito.when(searchUtil.createSearchQuery(eq(entityManager), anyString(), isNull(), eq(f), any(), eq(true)))
-                .thenReturn(query);
+        when(query.getResultList()).thenReturn(Collections.singletonList(x));
         PList<RangerPluginInfo> pList = new PList<>();
         Method                  m     = RangerPluginInfoService.class.getDeclaredMethod("searchRangerObjects", SearchFilter.class, List.class, List.class, PList.class);
         m.setAccessible(true);
         @SuppressWarnings("unchecked")
-        List<XXPluginInfo> out = (List<XXPluginInfo>) m.invoke(svc, f, svc.getSearchFields(), svc.getSortFields(), pList);
+        List<VXXPluginInfo> out = (List<VXXPluginInfo>) m.invoke(svc, f, svc.getSearchFields(), svc.getSortFields(), pList);
         assertNotNull(out);
         assertEquals(1, out.size());
     }
@@ -241,12 +237,12 @@ public class TestRangerPluginInfoService {
     @Test
     public void testF_jsonStringToMap_reflection_variants() throws Exception {
         RangerPluginInfoService svc = createSvc();
-        Method                  m   = RangerPluginInfoService.class.getDeclaredMethod("jsonStringToMap", String.class, XXServiceVersionInfo.class, boolean.class);
+        Method                  m   = RangerPluginInfoService.class.getDeclaredMethod("jsonStringToMap", String.class, VXXPluginInfo.class);
         m.setAccessible(true);
         Map<String, String> base = new HashMap<>();
         when(jsonUtil.jsonToMap("{}")).thenReturn(base);
         @SuppressWarnings("unchecked")
-        Map<String, String> out = (Map<String, String>) m.invoke(svc, "{}", null, false);
+        Map<String, String> out = (Map<String, String>) m.invoke(svc, "{}", null);
         assertNotNull(out);
     }
 
