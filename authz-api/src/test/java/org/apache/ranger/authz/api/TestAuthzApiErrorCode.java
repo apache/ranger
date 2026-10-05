@@ -40,6 +40,8 @@ import static org.apache.ranger.authz.api.RangerAuthzApiErrorCode.INVALID_RESOUR
 import static org.apache.ranger.authz.model.RangerResourceInfo.ResourceMatchScope.SELF;
 import static org.apache.ranger.authz.model.RangerResourceInfo.ResourceMatchScope.SELF_OR_ANY_DESCENDANT;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class TestAuthzApiErrorCode {
     @Test
@@ -64,5 +66,19 @@ public class TestAuthzApiErrorCode {
         assertEquals("AUTHZ-400-00-015: invalid resource \"mytype:myresource\" - unknown type \"mytype\"", RangerAuthzApiErrorCode.INVALID_RESOURCE_TYPE_NOT_VALID.getFormattedMessage("mytype:myresource", "mytype"));
         assertEquals("AUTHZ-400-00-016: invalid resource - empty", RangerAuthzApiErrorCode.INVALID_RESOURCE_EMPTY_VALUE.getFormattedMessage());
         assertEquals("AUTHZ-400-00-017: invalid resource \"mytype:myresource\" - does not match template \"{res1}/{res2}\"", RangerAuthzApiErrorCode.INVALID_RESOURCE_VALUE.getFormattedMessage("mytype:myresource", "{res1}/{res2}"));
+    }
+
+    @Test
+    void testEnumAccessors_positive_httpStatusCodeMessageAndToString() {
+        assertEquals(500, AUTHORIZER_CREATION_FAILED.getHttpStatusCode());
+        assertTrue(AUTHORIZER_CREATION_FAILED.getCode().startsWith("AUTHZ"));
+        assertTrue(AUTHORIZER_CREATION_FAILED.getMessage().contains("authorizer"));
+        assertTrue(AUTHORIZER_CREATION_FAILED.toString().contains("httpStatusCode=500"));
+    }
+
+    @Test
+    void testEnumAccessors_negative_distinctHttpStatusBetweenServerAndClient() {
+        assertNotEquals(INVALID_REQUEST_USER_INFO_MISSING.getHttpStatusCode(), AUTHORIZER_CREATION_FAILED.getHttpStatusCode());
+        assertTrue(INVALID_REQUEST_USER_INFO_MISSING.toString().contains("400"));
     }
 }
