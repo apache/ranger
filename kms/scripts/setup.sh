@@ -164,6 +164,8 @@ ranger_kms_http_enabled=$(get_prop 'ranger_kms_http_enabled' $PROPFILE)
 ranger_kms_https_keystore_file=$(get_prop 'ranger_kms_https_keystore_file' $PROPFILE)
 ranger_kms_https_keystore_keyalias=$(get_prop 'ranger_kms_https_keystore_keyalias' $PROPFILE)
 ranger_kms_https_keystore_password=$(get_prop 'ranger_kms_https_keystore_password' $PROPFILE)
+ranger_kms_https_truststore_file=$(get_prop 'ranger_kms_https_truststore_file' $PROPFILE)
+ranger_kms_https_truststore_password=$(get_prop 'ranger_kms_https_truststore_password' $PROPFILE)
 
 javax_net_ssl_keyStore=$(get_prop 'javax_net_ssl_keyStore' $PROPFILE)
 javax_net_ssl_keyStorePassword=$(get_prop 'javax_net_ssl_keyStorePassword' $PROPFILE)
@@ -1112,6 +1114,37 @@ update_properties() {
 				updatePropertyToFilePy $propertyName $newPropertyValue $to_file_kms_site
 			fi
 		fi
+		if [ "${ranger_kms_https_truststore_file}" != "" ] && [ "${ranger_kms_https_truststore_password}" != "" ]
+    		then
+    			propertyName=ranger.service.https.attrib.truststore.file
+    			newPropertyValue="${ranger_kms_https_truststore_file}"
+    			updatePropertyToFilePy $propertyName $newPropertyValue $to_file_kms_site
+
+    			policymgr_https_truststore_credential_alias=truststoreCredentialAlias
+    			propertyName=ranger.service.https.attrib.truststore.credential.alias
+    			newPropertyValue="${policymgr_https_truststore_credential_alias}"
+    			updatePropertyToFilePy $propertyName $newPropertyValue $to_file_kms_site
+
+    			if [ "${keystore}" != "" ]
+    			then
+    				propertyName=ranger.service.https.attrib.truststore.pass
+    				newPropertyValue="_"
+    				updatePropertyToFilePy $propertyName $newPropertyValue $to_file_kms_site
+    				$PYTHON_COMMAND_INVOKER ranger_credential_helper.py -l "cred/lib/*" -f "$keystore" -k "$policymgr_https_truststore_credential_alias" -v "$ranger_kms_https_truststore_password" -c 1
+    			else
+    				propertyName=ranger.service.https.attrib.truststore.pass
+    				newPropertyValue="${ranger_kms_https_truststore_password}"
+    				updatePropertyToFilePy $propertyName $newPropertyValue $to_file_kms_site
+    			fi
+    			if test -f $keystore; then
+    				chown -R ${unix_user}:${unix_group} ${keystore}
+    				chmod 640 ${keystore}
+    			else
+    				propertyName=ranger.service.https.attrib.truststore.pass
+    				newPropertyValue="${ranger_kms_https_truststore_password}"
+    				updatePropertyToFilePy $propertyName $newPropertyValue $to_file_kms_site
+    			fi
+    		fi
 	fi
 }
 
