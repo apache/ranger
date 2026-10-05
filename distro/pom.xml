@@ -73,6 +73,13 @@
         </dependency>
         <dependency>
             <groupId>org.apache.ranger</groupId>
+            <artifactId>pamCredValidator</artifactId>
+            <version>${project.version}</version>
+            <type>uexe</type>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.ranger</groupId>
             <artifactId>ranger-atlas-plugin</artifactId>
             <version>${project.version}</version>
             <scope>provided</scope>
