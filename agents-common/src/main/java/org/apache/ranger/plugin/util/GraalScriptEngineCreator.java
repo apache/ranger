@@ -99,7 +99,8 @@ public class GraalScriptEngineCreator implements ScriptEngineCreator {
         for (String className : SCRIPT_API_CLASSES) {
             try {
                 for (Method m : Class.forName(className).getDeclaredMethods()) {
-                    if (Modifier.isPublic(m.getModifiers()) && !Modifier.isStatic(m.getModifiers())) {
+                    // Bindings lifecycle is managed by Ranger, not by scripts.
+                    if (Modifier.isPublic(m.getModifiers()) && !Modifier.isStatic(m.getModifiers()) && !"close".equals(m.getName())) {
                         allowAccessMethod.invoke(haBuilder, m);
                     }
                 }

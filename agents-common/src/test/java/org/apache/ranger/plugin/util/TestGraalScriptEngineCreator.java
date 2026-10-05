@@ -27,9 +27,9 @@ import org.junit.jupiter.api.TestMethodOrder;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import javax.script.ScriptEngine;
 import javax.script.Bindings;
 import javax.script.ScriptContext;
+import javax.script.ScriptEngine;
 import javax.script.SimpleScriptContext;
 
 import java.lang.reflect.Field;
@@ -93,6 +93,30 @@ public class TestGraalScriptEngineCreator {
 
         try (RangerRequestScriptEvaluator secondEvaluator = new RangerRequestScriptEvaluator(request, secondEngine, false)) {
             assertEquals(3, ((Number) secondEvaluator.evaluateScript("1 + 2")).intValue());
+        }
+    }
+
+    @Test
+    public void test04_scriptsCannotCloseEvaluatorBindings() throws Exception {
+        GraalScriptEngineCreator creator = new GraalScriptEngineCreator();
+        GraalJSScriptEngine engine = (GraalJSScriptEngine) creator.getScriptEngine(null);
+        assertNotNull(engine);
+
+        RangerAccessRequest request = mock(RangerAccessRequest.class);
+        when(request.getReadOnlyCopy()).thenReturn(request);
+        when(request.getUser()).thenReturn("test-user");
+
+        Context context;
+        try (RangerRequestScriptEvaluator evaluator = new RangerRequestScriptEvaluator(request, engine, false)) {
+            assertEquals("undefined", evaluator.evaluateScript("typeof ctx.close"));
+            assertEquals(Boolean.TRUE, evaluator.evaluateScript("var closeDenied = false; try { ctx.close(); } catch (e) { closeDenied = e instanceof TypeError; } closeDenied;"));
+            assertEquals("test-user", evaluator.evaluateScript("ctx.getUser()"));
+            context = getBindingsContext(engine, evaluator);
+        }
+
+        assertThrows(IllegalStateException.class, () -> context.eval("js", "1 + 1"));
+        try (RangerRequestScriptEvaluator evaluator = new RangerRequestScriptEvaluator(request, engine, false)) {
+            assertEquals(3, ((Number) evaluator.evaluateScript("1 + 2")).intValue());
         }
     }
 

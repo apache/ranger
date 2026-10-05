@@ -93,7 +93,6 @@ public class RangerRequestExprResolverTest {
     }
 
     private static class FailingBindings extends TrackingBindings {
-
         @Override
         public Object put(String name, Object value) {
             throw new IllegalStateException("binding failure");
