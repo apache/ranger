@@ -31,6 +31,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -60,9 +61,16 @@ public class RangerAccessRequestUtil {
     public static final  String KEY_CONTEXT_BATCH_EVAL_CONTEXT               = "BATCH_EVAL_CONTEXT";
     public static final  String KEY_CONTEXT_RESOURCE_ZONE_NAMES              = "RESOURCE_ZONE_NAMES";
     public static final  String KEY_CONTEXT_ACL_ENFORCER                     = "_ACL_ENFORCER";
+    // make sure to add all internal keys in INTERNAL_CONTEXT_KEYS, to exclude them from CTX_ATTR in expressions
+
+    private static final Set<String> INTERNAL_CONTEXT_KEYS;
 
     private RangerAccessRequestUtil() {
         // to avoid instantiation
+    }
+
+    public static boolean isInternalKey(String key) {
+        return INTERNAL_CONTEXT_KEYS.contains(key);
     }
 
     public static void setRequestTagsInContext(Map<String, Object> context, Set<RangerTagForEval> tags) {
@@ -491,5 +499,33 @@ public class RangerAccessRequestUtil {
                 context.remove(KEY_CONTEXT_ACL_ENFORCER);
             }
         }
+    }
+
+    static {
+        Set<String> internalKeys = new HashSet<>();
+
+        internalKeys.add(KEY_CONTEXT_TAGS);
+        internalKeys.add(KEY_CONTEXT_TAG_OBJECT);
+        internalKeys.add(KEY_CONTEXT_RESOURCE);
+        internalKeys.add(KEY_CONTEXT_REQUESTED_RESOURCES);
+        internalKeys.add(KEY_CONTEXT_USERSTORE);
+        internalKeys.add(KEY_TOKEN_NAMESPACE);
+        internalKeys.add(KEY_USER);
+        internalKeys.add(KEY_OWNER);
+        internalKeys.add(KEY_ROLES);
+        internalKeys.add(KEY_CONTEXT_IS_ANY_ACCESS);
+        internalKeys.add(KEY_CONTEXT_ALL_ACCESSTYPE_GROUPS);
+        internalKeys.add(KEY_CONTEXT_ALL_ACCESSTYPES);
+        internalKeys.add(KEY_CONTEXT_IGNORE_IF_NOT_DENIED_ACCESSTYPES);
+        internalKeys.add(KEY_CONTEXT_ALL_ACCESS_TYPE_RESULTS);
+        internalKeys.add(KEY_CONTEXT_ALL_ACCESS_TYPE_ACL_RESULTS);
+        internalKeys.add(KEY_CONTEXT_REQUEST);
+        internalKeys.add(KEY_CONTEXT_GDS_RESULT);
+        internalKeys.add(KEY_CONTEXT_IS_REQUEST_PREPROCESSED);
+        internalKeys.add(KEY_CONTEXT_BATCH_EVAL_CONTEXT);
+        internalKeys.add(KEY_CONTEXT_RESOURCE_ZONE_NAMES);
+        internalKeys.add(KEY_CONTEXT_ACL_ENFORCER);
+
+        INTERNAL_CONTEXT_KEYS = Collections.unmodifiableSet(internalKeys);
     }
 }

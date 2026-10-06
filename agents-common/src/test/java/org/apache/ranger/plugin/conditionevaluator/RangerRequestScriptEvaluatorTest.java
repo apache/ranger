@@ -605,6 +605,40 @@ public class RangerRequestScriptEvaluatorTest {
         Assertions.assertTrue(escaped.isEmpty(), "Sandbox escape OS command executed via:\n  " + String.join("\n  ", escaped));
     }
 
+    @Test
+    public void testContextAttributes() {
+        Map<String, Object> attributes = new HashMap<>();
+
+        attributes.put("trx_amount", 10000);
+
+        RangerAccessRequest          request   = createRequest("test-user", Collections.emptySet(), Collections.emptySet(), attributes);
+        RangerRequestScriptEvaluator evaluator = new RangerRequestScriptEvaluator(request, scriptEngine);
+
+        Assertions.assertTrue((Boolean) evaluator.evaluateScript("CTX_ATTR.trx_amount <= 10000"), "CTX_ATTR.trx_amount <= 10000");
+        Assertions.assertFalse((Boolean) evaluator.evaluateScript("CTX_ATTR.trx_amount > 10000"), "CTX_ATTR.trx_amount > 10000");
+
+        // trx_amount=10,000; default approved_amount is 5,000 => false
+        Assertions.assertFalse((Boolean) evaluator.evaluateScript("CTX_ATTR.trx_amount <= (CTX_ATTR?.approved_amount ?? 5000)"), "CTX_ATTR.trx_amount <= (CTX_ATTR?.approved_amount ?? 5000)");
+
+        // trx_amount=10,000; default approved_amount is 15,000 => true
+        Assertions.assertTrue((Boolean) evaluator.evaluateScript("CTX_ATTR.trx_amount <= (CTX_ATTR?.approved_amount ?? 15000)"), "CTX_ATTR.trx_amount <= (CTX_ATTR?.approved_amount ?? 15000)");
+
+        // trx_amount=10,000; approved_amount=5000 => false
+        attributes.put("approved_amount", 5000);
+
+        evaluator = new RangerRequestScriptEvaluator(request, scriptEngine);
+
+        Assertions.assertFalse((Boolean) evaluator.evaluateScript("CTX_ATTR.trx_amount <= (CTX_ATTR?.approved_amount ?? 5000)"), "CTX_ATTR.trx_amount <= (CTX_ATTR?.approved_amount ?? 5000)");
+
+        // trx_amount=10,000; approved_amount=15000 => true
+        attributes.put("trx_amount", 10000);
+        attributes.put("approved_amount", 15000);
+
+        evaluator = new RangerRequestScriptEvaluator(request, scriptEngine);
+
+        Assertions.assertTrue((Boolean) evaluator.evaluateScript("CTX_ATTR.trx_amount <= (CTX_ATTR?.approved_amount ?? 5000)"), "CTX_ATTR.trx_amount <= (CTX_ATTR?.approved_amount ?? 5000)");
+    }
+
     private RangerRequestScriptEvaluator createEvaluator() {
         RangerAccessRequest request = createRequest("test-user", Collections.emptySet(), Collections.emptySet(),
                 Collections.singletonList(new RangerTag("PII", Collections.singletonMap("attr1", "v1"))));
@@ -613,6 +647,14 @@ public class RangerRequestScriptEvaluatorTest {
 
     private static String tempFilePath(String tag, long nonce) {
         return new File(System.getProperty("java.io.tmpdir"), "ranger_test_" + tag + "_" + nonce).getAbsolutePath();
+    }
+
+    RangerAccessRequest createRequest(String userName, Set<String> userGroups, Set<String> userRoles, Map<String, Object> attributes) {
+        RangerAccessRequestImpl ret = (RangerAccessRequestImpl) createRequest(userName, userGroups, userRoles, Collections.emptyList());
+
+        ret.setContext(attributes);
+
+        return ret;
     }
 
     RangerAccessRequest createRequest(String userName, Set<String> userGroups, Set<String> userRoles, List<RangerTag> resourceTags) {

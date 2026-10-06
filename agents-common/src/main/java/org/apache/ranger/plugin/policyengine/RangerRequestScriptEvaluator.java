@@ -64,6 +64,7 @@ import static org.apache.ranger.plugin.util.RangerCommonConstants.SCRIPT_FIELD_C
 import static org.apache.ranger.plugin.util.RangerCommonConstants.SCRIPT_FIELD_CLIENT_TYPE;
 import static org.apache.ranger.plugin.util.RangerCommonConstants.SCRIPT_FIELD_CLUSTER_NAME;
 import static org.apache.ranger.plugin.util.RangerCommonConstants.SCRIPT_FIELD_CLUSTER_TYPE;
+import static org.apache.ranger.plugin.util.RangerCommonConstants.SCRIPT_FIELD_CTX_ATTR;
 import static org.apache.ranger.plugin.util.RangerCommonConstants.SCRIPT_FIELD_FORWARDED_ADDRESSES;
 import static org.apache.ranger.plugin.util.RangerCommonConstants.SCRIPT_FIELD_REMOTE_IP_ADDRESS;
 import static org.apache.ranger.plugin.util.RangerCommonConstants.SCRIPT_FIELD_REQUEST;
@@ -134,6 +135,7 @@ import static org.apache.ranger.plugin.util.RangerCommonConstants.SCRIPT_MACRO_U
 import static org.apache.ranger.plugin.util.RangerCommonConstants.SCRIPT_MACRO_USER_ATTR_NAMES_Q_CSV;
 import static org.apache.ranger.plugin.util.RangerCommonConstants.SCRIPT_POLYFILL_INCLUDES;
 import static org.apache.ranger.plugin.util.RangerCommonConstants.SCRIPT_POLYFILL_INTERSECTS;
+import static org.apache.ranger.plugin.util.RangerCommonConstants.SCRIPT_VAR_CTX_ATTR;
 import static org.apache.ranger.plugin.util.RangerCommonConstants.SCRIPT_VAR_REQ;
 import static org.apache.ranger.plugin.util.RangerCommonConstants.SCRIPT_VAR_RES;
 import static org.apache.ranger.plugin.util.RangerCommonConstants.SCRIPT_VAR_TAG;
@@ -167,6 +169,7 @@ public final class RangerRequestScriptEvaluator {
             SCRIPT_VAR_RES + "=" + SCRIPT_VAR_REQ + "." + SCRIPT_FIELD_RESOURCE + ";" +
             SCRIPT_VAR_USER + "=" + SCRIPT_VAR_REQ + "." + SCRIPT_FIELD_USER_ATTRIBUTES + ";" +
             SCRIPT_VAR_UGNAMES + "=" + SCRIPT_VAR_REQ + "." + SCRIPT_FIELD_USER_GROUPS + ";" +
+            SCRIPT_VAR_CTX_ATTR + "=" + SCRIPT_VAR_REQ + "." + SCRIPT_FIELD_CTX_ATTR + ";" +
             SCRIPT_VAR_UG + "=" + SCRIPT_VAR_REQ + "." + SCRIPT_FIELD_USER_GROUP_ATTRIBUTES + ";" +
             SCRIPT_VAR_UGA + "=" + SCRIPT_VAR_REQ + "." + SCRIPT_FIELD_UGA + ";" +
             SCRIPT_VAR_URNAMES + "=" + SCRIPT_VAR_REQ + "." + SCRIPT_FIELD_USER_ROLES + ";" +
@@ -916,6 +919,16 @@ public final class RangerRequestScriptEvaluator {
         request.put(SCRIPT_FIELD_USER_GROUP_ATTRIBUTES, groupAttrs);
         request.put(SCRIPT_FIELD_UGA, new UserGroupsAttributes(userGroups, groupAttrs).getAttributes());
 
+        Map<String, Object> ctxAttributes = new HashMap<>();
+
+        getRequestContext().forEach((key, value) -> {
+            if (!RangerAccessRequestUtil.isInternalKey(key)) {
+                ctxAttributes.put(key, value);
+            }
+        });
+
+        request.put(SCRIPT_FIELD_CTX_ATTR, ctxAttributes);
+
         ret.put(SCRIPT_FIELD_REQUEST, request);
 
         ret.put(SCRIPT_FIELD_TAGS, tags);
@@ -1156,6 +1169,7 @@ public final class RangerRequestScriptEvaluator {
          *
          */
         varNames.add(SCRIPT_VAR__CTX);
+        varNames.add(SCRIPT_VAR_CTX_ATTR);
         varNames.add(SCRIPT_VAR_REQ);
         varNames.add(SCRIPT_VAR_RES);
         varNames.add(SCRIPT_VAR_TAG);
