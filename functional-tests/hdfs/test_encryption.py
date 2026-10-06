@@ -77,30 +77,39 @@ def test_hive_user_write_read(hadoop_container):
 
 # Negative Test - Unauthorized User Cannot Write i.e 'HBASE' in this case-------------
 def test_unauthorized_write(hadoop_container):
-    filename2="hdfs-test-file2" #writing new file into EZ
-    failure_detected = False
+    filename2 = "hdfs-test-file2"
 
-    unauth_write_cmd= UNAUTHORIZED_WRITE_COMMAND.format(filename=filename2,user=HBASE_USER,ez_name=ez_name)
-    output,exit_code= run_command(hadoop_container,unauth_write_cmd,HBASE_USER,fail_on_error=False,return_exit_code=True)
+    # Create a local file for hbase to attempt uploading — needed so the failure is
+    # HDFS authorization (Permission denied on EZ), not a missing-local-file error.
+    create_file_cmd = CREATE_FILE_COMMAND[0].format(
+        filename=filename2, filecontent="unauthorized write attempt", user=HBASE_USER
+    )
+    run_command(hadoop_container, ["bash", "-c", create_file_cmd], HBASE_USER)
+
+    unauth_write_cmd = UNAUTHORIZED_WRITE_COMMAND.format(filename=filename2, user=HBASE_USER, ez_name=ez_name)
+    output, exit_code = run_command(hadoop_container, unauth_write_cmd, HBASE_USER, fail_on_error=False, return_exit_code=True)
 
     print(f"Command Output:\n{output}")
 
-    # Check for known failure indicators in output
-    if exit_code != 0:
-        failure_detected = True
-
-    #assert that failure was detected as expected
-    assert failure_detected, "Expected failure due to no permission on EZ, but command succeeded."
+    assert exit_code != 0, "Expected failure: hbase should not have write permission on EZ, but command succeeded."
+    # Verify the failure is HDFS authorization (Permission denied), NOT a Kerberos auth failure.
+    # If this assert fails it means hbase is not properly authenticated and the test is a false positive.
+    assert any(p in output.lower() for p in ["permission denied", "access denied", "accesscontrolexception"]), \
+        f"Expected HDFS Permission denied error but got: {output}"
 
 
 # Negative Test - Unauthorized User 'HBASE' Cannot Read ------------------------------
 def test_unauthorized_read(hadoop_container):
-    unauth_read= UNAUTHORIZED_READ_COMMAND.format(filename=filename, ez_name=ez_name, user=HBASE_USER)
-    output,exit_code = run_command(hadoop_container,unauth_read,HBASE_USER,fail_on_error=False,return_exit_code=True)
+    unauth_read = UNAUTHORIZED_READ_COMMAND.format(filename=filename, ez_name=ez_name, user=HBASE_USER)
+    output, exit_code = run_command(hadoop_container, unauth_read, HBASE_USER, fail_on_error=False, return_exit_code=True)
 
     print(f"Command Output:\n{output}")
 
-    assert exit_code != 0, "Expected failure due to no permission on EZ, but command succeeded."
+    assert exit_code != 0, "Expected failure: hbase should not have read permission on EZ, but command succeeded."
+    # Verify the failure is HDFS authorization (Permission denied), NOT a Kerberos auth failure.
+    # If this assert fails it means hbase is not properly authenticated and the test is a false positive.
+    assert any(p in output.lower() for p in ["permission denied", "access denied", "accesscontrolexception"]), \
+        f"Expected HDFS Permission denied error but got: {output}"
 
 
 # Clean Up - Remove Test file and EZ -------------------------------------------------

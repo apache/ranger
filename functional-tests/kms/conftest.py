@@ -29,6 +29,11 @@ KMS_SERVICE_NAME = "dev_kms"
 TEST_USER = "keyadmin"
 HEADERS = {"Content-Type": "application/json"}
 
+@pytest.fixture(scope="session", autouse=True)
+def setup_kerberos_ticket():
+    """Ensure keyadmin has a valid Kerberos ticket before any test runs."""
+    ensure_keyadmin_ticket()
+
 @pytest.fixture(scope="session")
 def headers():
     return HEADERS

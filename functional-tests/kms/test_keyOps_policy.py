@@ -22,7 +22,8 @@ from kms.utils import (
     ensure_testuser_keytab, ensure_testuser_ticket, ensure_keyadmin_ticket,
     TESTUSER_PARAMS, ensure_test_user_exists, delete_test_user,
     BASE_URL_RANGER, BASE_URL_RANGER_USERS, BASE_URL_RANGER_USERS_BY_NAME,
-    RANGER_ADMIN_AUTH, RANGER_KMS_AUTH, KMS_SERVICE_NAME, TEST_USER
+    RANGER_ADMIN_AUTH, RANGER_KMS_AUTH, KMS_SERVICE_NAME, TEST_USER,
+    container, KEYADMIN_KEYTAB, KEYADMIN_PRINCIPAL, TESTUSER_KEYTAB, TESTUSER_PRINCIPAL
 )
 
 
@@ -33,6 +34,13 @@ def test_user_lifecycle():
         yield
     finally:
         delete_test_user(TEST_USER)
+
+
+@pytest.fixture(scope="session", autouse=True)
+def setup_keytabs():
+    """Create keytabs for both principals once per session — keytab creation is expensive."""
+    ensure_testuser_keytab()
+    # keyadmin keytab is handled by the global setup_kerberos_ticket in conftest.py
 
 
 # create base policy ------------------------------------------------------------------
@@ -77,9 +85,22 @@ def create_initial_kms_policy():
 
 @pytest.fixture(autouse=True)
 def kms_as_testuser():
-    ensure_testuser_ticket()
+    """Switch to testuser ticket for the test body; restore keyadmin ticket in teardown.
+    Keytab creation is handled once by setup_keytabs (session-scoped), so this fixture
+    only does the cheap kinit/kdestroy calls."""
+    container.exec_run("kdestroy -A 2>/dev/null || true", user="root")
+    exit_code, output = container.exec_run(
+        f"kinit -kt {TESTUSER_KEYTAB} {TESTUSER_PRINCIPAL}", user="root"
+    )
+    if exit_code != 0:
+        raise RuntimeError(f"testuser kinit failed: {output.decode()}")
     yield
-    ensure_keyadmin_ticket()
+    container.exec_run("kdestroy -A 2>/dev/null || true", user="root")
+    exit_code, output = container.exec_run(
+        f"kinit -kt {KEYADMIN_KEYTAB} {KEYADMIN_PRINCIPAL}", user="root"
+    )
+    if exit_code != 0:
+        raise RuntimeError(f"keyadmin kinit restore failed: {output.decode()}")
 
 # method to update policy---------------------------------------------------------------
 def update_kms_policy(policy_id, username, accesses):
