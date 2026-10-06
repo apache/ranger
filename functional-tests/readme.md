@@ -30,6 +30,7 @@ This test suite validates REST API endpoints for Apache Ranger services — Admi
 | **rolerest** | Test cases for Ranger Admin Role REST APIs |
 | **servicerest** | Test cases for Ranger Admin Service REST APIs |
 | **tagrest** | Test cases for Ranger Admin Tag REST APIs |
+| **api** | Public API v2 service and policy CRUD (admin Docker only) |
 
 ---
 
@@ -37,13 +38,15 @@ This test suite validates REST API endpoints for Apache Ranger services — Admi
 
 ```text
 functional-tests/
+├── ranger_test_utils/utils.py   # Shared logging, HTTP asserts, Public API v2 helpers
 ├── hdfs/                        # Tests on HDFS encryption cycle
 ├── kms/                         # Tests on KMS REST API
 ├── xuserrest/                   # Tests on Ranger User/Group/Role REST APIs
 ├── rolerest/                    # Tests on Ranger Role REST APIs
 ├── servicerest/                 # Tests on Ranger Service REST APIs
 ├── tagrest/                     # Tests on Ranger Tag REST APIs
-│ 
+├── api/                         # Public API v2 (service / policy) tests
+│
 ├── pytest.ini                   # Registers custom pytest markers
 ├── run-tests.sh                 # Script to automate setup and test execution
 ├── requirements.txt             # Python dependencies
@@ -120,8 +123,9 @@ export AUDIT_INDEX_STORE=none
 ---
 
 ## Running Tests
-
 The `run-tests.sh` script manages Docker container setup, dependency installation, and test execution. It supports both interactive and argument-based modes.
+
+1. Interactive Mode:
 
 ### 1. Interactive Mode
 
@@ -206,5 +210,4 @@ Regardless of which test suites you choose, these containers always start:
 ---
 
 ## Test Reports
-
 After execution, an HTML report is automatically generated for each suite in the `functional-tests/` directory:
