@@ -13,7 +13,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
 sudo: false
 dist: bionic
 language: generic
@@ -42,7 +41,7 @@ jobs:
       group: edge
       env:
         - JDK_VERSION=11
-        - MAVEN_ARGS="-DskipJSTests=true -P!all"
+        - MAVEN_ARGS=" -P!all"
 
 before_install:
   - export MAVEN_OPTS="-Xmx1200M -XX:MaxPermSize=768m -Xms512m"
