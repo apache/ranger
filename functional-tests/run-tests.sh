@@ -16,13 +16,13 @@
 #!/bin/bash
 
 # All available test suites (pytest folders)
-ALL_TEST_SUITES=(rolerest xuserrest servicerest hdfs kms)
+ALL_TEST_SUITES=(rolerest xuserrest servicerest tagrest hdfs kms)
 
 # Suites that have actual docker-compose services
 DOCKER_SERVICES=(hdfs kms)
 
 # Test-only suites (no docker-compose file needed)
-TEST_ONLY_SUITES=(rolerest xuserrest servicerest)
+TEST_ONLY_SUITES=(rolerest xuserrest servicerest tagrest)
 
 #handle input
 DB_TYPE="${1:-}"
@@ -36,6 +36,31 @@ if [[ -z "${DB_TYPE}" ]]; then
   read -rp "Enter DB type (press Enter to default to postgres): " input_db
   DB_TYPE="${input_db:-postgres}"
 fi
+
+# Prompt for AUDIT_INDEX_STORE if not provided
+AUDIT_INDEX_STORE="${AUDIT_INDEX_STORE:-}"
+if [[ -z "${AUDIT_INDEX_STORE}" ]]; then
+  echo ""
+  echo "Available audit stores: opensearch, solr, none"
+  read -rp "Enter audit store (press Enter to default to opensearch): " input_audit
+  AUDIT_INDEX_STORE="${input_audit:-opensearch}"
+fi
+
+# Set AUDIT_DESTINATIONS based on AUDIT_INDEX_STORE
+if [[ "${AUDIT_INDEX_STORE}" == "none" ]]; then
+  AUDIT_DESTINATIONS=""
+else
+  AUDIT_DESTINATIONS="audit-store-${AUDIT_INDEX_STORE}"
+fi
+
+# Export environment variables
+export RANGER_DB_TYPE="${DB_TYPE}"
+export AUDIT_INDEX_STORE="${AUDIT_INDEX_STORE}"
+export AUDIT_DESTINATIONS="${AUDIT_DESTINATIONS}"
+
+# Default to 0 — containers persist after each run.
+# Pass CLEAN_CONTAINERS=1 explicitly to wipe and rebuild everything.
+CLEAN_CONTAINERS="${CLEAN_CONTAINERS:-0}"
 
 # Prompt for EXTRA_SERVICES / TEST SUITES if not provided
 if [[ "${#EXTRA_SERVICES[@]}" -eq 0 ]]; then
@@ -51,8 +76,10 @@ if [[ "${#EXTRA_SERVICES[@]}" -eq 0 ]]; then
 fi
 
 echo ""
-echo "DB Type     : ${DB_TYPE}"
-echo "Test Suites : ${EXTRA_SERVICES[*]}"
+echo "DB Type           : ${DB_TYPE}"
+echo "Audit Store       : ${AUDIT_INDEX_STORE}"
+echo "Audit Destinations: ${AUDIT_DESTINATIONS}"
+echo "Test Suites       : ${EXTRA_SERVICES[*]}"
 echo ""
 echo "CLEAN_CONTAINERS=${CLEAN_CONTAINERS}"
 
@@ -83,6 +110,9 @@ for service in "${EXTRA_SERVICES[@]}"; do
           # 'hadoop' arg alone does NOT download tez
           DOCKER_BACKED+=("hive")
           ;;
+        kms)
+          : # KMS needs no archive download — it is always in BASE_SERVICES as a container
+          ;;
         *)
           DOCKER_BACKED+=("$service")
           ;;
@@ -91,8 +121,11 @@ for service in "${EXTRA_SERVICES[@]}"; do
   done
 done
 
-# Deduplicatec
-DOCKER_BACKED+=("kms")
+# Kafka archive is needed whenever the audit pipeline is up (ranger-kafka build)
+if [[ "${AUDIT_INDEX_STORE}" != "none" ]]; then
+  DOCKER_BACKED+=("kafka")
+fi
+
 DOCKER_BACKED=($(printf '%s\n' "${DOCKER_BACKED[@]}" | sort -u))
 
 if [[ "${#DOCKER_BACKED[@]}" -gt 0 ]]; then
@@ -148,6 +181,11 @@ DOCKER_FILES=(
   "-f" "docker-compose.ranger-kms.yml"
 )
 
+# Add audit service if audit store is not "none"
+if [[ "${AUDIT_INDEX_STORE}" != "none" ]]; then
+  DOCKER_FILES+=("-f" "docker-compose.ranger-audit-service.yml")
+fi
+
 # Add compose files based on requested suites
 for service in "${EXTRA_SERVICES[@]}"; do
   case "$service" in
@@ -161,8 +199,19 @@ for service in "${EXTRA_SERVICES[@]}"; do
 done
 
 # Build ALL_SERVICES list — only docker-backed services get container checks
-BASE_SERVICES=(ranger ranger-${RANGER_DB_TYPE} ranger-zk ranger-solr ranger-kms)
+BASE_SERVICES=(ranger ranger-kdc ranger-${RANGER_DB_TYPE} ranger-zk ranger-kms)
 ALL_SERVICES=("${BASE_SERVICES[@]}")
+
+# Audit pipeline containers brought up by docker-compose.ranger-audit-service.yml
+if [[ "${AUDIT_INDEX_STORE}" != "none" ]]; then
+  ALL_SERVICES+=(
+    ranger-kafka
+    ranger-audit-ingestor
+    "ranger-${AUDIT_INDEX_STORE}"
+    "ranger-audit-dispatcher-${AUDIT_INDEX_STORE}"
+  )
+fi
+
 for service in "${EXTRA_SERVICES[@]}"; do
   case "$service" in
     hdfs)
@@ -186,10 +235,18 @@ done
 
 if [[ "${missing}" == "true" ]]; then
   echo "Some containers are missing. Creating services..."
-  docker compose "${DOCKER_FILES[@]}" up -d --build
+  if [[ -n "${AUDIT_DESTINATIONS}" ]]; then
+    docker compose --profile "${AUDIT_DESTINATIONS}" "${DOCKER_FILES[@]}" up -d --build
+  else
+    docker compose "${DOCKER_FILES[@]}" up -d --build
+  fi
 else
   echo "All containers already exist. Starting without rebuild..."
-  docker compose "${DOCKER_FILES[@]}" up -d
+  if [[ -n "${AUDIT_DESTINATIONS}" ]]; then
+    docker compose --profile "${AUDIT_DESTINATIONS}" "${DOCKER_FILES[@]}" up -d
+  else
+    docker compose "${DOCKER_FILES[@]}" up -d
+  fi
 fi
 
 echo "Waiting for containers to start..."
@@ -247,10 +304,15 @@ if [[ $flag == true ]]; then
     echo "All required containers are up. Running test cases..."
     cd "$TESTS_PATH" || exit 1         # Switch to the tests directory
 
-    python3 -m venv myenv || { echo "Failed to create venv"; exit 1; }         # Create a new virtual environment
-    source myenv/bin/activate || { echo "Failed to activate venv"; exit 1; }   # Activate it
-    pip install --upgrade pip
-    pip install -r requirements.txt || { echo "Failed to install requirements"; exit 1; }  # Install dependencies
+    # Only create the venv (and upgrade pip) on first run — skip on re-runs.
+    if [[ ! -d "myenv" ]]; then
+      python3 -m venv myenv || { echo "Failed to create venv"; exit 1; }
+      source myenv/bin/activate || { echo "Failed to activate venv"; exit 1; }
+      pip install --upgrade pip        # upgrade pip once, when the venv is fresh
+    else
+      source myenv/bin/activate || { echo "Failed to activate venv"; exit 1; }
+    fi
+    pip install -q -r requirements.txt || { echo "Failed to install requirements"; exit 1; }  # Install/sync dependencies
 
     echo ""
     echo "Running tests for suites: ${EXTRA_SERVICES[*]}"
