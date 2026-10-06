@@ -28,12 +28,15 @@ import org.apache.ranger.ugsyncutil.model.XGroupInfo;
 import org.apache.ranger.ugsyncutil.model.XUserInfo;
 import org.apache.ranger.ugsyncutil.util.UgsyncCommonConstants;
 import org.apache.ranger.unixusersync.config.UserGroupSyncConfig;
+import org.apache.ranger.unixusersync.model.GetXGroupListResponse;
+import org.apache.ranger.unixusersync.model.GetXUserListResponse;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.extension.Extension;
+import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import javax.ws.rs.core.Cookie;
@@ -1071,7 +1074,7 @@ public class TestPolicyMgrUserGroupBuilder {
         // Cause inner build* calls to fail in doAs, so lambda returns false
         setPrivate(builder, "ldapUgSyncClient", new FakeRest());
 
-        try (org.mockito.MockedStatic<org.apache.hadoop.security.SecureClientLogin> mocked = org.mockito.Mockito.mockStatic(org.apache.hadoop.security.SecureClientLogin.class)) {
+        try (org.mockito.MockedStatic<org.apache.hadoop.security.SecureClientLogin> mocked = Mockito.mockStatic(org.apache.hadoop.security.SecureClientLogin.class)) {
             mocked.when(() -> org.apache.hadoop.security.SecureClientLogin.isKerberosCredentialExists("svc/_HOST@EXAMPLE.COM", "/tmp/svc.keytab")).thenReturn(true);
             mocked.when(() -> org.apache.hadoop.security.SecureClientLogin.loginUserFromKeytab("svc/_HOST@EXAMPLE.COM", "/tmp/svc.keytab", "DEFAULT")).thenReturn(new javax.security.auth.Subject());
 
@@ -1085,6 +1088,310 @@ public class TestPolicyMgrUserGroupBuilder {
                 }
             });
         }
+    }
+
+    private static XUserInfo cachedUser(String name, String fullName, String syncSource, String ldapUrl, String isVisible) {
+        XUserInfo u = new XUserInfo();
+        u.setName(name);
+        Map<String, String> attrs = new HashMap<>();
+        attrs.put(UgsyncCommonConstants.FULL_NAME, fullName);
+        attrs.put(UgsyncCommonConstants.SYNC_SOURCE, syncSource);
+        if (ldapUrl != null) {
+            attrs.put(UgsyncCommonConstants.LDAP_URL, ldapUrl);
+        }
+        u.setOtherAttrsMap(attrs);
+        u.setOtherAttributes(JsonUtils.objectToJson(attrs));
+        u.setIsVisible(isVisible);
+        return u;
+    }
+
+    private static XGroupInfo cachedGroup(String name, String fullName, String syncSource, String ldapUrl, String isVisible) {
+        XGroupInfo g = new XGroupInfo();
+        g.setName(name);
+        Map<String, String> attrs = new HashMap<>();
+        attrs.put(UgsyncCommonConstants.FULL_NAME, fullName);
+        attrs.put(UgsyncCommonConstants.SYNC_SOURCE, syncSource);
+        if (ldapUrl != null) {
+            attrs.put(UgsyncCommonConstants.LDAP_URL, ldapUrl);
+        }
+        g.setOtherAttrsMap(attrs);
+        g.setOtherAttributes(JsonUtils.objectToJson(attrs));
+        g.setIsVisible(isVisible);
+        return g;
+    }
+
+    @Test
+    public void testW1_markDeletedUsersByFullName_marksMatchingGuid() throws Exception {
+        PolicyMgrUserGroupBuilder builder = new PolicyMgrUserGroupBuilder();
+        // EntraID is a non-LDAP source: ldapUrl null, so the null==null gate applies.
+        setPrivate(builder, "currentSyncSource", "EntraID");
+        setPrivate(builder, "ldapUrl", null);
+
+        String guid = "aaaaaaaa-0000-0000-0000-000000000001";
+        Map<String, XUserInfo> ucache = new HashMap<>();
+        ucache.put("alice", cachedUser("alice", guid, "EntraID", null, "1"));
+        setPrivate(builder, "userCache", ucache);
+
+        Method mark = PolicyMgrUserGroupBuilder.class.getDeclaredMethod("markDeletedUsersByFullName", Set.class);
+        mark.setAccessible(true);
+        mark.invoke(builder, new HashSet<>(Collections.singletonList(guid)));
+
+        Map<String, XUserInfo> deletedUsers = getPrivate(builder, "deletedUsers", Map.class);
+        assertTrue(deletedUsers.containsKey("alice"), "user with matching GUID must be marked deleted");
+        assertEquals("0", deletedUsers.get("alice").getIsVisible(), "deleted user must be set ISHIDDEN");
+    }
+
+    @Test
+    public void testW2_markDeletedUsersByFullName_ignoresUnmatchedGuid() throws Exception {
+        PolicyMgrUserGroupBuilder builder = new PolicyMgrUserGroupBuilder();
+        setPrivate(builder, "currentSyncSource", "EntraID");
+        setPrivate(builder, "ldapUrl", null);
+
+        Map<String, XUserInfo> ucache = new HashMap<>();
+        ucache.put("alice", cachedUser("alice", "guid-keep", "EntraID", null, "1"));
+        setPrivate(builder, "userCache", ucache);
+
+        Method mark = PolicyMgrUserGroupBuilder.class.getDeclaredMethod("markDeletedUsersByFullName", Set.class);
+        mark.setAccessible(true);
+        mark.invoke(builder, new HashSet<>(Collections.singletonList("guid-other")));
+
+        Map<String, XUserInfo> deletedUsers = getPrivate(builder, "deletedUsers", Map.class);
+        assertTrue(deletedUsers.isEmpty(), "no cache record matches the delete GUID -> nothing marked");
+    }
+
+    @Test
+    public void testW3_markDeletedUsersByFullName_skipsDifferentSyncSource() throws Exception {
+        PolicyMgrUserGroupBuilder builder = new PolicyMgrUserGroupBuilder();
+        setPrivate(builder, "currentSyncSource", "EntraID");
+        setPrivate(builder, "ldapUrl", null);
+
+        String guid = "shared-guid";
+        Map<String, XUserInfo> ucache = new HashMap<>();
+        // Cached record belongs to a different source; must not be deletable by EntraID.
+        ucache.put("alice", cachedUser("alice", guid, "Unix", null, "1"));
+        setPrivate(builder, "userCache", ucache);
+
+        Method mark = PolicyMgrUserGroupBuilder.class.getDeclaredMethod("markDeletedUsersByFullName", Set.class);
+        mark.setAccessible(true);
+        mark.invoke(builder, new HashSet<>(Collections.singletonList(guid)));
+
+        Map<String, XUserInfo> deletedUsers = getPrivate(builder, "deletedUsers", Map.class);
+        assertTrue(deletedUsers.isEmpty(), "a record from another sync source must not be deleted");
+    }
+
+    @Test
+    public void testW4_markDeletedUsersByFullName_skipsAlreadyHidden() throws Exception {
+        PolicyMgrUserGroupBuilder builder = new PolicyMgrUserGroupBuilder();
+        setPrivate(builder, "currentSyncSource", "EntraID");
+        setPrivate(builder, "ldapUrl", null);
+
+        String guid = "guid-hidden";
+        Map<String, XUserInfo> ucache = new HashMap<>();
+        ucache.put("alice", cachedUser("alice", guid, "EntraID", null, "0")); // already ISHIDDEN
+        setPrivate(builder, "userCache", ucache);
+
+        Method mark = PolicyMgrUserGroupBuilder.class.getDeclaredMethod("markDeletedUsersByFullName", Set.class);
+        mark.setAccessible(true);
+        mark.invoke(builder, new HashSet<>(Collections.singletonList(guid)));
+
+        Map<String, XUserInfo> deletedUsers = getPrivate(builder, "deletedUsers", Map.class);
+        assertTrue(deletedUsers.isEmpty(), "already-hidden records must not be re-marked");
+    }
+
+    @Test
+    public void testW5_markDeletedGroupsByFullName_marksMatchingGuid() throws Exception {
+        PolicyMgrUserGroupBuilder builder = new PolicyMgrUserGroupBuilder();
+        setPrivate(builder, "currentSyncSource", "EntraID");
+        setPrivate(builder, "ldapUrl", null);
+
+        String guid = "bbbbbbbb-0000-0000-0000-000000000002";
+        Map<String, XGroupInfo> gcache = new HashMap<>();
+        gcache.put("Engineering", cachedGroup("Engineering", guid, "EntraID", null, "1"));
+        setPrivate(builder, "groupCache", gcache);
+
+        Method mark = PolicyMgrUserGroupBuilder.class.getDeclaredMethod("markDeletedGroupsByFullName", Set.class);
+        mark.setAccessible(true);
+        mark.invoke(builder, new HashSet<>(Collections.singletonList(guid)));
+
+        Map<String, XGroupInfo> deletedGroups = getPrivate(builder, "deletedGroups", Map.class);
+        assertTrue(deletedGroups.containsKey("Engineering"), "group with matching GUID must be marked deleted");
+        assertEquals("0", deletedGroups.get("Engineering").getIsVisible(), "deleted group must be set ISHIDDEN");
+    }
+
+    @Test
+    public void testW6_deleteUsersAndGroups_skipsDuringStartup() throws Throwable {
+        PolicyMgrUserGroupBuilder builder = new PolicyMgrUserGroupBuilder();
+        setPrivate(builder, "currentSyncSource", "EntraID");
+        setPrivate(builder, "ldapUrl", null);
+        setPrivate(builder, "isStartupFlag", true); // startup cycle: must not compute deletes
+
+        String guid = "guid-startup";
+        Map<String, XUserInfo> ucache = new HashMap<>();
+        ucache.put("alice", cachedUser("alice", guid, "EntraID", null, "1"));
+        setPrivate(builder, "userCache", ucache);
+        setPrivate(builder, "ldapUgSyncClient", new FakeRest());
+
+        Map<String, Map<String, String>> delUsers = new HashMap<>();
+        Map<String, String> attrs = new HashMap<>();
+        attrs.put(UgsyncCommonConstants.FULL_NAME, guid);
+        attrs.put(UgsyncCommonConstants.SYNC_SOURCE, "EntraID");
+        delUsers.put(guid, attrs);
+
+        builder.deleteUsersAndGroups(delUsers, new HashMap<>());
+
+        // Startup guard returns early; the cached user stays visible.
+        Map<String, XUserInfo> ucacheAfter = getPrivate(builder, "userCache", Map.class);
+        assertEquals("1", ucacheAfter.get("alice").getIsVisible(), "startup cycle must not mark deletes");
+    }
+
+    @Test
+    public void testW7_deleteUsersAndGroups_restoresVisibilityWhenPostFails() throws Throwable {
+        PolicyMgrUserGroupBuilder builder = new PolicyMgrUserGroupBuilder();
+        setPrivate(builder, "currentSyncSource", "EntraID");
+        setPrivate(builder, "ldapUrl", null);
+        setPrivate(builder, "isStartupFlag", false);
+
+        String guid = "guid-post-fail";
+        Map<String, XUserInfo> ucache = new HashMap<>();
+        ucache.put("alice", cachedUser("alice", guid, "EntraID", null, "1"));
+        setPrivate(builder, "userCache", ucache);
+        setPrivate(builder, "ldapUgSyncClient", new FakeRest());
+
+        Map<String, Map<String, String>> delUsers = new HashMap<>();
+        Map<String, String> attrs = new HashMap<>();
+        attrs.put(UgsyncCommonConstants.FULL_NAME, guid);
+        attrs.put(UgsyncCommonConstants.SYNC_SOURCE, "EntraID");
+        delUsers.put(guid, attrs);
+
+        assertThrows(Throwable.class, () -> builder.deleteUsersAndGroups(delUsers, new HashMap<>()));
+
+        Map<String, XUserInfo> ucacheAfter = getPrivate(builder, "userCache", Map.class);
+        assertEquals("1", ucacheAfter.get("alice").getIsVisible(),
+                "a failed delete POST must leave the cache row visible so the next cycle retries");
+    }
+
+    @Test
+    public void testRestartThenGroupRenameDoesNotCreateDuplicate() throws Exception {
+        UserGroupSyncConfig cfg = UserGroupSyncConfig.getInstance();
+        cfg.setProperty(UgsyncCommonConstants.UGSYNC_GROUPNAME_CASE_CONVERSION_PARAM, UgsyncCommonConstants.UGSYNC_NONE_CASE_CONVERSION_VALUE);
+        cfg.setProperty(UserGroupSyncConfig.UGSYNC_NAME_VALIDATION_ENABLED, "false");
+
+        PolicyMgrUserGroupBuilder builder = new PolicyMgrUserGroupBuilder();
+
+        String       guid      = "guid-restart-rename-group";
+        XGroupInfo   persisted = cachedGroup("OldGroupName", guid, "EntraID", null, "1");
+
+        GetXGroupListResponse listResponse = new GetXGroupListResponse();
+        listResponse.setTotalCount(1);
+        listResponse.setXgroupInfoList(Collections.singletonList(persisted));
+
+        Response mockResponse = Mockito.mock(Response.class);
+        Mockito.when(mockResponse.readEntity(String.class)).thenReturn(JsonUtils.objectToJson(listResponse));
+
+        FakeRest rest = new FakeRest() {
+            @Override
+            public Response get(String relativeUrl, Map<String, String> params) {
+                return mockResponse;
+            }
+        };
+
+        setPrivate(builder, "ldapUgSyncClient", rest);
+        setPrivate(builder, "groupCache", new HashMap<String, XGroupInfo>());
+        setPrivate(builder, "groupNameMap", new HashMap<String, String>());
+
+        // Simulate what happens right after a usersync restart: the cache is reloaded
+        // from Admin (buildGroupList), same as init() does before any sync cycle runs.
+        // groupNameMap starts empty on every restart -- this call must seed it from
+        // the persisted otherAttributes.full_name, or the first cycle below would treat
+        // an already-known GUID as brand new.
+        Method buildGroupList = PolicyMgrUserGroupBuilder.class.getDeclaredMethod("buildGroupList");
+        buildGroupList.setAccessible(true);
+        buildGroupList.invoke(builder);
+
+        Map<String, String> groupNameMapAfterLoad = getPrivate(builder, "groupNameMap", Map.class);
+        assertEquals("OldGroupName", groupNameMapAfterLoad.get(guid),
+                "buildGroupList() must seed groupNameMap from persisted otherAttributes.full_name");
+
+        // Now the source reports the SAME GUID with a renamed displayName -- exactly the
+        // first sync cycle after the restart, for a principal that was renamed earlier.
+        Map<String, Map<String, String>> sourceGroups  = new HashMap<>();
+        Map<String, String>              renamedAttrs  = new HashMap<>();
+        renamedAttrs.put(UgsyncCommonConstants.ORIGINAL_NAME, "OldGroupName *");
+        renamedAttrs.put(UgsyncCommonConstants.SYNC_SOURCE, "EntraID");
+        sourceGroups.put(guid, renamedAttrs);
+
+        Method computeGroupDelta = PolicyMgrUserGroupBuilder.class.getDeclaredMethod("computeGroupDelta", Map.class);
+        computeGroupDelta.setAccessible(true);
+        computeGroupDelta.invoke(builder, sourceGroups);
+
+        Map<String, XGroupInfo> groupCacheAfter = getPrivate(builder, "groupCache", Map.class);
+        Map<String, XGroupInfo> deltaGroups     = getPrivate(builder, "deltaGroups", Map.class);
+
+        assertEquals(1, groupCacheAfter.size(),
+                "a rename on the first cycle after restart must update the existing group, not create a duplicate");
+        assertTrue(deltaGroups.containsKey("OldGroupName"),
+                "the update must be recorded against the existing (frozen) name");
+        assertFalse(groupCacheAfter.containsKey("OldGroupName *"),
+                "no new group should be created under the incoming display name");
+    }
+
+    @Test
+    public void testRestartThenUserRenameDoesNotCreateDuplicate() throws Exception {
+        UserGroupSyncConfig cfg = UserGroupSyncConfig.getInstance();
+        cfg.setProperty(UgsyncCommonConstants.UGSYNC_USERNAME_CASE_CONVERSION_PARAM, UgsyncCommonConstants.UGSYNC_NONE_CASE_CONVERSION_VALUE);
+        cfg.setProperty(UserGroupSyncConfig.UGSYNC_NAME_VALIDATION_ENABLED, "false");
+
+        PolicyMgrUserGroupBuilder builder = new PolicyMgrUserGroupBuilder();
+
+        String    guid      = "guid-restart-rename-user";
+        XUserInfo persisted = cachedUser("olduser@example.com", guid, "EntraID", null, "1");
+
+        GetXUserListResponse listResponse = new GetXUserListResponse();
+        listResponse.setTotalCount(1);
+        listResponse.setXuserInfoList(Collections.singletonList(persisted));
+
+        Response mockResponse = Mockito.mock(Response.class);
+        Mockito.when(mockResponse.readEntity(String.class)).thenReturn(JsonUtils.objectToJson(listResponse));
+
+        FakeRest rest = new FakeRest() {
+            @Override
+            public Response get(String relativeUrl, Map<String, String> params) {
+                return mockResponse;
+            }
+        };
+
+        setPrivate(builder, "ldapUgSyncClient", rest);
+        setPrivate(builder, "userCache", new HashMap<String, XUserInfo>());
+        setPrivate(builder, "userNameMap", new HashMap<String, String>());
+
+        Method buildUserList = PolicyMgrUserGroupBuilder.class.getDeclaredMethod("buildUserList");
+        buildUserList.setAccessible(true);
+        buildUserList.invoke(builder);
+
+        Map<String, String> userNameMapAfterLoad = getPrivate(builder, "userNameMap", Map.class);
+        assertEquals("olduser@example.com", userNameMapAfterLoad.get(guid),
+                "buildUserList() must seed userNameMap from persisted otherAttributes.full_name");
+
+        // Same GUID, renamed UPN -- the first cycle after a restart for a user renamed earlier.
+        Map<String, Map<String, String>> sourceUsers = new HashMap<>();
+        Map<String, String>              renamedAttrs = new HashMap<>();
+        renamedAttrs.put(UgsyncCommonConstants.ORIGINAL_NAME, "newuser@example.com");
+        renamedAttrs.put(UgsyncCommonConstants.SYNC_SOURCE, "EntraID");
+        sourceUsers.put(guid, renamedAttrs);
+
+        Method computeUserDelta = PolicyMgrUserGroupBuilder.class.getDeclaredMethod("computeUserDelta", Map.class);
+        computeUserDelta.setAccessible(true);
+        computeUserDelta.invoke(builder, sourceUsers);
+
+        Map<String, XUserInfo> userCacheAfter = getPrivate(builder, "userCache", Map.class);
+        Map<String, XUserInfo> deltaUsers     = getPrivate(builder, "deltaUsers", Map.class);
+
+        assertEquals(1, userCacheAfter.size(),
+                "a rename on the first cycle after restart must update the existing user, not create a duplicate");
+        assertTrue(deltaUsers.containsKey("olduser@example.com"),
+                "the update must be recorded against the existing (frozen) name");
+        assertFalse(userCacheAfter.containsKey("newuser@example.com"),
+                "no new user should be created under the incoming UPN");
     }
 
     // Helpers
