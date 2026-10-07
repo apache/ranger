@@ -1859,6 +1859,8 @@ CREATE NONCLUSTERED INDEX x_trx_log_v2_FK_added_by_id ON dbo.x_trx_log_v2(added_
 GO
 CREATE NONCLUSTERED INDEX x_trx_log_v2_FK_trx_id ON dbo.x_trx_log_v2(trx_id ASC)
 GO
+CREATE NONCLUSTERED INDEX x_trx_log_v2_IDX_metrics ON dbo.x_trx_log_v2(create_time ASC, class_type ASC, action ASC)
+GO
 CREATE NONCLUSTERED INDEX x_user_cr_time ON dbo.x_user(create_time ASC)
 GO
 CREATE NONCLUSTERED INDEX x_user_FK_added_by_id ON dbo.x_user(added_by_id ASC)
@@ -2256,6 +2258,8 @@ GO
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('077',CURRENT_TIMESTAMP,'Ranger 3.0.0',CURRENT_TIMESTAMP,'localhost','Y');
 GO
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('078',CURRENT_TIMESTAMP,'Ranger 3.0.0',CURRENT_TIMESTAMP,'localhost','Y');
+GO
+INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('079',CURRENT_TIMESTAMP,'Ranger 1.0.0',CURRENT_TIMESTAMP,'localhost','Y');
 GO
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('DB_PATCHES',CURRENT_TIMESTAMP,'Ranger 1.0.0',CURRENT_TIMESTAMP,'localhost','Y');
 GO
