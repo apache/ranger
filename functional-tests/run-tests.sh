@@ -16,13 +16,14 @@
 #!/bin/bash
 
 # All available test suites (pytest folders)
-ALL_TEST_SUITES=(rolerest xuserrest servicerest tagrest hdfs kms)
+
+ALL_TEST_SUITES=(rolerest xuserrest servicerest tagrest hdfs kms api)
 
 # Suites that have actual docker-compose services
 DOCKER_SERVICES=(hdfs kms)
 
 # Test-only suites (no docker-compose file needed)
-TEST_ONLY_SUITES=(rolerest xuserrest servicerest tagrest)
+TEST_ONLY_SUITES=(rolerest xuserrest servicerest tagrest api)
 
 #handle input
 DB_TYPE="${1:-}"

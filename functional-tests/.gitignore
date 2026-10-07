@@ -1,0 +1,8 @@
+# Local Python / pytest (do not commit)
+__pycache__/
+
+# Virtualenv created by run-tests.sh
+myenv/
+
+# Pytest cache
+.pytest_cache/
