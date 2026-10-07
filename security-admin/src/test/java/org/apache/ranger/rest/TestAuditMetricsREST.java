@@ -21,7 +21,7 @@ package org.apache.ranger.rest;
 
 import org.apache.ranger.audit.metrics.AccessAuditsMetricsService;
 import org.apache.ranger.audit.metrics.AccessAuditsMetricsServiceFactory;
-import org.apache.ranger.common.MessageEnums;
+import org.apache.ranger.biz.AuditMetricsDBStore;
 import org.apache.ranger.common.RESTErrorUtil;
 import org.apache.ranger.common.RangerSearchUtil;
 import org.apache.ranger.plugin.model.RangerAuditMetrics;
@@ -52,8 +52,8 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.contains;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
@@ -78,6 +78,9 @@ class TestAuditMetricsREST {
 
     @Mock
     AccessAuditsMetricsService accessAuditsMetricsService;
+
+    @Mock
+    AuditMetricsDBStore auditMetricsDBStore;
 
     @Mock
     HttpServletRequest httpServletRequest;
@@ -342,29 +345,25 @@ class TestAuditMetricsREST {
 
     @Test
     void testGetDaysAuditMetrics_invalidOlderThanInDays_zero() {
-        when(restErrorUtil.createRESTException(anyString(), eq(MessageEnums.INVALID_INPUT_DATA)))
-                .thenReturn(new WebApplicationException());
+        WebApplicationException webException = new WebApplicationException();
+        doThrow(webException).when(auditMetricsDBStore).validateMaxAllowedDays(0);
 
         assertThrows(WebApplicationException.class, () ->
                 auditMetricsREST.getDaysAuditMetrics(httpServletRequest, 0, null));
 
-        verify(restErrorUtil, times(1)).createRESTException(
-                contains("olderThanInDays must be between 1 and"),
-                eq(MessageEnums.INVALID_INPUT_DATA));
+        verify(auditMetricsDBStore, times(1)).validateMaxAllowedDays(0);
         verify(accessAuditsMetricsService, never()).getAuditMetricsByDays(anyInt(), any(), any());
     }
 
     @Test
     void testGetDaysAuditMetrics_invalidOlderThanInDays_exceedsMax() {
-        when(restErrorUtil.createRESTException(anyString(), eq(MessageEnums.INVALID_INPUT_DATA)))
-                .thenReturn(new WebApplicationException());
+        WebApplicationException webException = new WebApplicationException();
+        doThrow(webException).when(auditMetricsDBStore).validateMaxAllowedDays(91);
 
         assertThrows(WebApplicationException.class, () ->
                 auditMetricsREST.getDaysAuditMetrics(httpServletRequest, 91, null));
 
-        verify(restErrorUtil, times(1)).createRESTException(
-                contains("olderThanInDays must be between 1 and"),
-                eq(MessageEnums.INVALID_INPUT_DATA));
+        verify(auditMetricsDBStore, times(1)).validateMaxAllowedDays(91);
         verify(accessAuditsMetricsService, never()).getAuditMetricsByDays(anyInt(), any(), any());
     }
 

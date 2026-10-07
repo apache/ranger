@@ -266,6 +266,7 @@ public class RangerAPIList {
     public static final String GET_ALL_LATEST_AUDIT_METRICS = "AuditMetricsREST.getAllLatestRangerAuditMetrics";
     public static final String GET_DAILY_AUDIT_METRICS      = "AuditMetricsREST.getDailyAuditMetrics";
     public static final String GET_DAYS_AUDIT_METRICS       = "AuditMetricsREST.getDaysAuditMetrics";
+    public static final String GET_DAYS_AUDIT_ADMIN_METRICS = "AuditMetricsREST.getDaysAuditAdminMetrics";
 
     /**
      * List of APIs for PublicAPIsv2

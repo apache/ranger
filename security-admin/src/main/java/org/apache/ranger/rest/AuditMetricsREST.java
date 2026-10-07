@@ -22,8 +22,7 @@ package org.apache.ranger.rest;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.ranger.audit.metrics.AccessAuditsMetricsService;
 import org.apache.ranger.audit.metrics.AccessAuditsMetricsServiceFactory;
-import org.apache.ranger.authorization.hadoop.config.RangerAdminConfig;
-import org.apache.ranger.common.MessageEnums;
+import org.apache.ranger.biz.AuditMetricsDBStore;
 import org.apache.ranger.common.RESTErrorUtil;
 import org.apache.ranger.common.RangerSearchUtil;
 import org.apache.ranger.plugin.model.RangerAuditMetrics;
@@ -31,6 +30,7 @@ import org.apache.ranger.plugin.model.RangerAuditMetricsByDays;
 import org.apache.ranger.plugin.model.RangerAuditMetricsByHours;
 import org.apache.ranger.plugin.util.SearchFilter;
 import org.apache.ranger.security.context.RangerAPIList;
+import org.apache.ranger.view.RangerAuditAdminMetricsByDays;
 import org.apache.ranger.view.RangerAuditMetricsList;
 import org.apache.ranger.view.RangerAuditMetricsListByDays;
 import org.apache.ranger.view.RangerAuditMetricsListByHours;
@@ -53,8 +53,11 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Context;
 
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 @Path("audit")
 @Component
@@ -62,10 +65,6 @@ import java.util.List;
 @Transactional(propagation = Propagation.REQUIRES_NEW)
 public class AuditMetricsREST {
     private static final Logger LOG = LoggerFactory.getLogger(AuditMetricsREST.class);
-
-    private static final String  PROP_AUDIT_METRICS_MAX_SUPPORTED_DAYS         = "ranger.audit.metrics.max.supported.days";
-    private static final Integer PROP_AUDIT_METRICS_MAX_SUPPORTED_DAYS_DEFAULT = 90;
-    private static final RangerAdminConfig config                              = RangerAdminConfig.getInstance();
 
     @Autowired
     RESTErrorUtil restErrorUtil;
@@ -75,6 +74,9 @@ public class AuditMetricsREST {
 
     @Autowired
     AccessAuditsMetricsServiceFactory accessAuditsMetricsServiceFactory;
+
+    @Autowired
+    AuditMetricsDBStore auditMetricsDBStore;
 
     @GET
     @Path("/metrics/servicetype/{servicetype}/servicename/{servicename}")
@@ -190,11 +192,7 @@ public class AuditMetricsREST {
             @QueryParam("timezone") String timezone) {
         LOG.debug("==> AuditMetricsREST.getDaysAuditMetrics()");
 
-        Integer maxAllowedDays = config.getInt(PROP_AUDIT_METRICS_MAX_SUPPORTED_DAYS, PROP_AUDIT_METRICS_MAX_SUPPORTED_DAYS_DEFAULT);
-
-        if (olderThanInDays <= 0 || olderThanInDays > maxAllowedDays) {
-            throw restErrorUtil.createRESTException("Invalid parameter: olderThanInDays must be between 1 and " + maxAllowedDays, MessageEnums.INVALID_INPUT_DATA);
-        }
+        auditMetricsDBStore.validateMaxAllowedDays(olderThanInDays);
 
         RangerAuditMetricsListByDays   ret    = new RangerAuditMetricsListByDays();
         List<RangerAuditMetricsByDays> rangerAuditMetricsByDays;
@@ -215,6 +213,43 @@ public class AuditMetricsREST {
         }
 
         LOG.debug("<== AuditMetricsREST.getDaysAuditMetrics()");
+
+        return ret;
+    }
+
+    @GET
+    @Path("/days-audit-admin-metrics")
+    @Produces("application/json")
+    @PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.GET_DAYS_AUDIT_ADMIN_METRICS + "\")")
+    public Map<String, List<RangerAuditAdminMetricsByDays>> getDaysAuditAdminMetrics(@QueryParam("objectClassTypes") List<String> objectClassTypes,
+            @QueryParam("actions") List<String> actions, @DefaultValue("7") @QueryParam("olderThanInDays") Integer olderThanInDays,
+            @DefaultValue("UTC") @QueryParam("timezone") String timezone) {
+        LOG.debug("==> AuditMetricsREST.getDaysAuditAdminMetrics(objectClassTypes={}, actions={}, olderThanInDays={}, timezone={})", objectClassTypes, actions, olderThanInDays, timezone);
+
+        Map<String, List<RangerAuditAdminMetricsByDays>> ret = new LinkedHashMap<>();
+        List<RangerAuditAdminMetricsByDays> rangerAuditAdminMetrics;
+
+        try {
+            rangerAuditAdminMetrics = auditMetricsDBStore.getRangerAuditAdminMetricsByDays(olderThanInDays, objectClassTypes, actions, timezone);
+        } catch (WebApplicationException excp) {
+            throw excp;
+        } catch (Throwable excp) {
+            LOG.error("getDaysAuditAdminMetrics failed", excp);
+            throw restErrorUtil.createRESTException(excp.getMessage());
+        }
+
+        if (CollectionUtils.isNotEmpty(rangerAuditAdminMetrics)) {
+            RangerAuditAdminMetricsByDays.TYPE_TO_KEY.values().forEach(k -> ret.put(k, new ArrayList<>()));
+
+            for (RangerAuditAdminMetricsByDays auditAdminMetric : rangerAuditAdminMetrics) {
+                String key = RangerAuditAdminMetricsByDays.TYPE_TO_KEY.get(auditAdminMetric.getObjectClassType());
+                if (key != null) {
+                    ret.get(key).add(auditAdminMetric);
+                }
+            }
+        }
+
+        LOG.debug("<== AuditMetricsREST.getDaysAuditAdminMetrics(): {}", ret);
 
         return ret;
     }
