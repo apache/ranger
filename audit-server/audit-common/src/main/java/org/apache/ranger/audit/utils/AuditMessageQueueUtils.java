@@ -19,7 +19,6 @@
 
 package org.apache.ranger.audit.utils;
 
-import org.apache.hadoop.security.SecureClientLogin;
 import org.apache.kafka.clients.admin.AdminClient;
 import org.apache.kafka.clients.admin.AdminClientConfig;
 import org.apache.kafka.clients.admin.CreatePartitionsResult;
@@ -29,10 +28,10 @@ import org.apache.kafka.clients.admin.NewTopic;
 import org.apache.kafka.clients.admin.TopicDescription;
 import org.apache.ranger.audit.provider.MiscUtil;
 import org.apache.ranger.audit.server.AuditServerConstants;
+import org.apache.ranger.kafka.auth.RangerKafkaClientSecurityConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
 import java.time.Duration;
 import java.util.Collections;
 import java.util.HashMap;
@@ -52,8 +51,6 @@ public class AuditMessageQueueUtils {
         String ret                  = null;
         String topicName            = MiscUtil.getStringProperty(props, propPrefix + "." + AuditServerConstants.PROP_TOPIC_NAME, AuditServerConstants.DEFAULT_TOPIC);
         String bootstrapServers     = MiscUtil.getStringProperty(props, propPrefix + "." + AuditServerConstants.PROP_BOOTSTRAP_SERVERS);
-        String securityProtocol     = MiscUtil.getStringProperty(props, propPrefix + "." + AuditServerConstants.PROP_SECURITY_PROTOCOL, AuditServerConstants.DEFAULT_SECURITY_PROTOCOL);
-        String saslMechanism        = MiscUtil.getStringProperty(props, propPrefix + "." + AuditServerConstants.PROP_SASL_MECHANISM, AuditServerConstants.DEFAULT_SASL_MECHANISM);
         int    connMaxIdleTimeoutMS = MiscUtil.getIntProperty(props, propPrefix + "." + AuditServerConstants.PROP_CONN_MAX_IDEAL_MS, 10000);
         int    partitions           = getPartitions(props, propPrefix);
         short  replicationFactor    = (short) MiscUtil.getIntProperty(props, propPrefix + "." + AuditServerConstants.PROP_REPLICATION_FACTOR, AuditServerConstants.DEFAULT_REPLICATION_FACTOR);
@@ -64,13 +61,8 @@ public class AuditMessageQueueUtils {
         Map<String, Object> kafkaProp = new HashMap<>();
 
         kafkaProp.put(AdminClientConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
-        kafkaProp.put("sasl.mechanism", saslMechanism);
-        kafkaProp.put(AdminClientConfig.SECURITY_PROTOCOL_CONFIG, securityProtocol);
 
-        if (securityProtocol != null && securityProtocol.toUpperCase().contains("SASL")) {
-            kafkaProp.put(AuditServerConstants.PROP_SASL_JAAS_CONFIG, getJAASConfig(props, propPrefix));
-            kafkaProp.put(AuditServerConstants.PROP_SASL_KERBEROS_SERVICE_NAME, AuditServerConstants.DEFAULT_SERVICE_NAME);
-        }
+        RangerKafkaClientSecurityConfig.apply(props, propPrefix, kafkaProp);
 
         kafkaProp.put(AdminClientConfig.REQUEST_TIMEOUT_MS_CONFIG, reqTimeoutMS);
         kafkaProp.put(AdminClientConfig.CONNECTIONS_MAX_IDLE_MS_CONFIG, connMaxIdleTimeoutMS);
@@ -141,78 +133,6 @@ public class AuditMessageQueueUtils {
         LOG.info("<== AuditMessageQueueUtils:createAuditsTopicIfNotExists(propPrefix={}) ret: {}", propPrefix, ret);
 
         return ret;
-    }
-
-    public static String getJAASConfig(Properties props, String propPrefix) {
-        // Use ranger service principal and keytab for Kafka authentication
-        // This ensures consistent identity across all Ranger services and destination writes
-        String hostName  = props.getProperty(propPrefix + "." + "host");
-        String principal = props.getProperty(propPrefix + "." + AuditServerConstants.PROP_AUDIT_SERVICE_PRINCIPAL);
-        String keytab    = props.getProperty(propPrefix + "." + AuditServerConstants.PROP_AUDIT_SERVICE_KEYTAB);
-
-        AuditServerLogFormatter.builder("Kerberos Configuration")
-                .add("Principal (raw)", principal)
-                .add("Hostname", hostName)
-                .add("Keytab path", keytab)
-                .logInfo(LOG);
-
-        // Validate keytab file exists and is readable
-        if (keytab != null) {
-            File keytabFile = new File(keytab);
-
-            if (!keytabFile.exists()) {
-                LOG.error("ERROR: Keytab file does not exist: {}", keytab);
-
-                throw new IllegalStateException("Keytab file not found: " + keytab);
-            } else if (!keytabFile.canRead()) {
-                LOG.error("ERROR: Keytab file is not readable: {}", keytab);
-
-                throw new IllegalStateException("Keytab file not readable: " + keytab);
-            }
-
-            AuditServerLogFormatter.builder("Keytab File Validation")
-                    .add("Exists", keytabFile.exists())
-                    .add("Readable", keytabFile.canRead())
-                    .add("Size (bytes)", keytabFile.length())
-                    .logInfo(LOG);
-        }
-
-        try {
-            principal = SecureClientLogin.getPrincipal(principal, hostName);
-
-            LOG.info("Principal (resolved): {}", principal);
-        } catch (Exception e) {
-            principal = null;
-
-            LOG.error("ERROR: Failed to resolve principal from _HOST pattern!", e);
-        }
-
-        if (keytab == null || principal == null) {
-            AuditServerLogFormatter.builder("Please configure the following properties in ranger-audit-ingestor-site.xml:")
-                    .add(propPrefix + "." + AuditServerConstants.PROP_AUDIT_SERVICE_PRINCIPAL, "ranger/_HOST@YOUR-REALM")
-                    .add(propPrefix + "." + AuditServerConstants.PROP_AUDIT_SERVICE_KEYTAB, "/path/to/ranger.keytab")
-                    .logError(LOG);
-
-            throw new IllegalStateException("Ranger service principal and keytab must be configured for Kafka authentication. ");
-        }
-
-        String jaasConfig = new StringBuilder()
-                .append(AuditServerConstants.JAAS_KRB5_MODULE).append(" ")
-                .append(AuditServerConstants.JAAS_USE_KEYTAB).append(" ")
-                .append(AuditServerConstants.JAAS_KEYTAB).append(keytab).append("\"").append(" ")
-                .append(AuditServerConstants.JAAS_STOKE_KEY).append(" ")
-                .append(AuditServerConstants.JAAS_USER_TICKET_CACHE).append(" ")
-                .append(AuditServerConstants.JAAS_SERVICE_NAME).append(" ")
-                .append(AuditServerConstants.JAAS_PRINCIPAL).append(principal).append("\";")
-                .toString();
-
-        AuditServerLogFormatter.builder("JAAS Configuration Generated")
-                .add("Principal", principal)
-                .add("Keytab", keytab)
-                .add("Full JAAS Config", jaasConfig)
-                .logInfo(LOG);
-
-        return jaasConfig;
     }
 
     private static String updateExistingTopicPartitions(AdminClient admin, String topicName, int partitions) {

@@ -98,6 +98,24 @@ docker compose --profile ${AUDIT_DESTINATIONS} -f docker-compose.ranger.yml -f d
 
 # Ranger Admin can be accessed at http://localhost:6080 (admin/rangerR0cks!)
 ~~~
+
+#### Kafka client authentication for the audit pipeline and tagsync
+
+With `KERBEROS_ENABLED=true` the Kafka broker exposes a SASL_PLAINTEXT listener that accepts both
+OAUTHBEARER and GSSAPI. `KAFKA_SASL_MECHANISM` in `.env` picks what the Ranger clients
+(audit ingestor, audit dispatchers, tagsync) use:
+
+- `OAUTHBEARER` (default): the `ranger-kafka` container mints unsigned dev JWTs for
+  `rangerauditserver` and `rangertagsync` into the shared `ranger-kafka-oauth-tokens` volume
+  (`/etc/kafka-oauth/<user>.token`) and rewrites them every two minutes with a ten minute
+  lifetime, standing in for a platform token issuer such as
+  Kubernetes projected service-account tokens. The clients read the file on every login through
+  `RangerKafkaOAuthBearerLoginCallbackHandler`, so rotation is picked up without a restart.
+- `GSSAPI`: the clients authenticate with their service keytabs instead. The ingestor renders its
+  site XML from `scripts/audit-ingestor/configs/ranger-audit-ingestor-site.yaml` plus env (like the
+  admin container), the dispatcher start script renders the value into the mounted site XML templates;
+  tagsync needs
+  `TAG_SOURCE_ATLAS_KAFKA_SASL_MECHANISM = GSSAPI` in `scripts/tagsync/ranger-tagsync-install.properties`.
 #### Bring up hive container
 ~~~
 docker compose --profile ${AUDIT_DESTINATIONS} -f docker-compose.ranger.yml -f docker-compose.ranger-audit-service.yml -f docker-compose.ranger-hadoop.yml -f docker-compose.ranger-hive.yml up -d

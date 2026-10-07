@@ -34,13 +34,6 @@ public class AuditServerConstants {
      AUDIT-SERVER INGESTOR Configuration
      **************************************/
     // kafka configuration for audit ingestor
-    public static final String JAAS_KRB5_MODULE                              = "com.sun.security.auth.module.Krb5LoginModule required";
-    public static final String JAAS_USE_KEYTAB                               = "useKeyTab=true";
-    public static final String JAAS_KEYTAB                                   = "keyTab=\"";
-    public static final String JAAS_STOKE_KEY                                = "storeKey=true";
-    public static final String JAAS_SERVICE_NAME                             = "serviceName=kafka";
-    public static final String JAAS_USER_TICKET_CACHE                        = "useTicketCache=false";
-    public static final String JAAS_PRINCIPAL                                = "principal=\"";
     public static final String PROP_KAFKA_PROP_PREFIX                        = "xasecure.audit.destination.kafka";
     public static final String PROP_BOOTSTRAP_SERVERS                        = "kafka.bootstrap.servers";
     public static final String PROP_TOPIC_NAME                               = "kafka.topic.name";
@@ -51,7 +44,6 @@ public class AuditServerConstants {
     public static final String PROP_REQ_TIMEOUT_MS                           = "kafka.request.timeout.ms";
     public static final String PROP_CONN_MAX_IDEAL_MS                        = "kafka.connections.max.idle.ms";
     public static final String PROP_SASL_JAAS_CONFIG                         = "sasl.jaas.config";
-    public static final String PROP_SASL_KERBEROS_SERVICE_NAME               = "sasl.kerberos.service.name";
 
     // kafka topic - ranger_audits configuration
     public static final String PROP_TOPIC_PARTITIONS                         = "kafka.topic.partitions";
@@ -96,10 +88,7 @@ public class AuditServerConstants {
 
     // Kafka Topic defaults
     public static final String DEFAULT_TOPIC                                 = "ranger_audits";
-    public static final String DEFAULT_SASL_MECHANISM                        = "PLAIN";
-    public static final String DEFAULT_SECURITY_PROTOCOL                     = "PLAINTEXT";
     public static final String DEFAULT_SERVICE_NAME                          = "kafka";
-    public static final String PROP_SECURITY_PROTOCOL_VALUE                  = "SASL";
 
     // kafka Offset commit strategies
     public static final String PROP_OFFSET_COMMIT_STRATEGY_MANUAL            = "manual";

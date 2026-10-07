@@ -38,6 +38,15 @@ echo "=========================================="
 # Source service check functions
 source /home/ranger/scripts/service-check-functions.sh
 
+# Render conf/ranger-audit-ingestor-site.xml from configs/ranger-audit-ingestor-site.yaml and env
+# (KAFKA_SASL_MECHANISM, KAFKA_BOOTSTRAP_SERVERS); a mounted configs/ranger-audit-ingestor-site.xml wins
+if ! python3 /home/ranger/scripts/audit-ingestor-config.py; then
+  echo "[ERROR] Audit ingestor configuration failed, see audit-ingestor-config.py logs above"
+  exit 1
+fi
+
+wait_for_kafka_oauth_token /etc/kafka-oauth/rangerauditserver.token 60
+
 # Quick check for Kafka availability
 # The audit server has a built-in recovery/spool mechanism for when Kafka is unavailable
 KAFKA_BOOTSTRAP_SERVERS="${KAFKA_BOOTSTRAP_SERVERS:-ranger-kafka:9092}"

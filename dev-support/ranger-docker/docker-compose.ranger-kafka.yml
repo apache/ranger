@@ -21,6 +21,8 @@ services:
       - ./scripts/kafka/kafka-client.properties:/opt/kafka/config/kafka-client.properties:ro
       - ./dist/version:/home/ranger/dist/version:ro
       - ./scripts/kafka/ranger-kafka-plugin-install.properties:/opt/ranger/ranger-kafka-plugin/install.properties
+      # dev SASL/OAUTHBEARER tokens minted by kafka-oauth-token-minter.sh, read by the Ranger Kafka clients
+      - ranger-kafka-oauth-tokens:/etc/kafka-oauth
     stdin_open: true
     tty: true
     networks:
@@ -59,6 +61,9 @@ services:
       KAFKA_VERSION: ${KAFKA_VERSION}
       KAFKA_PLUGIN_VERSION: ${KAFKA_PLUGIN_VERSION}
       KERBEROS_ENABLED: ${KERBEROS_ENABLED}
+
+volumes:
+  ranger-kafka-oauth-tokens:
 
 networks:
   ranger:

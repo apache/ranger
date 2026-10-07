@@ -76,6 +76,7 @@ x-audit-dispatcher-env-common: &audit-dispatcher-env-common
   RANGER_JVM_MAX_METASPACE: ${RANGER_JVM_MAX_METASPACE:-}
   RANGER_VERSION: ${RANGER_VERSION}
   KERBEROS_ENABLED: ${KERBEROS_ENABLED}
+  KAFKA_SASL_MECHANISM: ${KAFKA_SASL_MECHANISM:-OAUTHBEARER}
   KAFKA_BOOTSTRAP_SERVERS: ranger-kafka.rangernw:9092
 
 services:
@@ -197,9 +198,13 @@ services:
       RANGER_JVM_MAX_METASPACE: ${RANGER_JVM_MAX_METASPACE:-}
       RANGER_VERSION: ${RANGER_VERSION}
       KERBEROS_ENABLED: ${KERBEROS_ENABLED}
+      KAFKA_SASL_MECHANISM: ${KAFKA_SASL_MECHANISM:-OAUTHBEARER}
       KAFKA_BOOTSTRAP_SERVERS: ranger-kafka.rangernw:9092
     volumes:
       - ./dist/keytabs/ranger-audit-ingestor:/etc/keytabs
+      - ranger-kafka-oauth-tokens:/etc/kafka-oauth:ro
+      # audit-ingestor-config.py renders conf/ranger-audit-ingestor-site.xml from configs/*.yaml and env
+      - ./scripts/audit-ingestor/configs:/opt/ranger/audit-ingestor/configs:ro
       - ranger-audit-ingestor-logs:/var/log/ranger/audit-ingestor
       - ranger-audit-ingestor-spool:/var/log/ranger/audit-ingestor/audit
     healthcheck:
@@ -241,8 +246,10 @@ services:
       SOLR_URL: http://ranger-solr.rangernw:8983/solr
     volumes:
       - ./dist/keytabs/ranger-audit-dispatcher-solr:/etc/keytabs
+      - ranger-kafka-oauth-tokens:/etc/kafka-oauth:ro
       - ranger-audit-dispatcher-solr-logs:/var/log/ranger/audit-dispatcher/solr
-      - ./scripts/audit-dispatcher/ranger-audit-dispatcher-solr-site.xml:/opt/ranger/audit-dispatcher/conf/ranger-audit-dispatcher-solr-site.xml
+      # template; ranger-audit-dispatcher.sh renders it into conf/ with KAFKA_SASL_MECHANISM applied
+      - ./scripts/audit-dispatcher/ranger-audit-dispatcher-solr-site.xml:/home/ranger/scripts/ranger-audit-dispatcher-solr-site.xml:ro
 
   # -------------------------------------------------------------------------
   # Dispatcher: OpenSearch  (profile: audit-store-opensearch)
@@ -276,8 +283,10 @@ services:
       OPENSEARCH_URL: http://ranger-opensearch.rangernw:9200
     volumes:
       - ./dist/keytabs/ranger-audit-dispatcher-opensearch:/etc/keytabs
+      - ranger-kafka-oauth-tokens:/etc/kafka-oauth:ro
       - ranger-audit-dispatcher-opensearch-logs:/var/log/ranger/audit-dispatcher/opensearch
-      - ./scripts/audit-dispatcher/ranger-audit-dispatcher-opensearch-site.xml:/opt/ranger/audit-dispatcher/conf/ranger-audit-dispatcher-opensearch-site.xml
+      # template; ranger-audit-dispatcher.sh renders it into conf/ with KAFKA_SASL_MECHANISM applied
+      - ./scripts/audit-dispatcher/ranger-audit-dispatcher-opensearch-site.xml:/home/ranger/scripts/ranger-audit-dispatcher-opensearch-site.xml:ro
 
   # -------------------------------------------------------------------------
   # Optional additional destination: HDFS  (profile: audit-store-hdfs)
@@ -309,10 +318,13 @@ services:
       HDFS_NAMENODE: ranger-hadoop.rangernw:9000
     volumes:
       - ./dist/keytabs/ranger-audit-dispatcher-hdfs:/etc/keytabs
+      - ranger-kafka-oauth-tokens:/etc/kafka-oauth:ro
       - ranger-audit-dispatcher-hdfs-logs:/var/log/ranger/audit-dispatcher/hdfs
-      - ./scripts/audit-dispatcher/ranger-audit-dispatcher-hdfs-site.xml:/opt/ranger/audit-dispatcher/conf/ranger-audit-dispatcher-hdfs-site.xml
+      # template; ranger-audit-dispatcher.sh renders it into conf/ with KAFKA_SASL_MECHANISM applied
+      - ./scripts/audit-dispatcher/ranger-audit-dispatcher-hdfs-site.xml:/home/ranger/scripts/ranger-audit-dispatcher-hdfs-site.xml:ro
 
 volumes:
+  ranger-kafka-oauth-tokens:
   ranger-audit-ingestor-logs:
   ranger-audit-ingestor-spool:
   ranger-audit-dispatcher-solr-logs:
