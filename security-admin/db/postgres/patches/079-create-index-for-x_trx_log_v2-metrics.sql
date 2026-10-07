@@ -39,4 +39,3 @@ select 'delimiter end';
 
 select create_index_for_x_trx_log_v2();
 select 'delimiter end';
-commit;
