@@ -20,8 +20,6 @@
 package org.apache.ranger.rest;
 
 import org.apache.commons.collections.CollectionUtils;
-import org.apache.ranger.audit.metrics.AccessAuditsMetricsService;
-import org.apache.ranger.audit.metrics.AccessAuditsMetricsServiceFactory;
 import org.apache.ranger.biz.AuditMetricsDBStore;
 import org.apache.ranger.common.RESTErrorUtil;
 import org.apache.ranger.common.RangerSearchUtil;
@@ -73,9 +71,6 @@ public class AuditMetricsREST {
     RangerSearchUtil searchUtil;
 
     @Autowired
-    AccessAuditsMetricsServiceFactory accessAuditsMetricsServiceFactory;
-
-    @Autowired
     AuditMetricsDBStore auditMetricsDBStore;
 
     @GET
@@ -87,9 +82,7 @@ public class AuditMetricsREST {
         LOG.debug("==> AuditMetricsREST.getLatestAuditMetrics(serviceType={} serviceName={})", serviceType, serviceName);
         RangerAuditMetrics ret;
         try {
-            AccessAuditsMetricsService accessAuditsMetricsService = accessAuditsMetricsServiceFactory.getAccessAuditsMetricsService();
-
-            ret = accessAuditsMetricsService.getLatestAuditMetrics(serviceType, serviceName, timezone);
+            ret = auditMetricsDBStore.getLatestAuditMetrics(serviceType, serviceName, timezone);
         } catch (WebApplicationException excp) {
             throw excp;
         } catch (Throwable excp) {
@@ -109,9 +102,7 @@ public class AuditMetricsREST {
         LOG.debug("==> AuditMetricsREST.getAuditMetrics(id={})", id);
         RangerAuditMetrics ret;
         try {
-            AccessAuditsMetricsService accessAuditsMetricsService = accessAuditsMetricsServiceFactory.getAccessAuditsMetricsService();
-
-            ret = accessAuditsMetricsService.getAuditMetrics(id, timezone);
+            ret = auditMetricsDBStore.getAuditMetrics(id, timezone);
         } catch (WebApplicationException excp) {
             throw excp;
         } catch (Throwable excp) {
@@ -135,9 +126,7 @@ public class AuditMetricsREST {
         SearchFilter filter = searchUtil.getSearchFilter(request, Collections.emptyList());
 
         try {
-            AccessAuditsMetricsService accessAuditsMetricsService = accessAuditsMetricsServiceFactory.getAccessAuditsMetricsService();
-
-            rangerAuditMetrics = accessAuditsMetricsService.getLatestAuditMetricsList(filter, timezone);
+            rangerAuditMetrics = auditMetricsDBStore.getLatestAuditMetricsList(filter, timezone);
         } catch (WebApplicationException excp) {
             throw excp;
         } catch (Throwable excp) {
@@ -165,9 +154,7 @@ public class AuditMetricsREST {
 
         SearchFilter filter = searchUtil.getSearchFilter(request, Collections.emptyList());
         try {
-            AccessAuditsMetricsService accessAuditsMetricsService = accessAuditsMetricsServiceFactory.getAccessAuditsMetricsService();
-
-            rangerAuditMetricsByHours = accessAuditsMetricsService.getAuditMetricsByHours(filter, timezone);
+            rangerAuditMetricsByHours = auditMetricsDBStore.getAuditMetricsByHours(filter, timezone);
         } catch (WebApplicationException excp) {
             throw excp;
         } catch (Throwable excp) {
@@ -192,15 +179,11 @@ public class AuditMetricsREST {
             @QueryParam("timezone") String timezone) {
         LOG.debug("==> AuditMetricsREST.getDaysAuditMetrics()");
 
-        auditMetricsDBStore.validateMaxAllowedDays(olderThanInDays);
-
         RangerAuditMetricsListByDays   ret    = new RangerAuditMetricsListByDays();
         List<RangerAuditMetricsByDays> rangerAuditMetricsByDays;
         SearchFilter                   filter = searchUtil.getSearchFilter(request, Collections.emptyList());
         try {
-            AccessAuditsMetricsService accessAuditsMetricsService = accessAuditsMetricsServiceFactory.getAccessAuditsMetricsService();
-
-            rangerAuditMetricsByDays = accessAuditsMetricsService.getAuditMetricsByDays(olderThanInDays, filter, timezone);
+            rangerAuditMetricsByDays = auditMetricsDBStore.getRangerAuditMetricsByDays(olderThanInDays, filter, timezone);
         } catch (WebApplicationException excp) {
             throw excp;
         } catch (Throwable excp) {
@@ -262,15 +245,11 @@ public class AuditMetricsREST {
             @DefaultValue("UTC") @QueryParam("timezone") String timezone) {
         LOG.debug("==> AuditMetricsREST.getDaysAuditAccessMetrics(olderThanInDays={}, timezone={})", olderThanInDays, timezone);
 
-        auditMetricsDBStore.validateMaxAllowedDays(olderThanInDays);
-
         Map<String, List<Map<String, Object>>> ret = new LinkedHashMap<>();
         List<Map<String, Object>> rangerAuditAccessMetrics;
 
         try {
-            AccessAuditsMetricsService accessAuditsMetricsService = accessAuditsMetricsServiceFactory.getAccessAuditsMetricsService();
-
-            rangerAuditAccessMetrics = accessAuditsMetricsService.getAuditAccessMetricsByDays(olderThanInDays, timezone);
+            rangerAuditAccessMetrics = auditMetricsDBStore.getRangerAuditAccessMetricsByDays(olderThanInDays, timezone);
         } catch (WebApplicationException excp) {
             throw excp;
         } catch (Throwable excp) {
@@ -281,6 +260,33 @@ public class AuditMetricsREST {
         ret.put("AuditAccessMetricsByDays", rangerAuditAccessMetrics);
 
         LOG.debug("<== AuditMetricsREST.getDaysAuditAccessMetrics(): {}", ret);
+
+        return ret;
+    }
+
+    @GET
+    @Path("/days-plugin-policy-sync-metrics")
+    @Produces("application/json")
+    @PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.GET_DAYS_PLUGIN_POLICY_SYNC_METRICS + "\")")
+    public Map<String, List<Map<String, Object>>> getDaysPluginPolicySyncMetrics(@DefaultValue("7") @QueryParam("olderThanInDays") Integer olderThanInDays,
+            @DefaultValue("UTC") @QueryParam("timezone") String timezone) {
+        LOG.debug("==> AuditMetricsREST.getDaysPluginPolicySyncMetrics(olderThanInDays={}, timezone={})", olderThanInDays, timezone);
+
+        Map<String, List<Map<String, Object>>> ret = new LinkedHashMap<>();
+        List<Map<String, Object>> rangerPluginPolicySyncMetrics;
+
+        try {
+            rangerPluginPolicySyncMetrics = auditMetricsDBStore.getRangerPluginPolicySyncMetricsByDays(olderThanInDays, timezone);
+        } catch (WebApplicationException excp) {
+            throw excp;
+        } catch (Throwable excp) {
+            LOG.error("getDaysPluginPolicySyncMetrics failed", excp);
+            throw restErrorUtil.createRESTException(excp.getMessage());
+        }
+
+        ret.put("PluginPolicySyncMetricsByDays", rangerPluginPolicySyncMetrics);
+
+        LOG.debug("<== AuditMetricsREST.getDaysPluginPolicySyncMetrics(): {}", ret);
 
         return ret;
     }

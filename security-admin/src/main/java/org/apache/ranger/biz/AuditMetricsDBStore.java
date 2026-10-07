@@ -19,10 +19,16 @@
 
 package org.apache.ranger.biz;
 
+import org.apache.ranger.audit.metrics.AccessAuditsMetricsService;
+import org.apache.ranger.audit.metrics.AccessAuditsMetricsServiceFactory;
 import org.apache.ranger.authorization.hadoop.config.RangerAdminConfig;
 import org.apache.ranger.common.MessageEnums;
 import org.apache.ranger.common.RESTErrorUtil;
 import org.apache.ranger.db.RangerDaoManager;
+import org.apache.ranger.plugin.model.RangerAuditMetrics;
+import org.apache.ranger.plugin.model.RangerAuditMetricsByDays;
+import org.apache.ranger.plugin.model.RangerAuditMetricsByHours;
+import org.apache.ranger.plugin.util.SearchFilter;
 import org.apache.ranger.view.RangerAuditAdminMetricsByDays;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -34,6 +40,7 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -49,7 +56,32 @@ public class AuditMetricsDBStore {
     RangerDaoManager daoMgr;
 
     @Autowired
+    AccessAuditsMetricsServiceFactory accessAuditsMetricsServiceFactory;
+
+    @Autowired
     RESTErrorUtil restErrorUtil;
+
+    public RangerAuditMetrics getLatestAuditMetrics(String serviceType, String serviceName, String timezone) {
+        return accessAuditsMetricsService().getLatestAuditMetrics(serviceType, serviceName, timezone);
+    }
+
+    public RangerAuditMetrics getAuditMetrics(Long id, String timezone) {
+        return accessAuditsMetricsService().getAuditMetrics(id, timezone);
+    }
+
+    public List<RangerAuditMetrics> getLatestAuditMetricsList(SearchFilter filter, String timezone) {
+        return accessAuditsMetricsService().getLatestAuditMetricsList(filter, timezone);
+    }
+
+    public List<RangerAuditMetricsByHours> getAuditMetricsByHours(SearchFilter filter, String timezone) {
+        return accessAuditsMetricsService().getAuditMetricsByHours(filter, timezone);
+    }
+
+    public List<RangerAuditMetricsByDays> getRangerAuditMetricsByDays(Integer olderThanInDays, SearchFilter filter, String timezone) {
+        validateMaxAllowedDays(olderThanInDays);
+
+        return accessAuditsMetricsService().getAuditMetricsByDays(olderThanInDays, filter, timezone);
+    }
 
     public List<RangerAuditAdminMetricsByDays> getRangerAuditAdminMetricsByDays(Integer olderThanInDays, List<String> objectClassTypes, List<String> actions, String timezone) throws RuntimeException {
         validateMaxAllowedDays(olderThanInDays);
@@ -59,6 +91,19 @@ public class AuditMetricsDBStore {
         ZoneId zoneId                           = getZoneId(timezone);
 
         return daoMgr.getXXTrxLogV2().getRangerAuditAdminMetricsByDays(olderThanInDays, validatedObjectClassTypes, validatedActions, zoneId);
+    }
+
+    public List<Map<String, Object>> getRangerAuditAccessMetricsByDays(Integer olderThanInDays, String timezone) throws RuntimeException {
+        validateMaxAllowedDays(olderThanInDays);
+
+        return accessAuditsMetricsService().getAuditAccessMetricsByDays(olderThanInDays, timezone);
+    }
+
+    public List<Map<String, Object>> getRangerPluginPolicySyncMetricsByDays(Integer olderThanInDays, String timezone) throws RuntimeException {
+        validateMaxAllowedDays(olderThanInDays);
+        ZoneId zoneId = getZoneId(timezone);
+
+        return daoMgr.getXXPolicyExportAudit().getRangerPluginPolicySyncMetricsByDays(olderThanInDays, zoneId);
     }
 
     private List<String> validateActions(List<String> actions) {
@@ -107,6 +152,10 @@ public class AuditMetricsDBStore {
         }
 
         return zoneId;
+    }
+
+    private AccessAuditsMetricsService accessAuditsMetricsService() {
+        return accessAuditsMetricsServiceFactory.getAccessAuditsMetricsService();
     }
 
     public void validateMaxAllowedDays(Integer olderThanInDays) {
