@@ -25,6 +25,7 @@ import org.apache.ranger.plugin.model.RangerAuditMetricsByHours;
 import org.apache.ranger.plugin.util.SearchFilter;
 
 import java.util.List;
+import java.util.Map;
 
 public interface AccessAuditsMetricsService {
     RangerAuditMetrics getLatestAuditMetrics(String serviceType, String serviceName, String timezone);
@@ -36,4 +37,6 @@ public interface AccessAuditsMetricsService {
     List<RangerAuditMetricsByDays> getAuditMetricsByDays(int olderThanInDays, SearchFilter filter, String timezone);
 
     List<RangerAuditMetricsByHours> getAuditMetricsByHours(SearchFilter filter, String timezone);
+
+    List<Map<String, Object>> getAuditAccessMetricsByDays(int olderThanInDays, String timezone);
 }
