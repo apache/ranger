@@ -114,6 +114,7 @@ def setup_environment(hadoop_container):
     ensure_user_exists(hadoop_container, "hive")
     ensure_user_exists(hadoop_container, "hbase")
     ensure_hadoop_user_keytab("hive")
+    ensure_hadoop_user_keytab("hbase")
 
     # safemode leave with kerberos (hdfs principal already has keytab in container)
     hadoop_container.exec_run(
@@ -124,20 +125,13 @@ def setup_environment(hadoop_container):
     )
 
     kms_container = client.containers.get(KMS_CONTAINER)
-    if ensure_kms_kerberos_rules(kms_container):
-        time.sleep(5)
+    ensure_kms_kerberos_rules(kms_container)  # already sleeps 30s internally when restart is needed
 
     ensure_keyadmin_keytab()
     ensure_ticket()
     ensure_kms_hdfs_policy()
-    ensure_ticket()
 
     cleanup_test_artifacts(hadoop_container, TEST_KMS_KEYS, TEST_EZ_PATHS)
     yield
     cleanup_test_artifacts(hadoop_container, TEST_KMS_KEYS, TEST_EZ_PATHS)
-
-@pytest.fixture(scope="session", autouse=True)
-def setup_kerberos():
-    ensure_keyadmin_keytab()
-    ensure_ticket()
 

@@ -18,7 +18,7 @@ limitations under the License.
 
 ## Pytest Functional Test Suite
 
-This test suite validates REST API endpoints for Apache Ranger services,Admin (rolerest, xuserrest, servicerest), KMS (Key Management Service), and tests HDFS encryption functionalities including key management and file operations within encryption zones.
+This test suite validates REST API endpoints for Apache Ranger services — Admin (rolerest, xuserrest, servicerest,tagrest), KMS (Key Management Service), and HDFS encryption functionalities including key management and file operations within encryption zones.
 
 ### Available Test Suites
 
@@ -29,6 +29,7 @@ This test suite validates REST API endpoints for Apache Ranger services,Admin (r
 | **xuserrest** | Test cases for Ranger Admin User/Group REST APIs |
 | **rolerest** | Test cases for Ranger Admin Role REST APIs |
 | **servicerest** | Test cases for Ranger Admin Service REST APIs |
+| **tagrest** | Test cases for Ranger Admin Tag REST APIs |
 
 ---
 
@@ -41,113 +42,169 @@ functional-tests/
 ├── xuserrest/                   # Tests on Ranger User/Group/Role REST APIs
 ├── rolerest/                    # Tests on Ranger Role REST APIs
 ├── servicerest/                 # Tests on Ranger Service REST APIs
-│
+├── tagrest/                     # Tests on Ranger Tag REST APIs
+│ 
 ├── pytest.ini                   # Registers custom pytest markers
 ├── run-tests.sh                 # Script to automate setup and test execution
 ├── requirements.txt             # Python dependencies
 └── readme.md                    # This documentation
-
 ```
-> **Note:** A Python virtual environment folder named `myenv` will be automatically
-> generated upon running the tests for the first time.
 
+> **Note:** A Python virtual environment folder named `myenv` is created automatically
+> on the first run and **reused on all subsequent runs** — no reinstallation overhead.
+
+---
 
 ## Prerequisites
+
 1. Docker & Docker Compose installed and running
 2. Python 3.10 or higher
-3. Change the working directory to functional-tests
+3. Change the working directory to `functional-tests/`
 ```text
 cd functional-tests/
 ```
 4. Make the shell script executable
-
 ```text
 chmod +x run-tests.sh
 ```
 
+---
 
 ## Environment Variables
 
-Configure container behavior before running the script using the following environment variables:
+These can be exported before running, or passed inline. All have sensible defaults
 
-1. Fresh Setup & Cleanup:
+| Variable | Default | Description |
+|---|---|---|
+| `CLEAN_CONTAINERS` | `0` | Set to `1` to wipe all containers and force a full rebuild from scratch |
+| `RUN_TESTS` | `1` | Set to `0` to bring up infrastructure only without running any tests |
+| `AUDIT_INDEX_STORE` | `opensearch` | Audit backend: `opensearch`, `solr`, or `none` to skip the audit pipeline entirely |
 
-Force a clean environment & helps building binaries with local changes:
+### `CLEAN_CONTAINERS`
+
+By default containers **persist between runs** for fast re-execution. Use `CLEAN_CONTAINERS=1` only when you want a completely clean rebuild (e.g. for rebuilding the Docker image via Maven against your local source):
+
 ```text
 export CLEAN_CONTAINERS=1
 ./run-tests.sh
 ```
 
-After initial setup, disable fresh container creation to speed up subsequent runs (default behavior):
-
+On all subsequent re-runs (no rebuild needed):
 ```text
-export CLEAN_CONTAINERS=0
 ./run-tests.sh
 ```
 
-2. Infrastructure Only (Skip Tests)
+### `RUN_TESTS`
 
-Start Docker infrastructure without executing Pytest suites:
+Bring up the full infrastructure without executing any tests. Useful when containers are still initializing or you want to inspect the environment first:
 
 ```text
 export RUN_TESTS=0
 ./run-tests.sh
 ```
-This is useful when tests fail due to slow container startup. Once all containers are healthy, re-enable tests (default behavior):
 
+Once containers are healthy, run tests normally (default):
 ```text
-export RUN_TESTS=1
 ./run-tests.sh
 ```
 
+### `AUDIT_INDEX_STORE`
+
+Controls whether the audit pipeline (Kafka + ingestor + OpenSearch/Solr) is started. Defaults to `opensearch`. Allowed values for export AUDIT_INDEX_STORE= (solr/opensearch/none)
+
+```text
+export AUDIT_INDEX_STORE=none
+./run-tests.sh
+```
+
+---
 
 ## Running Tests
-The run-tests.sh script manages Docker container setup, dependency installation, and test execution. It supports both interactive and argument-based modes.
 
-1. Interactive Mode:
+The `run-tests.sh` script manages Docker container setup, dependency installation, and test execution. It supports both interactive and argument-based modes.
 
-Run the script without arguments to be prompted for inputs:
+### 1. Interactive Mode
+
+Run the script without arguments to be prompted for each input:
 ```text
 ./run-tests.sh
 ```
-> DB Type: Enter one of postgres, mysql, oracle, mssql. Defaults to postgres.
 
-> Test Suites: Enter space-separated suite names. Defaults to ALL suites.
+You will be asked three questions in sequence:
 
-example:
 ```text
-
 Available DB types: postgres, mysql, oracle
 Enter DB type (press Enter to default to postgres): postgres
 
-Available test suites: xuserrest servicerest hdfs kms
+Available audit stores: opensearch, solr, none
+Enter audit store (press Enter to default to opensearch): none
+
+Available test suites: rolerest xuserrest servicerest tagrest hdfs kms
 Enter test suites space-separated (press Enter to run ALL): kms hdfs
 ```
 
-2. Command-Line Arguments Mode:
+> Press **Enter** at any prompt to accept the default value.
 
-Pass arguments directly to skip prompts:
+### 2. Command-Line Arguments Mode
+
+Pass `db-type` and `test-suites` directly to skip prompts. Use env vars for the remaining options:
 
 ```text
 ./run-tests.sh [db-type] [test-suites...]
 ```
-db-type — Must be the first argument. Valid values: postgres, mysql, oracle.
 
-test-suites — Space-separated list: hdfs, kms, xuserrest, servicerest.
+- `db-type` — First argument. Valid values: `postgres`, `mysql`, `oracle`.
+- `test-suites` — Space-separated list: `hdfs`, `kms`, `rolerest`, `xuserrest`, `servicerest`, `tagrest`.
 
 Examples:
 
 ```text
+# Run kms and hdfs tests with postgres, no audit pipeline
+export AUDIT_INDEX_STORE=none 
 ./run-tests.sh postgres kms hdfs
- ```
+
+# Run all suites with mysql and opensearch audit
+./run-tests.sh mysql
+
+# Full clean rebuild with all suites
+CLEAN_CONTAINERS=1 ./run-tests.sh postgres
+```
+
+---
+
+## Containers Brought Up
+
+### Always (Base Services)
+
+Regardless of which test suites you choose, these containers always start:
+
+| Container | Role |
+|---|---|
+| `ranger` | Ranger Admin (policies, users, REST APIs) |
+| `ranger-kdc` | Kerberos KDC |
+| `ranger-<db>` | Database (`ranger-postgres`, `ranger-mysql`, `ranger-oracle`) |
+| `ranger-zk` | ZooKeeper |
+| `ranger-kms` | Ranger KMS |
+
+### Audit Pipeline (when `AUDIT_INDEX_STORE != none`)
+
+| Container | Role |
+|---|---|
+| `ranger-kafka` | Kafka broker |
+| `ranger-audit-ingestor` | Reads from Kafka, writes to audit store |
+| `ranger-opensearch` / `ranger-solr` | Audit index store |
+| `ranger-audit-dispatcher-<store>` | Dispatches audit events |
+
+### Suite-Specific
+
+| Suite | Extra Container |
+|---|---|
+| `hdfs` | `ranger-hadoop` |
+| `kms` | _(already in base)_ |
+| `rolerest`, `xuserrest`, `servicerest`, `tagrest`| _(none — use Ranger Admin API only)_ |
+
+---
 
 ## Test Reports
-After execution, HTML reports are automatically generated for each suite. Open the corresponding file in any browser to view detailed results:
 
-| Suite       | Report File             |
-|:------------|:------------------------|
-| hdfs        | report_hdfs.html        |
-| kms         | report_kms.html         |
-| xuserrest   | report_xuserrest.html   |
-| rolerest    | report_rolerest.html    |
-| servicerest | report_servicerest.html |
+After execution, an HTML report is automatically generated for each suite in the `functional-tests/` directory:

@@ -116,7 +116,7 @@ def test_writeAndRead_Newfile_after_rollover(hadoop_container):
     #read-write using 'hive' user-------
     read_write_cmd= [cmd.format(filename=filename, ez_name=ez_name, user=HIVE_USER) for cmd in ACTIONS_COMMANDS]
     for cmd in read_write_cmd:
-        output=run_command(hadoop_container,cmd,HIVE_USER)
+        output = run_kerberos_command(hadoop_container, cmd, HIVE_USER, HIVE_PRINCIPAL, HIVE_KEYTAB)
         print(output)
 
     #roll-over of key---------
@@ -135,13 +135,15 @@ def test_writeAndRead_Newfile_after_rollover(hadoop_container):
     #read-write new file now
     read_write_cmd= [cmd.format(filename=filename2, ez_name=ez_name, user=HIVE_USER) for cmd in ACTIONS_COMMANDS]
     for cmd in read_write_cmd:
-        output=run_command(hadoop_container,cmd,HIVE_USER)
+        output = run_kerberos_command(hadoop_container, cmd, HIVE_USER, HIVE_PRINCIPAL, HIVE_KEYTAB)
         print(output)
 
     #cleanup EZ and EZ file--------
+    # fail_on_error=False for all but the last cmd — partial file-removal failures are OK,
+    # but the final recursive EZ delete must succeed (also removes filename2 / testfile3).
     cleanup_cmd=[cmd.format(filename=filename, ez_name=ez_name) for cmd in CLEANUP_COMMANDS]
-    for cmd in cleanup_cmd:
-        run_command(hadoop_container,cmd,HDFS_USER)
+    for i, cmd in enumerate(cleanup_cmd):
+        run_command(hadoop_container, cmd, HDFS_USER, fail_on_error=(i == len(cleanup_cmd) - 1))
 
     #delete EZ key ----------
     delete_kms_key(key_name)
@@ -181,7 +183,7 @@ def test_Readfile_after_keyDeletion(hadoop_container):
     #read-write using 'hive' user-------
     read_write_cmd= [cmd.format(filename=filename, ez_name=ez_name, user=HIVE_USER) for cmd in ACTIONS_COMMANDS]
     for cmd in read_write_cmd:
-        output=run_command(hadoop_container,cmd,HIVE_USER)
+        output = run_kerberos_command(hadoop_container, cmd, HIVE_USER, HIVE_PRINCIPAL, HIVE_KEYTAB)
         print(output)
 
 
@@ -194,11 +196,12 @@ def test_Readfile_after_keyDeletion(hadoop_container):
     failure_detected = False
 
     for cmd in read_write_cmd:
-        output = run_command(hadoop_container, cmd, HIVE_USER, fail_on_error=False)
+        # Use return_exit_code=True so stderr (where HDFS error messages live) is included
+        # in output — required after demux=True split in run_command.
+        output, exit_code = run_command(hadoop_container, cmd, HIVE_USER, fail_on_error=False, return_exit_code=True)
         print(f"Command Output:\n{output}")
 
-        # Check for known failure indicators in output
-        if any(err in output.lower() for err in ["error", "exception", "failed", "not found"]):
+        if exit_code != 0:
             failure_detected = True
 
         #assert that failure was detected as expected
