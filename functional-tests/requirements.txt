@@ -16,7 +16,7 @@ Pygments==2.19.2
 pytest==9.0.2
 requests==2.32.5
 urllib3==2.6.3
-Werkzeug==3.1.5
+Werkzeug==3.1.9
 pytest-xdist
 requests
 docker
