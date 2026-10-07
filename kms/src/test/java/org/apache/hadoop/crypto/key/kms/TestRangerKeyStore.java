@@ -20,8 +20,10 @@ package org.apache.hadoop.crypto.key.kms;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.crypto.key.KeyProvider;
 import org.apache.hadoop.crypto.key.RangerAzureKeyVaultKeyGenerator;
+import org.apache.hadoop.crypto.key.RangerKMSCryptoConfigManager;
 import org.apache.hadoop.crypto.key.RangerKeyStore;
 import org.apache.hadoop.crypto.key.RangerMasterKey;
+import org.apache.hadoop.crypto.key.TestKMSCryptoAPIManager;
 import org.apache.ranger.entity.XXRangerKeyStore;
 import org.apache.ranger.kms.dao.DaoManager;
 import org.apache.ranger.kms.dao.RangerKMSDao;
@@ -88,6 +90,8 @@ public class TestRangerKeyStore {
     char[] keyPass          = "none".toCharArray();
     char[] masterKey        = "MasterPassword".toCharArray();
 
+    RangerKMSCryptoConfigManager kmsCryptoConfigApi = new TestKMSCryptoAPIManager("PBEWithMD5AndTripleDES", "MD5", 20);
+
     @BeforeEach
     public void checkFileIfExists() {
         deleteKeyStoreFile();
@@ -101,7 +105,7 @@ public class TestRangerKeyStore {
     @Test
     public void testInvalidKey1() {
         DaoManager     daoManager     = mock(DaoManager.class);
-        RangerKeyStore rangerKeyStore = new RangerKeyStore(daoManager);
+        RangerKeyStore rangerKeyStore = new RangerKeyStore(daoManager, kmsCryptoConfigApi);
         String         keyValue       = "enckey:1";
         Exception exception = Assertions.assertThrows(IOException.class, () -> {
             InputStream inputStream = generateKeyStoreFile(keyValue);
@@ -113,7 +117,7 @@ public class TestRangerKeyStore {
     @Test
     public void testInvalidKey2() throws NoSuchAlgorithmException, CertificateException, IOException, KeyStoreException {
         DaoManager     daoManager     = mock(DaoManager.class);
-        RangerKeyStore rangerKeyStore = new RangerKeyStore(daoManager);
+        RangerKeyStore rangerKeyStore = new RangerKeyStore(daoManager, kmsCryptoConfigApi);
         String         keyValue       = "1%enckey";
         Assertions.assertThrows(IOException.class, () -> {
             InputStream inputStream = generateKeyStoreFile(keyValue);
@@ -125,7 +129,7 @@ public class TestRangerKeyStore {
     @Test
     public void testInvalidKey3() throws NoSuchAlgorithmException, CertificateException, IOException, KeyStoreException {
         DaoManager     daoManager     = mock(DaoManager.class);
-        RangerKeyStore rangerKeyStore = new RangerKeyStore(daoManager);
+        RangerKeyStore rangerKeyStore = new RangerKeyStore(daoManager, kmsCryptoConfigApi);
         String         keyValue       = "1 enckey";
         Assertions.assertThrows(IOException.class, () -> {
             InputStream inputStream = generateKeyStoreFile(keyValue);
@@ -137,7 +141,7 @@ public class TestRangerKeyStore {
     @Test
     public void testInvalidKey4() throws NoSuchAlgorithmException, CertificateException, IOException, KeyStoreException {
         DaoManager     daoManager     = mock(DaoManager.class);
-        RangerKeyStore rangerKeyStore = new RangerKeyStore(daoManager);
+        RangerKeyStore rangerKeyStore = new RangerKeyStore(daoManager, kmsCryptoConfigApi);
         String         keyValue       = "_1-enckey";
         Assertions.assertThrows(IOException.class, () -> {
             InputStream inputStream = generateKeyStoreFile(keyValue);
@@ -149,7 +153,7 @@ public class TestRangerKeyStore {
     @Test
     public void testValidKey1() throws NoSuchAlgorithmException, CertificateException, IOException, KeyStoreException {
         DaoManager     daoManager     = mock(DaoManager.class);
-        RangerKeyStore rangerKeyStore = new RangerKeyStore(daoManager);
+        RangerKeyStore rangerKeyStore = new RangerKeyStore(daoManager, kmsCryptoConfigApi);
         String         keyValue       = "enckey_1-test";
         InputStream    inputStream    = generateKeyStoreFile(keyValue);
         rangerKeyStore.engineLoadKeyStoreFile(inputStream, storePass, keyPass, masterKey, fileFormat);
@@ -159,7 +163,7 @@ public class TestRangerKeyStore {
     @Test
     public void testValidKey2() throws NoSuchAlgorithmException, CertificateException, IOException, KeyStoreException {
         DaoManager     daoManager     = mock(DaoManager.class);
-        RangerKeyStore rangerKeyStore = new RangerKeyStore(daoManager);
+        RangerKeyStore rangerKeyStore = new RangerKeyStore(daoManager, kmsCryptoConfigApi);
         String         keyValue       = "1-enckey_test";
         InputStream    inputStream    = generateKeyStoreFile(keyValue);
         rangerKeyStore.engineLoadKeyStoreFile(inputStream, storePass, keyPass, masterKey, fileFormat);
@@ -169,7 +173,7 @@ public class TestRangerKeyStore {
     @Test
     public void testEngineGetCertificateChain() {
         DaoManager     daoManager     = mock(DaoManager.class);
-        RangerKeyStore rangerKeyStore = new RangerKeyStore(daoManager);
+        RangerKeyStore rangerKeyStore = new RangerKeyStore(daoManager, kmsCryptoConfigApi);
 
         Certificate[] result = rangerKeyStore.engineGetCertificateChain("enckey_1-test");
         assertNull(result, "Certificate chain should be null for a key that does not exist in the keystore");
@@ -178,7 +182,7 @@ public class TestRangerKeyStore {
     @Test
     public void testEngineGetCertificate() {
         DaoManager     daoManager     = mock(DaoManager.class);
-        RangerKeyStore rangerKeyStore = new RangerKeyStore(daoManager);
+        RangerKeyStore rangerKeyStore = new RangerKeyStore(daoManager, kmsCryptoConfigApi);
 
         Certificate result = rangerKeyStore.engineGetCertificate("enckey_1-test");
         assertNull(result, "Certificate should be null for a key that does not exist in the keystore");
@@ -187,7 +191,7 @@ public class TestRangerKeyStore {
     @Test
     public void testEngineGetCreationDate_NoEntry() {
         DaoManager     daoManager     = mock(DaoManager.class);
-        RangerKeyStore rangerKeyStore = new RangerKeyStore(daoManager);
+        RangerKeyStore rangerKeyStore = new RangerKeyStore(daoManager, kmsCryptoConfigApi);
 
         Date result = rangerKeyStore.engineGetCreationDate("missing-key");
 
@@ -197,7 +201,7 @@ public class TestRangerKeyStore {
     @Test
     public void testEngineSize() {
         DaoManager     daoManager     = mock(DaoManager.class);
-        RangerKeyStore rangerKeyStore = new RangerKeyStore(daoManager);
+        RangerKeyStore rangerKeyStore = new RangerKeyStore(daoManager, kmsCryptoConfigApi);
 
         int size = rangerKeyStore.engineSize();
         assertEquals(0, size, "Size should be 0 for an empty keystore");
@@ -206,7 +210,7 @@ public class TestRangerKeyStore {
     @Test
     public void testEngineIsKeyEntry() {
         DaoManager     daoManager     = mock(DaoManager.class);
-        RangerKeyStore rangerKeyStore = new RangerKeyStore(daoManager);
+        RangerKeyStore rangerKeyStore = new RangerKeyStore(daoManager, kmsCryptoConfigApi);
 
         boolean result = rangerKeyStore.engineIsKeyEntry("enckey_1-test");
         assertFalse(result, "isKeyEntry should return false for a key that does not exist in the keystore");
@@ -215,7 +219,7 @@ public class TestRangerKeyStore {
     @Test
     public void testEngineIsCertificateEntry() {
         DaoManager     daoManager     = mock(DaoManager.class);
-        RangerKeyStore rangerKeyStore = new RangerKeyStore(daoManager);
+        RangerKeyStore rangerKeyStore = new RangerKeyStore(daoManager, kmsCryptoConfigApi);
 
         boolean result = rangerKeyStore.engineIsCertificateEntry("enckey_1-test");
         assertFalse(result, "isCertificateEntry should return false for a key that does not exist in the keystore");
@@ -224,7 +228,7 @@ public class TestRangerKeyStore {
     @Test
     public void testEngineGetCertificateAlias() {
         DaoManager     daoManager     = mock(DaoManager.class);
-        RangerKeyStore rangerKeyStore = new RangerKeyStore(daoManager);
+        RangerKeyStore rangerKeyStore = new RangerKeyStore(daoManager, kmsCryptoConfigApi);
         Certificate    mockCert       = mock(Certificate.class);
 
         String result = rangerKeyStore.engineGetCertificateAlias(mockCert);
@@ -234,7 +238,7 @@ public class TestRangerKeyStore {
     @Test
     public void testEngineStore_if() throws Exception {
         DaoManager     daoManager     = mock(DaoManager.class);
-        RangerKeyStore rangerKeyStore = new RangerKeyStore(daoManager);
+        RangerKeyStore rangerKeyStore = new RangerKeyStore(daoManager, kmsCryptoConfigApi);
 
         Field keyVaultEnabledField = RangerKeyStore.class.getDeclaredField("keyVaultEnabled");
         keyVaultEnabledField.setAccessible(true);
@@ -246,7 +250,7 @@ public class TestRangerKeyStore {
     @Test
     public void testEngineStore_ThrowsIllegalArgumentException_WhenPasswordIsNull() throws Exception {
         DaoManager     daoManager     = mock(DaoManager.class);
-        RangerKeyStore rangerKeyStore = new RangerKeyStore(daoManager);
+        RangerKeyStore rangerKeyStore = new RangerKeyStore(daoManager, kmsCryptoConfigApi);
 
         Field keyVaultEnabledField = RangerKeyStore.class.getDeclaredField("keyVaultEnabled");
         keyVaultEnabledField.setAccessible(true);
@@ -263,7 +267,7 @@ public class TestRangerKeyStore {
     @Disabled
     public void testAddKeyEntry_throwsKeyStoreException_whenSealKeyFails() throws Exception {
         DaoManager     daoManager     = mock(DaoManager.class);
-        RangerKeyStore rangerKeyStore = new RangerKeyStore(daoManager);
+        RangerKeyStore rangerKeyStore = new RangerKeyStore(daoManager, kmsCryptoConfigApi);
 
         String alias       = "testkey";
         char[] password    = "123".toCharArray();
@@ -284,7 +288,7 @@ public class TestRangerKeyStore {
     @Disabled
     public void testDbOperationStore_whenUpdateThrowsException() {
         DaoManager     daoManager     = mock(DaoManager.class);
-        RangerKeyStore rangerKeyStore = new RangerKeyStore(daoManager);
+        RangerKeyStore rangerKeyStore = new RangerKeyStore(daoManager, kmsCryptoConfigApi);
         RangerKMSDao   rangerKMSDao   = mock(RangerKMSDao.class);
 
         try {
@@ -309,7 +313,7 @@ public class TestRangerKeyStore {
     @Test
     public void testDbOperationStore_whenKeyStoreExists_shouldCallUpdate() throws Exception {
         DaoManager     daoManager     = mock(DaoManager.class);
-        RangerKeyStore rangerKeyStore = new RangerKeyStore(daoManager);
+        RangerKeyStore rangerKeyStore = new RangerKeyStore(daoManager, kmsCryptoConfigApi);
         RangerKMSDao   rangerKMSDao   = mock(RangerKMSDao.class);
 
         XXRangerKeyStore input = new XXRangerKeyStore();
@@ -334,7 +338,7 @@ public class TestRangerKeyStore {
     @Disabled
     public void testDbOperationDelete() throws Exception {
         DaoManager     daoManager     = mock(DaoManager.class);
-        RangerKeyStore rangerKeyStore = new RangerKeyStore(daoManager);
+        RangerKeyStore rangerKeyStore = new RangerKeyStore(daoManager, kmsCryptoConfigApi);
         RangerKMSDao   rangerKMSDao   = mock(RangerKMSDao.class);
 
         Field kmsDaoField = RangerKeyStore.class.getDeclaredField("kmsDao");
@@ -355,7 +359,7 @@ public class TestRangerKeyStore {
     @Disabled
     public void testDbOperationLoad() throws Exception {
         DaoManager     daoManager     = mock(DaoManager.class);
-        RangerKeyStore rangerKeyStore = new RangerKeyStore(daoManager);
+        RangerKeyStore rangerKeyStore = new RangerKeyStore(daoManager, kmsCryptoConfigApi);
         RangerKMSDao   rangerKMSDao   = mock(RangerKMSDao.class);
 
         Field kmsDaoField = RangerKeyStore.class.getDeclaredField("kmsDao");
@@ -374,7 +378,7 @@ public class TestRangerKeyStore {
     @Test
     public void testEngineGetCreationDate_WithoutKeyEntryDirectUse() throws Exception {
         DaoManager     daoManager     = mock(DaoManager.class);
-        RangerKeyStore rangerKeyStore = new RangerKeyStore(daoManager);
+        RangerKeyStore rangerKeyStore = new RangerKeyStore(daoManager, kmsCryptoConfigApi);
         String         alias          = "alias";
         Date           expectedDate   = new Date();
 
@@ -422,7 +426,7 @@ public class TestRangerKeyStore {
     @Test
     public void testEngineSetKeyEntry() {
         DaoManager     daoManager     = mock(DaoManager.class);
-        RangerKeyStore rangerKeyStore = new RangerKeyStore(daoManager);
+        RangerKeyStore rangerKeyStore = new RangerKeyStore(daoManager, kmsCryptoConfigApi);
 
         String        alias       = "testKey";
         Key           key         = mock(Key.class);
@@ -439,7 +443,7 @@ public class TestRangerKeyStore {
     @Test
     public void testGetAlgorithm() {
         DaoManager     daoManager     = mock(DaoManager.class);
-        RangerKeyStore rangerKeyStore = new RangerKeyStore(daoManager);
+        RangerKeyStore rangerKeyStore = new RangerKeyStore(daoManager, kmsCryptoConfigApi);
         String         cipher         = "AES";
 
         String result = rangerKeyStore.getAlgorithm(cipher);
@@ -450,7 +454,7 @@ public class TestRangerKeyStore {
     @Test
     void testEngineGetDecryptedZoneKeyByte() throws Exception {
         DaoManager     daoManager     = mock(DaoManager.class);
-        RangerKeyStore rangerKeyStore = new RangerKeyStore(daoManager);
+        RangerKeyStore rangerKeyStore = new RangerKeyStore(daoManager, kmsCryptoConfigApi);
         String         alias          = "testKey";
 
         assertNull(rangerKeyStore.engineGetDecryptedZoneKeyByte(alias));
@@ -459,7 +463,7 @@ public class TestRangerKeyStore {
     @Test
     void testEngineGetDecryptedZoneKey() throws Exception {
         DaoManager     daoManager     = mock(DaoManager.class);
-        RangerKeyStore rangerKeyStore = new RangerKeyStore(daoManager);
+        RangerKeyStore rangerKeyStore = new RangerKeyStore(daoManager, kmsCryptoConfigApi);
         String         alias          = "testKey";
 
         Key result = rangerKeyStore.engineGetDecryptedZoneKey(alias);
@@ -469,7 +473,7 @@ public class TestRangerKeyStore {
     @Test
     void testEngineGetKeyMetadata() throws Exception {
         DaoManager     daoManager     = mock(DaoManager.class);
-        RangerKeyStore rangerKeyStore = new RangerKeyStore(daoManager);
+        RangerKeyStore rangerKeyStore = new RangerKeyStore(daoManager, kmsCryptoConfigApi);
         String         alias          = "testKey";
 
         KeyProvider.Metadata result = rangerKeyStore.engineGetKeyMetadata(alias);
@@ -480,7 +484,7 @@ public class TestRangerKeyStore {
     @Disabled
     void testAddSecureKeyByteEntry_EncryptFails_ThrowsKeyStoreException() throws Exception {
         DaoManager     daoManager     = mock(DaoManager.class);
-        RangerKeyStore rangerKeyStore = spy(new RangerKeyStore(daoManager));
+        RangerKeyStore rangerKeyStore = spy(new RangerKeyStore(daoManager, kmsCryptoConfigApi));
 
         Key             mockKey               = mock(Key.class);
         RangerMasterKey mockMasterKeyProvider = mock(RangerMasterKey.class);
@@ -501,7 +505,7 @@ public class TestRangerKeyStore {
     @Test
     void testAddSecureKeyByteEntry() throws Exception {
         DaoManager     daoManager     = mock(DaoManager.class);
-        RangerKeyStore rangerKeyStore = spy(new RangerKeyStore(daoManager));
+        RangerKeyStore rangerKeyStore = spy(new RangerKeyStore(daoManager, kmsCryptoConfigApi));
 
         Key    key         = mock(Key.class);
         String alias       = "testKey";
@@ -526,7 +530,7 @@ public class TestRangerKeyStore {
     @Test
     void testEngineLoadToKeyStoreFile_Success() throws Exception {
         DaoManager     daoManager     = mock(DaoManager.class);
-        RangerKeyStore rangerKeyStore = spy(new RangerKeyStore(daoManager));
+        RangerKeyStore rangerKeyStore = spy(new RangerKeyStore(daoManager, kmsCryptoConfigApi));
         String         alias          = "testkey";
         Key            dummyKey       = mock(Key.class);
 

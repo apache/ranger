@@ -72,7 +72,8 @@ public class KeySecureToRangerDBMKUtil {
             RangerSafenetKeySecure rangerSafenetKeySecure = new RangerSafenetKeySecure(conf);
             String                 mKey                   = rangerSafenetKeySecure.getMasterKey(password);
             byte[]                 key                    = Base64.decode(mKey);
-            RangerKMSMKI        rangerMasterKey        = new RangerMasterKey(daoManager); // Put Master Key in Ranger DB
+            RangerKMSCryptoConfigManager kmsCryptoConfigApi = new RangerKMSCryptoConfigManager(RangerKeyStoreProvider.DBKS_SITE_XML);
+            RangerKMSMKI        rangerMasterKey        = new RangerMasterKey(daoManager, kmsCryptoConfigApi); // Put Master Key in Ranger DB
 
             boolean isMKSet = rangerMasterKey.setExternalKeyAsMK(password, key);
             if (!isMKSet) {

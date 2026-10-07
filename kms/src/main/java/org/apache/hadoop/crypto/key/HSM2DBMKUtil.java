@@ -84,7 +84,8 @@ public class HSM2DBMKUtil {
             byte[]    key           = Base64.decode(mKey);
 
             // Put Master Key in Ranger DB
-            RangerKMSMKI rangerMasterKey = new RangerMasterKey(daoManager);
+            RangerKMSCryptoConfigManager kmsCryptoConfigApi = new RangerKMSCryptoConfigManager(RangerKeyStoreProvider.DBKS_SITE_XML);
+            RangerKMSMKI rangerMasterKey = new RangerMasterKey(daoManager, kmsCryptoConfigApi);
 
             boolean isMKSet = rangerMasterKey.setExternalKeyAsMK(password, key);
 
