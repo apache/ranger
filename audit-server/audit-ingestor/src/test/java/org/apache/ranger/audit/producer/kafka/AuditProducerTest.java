@@ -17,18 +17,28 @@
 
 package org.apache.ranger.audit.producer.kafka;
 
-import org.apache.kafka.clients.admin.AdminClientConfig;
+import org.apache.kafka.clients.CommonClientConfigs;
 import org.apache.kafka.clients.producer.ProducerConfig;
+import org.apache.kafka.common.config.SaslConfigs;
 import org.apache.ranger.audit.server.AuditServerConstants;
+import org.apache.ranger.kafka.auth.RangerKafkaClientSecurityConfig;
+import org.apache.ranger.kafka.auth.RangerKafkaOAuthBearerLoginCallbackHandler;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Properties;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class AuditProducerTest {
     private static final String PROP_PREFIX = AuditServerConstants.PROP_PREFIX_AUDIT_SERVER + "kafka";
+
+    @TempDir
+    Path tempDir;
 
     private static void assertProducerProp(Properties props, String key, Object expected) {
         assertEquals(String.valueOf(expected), String.valueOf(props.get(key)));
@@ -54,8 +64,47 @@ public class AuditProducerTest {
         assertProducerProp(producerProps, ProducerConfig.MAX_REQUEST_SIZE_CONFIG, AuditServerConstants.DEFAULT_PRODUCER_MAX_REQUEST_SIZE);
         assertProducerProp(producerProps, ProducerConfig.MAX_BLOCK_MS_CONFIG, AuditServerConstants.DEFAULT_PRODUCER_MAX_BLOCK_MS);
         assertProducerProp(producerProps, ProducerConfig.REQUEST_TIMEOUT_MS_CONFIG, AuditServerConstants.DEFAULT_PRODUCER_REQUEST_TIMEOUT_MS);
-        assertEquals("PLAINTEXT", producerProps.get(AdminClientConfig.SECURITY_PROTOCOL_CONFIG));
+        assertEquals("PLAINTEXT", producerProps.get(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG));
+        assertFalse(producerProps.containsKey(SaslConfigs.SASL_MECHANISM));
+        assertFalse(producerProps.containsKey(SaslConfigs.SASL_JAAS_CONFIG));
         assertFalse(producerProps.containsKey(ProducerConfig.PARTITIONER_CLASS_CONFIG));
+    }
+
+    @Test
+    public void testCreateProducerConfigSaslDefaultRequiresOAuthToken() {
+        Properties props = new Properties();
+        props.setProperty(PROP_PREFIX + "." + AuditServerConstants.PROP_BOOTSTRAP_SERVERS, "kafka:9092");
+        props.setProperty(PROP_PREFIX + "." + AuditServerConstants.PROP_SECURITY_PROTOCOL, "SASL_PLAINTEXT");
+
+        assertThrows(IllegalStateException.class, () -> AuditProducer.createProducerConfig(props, PROP_PREFIX));
+    }
+
+    @Test
+    public void testCreateProducerConfigSaslExplicitGssapiRequiresKeytab() {
+        Properties props = new Properties();
+        props.setProperty(PROP_PREFIX + "." + AuditServerConstants.PROP_BOOTSTRAP_SERVERS, "kafka:9092");
+        props.setProperty(PROP_PREFIX + "." + AuditServerConstants.PROP_SECURITY_PROTOCOL, "SASL_PLAINTEXT");
+        props.setProperty(PROP_PREFIX + "." + AuditServerConstants.PROP_SASL_MECHANISM, "GSSAPI");
+
+        assertThrows(IllegalStateException.class, () -> AuditProducer.createProducerConfig(props, PROP_PREFIX));
+    }
+
+    @Test
+    public void testCreateProducerConfigSaslDefaultOAuthBearerFileToken() throws Exception {
+        Path       token = Files.createFile(tempDir.resolve("kafka-token"));
+        Properties props = new Properties();
+        props.setProperty(PROP_PREFIX + "." + AuditServerConstants.PROP_BOOTSTRAP_SERVERS, "kafka:9093");
+        props.setProperty(PROP_PREFIX + "." + AuditServerConstants.PROP_SECURITY_PROTOCOL, "SASL_SSL");
+        props.setProperty(PROP_PREFIX + "." + RangerKafkaClientSecurityConfig.PROP_OAUTH_TOKEN_ENDPOINT_URL, token.toUri().toString());
+
+        Properties producerProps = AuditProducer.createProducerConfig(props, PROP_PREFIX);
+
+        assertEquals("SASL_SSL", producerProps.get(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG));
+        assertEquals("OAUTHBEARER", producerProps.get(SaslConfigs.SASL_MECHANISM));
+        assertEquals(RangerKafkaClientSecurityConfig.OAUTHBEARER_LOGIN_MODULE + " required;", producerProps.get(SaslConfigs.SASL_JAAS_CONFIG));
+        assertEquals(token.toUri().toString(), producerProps.get(SaslConfigs.SASL_OAUTHBEARER_TOKEN_ENDPOINT_URL));
+        assertEquals(RangerKafkaOAuthBearerLoginCallbackHandler.class.getName(), producerProps.get(SaslConfigs.SASL_LOGIN_CALLBACK_HANDLER_CLASS));
+        assertFalse(producerProps.containsKey(SaslConfigs.SASL_KERBEROS_SERVICE_NAME));
     }
 
     @Test

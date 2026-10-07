@@ -98,6 +98,10 @@ docker compose --profile ${AUDIT_DESTINATIONS} -f docker-compose.ranger.yml -f d
 
 # Ranger Admin can be accessed at http://localhost:6080 (admin/rangerR0cks!)
 ~~~
+
+#### Kafka client authentication for the audit pipeline and tagsync
+See [README-KAFKA-CLIENT-AUTH.md](README-KAFKA-CLIENT-AUTH.md) for the supported mechanisms (OAUTHBEARER by default, GSSAPI on request) and how this setup exercises them.
+
 #### Bring up hive container
 ~~~
 docker compose --profile ${AUDIT_DESTINATIONS} -f docker-compose.ranger.yml -f docker-compose.ranger-audit-service.yml -f docker-compose.ranger-hadoop.yml -f docker-compose.ranger-hive.yml up -d

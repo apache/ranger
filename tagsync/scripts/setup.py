@@ -73,6 +73,8 @@ TAGSYNC_ATLAS_CONSUMER_GROUP_KEY = 'TAG_SOURCE_ATLAS_KAFKA_ENTITIES_GROUP_ID'
 
 TAG_SOURCE_ATLAS_KAKFA_SERVICE_NAME_KEY = 'TAG_SOURCE_ATLAS_KAFKA_SERVICE_NAME'
 TAG_SOURCE_ATLAS_KAFKA_SECURITY_PROTOCOL_KEY = 'TAG_SOURCE_ATLAS_KAFKA_SECURITY_PROTOCOL'
+TAG_SOURCE_ATLAS_KAFKA_SASL_MECHANISM_KEY = 'TAG_SOURCE_ATLAS_KAFKA_SASL_MECHANISM'
+TAG_SOURCE_ATLAS_KAFKA_OAUTH_TOKEN_URL_KEY = 'TAG_SOURCE_ATLAS_KAFKA_OAUTH_TOKEN_URL'
 TAG_SOURCE_ATLAS_KERBEROS_PRINCIPAL_KEY = 'TAG_SOURCE_ATLAS_KERBEROS_PRINCIPAL'
 TAG_SOURCE_ATLAS_KERBEROS_KEYTAB_KEY = 'TAG_SOURCE_ATLAS_KERBEROS_KEYTAB'
 TAGSYNC_ATLAS_TO_RANGER_SERVICE_MAPPING = 'ranger.tagsync.atlas.to.ranger.service.mapping'
@@ -88,6 +90,12 @@ TAG_SOURCE_ATLASREST_ENABLED = 'ranger.tagsync.source.atlasrest'
 
 TAG_SOURCE_FILE_ENABLED_KEY = 'TAG_SOURCE_FILE_ENABLED'
 TAG_SOURCE_FILE_ENABLED = 'ranger.tagsync.source.file'
+
+KAFKA_SASL_MECHANISM_GSSAPI = 'GSSAPI'
+KAFKA_SASL_MECHANISM_OAUTHBEARER = 'OAUTHBEARER'
+KAFKA_OAUTHBEARER_LOGIN_MODULE = 'org.apache.kafka.common.security.oauthbearer.OAuthBearerLoginModule'
+KAFKA_OAUTHBEARER_LOGIN_HANDLER = 'org.apache.kafka.common.security.oauthbearer.OAuthBearerLoginCallbackHandler'
+RANGER_OAUTHBEARER_LOGIN_HANDLER = 'org.apache.ranger.kafka.auth.RangerKafkaOAuthBearerLoginCallbackHandler'
 
 hadoopConfFileName = 'core-site.xml'
 ENV_HADOOP_CONF_FILE = "ranger-tagsync-env-hadoopconfdir.sh"
@@ -215,14 +223,21 @@ def updatePropertyInJCKSFile(jcksFileName,propName,value):
 		sys.exit(1)
 	return ret
 
-def atlas_kafka_uses_kerberos(props):
-	"""Kerberos JAAS for Atlas Kafka consumer only when SASL is configured (not PLAINTEXT)."""
+def atlas_kafka_uses_sasl(props):
+	"""SASL settings for the Atlas Kafka consumer only when a SASL protocol is configured (not PLAINTEXT)."""
 	if not configure_security:
 		return False
 	protocol = props.get(TAG_SOURCE_ATLAS_KAFKA_SECURITY_PROTOCOL_KEY, 'PLAINTEXT')
 	if protocol is None:
 		return False
 	return protocol.strip().upper().startswith('SASL')
+
+def atlas_kafka_sasl_mechanism(props):
+	"""OAUTHBEARER unless TAG_SOURCE_ATLAS_KAFKA_SASL_MECHANISM says otherwise (GSSAPI for Kerberos keytabs)."""
+	mechanism = props.get(TAG_SOURCE_ATLAS_KAFKA_SASL_MECHANISM_KEY, '')
+	if mechanism is None or mechanism.strip() == '':
+		return KAFKA_SASL_MECHANISM_OAUTHBEARER
+	return mechanism.strip().upper()
 
 def convertInstallPropsToXML(props):
 	directKeyMap = getPropertiesConfigMap(join(installTemplateDirName,install2xmlMapFileName))
@@ -233,7 +248,11 @@ def convertInstallPropsToXML(props):
 
 	atlas_principal = ''
 	atlas_keytab = ''
-	atlas_kafka_kerberos = atlas_kafka_uses_kerberos(props)
+	atlas_oauth_token_url = ''
+	atlas_kafka_sasl = atlas_kafka_uses_sasl(props)
+	atlas_kafka_mechanism = atlas_kafka_sasl_mechanism(props)
+	atlas_kafka_kerberos = atlas_kafka_sasl and atlas_kafka_mechanism == KAFKA_SASL_MECHANISM_GSSAPI
+	atlas_kafka_oauth = atlas_kafka_sasl and atlas_kafka_mechanism == KAFKA_SASL_MECHANISM_OAUTHBEARER
 
 	for k,v in props.items():
 		if (k in list(directKeyMap)):
@@ -252,6 +271,12 @@ def convertInstallPropsToXML(props):
 				atlas_principal = v
 			elif (atlas_kafka_kerberos and k == TAG_SOURCE_ATLAS_KERBEROS_KEYTAB_KEY):
 				atlas_keytab = v
+			elif (k == TAG_SOURCE_ATLAS_KAFKA_SASL_MECHANISM_KEY):
+				if atlas_kafka_sasl:
+					atlasOutFile.write(newKey + "=" + atlas_kafka_mechanism + "\n")
+			elif (k == TAG_SOURCE_ATLAS_KAFKA_OAUTH_TOKEN_URL_KEY):
+				if atlas_kafka_oauth:
+					atlas_oauth_token_url = v.strip()
 			else:
 				ret[newKey] = v
 		else:
@@ -265,6 +290,19 @@ def convertInstallPropsToXML(props):
 		atlasOutFile.write("atlas.jaas.KafkaClient.option.serviceName = kafka" + "\n")
 		atlasOutFile.write("atlas.jaas.KafkaClient.option.keyTab = " + atlas_keytab + "\n")
 		atlasOutFile.write("atlas.jaas.KafkaClient.option.principal = " + atlas_principal + "\n")
+
+	if atlas_kafka_oauth:
+		if atlas_oauth_token_url == '':
+			print("ERROR: %s must be set when %s is %s" % (TAG_SOURCE_ATLAS_KAFKA_OAUTH_TOKEN_URL_KEY, TAG_SOURCE_ATLAS_KAFKA_SASL_MECHANISM_KEY, KAFKA_SASL_MECHANISM_OAUTHBEARER))
+			sys.exit(1)
+		# file:// tokens rotate in place, so use the Ranger handler that re-reads them on every login
+		if atlas_oauth_token_url.lower().startswith('file:'):
+			handler = RANGER_OAUTHBEARER_LOGIN_HANDLER
+		else:
+			handler = KAFKA_OAUTHBEARER_LOGIN_HANDLER
+		atlasOutFile.write("atlas.kafka.sasl.oauthbearer.token.endpoint.url=" + atlas_oauth_token_url + "\n")
+		atlasOutFile.write("atlas.kafka.sasl.login.callback.handler.class=" + handler + "\n")
+		atlasOutFile.write("atlas.kafka.sasl.jaas.config=" + KAFKA_OAUTHBEARER_LOGIN_MODULE + " required;" + "\n")
 
 	atlasOutFile.close()
 

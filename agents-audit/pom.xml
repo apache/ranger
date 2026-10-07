@@ -39,6 +39,7 @@
         <module>dest-log4j</module>
         <module>dest-os</module>
         <module>dest-solr</module>
+        <module>kafka-client-auth</module>
         <module>orc-util</module>
     </modules>
 </project>
