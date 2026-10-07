@@ -258,6 +258,24 @@
       "accessTypeRestrictions": [
         "entity-add-classification", "entity-update-classification", "entity-remove-classification"
       ]
+    },
+    {
+      "itemId":            17,
+      "name":              "notification-topic",
+      "parent":            "",
+      "level":             10,
+      "type":              "string",
+      "mandatory":         true,
+      "isValidLeaf":       true,
+      "lookupSupported":   true,
+      "excludesSupported": true,
+      "matcher":           "org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
+      "matcherOptions":    { "wildCard": "true", "ignoreCase": "false" },
+      "label":             "Notification Topic",
+      "description":       "Notification Topic",
+      "accessTypeRestrictions": [
+        "post-notification"
+      ]
     }
   ],
   "accessTypes": [
@@ -281,7 +299,8 @@
     { "itemId": 18, "name": "entity-remove-label",             "label": "Remove Label",             "category": "UPDATE" },
     { "itemId": 19, "name": "entity-update-business-metadata", "label": "Update Business Metadata", "category": "UPDATE" },
     { "itemId": 20, "name": "type-read",                       "label": "Read Type",                "category": "READ" },
-    { "itemId": 21, "name": "admin-audits",                    "label": "Admin Audits",             "category": "MANAGE" }
+    { "itemId": 21, "name": "admin-audits",                    "label": "Admin Audits",             "category": "MANAGE" },
+    { "itemId": 22, "name": "post-notification",              "label": "Post Notification",         "category": "UPDATE" }
   ],
   "configs": [
     { "itemId": 1, "name": "username",                    "type": "string",   "mandatory": true,  "label": "Username" },

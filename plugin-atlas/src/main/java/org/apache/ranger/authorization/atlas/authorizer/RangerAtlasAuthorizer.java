@@ -23,6 +23,7 @@ import org.apache.atlas.authorize.AtlasAccessRequest;
 import org.apache.atlas.authorize.AtlasAdminAccessRequest;
 import org.apache.atlas.authorize.AtlasAuthorizer;
 import org.apache.atlas.authorize.AtlasEntityAccessRequest;
+import org.apache.atlas.authorize.AtlasNotificationRequest;
 import org.apache.atlas.authorize.AtlasPrivilege;
 import org.apache.atlas.authorize.AtlasRelationshipAccessRequest;
 import org.apache.atlas.authorize.AtlasSearchResultScrubRequest;
@@ -70,6 +71,7 @@ import static org.apache.ranger.services.atlas.RangerServiceAtlas.RESOURCE_ENTIT
 import static org.apache.ranger.services.atlas.RangerServiceAtlas.RESOURCE_ENTITY_LABEL;
 import static org.apache.ranger.services.atlas.RangerServiceAtlas.RESOURCE_ENTITY_OWNER;
 import static org.apache.ranger.services.atlas.RangerServiceAtlas.RESOURCE_ENTITY_TYPE;
+import static org.apache.ranger.services.atlas.RangerServiceAtlas.RESOURCE_NOTIFICATION_TOPIC;
 import static org.apache.ranger.services.atlas.RangerServiceAtlas.RESOURCE_RELATIONSHIP_TYPE;
 import static org.apache.ranger.services.atlas.RangerServiceAtlas.RESOURCE_SERVICE;
 import static org.apache.ranger.services.atlas.RangerServiceAtlas.RESOURCE_TYPE_CATEGORY;
@@ -127,6 +129,39 @@ public class RangerAtlasAuthorizer implements AtlasAuthorizer {
 
             String                   action         = request.getAction() != null ? request.getAction().getType() : null;
             RangerAccessResourceImpl rangerResource = new RangerAccessResourceImpl(Collections.singletonMap(RESOURCE_SERVICE, "*"));
+            RangerAccessRequestImpl  rangerRequest  = new RangerAccessRequestImpl(rangerResource, action, request.getUser(), request.getUserGroups(), null);
+
+            rangerRequest.setClientIPAddress(request.getClientIPAddress());
+            rangerRequest.setAccessTime(request.getAccessTime());
+            rangerRequest.setAction(action);
+            rangerRequest.setForwardedAddresses(request.getForwardedAddresses());
+            rangerRequest.setRemoteIPAddress(request.getRemoteIPAddress());
+
+            ret = checkAccess(rangerRequest);
+        } finally {
+            RangerPerfTracer.log(perf);
+        }
+
+        LOG.debug("<== isAccessAllowed({}): {}", request, ret);
+
+        return ret;
+    }
+
+    @Override
+    public boolean isAccessAllowed(AtlasNotificationRequest request) {
+        LOG.debug("==> isAccessAllowed({})", request);
+
+        final boolean    ret;
+        RangerPerfTracer perf = null;
+
+        try {
+            if (RangerPerfTracer.isPerfTraceEnabled(PERF_LOG)) {
+                perf = RangerPerfTracer.getPerfTracer(PERF_LOG, "RangerAtlasAuthorizer.isAccessAllowed(" + request + ")");
+            }
+
+            String                   action         = request.getAction() != null ? request.getAction().getType() : null;
+            String                   topicName      = StringUtils.isNotBlank(request.getTopicName()) ? request.getTopicName() : "*";
+            RangerAccessResourceImpl rangerResource = new RangerAccessResourceImpl(Collections.singletonMap(RESOURCE_NOTIFICATION_TOPIC, topicName));
             RangerAccessRequestImpl  rangerRequest  = new RangerAccessRequestImpl(rangerResource, action, request.getUser(), request.getUserGroups(), null);
 
             rangerRequest.setClientIPAddress(request.getClientIPAddress());
