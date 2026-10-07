@@ -433,6 +433,7 @@ public class RangerAPIMapping {
         apiAssociatedWithAudit.add(RangerAPIList.GET_DAILY_AUDIT_METRICS);
         apiAssociatedWithAudit.add(RangerAPIList.GET_DAYS_AUDIT_METRICS);
         apiAssociatedWithAudit.add(RangerAPIList.GET_DAYS_AUDIT_ADMIN_METRICS);
+        apiAssociatedWithAudit.add(RangerAPIList.GET_DAYS_AUDIT_ACCESS_METRICS);
 
         rangerAPIMappingWithUI.put(TAB_AUDIT, apiAssociatedWithAudit);
 
