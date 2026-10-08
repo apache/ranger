@@ -101,15 +101,28 @@ public class RangerSqoopAuthorizer extends AuthorizationValidator {
 
 		RangerSqoopPlugin plugin = sqoopPlugin;
 
-		if (plugin != null) {
-			for (MPrivilege privilege : privileges) {
-				RangerSqoopAccessRequest request = new RangerSqoopAccessRequest(principal, privilege, clientIPAddress);
+		if (plugin == null) {
+			LOG.error("Ranger Sqoop plugin is not initialized; denying access for principal={}", principal);
 
-				RangerAccessResult result = plugin.isAccessAllowed(request);
-				if (result != null && !result.getIsAllowed()) {
-					throw new SqoopException(SecurityError.AUTH_0014, "principal=" + principal
-							+ " does not have privileges for : " + privilege);
-				}
+			throw new SqoopException(SecurityError.AUTH_0014, "Ranger authorization plugin is not initialized");
+		}
+
+		for (MPrivilege privilege : privileges) {
+			RangerSqoopAccessRequest request = new RangerSqoopAccessRequest(principal, privilege, clientIPAddress);
+
+			RangerAccessResult result = plugin.isAccessAllowed(request);
+
+			if (result == null) {
+				LOG.error("Ranger plugin returned null for request={}; denying access for principal={}", request,
+						principal);
+
+				throw new SqoopException(SecurityError.AUTH_0014, "principal=" + principal
+						+ " does not have privileges for : " + privilege);
+			}
+
+			if (!result.getIsAllowed()) {
+				throw new SqoopException(SecurityError.AUTH_0014, "principal=" + principal
+						+ " does not have privileges for : " + privilege);
 			}
 		}
 
