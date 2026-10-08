@@ -19,8 +19,11 @@ Shared helpers for Apache Ranger functional-tests (Docker pytest).
 """
 
 import logging
+import random
+import string
 import uuid
 from datetime import datetime, timezone
+from pathlib import Path
 
 import requests
 
@@ -49,15 +52,31 @@ HIVE_DRIVER = "org.apache.hive.jdbc.HiveDriver"
 
 # --- Logging ---
 
+# functional-tests/ (parent of ranger_test_utils/)
+FUNCTIONAL_TESTS_DIR = Path(__file__).resolve().parent.parent
+LOGS_DIR = FUNCTIONAL_TESTS_DIR / "logs"
+DEFAULT_PYTEST_LOG_FILE = LOGS_DIR / "pytest.log"
+
+
+def ensure_logs_directory():
+    """Create functional-tests/logs if missing (pytest log_file target)."""
+    LOGS_DIR.mkdir(parents=True, exist_ok=True)
+
 
 def configure_test_logging(level=logging.INFO, module_name=None):
     """
     Call once from setup_module.
 
+    Ensures logs/ exists for pytest.ini log_file=logs/pytest.log and sets logger levels.
     """
+    ensure_logs_directory()
     logging.getLogger().setLevel(level)
     if module_name:
         logging.getLogger(module_name).setLevel(level)
+        get_test_logger(module_name).info(
+            "Test logging configured; log file: %s",
+            DEFAULT_PYTEST_LOG_FILE,
+        )
 
 
 def get_test_logger(module_name):
@@ -121,11 +140,54 @@ def create_ranger_admin_session(auth=None, headers=None):
 # --- Test run IDs ---
 
 
-def unique_suffix():
-    """Unique string for service/policy names so parallel runs do not clash."""
+def unique_suffix(length=None):
+    """
+    Unique string for service/policy names so parallel runs do not clash.
+
+    length is None (default): UTC timestamp + 6 hex characters (existing callers).
+    length is an int: random lowercase letters and digits.
+    """
+    if length is not None:
+        if length < 1:
+            raise ValueError("unique_suffix length must be >= 1")
+        alphabet = string.ascii_lowercase + string.digits
+        return "".join(random.choice(alphabet) for _ in range(length))
     time_part = datetime.now(timezone.utc).strftime("%Y%m%d%H%M%S")
     random_part = uuid.uuid4().hex[:6]
     return time_part + random_part
+
+
+def qe_test_id_from_pytest_name(function_name, suite="HIVE"):
+    """
+    test_01_01_table_create_employee_no_policy_as_user1_deny ->
+    HIVE.test_01_01_TableCreateEmployeeNoPolicyAsUser1Deny
+    """
+    if not function_name.startswith("test_"):
+        return suite + "." + function_name
+    body = function_name[len("test_") :]
+    parts = body.split("_")
+    if len(parts) >= 3 and parts[0].isdigit() and parts[1].isdigit():
+        section = parts[0] + "_" + parts[1]
+        title = "".join(word.capitalize() for word in parts[2:])
+        return suite + ".test_" + section + "_" + title
+    title = "".join(word.capitalize() for word in parts)
+    return suite + ".test_" + title
+
+
+def log_testcase_begin(logger, test_id, component="ranger.functional-tests"):
+    """
+    Log  at the start of a test.
+    """
+    logger.info("%s", component)
+    logger.info("TESTCASE BEGIN: testId=%s", test_id)
+
+
+def log_testcase_begin_for_pytest(
+    logger, pytest_function_name, suite="HIVE", component="ranger.functional-tests"
+):
+    """TESTCASE BEGIN from pytest test function name (request.node.name)."""
+    test_id = qe_test_id_from_pytest_name(pytest_function_name, suite=suite)
+    log_testcase_begin(logger, test_id, component=component)
 
 
 # --- xusers: ensure principals exist ---
