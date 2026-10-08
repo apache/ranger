@@ -48,6 +48,7 @@ import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -108,6 +109,29 @@ public class OpenSearchAuditMetricsHelper {
         JsonNode            response     = runMetricsSearch(queryBody, "audit metrics by days");
 
         return extractAuditMetricsByDays(response, filter, timezone);
+    }
+
+    public List<Map<String, Object>> getAuditAccessMetricsByDays(int olderThanInDays, String timezone) {
+        List<RangerAuditMetricsByDays> metrics = getAuditMetricsByDays(olderThanInDays, new SearchFilter(), timezone);
+        List<Map<String, Object>> ret          = new ArrayList<>();
+        Map<Long, Long> aggregatedByDate       = new LinkedHashMap<>();
+
+        for (RangerAuditMetricsByDays metric : metrics) {
+            Long auditDate = metric.getAuditDate();
+            if (auditDate != null) {
+                Long count = metric.getNumberOfAudits() != null ? metric.getNumberOfAudits() : 0L;
+                aggregatedByDate.merge(auditDate, count, Long::sum);
+            }
+        }
+
+        for (Map.Entry<Long, Long> entry : aggregatedByDate.entrySet()) {
+            Map<String, Object> row = new HashMap<>();
+            row.put("auditDate", entry.getKey());
+            row.put("numberOfAudits", entry.getValue());
+            ret.add(row);
+        }
+
+        return ret;
     }
 
     public String resolveServiceType(XXService service) {
