@@ -23,7 +23,6 @@ import org.apache.atlas.authorize.AtlasAdminAccessRequest;
 import org.apache.atlas.authorize.AtlasAuthorizationException;
 import org.apache.atlas.authorize.AtlasAuthorizer;
 import org.apache.atlas.authorize.AtlasEntityAccessRequest;
-import org.apache.atlas.authorize.AtlasNotificationRequest;
 import org.apache.atlas.authorize.AtlasRelationshipAccessRequest;
 import org.apache.atlas.authorize.AtlasSearchResultScrubRequest;
 import org.apache.atlas.authorize.AtlasTypeAccessRequest;
@@ -88,13 +87,6 @@ public class RangerAtlasAuthorizer implements AtlasAuthorizer {
     @Override
     public boolean isAccessAllowed(AtlasRelationshipAccessRequest request) throws AtlasAuthorizationException {
         try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator(pluginClassLoader, "isAccessAllowed:relationshipAccess")) {
-            return rangerAtlasAuthorizerImpl.isAccessAllowed(request);
-        }
-    }
-
-    @Override
-    public boolean isAccessAllowed(AtlasNotificationRequest request) throws AtlasAuthorizationException {
-        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator(pluginClassLoader, "isAccessAllowed:notificationAccess")) {
             return rangerAtlasAuthorizerImpl.isAccessAllowed(request);
         }
     }
