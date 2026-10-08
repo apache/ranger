@@ -107,7 +107,7 @@ public class OpenSearchAuditMetricsHelper {
         Map<String, Object> queryBody    = buildMetricsQueryBody(filters, aggregations);
         JsonNode            response     = runMetricsSearch(queryBody, "audit metrics by days");
 
-        return extractAuditMetricsByDays(response, filter, timezone);
+        return extractAuditMetricsByDays(response, filter);
     }
 
     public String resolveServiceType(XXService service) {
@@ -448,7 +448,7 @@ public class OpenSearchAuditMetricsHelper {
         return ret;
     }
 
-    private List<RangerAuditMetricsByDays> extractAuditMetricsByDays(JsonNode response, SearchFilter filter, String timezone) {
+    private List<RangerAuditMetricsByDays> extractAuditMetricsByDays(JsonNode response, SearchFilter filter) {
         List<RangerAuditMetricsByDays> metrics = new ArrayList<>();
         JsonNode                       buckets = response.at("/aggregations/per_day/buckets");
 
@@ -459,7 +459,7 @@ public class OpenSearchAuditMetricsHelper {
         FilterParams params = auditMetricsHelper.getFilterParams(filter);
 
         for (JsonNode bucket : buckets) {
-            Long auditDate = parseBucketTime(bucket, timezone);
+            Long auditDate = parseBucketTime(bucket);
 
             if (auditDate == null) {
                 continue;
@@ -483,7 +483,7 @@ public class OpenSearchAuditMetricsHelper {
         ZoneId         zoneId = auditMetricsHelper.resolveZoneId(timezone);
 
         for (JsonNode bucket : buckets) {
-            Long auditDate = parseBucketTime(bucket, timezone);
+            Long auditDate = parseBucketTime(bucket);
 
             if (auditDate == null) {
                 continue;
@@ -498,7 +498,7 @@ public class OpenSearchAuditMetricsHelper {
         return metrics;
     }
 
-    private Long parseBucketTime(JsonNode bucket, String timezone) {
+    private Long parseBucketTime(JsonNode bucket) {
         Long result = null;
 
         if (bucket != null) {
