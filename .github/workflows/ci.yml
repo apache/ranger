@@ -57,7 +57,7 @@ jobs:
           java-version: '8'
           distribution: 'temurin'
       - name: build (8)
-        run: mvn -T 8 clean verify --no-transfer-progress -B -V
+        run: mvn -T 8 clean verify --no-transfer-progress -B -V -P enunciate-jdk8-tools
 
       - name: run code coverage
         run: |

@@ -1340,9 +1340,6 @@
     <profiles>
         <profile>
             <id>enunciate-jdk8-tools</id>
-            <activation>
-                <jdk>[1.8,1.9)</jdk>
-            </activation>
             <build>
                 <plugins>
                     <plugin>
