@@ -68,7 +68,14 @@
 
     <property>
         <name>ranger.audit.dispatcher.kafka.sasl.mechanism</name>
-        <value>GSSAPI</value>
+        <value></value>
+        <description>Empty = OAUTHBEARER (default); the start script sets GSSAPI here when KAFKA_SASL_MECHANISM=GSSAPI, which uses service.kerberos.principal/keytab</description>
+    </property>
+
+    <property>
+        <name>ranger.audit.dispatcher.kafka.sasl.oauthbearer.token.endpoint.url</name>
+        <value>file:///etc/kafka-oauth/rangerauditserver.token</value>
+        <description>Dev token minted by the ranger-kafka container; re-read on every login so rotation is picked up</description>
     </property>
 
     <!-- Solr Dispatcher Threading Configuration -->

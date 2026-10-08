@@ -1,0 +1,127 @@
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# Complete Ranger Audit Ingestor configuration for ranger-docker: audit-ingestor-config.py renders
+# conf/ranger-audit-ingestor-site.xml from this file on every start, without taking any property from
+# the distribution. Mount a configs/ranger-audit-ingestor-site.xml instead to bypass the YAML entirely.
+# Env overrides applied by the renderer: KAFKA_SASL_MECHANISM (OAUTHBEARER = default, GSSAPI = keytab)
+# and KAFKA_BOOTSTRAP_SERVERS.
+
+
+# RANGER AUDIT INGESTOR SERVICE CONFIGURATION
+
+# Server Configuration
+log.dir: '${audit.server.log.dir}'
+ranger.audit.ingestor.webapp.dir: webapp/audit-ingestor
+ranger.audit.ingestor.contextName: /
+ranger.audit.ingestor.host: ranger-audit-ingestor.rangernw
+ranger.audit.ingestor.http.port: '7081'
+ranger.audit.ingestor.https.port: '7182'
+ranger.audit.ingestor.https.attrib.ssl.enabled: 'false'
+
+# HTTPS/SSL Configuration
+ranger.audit.ingestor.https.attrib.keystore.keyalias: myKey
+ranger.audit.ingestor.https.attrib.keystore.pass: _
+ranger.audit.ingestor.https.attrib.keystore.file: /etc/ranger/ranger-audit-ingestor/keys/server.jks
+ranger.audit.ingestor.https.attrib.keystore.credential.alias: keyStoreCredentialAlias
+ranger.audit.ingestor.tomcat.ciphers: ''
+
+# KERBEROS CONFIGURATION FOR REST API (INCOMING REQUESTS) used by kerberos filter
+hadoop.security.authentication: kerberos
+ranger.audit.ingestor.kerberos.enabled: 'true'
+ranger.audit.ingestor.kerberos.type: kerberos
+ranger.audit.ingestor.kerberos.principal: 'HTTP/_HOST@EXAMPLE.COM'
+ranger.audit.ingestor.kerberos.keytab: /etc/keytabs/HTTP.keytab
+ranger.audit.ingestor.kerberos.name.rules: DEFAULT
+ranger.audit.ingestor.bind.address: ranger-audit-ingestor.rangernw
+ranger.audit.ingestor.cookie.path: /
+
+# JWT AUTHENTICATION CONFIGURATION to support JWT authentication
+config.prefix: ranger.audit.jwt.auth
+ranger.audit.jwt.auth.enabled: 'false'
+ranger.audit.jwt.auth.provider-url: 'http://localhost:9180/rest/jwks'
+ranger.audit.jwt.auth.public-key: ''
+ranger.audit.jwt.auth.cookie.name: hadoop-jwt
+ranger.audit.jwt.auth.audiences: ''
+
+# Trusted Header Auth Configs
+ranger.audit.ingestor.authn.header.enabled: 'false'
+ranger.audit.ingestor.authn.header.username: ''
+ranger.audit.ingestor.authn.header.spiffe: ''
+ranger.audit.ingestor.service.dev_hdfs.allowed.users: hdfs
+ranger.audit.ingestor.service.dev_yarn.allowed.users: yarn
+ranger.audit.ingestor.service.dev_hive.allowed.users: hive
+ranger.audit.ingestor.service.dev_hbase.allowed.users: hbase
+ranger.audit.ingestor.service.dev_kafka.allowed.users: kafka
+ranger.audit.ingestor.service.dev_knox.allowed.users: knox
+ranger.audit.ingestor.service.dev_kms.allowed.users: rangerkms
+ranger.audit.ingestor.service.dev_trino.allowed.users: trino
+ranger.audit.ingestor.service.dev_ozone.allowed.users: om
+ranger.audit.ingestor.service.dev_solr.allowed.users: solr
+
+# AUTH_TO_LOCAL RULES FOR KERBEROS PRINCIPAL MAPPING
+ranger.audit.ingestor.auth.to.local: |
+  RULE:[2:$1/$2@$0]([ndj]n/.*@.*|hdfs/.*@.*)s/.*/hdfs/
+  RULE:[2:$1/$2@$0]([rn]m/.*@.*|yarn/.*@.*)s/.*/yarn/
+  RULE:[2:$1/$2@$0](jhs/.*@.*)s/.*/mapred/
+  RULE:[1:$1@$0](.*@.*)s/@.*//
+  DEFAULT
+ranger.audit.ingestor.service.kerberos.principal: 'rangerauditserver/_HOST@EXAMPLE.COM'
+ranger.audit.ingestor.service.kerberos.keytab: /etc/keytabs/rangerauditserver.keytab
+
+# CONFIGURATION TO ENABLE AUDIT DESTINATION CONFIGURATION
+xasecure.audit.destination.kafka: 'true'
+
+# KAFKA PRODUCER CONFIGURATION IN THE INGESTOR
+ranger.audit.ingestor.kafka.bootstrap.servers: 'ranger-kafka.rangernw:9092'
+ranger.audit.ingestor.kafka.topic.name: ranger_audits
+ranger.audit.ingestor.kafka.partitioner.class: org.apache.ranger.audit.producer.kafka.AuditPartitioner
+ranger.audit.ingestor.kafka.configured.plugins: 'hdfs,yarn,knox,hiveServer2,hiveMetastore,kafka,hbaseRegional,hbaseMaster,solr,trino,ozone,kudu,nifi'
+ranger.audit.ingestor.kafka.topic.partitions.per.configured.plugin: '3'
+ranger.audit.ingestor.kafka.topic.partitions.buffer: '9'
+
+# partition allocation overrides for plugins
+ranger.audit.ingestor.kafka.topic.partitions: '10'
+ranger.audit.ingestor.kafka.replication.factor: '1'
+ranger.audit.ingestor.kafka.security.protocol: SASL_PLAINTEXT
+# empty = OAUTHBEARER (default); GSSAPI uses service.kerberos.principal/keytab. KAFKA_SASL_MECHANISM overrides it
+ranger.audit.ingestor.kafka.sasl.mechanism: ''
+# dev token minted by the ranger-kafka container; re-read on every login so rotation is picked up
+ranger.audit.ingestor.kafka.sasl.oauthbearer.token.endpoint.url: 'file:///etc/kafka-oauth/rangerauditserver.token'
+ranger.audit.ingestor.kafka.request.timeout.ms: '60000'
+
+# KAFKA PRODUCER PERFORMANCE (AuditProducer → ProducerConfig)
+ranger.audit.ingestor.kafka.producer.batch.size: '131072'
+ranger.audit.ingestor.kafka.producer.linger.ms: '20'
+ranger.audit.ingestor.kafka.producer.buffer.memory: '134217728'
+ranger.audit.ingestor.kafka.producer.compression.type: lz4
+ranger.audit.ingestor.kafka.producer.delivery.timeout.ms: '120000'
+ranger.audit.ingestor.kafka.producer.max.request.size: '1048576'
+ranger.audit.ingestor.kafka.producer.max.block.ms: '60000'
+ranger.audit.ingestor.kafka.producer.batch.send.timeout.ms: '30000'
+
+# Optional topic configs at create time (leave unset for broker defaults; enable for production RF>=3)
+ranger.audit.ingestor.kafka.connections.max.idle.ms: '90000'
+
+# AUDIT RECOVERY CONFIGURATION (FOR KAFKA SEND FAILURES)
+ranger.audit.ingestor.recovery.enabled: 'true'
+ranger.audit.ingestor.recovery.spool.dir: /var/log/ranger/ranger-audit-ingestor/audit/spool
+ranger.audit.ingestor.recovery.archive.dir: /var/log/ranger/ranger-audit-ingestor/audit/archive
+ranger.audit.ingestor.recovery.file.rotation.interval.sec: '300'
+ranger.audit.ingestor.recovery.max.messages.per.file: '10000'
+ranger.audit.ingestor.recovery.retry.interval.sec: '60'
+ranger.audit.ingestor.recovery.archive.max.processed.files: '100'
+ranger.audit.ingestor.recovery.retry.max.attempts: '3'

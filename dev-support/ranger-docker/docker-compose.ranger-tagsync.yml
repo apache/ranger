@@ -18,6 +18,7 @@ services:
       - ./dist/version:/home/ranger/dist/version:ro
       - ./scripts/tagsync/ranger-tagsync-tags.json:/opt/ranger/tagsync/data/tags.json:ro
       - ./scripts/tagsync/ranger-tagsync-install.properties:/opt/ranger/tagsync/install.properties
+      - ranger-kafka-oauth-tokens:/etc/kafka-oauth:ro
     stdin_open: true
     tty: true
     networks:
@@ -36,6 +37,9 @@ services:
       - RANGER_TAGSYNC_MAX_HEAP
       - RANGER_JVM_METASPACE
       - RANGER_JVM_MAX_METASPACE
+
+volumes:
+  ranger-kafka-oauth-tokens:
 
 networks:
   ranger:

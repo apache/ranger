@@ -43,8 +43,12 @@ if [ "${KERBEROS_ENABLED}" == "true" ]; then
   echo "Configuring Kafka with Kerberos (SASL_PLAINTEXT)"
   cat <<EOF >> ${KAFKA_HOME}/config/server.properties
 
-    # Enable SASL/GSSAPI mechanism
-    sasl.enabled.mechanisms=GSSAPI
+    # SASL/GSSAPI for inter-broker, the kafka CLI/healthcheck and clients that opt in; SASL/OAUTHBEARER
+    # for the Ranger clients (default). OAUTHBEARER tokens are dev tokens from kafka-oauth-token-minter.sh,
+    # accepted unsigned by Kafka's unsecured validator; the token's "sub" becomes the Kafka principal.
+    sasl.enabled.mechanisms=GSSAPI,OAUTHBEARER
+    listener.name.sasl_plaintext.oauthbearer.sasl.jaas.config=org.apache.kafka.common.security.oauthbearer.OAuthBearerLoginModule required unsecuredLoginStringClaim_sub="kafka";
+    listener.name.sasl_plaintext.oauthbearer.sasl.server.callback.handler.class=org.apache.kafka.common.security.oauthbearer.internals.unsecured.OAuthBearerUnsecuredValidatorCallbackHandler
     sasl.mechanism.inter.broker.protocol=GSSAPI
     security.inter.broker.protocol=SASL_PLAINTEXT
 

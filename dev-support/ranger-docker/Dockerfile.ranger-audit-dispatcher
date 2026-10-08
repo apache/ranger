@@ -38,6 +38,7 @@ COPY ./dist/ranger-${RANGER_VERSION}-audit-dispatcher.tar.gz /tmp/
 
 # Copy scripts and Kerberos configuration
 COPY ./scripts/audit-dispatcher/service-check-functions.sh    ${RANGER_SCRIPTS}/
+COPY ./scripts/audit-dispatcher/ranger-audit-dispatcher.sh    ${RANGER_SCRIPTS}/
 COPY ./scripts/kdc/krb5.conf /etc/krb5.conf
 
 # Extract and setup
@@ -50,7 +51,7 @@ RUN tar xzf /tmp/ranger-${RANGER_VERSION}-audit-dispatcher.tar.gz -C /opt/ranger
     cp /opt/ranger/audit-dispatcher/scripts/start-audit-dispatcher.sh ${RANGER_SCRIPTS}/ && \
     chown -R ranger:ranger /opt/ranger/audit-dispatcher/ /var/log/ranger/ ${RANGER_SCRIPTS} && \
     chmod -R 755 /opt/ranger/audit-dispatcher && \
-    chmod 755 ${RANGER_SCRIPTS}/start-audit-dispatcher.sh
+    chmod 755 ${RANGER_SCRIPTS}/start-audit-dispatcher.sh ${RANGER_SCRIPTS}/ranger-audit-dispatcher.sh
 
 # Set Java home
 ENV JAVA_HOME=/opt/java/openjdk
@@ -71,4 +72,4 @@ USER ranger
 
 # Start the dispatcher using the custom startup script
 WORKDIR /opt/ranger/audit-dispatcher
-ENTRYPOINT ["/home/ranger/scripts/start-audit-dispatcher.sh"]
+ENTRYPOINT ["/home/ranger/scripts/ranger-audit-dispatcher.sh"]
