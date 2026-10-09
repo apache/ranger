@@ -17,6 +17,7 @@
 
 package org.apache.ranger.plugin.util;
 
+import org.apache.ranger.authorization.utils.JsonUtils;
 import org.apache.ranger.plugin.contextenricher.RangerTagForEval;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.model.RangerTag;
@@ -248,28 +249,41 @@ public class TestRangerAccessRequestUtil {
     }
 
     @Test
-    public void testIsInternalKey() {
-        assertTrue(RangerAccessRequestUtil.isInternalKey(RangerAccessRequestUtil.KEY_CONTEXT_TAGS));
-        assertTrue(RangerAccessRequestUtil.isInternalKey(RangerAccessRequestUtil.KEY_CONTEXT_TAG_OBJECT));
-        assertTrue(RangerAccessRequestUtil.isInternalKey(RangerAccessRequestUtil.KEY_CONTEXT_RESOURCE));
-        assertTrue(RangerAccessRequestUtil.isInternalKey(RangerAccessRequestUtil.KEY_CONTEXT_REQUESTED_RESOURCES));
-        assertTrue(RangerAccessRequestUtil.isInternalKey(RangerAccessRequestUtil.KEY_CONTEXT_USERSTORE));
-        assertTrue(RangerAccessRequestUtil.isInternalKey(RangerAccessRequestUtil.KEY_TOKEN_NAMESPACE + "testToken"));
-        assertTrue(RangerAccessRequestUtil.isInternalKey(RangerAccessRequestUtil.KEY_USER));
-        assertTrue(RangerAccessRequestUtil.isInternalKey(RangerAccessRequestUtil.KEY_OWNER));
-        assertTrue(RangerAccessRequestUtil.isInternalKey(RangerAccessRequestUtil.KEY_ROLES));
-        assertTrue(RangerAccessRequestUtil.isInternalKey(RangerAccessRequestUtil.KEY_CONTEXT_IS_ANY_ACCESS));
-        assertTrue(RangerAccessRequestUtil.isInternalKey(RangerAccessRequestUtil.KEY_CONTEXT_ALL_ACCESSTYPE_GROUPS));
-        assertTrue(RangerAccessRequestUtil.isInternalKey(RangerAccessRequestUtil.KEY_CONTEXT_ALL_ACCESSTYPES));
-        assertTrue(RangerAccessRequestUtil.isInternalKey(RangerAccessRequestUtil.KEY_CONTEXT_IGNORE_IF_NOT_DENIED_ACCESSTYPES));
-        assertTrue(RangerAccessRequestUtil.isInternalKey(RangerAccessRequestUtil.KEY_CONTEXT_ALL_ACCESS_TYPE_RESULTS));
-        assertTrue(RangerAccessRequestUtil.isInternalKey(RangerAccessRequestUtil.KEY_CONTEXT_ALL_ACCESS_TYPE_ACL_RESULTS));
-        assertTrue(RangerAccessRequestUtil.isInternalKey(RangerAccessRequestUtil.KEY_CONTEXT_REQUEST));
-        assertTrue(RangerAccessRequestUtil.isInternalKey(RangerAccessRequestUtil.KEY_CONTEXT_GDS_RESULT));
-        assertTrue(RangerAccessRequestUtil.isInternalKey(RangerAccessRequestUtil.KEY_CONTEXT_IS_REQUEST_PREPROCESSED));
-        assertTrue(RangerAccessRequestUtil.isInternalKey(RangerAccessRequestUtil.KEY_CONTEXT_BATCH_EVAL_CONTEXT));
-        assertTrue(RangerAccessRequestUtil.isInternalKey(RangerAccessRequestUtil.KEY_CONTEXT_RESOURCE_ZONE_NAMES));
-        assertTrue(RangerAccessRequestUtil.isInternalKey(RangerAccessRequestUtil.KEY_CONTEXT_ACL_ENFORCER));
-        assertTrue(RangerAccessRequestUtil.isInternalKey(null));
+    public void testContextAttributes() {
+        Map<String, Object> context = new HashMap<>();
+
+        // null context
+        assertEquals(Collections.emptyMap(), JsonUtils.jsonToMapStringObject(null));
+
+        Map<String, Map<String, Object>> tests = new HashMap<>() {{
+                put(null, Collections.emptyMap());                            // null
+                put("", Collections.emptyMap());                              // empty
+                put("[]", Collections.emptyMap());                            // invalid map value
+                put("xyz", Collections.emptyMap());       // invalid map value
+                put("xyz=43", Collections.emptyMap());    // invalid map value
+                put("xyz: 43", Collections.emptyMap());   // invalid map value
+                put("{xyz: 43", Collections.emptyMap());  // invalid map value
+                put("{}", Collections.emptyMap());        // valid map value: empty
+                put("{'amount': 43}", toMap("amount", 43));   // valid map value, one entry
+                put("{\"amount\": 43}", toMap("amount", 43)); // valid map value, one entry
+                put("{\"amount\": 43, \"limit\": 127}", toMap("amount", 43, "limit", 127)); // valid map value, two entries
+            }};
+
+        tests.forEach((key, value) -> {
+            RangerAccessRequestUtil.setContextAttrJson(context, key);
+            assertEquals(value, JsonUtils.jsonToMapStringObject(RangerAccessRequestUtil.getContextAttrJson(context)));
+        });
+    }
+
+    private static Map<String, Object> toMap(String key1, Object val1, Object...args) {
+        Map<String, Object> ret = new HashMap<>();
+
+        ret.put(key1, val1);
+
+        for (int idx = 0; args.length > idx; idx += 2) {
+            ret.put((String) args[idx], args[idx + 1]);
+        }
+
+        return ret;
     }
 }

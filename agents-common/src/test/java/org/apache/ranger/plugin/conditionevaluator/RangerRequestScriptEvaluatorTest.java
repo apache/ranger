@@ -607,14 +607,11 @@ public class RangerRequestScriptEvaluatorTest {
 
     @Test
     public void testContextAttributes() {
-        Map<String, Object> attributes = new HashMap<>();
-
-        attributes.put("trx_amount", 10000);
-
-        RangerAccessRequest          request   = createRequest("test-user", Collections.emptySet(), Collections.emptySet(), attributes);
+        String                       attrJson  = "{'trx_amount':10000}";
+        RangerAccessRequest          request   = createRequest("test-user", attrJson);
         RangerRequestScriptEvaluator evaluator = new RangerRequestScriptEvaluator(request, scriptEngine);
 
-        // trx_amount=10,000; test if less-than-or-equals 10,000 => false
+        // trx_amount=10,000; test if less-than-or-equals 10,000 => true
         String expr = "CTX_ATTR.trx_amount <= 10000";
         Assertions.assertTrue((Boolean) evaluator.evaluateScript(expr), expr);
 
@@ -631,15 +628,16 @@ public class RangerRequestScriptEvaluatorTest {
         Assertions.assertTrue((Boolean) evaluator.evaluateScript(expr), expr);
 
         // trx_amount=10,000; approved_amount=5,000 => false
-        expr = "CTX_ATTR.trx_amount <= (CTX_ATTR?.approved_amount ?? 5000)";
-        attributes.put("approved_amount", 5000);
+        attrJson  = "{'trx_amount':10000, 'approved_amount':5000}";
+        request   = createRequest("test-user", attrJson);
+        expr      = "CTX_ATTR.trx_amount <= (CTX_ATTR?.approved_amount ?? 5000)";
         evaluator = new RangerRequestScriptEvaluator(request, scriptEngine, RangerRequestScriptEvaluator.needsJsonCtxEnabled(expr));
         Assertions.assertFalse((Boolean) evaluator.evaluateScript(expr), expr);
 
         // trx_amount=10,000; approved_amount=15000 => true
-        expr = "CTX_ATTR.trx_amount <= (CTX_ATTR?.approved_amount ?? 5000)";
-        attributes.put("trx_amount", 10000);
-        attributes.put("approved_amount", 15000);
+        expr      = "CTX_ATTR.trx_amount <= (CTX_ATTR?.approved_amount ?? 5000)";
+        attrJson  = "{'trx_amount':10000, 'approved_amount':15000}";
+        request   = createRequest("test-user", attrJson);
         evaluator = new RangerRequestScriptEvaluator(request, scriptEngine, RangerRequestScriptEvaluator.needsJsonCtxEnabled(expr));
 
         Assertions.assertTrue((Boolean) evaluator.evaluateScript(expr), expr);
@@ -655,10 +653,10 @@ public class RangerRequestScriptEvaluatorTest {
         return new File(System.getProperty("java.io.tmpdir"), "ranger_test_" + tag + "_" + nonce).getAbsolutePath();
     }
 
-    RangerAccessRequest createRequest(String userName, Set<String> userGroups, Set<String> userRoles, Map<String, Object> attributes) {
-        RangerAccessRequestImpl ret = (RangerAccessRequestImpl) createRequest(userName, userGroups, userRoles, Collections.emptyList());
+    RangerAccessRequest createRequest(String userName, String attributes) {
+        RangerAccessRequestImpl ret = (RangerAccessRequestImpl) createRequest(userName, Collections.emptySet(), Collections.emptySet(), Collections.emptyList());
 
-        ret.setContext(attributes);
+        RangerAccessRequestUtil.setContextAttrJson(ret.getContext(), attributes);
 
         return ret;
     }

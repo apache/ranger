@@ -918,7 +918,11 @@ public final class RangerRequestScriptEvaluator {
 
         request.put(SCRIPT_FIELD_USER_GROUP_ATTRIBUTES, groupAttrs);
         request.put(SCRIPT_FIELD_UGA, new UserGroupsAttributes(userGroups, groupAttrs).getAttributes());
-        request.put(SCRIPT_FIELD_CTX_ATTR, RangerAccessRequestUtil.cloneWithNoInternalKeys(getRequestContext()));
+
+        String attrJson = RangerAccessRequestUtil.getContextAttrJson(getRequestContext());
+
+        request.put(SCRIPT_FIELD_CTX_ATTR, JsonUtils.jsonToMapStringObject(attrJson));
+
         ret.put(SCRIPT_FIELD_REQUEST, request);
 
         ret.put(SCRIPT_FIELD_TAGS, tags);
