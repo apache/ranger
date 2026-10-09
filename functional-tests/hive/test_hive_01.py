@@ -34,7 +34,6 @@ from ranger_test_utils.hive_utils import (
     cleanup_hive_test_namespace,
     create_audit_only_policy,
     delete_policies_by_id,
-    ensure_hive_test_user_in_ranger,
     ensure_kerberos_user,
     preflight_hive_stack,
     prepare_hive_test_namespace,
@@ -43,8 +42,10 @@ from ranger_test_utils.hive_utils import (
     wait_for_policy_propagation,
 )
 from ranger_test_utils.utils import (
+    DOCKER_PLUGIN_TEST_USER_PASSWORD,
     configure_test_logging,
     create_ranger_admin_session,
+    ensure_user_exists,
     get_test_logger,
     log_testcase_begin_for_pytest,
     unique_suffix,
@@ -80,7 +81,12 @@ def setup_module():
     )
 
     logger.info("Ensuring Ranger user and Kerberos principal for %s", HIVE_TEST_USER)
-    ensure_hive_test_user_in_ranger(_admin_session)
+    ensure_user_exists(
+        _admin_session,
+        HIVE_TEST_USER,
+        password=DOCKER_PLUGIN_TEST_USER_PASSWORD,
+        last_name="hive_test",
+    )
     ensure_kerberos_user(HIVE_TEST_USER)
 
     logger.info(

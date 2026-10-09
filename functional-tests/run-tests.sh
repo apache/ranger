@@ -17,10 +17,10 @@
 
 # All available test suites (pytest folders)
 
-ALL_TEST_SUITES=(rolerest xuserrest servicerest tagrest hdfs kms api hive)
+ALL_TEST_SUITES=(rolerest xuserrest servicerest tagrest hdfs kms api hive hbase)
 
 # Suites that have actual docker-compose services
-DOCKER_SERVICES=(hdfs kms hive)
+DOCKER_SERVICES=(hdfs kms hive hbase)
 
 # Test-only suites (no docker-compose file needed)
 TEST_ONLY_SUITES=(rolerest xuserrest servicerest tagrest api)
@@ -111,6 +111,10 @@ for service in "${EXTRA_SERVICES[@]}"; do
           # 'hadoop' arg alone does NOT download tez
           DOCKER_BACKED+=("hive")
           ;;
+        hbase)
+          DOCKER_BACKED+=("hadoop")
+          DOCKER_BACKED+=("hbase")
+          ;;
         kms)
           : # KMS needs no archive download — it is always in BASE_SERVICES as a container
           ;;
@@ -197,6 +201,10 @@ for service in "${EXTRA_SERVICES[@]}"; do
       DOCKER_FILES+=("-f" "docker-compose.ranger-hadoop.yml")
       DOCKER_FILES+=("-f" "docker-compose.ranger-hive.yml")
       ;;
+    hbase)
+      DOCKER_FILES+=("-f" "docker-compose.ranger-hadoop.yml")
+      DOCKER_FILES+=("-f" "docker-compose.ranger-hbase.yml")
+      ;;
     kms)
       # already included in base
       ;;
@@ -225,6 +233,10 @@ for service in "${EXTRA_SERVICES[@]}"; do
     hive)
       ALL_SERVICES+=("ranger-hadoop")
       ALL_SERVICES+=("ranger-hive")
+      ;;
+    hbase)
+      ALL_SERVICES+=("ranger-hadoop")
+      ALL_SERVICES+=("ranger-hbase")
       ;;
     kms)
       : # already in BASE_SERVICES
