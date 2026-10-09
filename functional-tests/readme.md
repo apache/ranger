@@ -32,6 +32,7 @@ A Docker-based test execution framework that validates Apache Ranger service int
 | **tagrest** | Test cases for Ranger Admin Tag REST APIs |
 | **api** | Public API v2 service and policy CRUD (admin Docker only) |
 | **hive** | Hive Ranger plugin enforcement via HS2/beeline (requires `ranger-hadoop` + `ranger-hive`) |
+| **hbase** | HBase Ranger plugin enforcement via HBase shell (requires `ranger-hadoop` + `ranger-hbase`) |
 
 ### Directory Structure
 
@@ -39,6 +40,19 @@ A Docker-based test execution framework that validates Apache Ranger service int
 functional-tests/
 ├── multiple modules containing test cases
 ├── ...
+├── ranger_test_utils/utils.py   # Shared logging, HTTP asserts, Public API v2 helpers
+├── hdfs/                        # Tests on HDFS encryption cycle
+├── kms/                         # Tests on KMS REST API
+├── xuserrest/                   # Tests on Ranger User/Group/Role REST APIs
+├── rolerest/                    # Tests on Ranger Role REST APIs
+├── servicerest/                 # Tests on Ranger Service REST APIs
+├── tagrest/                     # Tests on Ranger Tag REST APIs
+├── api/                         # Public API v2 (service / policy) tests
+├── hive/                        # Hive plugin enforcement tests
+├── hbase/                       # HBase plugin enforcement tests
+├── ranger_test_utils/hive_utils.py
+├── ranger_test_utils/hbase_utils.py
+├── ranger_test_utils/access_audit_utils.py  # For future access-audit asserts
 │
 ├── ranger_test_utils/utils.py   # Shared logging, HTTP asserts, Public API v2 helpers
 ├── pytest.ini                   # Registers custom pytest markers
@@ -207,6 +221,12 @@ Brought up based on what you enter at the containers prompt (or `SELECTED_CONTAI
 - Service repo name in Docker is `dev_hive` (not QE `cm_hive`).
 - Tests currently assert **beeline authorization output only**. Hive access audits helpers live in `ranger_test_utils/access_audit_utils.py` for a follow-up once auditing works.
 - Example: `./run-tests.sh postgres hive`
+
+### HBase suite notes
+
+- Service repo name in Docker is `dev_hbase` (not QE `hbasedev`).
+- Tests currently assert **HBase shell authorization output only**. Access-audit helpers live in `ranger_test_utils/access_audit_utils.py` for a follow-up once auditing works.
+- Example: `./run-tests.sh postgres hbase`
 
 ## Test Reports
 
