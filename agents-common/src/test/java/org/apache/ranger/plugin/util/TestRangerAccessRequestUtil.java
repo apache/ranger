@@ -17,6 +17,7 @@
 
 package org.apache.ranger.plugin.util;
 
+import org.apache.ranger.authorization.utils.JsonUtils;
 import org.apache.ranger.plugin.contextenricher.RangerTagForEval;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.model.RangerTag;
@@ -245,5 +246,46 @@ public class TestRangerAccessRequestUtil {
             }
         };
         assertEquals(rs, RangerAccessRequestUtil.getUserRoles(req));
+    }
+
+    @Test
+    public void testContextAttributes() {
+        Map<String, Object> context = new HashMap<>();
+
+        // null context
+        assertEquals(Collections.emptyMap(), JsonUtils.jsonToMapStringObject(null));
+
+        Map<String, Map<String, Object>> tests = new HashMap<>();
+
+        tests.put(null, Collections.emptyMap());        // null
+        tests.put("", Collections.emptyMap());          // empty
+        tests.put("[]", Collections.emptyMap());        // invalid map value
+        tests.put("xyz", Collections.emptyMap());       // invalid map value
+        tests.put("xyz=43", Collections.emptyMap());    // invalid map value
+        tests.put("xyz: 43", Collections.emptyMap());   // invalid map value
+        tests.put("{xyz: 43", Collections.emptyMap());  // invalid map value
+        tests.put("{}", Collections.emptyMap());        // valid map value: empty
+        tests.put("{'amount': 43}", toMap("amount", 43));   // valid map value, one entry
+        tests.put("{\"amount\": 43}", toMap("amount", 43)); // valid map value, one entry
+        tests.put("{\"amount\": 43, \"limit\": 127}", toMap("amount", 43, "limit", 127)); // valid map value, two entries
+
+        tests.forEach((key, value) -> {
+            RangerAccessRequestUtil.setContextAttrJson(context, key);
+            assertEquals(value, JsonUtils.jsonToMapStringObject(RangerAccessRequestUtil.getContextAttrJson(context)));
+        });
+    }
+
+    private static Map<String, Object> toMap(Object...args) {
+        if (args.length % 2 != 0) {
+            throw new IllegalArgumentException("toMap(): invalid args length " + args.length + ". Must be an even number, representing key/value pairs");
+        }
+
+        Map<String, Object> ret = new HashMap<>();
+
+        for (int idx = 0; args.length > idx; idx += 2) {
+            ret.put(String.valueOf(args[idx]), args[idx + 1]);
+        }
+
+        return ret;
     }
 }
