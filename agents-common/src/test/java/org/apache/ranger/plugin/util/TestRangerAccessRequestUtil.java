@@ -246,4 +246,30 @@ public class TestRangerAccessRequestUtil {
         };
         assertEquals(rs, RangerAccessRequestUtil.getUserRoles(req));
     }
+
+    @Test
+    public void testIsInternalKey() {
+        assertTrue(RangerAccessRequestUtil.isInternalKey(RangerAccessRequestUtil.KEY_CONTEXT_TAGS));
+        assertTrue(RangerAccessRequestUtil.isInternalKey(RangerAccessRequestUtil.KEY_CONTEXT_TAG_OBJECT));
+        assertTrue(RangerAccessRequestUtil.isInternalKey(RangerAccessRequestUtil.KEY_CONTEXT_RESOURCE));
+        assertTrue(RangerAccessRequestUtil.isInternalKey(RangerAccessRequestUtil.KEY_CONTEXT_REQUESTED_RESOURCES));
+        assertTrue(RangerAccessRequestUtil.isInternalKey(RangerAccessRequestUtil.KEY_CONTEXT_USERSTORE));
+        assertTrue(RangerAccessRequestUtil.isInternalKey(RangerAccessRequestUtil.KEY_TOKEN_NAMESPACE + "testToken"));
+        assertTrue(RangerAccessRequestUtil.isInternalKey(RangerAccessRequestUtil.KEY_USER));
+        assertTrue(RangerAccessRequestUtil.isInternalKey(RangerAccessRequestUtil.KEY_OWNER));
+        assertTrue(RangerAccessRequestUtil.isInternalKey(RangerAccessRequestUtil.KEY_ROLES));
+        assertTrue(RangerAccessRequestUtil.isInternalKey(RangerAccessRequestUtil.KEY_CONTEXT_IS_ANY_ACCESS));
+        assertTrue(RangerAccessRequestUtil.isInternalKey(RangerAccessRequestUtil.KEY_CONTEXT_ALL_ACCESSTYPE_GROUPS));
+        assertTrue(RangerAccessRequestUtil.isInternalKey(RangerAccessRequestUtil.KEY_CONTEXT_ALL_ACCESSTYPES));
+        assertTrue(RangerAccessRequestUtil.isInternalKey(RangerAccessRequestUtil.KEY_CONTEXT_IGNORE_IF_NOT_DENIED_ACCESSTYPES));
+        assertTrue(RangerAccessRequestUtil.isInternalKey(RangerAccessRequestUtil.KEY_CONTEXT_ALL_ACCESS_TYPE_RESULTS));
+        assertTrue(RangerAccessRequestUtil.isInternalKey(RangerAccessRequestUtil.KEY_CONTEXT_ALL_ACCESS_TYPE_ACL_RESULTS));
+        assertTrue(RangerAccessRequestUtil.isInternalKey(RangerAccessRequestUtil.KEY_CONTEXT_REQUEST));
+        assertTrue(RangerAccessRequestUtil.isInternalKey(RangerAccessRequestUtil.KEY_CONTEXT_GDS_RESULT));
+        assertTrue(RangerAccessRequestUtil.isInternalKey(RangerAccessRequestUtil.KEY_CONTEXT_IS_REQUEST_PREPROCESSED));
+        assertTrue(RangerAccessRequestUtil.isInternalKey(RangerAccessRequestUtil.KEY_CONTEXT_BATCH_EVAL_CONTEXT));
+        assertTrue(RangerAccessRequestUtil.isInternalKey(RangerAccessRequestUtil.KEY_CONTEXT_RESOURCE_ZONE_NAMES));
+        assertTrue(RangerAccessRequestUtil.isInternalKey(RangerAccessRequestUtil.KEY_CONTEXT_ACL_ENFORCER));
+        assertTrue(RangerAccessRequestUtil.isInternalKey(null));
+    }
 }

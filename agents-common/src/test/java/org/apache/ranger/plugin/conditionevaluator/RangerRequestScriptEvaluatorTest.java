@@ -614,29 +614,35 @@ public class RangerRequestScriptEvaluatorTest {
         RangerAccessRequest          request   = createRequest("test-user", Collections.emptySet(), Collections.emptySet(), attributes);
         RangerRequestScriptEvaluator evaluator = new RangerRequestScriptEvaluator(request, scriptEngine);
 
-        Assertions.assertTrue((Boolean) evaluator.evaluateScript("CTX_ATTR.trx_amount <= 10000"), "CTX_ATTR.trx_amount <= 10000");
-        Assertions.assertFalse((Boolean) evaluator.evaluateScript("CTX_ATTR.trx_amount > 10000"), "CTX_ATTR.trx_amount > 10000");
+        // trx_amount=10,000; test if less-than-or-equals 10,000 => false
+        String expr = "CTX_ATTR.trx_amount <= 10000";
+        Assertions.assertTrue((Boolean) evaluator.evaluateScript(expr), expr);
+
+        // trx_amount=10,000; test if greater than 10,000 => false
+        expr = "CTX_ATTR.trx_amount > 10000";
+        Assertions.assertFalse((Boolean) evaluator.evaluateScript(expr), expr);
 
         // trx_amount=10,000; default approved_amount is 5,000 => false
-        Assertions.assertFalse((Boolean) evaluator.evaluateScript("CTX_ATTR.trx_amount <= (CTX_ATTR?.approved_amount ?? 5000)"), "CTX_ATTR.trx_amount <= (CTX_ATTR?.approved_amount ?? 5000)");
+        expr = "CTX_ATTR.trx_amount <= (CTX_ATTR?.approved_amount ?? 5000)";
+        Assertions.assertFalse((Boolean) evaluator.evaluateScript(expr), expr);
 
         // trx_amount=10,000; default approved_amount is 15,000 => true
-        Assertions.assertTrue((Boolean) evaluator.evaluateScript("CTX_ATTR.trx_amount <= (CTX_ATTR?.approved_amount ?? 15000)"), "CTX_ATTR.trx_amount <= (CTX_ATTR?.approved_amount ?? 15000)");
+        expr = "CTX_ATTR.trx_amount <= (CTX_ATTR?.approved_amount ?? 15000)";
+        Assertions.assertTrue((Boolean) evaluator.evaluateScript(expr), expr);
 
-        // trx_amount=10,000; approved_amount=5000 => false
+        // trx_amount=10,000; approved_amount=5,000 => false
+        expr = "CTX_ATTR.trx_amount <= (CTX_ATTR?.approved_amount ?? 5000)";
         attributes.put("approved_amount", 5000);
-
-        evaluator = new RangerRequestScriptEvaluator(request, scriptEngine);
-
-        Assertions.assertFalse((Boolean) evaluator.evaluateScript("CTX_ATTR.trx_amount <= (CTX_ATTR?.approved_amount ?? 5000)"), "CTX_ATTR.trx_amount <= (CTX_ATTR?.approved_amount ?? 5000)");
+        evaluator = new RangerRequestScriptEvaluator(request, scriptEngine, RangerRequestScriptEvaluator.needsJsonCtxEnabled(expr));
+        Assertions.assertFalse((Boolean) evaluator.evaluateScript(expr), expr);
 
         // trx_amount=10,000; approved_amount=15000 => true
+        expr = "CTX_ATTR.trx_amount <= (CTX_ATTR?.approved_amount ?? 5000)";
         attributes.put("trx_amount", 10000);
         attributes.put("approved_amount", 15000);
+        evaluator = new RangerRequestScriptEvaluator(request, scriptEngine, RangerRequestScriptEvaluator.needsJsonCtxEnabled(expr));
 
-        evaluator = new RangerRequestScriptEvaluator(request, scriptEngine);
-
-        Assertions.assertTrue((Boolean) evaluator.evaluateScript("CTX_ATTR.trx_amount <= (CTX_ATTR?.approved_amount ?? 5000)"), "CTX_ATTR.trx_amount <= (CTX_ATTR?.approved_amount ?? 5000)");
+        Assertions.assertTrue((Boolean) evaluator.evaluateScript(expr), expr);
     }
 
     private RangerRequestScriptEvaluator createEvaluator() {

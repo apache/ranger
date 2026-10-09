@@ -918,17 +918,7 @@ public final class RangerRequestScriptEvaluator {
 
         request.put(SCRIPT_FIELD_USER_GROUP_ATTRIBUTES, groupAttrs);
         request.put(SCRIPT_FIELD_UGA, new UserGroupsAttributes(userGroups, groupAttrs).getAttributes());
-
-        Map<String, Object> ctxAttributes = new HashMap<>();
-
-        getRequestContext().forEach((key, value) -> {
-            if (!RangerAccessRequestUtil.isInternalKey(key)) {
-                ctxAttributes.put(key, value);
-            }
-        });
-
-        request.put(SCRIPT_FIELD_CTX_ATTR, ctxAttributes);
-
+        request.put(SCRIPT_FIELD_CTX_ATTR, RangerAccessRequestUtil.cloneWithNoInternalKeys(getRequestContext()));
         ret.put(SCRIPT_FIELD_REQUEST, request);
 
         ret.put(SCRIPT_FIELD_TAGS, tags);

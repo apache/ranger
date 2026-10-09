@@ -70,7 +70,27 @@ public class RangerAccessRequestUtil {
     }
 
     public static boolean isInternalKey(String key) {
-        return INTERNAL_CONTEXT_KEYS.contains(key);
+        return key == null || INTERNAL_CONTEXT_KEYS.contains(key) || key.startsWith(KEY_TOKEN_NAMESPACE);
+    }
+
+    public static Map<String, Object> cloneWithNoInternalKeys(Map<String, Object> context) {
+        final Map<String, Object> ret;
+
+        if (context != null) {
+            Map<String, Object> copy = new HashMap<>(context.size());
+
+            context.forEach((key, value) -> {
+                if (!isInternalKey(key)) {
+                    copy.put(key, value);
+                }
+            });
+
+            ret = Collections.unmodifiableMap(copy);
+        } else {
+            ret = Collections.emptyMap();
+        }
+
+        return  ret;
     }
 
     public static void setRequestTagsInContext(Map<String, Object> context, Set<RangerTagForEval> tags) {
