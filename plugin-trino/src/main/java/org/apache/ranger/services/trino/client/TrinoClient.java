@@ -17,6 +17,7 @@ import org.apache.commons.io.FilenameUtils;
 import org.apache.ranger.plugin.client.BaseClient;
 import org.apache.ranger.plugin.client.HadoopConfigHolder;
 import org.apache.ranger.plugin.client.HadoopException;
+import org.apache.ranger.plugin.client.JdbcUrlValidator;
 import org.apache.ranger.plugin.util.PasswordUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -46,6 +47,9 @@ public class TrinoClient
     public static final String TRINO_PASSWORD_PROP  = "password";
 
     private static final String ERR_MSG = "You can still save the repository and start creating policies, but you would not be able to use autocomplete for resource names. Check ranger_admin.log for more info.";
+
+    private static final List<String> ALLOWED_JDBC_URL_PREFIXES   = List.of("jdbc:trino://");
+    private static final List<String> ALLOWED_JDBC_DRIVER_CLASSES = List.of("io.trino.jdbc.TrinoDriver");
 
     private Connection con;
 
@@ -207,6 +211,15 @@ public class TrinoClient
         Properties prop            = getConfigHolder().getRangerSection();
         String     driverClassName = prop.getProperty("jdbc.driverClassName");
         String     url             = prop.getProperty("jdbc.url");
+
+        if (url != null) {
+            url = url.trim();
+        }
+
+        // validate before loading the driver class: loading a class runs its initializers
+        JdbcUrlValidator.validate(url, ALLOWED_JDBC_URL_PREFIXES);
+        JdbcUrlValidator.validateDriverClassName(driverClassName, ALLOWED_JDBC_DRIVER_CLASSES);
+
         Properties trinoProperties = new Properties();
         String     decryptedPwd    = null;
 
