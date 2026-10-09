@@ -32,6 +32,7 @@ This test suite validates REST API endpoints for Apache Ranger services — Admi
 | **tagrest** | Test cases for Ranger Admin Tag REST APIs |
 | **api** | Public API v2 service and policy CRUD (admin Docker only) |
 | **hive** | Hive Ranger plugin enforcement via HS2/beeline (requires `ranger-hadoop` + `ranger-hive`) |
+| **hbase** | HBase Ranger plugin enforcement via HBase shell (requires `ranger-hadoop` + `ranger-hbase`) |
 
 ---
 
@@ -48,7 +49,9 @@ functional-tests/
 ├── tagrest/                     # Tests on Ranger Tag REST APIs
 ├── api/                         # Public API v2 (service / policy) tests
 ├── hive/                        # Hive plugin enforcement tests
+├── hbase/                       # HBase plugin enforcement tests
 ├── ranger_test_utils/hive_utils.py
+├── ranger_test_utils/hbase_utils.py
 ├── ranger_test_utils/access_audit_utils.py  # For future access-audit asserts
 │
 ├── pytest.ini                   # Registers custom pytest markers
@@ -162,7 +165,7 @@ Pass `db-type` and `test-suites` directly to skip prompts. Use env vars for the 
 ```
 
 - `db-type` — First argument. Valid values: `postgres`, `mysql`, `oracle`.
-- `test-suites` — Space-separated list: `hdfs`, `hive`, `kms`, `rolerest`, `xuserrest`, `servicerest`, `tagrest`, `api`.
+- `test-suites` — Space-separated list: `hdfs`, `hive`, `hbase`, `kms`, `rolerest`, `xuserrest`, `servicerest`, `tagrest`, `api`.
 
 Examples:
 
@@ -209,6 +212,7 @@ Regardless of which test suites you choose, these containers always start:
 |---|---|
 | `hdfs` | `ranger-hadoop` |
 | `hive` | `ranger-hadoop`, `ranger-hive` |
+| `hbase` | `ranger-hadoop`, `ranger-hbase` |
 | `kms` | _(already in base)_ |
 | `rolerest`, `xuserrest`, `servicerest`, `tagrest`| _(none — use Ranger Admin API only)_ |
 
@@ -220,6 +224,12 @@ Regardless of which test suites you choose, these containers always start:
 - Service repo name in Docker is `dev_hive` (not QE `cm_hive`).
 - Tests currently assert **beeline authorization output only**. Hive access audits helpers live in `ranger_test_utils/access_audit_utils.py` for a follow-up once auditing works.
 - Example: `./run-tests.sh postgres hive`
+
+### HBase suite notes
+
+- Service repo name in Docker is `dev_hbase` (not QE `hbasedev`).
+- Tests currently assert **HBase shell authorization output only**. Access-audit helpers live in `ranger_test_utils/access_audit_utils.py` for a follow-up once auditing works.
+- Example: `./run-tests.sh postgres hbase`
 
 ## Test Reports
 After execution, an HTML report is automatically generated for each suite in the `functional-tests/` directory:

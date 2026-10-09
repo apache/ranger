@@ -21,9 +21,9 @@ import time
 import pytest
 
 from ranger_test_utils.utils import (
+    DOCKER_PLUGIN_TEST_USER_PASSWORD,
     POLICY_URL,
     RANGER_ADMIN_BASE_URL,
-    XUSERS_BASE,
     assert_http_ok,
     get_test_logger,
     unique_suffix,
@@ -48,7 +48,7 @@ HIVE_JDBC_BEELINE = (
 )
 
 HIVE_TEST_USER = "hrt_21"
-HIVE_TEST_USER_PASSWORD = "Password@123"
+HIVE_TEST_USER_PASSWORD = DOCKER_PLUGIN_TEST_USER_PASSWORD
 
 HIVE_AUTHZ_DENIED_SUBSTR = "Permission denied"
 
@@ -299,33 +299,9 @@ def cleanup_hive_test_namespace(database, table):
     )
 
 
-def ensure_hive_test_user_in_ranger(session, username=HIVE_TEST_USER):
-    """Ensure hrt_21 exists in Ranger xusers (QE password)."""
-    lookup_url = XUSERS_BASE + "/users/userName/" + username
-    lookup = session.get(lookup_url)
-    if lookup.status_code == 200:
-        return
-    payload = {
-        "name": username,
-        "firstName": username,
-        "lastName": "hive_test",
-        "emailAddress": username + "@example.com",
-        "password": HIVE_TEST_USER_PASSWORD,
-        "status": 1,
-        "isVisible": 1,
-        "userSource": 1,
-        "userRoleList": ["ROLE_USER"],
-        "groupIdList": [],
-        "groupNameList": [],
-    }
-    create_url = XUSERS_BASE + "/secure/users"
-    create = session.post(create_url, json=payload)
-    assert_http_ok(create, 200, "Create Ranger user " + username, create_url)
-
-
 def run_beeline(username, sql, service_user=False, expect_substring=None):
     """
-    Run a beeline statement inside ranger-hive (-e, QE-style logging).
+    Run a beeline statement inside ranger-hive (-e).
 
     Returns (exit_code, combined_output).
     """

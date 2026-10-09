@@ -193,7 +193,16 @@ def log_testcase_begin_for_pytest(
 # --- xusers: ensure principals exist ---
 
 
-def ensure_user_exists(session, username):
+# Password for Docker plugin suites
+DOCKER_PLUGIN_TEST_USER_PASSWORD = "Password@123"
+
+
+def ensure_user_exists(
+    session,
+    username,
+    password="Test@123",
+    last_name="api_test",
+):
     """Create a Ranger user via xusers REST if it is not already present."""
     lookup_url = XUSERS_BASE + "/users/userName/" + username
     lookup = session.get(lookup_url)
@@ -202,9 +211,9 @@ def ensure_user_exists(session, username):
     payload = {
         "name": username,
         "firstName": username,
-        "lastName": "api_test",
+        "lastName": last_name,
         "emailAddress": username + "@example.com",
-        "password": "Test@123",
+        "password": password,
         "status": 1,
         "isVisible": 1,
         "userSource": 1,
