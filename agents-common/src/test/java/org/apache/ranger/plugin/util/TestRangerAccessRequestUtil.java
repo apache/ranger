@@ -255,19 +255,19 @@ public class TestRangerAccessRequestUtil {
         // null context
         assertEquals(Collections.emptyMap(), JsonUtils.jsonToMapStringObject(null));
 
-        Map<String, Map<String, Object>> tests = new HashMap<>() {{
-                put(null, Collections.emptyMap());                            // null
-                put("", Collections.emptyMap());                              // empty
-                put("[]", Collections.emptyMap());                            // invalid map value
-                put("xyz", Collections.emptyMap());       // invalid map value
-                put("xyz=43", Collections.emptyMap());    // invalid map value
-                put("xyz: 43", Collections.emptyMap());   // invalid map value
-                put("{xyz: 43", Collections.emptyMap());  // invalid map value
-                put("{}", Collections.emptyMap());        // valid map value: empty
-                put("{'amount': 43}", toMap("amount", 43));   // valid map value, one entry
-                put("{\"amount\": 43}", toMap("amount", 43)); // valid map value, one entry
-                put("{\"amount\": 43, \"limit\": 127}", toMap("amount", 43, "limit", 127)); // valid map value, two entries
-            }};
+        Map<String, Map<String, Object>> tests = new HashMap<>();
+
+        tests.put(null, Collections.emptyMap());        // null
+        tests.put("", Collections.emptyMap());          // empty
+        tests.put("[]", Collections.emptyMap());        // invalid map value
+        tests.put("xyz", Collections.emptyMap());       // invalid map value
+        tests.put("xyz=43", Collections.emptyMap());    // invalid map value
+        tests.put("xyz: 43", Collections.emptyMap());   // invalid map value
+        tests.put("{xyz: 43", Collections.emptyMap());  // invalid map value
+        tests.put("{}", Collections.emptyMap());        // valid map value: empty
+        tests.put("{'amount': 43}", toMap("amount", 43));   // valid map value, one entry
+        tests.put("{\"amount\": 43}", toMap("amount", 43)); // valid map value, one entry
+        tests.put("{\"amount\": 43, \"limit\": 127}", toMap("amount", 43, "limit", 127)); // valid map value, two entries
 
         tests.forEach((key, value) -> {
             RangerAccessRequestUtil.setContextAttrJson(context, key);
@@ -275,13 +275,15 @@ public class TestRangerAccessRequestUtil {
         });
     }
 
-    private static Map<String, Object> toMap(String key1, Object val1, Object...args) {
+    private static Map<String, Object> toMap(Object...args) {
+        if (args.length % 2 != 0) {
+            throw new IllegalArgumentException("toMap(): invalid args length " + args.length + ". Must be an even number, representing key/value pairs");
+        }
+
         Map<String, Object> ret = new HashMap<>();
 
-        ret.put(key1, val1);
-
         for (int idx = 0; args.length > idx; idx += 2) {
-            ret.put((String) args[idx], args[idx + 1]);
+            ret.put(String.valueOf(args[idx]), args[idx + 1]);
         }
 
         return ret;

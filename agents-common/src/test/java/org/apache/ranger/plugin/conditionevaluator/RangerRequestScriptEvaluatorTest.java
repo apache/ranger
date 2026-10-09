@@ -607,7 +607,7 @@ public class RangerRequestScriptEvaluatorTest {
 
     @Test
     public void testContextAttributes() {
-        String                       attrJson  = "{'trx_amount':10000}";
+        String                       attrJson  = "{\"trx_amount\":10000}";
         RangerAccessRequest          request   = createRequest("test-user", attrJson);
         RangerRequestScriptEvaluator evaluator = new RangerRequestScriptEvaluator(request, scriptEngine);
 
@@ -628,7 +628,7 @@ public class RangerRequestScriptEvaluatorTest {
         Assertions.assertTrue((Boolean) evaluator.evaluateScript(expr), expr);
 
         // trx_amount=10,000; approved_amount=5,000 => false
-        attrJson  = "{'trx_amount':10000, 'approved_amount':5000}";
+        attrJson  = "{\"trx_amount\":10000, \"approved_amount\":5000}";
         request   = createRequest("test-user", attrJson);
         expr      = "CTX_ATTR.trx_amount <= (CTX_ATTR?.approved_amount ?? 5000)";
         evaluator = new RangerRequestScriptEvaluator(request, scriptEngine, RangerRequestScriptEvaluator.needsJsonCtxEnabled(expr));
@@ -636,7 +636,7 @@ public class RangerRequestScriptEvaluatorTest {
 
         // trx_amount=10,000; approved_amount=15000 => true
         expr      = "CTX_ATTR.trx_amount <= (CTX_ATTR?.approved_amount ?? 5000)";
-        attrJson  = "{'trx_amount':10000, 'approved_amount':15000}";
+        attrJson  = "{\"trx_amount\":10000, \"approved_amount\":15000}";
         request   = createRequest("test-user", attrJson);
         evaluator = new RangerRequestScriptEvaluator(request, scriptEngine, RangerRequestScriptEvaluator.needsJsonCtxEnabled(expr));
 

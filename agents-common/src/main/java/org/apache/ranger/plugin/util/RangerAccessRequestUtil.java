@@ -77,7 +77,17 @@ public class RangerAccessRequestUtil {
     }
 
     public static String getContextAttrJson(Map<String, Object> context) {
-        return context != null ? (String) context.get(KEY_CONTEXT_ATTR_JSON) : null;
+        Object ret = context != null ? context.get(KEY_CONTEXT_ATTR_JSON) : null;
+
+        if (ret != null) {
+            if (ret instanceof String) {
+                return (String) ret;
+            } else {
+                LOG.error("getContextAttrJson(): failed to get {} from context", KEY_CONTEXT_ATTR_JSON);
+            }
+        }
+
+        return null;
     }
 
     public static void setRequestTagsInContext(Map<String, Object> context, Set<RangerTagForEval> tags) {
