@@ -6,3 +6,6 @@ myenv/
 
 # Pytest cache
 .pytest_cache/
+
+# Pytest file log (pytest.ini log_file=logs/pytest.log)
+logs/
