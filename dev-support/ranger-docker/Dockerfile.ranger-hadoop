@@ -44,6 +44,9 @@ RUN tar xvfz /home/ranger/dist/hadoop-${HADOOP_VERSION}.tar.gz --directory=/opt/
     ln -s /opt/ranger/ranger-${YARN_PLUGIN_VERSION}-yarn-plugin /opt/ranger/ranger-yarn-plugin && \
     rm -f /home/ranger/dist/ranger-${YARN_PLUGIN_VERSION}-yarn-plugin.tar.gz && \
     rm -f /opt/ranger/ranger-yarn-plugin/install.properties && \
+    cp /opt/tez/lib/*.jar /opt/hadoop/share/hadoop/yarn/lib/ 2>/dev/null || true && \
+    cp /opt/tez/*.jar /opt/hadoop/share/hadoop/yarn/lib/ 2>/dev/null || true && \
+    chown -R hdfs:hadoop /opt/hadoop && \
     chmod 744 ${RANGER_SCRIPTS}/ranger-hadoop-setup.sh ${RANGER_SCRIPTS}/ranger-hadoop.sh ${RANGER_SCRIPTS}/ranger-hadoop-mkdir.sh && \
     useradd -g hadoop -ms /bin/bash healthcheck && \
     chmod 744 ${RANGER_SCRIPTS}/ranger-hadoop-healthcheck.sh && \
