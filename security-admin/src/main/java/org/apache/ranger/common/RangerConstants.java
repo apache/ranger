@@ -45,6 +45,8 @@ public class RangerConstants extends RangerCommonEnums {
     // Action constants
     public static final String ACTION_EDIT            = "edit";
     public static final String ACTION_CHANGE          = "change";
+    public static final String ACTION_CREATE          = "create";
+    public static final String ACTION_UPDATE          = "update";
     public static final String ACTION_DELETE          = "delete";
     public static final String ACTION_MARK_SPAM       = "mark_spam";
     public static final String ACTION_RATE            = "rate";
