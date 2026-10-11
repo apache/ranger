@@ -38,6 +38,14 @@ services:
         condition: service_started
       ranger-hadoop:
         condition: service_healthy
+    healthcheck:
+      # Metastore (9083) and HiveServer2 (10000) bind their thrift ports only once initialized,
+      # which is what beeline clients wait for.
+      test: ["CMD-SHELL", "timeout 2 bash -c '</dev/tcp/localhost/9083' && timeout 2 bash -c '</dev/tcp/localhost/10000'"]
+      interval: 20s
+      timeout: 10s
+      retries: 30
+      start_period: 60s
     environment:
       - HIVE_HADOOP_VERSION
       - HIVE_VERSION

@@ -21,6 +21,14 @@ services:
       - ./scripts/ozone/docker-config
     environment:
       RANGER_KERBEROS_ENABLED: ${KERBEROS_ENABLED}
+    healthcheck:
+      # The datanode HTTP server comes up with the service; ozone.security.http.kerberos.enabled
+      # is left at its default (false), so the probe needs no SPNEGO.
+      test: ["CMD-SHELL", "curl -sf -o /dev/null http://localhost:9882/"]
+      interval: 20s
+      timeout: 10s
+      retries: 20
+      start_period: 30s
   om:
     build:
       context: .
@@ -61,6 +69,14 @@ services:
       RANGER_KERBEROS_ENABLED: ${KERBEROS_ENABLED}
     env_file:
       - ./scripts/ozone/docker-config
+    healthcheck:
+      # RatisRoles reports LEADER_AND_READY only once the OM ratis ring can serve requests,
+      # which is what an ofs:// client needs.
+      test: ["CMD-SHELL", "curl -sf 'http://localhost:9874/jmx?qry=Hadoop:service=OzoneManager,name=OzoneManagerInfo,component=ServerRuntime' | grep -q LEADER_AND_READY"]
+      interval: 20s
+      timeout: 10s
+      retries: 30
+      start_period: 40s
     restart: on-failure:3
     # Do not pass KERBEROS_ENABLED: Ozone libexec/entrypoint.sh waits for krb5:8081.
     command: bash -c "unset KERBEROS_ENABLED; export OZONE_KEYTAB_NAME=om.keytab; bash /opt/ozone-service-start.sh bash -c 'source /opt/hadoop/ranger-ozone-plugin/ranger-ozone-setup.sh && (test -f /data/metadata/om/current/VERSION || /opt/hadoop/bin/ozone om --init) && exec /opt/hadoop/bin/ozone om'"
@@ -86,6 +102,14 @@ services:
     environment:
       RANGER_KERBEROS_ENABLED: ${KERBEROS_ENABLED}
       OZONE-SITE.XML_hdds.scm.safemode.min.datanode: "${OZONE_SAFEMODE_MIN_DATANODES:-1}"
+    healthcheck:
+      # SCM allocates blocks only after it leaves safe mode, which is what the OM and any
+      # client actually wait for.
+      test: ["CMD-SHELL", "curl -sf 'http://localhost:9876/jmx?qry=Hadoop:service=StorageContainerManager,name=StorageContainerManagerInfo,component=ServerRuntime' | grep -qE '\"InSafeMode\"[[:space:]]*:[[:space:]]*false'"]
+      interval: 20s
+      timeout: 10s
+      retries: 30
+      start_period: 40s
     restart: on-failure:3
     command: bash -c "unset KERBEROS_ENABLED; export OZONE_KEYTAB_NAME=scm.keytab; bash /opt/ozone-service-start.sh bash -c '(test -f /data/metadata/scm/current/VERSION || /opt/hadoop/bin/ozone scm --init) && exec /opt/hadoop/bin/ozone scm'"
 
