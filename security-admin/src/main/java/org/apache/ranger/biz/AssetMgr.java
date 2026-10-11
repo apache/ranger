@@ -1304,7 +1304,7 @@ public class AssetMgr extends AssetMgrBase {
                 Map<String, String> infoMap       = dbObj.getInfo();
 
                 if (infoMap != null && !stringUtil.isEmpty(clusterName)) {
-                    if (!stringUtil.isEmpty(infoMap.get(SearchFilter.CLUSTER_NAME)) && !stringUtil.equals(infoMap.get(SearchFilter.CLUSTER_NAME), clusterName)) {
+                    if (stringUtil.isEmpty(infoMap.get(SearchFilter.CLUSTER_NAME)) || !stringUtil.equals(infoMap.get(SearchFilter.CLUSTER_NAME), clusterName)) {
                         infoMap.put(SearchFilter.CLUSTER_NAME, clusterName);
 
                         needsUpdating = true;

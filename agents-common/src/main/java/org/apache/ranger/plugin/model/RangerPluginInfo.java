@@ -62,12 +62,15 @@ public class RangerPluginInfo implements Serializable {
     public static final String PLUGIN_INFO_GDS_DOWNLOADED_VERSION       = "gdsDownloadedVersion";
     public static final String PLUGIN_INFO_GDS_ACTIVATION_TIME          = "gdsActivationTime";
     public static final String PLUGIN_INFO_GDS_ACTIVE_VERSION           = "gdsActiveVersion";
+    public static final String PLUGIN_INFO_CLUSTER_NAME                 = "clusterName";
     public static final String RANGER_ADMIN_LAST_POLICY_UPDATE_TIME     = "lastPolicyUpdateTime";
     public static final String RANGER_ADMIN_LATEST_POLICY_VERSION       = "latestPolicyVersion";
     public static final String RANGER_ADMIN_LAST_TAG_UPDATE_TIME        = "lastTagUpdateTime";
     public static final String RANGER_ADMIN_LATEST_TAG_VERSION          = "latestTagVersion";
     public static final String RANGER_ADMIN_LAST_GDS_UPDATE_TIME        = "lastGdsUpdateTime";
     public static final String RANGER_ADMIN_LATEST_GDS_VERSION          = "latestGdsVersion";
+    public static final String RANGER_ADMIN_LAST_ROLE_UPDATE_TIME       = "lastRoleUpdateTime";
+    public static final String RANGER_ADMIN_LATEST_ROLE_VERSION         = "latestRoleVersion";
     public static final String RANGER_ADMIN_CAPABILITIES                = "adminCapabilities";
     public static final String PLUGIN_INFO_CAPABILITIES                 = "pluginCapabilities";
 
@@ -459,6 +462,20 @@ public class RangerPluginInfo implements Serializable {
     }
 
     @JsonIgnore
+    public Long getLatestRoleVersion() {
+        String latestRoleVersionString = getInfo().get(RANGER_ADMIN_LATEST_ROLE_VERSION);
+
+        return StringUtils.isNotBlank(latestRoleVersionString) ? Long.valueOf(latestRoleVersionString) : null;
+    }
+
+    @JsonIgnore
+    public Long getLastRoleUpdateTime() {
+        String updateTimeString = getInfo().get(RANGER_ADMIN_LAST_ROLE_UPDATE_TIME);
+
+        return StringUtils.isNotBlank(updateTimeString) ? Long.valueOf(updateTimeString) : null;
+    }
+
+    @JsonIgnore
     public String getPluginCapabilities() {
         return getCapabilities(PLUGIN_INFO_CAPABILITIES);
     }
@@ -476,6 +493,16 @@ public class RangerPluginInfo implements Serializable {
     @JsonIgnore
     public void setAdminCapabilities(String capabilities) {
         setCapabilities(RANGER_ADMIN_CAPABILITIES, capabilities);
+    }
+
+    @JsonIgnore
+    public void setClusterName(String clusterName) {
+        setCapabilities(PLUGIN_INFO_CLUSTER_NAME, clusterName);
+    }
+
+    @JsonIgnore
+    public String getClusterName() {
+        return getCapabilities(PLUGIN_INFO_CLUSTER_NAME);
     }
 
     @Override
