@@ -39,7 +39,8 @@ HDFS_KMS_ACCESSES = [
     "CREATE", "DELETE", "ROLLOVER", "GET", "GETKEYS", "GETMETADATA",
     "GENERATEEEK", "DECRYPTEEK", "SETKEYMATERIAL",
 ]
-KMS_SITE_PATH = "/opt/ranger/ranger-kms/ews/webapp/WEB-INF/classes/conf/kms-site.xml"
+KMS_HOME = "/opt/ranger/kms"
+KMS_SITE_PATH = f"{KMS_HOME}/ews/webapp/WEB-INF/classes/conf/kms-site.xml"
 
 
 HADOOP_CONTAINER = "ranger-hadoop"
@@ -203,8 +204,28 @@ def ensure_ranger_user(username: str) -> None:
         print(f"WARN: create Ranger user {username}: {resp.status_code} {resp.text}")
 
 
+def _wait_for_kms_up(kms_container, timeout=180) -> None:
+    # Block until the KMS port accepts connections inside the container.
+    deadline = time.time() + timeout
+    while time.time() < deadline:
+        kms_container.reload()
+        if kms_container.status == "running":
+            ec, _ = kms_container.exec_run(
+                ["bash", "-c", "exec 3<>/dev/tcp/localhost/9292"], user="root"
+            )
+            if ec == 0:
+                return
+        time.sleep(3)
+    pytest.fail(f"ranger-kms did not come up within {timeout}s")
+
+
 def ensure_kms_kerberos_rules(kms_container) -> bool:
     # Patch KMS kerberos name rules at runtime. Returns True if KMS was restarted.
+    kms_container.reload()
+    if kms_container.status != "running":
+        kms_container.start()
+        _wait_for_kms_up(kms_container)
+
     exit_code, _ = kms_container.exec_run(
         f"grep -q 'hive/ranger-hadoop' {KMS_SITE_PATH}", user="root"
     )
@@ -219,11 +240,9 @@ def ensure_kms_kerberos_rules(kms_container) -> bool:
     for rule in rules:
         kms_container.exec_run(f"sed -i '/DEFAULT/i {rule}' {KMS_SITE_PATH}", user="root")
 
-    kms_container.exec_run(
-        "/opt/ranger/ranger-kms/ranger-kms-services.sh restart", user="root"
-    )
-    print("Patched KMS kerberos rules, restarted ranger-kms.")
-    time.sleep(30)
+    kms_container.restart()
+    _wait_for_kms_up(kms_container)
+    print("Patched KMS kerberos rules, restarted ranger-kms container.")
     return True
 
 
@@ -260,17 +279,19 @@ def ensure_kms_hdfs_policy() -> None:
 
     existing_users = set(policy_items[0].get("users") or [])
     needed_users = set(HDFS_KMS_USERS)
-    existing_access = {a["type"] for a in policy_items[0].get("accesses", [])}
+    # Ranger returns access types in lowercase; compare case-insensitively
+    existing_access = {a["type"].lower() for a in policy_items[0].get("accesses", [])}
+    needed_access = {a.lower() for a in HDFS_KMS_ACCESSES}
 
-    if needed_users.issubset(existing_users) and set(HDFS_KMS_ACCESSES).issubset(existing_access):
+    if needed_users.issubset(existing_users) and needed_access.issubset(existing_access):
         print("KMS policy already grants required HDFS users and accesses.")
         return
 
     policy_items[0]["users"] = sorted(existing_users | needed_users)
     for access_type in HDFS_KMS_ACCESSES:
-        if access_type not in existing_access:
+        if access_type.lower() not in existing_access:
             policy_items[0].setdefault("accesses", []).append(
-                {"type": access_type, "isAllowed": True}
+                {"type": access_type.lower(), "isAllowed": True}
             )
 
     target["policyItems"] = policy_items
