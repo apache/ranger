@@ -199,7 +199,8 @@ def test_Readfile_after_keyDeletion(hadoop_container):
         # Use return_exit_code=True so stderr (where HDFS error messages live) is included
         # in output — required after demux=True split in run_command.
         output, exit_code = run_command(hadoop_container, cmd, HIVE_USER, fail_on_error=False, return_exit_code=True)
-        print(f"Command Output:\n{output}")
+        error_lines = [line for line in output.splitlines() if line.startswith("-cat:")]
+        print("Command Output:\n" + "\n".join(error_lines))
 
         if exit_code != 0:
             failure_detected = True

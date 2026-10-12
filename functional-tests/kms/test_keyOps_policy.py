@@ -44,8 +44,15 @@ def setup_keytabs():
 
 
 # create base policy ------------------------------------------------------------------
-@pytest.fixture(scope="function", autouse=True)
+@pytest.fixture(scope="module", autouse=True)
 def create_initial_kms_policy():
+    """Create the pytest-* policy once for the entire module.
+
+    All test functions share the same policy_id and call update_kms_policy()
+    at the start of their body, which resets policyItems to [] before writing
+    the accesses needed for that specific test. This means there is no
+    cross-test state leakage even though the policy object is reused.
+    """
     policy_name = "pytest-policy"
     keyname_pattern = "pytest-*"
 
@@ -68,19 +75,18 @@ def create_initial_kms_policy():
         "policyItems": []
     }
 
-    # Create policy
+    # Create policy once — shared across all tests in this module
     response = requests.post(BASE_URL_RANGER, auth=RANGER_KMS_AUTH, json=policy_data)
-    #time.sleep(30)
     time.sleep(5)
-    if response.status_code != 200 and response.status_code != 201:
+    if response.status_code not in (200, 201):
         raise Exception(f"Failed to create initial policy: {response.text}")
 
-    created_policy = response.json()
-    policy_id = created_policy["id"]
+    policy_id = response.json()["id"]
 
     try:
         yield policy_id
     finally:
+        # Delete once at module teardown, not after every test
         requests.delete(f"{BASE_URL_RANGER}/{policy_id}", auth=RANGER_KMS_AUTH)
 
 @pytest.fixture(autouse=True)
