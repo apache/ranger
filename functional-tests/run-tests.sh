@@ -17,7 +17,7 @@
 
 # All available test suites (pytest folders)
 
-ALL_TEST_SUITES=(rolerest xuserrest servicerest tagrest hdfs kms api hive)
+ALL_TEST_SUITES=(rolerest xuserrest servicerest tagrest hdfs kms api hive hbase)
 
 # Test-only suites (no docker-compose file needed)
 TEST_ONLY_SUITES=(rolerest xuserrest servicerest tagrest api)
