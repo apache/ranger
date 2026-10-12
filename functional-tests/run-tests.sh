@@ -19,11 +19,12 @@
 
 ALL_TEST_SUITES=(rolerest xuserrest servicerest tagrest hdfs kms api hive)
 
-# Suites that have actual docker-compose services
-DOCKER_SERVICES=(hdfs kms hive)
-
 # Test-only suites (no docker-compose file needed)
 TEST_ONLY_SUITES=(rolerest xuserrest servicerest tagrest api)
+
+# All optional containers (on top of base services) — shown in the containers prompt
+# Each maps to a docker-compose file and a set of archives to download.
+ALL_OPTIONAL_CONTAINERS=(hadoop hive hbase knox trino ozone kafka)
 
 #handle input
 DB_TYPE="${1:-}"
@@ -76,11 +77,36 @@ if [[ "${#EXTRA_SERVICES[@]}" -eq 0 ]]; then
   fi
 fi
 
+# Prompt for optional containers to bring up (independent of test suites)
+# Base services always start: ranger, kdc, db, zk, kms, pdp, usersync, tagsync + audit pipeline.
+# Pre-set via env var (space-separated): export SELECTED_CONTAINERS="hadoop hive"  OR  "all"
+SELECTED_CONTAINERS_ENV="${SELECTED_CONTAINERS:-}"
+SELECTED_CONTAINERS=()
+if [[ -n "${SELECTED_CONTAINERS_ENV}" ]]; then
+  if [[ "${SELECTED_CONTAINERS_ENV}" == "all" ]]; then
+    SELECTED_CONTAINERS=("${ALL_OPTIONAL_CONTAINERS[@]}")
+  else
+    read -ra SELECTED_CONTAINERS <<< "${SELECTED_CONTAINERS_ENV}"
+  fi
+else
+  echo ""
+  echo "Available containers : ${ALL_OPTIONAL_CONTAINERS[*]}"
+  echo "  (base always starts: ranger, kdc, db, zk, kms, pdp, usersync, tagsync + audit pipeline)"
+  read -rp "Enter containers space-separated (press Enter or 'all' for ALL): " -a input_containers
+  if [[ "${#input_containers[@]}" -eq 0 || "${input_containers[0]}" == "all" ]]; then
+    echo "Bringing up ALL optional containers..."
+    SELECTED_CONTAINERS=("${ALL_OPTIONAL_CONTAINERS[@]}")
+  else
+    SELECTED_CONTAINERS=("${input_containers[@]}")
+  fi
+fi
+
 echo ""
 echo "DB Type           : ${DB_TYPE}"
 echo "Audit Store       : ${AUDIT_INDEX_STORE}"
 echo "Audit Destinations: ${AUDIT_DESTINATIONS}"
 echo "Test Suites       : ${EXTRA_SERVICES[*]}"
+echo "Containers        : ${SELECTED_CONTAINERS[*]:-none (base only)}"
 echo ""
 echo "CLEAN_CONTAINERS=${CLEAN_CONTAINERS}"
 
@@ -100,26 +126,19 @@ cd "$RANGER_DOCKER_PATH" || exit 1
 chmod +x scripts/**/*.sh || true
 chmod +x download-archives.sh || true
 
-# Download archives — only for docker-backed services
+# Download archives for selected optional containers
+# 'hive' arg downloads hadoop + tez + hive (all needed by Dockerfile.ranger-hadoop and ranger-hive)
 DOCKER_BACKED=()
-for service in "${EXTRA_SERVICES[@]}"; do
-  for ds in "${DOCKER_SERVICES[@]}"; do
-    if [[ "$service" == "$ds" ]]; then
-      case "$service" in
-        hdfs|hive)
-          # 'hive' arg downloads hadoop + tez (both needed by Dockerfile.ranger-hadoop)
-          # 'hadoop' arg alone does NOT download tez
-          DOCKER_BACKED+=("hive")
-          ;;
-        kms)
-          : # KMS needs no archive download — it is always in BASE_SERVICES as a container
-          ;;
-        *)
-          DOCKER_BACKED+=("$service")
-          ;;
-      esac
-    fi
-  done
+for container in "${SELECTED_CONTAINERS[@]}"; do
+  case "$container" in
+    hadoop) DOCKER_BACKED+=("hive") ;;          # 'hive' arg downloads hadoop + tez (needed by Dockerfile.ranger-hadoop)
+    hive)   DOCKER_BACKED+=("hive") ;;
+    hbase)  DOCKER_BACKED+=("hive" "hbase") ;;  # hadoop + tez (compose dep) + hbase image
+    knox)   DOCKER_BACKED+=("knox") ;;
+    trino)  ;;                                   # no archive — pulled from Docker image directly
+    ozone)  DOCKER_BACKED+=("ozone") ;;
+    kafka)  DOCKER_BACKED+=("kafka") ;;
+  esac
 done
 
 # Kafka archive is needed whenever the audit pipeline is up (ranger-kafka build)
@@ -174,11 +193,13 @@ else
   echo "Admin service (${ADMIN_SERVICE}) already exists. Skipping build/up."
 fi
 
-# Bring up basic services
+# Bring up base services — matches README ranger-core command:
+# ranger + usersync + tagsync + pdp + kms (+ audit-service when audit store != none)
 DOCKER_FILES=(
   "-f" "docker-compose.ranger.yml"
   "-f" "docker-compose.ranger-usersync.yml"
   "-f" "docker-compose.ranger-tagsync.yml"
+  "-f" "docker-compose.ranger-pdp.yml"
   "-f" "docker-compose.ranger-kms.yml"
 )
 
@@ -187,24 +208,38 @@ if [[ "${AUDIT_INDEX_STORE}" != "none" ]]; then
   DOCKER_FILES+=("-f" "docker-compose.ranger-audit-service.yml")
 fi
 
-# Add compose files based on requested suites
-for service in "${EXTRA_SERVICES[@]}"; do
-  case "$service" in
-    hdfs)
-      DOCKER_FILES+=("-f" "docker-compose.ranger-hadoop.yml")
-      ;;
-    hive)
-      DOCKER_FILES+=("-f" "docker-compose.ranger-hadoop.yml")
-      DOCKER_FILES+=("-f" "docker-compose.ranger-hive.yml")
-      ;;
-    kms)
-      # already included in base
-      ;;
+# Helper: add a compose file only if not already in the list (prevents duplicates
+# when e.g. both 'hadoop' and 'hive' are selected — both need ranger-hadoop.yml)
+_add_compose() {
+  local file="$1"
+  local already=false
+  for ac in "${ADDED_COMPOSE[@]}"; do
+    [[ "$ac" == "$file" ]] && already=true && break
+  done
+  if ! $already; then
+    DOCKER_FILES+=("-f" "$file")
+    ADDED_COMPOSE+=("$file")
+  fi
+}
+
+# Add compose files for selected optional containers
+ADDED_COMPOSE=()
+for container in "${SELECTED_CONTAINERS[@]}"; do
+  case "$container" in
+    hadoop) _add_compose "docker-compose.ranger-hadoop.yml" ;;
+    hive)   _add_compose "docker-compose.ranger-hadoop.yml"  # hive depends_on: ranger-hadoop: service_healthy
+            _add_compose "docker-compose.ranger-hive.yml" ;;
+    hbase)  _add_compose "docker-compose.ranger-hadoop.yml"  # hbase depends_on: ranger-hadoop: service_healthy
+            _add_compose "docker-compose.ranger-hbase.yml" ;;
+    knox)   _add_compose "docker-compose.ranger-knox.yml" ;;
+    trino)  _add_compose "docker-compose.ranger-trino.yml" ;;
+    ozone)  _add_compose "docker-compose.ranger-ozone.yml" ;;
+    kafka)  _add_compose "docker-compose.ranger-kafka.yml" ;;
   esac
 done
 
-# Build ALL_SERVICES list — only docker-backed services get container checks
-BASE_SERVICES=(ranger ranger-kdc ranger-${RANGER_DB_TYPE} ranger-zk ranger-kms)
+# Build ALL_SERVICES list — only docker-backed services get container health checks
+BASE_SERVICES=(ranger ranger-kdc ranger-${RANGER_DB_TYPE} ranger-zk ranger-kms ranger-pdp)
 ALL_SERVICES=("${BASE_SERVICES[@]}")
 
 # Audit pipeline containers brought up by docker-compose.ranger-audit-service.yml
@@ -217,53 +252,69 @@ if [[ "${AUDIT_INDEX_STORE}" != "none" ]]; then
   )
 fi
 
-for service in "${EXTRA_SERVICES[@]}"; do
-  case "$service" in
-    hdfs)
-      ALL_SERVICES+=("ranger-hadoop")
-      ;;
-    hive)
-      ALL_SERVICES+=("ranger-hadoop")
-      ALL_SERVICES+=("ranger-hive")
-      ;;
-    kms)
-      : # already in BASE_SERVICES
-      ;;
+# Add containers for selected optional services
+for container in "${SELECTED_CONTAINERS[@]}"; do
+  case "$container" in
+    hadoop) ALL_SERVICES+=("ranger-hadoop") ;;
+    hive)   ALL_SERVICES+=("ranger-hadoop" "ranger-hive") ;;
+    hbase)  ALL_SERVICES+=("ranger-hadoop" "ranger-hbase") ;;
+    knox)   ALL_SERVICES+=("ranger-knox") ;;
+    trino)  ALL_SERVICES+=("ranger-trino") ;;
+    ozone)  ALL_SERVICES+=("ozone-om" "ozone-scm" "ozone-datanode") ;;
+    kafka)  ALL_SERVICES+=("ranger-kafka") ;;
   esac
 done
 
+# Deduplicate — e.g. 'hadoop' + 'hive' both selected adds ranger-hadoop twice
+ALL_SERVICES=($(printf '%s\n' "${ALL_SERVICES[@]}" | sort -u))
 
-# only create/build if containers do not exist
-missing=false
-for container in "${ALL_SERVICES[@]}"; do
-  if ! docker container inspect "$container" >/dev/null 2>&1; then
-    missing=true
+# Run ozone pre-setup script if ozone is among selected containers
+for container in "${SELECTED_CONTAINERS[@]}"; do
+  if [[ "$container" == "ozone" ]]; then
+    echo "Running ozone pre-setup..."
+    bash scripts/ozone/ozone-plugin-docker-setup.sh
     break
   fi
 done
 
+
+# Determine container state: missing, stopped, or all already running
+missing=false
+all_running=true
+
+for container in "${ALL_SERVICES[@]}"; do
+  if ! docker container inspect "$container" >/dev/null 2>&1; then
+    missing=true
+    all_running=false
+    break
+  elif [[ $(docker inspect -f '{{.State.Running}}' "$container" 2>/dev/null) != "true" ]]; then
+    all_running=false
+  fi
+done
+
 if [[ "${missing}" == "true" ]]; then
+  # First run or containers were wiped — build and start everything
   echo "Some containers are missing. Creating services..."
   if [[ -n "${AUDIT_DESTINATIONS}" ]]; then
     docker compose --profile "${AUDIT_DESTINATIONS}" "${DOCKER_FILES[@]}" up -d --build
   else
     docker compose "${DOCKER_FILES[@]}" up -d --build
   fi
-else
-  echo "All containers already exist. Starting without rebuild..."
+  echo "Waiting for containers to start..."
+  sleep 20
+elif [[ "${all_running}" == "false" ]]; then
+  # Containers exist but some are stopped — start them without rebuild
+  echo "Some containers are stopped. Starting services..."
   if [[ -n "${AUDIT_DESTINATIONS}" ]]; then
     docker compose --profile "${AUDIT_DESTINATIONS}" "${DOCKER_FILES[@]}" up -d
   else
     docker compose "${DOCKER_FILES[@]}" up -d
   fi
+else
+  # All containers already running — skip compose and sleeps entirely
+  echo "All containers already running. Skipping compose and proceeding directly to tests..."
 fi
 
-echo "Waiting for containers to start..."
-if [[ "${missing}" == "true" || "${admin_missing}" == "true" ]]; then
-  sleep 20
-else
-  echo "No rebuild/start needed. Skipping wait."
-fi
 echo "Checking container status..."
 flag=true
 
@@ -296,12 +347,12 @@ else
   echo "All containers are running fine!"
 fi
 
-
-echo -e "\n\n\n\n\n\n\n\n\n\n-------------------------------------------"
-echo "Please wait while all services are fully initialized. This may take a few minutes..."
-echo "-------------------------------------------"
-
-sleep 60  # Wait for 60 seconds to allow services to initialize
+if [[ "${missing}" == "true" || "${admin_missing}" == "true" || "${all_running}" == "false" ]]; then
+  echo -e "\n\n\n\n\n\n\n\n\n\n-------------------------------------------"
+  echo "Please wait while all services are fully initialized. This may take a few minutes..."
+  echo "-------------------------------------------"
+  sleep 60  # Wait for services to initialize after a fresh start or restart
+fi
 
 
 #RUN TESTS--------
