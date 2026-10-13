@@ -60,9 +60,34 @@ public class RangerAccessRequestUtil {
     public static final  String KEY_CONTEXT_BATCH_EVAL_CONTEXT               = "BATCH_EVAL_CONTEXT";
     public static final  String KEY_CONTEXT_RESOURCE_ZONE_NAMES              = "RESOURCE_ZONE_NAMES";
     public static final  String KEY_CONTEXT_ACL_ENFORCER                     = "_ACL_ENFORCER";
+    public static final  String KEY_CONTEXT_ATTR_JSON                        = "_ATTR_JSON";
 
     private RangerAccessRequestUtil() {
         // to avoid instantiation
+    }
+
+    public static void setContextAttrJson(Map<String, Object> context, String attrJson) {
+        if (context != null) {
+            if (attrJson == null) {
+                context.remove(KEY_CONTEXT_ATTR_JSON);
+            } else {
+                context.put(KEY_CONTEXT_ATTR_JSON, attrJson);
+            }
+        }
+    }
+
+    public static String getContextAttrJson(Map<String, Object> context) {
+        Object ret = context != null ? context.get(KEY_CONTEXT_ATTR_JSON) : null;
+
+        if (ret != null) {
+            if (ret instanceof String) {
+                return (String) ret;
+            } else {
+                LOG.error("getContextAttrJson(): failed to get {} from context", KEY_CONTEXT_ATTR_JSON);
+            }
+        }
+
+        return null;
     }
 
     public static void setRequestTagsInContext(Map<String, Object> context, Set<RangerTagForEval> tags) {
