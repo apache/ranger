@@ -612,30 +612,30 @@ public class RangerRequestScriptEvaluatorTest {
         RangerRequestScriptEvaluator evaluator = new RangerRequestScriptEvaluator(request, scriptEngine);
 
         // trx_amount=10,000; test if less-than-or-equals 10,000 => true
-        String expr = "CTX_ATTR.trx_amount <= 10000";
+        String expr = "ATTR.trx_amount <= 10000";
         Assertions.assertTrue((Boolean) evaluator.evaluateScript(expr), expr);
 
         // trx_amount=10,000; test if greater than 10,000 => false
-        expr = "CTX_ATTR.trx_amount > 10000";
+        expr = "ATTR.trx_amount > 10000";
         Assertions.assertFalse((Boolean) evaluator.evaluateScript(expr), expr);
 
         // trx_amount=10,000; default approved_amount is 5,000 => false
-        expr = "CTX_ATTR.trx_amount <= (CTX_ATTR?.approved_amount ?? 5000)";
+        expr = "ATTR.trx_amount <= (ATTR?.approved_amount ?? 5000)";
         Assertions.assertFalse((Boolean) evaluator.evaluateScript(expr), expr);
 
         // trx_amount=10,000; default approved_amount is 15,000 => true
-        expr = "CTX_ATTR.trx_amount <= (CTX_ATTR?.approved_amount ?? 15000)";
+        expr = "ATTR.trx_amount <= (ATTR?.approved_amount ?? 15000)";
         Assertions.assertTrue((Boolean) evaluator.evaluateScript(expr), expr);
 
         // trx_amount=10,000; approved_amount=5,000 => false
         attrJson  = "{\"trx_amount\":10000, \"approved_amount\":5000}";
         request   = createRequest("test-user", attrJson);
-        expr      = "CTX_ATTR.trx_amount <= (CTX_ATTR?.approved_amount ?? 5000)";
+        expr      = "ATTR.trx_amount <= (ATTR?.approved_amount ?? 5000)";
         evaluator = new RangerRequestScriptEvaluator(request, scriptEngine, RangerRequestScriptEvaluator.needsJsonCtxEnabled(expr));
         Assertions.assertFalse((Boolean) evaluator.evaluateScript(expr), expr);
 
         // trx_amount=10,000; approved_amount=15000 => true
-        expr      = "CTX_ATTR.trx_amount <= (CTX_ATTR?.approved_amount ?? 5000)";
+        expr      = "ATTR.trx_amount <= (ATTR?.approved_amount ?? 5000)";
         attrJson  = "{\"trx_amount\":10000, \"approved_amount\":15000}";
         request   = createRequest("test-user", attrJson);
         evaluator = new RangerRequestScriptEvaluator(request, scriptEngine, RangerRequestScriptEvaluator.needsJsonCtxEnabled(expr));
