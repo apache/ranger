@@ -40,6 +40,7 @@ import java.text.SimpleDateFormat;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.Collections;
 
 import static com.fasterxml.jackson.databind.DeserializationFeature.*;
 
@@ -47,6 +48,7 @@ public class JsonUtils {
     private static final Logger LOG = LoggerFactory.getLogger(JsonUtils.class);
 
     private static final TypeReference<Map<String, String>>                       TYPE_MAP_STRING_STRING               = new TypeReference<Map<String, String>>() {};
+    private static final TypeReference<Map<String, Object>>                       TYPE_MAP_STRING_OBJECT               = new TypeReference<Map<String, Object>>() {};
     private static final TypeReference<Set<String>>                               TYPE_SET_STRING                      = new TypeReference<Set<String>>() {};
     private static final TypeReference<List<String>>                              TYPE_LIST_STRING                     = new TypeReference<List<String>>() {};
     private static final TypeReference<List<RangerValiditySchedule>>              TYPE_LIST_RANGER_VALIDITY_SCHEDULE   = new TypeReference<List<RangerValiditySchedule>>() {};
@@ -175,6 +177,20 @@ public class JsonUtils {
         }
 
         return null;
+    }
+
+    public static Map<String, Object> jsonToMapStringObject(String jsonStr) {
+        Map<String, Object> ret = null;
+
+        if (StringUtils.isNotEmpty(jsonStr)) {
+            try {
+                ret = getMapper().readValue(jsonStr, TYPE_MAP_STRING_OBJECT);
+            } catch (Exception excp) {
+                LOG.warn("jsonToMapStringObject() failed to convert json to object: {}", jsonStr, excp);
+            }
+        }
+
+        return ret == null ? Collections.emptyMap() : ret;
     }
 
     public static Set<String> jsonToSetString(String jsonStr) {

@@ -84,6 +84,7 @@ public class RangerCommonConstants {
 	public static final String SCRIPT_VAR_UGNAMES                   = "UGNAMES";
 	public static final String SCRIPT_VAR_URNAMES                   = "URNAMES";
 	public static final String SCRIPT_VAR_USER                      = "USER";
+	public static final String SCRIPT_VAR_ATTR                      = "ATTR";
 
 	public static final String SCRIPT_FIELD_ACCESS_TIME             = "accessTime";
 	public static final String SCRIPT_FIELD_ACCESS_TYPE             = "accessType";
@@ -114,6 +115,7 @@ public class RangerCommonConstants {
 	public static final String SCRIPT_FIELD_USER_GROUP_ATTRIBUTES   = "userGroupAttributes";
 	public static final String SCRIPT_FIELD_UGA                     = "uga";
 	public static final String SCRIPT_FIELD_USER_ROLES              = "userRoles";
+	public static final String SCRIPT_FIELD_ATTR                    = "attr";
 
 	public static final String SCRIPT_MACRO_GET_TAG_NAMES         = "GET_TAG_NAMES";
 	public static final String SCRIPT_MACRO_GET_TAG_NAMES_Q       = "GET_TAG_NAMES_Q";
