@@ -19,6 +19,9 @@
 
 package org.apache.ranger.security.handler;
 
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.hadoop.security.Groups;
+import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.ranger.authentication.unix.jaas.RoleUserAuthorityGranter;
 import org.apache.ranger.authorization.hadoop.config.RangerAdminConfig;
 import org.apache.ranger.authorization.utils.StringUtil;
@@ -62,13 +65,19 @@ import javax.security.auth.login.AppConfigurationEntry.LoginModuleControlFlag;
 import javax.security.auth.login.Configuration;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public class RangerAuthenticationProvider implements AuthenticationProvider {
     private static final Logger logger = LoggerFactory.getLogger(RangerAuthenticationProvider.class);
+
+    private static final String  RANGER_UGI_INCLUDE_HADOOP_GROUPS_PROP    = "ranger.ugi.group.resolution.include.hadoop.groups";
+    private static final boolean RANGER_UGI_INCLUDE_HADOOP_GROUPS_DEFAULT = false;
 
     private final boolean isFipsEnabled;
 
@@ -734,5 +743,60 @@ public class RangerAuthenticationProvider implements AuthenticationProvider {
 
     private Authentication getSSOAuthentication(Authentication authentication) throws AuthenticationException {
         return authentication;
+    }
+
+    /**
+     * function to resolve user group mappings from UGI and Hadoop LDAP-based group mapping
+     */
+    public static List<GrantedAuthority> getAuthoritiesFromUGI(String userName) {
+        Set<String>          userGroups = new HashSet<>();
+        UserGroupInformation ugi        = UserGroupInformation.createRemoteUser(userName);
+
+        if (ugi != null) {
+            String[] groups = ugi.getGroupNames();
+
+            if (logger.isDebugEnabled()) {
+                logger.debug("UserGroupInformation userGroups=" + Arrays.toString(groups));
+            }
+
+            if (groups != null) {
+                for (String group : groups) {
+                    userGroups.add(group);
+                }
+            }
+        }
+
+        // if group empty take groups from Hadoop LDAP-based group mapping
+        if (CollectionUtils.isEmpty(userGroups) || includeHadoopGroups()) {
+            try {
+                org.apache.hadoop.conf.Configuration config = new org.apache.hadoop.conf.Configuration();
+                Groups                               gp     = new Groups(config);
+                List<String>                         groups = gp.getGroups(userName);
+
+                if (logger.isDebugEnabled()) {
+                    logger.debug("Hadoop userGroups=" + groups);
+                }
+
+                if (groups != null) {
+                    for (String group : groups) {
+                        userGroups.add(group);
+                    }
+                }
+            } catch (java.io.IOException e) {
+                logger.error("Exception while fetching groups ", e);
+            }
+        }
+
+        List<GrantedAuthority> ret = new ArrayList<>();
+
+        for (String userGroup : userGroups) {
+            ret.add(new SimpleGrantedAuthority(userGroup));
+        }
+
+        return ret;
+    }
+
+    private static boolean includeHadoopGroups() {
+        return PropertiesUtil.getBooleanProperty(RANGER_UGI_INCLUDE_HADOOP_GROUPS_PROP, RANGER_UGI_INCLUDE_HADOOP_GROUPS_DEFAULT);
     }
 }

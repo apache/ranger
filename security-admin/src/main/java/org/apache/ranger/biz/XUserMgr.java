@@ -82,6 +82,7 @@ import org.apache.ranger.plugin.util.PasswordUtils.PasswordGenerator;
 import org.apache.ranger.plugin.util.RangerUserStore;
 import org.apache.ranger.security.context.RangerContextHolder;
 import org.apache.ranger.security.context.RangerSecurityContext;
+import org.apache.ranger.security.handler.RangerAuthenticationProvider;
 import org.apache.ranger.security.web.filter.RangerAuthenticationToken;
 import org.apache.ranger.security.web.filter.RangerHeaderPreAuthFilter;
 import org.apache.ranger.service.RangerPolicyService;
@@ -1898,6 +1899,24 @@ public class XUserMgr extends XUserMgrBase {
      * @return group names from {@code x_group_users}
      */
     public Set<String> getGroupsForUser(final String userName) {
+        boolean ugiGroupResolutionEnabled = PropertiesUtil.getBooleanProperty("ranger.ugi.group.resolution.enabled", false);
+
+        if (ugiGroupResolutionEnabled) {
+            try {
+                List<GrantedAuthority> grantedAuthorities = RangerAuthenticationProvider.getAuthoritiesFromUGI(userName);
+                Set<String>            groups             = new HashSet<>();
+
+                for (GrantedAuthority grantedAuthority : grantedAuthorities) {
+                    groups.add(grantedAuthority.getAuthority());
+                }
+
+                return groups;
+            } catch (Exception excp) {
+                logger.error("getGroupsForUser('{}') failed while resolving groups via UGI", userName, excp);
+
+                return new HashSet<>();
+            }
+        }
         try {
             return daoManager.getXXGroupUser().findGroupNamesByUserName(userName);
         } catch (Exception excp) {
