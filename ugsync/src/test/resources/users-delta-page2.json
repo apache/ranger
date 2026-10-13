@@ -1,0 +1,13 @@
+{
+  "@odata.context": "https://graph.microsoft.com/v1.0/$metadata#users",
+  "value": [
+    {
+      "id": "33333333-aaaa-bbbb-cccc-000000000003",
+      "userPrincipalName": "frank@contoso.onmicrosoft.com",
+      "mail": "frank@contoso.com",
+      "displayName": "Frank Foster",
+      "accountEnabled": true
+    }
+  ],
+  "@odata.deltaLink": "__BASE_URL__/v1.0/users/delta?$deltatoken=PAGED_SAMPLE_TOKEN"
+}
