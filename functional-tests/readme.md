@@ -24,7 +24,7 @@ A Docker-based test execution framework that validates Apache Ranger service int
 
 | Suite | Description |
 |---|---|
-| **hdfs** | Test cases for HDFS encryption lifecycle using KMS |
+| **hdfs** | HDFS encryption lifecycle (KMS) and Ranger HDFS plugin path policies (`hdfs_policy` marker) |
 | **kms** | Test cases for KMS REST API functionality |
 | **xuserrest** | Test cases for Ranger Admin User/Group REST APIs |
 | **rolerest** | Test cases for Ranger Admin Role REST APIs |
@@ -52,6 +52,7 @@ functional-tests/
 ├── hbase/                       # HBase plugin enforcement tests
 ├── ranger_test_utils/hive_utils.py
 ├── ranger_test_utils/hbase_utils.py
+├── ranger_test_utils/hdfs_utils.py
 ├── ranger_test_utils/access_audit_utils.py  # For future access-audit asserts
 │
 ├── ranger_test_utils/utils.py   # Shared logging, HTTP asserts, Public API v2 helpers
@@ -127,6 +128,11 @@ The containers prompt always appears unless `SELECTED_CONTAINERS` is exported.
 **Examples:**
 
 ```text
+# Run hdfs suite (encryption + hdfs_policy tests) — requires ranger-hadoop
+export AUDIT_INDEX_STORE=none
+export SELECTED_CONTAINERS=hadoop
+./run-tests.sh postgres hdfs
+
 # Run hdfs and kms tests — postgres db, no audit pipeline, hadoop container only
 export AUDIT_INDEX_STORE=none
 export SELECTED_CONTAINERS=hadoop
@@ -153,7 +159,7 @@ All variables have sensible defaults and can be exported before running or passe
 | `CLEAN_CONTAINERS` | `0` | Set to `1` to wipe all containers and force a full rebuild from scratch |
 | `RUN_TESTS` | `1` | Set to `0` to bring up infrastructure only without running any tests |
 | `AUDIT_INDEX_STORE` | `opensearch` | Audit backend: `opensearch`, `solr`, or `none` to skip the audit pipeline entirely |
-| `SELECTED_CONTAINERS` | _(prompted)_ | Space-separated optional containers to bring up, e.g. `"hadoop hive"`. Set to `"all"` to bring up every optional container. |
+| `SELECTED_CONTAINERS` | _(prompted)_ | Space-separated optional containers to bring up, e.g. `"hadoop hive"`. Set to `"all"` to bring up every optional container. **Required for the hdfs suite:** export `hadoop` or `all` (starts `ranger-hadoop`). |
 
 ### `CLEAN_CONTAINERS`
 
@@ -227,6 +233,21 @@ Brought up based on what you enter at the containers prompt (or `SELECTED_CONTAI
 - Service repo name in Docker is `dev_hbase` (not QE `hbasedev`).
 - Tests currently assert **HBase shell authorization output only**. Access-audit helpers live in `ranger_test_utils/access_audit_utils.py` for a follow-up once auditing works.
 - Example: `./run-tests.sh postgres hbase`
+
+### HDFS suite notes (encryption + `hdfs_policy`)
+
+- Service repo for plugin tests is `dev_hdfs` (seeded by ranger-docker).
+- **`./run-tests.sh postgres hdfs` does not start `ranger-hadoop` by itself.** Export `SELECTED_CONTAINERS=hadoop` or `SELECTED_CONTAINERS=all` before running (or choose `hadoop` / `all` at the containers prompt).
+- `./run-tests.sh` runs the whole `hdfs/` folder (no marker filter). Use `-m hdfs_policy` only for selective local runs.
+- Example:
+  ```text
+  export AUDIT_INDEX_STORE=none
+  export SELECTED_CONTAINERS=hadoop
+  ./run-tests.sh postgres hdfs
+  ```
+- Plugin tests only (skips encryption/KMS session setup in `hdfs/conftest.py`):
+  `pytest hdfs/test_hdfs_group_policy_03.py -m hdfs_policy`
+  Still requires `ranger-hadoop` (and Ranger Admin) running.
 
 ## Test Reports
 

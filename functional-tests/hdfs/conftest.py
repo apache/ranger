@@ -16,17 +16,35 @@
 import docker
 import pytest
 import time
-from hdfs.test_config import CORE_SITE_XML_PATH, HADOOP_CONTAINER, HDFS_USER, KMS_CONTAINER, KMS_PROPERTY, TEST_EZ_PATHS, TEST_KMS_KEYS
-from hdfs.utils import cleanup_test_artifacts, ensure_hadoop_user_keytab, ensure_kms_hdfs_policy, ensure_kms_kerberos_rules
-from kms.utils import ensure_keyadmin_keytab, ensure_ticket
+from hdfs.test_config import (
+    CORE_SITE_XML_PATH,
+    HADOOP_CONTAINER,
+    HDFS_USER,
+    KMS_CONTAINER,
+    KMS_PROPERTY,
+    TEST_EZ_PATHS,
+    TEST_KMS_KEYS,
+)
 
 # Setup Docker Client
 client = docker.from_env()
 
+
+def _session_needs_encryption_setup(session):
+    """Encryption/KMS session setup — skip for hdfs_policy-only runs."""
+    if not session.items:
+        return False
+    for item in session.items:
+        if item.get_closest_marker("hdfs_policy") is None:
+            return True
+    return False
+
+
 @pytest.fixture(scope="session")
 def hadoop_container():
-    container = client.containers.get(HADOOP_CONTAINER)      #to get hadoop container instance
+    container = client.containers.get(HADOOP_CONTAINER)
     return container
+
 
 def ensure_key_provider_and_simple_auth(container) -> bool:
     """
@@ -63,6 +81,7 @@ def ensure_key_provider_and_simple_auth(container) -> bool:
 
     return changed
 
+
 def ensure_user_exists(container, username: str) -> None:
     exit_code, _ = container.exec_run(f"id -u {username}", user="root")
     if exit_code == 0:
@@ -70,6 +89,7 @@ def ensure_user_exists(container, username: str) -> None:
 
     container.exec_run(f"useradd -m -s /bin/bash {username}", user="root")
     container.exec_run(f"usermod -aG hadoop {username}", user="root")
+
 
 def ensure_kms_provider_configured(container) -> bool:
     """
@@ -104,8 +124,23 @@ def ensure_kms_provider_configured(container) -> bool:
 
     return changed
 
+
 @pytest.fixture(scope="session", autouse=True)
-def setup_environment(hadoop_container):
+def setup_encryption_environment(request):
+    if not _session_needs_encryption_setup(request.session):
+        yield
+        return
+
+    hadoop_container = client.containers.get(HADOOP_CONTAINER)
+
+    from hdfs.utils import (
+        cleanup_test_artifacts,
+        ensure_hadoop_user_keytab,
+        ensure_kms_hdfs_policy,
+        ensure_kms_kerberos_rules,
+    )
+    from kms.utils import ensure_keyadmin_keytab, ensure_ticket
+
     changed = ensure_kms_provider_configured(hadoop_container)
     if changed:
         hadoop_container.restart()
@@ -118,14 +153,17 @@ def setup_environment(hadoop_container):
 
     # safemode leave with kerberos (hdfs principal already has keytab in container)
     hadoop_container.exec_run(
-        ["bash", "-c",
-         "kinit -kt /etc/keytabs/hdfs.keytab hdfs/ranger-hadoop.rangernw@EXAMPLE.COM 2>/dev/null;"
-         "hdfs dfsadmin -safemode leave"],
+        [
+            "bash",
+            "-c",
+            "kinit -kt /etc/keytabs/hdfs.keytab hdfs/ranger-hadoop.rangernw@EXAMPLE.COM 2>/dev/null;"
+            "hdfs dfsadmin -safemode leave",
+        ],
         user=HDFS_USER,
     )
 
     kms_container = client.containers.get(KMS_CONTAINER)
-    ensure_kms_kerberos_rules(kms_container)  # already sleeps 30s internally when restart is needed
+    ensure_kms_kerberos_rules(kms_container)
 
     ensure_keyadmin_keytab()
     ensure_ticket()
@@ -134,4 +172,3 @@ def setup_environment(hadoop_container):
     cleanup_test_artifacts(hadoop_container, TEST_KMS_KEYS, TEST_EZ_PATHS)
     yield
     cleanup_test_artifacts(hadoop_container, TEST_KMS_KEYS, TEST_EZ_PATHS)
-

@@ -246,6 +246,27 @@ def ensure_argus_policy_principals(session):
         ensure_group_exists(session, group_name)
 
 
+def ensure_user_assigned_to_groups(session, username, group_names):
+    """Assign Ranger xuser group membership (idempotent for functional-tests)."""
+    if not group_names:
+        return
+    url = XUSERS_BASE + "/users/userinfo"
+    payload = {
+        "xuserInfo": {"name": username},
+        "xgroupInfo": [{"name": group_name} for group_name in group_names],
+    }
+    response = session.post(url, json=payload)
+    assert_http_ok(
+        response,
+        200,
+        "Assign groups "
+        + ",".join(group_names)
+        + " to user "
+        + username,
+        url,
+    )
+
+
 # --- Hive public API v2 JSON builders ---
 
 
