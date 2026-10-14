@@ -109,7 +109,12 @@ public class NiFiClient {
         if (connectivityStatus) {
             BaseClient.generateResponseDataMap(true, SUCCESS_MSG, SUCCESS_MSG, null, null, responseData);
         } else {
-            BaseClient.generateResponseDataMap(false, FAILURE_MSG, FAILURE_MSG + errMsg, null, null, responseData);
+            // Keep low-level exception/status details in logs only to avoid host/port reachability disclosure in the UI
+            if (StringUtils.isNotBlank(errMsg)) {
+                LOG.error("Connection to NiFi failed: {}", errMsg);
+            }
+
+            BaseClient.generateResponseDataMap(false, FAILURE_MSG, FAILURE_MSG, null, null, responseData);
         }
 
         LOG.debug("Response Data - {}", responseData);
