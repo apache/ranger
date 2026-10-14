@@ -31,8 +31,10 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 @JsonAutoDetect(fieldVisibility = Visibility.ANY)
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
@@ -44,6 +46,7 @@ public class RangerPolicy extends RangerBaseModelObject implements java.io.Seria
     public static final int POLICY_TYPE_DATAMASK  = 1;
     public static final int POLICY_TYPE_ROWFILTER = 2;
     public static final int POLICY_TYPE_AUDIT     = 3;
+    public static final int POLICY_TYPE_CONSTRAINTS = 4;
 
     public static final int[] POLICY_TYPES = new int[] {
             POLICY_TYPE_ACCESS,
@@ -79,6 +82,7 @@ public class RangerPolicy extends RangerBaseModelObject implements java.io.Seria
     private List<RangerPolicyItem>                  denyExceptions;
     private List<RangerDataMaskPolicyItem>          dataMaskPolicyItems;
     private List<RangerRowFilterPolicyItem>         rowFilterPolicyItems;
+    private List<RangerConstraintPolicyItem>        constraintPolicyItems;
     private String                                  serviceType;
     private Map<String, Object>                     options;
     private List<RangerValiditySchedule>            validitySchedules;
@@ -128,6 +132,7 @@ public class RangerPolicy extends RangerBaseModelObject implements java.io.Seria
         setDenyExceptions(null);
         setDataMaskPolicyItems(null);
         setRowFilterPolicyItems(null);
+        setConstraintPolicyItems(null);
         setOptions(options);
         setValiditySchedules(validitySchedules);
         setPolicyLabels(policyLables);
@@ -158,6 +163,7 @@ public class RangerPolicy extends RangerBaseModelObject implements java.io.Seria
         setDenyExceptions(other.getDenyExceptions());
         setDataMaskPolicyItems(other.getDataMaskPolicyItems());
         setRowFilterPolicyItems(other.getRowFilterPolicyItems());
+        setConstraintPolicyItems(other.getConstraintPolicyItems());
         setServiceType(other.getServiceType());
         setOptions(other.getOptions());
         setValiditySchedules(other.getValiditySchedules());
@@ -434,6 +440,20 @@ public class RangerPolicy extends RangerBaseModelObject implements java.io.Seria
         return rowFilterPolicyItems.add(policyItem);
     }
 
+    public List<RangerConstraintPolicyItem> getConstraintPolicyItems() {
+        return constraintPolicyItems;
+    }
+
+    public void setConstraintPolicyItems(List<RangerConstraintPolicyItem> constraintPolicyItems) {
+        this.constraintPolicyItems = nullSafeList(constraintPolicyItems);
+    }
+
+    public boolean addConstraintPolicyItem(RangerConstraintPolicyItem policyItem) {
+        constraintPolicyItems = getUpdatableList(constraintPolicyItems);
+
+        return constraintPolicyItems.add(policyItem);
+    }
+
     public Map<String, Object> getOptions() {
         return options;
     }
@@ -552,6 +572,12 @@ public class RangerPolicy extends RangerBaseModelObject implements java.io.Seria
 
         if (CollectionUtils.isNotEmpty(rowFilterPolicyItems)) {
             for (RangerPolicyItem policyItem : rowFilterPolicyItems) {
+                policyItem.dedupStrings(strTbl);
+            }
+        }
+
+        if (CollectionUtils.isNotEmpty(constraintPolicyItems)) {
+            for (RangerPolicyItem policyItem : constraintPolicyItems) {
                 policyItem.dedupStrings(strTbl);
             }
         }
@@ -677,6 +703,16 @@ public class RangerPolicy extends RangerBaseModelObject implements java.io.Seria
             for (RangerRowFilterPolicyItem rowFilterPolicyItem : rowFilterPolicyItems) {
                 if (rowFilterPolicyItem != null) {
                     rowFilterPolicyItem.toString(sb);
+                }
+            }
+        }
+        sb.append("} ");
+
+        sb.append("constraintPolicyItems={");
+        if (constraintPolicyItems != null) {
+            for (RangerConstraintPolicyItem constraintPolicyItem : constraintPolicyItems) {
+                if (constraintPolicyItem != null) {
+                    constraintPolicyItem.toString(sb);
                 }
             }
         }
@@ -1445,6 +1481,96 @@ public class RangerPolicy extends RangerBaseModelObject implements java.io.Seria
     @JsonAutoDetect(fieldVisibility = Visibility.ANY)
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
     @JsonIgnoreProperties(ignoreUnknown = true)
+    public static class RangerConstraintPolicyItem extends RangerPolicyItem implements java.io.Serializable {
+        private static final long serialVersionUID = 1L;
+
+        private RangerPolicyItemConstraintInfo constraintInfo;
+
+        public RangerConstraintPolicyItem() {
+            this(null, null, null, null, null, null, null);
+        }
+
+        public RangerConstraintPolicyItem(RangerPolicyItemConstraintInfo constraintInfo, List<RangerPolicyItemAccess> accesses, List<String> users, List<String> groups, List<String> roles, List<RangerPolicyItemCondition> conditions, Boolean delegateAdmin) {
+            super(accesses, users, groups, roles, conditions, delegateAdmin);
+
+            setConstraintInfo(constraintInfo);
+        }
+
+        public RangerPolicyItemConstraintInfo getConstraintInfo() {
+            return constraintInfo;
+        }
+
+        public void setConstraintInfo(RangerPolicyItemConstraintInfo constraintInfo) {
+            this.constraintInfo = constraintInfo == null ? new RangerPolicyItemConstraintInfo() : constraintInfo;
+        }
+
+        @Override
+        public void dedupStrings(Map<String, String> strTbl) {
+            super.dedupStrings(strTbl);
+
+            if (constraintInfo != null) {
+                constraintInfo.dedupStrings(strTbl);
+            }
+        }
+
+        @Override
+        public StringBuilder toString(StringBuilder sb) {
+            sb.append("RangerConstraintPolicyItem={");
+
+            super.toString(sb);
+
+            sb.append("constraintInfo={");
+            if (constraintInfo != null) {
+                constraintInfo.toString(sb);
+            }
+            sb.append("} ");
+
+            sb.append("}");
+
+            return sb;
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(super.hashCode(), constraintInfo);
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (!super.equals(obj)) {
+                return false;
+            }
+
+            if (this == obj) {
+                return true;
+            }
+
+            if (getClass() != obj.getClass()) {
+                return false;
+            }
+
+            RangerConstraintPolicyItem other = (RangerConstraintPolicyItem) obj;
+
+            if (constraintInfo == null) {
+                return other.constraintInfo == null;
+            } else {
+                return constraintInfo.equals(other.constraintInfo);
+            }
+        }
+
+        @Override
+        public String toString() {
+            StringBuilder sb = new StringBuilder();
+
+            toString(sb);
+
+            return sb.toString();
+        }
+    }
+
+    @JsonAutoDetect(fieldVisibility = Visibility.ANY)
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
+    @JsonIgnoreProperties(ignoreUnknown = true)
     public static class RangerPolicyItemAccess implements java.io.Serializable {
         private static final long serialVersionUID = 1L;
 
@@ -1868,6 +1994,122 @@ public class RangerPolicy extends RangerBaseModelObject implements java.io.Seria
             sb.append("RangerPolicyItemRowFilterInfo={");
 
             sb.append("filterExpr={").append(filterExpr).append("} ");
+
+            sb.append("}");
+
+            return sb;
+        }
+    }
+
+    @JsonAutoDetect(fieldVisibility = Visibility.ANY)
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    public static class RangerPolicyItemConstraintInfo implements java.io.Serializable {
+        private static final long serialVersionUID = 1L;
+
+        private String              constraintName;
+        private Map<String, Object> parameters;
+
+        public RangerPolicyItemConstraintInfo() {
+            this(null, null);
+        }
+
+        public RangerPolicyItemConstraintInfo(String constraintName, Map<String, Object> parameters) {
+            setConstraintName(constraintName);
+            setParameters(parameters);
+        }
+
+        public RangerPolicyItemConstraintInfo(RangerPolicyItemConstraintInfo that) {
+            setConstraintName(that.constraintName);
+            setParameters(that.parameters == null ? null : new HashMap<>(that.parameters));
+        }
+
+        public String getConstraintName() {
+            return constraintName;
+        }
+
+        public void setConstraintName(String constraintName) {
+            this.constraintName = constraintName;
+        }
+
+        public Map<String, Object> getParameters() {
+            return parameters;
+        }
+
+        public void setParameters(Map<String, Object> parameters) {
+            this.parameters = parameters == null ? new HashMap<>() : parameters;
+        }
+
+        public void dedupStrings(Map<String, String> strTbl) {
+            constraintName = StringUtil.dedupString(constraintName, strTbl);
+
+            if (MapUtils.isNotEmpty(parameters)) {
+                Map<String, Object> updated = new HashMap<>(parameters.size());
+
+                for (Map.Entry<String, Object> entry : parameters.entrySet()) {
+                    Object value = entry.getValue();
+
+                    if (value instanceof String) {
+                        value = StringUtil.dedupString((String) value, strTbl);
+                    }
+
+                    updated.put(StringUtil.dedupString(entry.getKey(), strTbl), value);
+                }
+
+                parameters = updated;
+            }
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(constraintName, parameters);
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (this == obj) {
+                return true;
+            }
+
+            if (obj == null) {
+                return false;
+            }
+
+            if (getClass() != obj.getClass()) {
+                return false;
+            }
+
+            RangerPolicyItemConstraintInfo other = (RangerPolicyItemConstraintInfo) obj;
+
+            if (constraintName == null) {
+                if (other.constraintName != null) {
+                    return false;
+                }
+            } else if (!constraintName.equals(other.constraintName)) {
+                return false;
+            }
+
+            if (parameters == null) {
+                return other.parameters == null;
+            } else {
+                return parameters.equals(other.parameters);
+            }
+        }
+
+        @Override
+        public String toString() {
+            StringBuilder sb = new StringBuilder();
+
+            toString(sb);
+
+            return sb.toString();
+        }
+
+        public StringBuilder toString(StringBuilder sb) {
+            sb.append("RangerPolicyItemConstraintInfo={");
+
+            sb.append("constraintName={").append(constraintName).append("} ");
+            sb.append("parameters={").append(parameters).append("} ");
 
             sb.append("}");
 
