@@ -196,7 +196,7 @@ public class RangerHdfsAuthorizerTest {
     }
 
     @Test
-    public void testOperationOptimizer_Rename_DirectorySourceEvaluated() throws Exception {
+    public void testOperationOptimizerRenameDirectorySourceEvaluated() throws Exception {
         runWithAuthzOptimizationEnabled(true, () -> {
             AccessControlEnforcer enforcer = authorizer.getExternalAccessControlEnforcer(null);
             INode[]               inodes   = createPath("/tmp/srcdir", false, true);
@@ -220,7 +220,7 @@ public class RangerHdfsAuthorizerTest {
     }
 
     @Test
-    public void testOperationOptimizer_Rename_FileUnchanged() throws Exception {
+    public void testOperationOptimizerRenameFileUnchanged() throws Exception {
         runWithAuthzOptimizationEnabled(true, () -> {
             AccessControlEnforcer enforcer = authorizer.getExternalAccessControlEnforcer(null);
 
@@ -239,7 +239,7 @@ public class RangerHdfsAuthorizerTest {
     }
 
     @Test
-    public void testOperationOptimizer_DeleteRegression() throws Exception {
+    public void testOperationOptimizerDeleteRegression() throws Exception {
         runWithAuthzOptimizationEnabled(true, () -> {
             AccessControlEnforcer enforcer = authorizer.getExternalAccessControlEnforcer(null);
             INode[]               inodes   = createPath("/tmp/srcdir", false, true);
