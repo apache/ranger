@@ -19,6 +19,7 @@
 
 package org.apache.ranger.audit.dispatcher.kafka;
 
+import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.ranger.audit.destination.OpenSearchAuditDestination;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -30,6 +31,7 @@ import java.lang.reflect.Method;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Properties;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.anyCollection;
@@ -49,8 +51,23 @@ public class TestAuditOpenSearchDispatcher {
     private AuditOpenSearchDispatcher dispatcher;
 
     @BeforeEach
-    void setUp() {
-        dispatcher = new AuditOpenSearchDispatcher(openSearchAuditDestination, TEST_DISPATCHER_GROUP, null, TEST_TOPIC);
+    void setUp() throws Exception {
+        Properties props = new Properties();
+        props.setProperty("ranger.audit.dispatcher.test.kafka.group.id", TEST_DISPATCHER_GROUP);
+        props.setProperty("ranger.audit.dispatcher.test." + org.apache.ranger.audit.server.AuditServerConstants.PROP_BOOTSTRAP_SERVERS, "localhost:9092");
+        props.setProperty("ranger.audit.dispatcher.test." + org.apache.ranger.audit.server.AuditServerConstants.PROP_TOPIC_NAME, TEST_TOPIC);
+
+        dispatcher = new AuditOpenSearchDispatcher(props, "ranger.audit.dispatcher.test") {
+            @Override
+            protected KafkaConsumer<String, String> createDispatcher(Properties props) {
+                return null;
+            }
+        };
+
+        // Inject the mocked destination
+        java.lang.reflect.Field field = AuditOpenSearchDispatcher.class.getDeclaredField("openSearchAuditDestination");
+        field.setAccessible(true);
+        field.set(dispatcher, openSearchAuditDestination);
     }
 
     @Test
