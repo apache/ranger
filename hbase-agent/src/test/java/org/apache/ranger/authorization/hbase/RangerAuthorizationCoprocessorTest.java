@@ -19,10 +19,15 @@
 package org.apache.ranger.authorization.hbase;
 
 import static org.junit.Assert.*;
+import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
+import java.lang.reflect.Field;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.hadoop.hbase.security.User;
 import org.junit.Test;
 
 public class RangerAuthorizationCoprocessorTest {
@@ -47,5 +52,38 @@ public class RangerAuthorizationCoprocessorTest {
 		assertTrue(result.isEmpty());
 		// same for passing in an empty collection
 //		result = _coprocessor.getColumnFamilies(new HashMap<byte[], ? extends Collection<?>>());
+	}
+
+	@Test
+	public void test_isSpecialTable_and_metadataRead() throws Exception {
+		RangerAuthorizationCoprocessor cp = new RangerAuthorizationCoprocessor();
+		assertTrue(cp.isSpecialTable("hbase:meta"));
+		assertFalse(cp.isSpecialTable("normal"));
+		assertFalse(cp.isAccessForMetadataRead("read", "hbase:acl", null));
+		assertFalse(cp.isAccessForMetadataRead("write", "hbase:acl", null));
+
+		// Test for system user bypass on hbase:acl
+		User systemUser = mock(User.class);
+		when(systemUser.getShortName()).thenReturn(User.getCurrent().getShortName());
+		assertTrue(cp.isAccessForMetadataRead("read", "hbase:acl", systemUser));
+
+		// Test for super user bypass on hbase:acl
+		User superUser = mock(User.class);
+		when(superUser.getShortName()).thenReturn("some_super_user");
+		HbaseUserUtils userUtils = mock(HbaseUserUtils.class);
+		lenient().when(userUtils.isSuperUser(superUser)).thenReturn(true);
+		Field userUtilsField = RangerAuthorizationCoprocessor.class.getDeclaredField("_userUtils");
+		userUtilsField.setAccessible(true);
+		userUtilsField.set(cp, userUtils);
+		assertTrue(cp.isAccessForMetadataRead("read", "hbase:acl", superUser));
+
+		// Test for normal user on hbase:acl (should be denied)
+		User normalUser = mock(User.class);
+		when(normalUser.getShortName()).thenReturn("normal_user");
+		lenient().when(userUtils.isSuperUser(normalUser)).thenReturn(false);
+		assertFalse(cp.isAccessForMetadataRead("read", "hbase:acl", normalUser));
+
+		// Test for normal user on hbase:meta (should be allowed)
+		assertTrue(cp.isAccessForMetadataRead("read", "hbase:meta", normalUser));
 	}
 }
