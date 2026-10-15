@@ -4119,6 +4119,7 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
         private String  label;
         private String  description;
         private String  type;
+        private String  subType;
         private Boolean mandatory;
         private String  defaultValue;
         private String  rbKeyLabel;
@@ -4134,6 +4135,7 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
             setLabel(other.getLabel());
             setDescription(other.getDescription());
             setType(other.getType());
+            setSubType(other.getSubType());
             setMandatory(other.getMandatory());
             setDefaultValue(other.getDefaultValue());
             setRbKeyLabel(other.getRbKeyLabel());
@@ -4180,6 +4182,14 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
             this.type = type;
         }
 
+        public String getSubType() {
+            return subType;
+        }
+
+        public void setSubType(String subType) {
+            this.subType = subType;
+        }
+
         public Boolean getMandatory() {
             return mandatory;
         }
@@ -4217,6 +4227,7 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
             label            = StringUtil.dedupString(label, strTbl);
             description      = StringUtil.dedupString(description, strTbl);
             type             = StringUtil.dedupString(type, strTbl);
+            subType          = StringUtil.dedupString(subType, strTbl);
             defaultValue     = StringUtil.dedupString(defaultValue, strTbl);
             rbKeyLabel       = StringUtil.dedupString(rbKeyLabel, strTbl);
             rbKeyDescription = StringUtil.dedupString(rbKeyDescription, strTbl);
@@ -4229,6 +4240,7 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
             sb.append("label={").append(label).append("} ");
             sb.append("description={").append(description).append("} ");
             sb.append("type={").append(type).append("} ");
+            sb.append("subType={").append(subType).append("} ");
             sb.append("mandatory={").append(mandatory).append("} ");
             sb.append("defaultValue={").append(defaultValue).append("} ");
             sb.append("rbKeyLabel={").append(rbKeyLabel).append("} ");
@@ -4240,7 +4252,7 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 
         @Override
         public int hashCode() {
-            return Objects.hash(itemId, name, label, description, type, mandatory, defaultValue, rbKeyLabel, rbKeyDescription);
+            return Objects.hash(itemId, name, label, description, type, subType, mandatory, defaultValue, rbKeyLabel, rbKeyDescription);
         }
 
         @Override
@@ -4296,6 +4308,14 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
                     return false;
                 }
             } else if (!type.equals(other.type)) {
+                return false;
+            }
+
+            if (subType == null) {
+                if (other.subType != null) {
+                    return false;
+                }
+            } else if (!subType.equals(other.subType)) {
                 return false;
             }
 

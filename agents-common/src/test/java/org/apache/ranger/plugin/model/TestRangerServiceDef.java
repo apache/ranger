@@ -366,6 +366,8 @@ public class TestRangerServiceDef {
         param.setLabel("Approver");
         param.setDescription("User who must approve");
         param.setType("user");
+        param.setSubType(null);
+        Assertions.assertNull(param.getSubType());
         param.setMandatory(null);
         Assertions.assertEquals(Boolean.FALSE, param.getMandatory());
         param.setMandatory(Boolean.TRUE);
@@ -376,6 +378,21 @@ public class TestRangerServiceDef {
         RangerConstraintParamDef paramCopy = new RangerConstraintParamDef(param);
         Assertions.assertEquals(param, paramCopy);
         Assertions.assertEquals(param.hashCode(), paramCopy.hashCode());
+        Assertions.assertNull(paramCopy.getSubType());
+
+        RangerConstraintParamDef enumParam = new RangerConstraintParamDef(param);
+        enumParam.setName("maskExpression");
+        enumParam.setType("enum");
+        enumParam.setSubType("MaskTypes");
+        RangerConstraintParamDef enumCopy = new RangerConstraintParamDef(enumParam);
+        Assertions.assertEquals(enumParam, enumCopy);
+        Assertions.assertEquals(enumParam.hashCode(), enumCopy.hashCode());
+        Assertions.assertEquals("MaskTypes", enumCopy.getSubType());
+        Assertions.assertNotEquals(param, enumParam);
+        RangerConstraintParamDef parsedEnum = JsonUtils.getMapper().readValue("{\"type\":\"enum\",\"subType\":\"MaskTypes\"}", RangerConstraintParamDef.class);
+        Assertions.assertEquals("enum", parsedEnum.getType());
+        Assertions.assertEquals("MaskTypes", parsedEnum.getSubType());
+        Assertions.assertTrue(JsonUtils.getMapper().writeValueAsString(enumParam).contains("\"subType\":\"MaskTypes\""));
 
         RangerConstraintDef constraintDef = new RangerConstraintDef();
         constraintDef.setItemId(1L);
@@ -472,21 +489,25 @@ public class TestRangerServiceDef {
         Assertions.assertEquals(constraintDef, parsedDef);
         Assertions.assertEquals(Boolean.TRUE, parsedDef.getParameters().get(0).getMandatory());
         Assertions.assertEquals("alice", parsedDef.getParameters().get(0).getDefaultValue());
+        Assertions.assertNull(parsedDef.getParameters().get(0).getSubType());
         Assertions.assertNotNull(parsed.getDataMaskDef());
         Assertions.assertNotNull(parsed.getRowFilterDef());
 
         Map<String, String> tbl = new HashMap<>();
         String canonicalResource = StringUtil.dedupString(new String("tool"), tbl);
         String canonicalName = StringUtil.dedupString(new String("requireApproval"), tbl);
-        String canonicalType = StringUtil.dedupString(new String("user"), tbl);
+        String canonicalType    = StringUtil.dedupString(new String("user"), tbl);
+        String canonicalSubType = StringUtil.dedupString(new String("MaskTypes"), tbl);
         parsedDef.setName(new String("requireApproval"));
         List<String> resources = new ArrayList<>();
         resources.add(new String("tool"));
         parsedDef.setResources(resources);
         parsedDef.getParameters().get(0).setType(new String("user"));
+        parsedDef.getParameters().get(0).setSubType(new String("MaskTypes"));
         parsedDef.dedupStrings(tbl);
         Assertions.assertSame(canonicalName, parsedDef.getName());
         Assertions.assertSame(canonicalResource, parsedDef.getResources().get(0));
         Assertions.assertSame(canonicalType, parsedDef.getParameters().get(0).getType());
+        Assertions.assertSame(canonicalSubType, parsedDef.getParameters().get(0).getSubType());
     }
 }
