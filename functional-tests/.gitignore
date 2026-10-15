@@ -7,5 +7,8 @@ myenv/
 # Pytest cache
 .pytest_cache/
 
-# Pytest file log (pytest.ini log_file=logs/pytest.log)
+# Pytest file logs (logs/<test_module_stem>.log via conftest.py)
 logs/
+
+# HTML reports from run-tests.sh (pytest --html=report_<suite>.html)
+report_*.html
