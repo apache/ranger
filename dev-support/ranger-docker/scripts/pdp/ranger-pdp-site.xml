@@ -181,61 +181,21 @@
 
   <property>
     <name>ranger.authz.audit.destination.solr</name>
-    <value>true</value>
-  </property>
-
-  <property>
-    <name>ranger.authz.audit.destination.solr.urls</name>
-    <value>http://ranger-solr:8983/solr/ranger_audits</value>
-  </property>
-
-  <property>
-    <name>ranger.authz.audit.destination.solr.batch.filespool.dir</name>
-    <value>/var/log/ranger/pdp/audit/solr/spool</value>
-  </property>
-
-  <property>
-    <name>ranger.authz.audit.destination.solr.force.use.inmemory.jaas.config</name>
-    <value>true</value>
-  </property>
-
-  <property>
-    <name>ranger.authz.audit.jaas.Client.loginModuleName</name>
-    <value>com.sun.security.auth.module.Krb5LoginModule</value>
-  </property>
-
-  <property>
-    <name>ranger.authz.audit.jaas.Client.loginModuleControlFlag</name>
-    <value>required</value>
-  </property>
-
-  <property>
-    <name>ranger.authz.audit.jaas.Client.option.serviceName</name>
-    <value>HTTP</value>
-  </property>
-
-  <property>
-    <name>ranger.authz.audit.jaas.Client.option.useKeyTab</name>
-    <value>true</value>
-  </property>
-
-  <property>
-    <name>ranger.authz.audit.jaas.Client.option.storeKey</name>
     <value>false</value>
   </property>
 
   <property>
-    <name>ranger.authz.audit.jaas.Client.option.useTicketCache</name>
+    <name>ranger.authz.audit.destination.auditserver</name>
     <value>true</value>
   </property>
 
   <property>
-    <name>ranger.authz.audit.jaas.Client.option.keyTab</name>
-    <value>/etc/keytabs/rangerpdp.keytab</value>
+    <name>ranger.authz.audit.destination.auditserver.url</name>
+    <value>http://ranger-audit-ingestor.rangernw:7081</value>
   </property>
 
   <property>
-    <name>ranger.authz.audit.jaas.Client.option.principal</name>
-    <value>rangerpdp/ranger-pdp.rangernw@EXAMPLE.COM</value>
+    <name>ranger.authz.audit.destination.auditserver.batch.filespool.dir</name>
+    <value>/var/log/ranger/pdp/audit/auditserver/spool</value>
   </property>
 </configuration>

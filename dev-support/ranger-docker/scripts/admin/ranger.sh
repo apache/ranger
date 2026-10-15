@@ -34,6 +34,11 @@ then
   fi
 
   cd "${RANGER_HOME}"/admin || exit
+  # AUDIT_INDEX_STORE (solr|opensearch) must match docker-compose.ranger-audit-service.yml.
+  if [ -n "${AUDIT_INDEX_STORE}" ]; then
+    sed "s/^audit_store=.*/audit_store=${AUDIT_INDEX_STORE}/" install.properties > /tmp/ranger-install.properties \
+      && cp /tmp/ranger-install.properties install.properties
+  fi
   if ./setup.sh;
   then
     if [ "${KERBEROS_ENABLED}" == "true" ]

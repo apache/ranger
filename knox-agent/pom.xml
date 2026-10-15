@@ -51,6 +51,17 @@
             <version>${protobuf-java.version}</version>
         </dependency>
         <dependency>
+            <groupId>com.sun.jersey</groupId>
+            <artifactId>jersey-client</artifactId>
+            <version>${jersey-bundle.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>javax.ws.rs</groupId>
+                    <artifactId>jsr311-api</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
             <groupId>commons-collections</groupId>
             <artifactId>commons-collections</artifactId>
             <version>${commons.collections.version}</version>
@@ -64,6 +75,11 @@
             <groupId>javax.servlet</groupId>
             <artifactId>javax.servlet-api</artifactId>
             <version>${javax.servlet.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>javax.ws.rs</groupId>
+            <artifactId>javax.ws.rs-api</artifactId>
+            <version>2.1.1</version>
         </dependency>
         <dependency>
             <groupId>org.apache.hadoop</groupId>
@@ -109,19 +125,8 @@
         </dependency>
         <dependency>
             <groupId>org.apache.ranger</groupId>
-            <artifactId>ranger-audit-dest-hdfs</artifactId>
+            <artifactId>ranger-audit-dest-auditserver</artifactId>
             <version>${project.version}</version>
-            <!-- TO DEBUG JERSEY2 code: uncomment this exclusion
-       <exclusions><exclusion><artifactId>*</artifactId><groupId>*</groupId></exclusion></exclusions>
- -->
-        </dependency>
-        <dependency>
-            <groupId>org.apache.ranger</groupId>
-            <artifactId>ranger-audit-dest-solr</artifactId>
-            <version>${project.version}</version>
-            <!-- TO DEBUG JERSEY2 code: uncomment this exclusion
-       <exclusions><exclusion><artifactId>*</artifactId><groupId>*</groupId></exclusion></exclusions>
- -->
         </dependency>
         <dependency>
             <groupId>org.apache.ranger</groupId>
@@ -129,13 +134,14 @@
             <version>${project.version}</version>
             <exclusions>
                 <exclusion>
+                    <groupId>com.sun.jersey</groupId>
+                    <artifactId>jersey-bundle</artifactId>
+                </exclusion>
+                <exclusion>
                     <groupId>javax.ws.rs</groupId>
                     <artifactId>jsr311-api</artifactId>
                 </exclusion>
             </exclusions>
-            <!-- TO DEBUG JERSEY2 code: uncomment this exclusion
-       <exclusions><exclusion><artifactId>*</artifactId><groupId>*</groupId></exclusion></exclusions>
- -->
         </dependency>
         <dependency>
             <groupId>org.glassfish.jersey.core</groupId>

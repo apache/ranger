@@ -31,6 +31,7 @@
     <!-- Sub modules -->
     <modules>
         <module>core</module>
+        <module>dest-auditserver</module>
         <module>dest-cloudwatch</module>
         <module>dest-es</module>
         <module>dest-hdfs</module>

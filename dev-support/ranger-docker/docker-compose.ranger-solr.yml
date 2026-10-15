@@ -1,0 +1,66 @@
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+services:
+  ranger-solr:
+    build:
+      context: .
+      dockerfile: Dockerfile.ranger-solr
+      args:
+        - RANGER_BASE_IMAGE=${RANGER_BASE_IMAGE}
+        - RANGER_BASE_VERSION=${RANGER_BASE_VERSION}
+        - SOLR_VERSION=${SOLR_VERSION}
+        - SOLR_PLUGIN_VERSION=${SOLR_PLUGIN_VERSION}
+        - KERBEROS_ENABLED=${KERBEROS_ENABLED}
+    image: ranger-solr
+    container_name: ranger-solr
+    hostname: ranger-solr.rangernw
+    volumes:
+      - ./dist/keytabs/ranger-solr:/etc/keytabs
+      - ./scripts/solr/solr-ranger_audits:/opt/solr/server/solr/configsets/ranger_audits/conf
+      # Core conf is copied once by solr-precreate; mount so Solr 9 cache updates apply without recreating the core
+      - ./scripts/solr/solr-ranger_audits:/var/solr/data/ranger_audits/conf
+      - ./scripts/solr/ranger_audits/core.properties:/var/solr/data/ranger_audits/core.properties
+      - ./scripts/solr/ranger-solr-plugin-install.properties:/opt/ranger/ranger-solr-plugin/install.properties
+      # Keep enable templates in sync with repo (image tarball may be stale)
+      - ../../plugin-solr/conf/ranger-solr-security-changes.cfg:/opt/ranger/ranger-solr-plugin/install/conf.templates/enable/ranger-solr-security-changes.cfg:ro
+      - ./scripts/solr/core-site.xml:/opt/solr/server/resources/core-site.xml
+      - ./scripts/solr/solr-jaas.conf:/var/solr/data/jaas.conf
+      - ./scripts/solr/solr-security.json:/var/solr/data/security.json
+      - ./scripts/solr/ranger-solr.sh:/opt/ranger/ranger-solr.sh
+      - ./scripts/kdc/krb5.conf:/etc/krb5.conf
+    networks:
+      - ranger
+    ports:
+      - "8983:8983"
+    depends_on:
+      ranger-kdc:
+        condition: service_started
+      ranger-zk:
+        condition: service_started
+    environment:
+      - KERBEROS_ENABLED
+      - KRB5_CONFIG=/etc/krb5.conf
+      # Solr 9 enables Java SecurityManager by default; Ranger keytab login and policy cache need broader access
+      - SOLR_SECURITY_MANAGER_ENABLED=false
+    command:
+      - solr-precreate
+      - ranger_audits
+      - /opt/solr/server/solr/configsets/ranger_audits/
+
+networks:
+  ranger:
+    name: rangernw
