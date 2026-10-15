@@ -4007,95 +4007,24 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
         public boolean equals(Object obj) {
             if (this == obj) {
                 return true;
-            }
-
-            if (obj == null) {
+            } else if (obj == null) {
                 return false;
-            }
-
-            if (getClass() != obj.getClass()) {
+            } else if (getClass() != obj.getClass()) {
                 return false;
             }
 
             RangerConstraintDef other = (RangerConstraintDef) obj;
 
-            if (itemId == null) {
-                if (other.itemId != null) {
-                    return false;
-                }
-            } else if (!itemId.equals(other.itemId)) {
-                return false;
-            }
-
-            if (name == null) {
-                if (other.name != null) {
-                    return false;
-                }
-            } else if (!name.equals(other.name)) {
-                return false;
-            }
-
-            if (label == null) {
-                if (other.label != null) {
-                    return false;
-                }
-            } else if (!label.equals(other.label)) {
-                return false;
-            }
-
-            if (description == null) {
-                if (other.description != null) {
-                    return false;
-                }
-            } else if (!description.equals(other.description)) {
-                return false;
-            }
-
-            if (rbKeyLabel == null) {
-                if (other.rbKeyLabel != null) {
-                    return false;
-                }
-            } else if (!rbKeyLabel.equals(other.rbKeyLabel)) {
-                return false;
-            }
-
-            if (rbKeyDescription == null) {
-                if (other.rbKeyDescription != null) {
-                    return false;
-                }
-            } else if (!rbKeyDescription.equals(other.rbKeyDescription)) {
-                return false;
-            }
-
-            if (resources == null) {
-                if (other.resources != null) {
-                    return false;
-                }
-            } else if (!resources.equals(other.resources)) {
-                return false;
-            }
-
-            if (accessTypes == null) {
-                if (other.accessTypes != null) {
-                    return false;
-                }
-            } else if (!accessTypes.equals(other.accessTypes)) {
-                return false;
-            }
-
-            if (parameters == null) {
-                if (other.parameters != null) {
-                    return false;
-                }
-            } else if (!parameters.equals(other.parameters)) {
-                return false;
-            }
-
-            if (options == null) {
-                return other.options == null;
-            } else {
-                return options.equals(other.options);
-            }
+            return Objects.equals(itemId, other.itemId) &&
+                Objects.equals(name, other.name) &&
+                Objects.equals(label, other.label) &&
+                Objects.equals(description, other.description) &&
+                Objects.equals(rbKeyLabel, other.rbKeyLabel) &&
+                Objects.equals(rbKeyDescription, other.rbKeyDescription) &&
+                Objects.equals(resources, other.resources) &&
+                Objects.equals(accessTypes, other.accessTypes) &&
+                Objects.equals(parameters, other.parameters) &&
+                Objects.equals(options, other.options);
         }
 
         @Override
@@ -4259,95 +4188,24 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
         public boolean equals(Object obj) {
             if (this == obj) {
                 return true;
-            }
-
-            if (obj == null) {
+            } else if (obj == null) {
                 return false;
-            }
-
-            if (getClass() != obj.getClass()) {
+            } else if (getClass() != obj.getClass()) {
                 return false;
             }
 
             RangerConstraintParamDef other = (RangerConstraintParamDef) obj;
 
-            if (itemId == null) {
-                if (other.itemId != null) {
-                    return false;
-                }
-            } else if (!itemId.equals(other.itemId)) {
-                return false;
-            }
-
-            if (name == null) {
-                if (other.name != null) {
-                    return false;
-                }
-            } else if (!name.equals(other.name)) {
-                return false;
-            }
-
-            if (label == null) {
-                if (other.label != null) {
-                    return false;
-                }
-            } else if (!label.equals(other.label)) {
-                return false;
-            }
-
-            if (description == null) {
-                if (other.description != null) {
-                    return false;
-                }
-            } else if (!description.equals(other.description)) {
-                return false;
-            }
-
-            if (type == null) {
-                if (other.type != null) {
-                    return false;
-                }
-            } else if (!type.equals(other.type)) {
-                return false;
-            }
-
-            if (subType == null) {
-                if (other.subType != null) {
-                    return false;
-                }
-            } else if (!subType.equals(other.subType)) {
-                return false;
-            }
-
-            if (mandatory == null) {
-                if (other.mandatory != null) {
-                    return false;
-                }
-            } else if (!mandatory.equals(other.mandatory)) {
-                return false;
-            }
-
-            if (defaultValue == null) {
-                if (other.defaultValue != null) {
-                    return false;
-                }
-            } else if (!defaultValue.equals(other.defaultValue)) {
-                return false;
-            }
-
-            if (rbKeyLabel == null) {
-                if (other.rbKeyLabel != null) {
-                    return false;
-                }
-            } else if (!rbKeyLabel.equals(other.rbKeyLabel)) {
-                return false;
-            }
-
-            if (rbKeyDescription == null) {
-                return other.rbKeyDescription == null;
-            } else {
-                return rbKeyDescription.equals(other.rbKeyDescription);
-            }
+            return Objects.equals(itemId, other.itemId) &&
+                Objects.equals(name, other.name) &&
+                Objects.equals(label, other.label) &&
+                Objects.equals(description, other.description) &&
+                Objects.equals(type, other.type) &&
+                Objects.equals(subType, other.subType) &&
+                Objects.equals(mandatory, other.mandatory) &&
+                Objects.equals(defaultValue, other.defaultValue) &&
+                Objects.equals(rbKeyLabel, other.rbKeyLabel) &&
+                Objects.equals(rbKeyDescription, other.rbKeyDescription);
         }
 
         @Override
