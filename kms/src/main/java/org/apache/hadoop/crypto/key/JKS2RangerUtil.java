@@ -113,7 +113,8 @@ public class JKS2RangerUtil {
             Configuration  conf        = RangerKeyStoreProvider.getDBKSConf();
             RangerKMSDB    rangerkmsDb = new RangerKMSDB(conf);
             DaoManager     daoManager  = rangerkmsDb.getDaoManager();
-            RangerKeyStore dbStore     = new RangerKeyStore(daoManager);
+            RangerKMSCryptoConfigManager kmsCryptoConfigApi = new RangerKMSCryptoConfigManager(RangerKeyStoreProvider.DBKS_SITE_XML);
+            RangerKeyStore dbStore     = new RangerKeyStore(daoManager, kmsCryptoConfigApi);
             char[]         masterKey   = null;
             String         password    = conf.get(ENCRYPTION_KEY);
 
@@ -190,7 +191,7 @@ public class JKS2RangerUtil {
                     masterKey = null;
                 }
             } else {
-                RangerMasterKey rangerMasterKey = new RangerMasterKey(daoManager);
+                RangerMasterKey rangerMasterKey = new RangerMasterKey(daoManager, kmsCryptoConfigApi);
 
                 rangerMasterKey.generateMasterKey(password);
 
