@@ -174,7 +174,13 @@
   <property>
     <name>ranger.pdp.authn.jwt.audiences</name>
     <value/>
-    <description>Comma-separated list of accepted JWT audiences. Empty means any audience is accepted.</description>
+    <description>Comma-separated list of accepted JWT audiences (aud claim). Mandatory: JWT authentication fails to initialize when unset.</description>
+  </property>
+
+  <property>
+    <name>ranger.pdp.authn.jwt.issuer</name>
+    <value/>
+    <description>Expected JWT issuer (iss claim). Mandatory: JWT authentication fails to initialize when unset.</description>
   </property>
 
   <!-- Kerberos / SPNEGO authentication for incoming REST requests -->

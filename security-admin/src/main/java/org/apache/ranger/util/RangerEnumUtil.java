@@ -1959,6 +1959,15 @@ public class RangerEnumUtil {
 
         vEnum.getElementList().add(vElement);
 
+        vElement = new VEnumElement();
+        vElement.setElementName("AUTH_TYPE_JWT");
+        vElement.setElementValue(5);
+        vElement.setElementLabel("JWT");
+        vElement.setRbKey("xa.enum.AuthType.AUTH_TYPE_JWT");
+        vElement.setEnumName(vEnum.getEnumName());
+
+        vEnum.getElementList().add(vElement);
+
         ///////////////////////////////////
         // XResponse::ResponseStatus
         ///////////////////////////////////

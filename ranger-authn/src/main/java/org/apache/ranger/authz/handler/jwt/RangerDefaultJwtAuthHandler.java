@@ -18,12 +18,12 @@
  */
 package org.apache.ranger.authz.handler.jwt;
 
+import com.nimbusds.jose.JOSEObjectType;
+import com.nimbusds.jose.proc.DefaultJOSEObjectTypeVerifier;
 import com.nimbusds.jose.proc.JWSKeySelector;
 import com.nimbusds.jose.proc.SecurityContext;
 import com.nimbusds.jwt.proc.ConfigurableJWTProcessor;
-import com.nimbusds.jwt.proc.DefaultJWTClaimsVerifier;
 import com.nimbusds.jwt.proc.DefaultJWTProcessor;
-import com.nimbusds.jwt.proc.JWTClaimsSetVerifier;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.ranger.authz.handler.RangerAuth;
 import org.slf4j.Logger;
@@ -37,6 +37,9 @@ import javax.servlet.http.HttpServletRequest;
  */
 public class RangerDefaultJwtAuthHandler extends RangerJwtAuthHandler {
     private static final Logger LOG = LoggerFactory.getLogger(RangerDefaultJwtAuthHandler.class);
+
+    /* accepted 'typ' headers: plain JWT (or none) and RFC 9068 OAuth 2.0 access tokens */
+    private static final JOSEObjectType JWT_TYPE_ACCESS_TOKEN = new JOSEObjectType("at+jwt");
     protected static final String AUTHORIZATION_HEADER = "Authorization";
     protected static final String DO_AS_PARAMETER      = "doAs";
 
@@ -53,11 +56,11 @@ public class RangerDefaultJwtAuthHandler extends RangerJwtAuthHandler {
 
     @Override
     public ConfigurableJWTProcessor<SecurityContext> getJwtProcessor(JWSKeySelector<SecurityContext> keySelector) {
-        ConfigurableJWTProcessor<SecurityContext> jwtProcessor   = new DefaultJWTProcessor<>();
-        JWTClaimsSetVerifier<SecurityContext>     claimsVerifier = new DefaultJWTClaimsVerifier<>();
+        ConfigurableJWTProcessor<SecurityContext> jwtProcessor = new DefaultJWTProcessor<>();
 
+        jwtProcessor.setJWSTypeVerifier(new DefaultJOSEObjectTypeVerifier<>(JOSEObjectType.JWT, JWT_TYPE_ACCESS_TOKEN, null));
         jwtProcessor.setJWSKeySelector(keySelector);
-        jwtProcessor.setJWTClaimsSetVerifier(claimsVerifier);
+        jwtProcessor.setJWTClaimsSetVerifier(createClaimsVerifier());
 
         return jwtProcessor;
     }

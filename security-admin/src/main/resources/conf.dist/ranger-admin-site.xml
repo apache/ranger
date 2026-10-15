@@ -309,6 +309,16 @@
 		<name>ranger.sso.browser.useragent</name>
 		<value>Mozilla,chrome</value>
 	</property>
+	<property>
+		<name>ranger.sso.audiences</name>
+		<value></value>
+		<description>Comma-separated list of accepted JWT audiences (aud claim). Mandatory for JWT bearer-token authentication: the JWT filter fails to initialize when unset.</description>
+	</property>
+	<property>
+		<name>ranger.sso.issuer</name>
+		<value></value>
+		<description>Expected JWT issuer (iss claim). Mandatory for JWT bearer-token authentication: the JWT filter fails to initialize when unset.</description>
+	</property>
 	<!-- SSO Properties Ends-->
 	<property>
 		<name>ranger.admin.healthcheck.username</name>
