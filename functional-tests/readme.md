@@ -31,35 +31,26 @@ A Docker-based test execution framework that validates Apache Ranger service int
 | **servicerest** | Test cases for Ranger Admin Service REST APIs |
 | **tagrest** | Test cases for Ranger Admin Tag REST APIs |
 | **api** | Public API v2 service and policy CRUD (admin Docker only) |
+| **api_tests** | Public API v2 user REST calls by role: admin, keyadmin, auditor, user role, and negative cases (admin Docker only) |
 | **hive** | Hive Ranger plugin enforcement via HS2/beeline (requires `ranger-hadoop` + `ranger-hive`) |
 | **hbase** | HBase Ranger plugin enforcement via HBase shell (requires `ranger-hadoop` + `ranger-hbase`) |
+| **kafka** | Kafka Ranger plugin enforcement via console producer (requires `ranger-kafka`) |
 
 ### Directory Structure
 
 ```text
 functional-tests/
-├── multiple modules containing test cases
-├── ...
-├── ranger_test_utils/utils.py   # Shared logging, HTTP asserts, Public API v2 helpers
-├── hdfs/                        # Tests on HDFS encryption cycle
-├── kms/                         # Tests on KMS REST API
-├── xuserrest/                   # Tests on Ranger User/Group/Role REST APIs
-├── rolerest/                    # Tests on Ranger Role REST APIs
-├── servicerest/                 # Tests on Ranger Service REST APIs
-├── tagrest/                     # Tests on Ranger Tag REST APIs
-├── api/                         # Public API v2 (service / policy) tests
-├── hive/                        # Hive plugin enforcement tests
-├── hbase/                       # HBase plugin enforcement tests
-├── ranger_test_utils/hive_utils.py
-├── ranger_test_utils/hbase_utils.py
-├── ranger_test_utils/hdfs_utils.py
-├── ranger_test_utils/access_audit_utils.py  # For future access-audit asserts
-│
-├── ranger_test_utils/utils.py   # Shared logging, HTTP asserts, Public API v2 helpers
+├── <component> test modules     # i.e hive,hdfs,kms etc
+├── REST API modules             # xuserrest,servicerest,api,tagrest etc
+|
 ├── pytest.ini                   # Registers custom pytest markers
 ├── run-tests.sh                 # Script to automate setup and test execution
 ├── requirements.txt             # Python dependencies
 └── readme.md                    # This documentation
+├── ranger_test_utils/utils.py   # Shared logging, HTTP asserts, Public API v2 helpers
+├── ranger_test_utils/<service>_utils.py
+├── ranger_test_utils/access_audit_utils.py  # For future access-audit asserts
+
 ```
 
 > **Note:** A Python virtual environment folder named `myenv` is created automatically
@@ -102,7 +93,7 @@ Enter DB type (press Enter to default to postgres): postgres
 Available audit stores: opensearch, solr, none
 Enter audit store (press Enter to default to opensearch): opensearch
 
-Available test suites: rolerest xuserrest servicerest tagrest hdfs kms api hive
+Available test suites: rolerest xuserrest servicerest tagrest hdfs kms api hive ...
 Enter test suites space-separated (press Enter to run ALL): hdfs kms
 
 Available containers : hadoop hive hbase knox trino ozone kafka
@@ -222,32 +213,24 @@ Brought up based on what you enter at the containers prompt (or `SELECTED_CONTAI
 
 ---
 
-### Hive suite notes
+### Note on hive, hbase, kafka suites
+- Each suite uses its own Docker service repo: `dev_hive`, `dev_hbase`, `dev_kafka`.
+- Tests assert on client output only (beeline, HBase shell, Kafka console producer). Access-audit checks are deferred; helpers are in `ranger_test_utils/access_audit_utils.py`.
+- `hive` and `hbase` start `ranger-hadoop` automatically. `kafka` starts `ranger-kafka`.
+- Example: `SELECTED_CONTAINERS="hive hbase kafka" ./run-tests.sh postgres hive hbase kafka`
 
-- Service repo name in Docker is `dev_hive` (not QE `cm_hive`).
-- Tests currently assert **beeline authorization output only**. Hive access audits helpers live in `ranger_test_utils/access_audit_utils.py` for a follow-up once auditing works.
-- Example: `./run-tests.sh postgres hive`
 
-### HBase suite notes
+### HDFS suite notes
+- Service repo is `dev_hdfs`.
+- `./run-tests.sh postgres hdfs` does not start `ranger-hadoop`. Export `SELECTED_CONTAINERS=hadoop` (or `all`) first.
+- The whole `hdfs/` folder runs. For plugin tests only: `pytest hdfs/test_hdfs_group_policy_03.py -m hdfs_policy` (still needs `ranger-hadoop`and admin running).
 
-- Service repo name in Docker is `dev_hbase` (not QE `hbasedev`).
-- Tests currently assert **HBase shell authorization output only**. Access-audit helpers live in `ranger_test_utils/access_audit_utils.py` for a follow-up once auditing works.
-- Example: `./run-tests.sh postgres hbase`
-
-### HDFS suite notes (encryption + `hdfs_policy`)
-
-- Service repo for plugin tests is `dev_hdfs` (seeded by ranger-docker).
-- **`./run-tests.sh postgres hdfs` does not start `ranger-hadoop` by itself.** Export `SELECTED_CONTAINERS=hadoop` or `SELECTED_CONTAINERS=all` before running (or choose `hadoop` / `all` at the containers prompt).
-- `./run-tests.sh` runs the whole `hdfs/` folder (no marker filter). Use `-m hdfs_policy` only for selective local runs.
 - Example:
   ```text
   export AUDIT_INDEX_STORE=none
   export SELECTED_CONTAINERS=hadoop
   ./run-tests.sh postgres hdfs
   ```
-- Plugin tests only (skips encryption/KMS session setup in `hdfs/conftest.py`):
-  `pytest hdfs/test_hdfs_group_policy_03.py -m hdfs_policy`
-  Still requires `ranger-hadoop` (and Ranger Admin) running.
 
 ## Test Reports
 
