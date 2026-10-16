@@ -525,6 +525,20 @@ public abstract class RangerAbstractPolicyEvaluator implements RangerPolicyEvalu
         return ret;
     }
 
+    private Set<String> getConstraintNames() {
+        Set<String> ret = new HashSet<>();
+
+        if (policy != null && CollectionUtils.isNotEmpty(policy.getConstraintPolicyItems())) {
+            for (RangerPolicy.RangerConstraintPolicyItem item : policy.getConstraintPolicyItems()) {
+                if (item != null && item.getConstraintInfo() != null && StringUtils.isNotEmpty(item.getConstraintInfo().getConstraintName())) {
+                    ret.add(item.getConstraintInfo().getConstraintName());
+                }
+            }
+        }
+
+        return ret;
+    }
+
     public class RangerDefaultPolicyResourceEvaluator implements RangerPolicyResourceEvaluator {
         private final    long                               id;
         private final    Map<String, RangerPolicyResource>  resource;
@@ -539,6 +553,11 @@ public abstract class RangerAbstractPolicyEvaluator implements RangerPolicyEvalu
             this.resourceMatcher = new RangerDefaultPolicyResourceMatcher();
 
             this.resourceMatcher.setPolicyResources(resource, policyType);
+
+            if (policyType == RangerPolicy.POLICY_TYPE_CONSTRAINTS) {
+                this.resourceMatcher.setConstraintNames(getConstraintNames());
+            }
+
             this.resourceMatcher.setServiceDef(serviceDef);
             this.resourceMatcher.setServiceDefHelper(serviceDefHelper);
             this.resourceMatcher.setPluginContext(pluginContext);
@@ -565,6 +584,7 @@ public abstract class RangerAbstractPolicyEvaluator implements RangerPolicyEvalu
                             ret = new RangerDefaultPolicyResourceMatcher(true);
 
                             ret.setPolicyResources(updatedResource, resourceMatcher.getPolicyType());
+                            ret.setConstraintNames(resourceMatcher.getConstraintNames());
                             ret.setServiceDef(serviceDef);
                             ret.setServiceDefHelper(resourceMatcher.getServiceDefHelper());
                             ret.init();
