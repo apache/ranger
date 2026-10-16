@@ -128,6 +128,13 @@ public interface RangerPolicyEvaluator {
 
     void evaluate(RangerAccessRequest request, RangerAccessResult result);
 
+    /**
+     * Append every constraint item that matches the request. The default does nothing, so access,
+     * mask, row-filter, and audit evaluators do not change an access result.
+     */
+    default void evaluateConstraints(RangerAccessRequest request, RangerAccessResult result) {
+    }
+
     void getResourceACLs(RangerAccessRequest request, RangerResourceACLs acls, boolean isConditional, Set<String> targetAccessTypes, MatchType matchType, PolicyEngine policyEngine);
 
     boolean isMatch(RangerAccessResource resource, Map<String, Object> evalContext);
