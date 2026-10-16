@@ -787,6 +787,7 @@ public class RangerAccessControlEnforcer implements AccessControlEnforcer {
                               Namenode calls this twice when renaming a file for source as well as target directories. For each directory, first invocation checks if the user has a EXECUTE access on the parent directory, and second invocation
                               checks if the user has a WRITE access to the parent (or ancestor when checking target directory) . The optimized code combines these checks into a WRITE_EXECUTE access for the first invocation,
                               and optimizes away the second call.
+                              When the source is an existing directory, the first traverse-only call is optimized away and the subsequent substantive check is evaluated as WRITE_EXECUTE.
                           5. OPERATION_NAME_LISTSTATUS, OPERATION_NAME_GETEZFORPATH:
                               Namenode calls this twice when listing a directory or getting the encryption zone for the directory. First invocation checks if the user has a EXECUTE access
                               on the directory, and second checks if the user has a READ_EXECUTE access on the directory. The optimized code combines these checks into a READ_EXECUTE access

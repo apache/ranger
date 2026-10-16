@@ -121,6 +121,30 @@ class OperationOptimizer {
     }
 
     private OptimizedAuthzContext optimizeDeleteOp() {
+        return optimizeDirectoryTreeMutationOp();
+    }
+
+    private OptimizedAuthzContext optimizeRenameOp() {
+        if (inode != null && inode.isDirectory()) {
+            return optimizeDirectoryTreeMutationOp();
+        }
+
+        INode nodeToAuthorize = getINodeToAuthorize();
+
+        if (nodeToAuthorize == null) {
+            return OPT_BYPASS_AUTHZ;
+        }
+
+        if (!nodeToAuthorize.isDirectory()) {
+            LOG.debug("nodeToCheck is not a directory for a rename operation! Optimization skipped");
+
+            return null;
+        }
+
+        return getOrCreateOptimizedAuthzContext();
+    }
+
+    private OptimizedAuthzContext optimizeDirectoryTreeMutationOp() {
         int numOfRequestedAccesses = 0;
 
         if (ancestorAccess != null) {
@@ -146,22 +170,6 @@ class OperationOptimizer {
 
             return getOrCreateOptimizedAuthzContext();
         }
-    }
-
-    private OptimizedAuthzContext optimizeRenameOp() {
-        INode nodeToAuthorize = getINodeToAuthorize();
-
-        if (nodeToAuthorize == null) {
-            return OPT_BYPASS_AUTHZ;
-        }
-
-        if (!nodeToAuthorize.isDirectory()) {
-            LOG.debug("nodeToCheck is not a directory for a rename operation! Optimization skipped");
-
-            return null;
-        }
-
-        return getOrCreateOptimizedAuthzContext();
     }
 
     private OptimizedAuthzContext optimizeMkdirsOp() {
