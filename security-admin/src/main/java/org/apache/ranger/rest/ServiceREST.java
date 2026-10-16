@@ -197,6 +197,8 @@ public class ServiceREST {
     public static final String PURGE_RECORD_TYPE_TRX_LOGS           = "trx_records";
     public static final String PURGE_RECORD_TYPE_POLICY_EXPORT_LOGS = "policy_export_logs";
     public static final String ERR_VALIDATE_CONFIG_ADMIN_ONLY       = "Only system administrators or key administrators can validate service configs";
+    public static final String ERR_CONCURRENT_GRANT_POLICY_CONFLICT = "Concurrent policy conflict while processing grant request. Please retry.";
+    public static final String ERR_CONCURRENT_GRANT_POLICY_UPDATE   = "Concurrent policy update conflict while processing grant request. Please retry.";
 
     private final RangerAdminConfig config                              = RangerAdminConfig.getInstance();
     private final int               maxPolicyNameLength                 = config.getInt("ranger.policyname.maxlength", 255);
@@ -1217,6 +1219,7 @@ public class ServiceREST {
 
                         ensureAdminAccess(policy, userName);
 
+                        ServiceRESTUtil.preserveExistingPolicyGuidForGrantUpdate(svcStore, policy);
                         svcStore.updatePolicy(policy);
                     } else {
                         LOG.error("processGrantRequest processing failed");
@@ -1224,47 +1227,19 @@ public class ServiceREST {
                         throw new Exception("processGrantRequest processing failed");
                     }
                 } else {
-                    policy = new RangerPolicy();
-
-                    policy.setService(serviceName);
-                    policy.setName("grant-" + System.currentTimeMillis()); // TODO: better policy name
-                    policy.setDescription("created by grant");
-                    policy.setIsAuditEnabled(grantRequest.getEnableAudit());
-                    policy.setCreatedBy(userName);
-
-                    Map<String, RangerPolicyResource> policyResources = new HashMap<>();
-                    Set<String>                       resourceNames   = resource.getKeys();
-
-                    if (!CollectionUtils.isEmpty(resourceNames)) {
-                        for (String resourceName : resourceNames) {
-                            policyResources.put(resourceName, getPolicyResource(resource.getValue(resourceName), grantRequest));
-                        }
-                    }
-
-                    policy.setResources(policyResources);
-
-                    RangerPolicyItem policyItem = new RangerPolicyItem();
-
-                    policyItem.setDelegateAdmin(grantRequest.getDelegateAdmin());
-                    policyItem.addUsers(grantRequest.getUsers());
-                    policyItem.addGroups(grantRequest.getGroups());
-                    policyItem.addRoles(grantRequest.getRoles());
-
-                    for (String accessType : grantRequest.getAccessTypes()) {
-                        policyItem.addAccess(new RangerPolicyItemAccess(accessType, Boolean.TRUE));
-                    }
-
-                    policy.addPolicyItem(policyItem);
-                    policy.setZoneName(zoneName);
-
-                    ensureAdminAccess(policy, userName);
-
-                    svcStore.createPolicy(policy);
+                    createRangerPolicy(serviceName, userName, zoneName, resource, grantRequest);
                 }
             } catch (WebApplicationException excp) {
                 throw excp;
             } catch (Throwable excp) {
                 LOG.error("grantAccess({}, {}) failed", serviceName, grantRequest, excp);
+
+                if (ServiceRESTUtil.isXPolicyUniqueConstraintViolation(excp)) {
+                    throw restErrorUtil.createRESTException(HttpServletResponse.SC_CONFLICT, ERR_CONCURRENT_GRANT_POLICY_CONFLICT, true);
+                }
+                if (ServiceRESTUtil.isOptimisticLockException(excp)) {
+                    throw restErrorUtil.createRESTException(HttpServletResponse.SC_CONFLICT, ERR_CONCURRENT_GRANT_POLICY_UPDATE, true);
+                }
 
                 throw restErrorUtil.createRESTException(excp.getMessage());
             } finally {
@@ -1336,6 +1311,7 @@ public class ServiceREST {
 
                             ensureAdminAccess(policy, userName);
 
+                            ServiceRESTUtil.preserveExistingPolicyGuidForGrantUpdate(svcStore, policy);
                             svcStore.updatePolicy(policy);
                         } else {
                             LOG.error("processSecureGrantRequest processing failed");
@@ -1343,42 +1319,7 @@ public class ServiceREST {
                             throw new Exception("processSecureGrantRequest processing failed");
                         }
                     } else {
-                        policy = new RangerPolicy();
-
-                        policy.setService(serviceName);
-                        policy.setName("grant-" + System.currentTimeMillis()); // TODO: better policy name
-                        policy.setDescription("created by grant");
-                        policy.setIsAuditEnabled(grantRequest.getEnableAudit());
-                        policy.setCreatedBy(userName);
-
-                        Map<String, RangerPolicyResource> policyResources = new HashMap<>();
-                        Set<String>                       resourceNames   = resource.getKeys();
-
-                        if (!CollectionUtils.isEmpty(resourceNames)) {
-                            for (String resourceName : resourceNames) {
-                                policyResources.put(resourceName, getPolicyResource(resource.getValue(resourceName), grantRequest));
-                            }
-                        }
-
-                        policy.setResources(policyResources);
-
-                        RangerPolicyItem policyItem = new RangerPolicyItem();
-
-                        policyItem.setDelegateAdmin(grantRequest.getDelegateAdmin());
-                        policyItem.addUsers(grantRequest.getUsers());
-                        policyItem.addGroups(grantRequest.getGroups());
-                        policyItem.addRoles(grantRequest.getRoles());
-
-                        for (String accessType : grantRequest.getAccessTypes()) {
-                            policyItem.addAccess(new RangerPolicyItemAccess(accessType, Boolean.TRUE));
-                        }
-
-                        policy.addPolicyItem(policyItem);
-                        policy.setZoneName(zoneName);
-
-                        ensureAdminAccess(policy, userName);
-
-                        svcStore.createPolicy(policy);
+                        createRangerPolicy(serviceName, userName, zoneName, resource, grantRequest);
                     }
                 } else {
                     LOG.error("secureGrantAccess({}, {}) failed as User doesn't have permission to grant Policy", serviceName, grantRequest);
@@ -1389,6 +1330,13 @@ public class ServiceREST {
                 throw excp;
             } catch (Throwable excp) {
                 LOG.error("secureGrantAccess({}, {}) failed", serviceName, grantRequest, excp);
+
+                if (ServiceRESTUtil.isXPolicyUniqueConstraintViolation(excp)) {
+                    throw restErrorUtil.createRESTException(HttpServletResponse.SC_CONFLICT, ERR_CONCURRENT_GRANT_POLICY_CONFLICT, true);
+                }
+                if (ServiceRESTUtil.isOptimisticLockException(excp)) {
+                    throw restErrorUtil.createRESTException(HttpServletResponse.SC_CONFLICT, ERR_CONCURRENT_GRANT_POLICY_UPDATE, true);
+                }
 
                 throw restErrorUtil.createRESTException(excp.getMessage());
             } finally {
@@ -4470,6 +4418,87 @@ public class ServiceREST {
         rangerService.setVersion(null);
 
         return rangerService;
+    }
+
+    private RangerPolicy createRangerPolicy(String serviceName, String userName, String zoneName, RangerAccessResource resource, GrantRevokeRequest grantRequest) throws Exception {
+        RangerPolicy policy = new RangerPolicy();
+        String       guid   = guidUtil.genGUID();
+
+        policy.setService(serviceName);
+        policy.setGuid(guid);
+        policy.setName("grant-" + guid);
+        policy.setDescription("created by grant");
+        policy.setIsAuditEnabled(grantRequest.getEnableAudit());
+        policy.setCreatedBy(userName);
+
+        Map<String, RangerPolicyResource> policyResources = new HashMap<>();
+        Set<String>                       resourceNames   = resource.getKeys();
+
+        if (!CollectionUtils.isEmpty(resourceNames)) {
+            for (String resourceName : resourceNames) {
+                policyResources.put(resourceName, getPolicyResource(resource.getValue(resourceName), grantRequest));
+            }
+        }
+
+        policy.setResources(policyResources);
+
+        RangerPolicyItem policyItem = new RangerPolicyItem();
+
+        policyItem.setDelegateAdmin(grantRequest.getDelegateAdmin());
+        policyItem.addUsers(grantRequest.getUsers());
+        policyItem.addGroups(grantRequest.getGroups());
+        policyItem.addRoles(grantRequest.getRoles());
+
+        for (String accessType : grantRequest.getAccessTypes()) {
+            policyItem.addAccess(new RangerPolicyItemAccess(accessType, Boolean.TRUE));
+        }
+
+        policy.addPolicyItem(policyItem);
+        policy.setZoneName(zoneName);
+
+        ensureAdminAccess(policy, userName);
+
+        try {
+            return svcStore.createPolicy(policy);
+        } catch (Exception excp) {
+            if (ServiceRESTUtil.isXPolicyServiceSignatureUniqueConstraintViolation(excp)) {
+                LOG.debug("createRangerPolicy: signature conflict detected; trying merge flow. serviceName={}, zoneName={}, policyName={}",
+                        serviceName, zoneName, policy.getName());
+
+                String             signature       = new RangerPolicyResourceSignature(policy).getSignature();
+                List<RangerPolicy> matchedPolicies = svcStore.getPoliciesByResourceSignature(serviceName, signature, true);
+                RangerPolicy       existingPolicy  = null;
+
+                if (CollectionUtils.isNotEmpty(matchedPolicies)) {
+                    if (matchedPolicies.size() == 1) {
+                        existingPolicy = matchedPolicies.get(0);
+                    } else {
+                        LOG.error("createRangerPolicy: multiple policies found for signature conflict fallback. serviceName={}, signature={}, count={}",
+                                serviceName, signature, matchedPolicies.size());
+                    }
+                } else {
+                    LOG.error("createRangerPolicy: DB signature lookup could not find policy after signature conflict. serviceName={}, zoneName={}, signature={}",
+                            serviceName, zoneName, signature);
+                }
+
+                if (existingPolicy != null && ServiceRESTUtil.processGrantRequest(existingPolicy, grantRequest)) {
+                    existingPolicy.setZoneName(zoneName);
+                    ensureAdminAccess(existingPolicy, userName);
+                    ServiceRESTUtil.preserveExistingPolicyGuidForGrantUpdate(svcStore, existingPolicy);
+                    RangerPolicy updatedPolicy = svcStore.updatePolicy(existingPolicy);
+
+                    LOG.debug("createRangerPolicy: merge succeeded after signature conflict. serviceName={}, zoneName={}, policyId={}",
+                            serviceName, zoneName, existingPolicy.getId());
+
+                    return updatedPolicy;
+                } else if (existingPolicy != null) {
+                    LOG.error("createRangerPolicy: processGrantRequest returned false while merging conflicting create request. serviceName={}, zoneName={}, policyId={}",
+                            serviceName, zoneName, existingPolicy.getId());
+                }
+            }
+
+            throw excp;
+        }
     }
 
     private void createOrGetLinkedServices(RangerService resourceService) {
