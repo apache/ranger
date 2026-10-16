@@ -15,15 +15,22 @@
 
 
 import json
+import os
 import pytest
+import re
 import requests
 from datetime import datetime
+from email.utils import parsedate_to_datetime
 import inspect
 import subprocess
+import tempfile
+from ranger_test_utils.hive_utils import KDC_CONTAINER, get_docker_client
 
 
 RANGER_CONTAINER_NAME = "ranger"
 RANGER_LOG_FILE = "/var/log/ranger/ranger-admin-ranger.rangernw-.log"
+RANGER_REALM = "EXAMPLE.COM"
+RANGER_SPNEGO_URL = "http://ranger.rangernw:6080/service/xusers/lookup/users"
 
 BIGINT_MIN = -9223372036854775808
 BIGINT_MAX = 9223372036854775807
@@ -43,6 +50,91 @@ def init_configs(ranger_config, ranger_key_admin_config, ranger_auditor_config, 
     RANGER_KEY_ADMIN_CONFIG = ranger_key_admin_config
     RANGER_AUDITOR_CONFIG = ranger_auditor_config
     RANGER_USER_CONFIG = ranger_user_config
+
+
+def ensure_spnego_principal_keytab(username):
+    client = get_docker_client()
+    kdc = client.containers.get(KDC_CONTAINER)
+    principal = f"{username}@{RANGER_REALM}"
+    keytab_name = f"{username}.keytab"
+    kdc_keytab = f"/tmp/{keytab_name}"
+    ranger_keytab = f"/etc/keytabs/{keytab_name}"
+
+    exit_code, output = kdc.exec_run(f'kadmin.local -q "getprinc {principal}"', user="root")
+    if exit_code != 0 or b"does not exist" in output:
+        exit_code, output = kdc.exec_run(f'kadmin.local -q "addprinc -randkey {principal}"', user="root")
+        assert exit_code == 0, output.decode("utf-8", errors="replace")
+
+    kdc.exec_run(f"rm -f {kdc_keytab}", user="root")
+    exit_code, output = kdc.exec_run(f'kadmin.local -q "xst -k {kdc_keytab} {principal}"', user="root")
+    assert exit_code == 0, output.decode("utf-8", errors="replace")
+
+    local_keytab = os.path.join(tempfile.gettempdir(), keytab_name)
+    try:
+        subprocess.check_call(["docker", "cp", f"{KDC_CONTAINER}:{kdc_keytab}", local_keytab])
+        subprocess.check_call(["docker", "cp", local_keytab, f"{RANGER_CONTAINER_NAME}:{ranger_keytab}"])
+    finally:
+        if os.path.exists(local_keytab):
+            os.remove(local_keytab)
+
+    ranger = client.containers.get(RANGER_CONTAINER_NAME)
+    ranger.exec_run(f"chmod 400 {ranger_keytab}", user="root")
+
+    return principal, ranger_keytab
+
+
+def cleanup_spnego_principal_keytab(principal, keytab):
+    client = get_docker_client()
+    client.containers.get(RANGER_CONTAINER_NAME).exec_run(f"rm -f {keytab}", user="root")
+    client.containers.get(KDC_CONTAINER).exec_run(
+        f'kadmin.local -q "delprinc -force {principal}"',
+        user="root",
+    )
+
+
+def call_ranger_admin_with_spnego(principal, keytab):
+    ranger = get_docker_client().containers.get(RANGER_CONTAINER_NAME)
+    command = (
+        "kdestroy -A 2>/dev/null || true; "
+        f"kinit -kt {keytab} {principal}; "
+        "curl -s -i --negotiate -u : "
+        "-H 'Accept: application/json' "
+        "-w '\\n---STATUS---%{http_code}\\n' "
+        f"{RANGER_SPNEGO_URL}"
+    )
+
+    exit_code, output = ranger.exec_run(["bash", "-c", command], user="root")
+    text = output.decode("utf-8", errors="replace") if output else ""
+    assert exit_code == 0, text
+
+    return text
+
+
+def assert_hadoop_auth_cookie_has_http_date_expiry(response_text):
+    status = int(response_text.rsplit("---STATUS---", 1)[1].strip())
+    assert status == 200, response_text
+
+    headers = response_text.split("\r\n\r\n", 1)[0]
+    headers = headers.split("\n\n", 1)[0]
+    cookie = None
+    for line in headers.splitlines():
+        if line.lower().startswith("set-cookie:") and "hadoop.auth" in line:
+            cookie = line
+            break
+
+    assert cookie is not None, response_text
+    assert "u=" in cookie
+
+    match = re.search(r"Expires=([^;]+)", cookie)
+    assert match is not None, cookie
+
+    expires = match.group(1)
+    print(f"hadoop.auth Expires={expires}")
+    parsedate_to_datetime(expires)
+    assert re.match(
+        r"^[A-Z][a-z]{2}, \d{2}-[A-Z][a-z]{2}-\d{4} \d{2}:\d{2}:\d{2} GMT$",
+        expires,
+    ), cookie
 
 
 def assert_response(response, expected_status, text = None, service_name=SERVICE_NAME):

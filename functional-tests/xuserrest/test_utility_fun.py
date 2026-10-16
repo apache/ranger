@@ -186,6 +186,7 @@ class TestAuthSession:
 
         cls.headers = default_headers
         cls.base_url = ranger_config["base_url"]
+        cls.create_temp_user = staticmethod(temp_secure_user)
 
         init_configs(
             cls.ranger_admin_config,
@@ -285,6 +286,21 @@ class TestAuthSession:
         expected_user = auth[0] 
         assert data.get("loginId") == expected_user, f"Expected loginId to be {expected_user} but got {data.get('loginId')}"
         assert data.get("id") is not None
+
+    @pytest.mark.get
+    @pytest.mark.positive
+    @pytest.mark.secure_endpoint
+    def test_spnego_auth_cookie_expires_uses_http_date_format(self):
+        test_user, _ = self.create_temp_user(["user"])
+        principal, keytab = ensure_spnego_principal_keytab(test_user["name"])
+        try:
+            response_text = call_ranger_admin_with_spnego(
+                principal,
+                keytab,
+            )
+            assert_hadoop_auth_cookie_has_http_date_expiry(response_text)
+        finally:
+            cleanup_spnego_principal_keytab(principal, keytab)
     
     # NEGATIVE TEST CASES
 
