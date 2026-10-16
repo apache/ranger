@@ -633,8 +633,54 @@ public class TestServiceREST {
         ResourceLookupContext context     = new ResourceLookupContext();
         context.setResourceName(serviceName);
         context.setUserInput("HDFS");
+        XXService    xService    = xService();
+        XXServiceDao xServiceDao = Mockito.mock(XXServiceDao.class);
+        Mockito.when(daoManager.getXXService()).thenReturn(xServiceDao);
+        Mockito.when(xServiceDao.findByName(serviceName)).thenReturn(xService);
+        Mockito.when(bizUtil.hasAccess(xService, null)).thenReturn(true);
         List<String> list = serviceREST.lookupResource(serviceName, context);
         Assertions.assertNotNull(list);
+    }
+
+    @Test
+    public void test13bLookupResourceNotFound() throws Exception {
+        String                serviceName = "missing_service";
+        ResourceLookupContext context     = new ResourceLookupContext();
+        XXServiceDao          xServiceDao = Mockito.mock(XXServiceDao.class);
+
+        Mockito.when(daoManager.getXXService()).thenReturn(xServiceDao);
+        Mockito.when(xServiceDao.findByName(serviceName)).thenReturn(null);
+        Mockito.when(restErrorUtil.createRESTException(Mockito.eq(HttpServletResponse.SC_NOT_FOUND), Mockito.eq("Not found"), Mockito.eq(true)))
+                .thenReturn(new WebApplicationException(HttpServletResponse.SC_NOT_FOUND));
+
+        WebApplicationException exception = Assertions.assertThrows(WebApplicationException.class,
+                () -> serviceREST.lookupResource(serviceName, context));
+
+        Assertions.assertEquals(HttpServletResponse.SC_NOT_FOUND, exception.getResponse().getStatus());
+        Mockito.verify(restErrorUtil).createRESTException(HttpServletResponse.SC_NOT_FOUND, "Not found", true);
+        Mockito.verify(serviceMgr, Mockito.never()).lookupResource(Mockito.anyString(), Mockito.any(), Mockito.any());
+    }
+
+    @Test
+    public void test13cLookupResourceForbiddenWhenNoAccess() throws Exception {
+        String                serviceName = "HDFS_1";
+        ResourceLookupContext context     = new ResourceLookupContext();
+        XXService             xService    = xService();
+        XXServiceDao          xServiceDao = Mockito.mock(XXServiceDao.class);
+        String                deniedMsg   = "Operation denied. User is not permitted to lookup resources for service " + serviceName;
+
+        Mockito.when(daoManager.getXXService()).thenReturn(xServiceDao);
+        Mockito.when(xServiceDao.findByName(serviceName)).thenReturn(xService);
+        Mockito.when(bizUtil.hasAccess(xService, null)).thenReturn(false);
+        Mockito.when(restErrorUtil.createRESTException(Mockito.eq(HttpServletResponse.SC_FORBIDDEN), Mockito.eq(deniedMsg), Mockito.eq(true)))
+                .thenReturn(new WebApplicationException(HttpServletResponse.SC_FORBIDDEN));
+
+        WebApplicationException exception = Assertions.assertThrows(WebApplicationException.class,
+                () -> serviceREST.lookupResource(serviceName, context));
+
+        Assertions.assertEquals(HttpServletResponse.SC_FORBIDDEN, exception.getResponse().getStatus());
+        Mockito.verify(restErrorUtil).createRESTException(HttpServletResponse.SC_FORBIDDEN, deniedMsg, true);
+        Mockito.verify(serviceMgr, Mockito.never()).lookupResource(Mockito.anyString(), Mockito.any(), Mockito.any());
     }
 
     @Test
@@ -3302,6 +3348,11 @@ public class TestServiceREST {
         context.setResourceName(serviceName);
         context.setUserInput("HDFS");
 
+        XXService    xService    = xService();
+        XXServiceDao xServiceDao = Mockito.mock(XXServiceDao.class);
+        Mockito.when(daoManager.getXXService()).thenReturn(xServiceDao);
+        Mockito.when(xServiceDao.findByName(serviceName)).thenReturn(xService);
+        Mockito.when(bizUtil.hasAccess(xService, null)).thenReturn(true);
         Mockito.when(serviceMgr.lookupResource(serviceName, context, svcStore)).thenThrow(new RuntimeException("Lookup failed"));
         Mockito.when(restErrorUtil.createRESTException(Mockito.anyString())).thenReturn(new WebApplicationException());
 

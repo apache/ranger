@@ -509,6 +509,12 @@
 	</property>
 
 	<property>
+		<name>ranger.serviceconfig.validate.require.saved.service</name>
+		<value>false</value>
+		<description>When true, validateConfig for a named service requires a saved service record and rejects endpoint URLs that differ from the saved configuration.</description>
+	</property>
+
+	<property>
 		<name>ranger.timed.executor.max.threadpool.size</name>
 		<value>10</value>
 		<description></description>
