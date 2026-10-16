@@ -201,7 +201,7 @@ def ensure_user_exists(
     session,
     username,
     password="Test@123",
-    last_name="api_test",
+    last_name="api_tests",
 ):
     """Create a Ranger user via xusers REST if it is not already present."""
     lookup_url = XUSERS_BASE + "/users/userName/" + username
