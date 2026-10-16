@@ -71,30 +71,42 @@ public class AuditProducerTest {
     }
 
     @Test
-    public void testCreateProducerConfigSaslDefaultRequiresOAuthToken() {
+    public void testCreateProducerConfigSaslDefaultGssapiKeytabLoginRequiresKeytab() {
         Properties props = new Properties();
         props.setProperty(PROP_PREFIX + "." + AuditServerConstants.PROP_BOOTSTRAP_SERVERS, "kafka:9092");
         props.setProperty(PROP_PREFIX + "." + AuditServerConstants.PROP_SECURITY_PROTOCOL, "SASL_PLAINTEXT");
+        props.setProperty(PROP_PREFIX + "." + RangerKafkaClientSecurityConfig.PROP_JAAS_OPTION_PREFIX + "useKeyTab", "true");
 
         assertThrows(IllegalStateException.class, () -> AuditProducer.createProducerConfig(props, PROP_PREFIX));
     }
 
     @Test
-    public void testCreateProducerConfigSaslExplicitGssapiRequiresKeytab() {
-        Properties props = new Properties();
+    public void testCreateProducerConfigSaslDefaultGssapiKeytab() throws Exception {
+        Path       keytab = Files.createFile(tempDir.resolve("ranger.keytab"));
+        Properties props  = new Properties();
         props.setProperty(PROP_PREFIX + "." + AuditServerConstants.PROP_BOOTSTRAP_SERVERS, "kafka:9092");
         props.setProperty(PROP_PREFIX + "." + AuditServerConstants.PROP_SECURITY_PROTOCOL, "SASL_PLAINTEXT");
-        props.setProperty(PROP_PREFIX + "." + AuditServerConstants.PROP_SASL_MECHANISM, "GSSAPI");
+        props.setProperty(PROP_PREFIX + "." + AuditServerConstants.PROP_AUDIT_SERVICE_PRINCIPAL, "rangerauditserver@EXAMPLE.COM");
+        props.setProperty(PROP_PREFIX + "." + AuditServerConstants.PROP_AUDIT_SERVICE_KEYTAB, keytab.toString());
+        props.setProperty(PROP_PREFIX + "." + RangerKafkaClientSecurityConfig.PROP_JAAS_OPTION_PREFIX + "useKeyTab", "true");
+        props.setProperty(PROP_PREFIX + "." + RangerKafkaClientSecurityConfig.PROP_JAAS_OPTION_PREFIX + "storeKey", "true");
+        props.setProperty(PROP_PREFIX + "." + RangerKafkaClientSecurityConfig.PROP_JAAS_OPTION_PREFIX + "useTicketCache", "false");
 
-        assertThrows(IllegalStateException.class, () -> AuditProducer.createProducerConfig(props, PROP_PREFIX));
+        Properties producerProps = AuditProducer.createProducerConfig(props, PROP_PREFIX);
+
+        assertEquals("GSSAPI", producerProps.get(SaslConfigs.SASL_MECHANISM));
+        assertEquals("kafka", producerProps.get(SaslConfigs.SASL_KERBEROS_SERVICE_NAME));
+        assertEquals(RangerKafkaClientSecurityConfig.KRB5_LOGIN_MODULE + " required keyTab=\"" + keytab + "\" serviceName=\"kafka\" principal=\"rangerauditserver@EXAMPLE.COM\" storeKey=\"true\" useKeyTab=\"true\" useTicketCache=\"false\";",
+                producerProps.get(SaslConfigs.SASL_JAAS_CONFIG));
     }
 
     @Test
-    public void testCreateProducerConfigSaslDefaultOAuthBearerFileToken() throws Exception {
+    public void testCreateProducerConfigSaslOAuthBearerFileToken() throws Exception {
         Path       token = Files.createFile(tempDir.resolve("kafka-token"));
         Properties props = new Properties();
         props.setProperty(PROP_PREFIX + "." + AuditServerConstants.PROP_BOOTSTRAP_SERVERS, "kafka:9093");
         props.setProperty(PROP_PREFIX + "." + AuditServerConstants.PROP_SECURITY_PROTOCOL, "SASL_SSL");
+        props.setProperty(PROP_PREFIX + "." + AuditServerConstants.PROP_SASL_MECHANISM, "OAUTHBEARER");
         props.setProperty(PROP_PREFIX + "." + RangerKafkaClientSecurityConfig.PROP_OAUTH_TOKEN_ENDPOINT_URL, token.toUri().toString());
 
         Properties producerProps = AuditProducer.createProducerConfig(props, PROP_PREFIX);

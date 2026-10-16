@@ -53,42 +53,11 @@ public class RangerKafkaClientSecurityConfigTest {
     }
 
     @Test
-    public void testSaslDefaultsToOAuthBearer() throws IOException {
-        Path       token = Files.createFile(tempDir.resolve("token"));
-        Properties props = new Properties();
-
-        props.setProperty(PREFIX + ".kafka.security.protocol", "SASL_PLAINTEXT");
-        props.setProperty(PREFIX + ".kafka.sasl.oauthbearer.token.endpoint.url", token.toUri().toString());
-
-        Map<String, Object> config = RangerKafkaClientSecurityConfig.build(props, PREFIX);
-
-        assertEquals("OAUTHBEARER", config.get(SaslConfigs.SASL_MECHANISM));
-        assertEquals(RangerKafkaOAuthBearerLoginCallbackHandler.class.getName(), config.get(SaslConfigs.SASL_LOGIN_CALLBACK_HANDLER_CLASS));
-    }
-
-    @Test
-    public void testSaslDefaultRequiresTokenUrlAndNamesGssapiOptOut() {
-        Properties props = new Properties();
-
-        props.setProperty(PREFIX + ".kafka.security.protocol", "SASL_PLAINTEXT");
-        props.setProperty(PREFIX + ".service.kerberos.principal", "rangeraudit@EXAMPLE.COM");
-        props.setProperty(PREFIX + ".service.kerberos.keytab", "/etc/keytabs/ranger.keytab");
-
-        IllegalStateException e = assertThrows(IllegalStateException.class, () -> RangerKafkaClientSecurityConfig.build(props, PREFIX));
-
-        assertTrue(e.getMessage().contains(PREFIX + ".kafka.sasl.oauthbearer.token.endpoint.url"), e.getMessage());
-        assertTrue(e.getMessage().contains(PREFIX + ".kafka.sasl.mechanism=GSSAPI"), e.getMessage());
-    }
-
-    @Test
-    public void testExplicitGssapiBuildsKeytabJaas() throws IOException {
+    public void testSaslDefaultsToGssapiWithConfiguredKeytabOptions() throws IOException {
         Path       keytab = Files.createFile(tempDir.resolve("ranger.keytab"));
-        Properties props  = new Properties();
+        Properties props  = keytabLoginProps(keytab);
 
-        props.setProperty(PREFIX + ".kafka.security.protocol", "SASL_PLAINTEXT");
-        props.setProperty(PREFIX + ".kafka.sasl.mechanism", "GSSAPI");
         props.setProperty(PREFIX + ".service.kerberos.principal", "rangeraudit/_HOST@EXAMPLE.COM");
-        props.setProperty(PREFIX + ".service.kerberos.keytab", keytab.toString());
         props.setProperty(PREFIX + ".host", "Audit-Host.example.com");
 
         Map<String, Object> config = RangerKafkaClientSecurityConfig.build(props, PREFIX);
@@ -96,15 +65,29 @@ public class RangerKafkaClientSecurityConfigTest {
         assertEquals("SASL_PLAINTEXT", config.get(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG));
         assertEquals("GSSAPI", config.get(SaslConfigs.SASL_MECHANISM));
         assertEquals("kafka", config.get(SaslConfigs.SASL_KERBEROS_SERVICE_NAME));
-        assertEquals(RangerKafkaClientSecurityConfig.KRB5_LOGIN_MODULE + " required useKeyTab=true keyTab=\"" + keytab + "\" storeKey=true useTicketCache=false serviceName=kafka principal=\"rangeraudit/audit-host.example.com@EXAMPLE.COM\";",
+        assertEquals(RangerKafkaClientSecurityConfig.KRB5_LOGIN_MODULE + " required keyTab=\"" + keytab + "\" serviceName=\"kafka\" principal=\"rangeraudit/audit-host.example.com@EXAMPLE.COM\" storeKey=\"true\" useKeyTab=\"true\" useTicketCache=\"false\";",
                 config.get(SaslConfigs.SASL_JAAS_CONFIG));
         assertFalse(config.containsKey(SaslConfigs.SASL_LOGIN_CALLBACK_HANDLER_CLASS));
     }
 
     @Test
+    public void testGssapiWithoutOptionsOnlyPassesServiceCredentials() {
+        Properties props = new Properties();
+
+        props.setProperty(PREFIX + ".kafka.security.protocol", "SASL_PLAINTEXT");
+        props.setProperty(PREFIX + ".service.kerberos.principal", "rangeraudit@EXAMPLE.COM");
+        props.setProperty(PREFIX + ".service.kerberos.keytab", "/etc/keytabs/missing.keytab");
+
+        Map<String, Object> config = RangerKafkaClientSecurityConfig.build(props, PREFIX);
+
+        assertEquals(RangerKafkaClientSecurityConfig.KRB5_LOGIN_MODULE + " required keyTab=\"/etc/keytabs/missing.keytab\" serviceName=\"kafka\" principal=\"rangeraudit@EXAMPLE.COM\";",
+                config.get(SaslConfigs.SASL_JAAS_CONFIG));
+    }
+
+    @Test
     public void testGssapiHonoursConfiguredServiceName() throws IOException {
         Path       keytab = Files.createFile(tempDir.resolve("ranger.keytab"));
-        Properties props  = new Properties();
+        Properties props  = keytabLoginProps(keytab);
 
         props.setProperty(PREFIX + ".kafka.security.protocol", "SASL_SSL");
         props.setProperty(PREFIX + ".kafka.sasl.mechanism", "GSSAPI");
@@ -115,15 +98,15 @@ public class RangerKafkaClientSecurityConfigTest {
         Map<String, Object> config = RangerKafkaClientSecurityConfig.build(props, PREFIX);
 
         assertEquals("kafka-broker", config.get(SaslConfigs.SASL_KERBEROS_SERVICE_NAME));
-        assertTrue(config.get(SaslConfigs.SASL_JAAS_CONFIG).toString().contains("serviceName=kafka-broker principal=\"rangeraudit@EXAMPLE.COM\""));
+        assertTrue(config.get(SaslConfigs.SASL_JAAS_CONFIG).toString().contains("serviceName=\"kafka-broker\" principal=\"rangeraudit@EXAMPLE.COM\" storeKey=\"true\" useKeyTab=\"true\""));
     }
 
     @Test
-    public void testGssapiRequiresPrincipalAndKeytab() {
+    public void testGssapiKeytabLoginRequiresPrincipalAndKeytab() {
         Properties props = new Properties();
 
         props.setProperty(PREFIX + ".kafka.security.protocol", "SASL_PLAINTEXT");
-        props.setProperty(PREFIX + ".kafka.sasl.mechanism", "GSSAPI");
+        props.setProperty(PREFIX + ".kafka.sasl.jaas.option.useKeyTab", "true");
         props.setProperty(PREFIX + ".service.kerberos.principal", "rangeraudit@EXAMPLE.COM");
 
         IllegalStateException e = assertThrows(IllegalStateException.class, () -> RangerKafkaClientSecurityConfig.build(props, PREFIX));
@@ -132,11 +115,11 @@ public class RangerKafkaClientSecurityConfigTest {
     }
 
     @Test
-    public void testGssapiRequiresReadableKeytab() {
+    public void testGssapiKeytabLoginRequiresReadableKeytab() {
         Properties props = new Properties();
 
         props.setProperty(PREFIX + ".kafka.security.protocol", "SASL_PLAINTEXT");
-        props.setProperty(PREFIX + ".kafka.sasl.mechanism", "GSSAPI");
+        props.setProperty(PREFIX + ".kafka.sasl.jaas.option.useKeyTab", "true");
         props.setProperty(PREFIX + ".service.kerberos.principal", "rangeraudit@EXAMPLE.COM");
         props.setProperty(PREFIX + ".service.kerberos.keytab", tempDir.resolve("missing.keytab").toString());
 
@@ -146,17 +129,55 @@ public class RangerKafkaClientSecurityConfigTest {
     }
 
     @Test
+    public void testGssapiTicketCacheNeedsNoKeytab() {
+        Properties props = new Properties();
+
+        props.setProperty(PREFIX + ".kafka.security.protocol", "SASL_PLAINTEXT");
+        props.setProperty(PREFIX + ".kafka.sasl.jaas.option.useTicketCache", "true");
+        props.setProperty(PREFIX + ".kafka.sasl.jaas.option.renewTGT", "true");
+
+        Map<String, Object> config = RangerKafkaClientSecurityConfig.build(props, PREFIX);
+
+        assertEquals(RangerKafkaClientSecurityConfig.KRB5_LOGIN_MODULE + " required serviceName=\"kafka\" renewTGT=\"true\" useTicketCache=\"true\";",
+                config.get(SaslConfigs.SASL_JAAS_CONFIG));
+    }
+
+    @Test
+    public void testJaasOptionsOverrideDefaultsAndResolveHost() throws IOException {
+        Path       keytab = Files.createFile(tempDir.resolve("other.keytab"));
+        Properties props  = new Properties();
+
+        props.setProperty(PREFIX + ".kafka.security.protocol", "SASL_PLAINTEXT");
+        props.setProperty(PREFIX + ".kafka.sasl.jaas.loginModuleControlFlag", "requisite");
+        props.setProperty(PREFIX + ".kafka.sasl.jaas.option.useKeyTab", "true");
+        props.setProperty(PREFIX + ".kafka.sasl.jaas.option.keyTab", keytab.toString());
+        props.setProperty(PREFIX + ".kafka.sasl.jaas.option.principal", "svc/_HOST@EXAMPLE.COM");
+        props.setProperty(PREFIX + ".kafka.sasl.jaas.option.storeKey", "false");
+        props.setProperty(PREFIX + ".host", "node1.example.com");
+
+        Map<String, Object> config = RangerKafkaClientSecurityConfig.build(props, PREFIX);
+        String              jaas   = config.get(SaslConfigs.SASL_JAAS_CONFIG).toString();
+
+        assertTrue(jaas.startsWith(RangerKafkaClientSecurityConfig.KRB5_LOGIN_MODULE + " requisite "), jaas);
+        assertTrue(jaas.contains("keyTab=\"" + keytab + "\""), jaas);
+        assertTrue(jaas.contains("storeKey=\"false\""), jaas);
+        assertTrue(jaas.contains("principal=\"svc/node1.example.com@EXAMPLE.COM\""), jaas);
+        assertFalse(config.containsKey("sasl.jaas.option.keyTab"));
+        assertFalse(config.containsKey("sasl.jaas.loginModuleControlFlag"));
+    }
+
+    @Test
     public void testOAuthBearerFileTokenUsesRangerHandler() throws IOException {
         Path       token = Files.createFile(tempDir.resolve("token"));
         Properties props = new Properties();
 
         props.setProperty(PREFIX + ".kafka.security.protocol", "SASL_SSL");
-        props.setProperty(PREFIX + ".kafka.sasl.mechanism", "oauthbearer");
+        props.setProperty(PREFIX + ".kafka.sasl.mechanism", "OAUTHBEARER");
         props.setProperty(PREFIX + ".kafka.sasl.oauthbearer.token.endpoint.url", token.toUri().toString());
 
         Map<String, Object> config = RangerKafkaClientSecurityConfig.build(props, PREFIX);
 
-        assertEquals("oauthbearer", config.get(SaslConfigs.SASL_MECHANISM));
+        assertEquals("OAUTHBEARER", config.get(SaslConfigs.SASL_MECHANISM));
         assertEquals(RangerKafkaClientSecurityConfig.OAUTHBEARER_LOGIN_MODULE + " required;", config.get(SaslConfigs.SASL_JAAS_CONFIG));
         assertEquals(token.toUri().toString(), config.get(SaslConfigs.SASL_OAUTHBEARER_TOKEN_ENDPOINT_URL));
         assertEquals(RangerKafkaOAuthBearerLoginCallbackHandler.class.getName(), config.get(SaslConfigs.SASL_LOGIN_CALLBACK_HANDLER_CLASS));
@@ -164,15 +185,31 @@ public class RangerKafkaClientSecurityConfigTest {
     }
 
     @Test
-    public void testOAuthBearerHttpEndpointUsesKafkaHandler() {
+    public void testOAuthBearerHttpEndpointUsesKafkaHandlerWithJaasOptions() {
         Properties props = new Properties();
 
         props.setProperty(PREFIX + ".kafka.security.protocol", "SASL_SSL");
+        props.setProperty(PREFIX + ".kafka.sasl.mechanism", "OAUTHBEARER");
         props.setProperty(PREFIX + ".kafka.sasl.oauthbearer.token.endpoint.url", "https://idp.example.com/oauth/token");
+        props.setProperty(PREFIX + ".kafka.sasl.jaas.option.clientId", "ranger");
+        props.setProperty(PREFIX + ".kafka.sasl.jaas.option.clientSecret", "secret");
 
         Map<String, Object> config = RangerKafkaClientSecurityConfig.build(props, PREFIX);
 
         assertEquals(OAuthBearerLoginCallbackHandler.class.getName(), config.get(SaslConfigs.SASL_LOGIN_CALLBACK_HANDLER_CLASS));
+        assertEquals(RangerKafkaClientSecurityConfig.OAUTHBEARER_LOGIN_MODULE + " required clientId=\"ranger\" clientSecret=\"secret\";", config.get(SaslConfigs.SASL_JAAS_CONFIG));
+    }
+
+    @Test
+    public void testOAuthBearerRequiresTokenUrl() {
+        Properties props = new Properties();
+
+        props.setProperty(PREFIX + ".kafka.security.protocol", "SASL_SSL");
+        props.setProperty(PREFIX + ".kafka.sasl.mechanism", "OAUTHBEARER");
+
+        IllegalStateException e = assertThrows(IllegalStateException.class, () -> RangerKafkaClientSecurityConfig.build(props, PREFIX));
+
+        assertTrue(e.getMessage().contains(PREFIX + ".kafka.sasl.oauthbearer.token.endpoint.url"), e.getMessage());
     }
 
     @Test
@@ -181,6 +218,7 @@ public class RangerKafkaClientSecurityConfigTest {
         Properties props = new Properties();
 
         props.setProperty(PREFIX + ".kafka.security.protocol", "SASL_SSL");
+        props.setProperty(PREFIX + ".kafka.sasl.mechanism", "OAUTHBEARER");
         props.setProperty(PREFIX + ".kafka.sasl.oauthbearer.token.endpoint.url", token.toUri().toString());
         props.setProperty(PREFIX + ".kafka.sasl.login.callback.handler.class", "com.example.CustomHandler");
         props.setProperty(PREFIX + ".kafka.sasl.login.refresh.window.factor", "0.7");
@@ -198,7 +236,7 @@ public class RangerKafkaClientSecurityConfigTest {
     }
 
     @Test
-    public void testOtherMechanismsNeedExplicitJaasConfig() {
+    public void testOtherMechanismsUseConfiguredLoginModuleOrExplicitJaas() {
         Properties props = new Properties();
 
         props.setProperty(PREFIX + ".kafka.security.protocol", "SASL_SSL");
@@ -206,29 +244,51 @@ public class RangerKafkaClientSecurityConfigTest {
 
         assertThrows(IllegalStateException.class, () -> RangerKafkaClientSecurityConfig.build(props, PREFIX));
 
-        props.setProperty(PREFIX + ".kafka.sasl.jaas.config", "org.apache.kafka.common.security.scram.ScramLoginModule required username=\"ranger\" password=\"secret\";");
+        props.setProperty(PREFIX + ".kafka.sasl.jaas.loginModuleName", "org.apache.kafka.common.security.scram.ScramLoginModule");
+        props.setProperty(PREFIX + ".kafka.sasl.jaas.option.username", "ranger");
+        props.setProperty(PREFIX + ".kafka.sasl.jaas.option.password", "secret");
 
         Map<String, Object> config = RangerKafkaClientSecurityConfig.build(props, PREFIX);
 
         assertEquals("SCRAM-SHA-512", config.get(SaslConfigs.SASL_MECHANISM));
-        assertTrue(config.get(SaslConfigs.SASL_JAAS_CONFIG).toString().startsWith("org.apache.kafka.common.security.scram.ScramLoginModule"));
+        assertEquals("org.apache.kafka.common.security.scram.ScramLoginModule required password=\"secret\" username=\"ranger\";", config.get(SaslConfigs.SASL_JAAS_CONFIG));
+
+        props.setProperty(PREFIX + ".kafka.sasl.jaas.config", "org.apache.kafka.common.security.scram.ScramLoginModule required username=\"explicit\" password=\"x\";");
+
+        config = RangerKafkaClientSecurityConfig.build(props, PREFIX);
+
+        assertTrue(config.get(SaslConfigs.SASL_JAAS_CONFIG).toString().contains("username=\"explicit\""));
     }
 
     @Test
     public void testApplyAddsToExistingProperties() throws IOException {
-        Path       token  = Files.createFile(tempDir.resolve("token"));
+        Path       keytab = Files.createFile(tempDir.resolve("ranger.keytab"));
         Properties props  = new Properties();
         Properties target = new Properties();
 
         props.setProperty(PREFIX + ".kafka.security.protocol", "SASL_PLAINTEXT");
-        props.setProperty(PREFIX + ".kafka.sasl.oauthbearer.token.endpoint.url", token.toUri().toString());
+        props.setProperty(PREFIX + ".service.kerberos.principal", "rangeraudit@EXAMPLE.COM");
+        props.setProperty(PREFIX + ".service.kerberos.keytab", keytab.toString());
         target.put("bootstrap.servers", "kafka:9092");
 
         RangerKafkaClientSecurityConfig.apply(props, PREFIX, target);
 
         assertEquals("kafka:9092", target.get("bootstrap.servers"));
         assertEquals("SASL_PLAINTEXT", target.get(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG));
-        assertEquals("OAUTHBEARER", target.get(SaslConfigs.SASL_MECHANISM));
+        assertEquals("GSSAPI", target.get(SaslConfigs.SASL_MECHANISM));
+    }
+
+    /* SASL_PLAINTEXT with the keytab-login options the shipped site XML carries */
+    private static Properties keytabLoginProps(Path keytab) {
+        Properties props = new Properties();
+
+        props.setProperty(PREFIX + ".kafka.security.protocol", "SASL_PLAINTEXT");
+        props.setProperty(PREFIX + ".service.kerberos.keytab", keytab.toString());
+        props.setProperty(PREFIX + ".kafka.sasl.jaas.option.useKeyTab", "true");
+        props.setProperty(PREFIX + ".kafka.sasl.jaas.option.storeKey", "true");
+        props.setProperty(PREFIX + ".kafka.sasl.jaas.option.useTicketCache", "false");
+
+        return props;
     }
 
     @Test

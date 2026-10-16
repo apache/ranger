@@ -100,7 +100,7 @@ docker compose --profile ${AUDIT_DESTINATIONS} -f docker-compose.ranger.yml -f d
 ~~~
 
 #### Kafka client authentication for the audit pipeline and tagsync
-See [README-KAFKA-CLIENT-AUTH.md](README-KAFKA-CLIENT-AUTH.md) for the supported mechanisms (OAUTHBEARER by default, GSSAPI on request) and how this setup exercises them.
+See [README-KAFKA-CLIENT-AUTH.md](README-KAFKA-CLIENT-AUTH.md) for the supported mechanisms (GSSAPI by default, OAUTHBEARER used here) and how this setup exercises them.
 
 #### Bring up hive container
 ~~~

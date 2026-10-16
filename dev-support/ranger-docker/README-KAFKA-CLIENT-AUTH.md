@@ -25,14 +25,18 @@ The audit ingestor, the audit dispatchers and tagsync authenticate to Kafka thro
 | `kafka.security.protocol` | `kafka.sasl.mechanism` | Credential |
 |---|---|---|
 | `PLAINTEXT` (default), `SSL` | none | none |
-| `SASL_PLAINTEXT`, `SASL_SSL` | `OAUTHBEARER` (default when empty) | JWT from `kafka.sasl.oauthbearer.token.endpoint.url` |
-| `SASL_PLAINTEXT`, `SASL_SSL` | `GSSAPI` | `service.kerberos.principal` and `service.kerberos.keytab` |
-| `SASL_PLAINTEXT`, `SASL_SSL` | other (`PLAIN`, `SCRAM-*`) | `kafka.sasl.jaas.config` from the deployment |
+| `SASL_PLAINTEXT`, `SASL_SSL` | `GSSAPI` (default when empty) | `service.kerberos.principal` and `service.kerberos.keytab` |
+| `SASL_PLAINTEXT`, `SASL_SSL` | `OAUTHBEARER` | JWT from `kafka.sasl.oauthbearer.token.endpoint.url` |
+| `SASL_PLAINTEXT`, `SASL_SSL` | other (`PLAIN`, `SCRAM-*`) | `kafka.sasl.jaas.loginModuleName` and `kafka.sasl.jaas.option.*`, or `kafka.sasl.jaas.config` |
 
 - OAUTHBEARER with a `file://` URL uses `RangerKafkaOAuthBearerLoginCallbackHandler`, which re-reads the
   token on every login and refresh, so a token rotated in place (for example a Kubernetes projected
   service-account token) is picked up without a restart. An `http(s)://` URL uses Kafka's own
   client-credentials handler. The broker validates the token; its `sub` is the Kafka principal.
+- JAAS is built from `kafka.sasl.jaas.loginModuleName`, `kafka.sasl.jaas.loginModuleControlFlag` and any
+  `kafka.sasl.jaas.option.<name>` under the service prefix. For GSSAPI the service principal and keytab are passed
+  as `principal` and `keyTab`; every other Krb5LoginModule option comes from configuration, and the shipped site
+  XML sets `useKeyTab=true`, `storeKey=true`, `useTicketCache=false`.
 - Any `kafka.sasl.*` or `kafka.ssl.*` property under the service prefix is passed to the Kafka client as is.
 
 ## Docker Setup

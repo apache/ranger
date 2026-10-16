@@ -26,20 +26,20 @@ import java.util.Set;
 
 /**
  * {@link OAuthBearerToken} backed by a JWT whose claims were already extracted by the caller.
- * Carries no scopes; {@code lifetimeMs} is the {@code exp} claim and {@code startTimeMs} the optional {@code iat},
+ * Carries no scopes; {@code expiresOnTimeMs} is the {@code exp} claim and {@code startTimeMs} the optional {@code iat},
  * both in epoch milliseconds, which is what Kafka's credential refresh scheduling expects.
  */
 public final class RangerOAuthBearerToken implements OAuthBearerToken {
     private final String value;
     private final String principalName;
-    private final long   lifetimeMs;
+    private final long   expiresOnTimeMs;
     private final Long   startTimeMs;
 
-    public RangerOAuthBearerToken(String value, String principalName, long lifetimeMs, Long startTimeMs) {
-        this.value         = value;
-        this.principalName = principalName;
-        this.lifetimeMs    = lifetimeMs;
-        this.startTimeMs   = startTimeMs;
+    public RangerOAuthBearerToken(String value, String principalName, long expiresOnTimeMs, Long startTimeMs) {
+        this.value           = value;
+        this.principalName   = principalName;
+        this.expiresOnTimeMs = expiresOnTimeMs;
+        this.startTimeMs     = startTimeMs;
     }
 
     @Override
@@ -54,7 +54,7 @@ public final class RangerOAuthBearerToken implements OAuthBearerToken {
 
     @Override
     public long lifetimeMs() {
-        return lifetimeMs;
+        return expiresOnTimeMs;
     }
 
     @Override

@@ -96,8 +96,12 @@ ranger.audit.ingestor.kafka.topic.partitions.buffer: '9'
 ranger.audit.ingestor.kafka.topic.partitions: '10'
 ranger.audit.ingestor.kafka.replication.factor: '1'
 ranger.audit.ingestor.kafka.security.protocol: SASL_PLAINTEXT
-# OAUTHBEARER (the default); GSSAPI is also supported and uses service.kerberos.principal/keytab
+# OAUTHBEARER; GSSAPI is also supported and uses service.kerberos.principal/keytab
 ranger.audit.ingestor.kafka.sasl.mechanism: OAUTHBEARER
+# GSSAPI Krb5LoginModule options; any option can be set as ranger.audit.ingestor.kafka.sasl.jaas.option.<name>
+ranger.audit.ingestor.kafka.sasl.jaas.option.useKeyTab: 'true'
+ranger.audit.ingestor.kafka.sasl.jaas.option.storeKey: 'true'
+ranger.audit.ingestor.kafka.sasl.jaas.option.useTicketCache: 'false'
 # dev token minted by the ranger-kafka container; re-read on every login so rotation is picked up
 ranger.audit.ingestor.kafka.sasl.oauthbearer.token.endpoint.url: 'file:///etc/kafka-oauth/rangerauditserver.token'
 ranger.audit.ingestor.kafka.request.timeout.ms: '60000'

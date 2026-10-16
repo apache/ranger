@@ -21,6 +21,7 @@ package org.apache.ranger.kafka.auth;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.kafka.common.config.ConfigException;
 import org.apache.kafka.common.config.SaslConfigs;
 import org.apache.kafka.common.security.auth.AuthenticateCallbackHandler;
@@ -44,8 +45,6 @@ import java.util.Arrays;
 import java.util.Base64;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 /**
  * SASL/OAUTHBEARER login callback handler that presents a JWT read from a local file, such as a
@@ -76,9 +75,9 @@ public class RangerKafkaOAuthBearerLoginCallbackHandler implements AuthenticateC
     @Override
     public void configure(Map<String, ?> configs, String saslMechanism, List<AppConfigurationEntry> jaasConfigEntries) {
         Object urlValue = configs.get(SaslConfigs.SASL_OAUTHBEARER_TOKEN_ENDPOINT_URL);
-        String url      = urlValue != null ? urlValue.toString().trim() : "";
+        String url      = urlValue != null ? urlValue.toString() : null;
 
-        if (url.isEmpty()) {
+        if (StringUtils.isBlank(url)) {
             throw new ConfigException(String.format("%s must be set to a file:// URL for %s", SaslConfigs.SASL_OAUTHBEARER_TOKEN_ENDPOINT_URL, getClass().getSimpleName()));
         }
 
@@ -103,7 +102,7 @@ public class RangerKafkaOAuthBearerLoginCallbackHandler implements AuthenticateC
 
                 ((OAuthBearerTokenCallback) callback).token(token);
 
-                LOG.info("{}: token loaded from {} for principal={}, expiresAtMs={}", getClass().getSimpleName(), file, token.principalName(), token.lifetimeMs());
+                LOG.debug("{}: token loaded from {} for principal={}, expiresAtMs={}", getClass().getSimpleName(), file, token.principalName(), token.lifetimeMs());
             } else if (callback instanceof SaslExtensionsCallback) {
                 ((SaslExtensionsCallback) callback).extensions(SaslExtensions.empty());
             } else {
@@ -117,21 +116,19 @@ public class RangerKafkaOAuthBearerLoginCallbackHandler implements AuthenticateC
         tokenFile = null;
     }
 
-    static void throwIfUrlNotAllowed(String url) {
+    private void throwIfUrlNotAllowed(String url) {
         String allowed = System.getProperty(ALLOWED_URLS_SYSTEM_PROPERTY);
 
         if (allowed == null) {
             return;
         }
 
-        Set<String> allowedUrls = Arrays.stream(allowed.split(",")).map(String::trim).collect(Collectors.toSet());
-
-        if (!allowedUrls.contains(url)) {
+        if (Arrays.stream(allowed.split(",")).map(String::trim).noneMatch(url::equalsIgnoreCase)) {
             throw new ConfigException(String.format("%s is not allowed. Update system property '%s' to allow it", url, ALLOWED_URLS_SYSTEM_PROPERTY));
         }
     }
 
-    static Path resolveTokenFile(String url) {
+    private Path resolveTokenFile(String url) {
         URI uri;
 
         try {
@@ -141,7 +138,7 @@ public class RangerKafkaOAuthBearerLoginCallbackHandler implements AuthenticateC
         }
 
         if (!"file".equalsIgnoreCase(uri.getScheme())) {
-            throw new ConfigException(String.format("%s supports only file:// token URLs, got: %s", RangerKafkaOAuthBearerLoginCallbackHandler.class.getSimpleName(), url));
+            throw new ConfigException(String.format("%s supports only file:// token URLs, got: %s", getClass().getSimpleName(), url));
         }
 
         Path path = Paths.get(uri);
@@ -153,9 +150,8 @@ public class RangerKafkaOAuthBearerLoginCallbackHandler implements AuthenticateC
         return path;
     }
 
-    /* Re-reads and re-parses on every call. Retries briefly to ride out the moment where kubelet
-     * atomically replaces the projected token file. */
-    static RangerOAuthBearerToken readToken(Path file) throws IOException {
+    /* Re-reads and reparses on every call. Retries briefly to ride out the moment where kubelet atomically replaces the projected token file. */
+    private RangerOAuthBearerToken readToken(Path file) throws IOException {
         IOException lastFailure = null;
 
         for (int attempt = 1; attempt <= TOKEN_READ_MAX_ATTEMPTS; attempt++) {
@@ -170,7 +166,7 @@ public class RangerKafkaOAuthBearerLoginCallbackHandler implements AuthenticateC
             } catch (IOException e) {
                 lastFailure = e;
 
-                LOG.debug("{}: token read/parse failed (attempt {}/{}): {}", RangerKafkaOAuthBearerLoginCallbackHandler.class.getSimpleName(), attempt, TOKEN_READ_MAX_ATTEMPTS, e.getMessage());
+                LOG.debug("{}: token read/parse failed (attempt {}/{}): {}", getClass().getSimpleName(), attempt, TOKEN_READ_MAX_ATTEMPTS, e.getMessage());
 
                 if (attempt < TOKEN_READ_MAX_ATTEMPTS) {
                     sleepBeforeRetry();
@@ -181,7 +177,7 @@ public class RangerKafkaOAuthBearerLoginCallbackHandler implements AuthenticateC
         throw new IOException(String.format("Failed to read SASL/OAUTHBEARER token from %s after %d attempts", file, TOKEN_READ_MAX_ATTEMPTS), lastFailure);
     }
 
-    static RangerOAuthBearerToken parseToken(String jwt) throws IOException {
+    private RangerOAuthBearerToken parseToken(String jwt) throws IOException {
         String[] parts = jwt.split("\\.");
 
         if (parts.length < 2) {
@@ -200,7 +196,7 @@ public class RangerKafkaOAuthBearerLoginCallbackHandler implements AuthenticateC
         JsonNode exp = claims.get(CLAIM_EXPIRATION);
         JsonNode iat = claims.get(CLAIM_ISSUED_AT);
 
-        if (sub == null || !sub.isTextual() || sub.asText().trim().isEmpty()) {
+        if (sub == null || !sub.isTextual() || StringUtils.isBlank(sub.asText())) {
             throw new IOException(String.format("JWT is missing required '%s' claim", CLAIM_SUBJECT));
         }
 
@@ -213,11 +209,11 @@ public class RangerKafkaOAuthBearerLoginCallbackHandler implements AuthenticateC
         return new RangerOAuthBearerToken(jwt, sub.asText(), toEpochMillis(exp), startTimeMs);
     }
 
-    private static long toEpochMillis(JsonNode epochSeconds) {
+    private long toEpochMillis(JsonNode epochSeconds) {
         return Math.round(epochSeconds.asDouble() * 1000);
     }
 
-    private static void sleepBeforeRetry() throws IOException {
+    private void sleepBeforeRetry() throws IOException {
         try {
             Thread.sleep(TOKEN_READ_RETRY_SLEEP_MS);
         } catch (InterruptedException e) {

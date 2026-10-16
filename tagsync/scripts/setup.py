@@ -233,10 +233,10 @@ def atlas_kafka_uses_sasl(props):
 	return protocol.strip().upper().startswith('SASL')
 
 def atlas_kafka_sasl_mechanism(props):
-	"""OAUTHBEARER unless TAG_SOURCE_ATLAS_KAFKA_SASL_MECHANISM says otherwise (GSSAPI for Kerberos keytabs)."""
+	"""GSSAPI unless TAG_SOURCE_ATLAS_KAFKA_SASL_MECHANISM says otherwise (OAUTHBEARER for token files)."""
 	mechanism = props.get(TAG_SOURCE_ATLAS_KAFKA_SASL_MECHANISM_KEY, '')
 	if mechanism is None or mechanism.strip() == '':
-		return KAFKA_SASL_MECHANISM_OAUTHBEARER
+		return KAFKA_SASL_MECHANISM_GSSAPI
 	return mechanism.strip().upper()
 
 def convertInstallPropsToXML(props):
