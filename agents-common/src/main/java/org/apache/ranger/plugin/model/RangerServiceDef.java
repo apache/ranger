@@ -4016,15 +4016,15 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
             RangerConstraintDef other = (RangerConstraintDef) obj;
 
             return Objects.equals(itemId, other.itemId) &&
-                Objects.equals(name, other.name) &&
-                Objects.equals(label, other.label) &&
-                Objects.equals(description, other.description) &&
-                Objects.equals(rbKeyLabel, other.rbKeyLabel) &&
-                Objects.equals(rbKeyDescription, other.rbKeyDescription) &&
-                Objects.equals(resources, other.resources) &&
-                Objects.equals(accessTypes, other.accessTypes) &&
-                Objects.equals(parameters, other.parameters) &&
-                Objects.equals(options, other.options);
+                    Objects.equals(name, other.name) &&
+                    Objects.equals(label, other.label) &&
+                    Objects.equals(description, other.description) &&
+                    Objects.equals(rbKeyLabel, other.rbKeyLabel) &&
+                    Objects.equals(rbKeyDescription, other.rbKeyDescription) &&
+                    Objects.equals(resources, other.resources) &&
+                    Objects.equals(accessTypes, other.accessTypes) &&
+                    Objects.equals(parameters, other.parameters) &&
+                    Objects.equals(options, other.options);
         }
 
         @Override
@@ -4197,15 +4197,15 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
             RangerConstraintParamDef other = (RangerConstraintParamDef) obj;
 
             return Objects.equals(itemId, other.itemId) &&
-                Objects.equals(name, other.name) &&
-                Objects.equals(label, other.label) &&
-                Objects.equals(description, other.description) &&
-                Objects.equals(type, other.type) &&
-                Objects.equals(subType, other.subType) &&
-                Objects.equals(mandatory, other.mandatory) &&
-                Objects.equals(defaultValue, other.defaultValue) &&
-                Objects.equals(rbKeyLabel, other.rbKeyLabel) &&
-                Objects.equals(rbKeyDescription, other.rbKeyDescription);
+                    Objects.equals(name, other.name) &&
+                    Objects.equals(label, other.label) &&
+                    Objects.equals(description, other.description) &&
+                    Objects.equals(type, other.type) &&
+                    Objects.equals(subType, other.subType) &&
+                    Objects.equals(mandatory, other.mandatory) &&
+                    Objects.equals(defaultValue, other.defaultValue) &&
+                    Objects.equals(rbKeyLabel, other.rbKeyLabel) &&
+                    Objects.equals(rbKeyDescription, other.rbKeyDescription);
         }
 
         @Override
