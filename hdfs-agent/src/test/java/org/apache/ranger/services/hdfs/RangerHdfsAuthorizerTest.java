@@ -23,6 +23,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.OutputStreamWriter;
 import java.io.UnsupportedEncodingException;
+import java.lang.reflect.Field;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 
@@ -302,6 +303,61 @@ public class RangerHdfsAuthorizerTest {
         readFailWithPath("/tmp/tmpdir5/t/data-file.txt");
     }
 
+    @Test
+    public void testOperationOptimizerRenameDirectorySourceEvaluated() throws Exception {
+        runWithAuthzOptimizationEnabled(true, () -> {
+            AccessControlEnforcer enforcer = authorizer.getExternalAccessControlEnforcer(null);
+            INode[]               inodes   = createPath("/tmp/srcdir", false, true);
+
+            checkPermission(enforcer, "bob", inodes, "/tmp/srcdir", null, null, null, null, false, RangerHdfsAuthorizer.OPERATION_NAME_RENAME);
+
+            expectAccessDenied(() ->
+                    checkPermission(enforcer, "bob", inodes, "/tmp/srcdir", null, FsAction.WRITE, null, FsAction.ALL, true, RangerHdfsAuthorizer.OPERATION_NAME_RENAME));
+
+            // mv of a directory: no subAccess
+            expectAccessDenied(() ->
+                    checkPermission(authorizer.getExternalAccessControlEnforcer(null), "bob", inodes, "/tmp/srcdir", null, FsAction.WRITE, null, null, false, RangerHdfsAuthorizer.OPERATION_NAME_RENAME));
+
+            checkPermission(authorizer.getExternalAccessControlEnforcer(null), "bob", createPath("/tmp/tmpdir2/srcdir", false, true), "/tmp/tmpdir2/srcdir", null, FsAction.WRITE, null, null, false, RangerHdfsAuthorizer.OPERATION_NAME_RENAME);
+        });
+
+        // run without optimization enabled
+        runWithAuthzOptimizationEnabled(false, () ->
+                expectAccessDenied(() ->
+                        checkPermission(authorizer.getExternalAccessControlEnforcer(null), "bob", createPath("/tmp/srcdir", false, true), "/tmp/srcdir", null, FsAction.WRITE, null, FsAction.ALL, true, RangerHdfsAuthorizer.OPERATION_NAME_RENAME)));
+    }
+
+    @Test
+    public void testOperationOptimizerRenameFileUnchanged() throws Exception {
+        runWithAuthzOptimizationEnabled(true, () -> {
+            AccessControlEnforcer enforcer = authorizer.getExternalAccessControlEnforcer(null);
+
+            checkPermission(enforcer, "bob", createPath("/tmp/tmpdir2/data-file3", true, true), "/tmp/tmpdir2/data-file3", null, null, null, null, false, RangerHdfsAuthorizer.OPERATION_NAME_RENAME);
+
+            expectAccessDenied(() ->
+                    checkPermission(authorizer.getExternalAccessControlEnforcer(null), "bob", createPath("/tmp/data-file3", true, true), "/tmp/data-file3", null, null, null, null, false, RangerHdfsAuthorizer.OPERATION_NAME_RENAME));
+            expectAccessDenied(() ->
+                    checkPermission(authorizer.getExternalAccessControlEnforcer(null), "bob", createPath("/tmp/data-file3", true, true), "/tmp/data-file3", null, FsAction.WRITE, null, null, true, RangerHdfsAuthorizer.OPERATION_NAME_RENAME));
+        });
+
+        runWithAuthzOptimizationEnabled(false, () ->
+                expectAccessDenied(() ->
+                        checkPermission(authorizer.getExternalAccessControlEnforcer(null), "bob", createPath("/tmp/data-file3", true, true), "/tmp/data-file3", null, FsAction.WRITE, null, null, true, RangerHdfsAuthorizer.OPERATION_NAME_RENAME)));
+    }
+
+    @Test
+    public void testOperationOptimizerDeleteRegression() throws Exception {
+        runWithAuthzOptimizationEnabled(true, () -> {
+            AccessControlEnforcer enforcer = authorizer.getExternalAccessControlEnforcer(null);
+            INode[]               inodes   = createPath("/tmp/srcdir", false, true);
+
+            checkPermission(enforcer, "bob", inodes, "/tmp/srcdir", null, null, null, null, false, RangerHdfsAuthorizer.OPERATION_NAME_DELETE);
+
+            expectAccessDenied(() ->
+                    checkPermission(enforcer, "bob", inodes, "/tmp/srcdir", null, FsAction.WRITE, null, FsAction.ALL, true, RangerHdfsAuthorizer.OPERATION_NAME_DELETE));
+        });
+    }
+
     private void readFailWithPath(String path) throws AccessControlException {
         final TestFileSystem fs = new TestFileSystem(path);
         fs.setFilePermission(READ_ONLY);
@@ -349,5 +405,82 @@ public class RangerHdfsAuthorizerTest {
         when(mock.isDirectory()).thenReturn(!file);
         when(mock.toString()).thenReturn(name);
         return mock;
+    }
+
+    private static INode[] createPath(String path, boolean file, boolean exists) {
+        String[] segments = path.split("/");
+        INode[]  ret      = new INode[segments.length];
+
+        for (int i = 0; i < segments.length; i++) {
+            boolean isLast = i == segments.length - 1;
+
+            ret[i] = isLast && !exists ? null : createNode(segments, i, FILE_OWNER, FILE_GROUP, isLast && file);
+        }
+
+        return ret;
+    }
+
+    private static void runWithAuthzOptimizationEnabled(boolean enabled, ThrowingRunnable runnable) throws Exception {
+        boolean previous = setAuthzOptimizationEnabled(enabled);
+
+        try {
+            runnable.run();
+        } finally {
+            setAuthzOptimizationEnabled(previous);
+        }
+    }
+
+    private static boolean setAuthzOptimizationEnabled(boolean enabled) throws ReflectiveOperationException {
+        Field   field    = RangerHdfsAuthorizer.class.getDeclaredField("AUTHZ_OPTIMIZATION_ENABLED");
+        boolean previous;
+
+        field.setAccessible(true);
+        previous = field.getBoolean(authorizer);
+        field.setBoolean(authorizer, enabled);
+
+        return previous;
+    }
+
+    private static void expectAccessDenied(ThrowingRunnable runnable) throws Exception {
+        try {
+            runnable.run();
+            Assert.fail("Access should be denied");
+        } catch (AccessControlException exception) {
+            Assert.assertNotNull(exception);
+        }
+    }
+
+    private static void checkPermission(AccessControlEnforcer enforcer, String userName, INode[] inodes, String path, FsAction ancestorAccess, FsAction parentAccess, FsAction access, FsAction subAccess, boolean ignoreEmptyDir, String operationName) throws AccessControlException {
+        INodeAttributes[] attrs = new INodeAttributes[inodes.length];
+
+        for (int i = 0; i < inodes.length; i++) {
+            attrs[i] = inodes[i];
+        }
+
+        INodeAttributeProvider.AuthorizationContext.Builder builder =
+                new INodeAttributeProvider.AuthorizationContext.Builder()
+                        .fsOwner(FILE_OWNER)
+                        .supergroup(FILE_GROUP)
+                        .callerUgi(UserGroupInformation.createUserForTesting(userName, new String[0]))
+                        .inodeAttrs(attrs)
+                        .inodes(inodes)
+                        .pathByNameArr(new byte[0][0])
+                        .snapshotId(SNAPSHOT_ID)
+                        .path(path)
+                        .ancestorIndex(inodes.length - 2)
+                        .doCheckOwner(false)
+                        .ancestorAccess(ancestorAccess)
+                        .parentAccess(parentAccess)
+                        .access(access)
+                        .subAccess(subAccess)
+                        .ignoreEmptyDir(ignoreEmptyDir)
+                        .operationName(operationName)
+                        .callerContext(null);
+
+        enforcer.checkPermissionWithContext(new INodeAttributeProvider.AuthorizationContext(builder));
+    }
+
+    private interface ThrowingRunnable {
+        void run() throws Exception;
     }
 }
