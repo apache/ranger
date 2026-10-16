@@ -1,0 +1,8 @@
+{
+            "name": "dev_hdfs_{random_str}",
+            "description": "Hdfs repo",
+            "activeStatus": 1,
+            "assetType": 1,
+            "config": "{\"tag.download.auth.users\":\"hdfs,hdfsfoo0\",\"password\":\"*****\",\"policy.download.auth.users\":\"hdfs,hdfsfoo0\",\"hadoop.security.authentication\":\"kerberos\",\"hadoop.rpc.protection\":\"privacy\",\"default.policy.users\":\"mapred,hdfs,hdfsfoo0\",\"fs.default.name\":\"hdfs://quasar-itndzm-2.quasar-itndzm.root.hwx.site:8020\",\"hadoop.security.authorization\":\"true\",\"ranger.plugin.audit.filters\":\"[{'accessResult': 'DENIED', 'isAudited': true}, {'actions':['delete','rename'],'isAudited':true}, {'users':['hdfs'], 'actions': ['listStatus', 'getfileinfo', 'listCachePools', 'listCacheDirectives', 'listCorruptFileBlocks', 'monitorHealth', 'rollEditLog', 'open'], 'isAudited': false}, {'users': ['oozie'],'resources': {'path': {'values': ['/user/oozie/share/lib'],'isRecursive': true}},'isAudited': false},{'users': ['spark'],'resources': {'path': {'values': ['/user/spark/applicationHistory'],'isRecursive': true}},'isAudited': false},{'users': ['hue'],'resources': {'path': {'values': ['/user/hue'],'isRecursive': true}},'isAudited': false},{'users': ['hbase'],'resources': {'path': {'values': ['/hbase'],'isRecursive': true}},'isAudited': false},{'users': ['mapred'],'resources': {'path': {'values': ['/user/history'],'isRecursive': true}},'isAudited': false}, {'actions': ['getfileinfo'], 'isAudited':false} ]\",\"username\":\"hdfs\"}",
+            "supportNative": false
+        }
