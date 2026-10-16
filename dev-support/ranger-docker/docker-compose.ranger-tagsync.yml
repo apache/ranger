@@ -18,6 +18,7 @@ services:
       - ./dist/version:/home/ranger/dist/version:ro
       - ./scripts/tagsync/ranger-tagsync-tags.json:/opt/ranger/tagsync/data/tags.json:ro
       - ./scripts/tagsync/ranger-tagsync-install.properties:/opt/ranger/tagsync/install.properties
+      - ranger-kafka-oauth-tokens:/etc/kafka-oauth:ro
     stdin_open: true
     tty: true
     networks:
@@ -29,6 +30,9 @@ services:
       - TAGSYNC_VERSION
       - DEBUG_TAGSYNC=${DEBUG_TAGSYNC:-false}
       - KERBEROS_ENABLED
+
+volumes:
+  ranger-kafka-oauth-tokens:
 
 networks:
   ranger:

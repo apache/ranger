@@ -857,6 +857,7 @@
                 <module>ranger-hbase-plugin-shim</module>
                 <module>ranger-hdfs-plugin-shim</module>
                 <module>ranger-hive-plugin-shim</module>
+                <module>ranger-kafka-client-auth</module>
                 <module>ranger-kafka-plugin-shim</module>
                 <module>ranger-kms-plugin-shim</module>
                 <module>ranger-knox-plugin-shim</module>
@@ -1015,6 +1016,7 @@
                 <module>common-utils</module>
                 <module>credentialbuilder</module>
                 <module>plugin-kafka</module>
+                <module>ranger-kafka-client-auth</module>
                 <module>ranger-kafka-plugin-shim</module>
                 <module>ranger-plugin-classloader</module>
                 <module>ranger-util</module>
@@ -1208,6 +1210,7 @@
                 <module>ranger-hbase-plugin-shim</module>
                 <module>ranger-hdfs-plugin-shim</module>
                 <module>ranger-hive-plugin-shim</module>
+                <module>ranger-kafka-client-auth</module>
                 <module>ranger-kafka-plugin-shim</module>
                 <module>ranger-kms-plugin-shim</module>
                 <module>ranger-knox-plugin-shim</module>
@@ -1296,6 +1299,7 @@
                 <module>ranger-hbase-plugin-shim</module>
                 <module>ranger-hdfs-plugin-shim</module>
                 <module>ranger-hive-plugin-shim</module>
+                <module>ranger-kafka-client-auth</module>
                 <module>ranger-kafka-plugin-shim</module>
                 <module>ranger-kms-plugin-shim</module>
                 <module>ranger-knox-plugin-shim</module>

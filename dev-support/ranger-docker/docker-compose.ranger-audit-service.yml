@@ -194,6 +194,9 @@ services:
       KAFKA_BOOTSTRAP_SERVERS: ranger-kafka.rangernw:9092
     volumes:
       - ./dist/keytabs/ranger-audit-ingestor:/etc/keytabs
+      - ranger-kafka-oauth-tokens:/etc/kafka-oauth:ro
+      # audit-ingestor-config.py renders conf/ranger-audit-ingestor-site.xml from configs/*.yaml
+      - ./scripts/audit-ingestor/configs:/opt/ranger/audit-ingestor/configs:ro
       - ranger-audit-ingestor-logs:/var/log/ranger/audit-ingestor
       - ranger-audit-ingestor-spool:/var/log/ranger/audit-ingestor/audit
     healthcheck:
@@ -235,6 +238,7 @@ services:
       SOLR_URL: http://ranger-solr.rangernw:8983/solr
     volumes:
       - ./dist/keytabs/ranger-audit-dispatcher-solr:/etc/keytabs
+      - ranger-kafka-oauth-tokens:/etc/kafka-oauth:ro
       - ranger-audit-dispatcher-solr-logs:/var/log/ranger/audit-dispatcher/solr
       - ./scripts/audit-dispatcher/ranger-audit-dispatcher-solr-site.xml:/opt/ranger/audit-dispatcher/conf/ranger-audit-dispatcher-solr-site.xml
 
@@ -270,6 +274,7 @@ services:
       OPENSEARCH_URL: http://ranger-opensearch.rangernw:9200
     volumes:
       - ./dist/keytabs/ranger-audit-dispatcher-opensearch:/etc/keytabs
+      - ranger-kafka-oauth-tokens:/etc/kafka-oauth:ro
       - ranger-audit-dispatcher-opensearch-logs:/var/log/ranger/audit-dispatcher/opensearch
       - ./scripts/audit-dispatcher/ranger-audit-dispatcher-opensearch-site.xml:/opt/ranger/audit-dispatcher/conf/ranger-audit-dispatcher-opensearch-site.xml
 
@@ -303,10 +308,12 @@ services:
       HDFS_NAMENODE: ranger-hadoop.rangernw:9000
     volumes:
       - ./dist/keytabs/ranger-audit-dispatcher-hdfs:/etc/keytabs
+      - ranger-kafka-oauth-tokens:/etc/kafka-oauth:ro
       - ranger-audit-dispatcher-hdfs-logs:/var/log/ranger/audit-dispatcher/hdfs
       - ./scripts/audit-dispatcher/ranger-audit-dispatcher-hdfs-site.xml:/opt/ranger/audit-dispatcher/conf/ranger-audit-dispatcher-hdfs-site.xml
 
 volumes:
+  ranger-kafka-oauth-tokens:
   ranger-audit-ingestor-logs:
   ranger-audit-ingestor-spool:
   ranger-audit-dispatcher-solr-logs:

@@ -440,7 +440,30 @@
 
     <property>
         <name>ranger.audit.ingestor.kafka.sasl.mechanism</name>
-        <value>GSSAPI</value>
+        <value></value>
+        <description>SASL mechanism for SASL_PLAINTEXT/SASL_SSL: empty = GSSAPI (default; service.kerberos.principal/keytab with the Krb5LoginModule options below) or OAUTHBEARER</description>
+    </property>
+
+    <property>
+        <name>ranger.audit.ingestor.kafka.sasl.jaas.option.useKeyTab</name>
+        <value>true</value>
+        <description>GSSAPI Krb5LoginModule option; any option can be set as ranger.audit.ingestor.kafka.sasl.jaas.option.&lt;name&gt;</description>
+    </property>
+
+    <property>
+        <name>ranger.audit.ingestor.kafka.sasl.jaas.option.storeKey</name>
+        <value>true</value>
+    </property>
+
+    <property>
+        <name>ranger.audit.ingestor.kafka.sasl.jaas.option.useTicketCache</name>
+        <value>false</value>
+    </property>
+
+    <property>
+        <name>ranger.audit.ingestor.kafka.sasl.oauthbearer.token.endpoint.url</name>
+        <value>file:///var/run/secrets/kafka/token</value>
+        <description>OAUTHBEARER token: a file:// JWT (e.g. Kubernetes projected service-account token) re-read on every login, or an http(s):// token endpoint for Kafka's client-credentials handler</description>
     </property>
 
     <property>
