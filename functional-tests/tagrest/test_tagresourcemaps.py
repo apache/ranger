@@ -92,11 +92,12 @@ def test_create_resource_map_with_invalid_tag_guid(create_service_resource_ids, 
     response = requests.post(request_url , auth=admin_auth, headers=headers)
     assert response.status_code == 400, f"Expected status code 400 for invalid tag guid, but got {response.status_code}"
 
+
 def test_create_resource_map_with_invalid_resource_guid(create_tag_for_tests, log):
     tag_guid = create_tag_for_tests.get("guid")
     request_url = base_url + f"/tags/tagresourcemaps?tag-guid={tag_guid}&resource-guid=invalid-resource-guid&lenient=true"
     response = requests.post(request_url,  auth=admin_auth, headers=headers)
-    assert response.status_code == 200, f"Expected status code 400 for invalid resource guid, but got {response.status_code}"
+    assert response.status_code == 400, f"Expected status code 400 for invalid resource guid, but got {response.status_code}"
 
 
 
