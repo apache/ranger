@@ -19,7 +19,11 @@
 
 package org.apache.ranger.plugin.model;
 
+import org.apache.ranger.authorization.utils.JsonUtils;
+import org.apache.ranger.authorization.utils.StringUtil;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerAccessTypeDef;
+import org.apache.ranger.plugin.model.RangerServiceDef.RangerConstraintDef;
+import org.apache.ranger.plugin.model.RangerServiceDef.RangerConstraintParamDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerEnumDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerEnumElementDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerPolicyConditionDef;
@@ -344,5 +348,166 @@ public class TestRangerServiceDef {
 
         String s = enumDef.toString();
         Assertions.assertTrue(s.contains("RangerEnumDef={"));
+    }
+
+    @Test
+    public void test14_ConstraintDefsJsonRoundTrip() throws Exception {
+        RangerServiceDef empty = JsonUtils.getMapper().readValue("{\"name\":\"hive\"}", RangerServiceDef.class);
+        Assertions.assertEquals("hive", empty.getName());
+        Assertions.assertNotNull(empty.getDataMaskDef());
+        Assertions.assertNotNull(empty.getRowFilterDef());
+        Assertions.assertNotNull(empty.getConstraintDefs());
+        Assertions.assertTrue(empty.getConstraintDefs().isEmpty());
+        Assertions.assertFalse(JsonUtils.getMapper().writeValueAsString(empty).contains("constraintDefs"));
+
+        RangerConstraintParamDef param = new RangerConstraintParamDef();
+        param.setItemId(1L);
+        param.setName("approver");
+        param.setLabel("Approver");
+        param.setDescription("User who must approve");
+        param.setType("user");
+        param.setSubType(null);
+        Assertions.assertNull(param.getSubType());
+        param.setMandatory(null);
+        Assertions.assertEquals(Boolean.FALSE, param.getMandatory());
+        param.setMandatory(Boolean.TRUE);
+        param.setDefaultValue("alice");
+        param.setRbKeyLabel("rb.approver");
+        param.setRbKeyDescription("rb.approver.desc");
+
+        RangerConstraintParamDef paramCopy = new RangerConstraintParamDef(param);
+        Assertions.assertEquals(param, paramCopy);
+        Assertions.assertEquals(param.hashCode(), paramCopy.hashCode());
+        Assertions.assertNull(paramCopy.getSubType());
+
+        RangerConstraintParamDef enumParam = new RangerConstraintParamDef(param);
+        enumParam.setName("maskExpression");
+        enumParam.setType("enum");
+        enumParam.setSubType("MaskTypes");
+        RangerConstraintParamDef enumCopy = new RangerConstraintParamDef(enumParam);
+        Assertions.assertEquals(enumParam, enumCopy);
+        Assertions.assertEquals(enumParam.hashCode(), enumCopy.hashCode());
+        Assertions.assertEquals("MaskTypes", enumCopy.getSubType());
+        Assertions.assertNotEquals(param, enumParam);
+        RangerConstraintParamDef parsedEnum = JsonUtils.getMapper().readValue("{\"type\":\"enum\",\"subType\":\"MaskTypes\"}", RangerConstraintParamDef.class);
+        Assertions.assertEquals("enum", parsedEnum.getType());
+        Assertions.assertEquals("MaskTypes", parsedEnum.getSubType());
+        Assertions.assertTrue(JsonUtils.getMapper().writeValueAsString(enumParam).contains("\"subType\":\"MaskTypes\""));
+
+        RangerConstraintDef constraintDef = new RangerConstraintDef();
+        constraintDef.setItemId(1L);
+        constraintDef.setName("requireApproval");
+        constraintDef.setLabel("Require approval");
+        constraintDef.setDescription("Pause until approved");
+        constraintDef.setRbKeyLabel("rb.requireApproval");
+        constraintDef.setRbKeyDescription("rb.requireApproval.desc");
+        constraintDef.setResources(null);
+        Assertions.assertNotNull(constraintDef.getResources());
+        Assertions.assertTrue(constraintDef.getResources().isEmpty());
+        constraintDef.setResources(Arrays.asList("tool"));
+        constraintDef.setAccessTypes(Arrays.asList("execute"));
+        List<RangerConstraintParamDef> params = new ArrayList<>();
+        params.add(param);
+        constraintDef.setParameters(params);
+        constraintDef.setOptions(null);
+        Assertions.assertNotNull(constraintDef.getOptions());
+        Map<String, String> options = new HashMap<>();
+        options.put("scope", "tool");
+        constraintDef.setOptions(options);
+
+        Assertions.assertTrue(constraintDef.toString().contains("RangerConstraintDef={"));
+        Assertions.assertTrue(param.toString().contains("RangerConstraintParamDef={"));
+
+        RangerConstraintDef defCopy = new RangerConstraintDef(constraintDef);
+        Assertions.assertEquals(constraintDef, defCopy);
+        Assertions.assertEquals(constraintDef.hashCode(), defCopy.hashCode());
+
+        RangerConstraintDef different = new RangerConstraintDef(constraintDef);
+        different.setName("maxRows");
+        Assertions.assertNotEquals(constraintDef, different);
+
+        RangerServiceDef def = new RangerServiceDef();
+        def.setName("agent-studio");
+        def.setConstraintDefs(null);
+        Assertions.assertTrue(def.getConstraintDefs().isEmpty());
+        List<RangerConstraintDef> defs = new ArrayList<>();
+        defs.add(constraintDef);
+        def.setConstraintDefs(defs);
+        Assertions.assertEquals(1, def.getConstraintDefs().size());
+
+        List<RangerConstraintDef> sameRef = def.getConstraintDefs();
+        sameRef.add(new RangerConstraintDef());
+        def.setConstraintDefs(sameRef);
+        Assertions.assertEquals(2, def.getConstraintDefs().size());
+        List<RangerConstraintDef> reset = new ArrayList<>();
+        reset.add(constraintDef);
+        def.setConstraintDefs(reset);
+
+        RangerServiceDef copied = new RangerServiceDef();
+        copied.updateFrom(def);
+        Assertions.assertEquals(def.getName(), copied.getName());
+        Assertions.assertEquals(def.getConstraintDefs(), copied.getConstraintDefs());
+        Assertions.assertEquals(def.getDataMaskDef(), copied.getDataMaskDef());
+        Assertions.assertEquals(def.getRowFilterDef(), copied.getRowFilterDef());
+
+        def.normalize();
+        Assertions.assertEquals("requireApproval", def.getConstraintDefs().get(0).getName());
+        Assertions.assertEquals(Arrays.asList("tool"), def.getConstraintDefs().get(0).getResources());
+
+        String json = "{"
+                + "\"name\":\"agent-studio\","
+                + "\"unknownTop\":\"x\","
+                + "\"constraintDefs\":[{"
+                + "\"itemId\":1,"
+                + "\"name\":\"requireApproval\","
+                + "\"label\":\"Require approval\","
+                + "\"description\":\"Pause until approved\","
+                + "\"rbKeyLabel\":\"rb.requireApproval\","
+                + "\"rbKeyDescription\":\"rb.requireApproval.desc\","
+                + "\"resources\":[\"tool\"],"
+                + "\"accessTypes\":[\"execute\"],"
+                + "\"unknownDef\":\"x\","
+                + "\"parameters\":[{"
+                + "\"itemId\":1,"
+                + "\"name\":\"approver\","
+                + "\"label\":\"Approver\","
+                + "\"description\":\"User who must approve\","
+                + "\"type\":\"user\","
+                + "\"mandatory\":true,"
+                + "\"defaultValue\":\"alice\","
+                + "\"rbKeyLabel\":\"rb.approver\","
+                + "\"rbKeyDescription\":\"rb.approver.desc\","
+                + "\"unknownParam\":\"x\""
+                + "}],"
+                + "\"options\":{\"scope\":\"tool\"}"
+                + "}]"
+                + "}";
+        RangerServiceDef parsed = JsonUtils.getMapper().readValue(json, RangerServiceDef.class);
+        Assertions.assertEquals("agent-studio", parsed.getName());
+        Assertions.assertEquals(1, parsed.getConstraintDefs().size());
+        RangerConstraintDef parsedDef = parsed.getConstraintDefs().get(0);
+        Assertions.assertEquals(constraintDef, parsedDef);
+        Assertions.assertEquals(Boolean.TRUE, parsedDef.getParameters().get(0).getMandatory());
+        Assertions.assertEquals("alice", parsedDef.getParameters().get(0).getDefaultValue());
+        Assertions.assertNull(parsedDef.getParameters().get(0).getSubType());
+        Assertions.assertNotNull(parsed.getDataMaskDef());
+        Assertions.assertNotNull(parsed.getRowFilterDef());
+
+        Map<String, String> tbl = new HashMap<>();
+        String canonicalResource = StringUtil.dedupString(new String("tool"), tbl);
+        String canonicalName = StringUtil.dedupString(new String("requireApproval"), tbl);
+        String canonicalType    = StringUtil.dedupString(new String("user"), tbl);
+        String canonicalSubType = StringUtil.dedupString(new String("MaskTypes"), tbl);
+        parsedDef.setName(new String("requireApproval"));
+        List<String> resources = new ArrayList<>();
+        resources.add(new String("tool"));
+        parsedDef.setResources(resources);
+        parsedDef.getParameters().get(0).setType(new String("user"));
+        parsedDef.getParameters().get(0).setSubType(new String("MaskTypes"));
+        parsedDef.dedupStrings(tbl);
+        Assertions.assertSame(canonicalName, parsedDef.getName());
+        Assertions.assertSame(canonicalResource, parsedDef.getResources().get(0));
+        Assertions.assertSame(canonicalType, parsedDef.getParameters().get(0).getType());
+        Assertions.assertSame(canonicalSubType, parsedDef.getParameters().get(0).getSubType());
     }
 }

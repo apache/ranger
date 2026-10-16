@@ -19,10 +19,15 @@
 
 package org.apache.ranger.plugin.model;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.apache.ranger.authorization.utils.JsonUtils;
+import org.apache.ranger.authorization.utils.StringUtil;
+import org.apache.ranger.plugin.model.RangerPolicy.RangerConstraintPolicyItem;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerDataMaskPolicyItem;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItem;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemAccess;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemCondition;
+import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemConstraintInfo;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemDataMaskInfo;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemRowFilterInfo;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
@@ -234,7 +239,9 @@ public class TestRangerPolicy {
         // switch supplier to V2 and verify empty collections are immutable empty
         RangerBaseModelObject.setNullSafeSupplier(RangerBaseModelObject.NULL_SAFE_SUPPLIER_V2);
         p.setPolicyItems(null);
+        p.setConstraintPolicyItems(null);
         Assertions.assertEquals(0, p.getPolicyItems().size());
+        Assertions.assertEquals(0, p.getConstraintPolicyItems().size());
         // revert to default
         RangerBaseModelObject.setNullSafeSupplier((RangerBaseModelObject.NullSafeSupplier) null);
     }
@@ -280,6 +287,109 @@ public class TestRangerPolicy {
         RangerPolicy.RangerPolicyItemRowFilterInfo rf1 = new RangerPolicy.RangerPolicyItemRowFilterInfo();
         RangerPolicy.RangerPolicyItemRowFilterInfo rf2 = new RangerPolicy.RangerPolicyItemRowFilterInfo();
         Assertions.assertEquals(rf1, rf2);
+    }
+
+    @Test
+    public void test13_ConstraintPolicyItemsAndJson() throws Exception {
+        Assertions.assertEquals(4, RangerPolicy.POLICY_TYPE_CONSTRAINTS);
+        Assertions.assertEquals(3, RangerPolicy.POLICY_TYPES.length);
+        for (int policyType : RangerPolicy.POLICY_TYPES) {
+            Assertions.assertNotEquals(RangerPolicy.POLICY_TYPE_CONSTRAINTS, policyType);
+        }
+
+        Map<String, Object> parameters = new LinkedHashMap<>();
+        parameters.put("approver", "alice");
+        parameters.put("rowCount", 100);
+
+        RangerPolicyItemConstraintInfo info = new RangerPolicyItemConstraintInfo("requireApproval", parameters);
+        RangerConstraintPolicyItem item = new RangerConstraintPolicyItem(info, Collections.emptyList(), Collections.singletonList("bob"), Collections.emptyList(), Collections.emptyList(), Collections.emptyList(), Boolean.FALSE);
+
+        Assertions.assertEquals("requireApproval", item.getConstraintInfo().getConstraintName());
+        Assertions.assertEquals("alice", item.getConstraintInfo().getParameters().get("approver"));
+        Assertions.assertEquals(Boolean.FALSE, item.getDelegateAdmin());
+        Assertions.assertTrue(item.toString().contains("constraintInfo={"));
+        Assertions.assertTrue(item.toString().contains("requireApproval"));
+
+        item.setConstraintInfo(null);
+        Assertions.assertNotNull(item.getConstraintInfo());
+        Assertions.assertTrue(item.getConstraintInfo().getParameters().isEmpty());
+        item.setConstraintInfo(info);
+
+        RangerConstraintPolicyItem copy = new RangerConstraintPolicyItem(new RangerPolicyItemConstraintInfo(item.getConstraintInfo()), item.getAccesses(), item.getUsers(), item.getGroups(), item.getRoles(), item.getConditions(), item.getDelegateAdmin());
+        Assertions.assertEquals(item, copy);
+        Assertions.assertEquals(item.hashCode(), copy.hashCode());
+
+        RangerPolicyItemConstraintInfo otherInfo = new RangerPolicyItemConstraintInfo("maxRows", parameters);
+        RangerConstraintPolicyItem otherItem = new RangerConstraintPolicyItem(otherInfo, item.getAccesses(), item.getUsers(), item.getGroups(), item.getRoles(), item.getConditions(), item.getDelegateAdmin());
+        Assertions.assertNotEquals(item, otherItem);
+
+        RangerPolicy policy = new RangerPolicy();
+        policy.setName("approve-transfer");
+        policy.setPolicyType(RangerPolicy.POLICY_TYPE_CONSTRAINTS);
+        policy.setConstraintPolicyItems(null);
+        Assertions.assertEquals(0, policy.getConstraintPolicyItems().size());
+        Assertions.assertTrue(policy.addConstraintPolicyItem(item));
+        Assertions.assertEquals(1, policy.getConstraintPolicyItems().size());
+
+        RangerPolicy updated = new RangerPolicy();
+        updated.updateFrom(policy);
+        Assertions.assertEquals(policy.getConstraintPolicyItems(), updated.getConstraintPolicyItems());
+        Assertions.assertTrue(updated.toString().contains("constraintPolicyItems={"));
+
+        ObjectMapper mapper = JsonUtils.getMapper();
+        RangerPolicy accessPolicy = new RangerPolicy();
+        accessPolicy.setName("plain-access");
+        accessPolicy.setPolicyType(RangerPolicy.POLICY_TYPE_ACCESS);
+        Assertions.assertFalse(mapper.writeValueAsString(accessPolicy).contains("constraintPolicyItems"));
+
+        String json = "{"
+                + "\"name\":\"approve-transfer\","
+                + "\"policyType\":4,"
+                + "\"unknownField\":\"ignore-me\","
+                + "\"constraintPolicyItems\":[{"
+                + "\"users\":[\"bob\"],"
+                + "\"delegateAdmin\":false,"
+                + "\"constraintInfo\":{"
+                + "\"constraintName\":\"requireApproval\","
+                + "\"parameters\":{\"approver\":\"alice\",\"rowCount\":100},"
+                + "\"unknownInfo\":\"ignore\""
+                + "}}]"
+                + "}";
+        RangerPolicy parsed = mapper.readValue(json, RangerPolicy.class);
+        Assertions.assertEquals(RangerPolicy.POLICY_TYPE_CONSTRAINTS, parsed.getPolicyType().intValue());
+        Assertions.assertEquals(1, parsed.getConstraintPolicyItems().size());
+
+        RangerPolicyItemConstraintInfo parsedInfo = parsed.getConstraintPolicyItems().get(0).getConstraintInfo();
+        Assertions.assertEquals("requireApproval", parsedInfo.getConstraintName());
+        Assertions.assertEquals("alice", parsedInfo.getParameters().get("approver"));
+        Assertions.assertEquals(Integer.valueOf(100), parsedInfo.getParameters().get("rowCount"));
+        Assertions.assertEquals(Collections.singletonList("bob"), parsed.getConstraintPolicyItems().get(0).getUsers());
+
+        RangerPolicy roundTrip = mapper.readValue(mapper.writeValueAsString(parsed), RangerPolicy.class);
+        Assertions.assertEquals(parsed.getConstraintPolicyItems(), roundTrip.getConstraintPolicyItems());
+
+        Map<String, String> strTbl = new HashMap<>();
+        String canonicalName = StringUtil.dedupString(new String("requireApproval"), strTbl);
+        String canonicalKey = StringUtil.dedupString(new String("approver"), strTbl);
+        String canonicalValue = StringUtil.dedupString(new String("alice"), strTbl);
+        parsedInfo.setConstraintName(new String("requireApproval"));
+        Map<String, Object> fresh = new HashMap<>();
+        fresh.put(new String("approver"), new String("alice"));
+        fresh.put("rowCount", 100);
+        parsedInfo.setParameters(fresh);
+        parsed.getConstraintPolicyItems().get(0).dedupStrings(strTbl);
+        Assertions.assertSame(canonicalName, parsedInfo.getConstraintName());
+        Assertions.assertEquals(Integer.valueOf(100), parsedInfo.getParameters().get("rowCount"));
+
+        boolean foundApprover = false;
+        for (Map.Entry<String, Object> entry : parsedInfo.getParameters().entrySet()) {
+            if ("approver".equals(entry.getKey())) {
+                Assertions.assertSame(canonicalKey, entry.getKey());
+                Assertions.assertSame(canonicalValue, entry.getValue());
+                foundApprover = true;
+            }
+        }
+        Assertions.assertTrue(foundApprover);
     }
 
     private <T> List<T> getList(T value) {
