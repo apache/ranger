@@ -17,6 +17,7 @@
 
 package org.apache.ranger.db;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.ranger.common.db.BaseDao;
 import org.apache.ranger.entity.XXServiceConfigMap;
 import org.apache.ranger.services.tag.RangerServiceTag;
@@ -93,6 +94,28 @@ public class XXServiceConfigMapDao extends BaseDao<XXServiceConfigMap> {
         }
 
         return findServiceIdsByConfigKeyAndConfigValueFilterByServiceType(SERVICE_CLUSTER_NAME_CONF_KEY, clusterName, RangerServiceTag.TAG_RESOURCE_NAME);
+    }
+
+    /**
+     * Returns up to {@code maxResults} rows whose configValue starts with {@code prefix} — an
+     * indexed-friendly {@code LIKE 'prefix%'} query, not a full-table scan. Used by
+     * PasswordEncryptionKeyConsistencyChecker to find one v2-format ("v2,") row cheaply at every
+     * Admin startup, instead of loading the entire x_service_config_map table just to find the
+     * first row matching a prefix.
+     */
+    public List<XXServiceConfigMap> findByConfigValuePrefix(String prefix, int maxResults) {
+        if (StringUtils.isEmpty(prefix)) {
+            return Collections.emptyList();
+        }
+        try {
+            return getEntityManager()
+                    .createNamedQuery("XXServiceConfigMap.findByConfigValueLike", tClass)
+                    .setParameter("configValuePrefix", prefix + "%")
+                    .setMaxResults(maxResults)
+                    .getResultList();
+        } catch (NoResultException e) {
+            return Collections.emptyList();
+        }
     }
 
     public List<XXServiceConfigMap> findByConfigKey(String configKey) {
