@@ -24,6 +24,7 @@ import org.apache.ranger.authorization.utils.JsonUtils;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerAccessTypeDef;
+import org.apache.ranger.plugin.model.RangerServiceDef.RangerConstraintDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerDataMaskDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerResourceDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerRowFilterDef;
@@ -130,6 +131,55 @@ public class TestRangerServiceDefHelper {
         }
 
         assertTrue(expectedHierarchies.isEmpty());
+    }
+
+    @Test
+    public void test_getResourceHierarchiesForConstraint() {
+        RangerServiceDef serviceDef = mock(RangerServiceDef.class);
+        when(serviceDef.getName()).thenReturn("constraint-hierarchies");
+        when(serviceDef.getUpdateTime()).thenReturn(getNow());
+
+        RangerResourceDef database       = createRealResourceDef("Database", null, 1, null);
+        RangerResourceDef udf            = createRealResourceDef("UDF", "Database", 2, null);
+        RangerResourceDef table          = createRealResourceDef("Table", "Database", 2, null);
+        RangerResourceDef column         = createRealResourceDef("Column", "Table", 3, true);
+        RangerResourceDef tableAttribute = createRealResourceDef("Table-Attribute", "Table", 3, true);
+
+        when(serviceDef.getResources()).thenReturn(Lists.newArrayList(column, database, table, tableAttribute, udf));
+        when(serviceDef.getAccessTypes()).thenReturn(new ArrayList<>());
+
+        RangerConstraintDef maxRows = new RangerConstraintDef();
+        maxRows.setName("maxRows");
+        maxRows.setResources(Arrays.asList("Table", "Database"));
+
+        RangerConstraintDef requireApproval = new RangerConstraintDef();
+        requireApproval.setName("requireApproval");
+        requireApproval.setResources(Collections.singletonList("UDF"));
+
+        RangerConstraintDef unrestricted = new RangerConstraintDef();
+        unrestricted.setName("unrestricted");
+
+        when(serviceDef.getConstraintDefs()).thenReturn(Arrays.asList(maxRows, requireApproval, unrestricted));
+
+        RangerServiceDefHelper helper    = new RangerServiceDefHelper(serviceDef);
+        List<String>            tableKeys = Arrays.asList("Table");
+
+        Set<List<RangerResourceDef>> maxRowsHierarchies = helper.getResourceHierarchiesForConstraint("maxRows", tableKeys);
+
+        assertEquals(1, maxRowsHierarchies.size());
+        assertEquals(Arrays.asList("Database", "Table"), helper.getAllResourceNamesOrdered(maxRowsHierarchies.iterator().next()));
+        assertTrue(helper.getResourceHierarchiesForConstraint("maxRows", Arrays.asList("Database", "Column")).isEmpty());
+
+        Set<List<RangerResourceDef>> approvalHierarchies = helper.getResourceHierarchiesForConstraint("requireApproval", Collections.singletonList("UDF"));
+
+        assertEquals(1, approvalHierarchies.size());
+        assertEquals(Collections.singletonList("UDF"), helper.getAllResourceNamesOrdered(approvalHierarchies.iterator().next()));
+        assertTrue(helper.getResourceHierarchiesForConstraint("requireApproval", Arrays.asList("Database", "UDF")).isEmpty());
+
+        assertEquals(helper.getResourceHierarchies(RangerPolicy.POLICY_TYPE_ACCESS, Arrays.asList("Database", "Table")), helper.getResourceHierarchiesForConstraint("unrestricted", Arrays.asList("Database", "Table")));
+        assertTrue(helper.getResourceHierarchiesForConstraint("missing", tableKeys).isEmpty());
+        assertTrue(helper.getResourceHierarchies(RangerPolicy.POLICY_TYPE_CONSTRAINTS).isEmpty());
+        assertTrue(helper.getResourceHierarchies(RangerPolicy.POLICY_TYPE_CONSTRAINTS, tableKeys).isEmpty());
     }
 
     @Test

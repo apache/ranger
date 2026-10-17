@@ -149,7 +149,7 @@ public class RangerPolicyDeltaUtil {
 
                 if (serviceType == null || (!serviceType.equals(EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_TAG_NAME) && !serviceType.equals(componentServiceType))) {
                     isValid = false;
-                } else if (policyType == null || (policyType != RangerPolicy.POLICY_TYPE_ACCESS && policyType != RangerPolicy.POLICY_TYPE_DATAMASK && policyType != RangerPolicy.POLICY_TYPE_ROWFILTER)) {
+                } else if (policyType == null || (policyType != RangerPolicy.POLICY_TYPE_ACCESS && policyType != RangerPolicy.POLICY_TYPE_DATAMASK && policyType != RangerPolicy.POLICY_TYPE_ROWFILTER && policyType != RangerPolicy.POLICY_TYPE_CONSTRAINTS)) {
                     isValid = false;
                 }
             }

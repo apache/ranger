@@ -30,6 +30,7 @@ import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerAccessTypeDef;
+import org.apache.ranger.plugin.model.RangerServiceDef.RangerConstraintDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerResourceDef;
 import org.apache.ranger.plugin.resourcematcher.RangerAbstractResourceMatcher;
 import org.apache.ranger.plugin.resourcematcher.RangerPathResourceMatcher;
@@ -39,6 +40,7 @@ import org.slf4j.LoggerFactory;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -312,6 +314,80 @@ public class RangerServiceDefHelper {
         if (LOG.isDebugEnabled()) {
             LOG.debug("<== getResourceHierarchies(policyType={}, keys={}) : {}", policyType, StringUtils.join(keys, ","), StringUtils.join(ret, ""));
         }
+
+        return ret;
+    }
+
+    /**
+     * Resource hierarchy for one constraint. Names on that constraint def are ordered by resource level.
+     * A def that lists no resources uses the access hierarchy. A hierarchy is returned only when it contains every key.
+     */
+    public Set<List<RangerResourceDef>> getResourceHierarchiesForConstraint(String constraint, Collection<String> keys) {
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("==> getResourceHierarchiesForConstraint(constraint={}, keys={})", constraint, StringUtils.join(keys, ","));
+        }
+
+        Set<List<RangerResourceDef>> ret           = new HashSet<>();
+        RangerConstraintDef          constraintDef = getConstraintDef(constraint);
+
+        if (constraintDef == null) {
+            ret = Collections.emptySet();
+        } else if (CollectionUtils.isEmpty(constraintDef.getResources())) {
+            ret.addAll(getResourceHierarchies(RangerPolicy.POLICY_TYPE_ACCESS, keys));
+        } else {
+            List<RangerResourceDef> hierarchy = buildConstraintHierarchy(constraintDef.getResources());
+
+            if (CollectionUtils.isNotEmpty(hierarchy) && hierarchyHasAllResources(hierarchy, keys)) {
+                ret.add(hierarchy);
+            }
+        }
+
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("<== getResourceHierarchiesForConstraint(constraint={}, keys={}): {}", constraint, StringUtils.join(keys, ","), StringUtils.join(ret, ""));
+        }
+
+        return ret;
+    }
+
+    private RangerConstraintDef getConstraintDef(String constraint) {
+        RangerConstraintDef ret = null;
+
+        if (StringUtils.isNotEmpty(constraint) && CollectionUtils.isNotEmpty(delegate.servicedef.getConstraintDefs())) {
+            for (RangerConstraintDef constraintDef : delegate.servicedef.getConstraintDefs()) {
+                if (constraintDef != null && StringUtils.equals(constraint, constraintDef.getName())) {
+                    ret = constraintDef;
+
+                    break;
+                }
+            }
+        }
+
+        return ret;
+    }
+
+    private List<RangerResourceDef> buildConstraintHierarchy(List<String> resourceNames) {
+        Map<String, RangerResourceDef> resourceDefs = new HashMap<>();
+
+        if (CollectionUtils.isNotEmpty(delegate.servicedef.getResources())) {
+            for (RangerResourceDef resourceDef : delegate.servicedef.getResources()) {
+                if (resourceDef != null && resourceDef.getName() != null) {
+                    resourceDefs.putIfAbsent(resourceDef.getName(), resourceDef);
+                }
+            }
+        }
+
+        List<RangerResourceDef> ret   = new ArrayList<>();
+        Set<String>             added = new HashSet<>();
+
+        for (String resourceName : resourceNames) {
+            RangerResourceDef resourceDef = resourceDefs.get(resourceName);
+
+            if (resourceDef != null && added.add(resourceName)) {
+                ret.add(resourceDef);
+            }
+        }
+
+        ret.sort(Comparator.comparing(RangerResourceDef::getLevel, Comparator.nullsLast(Comparator.naturalOrder())));
 
         return ret;
     }
