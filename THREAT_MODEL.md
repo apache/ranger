@@ -22,8 +22,8 @@ limitations under the License.
 - **Repository:** https://github.com/apache/ranger
 - **Version/commit modeled against:** `master` branch as of 2026-06-03 (no specific release tag; this v0 predates maintainer review).
 - **Threat-model authors:** Drafted by the ASF Security team as a v0 pre-flight artifact for an automated agentic security scan; **reviewed by the Apache Ranger PMC (Abhishek Kumar, `@kumaab`) on 2026-06-12**, who answered every §14 question — those answers are folded into §1–§13 below.
-- **Date:** 2026-06-03 (v0); 2026-06-12 (v1, PMC-reviewed); 2026-07-14 (v1.1).
-- **Status:** v1.1 — PMC-reviewed (see §11a). Abhishek Kumar (PMC) volunteered to own ongoing revision (§14 Q20).
+- **Date:** 2026-06-03 (v0); 2026-06-12 (v1, PMC-reviewed); 2026-07-14 (v1.1); 2026-10-23 (v1.2).
+- **Status:** v1.2 — PMC-reviewed (see §2, §8, §9, §11a). Abhishek Kumar (PMC) volunteered to own ongoing revision (§14 Q20).
 
 **Version binding.** Once ratified, this model is intended to be versioned alongside Ranger and tagged with releases. A report against Ranger version *N* should be triaged against the model as it stood at *N*, not at HEAD. This v0 carries no such binding yet.
 
@@ -34,7 +34,7 @@ limitations under the License.
 - *(maintainer)* — stated by a Ranger maintainer in response to this process. As of 2026-06-12 the PMC has answered all 20 §14 questions (see §14); the load-bearing claims they confirmed are tagged *(maintainer, 2026-06-12)*.
 - *(inferred)* — reasoned from code/repo structure, absence of a feature, or general domain knowledge. Remaining *(inferred)* tags are claims the PMC has not yet individually ratified beyond the §14 answers.
 
-**Confidence:** PMC-reviewed v1.1 — all 20 §14 questions answered by the maintainer on 2026-06-12 and folded into §1–§13. A handful of items (e.g. the "no resource guarantee" line, §8 #6) were explicitly deferred by the PMC for later ratification.
+**Confidence:** PMC-reviewed v1.2 — all 20 §14 questions answered by the maintainer on 2026-06-12 and folded into §1–§13. A handful of items (e.g. the "no resource guarantee" line, §8 #6) were explicitly deferred by the PMC for later ratification.
 
 **What Apache Ranger is.** Apache Ranger is "a framework to enable, monitor and manage comprehensive data security across 20+ data processing services" *(documented — ranger.apache.org)*. It provides centralized & fine-grained authorization, audit, and key management for data services (Trino, Polaris, Ozone, HDFS, Hive, HBase, Kafka, NiFi, Knox, Kudu, YARN, Solr, Atlas and others). The administrator defines access-control policies in a central web application (Ranger Admin); lightweight per-service Java plugins, deployed inside each data service's own process, pull those policies and enforce authorization decisions locally on every access request. In threat-model terms Ranger is a **distributed Policy Decision / Policy Enforcement system**: the policy decision authority lives with the admin server (which authors and distributes policy), but the actual *enforcement* (the PEP) runs as plugin code co-located inside the data service it guards *(documented — FAQ: plugins "run as part of the same process as the namenode (HDFS), Hive2Server(Hive), HBase server (Hbase)")*.
 
@@ -50,6 +50,7 @@ limitations under the License.
 
 - **Security administrator** — authors policies, manages users/roles, views audits via the Admin UI or REST API. Trusted for the instance.
 - **Delegated administrator** — a group owner to whom administration of a subset of resources has been delegated *(documented — FAQ: "delegate administration of certain data to other group owners")*. Trusted for their delegated scope only.
+- **Service Admin** — a user or group listed in a service's `service.admin.users` / `service.admin.groups` config. Trusted for that service's policies **and for every Ranger role**: roles are global, not scoped to a service, so being Service Admin of *any* service lets the caller create, delete, and grant/revoke membership of *any* role, including roles used only by other services' policies. This is by design, so services with role management in their authorization interface (e.g. Hive `GRANT ROLE`) can use Ranger roles *(maintainer, 2026-10-23)*.
 - **Deployed plugin (PEP)** — code running inside a data service, authenticated to the Admin server, that downloads policy and enforces it. **Fully trusted once authenticated** — a deliberate design choice (§7) *(maintainer, 2026-06-12 — §14 Q8)*.
 - **End user of the guarded data service** — the principal whose HDFS/Hive/etc. access Ranger authorizes. **Untrusted** with respect to the decisions Ranger makes about them; they do not interact with Ranger directly but their identity and requested action are the inputs to the PEP. Ranger does **not** authenticate the end user at access time — the host service does *(maintainer, 2026-06-12 — §14 Q7)*.
 - **Identity source** — LDAP/AD/Unix that usersync reads from. Trusted as the authority for user/group membership *(maintainer, 2026-06-12 — §14 Q16)*.
@@ -153,6 +154,7 @@ Ranger is a network service, so the trust table is keyed by endpoint/message, no
 | `GET /service/plugins/policies/download` (policy pull) | requesting plugin identity | no — must be authenticated plugin *(inferred)* | mutual auth between plugin and Admin |
 | `POST/PUT /public/v2/api/policy` *(documented — API docs)* | policy body | no — trusted admin only *(inferred)* | endpoint must require admin authz; never expose unauthenticated |
 | `/service/xusers/users`, `/groups`, `/roleassignments` *(documented — API docs)* | user/group/role data | partly — usersync feeds it from LDAP/AD *(inferred)* | trust in the identity source; admin authz on the endpoint |
+| `PUT /service/roles/roles/grant/{serviceName}`, `/roles/revoke/{serviceName}`; `POST /service/roles/roles?serviceName=`; `DELETE /service/roles/roles/name/{name}?serviceName=` | `serviceName` | **yes** — the caller picks it; it only selects whose Service Admin list is checked and does **not** limit which role can be changed *(maintainer, 2026-10-23)* | grant Service Admin only to principals trusted to manage every Ranger role (§2, §10) |
 | `/service/assets/accessAudit`, `/xaudit/...` *(documented — API docs)* | audit query params | depends on who can reach it | restrict audit read to authorized roles |
 | Ranger KMS `/keys/key`, `/keys/keys` *(documented — API docs)* | key name, key ops | by an authenticated KMS client *(inferred)* | KMS must authorize each key operation against policy |
 | Usersync input | LDAP/AD/Unix records | as trusted as the identity source *(inferred)* | secure + authenticate the directory connection |
@@ -168,7 +170,7 @@ Ranger is a network service, so the trust table is keyed by endpoint/message, no
 
 - **An end user of a guarded data service** attempting to access data they are not authorized for, by manipulating the resource/action they request, exploiting policy-evaluation edge cases (resource-name matching, wildcard/recursion handling, case sensitivity, tag-vs-resource precedence), or attempting privilege escalation through Ranger's own access paths *(inferred)*.
 - **A network peer on the cluster network** attempting to reach the Admin REST API or the policy-download endpoint without proper authentication, or to impersonate the Admin to a plugin / a plugin to the Admin *(inferred)*.
-- **A low-privilege or delegated administrator** attempting to exceed their delegated scope — author policy outside their delegation, escalate their own role, or read audits/keys they should not *(inferred)*.
+- **A low-privilege or delegated administrator** attempting to exceed their delegated scope — author policy outside their delegation, escalate their own role, or read audits/keys they should not *(inferred)*. A Service Admin's scope includes all Ranger roles (§2), so a Service Admin changing membership of any role, including adding themselves to it, is within scope, not escalation *(maintainer, 2026-10-23)*.
 - **A malicious identity/tag source, or someone able to inject into usersync/tagsync inputs**, attempting to forge group/role membership and thereby gain policy grants *(inferred)*.
 - **A KMS client** attempting to obtain key material for keys it is not authorized to use *(inferred)*.
 
@@ -192,7 +194,7 @@ Ranger is a network service, so the trust table is keyed by endpoint/message, no
 
 2. **Centralized policy is faithfully distributed to enforcement points.** Policy authored in Admin is delivered to plugins via the periodic pull and applied; plugins fall back to last-cached policy when Admin is unreachable rather than failing open arbitrarily. *Violation symptom:* a plugin enforces stale or wrong policy in a way that grants access the current policy denies; or distribution lets an attacker substitute policy. *Severity:* security-critical. *(documented in part — FAQ on pull interval + cache fallback; the "faithfully/integrity" guarantee is inferred)*
 
-3. **Administrative actions are access-controlled.** Authoring/modifying policy, managing users/roles, and reading audits via the REST API and UI require appropriate authenticated, authorized identity; delegated admins are confined to their delegated scope. *Violation symptom:* an unauthenticated or under-privileged actor authors/reads policy, escalates a role, or reads audit/keys. *Severity:* security-critical. *(documented in part — delegation in FAQ; enforcement details inferred)*
+3. **Administrative actions are access-controlled.** Authoring/modifying policy, managing users/roles, and reading audits via the REST API and UI require appropriate authenticated, authorized identity; delegated admins are confined to their delegated scope. A Service Admin's scope is their service's policies plus **all** Ranger roles, because roles are global (§2, §9) *(maintainer, 2026-10-23)*. *Violation symptom:* an unauthenticated or under-privileged actor authors/reads policy, escalates a role, or reads audit/keys. *Severity:* security-critical. *(documented in part — delegation in FAQ; enforcement details inferred)*
 
 4. **Access decisions are audited.** Allow/deny decisions and administrative actions are recorded to the configured audit sink. *Violation symptom:* an in-scope access produces no audit record, or audit can be silently suppressed/forged by a non-admin. *Severity:* security-relevant — **a non-admin able to tamper or forge audit records IS a security finding** *(maintainer, 2026-06-12 — §14 Q14)*; missed records alone are correctness-grade. *(documented — ranger.apache.org: "Centralize auditing of user access and administrative actions")*
 
@@ -211,6 +213,7 @@ Ranger is a network service, so the trust table is keyed by endpoint/message, no
 - **No defense of a plugin against its own compromised host.** A PEP running in a compromised data-service process can be bypassed locally *(inferred)*.
 - **No transport security by default.** Plaintext HTTP is the supported default *(maintainer, 2026-06-12 — §14 Q2)*; Ranger supports TLS but does not enforce it at the protocol layer. Plaintext deployment exposes policy and audit in transit.
 - **No guarantee about the guarded service's own attack surface.** Ranger only renders authorization decisions *(inferred)*.
+- **No per-service scoping of Ranger roles.** Roles are global objects shared by all services. A Service Admin of one service can change membership of a role that only another service's policies reference, and so change access decisions in that other service. Isolation between services is not provided at the role level *(maintainer, 2026-10-23)*.
 
 **False friends (highest-value warnings — confirm):**
 - **A Ranger "deny" is not a sandbox.** Enforcement depends on the host service actually calling the plugin for every access path. A code path in the guarded service that does not consult the plugin is not protected by Ranger *(inferred)*.
@@ -237,6 +240,7 @@ For Ranger the "downstream user" is the **cluster operator** who deploys Admin +
 - Confirm the no-match default behavior (deny vs. fall-through to native ACLs) matches the intended posture for each service *(inferred)*.
 - Secure the backing DB, audit sinks (Solr/HDFS), and KMS key store independently — Ranger trusts them *(inferred)*.
 - Constrain delegated administrators' scope deliberately *(inferred)*.
+- Treat Service Admin as a cross-service privilege: any principal in `service.admin.users` / `service.admin.groups` of any service can manage every Ranger role (§2). Do not use roles to separate services whose admins should not affect each other *(maintainer, 2026-10-23)*.
 - Understand that revocation propagates only at the policy-pull interval; size that interval to the data's sensitivity *(inferred)*.
 
 ---
@@ -252,6 +256,7 @@ For Ranger the "downstream user" is the **cluster operator** who deploys Admin +
 - **Trusting tag-based policy without securing the tag source** (Atlas/tagsync) *(inferred)*.
 - **Leaving the default admin account credentials in place** *(inferred)*.
 - **Disabling audit and then relying on it for compliance evidence** *(inferred)*.
+- **Setting a service's `service.admin.groups` to `public`.** Every authenticated user then becomes Service Admin and can manage every Ranger role (§2) *(inferred)*.
 
 ---
 
@@ -266,6 +271,7 @@ Provisional candidates *(inferred)*:
 - "HTTP listener on 6080 / plaintext by default" flagged by a config scanner — plaintext is the supported default (§5a, §9), so this is `BY-DESIGN` / operator-hardening, not a code vulnerability *(maintainer, 2026-06-12 — §14 Q2)*.
 - **Resource-name canonicalization mismatch** between the host service and the policy engine — a **shared responsibility** with the host service, not a Ranger-only defect *(maintainer, 2026-06-12 — §14 Q17)*.
 - **Any authenticated user (including `ROLE_USER` without module/tab permissions) can look up any user, group, or role name in the Ranger UI** via lookup REST endpoints (`GET /service/xusers/lookup/users`, `/lookup/groups`, `/lookup/principals`, `GET /service/roles/lookup/roles/names`). By design for UI typeahead in policy and service forms; returns names only, not full profiles. Disposition: `KNOWN-NON-FINDING` *(maintainer, 2026-07-14)*.
+- **A Service Admin of one service can create, delete, or change membership of any Ranger role**, including roles that only another service's policies use, via `PUT /service/roles/roles/grant/{serviceName}`, `/roles/revoke/{serviceName}`, or role create/delete with `?serviceName=`. Adding or removing a user this way can flip the other service's decisions (deny↔allow). By design: roles are global, and Service Admins manage them so services like Hive can use Ranger roles (§2, §9). Disposition: `KNOWN-NON-FINDING` *(maintainer, 2026-10-23)*.
 
 **Correction (do NOT wave off):** a "default/seeded admin password" finding is **not** a non-finding — the installer mandates a complexity-checked password on fresh install, so a seeded/default password is not a supported posture (§5a) *(maintainer, 2026-06-12 — §14 Q3/Q18)*.
 
@@ -315,7 +321,7 @@ The Apache Ranger PMC (**Abhishek Kumar, `@kumaab`**) reviewed this model on [ap
 7. **End-user identity:** Ranger Admin authenticates **management/UI users** (LDAP, AD, Unix, PAM, Kerberos/SPNEGO, Knox SSO, header, JWT, internal DB). At **data-access time Ranger does not authenticate the end user** — the host service authenticates the principal and the PEP hands Ranger an already-authenticated principal.
 8. **Byzantine plugin:** **full trust once authenticated** — a deliberate design choice that keeps runtime overhead low; **Ranger makes no cross-node integrity claim**.
 9. **Fail mode:** if a plugin can neither evaluate fresh nor cached policy it **denies** — except the HDFS plugin, which can fall through to native ACLs.
-10. **REST endpoint matrix:** three buckets — (1) **public** (login/static, `/service/actuator/health`, `/service/metrics/**`); (2) **plugin/PEP identity** (policy/tag/role/user/GDS download + grant/revoke — `security="none"` at Spring but app-layer authenticated by service client-cert or SPNEGO, with `secure/...download` variants requiring a user in `policy.download.auth.users`); (3) **authenticated admin/user** (everything else: policy/service/user/role/zone/audit CRUD, plugin info, KMS keys — session + `@PreAuthorize` RBAC, writes blocked for read-only Auditor).
+10. **REST endpoint matrix:** three buckets — (1) **public** (login/static, `/service/actuator/health`, `/service/metrics/**`); (2) **plugin/PEP identity** (policy/tag/role/user/GDS download + grant/revoke — `security="none"` at Spring but app-layer authenticated by service client-cert or SPNEGO, with `secure/...download` variants requiring a user in `policy.download.auth.users`); (3) **authenticated admin/user** (everything else: policy/service/user/role/zone/audit CRUD, plugin info, KMS keys — session + `@PreAuthorize` RBAC, writes blocked for read-only Auditor). *Clarification (2026-10-23): "grant/revoke" in bucket (2) means policy grant/revoke (`/service/plugins/services/grant|revoke/**`). Role grant/revoke (`/service/roles/roles/grant|revoke/{serviceName}`) is in bucket (3): Ranger admins and Service Admins (§2) call it directly, and a service's plugin user can call it on behalf of an end user.*
 
 **Wave 3 — properties, resources, KMS**
 11. **Authorization-bypass severity:** an existing deny-policy (or absence of a grant) that nonetheless yields access is **CVE-class `VALID`**.
