@@ -24,7 +24,10 @@ import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.util.ServiceDefUtil;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -38,24 +41,25 @@ public class RangerAccessResult {
     private static final String KEY_ALLOWED_BY_DATASETS = "allowedByDatasets";
     private static final String KEY_ALLOWED_BY_PROJECTS = "allowedByProjects";
 
-    private final String              serviceName;
-    private final RangerServiceDef    serviceDef;
-    private final RangerAccessRequest request;
+    private final String                       serviceName;
+    private final RangerServiceDef             serviceDef;
+    private final RangerAccessRequest          request;
 
-    private final int                 policyType;  // Really, policy-type for audit purpose
-    private       boolean             isAccessDetermined;
-    private       boolean             isAllowed;
-    private       boolean             isAuditedDetermined;
-    private       boolean             isAudited;
-    private       long                auditPolicyId = -1;
-    private       String              auditLogId;
-    private       long                policyId      = -1;
-    private       int                 policyPriority;
-    private       String              zoneName;
-    private       Long                policyVersion;
-    private       long                evaluatedPoliciesCount;
-    private       String              reason;
-    private       Map<String, Object> additionalInfo;
+    private final int                          policyType;  // Really, policy-type for audit purpose
+    private       boolean                      isAccessDetermined;
+    private       boolean                      isAllowed;
+    private       boolean                      isAuditedDetermined;
+    private       boolean                      isAudited;
+    private       long                         auditPolicyId = -1;
+    private       String                       auditLogId;
+    private       long                         policyId      = -1;
+    private       int                          policyPriority;
+    private       String                       zoneName;
+    private       Long                         policyVersion;
+    private       long                         evaluatedPoliciesCount;
+    private       String                       reason;
+    private       Map<String, Object>          additionalInfo;
+    private       List<RangerConstraintResult> constraints;
 
     public RangerAccessResult(final int policyType, final String serviceName, final RangerServiceDef serviceDef, final RangerAccessRequest request) {
         this.serviceName            = serviceName;
@@ -83,6 +87,7 @@ public class RangerAccessResult {
         this.evaluatedPoliciesCount = other.evaluatedPoliciesCount;
         this.reason                 = other.getReason();
         this.additionalInfo         = other.additionalInfo == null ? new HashMap<>() : new HashMap<>(other.additionalInfo);
+        this.constraints            = copyConstraints(other.constraints);
     }
 
     public void setAuditResultFrom(final RangerAccessResult other) {
@@ -138,6 +143,7 @@ public class RangerAccessResult {
     public void setIsAllowed(boolean isAllowed) {
         if (!isAllowed) {
             setIsAccessDetermined(true);
+            this.constraints = null;
         }
 
         this.isAllowed = isAllowed;
@@ -408,6 +414,29 @@ public class RangerAccessResult {
         }
     }
 
+    /**
+     * Constraints that matched this request. Empty when access is denied or nothing matched.
+     */
+    public List<RangerConstraintResult> getConstraints() {
+        return constraints == null ? Collections.emptyList() : constraints;
+    }
+
+    public void setConstraints(List<RangerConstraintResult> constraints) {
+        this.constraints = copyConstraints(constraints);
+    }
+
+    public void addConstraint(RangerConstraintResult constraint) {
+        if (constraint == null) {
+            return;
+        }
+
+        if (constraints == null) {
+            constraints = new ArrayList<>();
+        }
+
+        constraints.add(constraint);
+    }
+
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
@@ -439,10 +468,16 @@ public class RangerAccessResult {
                 sb.append(entry.getKey()).append("=").append(entry.getValue()).append(", ");
             }
         }
-        sb.append("}");
+        sb.append("} ");
+
+        sb.append("constraints={").append(getConstraints()).append("}");
 
         sb.append("}");
 
         return sb;
+    }
+
+    private static List<RangerConstraintResult> copyConstraints(List<RangerConstraintResult> constraints) {
+        return constraints == null || constraints.isEmpty() ? null : new ArrayList<>(constraints);
     }
 }

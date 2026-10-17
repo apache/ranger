@@ -1423,6 +1423,10 @@ public class RangerBasePlugin {
             } else if (policyType == RangerPolicy.POLICY_TYPE_ROWFILTER) {
                 result.setFilterExpr(chainedResult.getFilterExpr());
             }
+
+            if (result.getIsAllowed()) {
+                result.setConstraints(chainedResult.getConstraints());
+            }
         }
 
         if (!result.getIsAuditedDetermined() && chainedResult.getIsAuditedDetermined()) {
