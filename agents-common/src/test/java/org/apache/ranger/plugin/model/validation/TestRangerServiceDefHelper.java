@@ -152,29 +152,30 @@ public class TestRangerServiceDefHelper {
         maxRows.setName("maxRows");
         maxRows.setResources(Arrays.asList("Table", "Database"));
 
-        RangerConstraintDef requireApproval = new RangerConstraintDef();
-        requireApproval.setName("requireApproval");
-        requireApproval.setResources(Collections.singletonList("UDF"));
+        RangerConstraintDef sibling = new RangerConstraintDef();
+        sibling.setName("sibling");
+        sibling.setResources(Arrays.asList("Database", "Table", "UDF"));
+
+        RangerConstraintDef udfOnly = new RangerConstraintDef();
+        udfOnly.setName("udfOnly");
+        udfOnly.setResources(Collections.singletonList("UDF"));
 
         RangerConstraintDef unrestricted = new RangerConstraintDef();
         unrestricted.setName("unrestricted");
 
-        when(serviceDef.getConstraintDefs()).thenReturn(Arrays.asList(maxRows, requireApproval, unrestricted));
+        when(serviceDef.getConstraintDefs()).thenReturn(Arrays.asList(maxRows, sibling, udfOnly, unrestricted));
 
         RangerServiceDefHelper helper    = new RangerServiceDefHelper(serviceDef);
         List<String>            tableKeys = Arrays.asList("Table");
 
         Set<List<RangerResourceDef>> maxRowsHierarchies = helper.getResourceHierarchiesForConstraint("maxRows", tableKeys);
 
-        assertEquals(1, maxRowsHierarchies.size());
-        assertEquals(Arrays.asList("Database", "Table"), helper.getAllResourceNamesOrdered(maxRowsHierarchies.iterator().next()));
+        assertEquals(Collections.singleton(Arrays.asList("Database", "Table")), hierarchyNames(helper, maxRowsHierarchies));
         assertTrue(helper.getResourceHierarchiesForConstraint("maxRows", Arrays.asList("Database", "Column")).isEmpty());
 
-        Set<List<RangerResourceDef>> approvalHierarchies = helper.getResourceHierarchiesForConstraint("requireApproval", Collections.singletonList("UDF"));
-
-        assertEquals(1, approvalHierarchies.size());
-        assertEquals(Collections.singletonList("UDF"), helper.getAllResourceNamesOrdered(approvalHierarchies.iterator().next()));
-        assertTrue(helper.getResourceHierarchiesForConstraint("requireApproval", Arrays.asList("Database", "UDF")).isEmpty());
+        assertEquals(Collections.singleton(Arrays.asList("Database", "UDF")), hierarchyNames(helper, helper.getResourceHierarchiesForConstraint("sibling", Arrays.asList("Database", "UDF"))));
+        assertEquals(Collections.singleton(Arrays.asList("Database", "Table")), hierarchyNames(helper, helper.getResourceHierarchiesForConstraint("sibling", Arrays.asList("Database", "Table"))));
+        assertTrue(helper.getResourceHierarchiesForConstraint("udfOnly", Arrays.asList("Database", "UDF")).isEmpty());
 
         assertEquals(helper.getResourceHierarchies(RangerPolicy.POLICY_TYPE_ACCESS, Arrays.asList("Database", "Table")), helper.getResourceHierarchiesForConstraint("unrestricted", Arrays.asList("Database", "Table")));
         assertTrue(helper.getResourceHierarchiesForConstraint("missing", tableKeys).isEmpty());
@@ -1006,6 +1007,16 @@ public class TestRangerServiceDefHelper {
             when(resourceDef.getIsValidLeaf()).thenReturn(isValidLeaf);
         }
         return resourceDef;
+    }
+
+    private Set<List<String>> hierarchyNames(RangerServiceDefHelper helper, Set<List<RangerResourceDef>> hierarchies) {
+        Set<List<String>> ret = new HashSet<>();
+
+        for (List<RangerResourceDef> hierarchy : hierarchies) {
+            ret.add(helper.getAllResourceNamesOrdered(hierarchy));
+        }
+
+        return ret;
     }
 
     private RangerResourceDef createRealResourceDef(String name, String parent, int level, Boolean isValidLeaf) {
