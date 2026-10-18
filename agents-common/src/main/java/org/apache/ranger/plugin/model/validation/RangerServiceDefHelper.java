@@ -40,7 +40,6 @@ import org.slf4j.LoggerFactory;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -319,8 +318,9 @@ public class RangerServiceDefHelper {
     }
 
     /**
-     * Resource hierarchy for one constraint. Names on that constraint def are ordered by resource level.
-     * A def that lists no resources uses the access hierarchy. A hierarchy is returned only when it contains every key.
+     * Resource hierarchies for one constraint. Each access hierarchy contributes its longest prefix
+     * whose resources are all named on the constraint def. A def that lists no resources uses the access hierarchy.
+     * A prefix is returned only when it contains every key.
      */
     public Set<List<RangerResourceDef>> getResourceHierarchiesForConstraint(String constraint, Collection<String> keys) {
         if (LOG.isDebugEnabled()) {
@@ -335,10 +335,22 @@ public class RangerServiceDefHelper {
         } else if (CollectionUtils.isEmpty(constraintDef.getResources())) {
             ret.addAll(getResourceHierarchies(RangerPolicy.POLICY_TYPE_ACCESS, keys));
         } else {
-            List<RangerResourceDef> hierarchy = buildConstraintHierarchy(constraintDef.getResources());
+            Set<String> names = new HashSet<>(constraintDef.getResources());
 
-            if (CollectionUtils.isNotEmpty(hierarchy) && hierarchyHasAllResources(hierarchy, keys)) {
-                ret.add(hierarchy);
+            for (List<RangerResourceDef> hierarchy : getResourceHierarchies(RangerPolicy.POLICY_TYPE_ACCESS)) {
+                List<RangerResourceDef> prefix = new ArrayList<>();
+
+                for (RangerResourceDef resourceDef : hierarchy) {
+                    if (!names.contains(resourceDef.getName())) {
+                        break;
+                    }
+
+                    prefix.add(resourceDef);
+                }
+
+                if (CollectionUtils.isNotEmpty(prefix) && hierarchyHasAllResources(prefix, keys)) {
+                    ret.add(prefix);
+                }
             }
         }
 
@@ -361,33 +373,6 @@ public class RangerServiceDefHelper {
                 }
             }
         }
-
-        return ret;
-    }
-
-    private List<RangerResourceDef> buildConstraintHierarchy(List<String> resourceNames) {
-        Map<String, RangerResourceDef> resourceDefs = new HashMap<>();
-
-        if (CollectionUtils.isNotEmpty(delegate.servicedef.getResources())) {
-            for (RangerResourceDef resourceDef : delegate.servicedef.getResources()) {
-                if (resourceDef != null && resourceDef.getName() != null) {
-                    resourceDefs.putIfAbsent(resourceDef.getName(), resourceDef);
-                }
-            }
-        }
-
-        List<RangerResourceDef> ret   = new ArrayList<>();
-        Set<String>             added = new HashSet<>();
-
-        for (String resourceName : resourceNames) {
-            RangerResourceDef resourceDef = resourceDefs.get(resourceName);
-
-            if (resourceDef != null && added.add(resourceName)) {
-                ret.add(resourceDef);
-            }
-        }
-
-        ret.sort(Comparator.comparing(RangerResourceDef::getLevel, Comparator.nullsLast(Comparator.naturalOrder())));
 
         return ret;
     }
