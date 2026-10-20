@@ -17,6 +17,8 @@
 
 package org.apache.hadoop.crypto.key;
 
+import org.apache.hadoop.crypto.key.common.DefaultKMSKeyGenerator;
+import org.apache.hadoop.crypto.key.common.RangerKMSKeyGenerator;
 import org.apache.hadoop.crypto.key.kms.server.DerbyTestUtils;
 import org.apache.hadoop.crypto.key.kms.server.KMSConfiguration;
 import org.apache.ranger.kms.dao.DaoManager;
@@ -30,7 +32,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import javax.crypto.Cipher;
-import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 
@@ -38,9 +39,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.security.NoSuchAlgorithmException;
 import java.security.Security;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Map;
 
@@ -51,12 +50,15 @@ public class TestFIPSRangerKeyStore {
 
     private RangerKeyStore rangerKeyStore;
 
+    private static RangerKMSKeyGenerator keyGenerator;
+
     @BeforeAll
     public static void startServers() throws Exception {
         if (!UNRESTRICTED_POLICIES_INSTALLED) {
             return;
         }
         DerbyTestUtils.startDerby();
+        keyGenerator = new DefaultKMSKeyGenerator();
     }
 
     @AfterAll
@@ -109,19 +111,20 @@ public class TestFIPSRangerKeyStore {
             String cipher = "AES";
             int bitLength = 192;
             String attribute   = JsonUtilsV2.mapToJson(Collections.emptyMap());
-            byte[] originalKeyMaterial = generateKey(bitLength, cipher);
+            byte[] originalKeyMaterial = keyGenerator.generateKey(cipher, bitLength).getEncoded();
 
             bouncyCastleProvider = new BouncyCastleProvider();
             Security.insertProviderAt(bouncyCastleProvider, 1);
-            this.rangerKeyStore = new RangerKeyStore(true,  this.daoManager);
+            RangerKMSCryptoConfigManager kmsCryptoConfigApi = new TestKMSCryptoAPIManager("PBKDF2WithHmacSHA256", "SHA-512", 20);
+            this.rangerKeyStore = new RangerKeyStore(this.daoManager, kmsCryptoConfigApi);
 
             this.rangerKeyStore.addKeyEntry(versionName, new SecretKeySpec(originalKeyMaterial, cipher), masterKey, cipher, bitLength, "fipstestkey", 1, attribute);
             this.rangerKeyStore.engineStore(null, masterKey);
 
             SecretKeySpec key = (SecretKeySpec) this.rangerKeyStore.engineGetKey(versionName, masterKey);
             Assertions.assertNotNull(key);
-            Assertions.assertTrue(Arrays.equals(originalKeyMaterial, key.getEncoded()));
-            Assertions.assertEquals(SupportedPBECryptoAlgo.PBKDF2WithHmacSHA256.getAlgoName(), this.getKeyAttributeMap(this.rangerKeyStore, versionName).get(RangerKeyStore.KEY_CRYPTO_ALGO_NAME));
+            Assertions.assertArrayEquals(originalKeyMaterial, key.getEncoded());
+            Assertions.assertEquals(kmsCryptoConfigApi.getCryptoAlgorithm().toString(), this.getKeyAttributeMap(this.rangerKeyStore, versionName).get(RangerKeyStore.KEY_ENCR_ALGO_NAME));
 
             this.rangerKeyStore.engineDeleteEntry(versionName);
             Assertions.assertNull(this.rangerKeyStore.engineGetKey(versionName, masterKey));
@@ -159,31 +162,34 @@ public class TestFIPSRangerKeyStore {
             String cipher = "AES";
             int bitLength = 192;
 
-            this.rangerKeyStore = new RangerKeyStore(this.daoManager);
+            RangerKMSCryptoConfigManager kmsCryptoConfigApi = new TestKMSCryptoAPIManager("PBEWithMD5AndTripleDES", "MD5", 20);
+            this.rangerKeyStore = new RangerKeyStore(this.daoManager, kmsCryptoConfigApi);
             String attribute   = JsonUtilsV2.mapToJson(Collections.emptyMap());
-            byte[] originalKeyMaterial = generateKey(bitLength, cipher);
+            byte[] originalKeyMaterial = keyGenerator.generateKey(cipher, bitLength).getEncoded();
 
             this.rangerKeyStore.addKeyEntry(versionName, new SecretKeySpec(originalKeyMaterial, cipher), masterKey, cipher, bitLength, "fipstestkey", 1, attribute);
             this.rangerKeyStore.engineStore(null, masterKey);
 
             SecretKeySpec key = (SecretKeySpec) this.rangerKeyStore.engineGetKey(versionName, masterKey);
             Assertions.assertNotNull(key);
-            Assertions.assertTrue(Arrays.equals(originalKeyMaterial, key.getEncoded()));
-            Assertions.assertNull(this.getKeyAttributeMap(this.rangerKeyStore, versionName).get(RangerKeyStore.KEY_CRYPTO_ALGO_NAME));
+            Assertions.assertArrayEquals(originalKeyMaterial, key.getEncoded());
+            Assertions.assertNotNull(this.getKeyAttributeMap(this.rangerKeyStore, versionName).get(RangerKeyStore.KEY_ENCR_ALGO_NAME));
+            Assertions.assertEquals(kmsCryptoConfigApi.getCryptoAlgorithm().toString(), this.getKeyAttributeMap(this.rangerKeyStore, versionName).get(RangerKeyStore.KEY_ENCR_ALGO_NAME));
 
             // Till now, ZoneKey was created using non-fips algo.
             // Now set FIPS parameters and invoke reencrypt.
 
             bouncyCastleProvider = new BouncyCastleProvider();
             Security.insertProviderAt(bouncyCastleProvider, 1);
-            this.rangerKeyStore = new RangerKeyStore(true, this.daoManager);
+            kmsCryptoConfigApi = new TestKMSCryptoAPIManager("PBKDF2WITHHMACSHA256", "SHA-512", 20);
+            this.rangerKeyStore = new RangerKeyStore(this.daoManager, kmsCryptoConfigApi);
 
             this.rangerKeyStore.reencryptZoneKeysWithNewAlgo(null, masterKey);
 
             key = (SecretKeySpec) this.rangerKeyStore.engineGetKey(versionName, masterKey);
             Assertions.assertNotNull(key);
-            Assertions.assertTrue(Arrays.equals(originalKeyMaterial, key.getEncoded()));
-            Assertions.assertEquals(SupportedPBECryptoAlgo.PBKDF2WithHmacSHA256.getAlgoName(), this.getKeyAttributeMap(this.rangerKeyStore, versionName).get(RangerKeyStore.KEY_CRYPTO_ALGO_NAME));
+            Assertions.assertArrayEquals(originalKeyMaterial, key.getEncoded());
+            Assertions.assertEquals(kmsCryptoConfigApi.getCryptoAlgorithm().toString(), this.getKeyAttributeMap(this.rangerKeyStore, versionName).get(RangerKeyStore.KEY_ENCR_ALGO_NAME));
 
             this.rangerKeyStore.engineDeleteEntry(versionName);
             Assertions.assertNull(this.rangerKeyStore.engineGetKey(versionName, masterKey));
@@ -207,13 +213,6 @@ public class TestFIPSRangerKeyStore {
         String attribute = (String) secretkeyAttrField.get(secretEntry);
 
         return JsonUtilsV2.jsonToMap(attribute);
-    }
-
-    private byte[] generateKey(int size, String algorithm) throws NoSuchAlgorithmException {
-        KeyGenerator keyGenerator = KeyGenerator.getInstance(algorithm);
-        keyGenerator.init(size);
-        byte[] key = keyGenerator.generateKey().getEncoded();
-        return key;
     }
 
     static {

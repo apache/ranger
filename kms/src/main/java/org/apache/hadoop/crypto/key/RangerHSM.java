@@ -20,11 +20,12 @@ package org.apache.hadoop.crypto.key;
 import com.sun.org.apache.xml.internal.security.utils.Base64;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.crypto.key.common.DefaultKMSKeyGenerator;
+import org.apache.hadoop.crypto.key.common.RangerKMSKeyGenerator;
 import org.bouncycastle.crypto.RuntimeCryptoException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 
@@ -110,11 +111,8 @@ public class RangerHSM implements RangerKMSMKI {
             try {
                 logger.info("Generating AES Master Key for '{}' HSM Provider and keySize is {}", hsmKeystore, this.mkKeySize);
 
-                KeyGenerator keyGen = KeyGenerator.getInstance(MK_CIPHER, hsmKeystore);
-
-                keyGen.init(this.mkKeySize);
-
-                SecretKey aesKey = keyGen.generateKey();
+                RangerKMSKeyGenerator kmsKeyGenerator = new DefaultKMSKeyGenerator();
+                SecretKey             aesKey          = kmsKeyGenerator.generateKey(MK_CIPHER, mkKeySize, hsmKeystore);
 
                 myStore.setKeyEntry(mkAlias, aesKey, password.toCharArray(), (java.security.cert.Certificate[]) null);
 

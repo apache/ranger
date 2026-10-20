@@ -22,6 +22,8 @@ import org.apache.ranger.kms.dao.DaoManager;
 
 import java.util.Arrays;
 
+import static org.apache.hadoop.crypto.key.RangerKeyStoreProvider.DBKS_SITE_XML;
+
 public class DB2HSMMKUtil {
     private static final String ENCRYPTION_KEY     = "ranger.db.encrypt.key.password";
     private static final String PARTITION_PASSWORD = "ranger.ks.hsm.partition.password";
@@ -76,7 +78,8 @@ public class DB2HSMMKUtil {
             String      password    = conf.get(ENCRYPTION_KEY);
 
             // Get Master Key from Ranger DB
-            RangerKMSMKI rangerMasterKey    = new RangerMasterKey(daoManager);
+            RangerKMSCryptoConfigManager kmsCryptoConfigApi = new RangerKMSCryptoConfigManager(DBKS_SITE_XML);
+            RangerKMSMKI rangerMasterKey    = new RangerMasterKey(daoManager, kmsCryptoConfigApi);
             String          mkey            = rangerMasterKey.getMasterKey(password);
             byte[]          key             = Base64.decode(mkey);
 

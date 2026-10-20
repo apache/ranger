@@ -71,7 +71,8 @@ public class VerifyIsHSMMasterkeyCorrect {
 
             RangerKMSDB    rangerkmsDb = new RangerKMSDB(conf);
             DaoManager     daoManager  = rangerkmsDb.getDaoManager();
-            RangerKeyStore dbStore     = new RangerKeyStore(daoManager);
+            RangerKMSCryptoConfigManager kmsCryptoConfigApi = new RangerKMSCryptoConfigManager(RangerKeyStoreProvider.DBKS_SITE_XML);
+            RangerKeyStore dbStore     = new RangerKeyStore(daoManager, kmsCryptoConfigApi);
 
             // Get Master Key from HSM
             RangerHSM rangerHSM    = new RangerHSM(conf);
