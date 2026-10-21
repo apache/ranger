@@ -314,7 +314,11 @@ public class TestServiceMgr {
         def.setImplClass(Thread.class.getName());
         when(store.getServiceDefByName("evil")).thenReturn(def);
 
-        Assertions.assertThrows(ClassCastException.class, () -> mgr.getRangerServiceByService(svc, store));
+        RangerBaseService built = mgr.getRangerServiceByService(svc, store);
+
+        Assertions.assertNotNull(built);
+        Assertions.assertEquals(RangerDefaultService.class, built.getClass());
+        Assertions.assertEquals("s", built.getServiceName());
     }
 
     @Test

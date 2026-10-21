@@ -58,6 +58,7 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.Reader;
 import java.io.Writer;
+import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -116,10 +117,16 @@ public class RangerTagEnricher extends RangerAbstractContextEnricher {
 		if (StringUtils.isNotBlank(tagRetrieverClassName)) {
 
 			try {
-				@SuppressWarnings("unchecked")
-				Class<RangerTagRetriever> tagRetriverClass = (Class<RangerTagRetriever>) Class.forName(tagRetrieverClassName);
+				Class<?> cls = Class.forName(tagRetrieverClassName, false, RangerTagEnricher.class.getClassLoader());
 
-				tagRetriever = tagRetriverClass.newInstance();
+				if (!RangerTagRetriever.class.isAssignableFrom(cls)) {
+					throw new ClassCastException("class " + tagRetrieverClassName + " is not assignable to " + RangerTagRetriever.class.getName());
+				}
+
+				@SuppressWarnings("unchecked")
+				Class<RangerTagRetriever> tagRetriverClass = (Class<RangerTagRetriever>) cls;
+
+				tagRetriever = tagRetriverClass.getDeclaredConstructor().newInstance();
 
 			} catch (ClassNotFoundException exception) {
 				LOG.error("Class " + tagRetrieverClassName + " not found, exception=" + exception);
@@ -127,7 +134,7 @@ public class RangerTagEnricher extends RangerAbstractContextEnricher {
 				LOG.error("Class " + tagRetrieverClassName + " is not a type of RangerTagRetriever, exception=" + exception);
 			} catch (IllegalAccessException exception) {
 				LOG.error("Class " + tagRetrieverClassName + " illegally accessed, exception=" + exception);
-			} catch (InstantiationException exception) {
+			} catch (InstantiationException | NoSuchMethodException | InvocationTargetException exception) {
 				LOG.error("Class " + tagRetrieverClassName + " could not be instantiated, exception=" + exception);
 			}
 

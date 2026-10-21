@@ -27,6 +27,7 @@ import org.apache.ranger.plugin.store.GeolocationStore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.lang.reflect.InvocationTargetException;
 import java.util.Map;
 
 public abstract class RangerAbstractGeolocationProvider extends RangerAbstractContextEnricher {
@@ -62,10 +63,15 @@ public abstract class RangerAbstractGeolocationProvider extends RangerAbstractCo
 		if (context != null) {
 			try {
 				// Get the class definition and ensure it is of the correct type
+				Class<?> cls = Class.forName(geoSourceLoader, false, RangerAbstractGeolocationProvider.class.getClassLoader());
+				if (!GeolocationStore.class.isAssignableFrom(cls)) {
+					throw new ClassCastException("class " + geoSourceLoader + " is not assignable to " + GeolocationStore.class.getName());
+				}
+
 				@SuppressWarnings("unchecked")
-				Class<GeolocationStore> geoSourceLoaderClass = (Class<GeolocationStore>) Class.forName(geoSourceLoader);
+				Class<GeolocationStore> geoSourceLoaderClass = (Class<GeolocationStore>) cls;
 				// instantiate the loader class and initialize it with options
-				geoStore = geoSourceLoaderClass.newInstance();
+				geoStore = geoSourceLoaderClass.getDeclaredConstructor().newInstance();
 			}
 			catch (ClassNotFoundException exception) {
 				LOG.error("RangerAbstractGeolocationProvider.init() - Class " + geoSourceLoader + " not found, exception=" + exception);
@@ -76,7 +82,7 @@ public abstract class RangerAbstractGeolocationProvider extends RangerAbstractCo
 			catch (IllegalAccessException exception) {
 				LOG.error("RangerAbstractGeolocationProvider.init() - Class " + geoSourceLoader + " could not be instantiated, exception=" + exception);
 			}
-			catch (InstantiationException exception) {
+			catch (InstantiationException | NoSuchMethodException | InvocationTargetException exception) {
 				LOG.error("RangerAbstractGeolocationProvider.init() - Class " + geoSourceLoader + " could not be instantiated, exception=" + exception);
 			}
 
