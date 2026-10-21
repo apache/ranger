@@ -93,12 +93,16 @@ import javax.ws.rs.core.MediaType;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Deque;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 @Path("roles")
@@ -1007,15 +1011,16 @@ public class RoleREST {
 
             Set<RangerRole> roleList = roleStore.getRoleNames(userName, userMgr.getGroupsForUser(userName));
 
+            // one visited set across all of the user's roles: a nested role shared by several of them is loaded once
+            Set<String> nestedRoleNames = new HashSet<>();
+
             for (RangerRole role : roleList) {
                 ret.add(role.getName());
 
-                Set<String> roleMembers = new HashSet<>();
-
-                getRoleMemberNames(roleMembers, role);
-
-                ret.addAll(roleMembers);
+                getRoleMemberNames(nestedRoleNames, role);
             }
+
+            ret.addAll(nestedRoleNames);
         } catch (WebApplicationException excp) {
             throw excp;
         } catch (Throwable excp) {
@@ -1407,15 +1412,18 @@ public class RoleREST {
         }
 
         Set<RangerRole.RoleMember> roleMemberList = new HashSet<>();
-
-        getRoleMembers(roleMemberList, role);
+        Map<String, RangerRole>    loadedRoles    = getRoleMembers(roleMemberList, role);
 
         for (RangerRole.RoleMember roleMember : roleMemberList) {
             if (!roleMember.getIsAdmin()) {
                 continue;
             }
 
-            RangerRole roleMemberObj = roleStore.getRole(roleMember.getName());
+            RangerRole roleMemberObj = loadedRoles.get(roleMember.getName()); // already loaded while expanding
+
+            if (roleMemberObj == null) { // nested role doesn't exist (yet)
+                continue;
+            }
 
             if (getUserNames(roleMemberObj).contains(username)) {
                 isAccessible = true;
@@ -1447,19 +1455,7 @@ public class RoleREST {
         }
 
         try {
-            // Check for any cycling relationship between roles
-            for (String newRole : roles) {
-                //get members recursively and check if the grantor role is already a member
-                Set<String> roleMembers = new HashSet<>();
-
-                getRoleMemberNames(roleMembers, roleStore.getRole(newRole));
-
-                LOG.debug("Role members for {} = {}", newRole, roleMembers);
-
-                if (roleMembers.contains(role.getName())) {
-                    throw new Exception("Invalid role grant");
-                }
-            }
+            // nesting cycles, including granting a role into itself, are rejected by RoleDBStore.updateRole()
 
             Set<RangerRole.RoleMember> roleUsers  = new HashSet<>();
             Set<RangerRole.RoleMember> roleGroups = new HashSet<>();
@@ -1678,19 +1674,75 @@ public class RoleREST {
         return rolenames;
     }
 
+    /*
+     * Adds names of all roles nested, directly or transitively, under the given role. Iterative with a visited
+     * set: each role is loaded at most once and a cyclic role graph terminates instead of overflowing the stack.
+     */
     private void getRoleMemberNames(Set<String> roleMembers, RangerRole role) throws Exception {
-        for (RangerRole.RoleMember roleMember : role.getRoles()) {
-            roleMembers.add(roleMember.getName());
+        Deque<RangerRole> pending = new ArrayDeque<>();
 
-            getRoleMemberNames(roleMembers, roleStore.getRole(roleMember.getName()));
+        pending.add(role);
+
+        while (!pending.isEmpty()) {
+            RangerRole current = pending.poll();
+
+            for (RangerRole.RoleMember roleMember : current.getRoles()) {
+                if (roleMembers.add(roleMember.getName())) {
+                    RangerRole memberRole = getNestedRoleIfExists(roleMember.getName());
+
+                    if (memberRole != null) {
+                        pending.add(memberRole);
+                    }
+                }
+            }
         }
     }
 
-    private void getRoleMembers(Set<RangerRole.RoleMember> roleMembers, RangerRole role) throws Exception {
-        for (RangerRole.RoleMember roleMember : role.getRoles()) {
-            roleMembers.add(roleMember);
+    /*
+     * Adds all role members nested, directly or transitively, under the given role, and returns the nested roles
+     * loaded along the way (by name). Iterative: each nested role is loaded at most once, so a cyclic role graph
+     * terminates instead of overflowing the stack.
+     */
+    private Map<String, RangerRole> getRoleMembers(Set<RangerRole.RoleMember> roleMembers, RangerRole role) throws Exception {
+        Map<String, RangerRole> loaded  = new HashMap<>();
+        Deque<RangerRole>       pending = new ArrayDeque<>();
 
-            getRoleMembers(roleMembers, roleStore.getRole(roleMember.getName()));
+        pending.add(role);
+
+        while (!pending.isEmpty()) {
+            RangerRole current = pending.poll();
+
+            for (RangerRole.RoleMember roleMember : current.getRoles()) {
+                roleMembers.add(roleMember);
+
+                if (!loaded.containsKey(roleMember.getName())) {
+                    RangerRole memberRole = getNestedRoleIfExists(roleMember.getName());
+
+                    loaded.put(roleMember.getName(), memberRole);
+
+                    if (memberRole != null) {
+                        pending.add(memberRole);
+                    }
+                }
+            }
+        }
+
+        return loaded;
+    }
+
+    /*
+     * A nested role named in a stored role definition may not exist yet, e.g. when it is created after commit by
+     * createNonExistUserGroupRole. Skip it instead of failing the whole read.
+     * RoleDBStore.getRole(String) throws WebApplicationException only when the role is not found (by name, or by id
+     * in roleService.read() if deleted in between); DB failures surface as persistence exceptions and still propagate.
+     */
+    private RangerRole getNestedRoleIfExists(String roleName) {
+        try {
+            return roleStore.getRole(roleName);
+        } catch (WebApplicationException excp) {
+            LOG.warn("Nested role {} does not exist; skipping it", roleName);
+
+            return null;
         }
     }
 
