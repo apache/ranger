@@ -35,7 +35,12 @@ import {
   UserTypes
 } from "Utils/XAEnums";
 import { toast } from "react-toastify";
-import { InfoIcon, getUserAccessRoleList, isSystemAdmin, serverError } from "Utils/XAUtils";
+import {
+  InfoIcon,
+  getUserAccessRoleList,
+  isSystemAdmin,
+  serverError
+} from "Utils/XAUtils";
 import { getUserProfile, setUserProfile } from "Utils/appState";
 import { cloneDeep, has, isEmpty, isUndefined } from "lodash";
 import { SyncSourceDetails } from "Views/UserGroupRoleListing/SyncSourceDetails";
@@ -278,7 +283,7 @@ function UserForm(props) {
   };
 
   const disabledGroupField = () => {
-    return !(isSystemAdmin() && isEditView && isInternalUser)
+    return isEditView ? !(isSystemAdmin() && isInternalUser) : false;
   };
 
   const userRoleListData = () => {
