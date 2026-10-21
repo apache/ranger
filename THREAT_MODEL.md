@@ -23,7 +23,7 @@ limitations under the License.
 - **Version/commit modeled against:** `master` branch as of 2026-06-03 (no specific release tag; this v0 predates maintainer review).
 - **Threat-model authors:** Drafted by the ASF Security team as a v0 pre-flight artifact for an automated agentic security scan; **reviewed by the Apache Ranger PMC (Abhishek Kumar, `@kumaab`) on 2026-06-12**, who answered every §14 question — those answers are folded into §1–§13 below.
 - **Date:** 2026-06-03 (v0); 2026-06-12 (v1, PMC-reviewed); 2026-07-14 (v1.1); 2026-10-23 (v1.2).
-- **Status:** v1.2 — PMC-reviewed (see §2, §8, §9, §11a). Abhishek Kumar (PMC) volunteered to own ongoing revision (§14 Q20).
+- **Status:** v1.2 — PMC-reviewed (see §2, §4, §8, §9, §11a). Abhishek Kumar (PMC) volunteered to own ongoing revision (§14 Q20).
 
 **Version binding.** Once ratified, this model is intended to be versioned alongside Ranger and tagged with releases. A report against Ranger version *N* should be triaged against the model as it stood at *N*, not at HEAD. This v0 carries no such binding yet.
 
@@ -108,7 +108,7 @@ limitations under the License.
 - A finding in the **PDP service (`pdp/`, `authz-api/`, `authz-embedded/`, `authz-remote/`)** is reached over the network, not in-process. Its authorization API (`/authz/*`) requires an authenticated client (Kerberos/JWT/trusted-header; the server refuses to start with no auth handler configured), so treat it like an authenticated **Ranger Admin REST** endpoint — there is no anonymous path into the authz API. Only the liveness/readiness/metrics probes (`/health/live`, `/health/ready`, `/metrics`) are reachable unauthenticated, mirroring Admin's public health/metrics bucket (§14 Q10) *(inferred)*.
 - A finding in **Ranger Admin REST** is in-model only if reachable by an actor the endpoint's auth permits — distinguish endpoints reachable by an *unauthenticated* network peer from those requiring an authenticated admin/plugin identity *(inferred)*.
 - A finding in **usersync/tagsync** is in-model only if reachable from the external identity/tag source data or its configuration *(inferred)*.
-- A finding in **Ranger KMS** is in-model only if reachable from a key-operation request or the key store contents *(inferred)*.
+- A finding in **Ranger KMS** is in-model only if reachable from a key-operation request, the key store contents, or any KMS HTTP endpoint *(inferred)*. Unlike Admin and the PDP, **KMS has no endpoints meant to be reachable without authentication**: every KMS HTTP path, including the `/jmx` instrumentation servlet, requires the same authentication as `/kms/*`. A KMS endpoint that answers without authentication is a finding, not a public probe *(maintainer, 2026-10-23)*.
 - A finding in **`ranger-examples/`** is out of model (§3) *(inferred)*.
 
 ---
@@ -274,6 +274,8 @@ Provisional candidates *(inferred)*:
 - **A Service Admin of one service can create, delete, or change membership of any Ranger role**, including roles that only another service's policies use, via `PUT /service/roles/roles/grant/{serviceName}`, `/roles/revoke/{serviceName}`, or role create/delete with `?serviceName=`. Adding or removing a user this way can flip the other service's decisions (deny↔allow). By design: roles are global, and Service Admins manage them so services like Hive can use Ranger roles (§2, §9). Disposition: `KNOWN-NON-FINDING` *(maintainer, 2026-10-23)*.
 
 **Correction (do NOT wave off):** a "default/seeded admin password" finding is **not** a non-finding — the installer mandates a complexity-checked password on fresh install, so a seeded/default password is not a supported posture (§5a) *(maintainer, 2026-06-12 — §14 Q3/Q18)*.
+
+**Correction (do NOT wave off):** the public health/metrics buckets of Admin and the PDP (§4, §14 Q10) do **not** extend to Ranger KMS. A KMS endpoint, including `/jmx`, that answers without authentication is not a known non-finding (§4) *(maintainer, 2026-10-23)*.
 
 ---
 
