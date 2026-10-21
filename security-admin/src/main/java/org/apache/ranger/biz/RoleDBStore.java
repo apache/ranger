@@ -51,9 +51,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
+import javax.ws.rs.WebApplicationException;
 
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Deque;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -113,6 +116,8 @@ public class RoleDBStore implements RoleStore {
             throw restErrorUtil.createRESTException("role with name: " + role.getName() + " already exists", MessageEnums.ERROR_DUPLICATE_OBJECT);
         }
 
+        ensureRoleNotNestedInItself(role);
+
         Runnable roleVersionUpdater = new RoleVersionUpdater(daoMgr);
         transactionSynchronizationAdapter.executeOnTransactionCommit(roleVersionUpdater);
 
@@ -148,6 +153,8 @@ public class RoleDBStore implements RoleStore {
         if (StringUtils.isNotEmpty(xxRole.getRoleText())) {
             oldRole = JsonUtils.jsonToObject(xxRole.getRoleText(), RangerRole.class);
         }
+
+        ensureNoRoleNestingCycle(role, xxRole, oldRole);
 
         Runnable roleVersionUpdater = new RoleVersionUpdater(daoMgr);
 
@@ -452,6 +459,117 @@ public class RoleDBStore implements RoleStore {
         if (!rleNotInZone) {
             throw new Exception("Rolename for '" + roleName + "' can not be updated as it is referenced in one or more security zones");
         }
+    }
+
+    /**
+     * Rejects a new role whose nested roles contain it, directly or transitively.
+     *
+     * The ref table can't be used here: when an earlier save referenced a not-yet-existing role with
+     * createNonExistUserGroupRole=true (e.g. earlier in the same import), its x_role_ref_role row is only written
+     * after commit, so that edge exists only in the stored role JSON. So walk the new role's nested roles downwards
+     * using their stored definitions. Each role is loaded at most once; a role with no nested roles costs nothing.
+     */
+    private void ensureRoleNotNestedInItself(RangerRole role) {
+        Set<String>   visited = new HashSet<>();
+        Deque<String> pending = new ArrayDeque<>();
+
+        for (RangerRole.RoleMember member : role.getRoles()) {
+            if (member != null && StringUtils.isNotEmpty(member.getName())) {
+                pending.add(member.getName());
+            }
+        }
+
+        while (!pending.isEmpty()) {
+            String nestedRoleName = pending.poll();
+
+            if (StringUtils.equals(nestedRoleName, role.getName())) {
+                throw createNestingCycleException(role.getName());
+            }
+
+            if (!visited.add(nestedRoleName)) {
+                continue;
+            }
+
+            XXRole xxNestedRole = daoMgr.getXXRole().findByRoleName(nestedRoleName);
+
+            if (xxNestedRole == null) { // will be created empty
+                continue;
+            }
+
+            RangerRole nestedRole = roleService.read(xxNestedRole.getId());
+
+            if (nestedRole != null) {
+                for (RangerRole.RoleMember member : nestedRole.getRoles()) {
+                    if (member != null && StringUtils.isNotEmpty(member.getName())) {
+                        pending.add(member.getName());
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * Rejects an update that would make the role contain itself, directly or through nested roles.
+     *
+     * Only nested roles added by this update are checked: an edge role -> N closes a cycle iff N is the role
+     * itself or one of its ancestors. Ancestors are found by walking x_role_ref_role upwards by id (the same walk
+     * updatePolicyVersions() already performs on every update), so no role JSON is loaded. Updates that do not add
+     * a nested role (e.g. user/group membership changes) do no extra DB work.
+     */
+    private void ensureNoRoleNestingCycle(RangerRole role, XXRole xxRole, RangerRole oldRole) {
+        Set<String> addedRoleNames = new HashSet<>();
+
+        for (RangerRole.RoleMember member : role.getRoles()) {
+            if (member != null && StringUtils.isNotEmpty(member.getName())) {
+                addedRoleNames.add(member.getName());
+            }
+        }
+
+        if (oldRole != null) {
+            for (RangerRole.RoleMember member : oldRole.getRoles()) {
+                if (member != null) {
+                    addedRoleNames.remove(member.getName());
+                }
+            }
+        }
+
+        if (addedRoleNames.isEmpty()) {
+            return;
+        }
+
+        if (addedRoleNames.contains(role.getName()) || addedRoleNames.contains(xxRole.getName())) {
+            throw createNestingCycleException(role.getName());
+        }
+
+        // roles that don't exist yet are created empty, so they can't close a cycle
+        Set<Long> addedRoleIds = new HashSet<>(daoMgr.getXXRole().getIdsByRoleNames(addedRoleNames).values());
+
+        if (addedRoleIds.isEmpty()) {
+            return;
+        }
+
+        Set<Long>   visited = new HashSet<>();
+        Deque<Long> pending = new ArrayDeque<>();
+
+        pending.add(xxRole.getId());
+
+        while (!pending.isEmpty()) {
+            Long roleId = pending.poll();
+
+            if (addedRoleIds.contains(roleId)) {
+                throw createNestingCycleException(role.getName());
+            }
+
+            if (visited.add(roleId)) {
+                pending.addAll(daoMgr.getXXRoleRefRole().getContainingRoles(roleId));
+            }
+        }
+    }
+
+    private WebApplicationException createNestingCycleException(String roleName) {
+        LOG.error("Role {} can not be saved: nested roles would make it contain itself", roleName);
+
+        return restErrorUtil.createRESTException("Invalid role members for role " + roleName + ": a role can not contain itself, directly or through nested roles", MessageEnums.INVALID_INPUT_DATA);
     }
 
     private void ensureRoleDeleteAllowed(String roleName) throws Exception {
