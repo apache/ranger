@@ -53,6 +53,7 @@ import java.text.SimpleDateFormat;
 import java.util.Collection;
 import java.util.Date;
 import java.util.Enumeration;
+import java.util.Locale;
 import java.util.Properties;
 import java.util.TimeZone;
 
@@ -200,7 +201,7 @@ public class RangerKrbFilter implements Filter {
 
         if (expires >= 0) {
             Date             date = new Date(expires);
-            SimpleDateFormat df   = new SimpleDateFormat("EEE, " + "dd-MMM-yyyy HH:mm:ss zzz");
+            SimpleDateFormat df   = new SimpleDateFormat("EEE, " + "dd-MMM-yyyy HH:mm:ss zzz", Locale.US);
 
             df.setTimeZone(TimeZone.getTimeZone("GMT"));
 
