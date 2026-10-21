@@ -154,7 +154,8 @@ Ranger is a network service, so the trust table is keyed by endpoint/message, no
 | Plugin authorization call (in-process, from host service) | principal identity | no — asserted by host service auth *(inferred)* | host service must authenticate before calling |
 | Plugin authorization call | resource name, action | **yes** — derived from untrusted user request *(inferred)* | plugin must evaluate policy correctly against arbitrary resource strings |
 | `GET /service/plugins/policies/download` (policy pull) | requesting plugin identity | no — must be authenticated plugin *(inferred)* | mutual auth between plugin and Admin |
-| `POST/PUT /public/v2/api/policy` *(documented — API docs)* | policy body | no — trusted admin only *(inferred)* | endpoint must require admin authz; never expose unauthenticated |
+| `POST/PUT /public/v2/api/policy` *(documented — API docs)* | policy body | partly — authored by Ranger admins, and within their scope by Service Admins, security-zone admins and delegated admins *(maintainer, 2026-10-23)* | endpoint must require admin authz; never expose unauthenticated |
+| Script fields in a policy (custom-condition expressions; row-filter expressions a plugin evaluates as JavaScript) | script text | **yes** — any policy author, including delegated, security-zone and Service Admins *(maintainer, 2026-10-23)* | plugin must evaluate it only in the sandboxed script engine (§8 #7) |
 | `/service/xusers/users`, `/groups`, `/roleassignments` *(documented — API docs)* | user/group/role data | partly — usersync feeds it from LDAP/AD *(inferred)* | trust in the identity source; admin authz on the endpoint |
 | `PUT /service/roles/roles/grant/{serviceName}`, `/roles/revoke/{serviceName}`; `POST /service/roles/roles?serviceName=`; `DELETE /service/roles/roles/name/{name}?serviceName=` | `serviceName` | **yes** — the caller picks it; it only selects whose Service Admin list is checked and does **not** limit which role can be changed *(maintainer, 2026-10-23)* | grant Service Admin only to principals trusted to manage every Ranger role (§2, §10) |
 | `/service/assets/accessAudit`, `/xaudit/...` *(documented — API docs)* | audit query params | depends on who can reach it | restrict audit read to authorized roles |
@@ -172,7 +173,7 @@ Ranger is a network service, so the trust table is keyed by endpoint/message, no
 
 - **An end user of a guarded data service** attempting to access data they are not authorized for, by manipulating the resource/action they request, exploiting policy-evaluation edge cases (resource-name matching, wildcard/recursion handling, case sensitivity, tag-vs-resource precedence), or attempting privilege escalation through Ranger's own access paths *(inferred)*.
 - **A network peer on the cluster network** attempting to reach the Admin REST API or the policy-download endpoint without proper authentication, or to impersonate the Admin to a plugin / a plugin to the Admin *(inferred)*.
-- **A low-privilege or delegated administrator** attempting to exceed their delegated scope — author policy outside their delegation, escalate their own role, or read audits/keys they should not *(inferred)*. A Service Admin's scope includes all Ranger roles (§2), so a Service Admin changing membership of any role, including adding themselves to it, is within scope, not escalation *(maintainer, 2026-10-23)*.
+- **A low-privilege or delegated administrator** attempting to exceed their delegated scope — author policy outside their delegation, escalate their own role, read audits/keys they should not *(inferred)*, or run code on a plugin host through a script in a policy they author (§8 #7) *(maintainer, 2026-10-23)*. A Service Admin's scope includes all Ranger roles (§2), so a Service Admin changing membership of any role, including adding themselves to it, is within scope, not escalation *(maintainer, 2026-10-23)*.
 - **A malicious identity/tag source, or someone able to inject into usersync/tagsync inputs**, attempting to forge group/role membership and thereby gain policy grants *(inferred)*.
 - **A KMS client** attempting to obtain key material for keys it is not authorized to use *(inferred)*.
 
@@ -203,6 +204,8 @@ Ranger is a network service, so the trust table is keyed by endpoint/message, no
 5. **KMS authorizes key access per policy.** Ranger KMS releases key material only to clients authorized by key-access policy. *Violation symptom:* unauthorized key retrieval / decryption capability. *Severity:* security-critical — **the key is the KMS-policy resource; unauthorized key retrieval is CVE-class `VALID`** *(maintainer, 2026-06-12 — §14 Q13)*.
 
 6. **Policy evaluation is bounded and thread-safe.** Each authorization call terminates promptly and concurrent evaluation during a policy refresh does not corrupt decisions. *Violation symptom:* hang/CPU exhaustion inside the host service on crafted resource input, or a race producing a wrong decision. *Severity:* the engine is bounded and thread-safe *(maintainer, 2026-06-12 — §14 Q12)*. **Super-linear evaluation cost in policy size or resource-string length is NOT a bug**; a **hang inside the host service may be** a security issue; whether *no* resource guarantee is made was deferred by the PMC for later ratification.
+
+7. **Scripts in policies cannot run host code.** Script fields in a policy (custom-condition expressions, and row-filter expressions a plugin evaluates as JavaScript) run in a sandboxed engine: no host class lookup or loading, host access limited to Ranger's script API, no threads, no native access. *Violation symptom:* a policy script reaches Java classes, the file system, or process execution on a plugin host. *Severity:* `VALID` when a delegated, security-zone or Service Admin can author the script, since that runs code outside any delegated scope; `VALID-HARDENING` when only a top-level Ranger admin can (§7) *(maintainer, 2026-10-23)*.
 
 ---
 
@@ -281,6 +284,8 @@ Provisional candidates *(inferred)*:
 **Correction (do NOT wave off):** a "default/seeded admin password" finding is **not** a non-finding — the installer mandates a complexity-checked password on fresh install, so a seeded/default password is not a supported posture (§5a) *(maintainer, 2026-06-12 — §14 Q3/Q18)*.
 
 **Correction (do NOT wave off):** the public health/metrics buckets of Admin and the PDP (§4, §14 Q10) do **not** extend to Ranger KMS. A KMS endpoint, including `/jmx`, that answers without authentication is not a known non-finding (§4) *(maintainer, 2026-10-23)*.
+
+**Correction (do NOT wave off):** "policy content comes from a trusted admin" does not cover a script in a policy escaping the sandbox. Delegated, security-zone and Service Admins author policies too, so route such reports by §8 #7, not as `OUT-OF-MODEL: trusted-input` *(maintainer, 2026-10-23)*.
 
 ---
 
