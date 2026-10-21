@@ -23,7 +23,7 @@ limitations under the License.
 - **Version/commit modeled against:** `master` branch as of 2026-06-03 (no specific release tag; this v0 predates maintainer review).
 - **Threat-model authors:** Drafted by the ASF Security team as a v0 pre-flight artifact for an automated agentic security scan; **reviewed by the Apache Ranger PMC (Abhishek Kumar, `@kumaab`) on 2026-06-12**, who answered every §14 question — those answers are folded into §1–§13 below.
 - **Date:** 2026-06-03 (v0); 2026-06-12 (v1, PMC-reviewed); 2026-07-14 (v1.1); 2026-10-23 (v1.2).
-- **Status:** v1.2 — PMC-reviewed (see §2, §4, §8, §9, §11a). Abhishek Kumar (PMC) volunteered to own ongoing revision (§14 Q20).
+- **Status:** v1.2 — PMC-reviewed (see §2, §4, §5a, §8, §9, §11a). Abhishek Kumar (PMC) volunteered to own ongoing revision (§14 Q20).
 
 **Version binding.** Once ratified, this model is intended to be versioned alongside Ranger and tagged with releases. A report against Ranger version *N* should be triaged against the model as it stood at *N*, not at HEAD. This v0 carries no such binding yet.
 
@@ -138,8 +138,10 @@ Ranger's security envelope is governed primarily by **runtime configuration**, n
 - **Audit destination** (Solr / HDFS / DB / log file / none). Disabling audit voids the §8 auditability property *(inferred)*.
 - **No-match behavior:** when Ranger is the ACL enforcer and no policy matches, the result is **deny** — **except the HDFS service**, where it falls through to the host's native ACLs *(maintainer, 2026-06-12 — §14 Q1/Q9)*.
 - **KMS key store** (DB-backed vs. HSM/KeySecure). Changes the confidentiality guarantee for key material *(inferred)*.
+- **`ranger.admin.allow.unauthenticated.access`** (default `false`). Setting it to `true` lets callers with no authenticated session use Admin's plugin endpoints: policy grant/revoke and, because it also becomes the default of the download flag below, every plugin download endpoint. It is **not a supported production posture** *(documented — `ranger-admin-default-site.xml`: "can not be used in production environment")*. A finding that only shows up with it set is `OUT-OF-MODEL: non-default-build`; enabling it in production is an operator-hardening failure (§10, §11) *(maintainer, 2026-10-23)*.
+- **`ranger.admin.allow.unauthenticated.download.access`** (defaults to the flag above, so `false`). Setting it to `true` opens only the plugin download endpoints (policies, tags, roles, users/groups, GDS) to unauthenticated callers, which the shipped config suggests for Kerberos clusters with low security needs *(documented — `ranger-admin-default-site.xml`)*. It is a supported, reduced posture: exposure of the downloaded data is `BY-DESIGN: property-disclaimed` (§9), but any write, or any access beyond those downloads, is still `VALID` *(maintainer, 2026-10-23)*.
 
-For each knob whose default is the less-secure value, the PMC's ruling (supported production posture → reports are `VALID`; vs. dev-convenience requiring operator action → `OUT-OF-MODEL: non-default-build`) is recorded once confirmed. **No ruling exists yet.**
+For each knob whose default is the less-secure value, the PMC's ruling (supported production posture → reports are `VALID`; vs. dev-convenience requiring operator action → `OUT-OF-MODEL: non-default-build`) is recorded once confirmed. Rulings made so far are the *(maintainer)*-tagged entries above.
 
 ---
 
@@ -214,6 +216,7 @@ Ranger is a network service, so the trust table is keyed by endpoint/message, no
 - **No transport security by default.** Plaintext HTTP is the supported default *(maintainer, 2026-06-12 — §14 Q2)*; Ranger supports TLS but does not enforce it at the protocol layer. Plaintext deployment exposes policy and audit in transit.
 - **No guarantee about the guarded service's own attack surface.** Ranger only renders authorization decisions *(inferred)*.
 - **No per-service scoping of Ranger roles.** Roles are global objects shared by all services. A Service Admin of one service can change membership of a role that only another service's policies reference, and so change access decisions in that other service. Isolation between services is not provided at the role level *(maintainer, 2026-10-23)*.
+- **No confidentiality of plugin download data when unauthenticated download is enabled.** With `ranger.admin.allow.unauthenticated.download.access=true`, any network peer that reaches Admin can read policies, tags, roles, users/groups and GDS data through the download endpoints (§5a) *(maintainer, 2026-10-23)*.
 
 **False friends (highest-value warnings — confirm):**
 - **A Ranger "deny" is not a sandbox.** Enforcement depends on the host service actually calling the plugin for every access path. A code path in the guarded service that does not consult the plugin is not protected by Ranger *(inferred)*.
@@ -241,6 +244,7 @@ For Ranger the "downstream user" is the **cluster operator** who deploys Admin +
 - Secure the backing DB, audit sinks (Solr/HDFS), and KMS key store independently — Ranger trusts them *(inferred)*.
 - Constrain delegated administrators' scope deliberately *(inferred)*.
 - Treat Service Admin as a cross-service privilege: any principal in `service.admin.users` / `service.admin.groups` of any service can manage every Ranger role (§2). Do not use roles to separate services whose admins should not affect each other *(maintainer, 2026-10-23)*.
+- Keep `ranger.admin.allow.unauthenticated.access` at its default `false`. Enable `ranger.admin.allow.unauthenticated.download.access` only where policies, roles, tags and user/group data need no confidentiality on the cluster network (§5a) *(maintainer, 2026-10-23)*.
 - Understand that revocation propagates only at the policy-pull interval; size that interval to the data's sensitivity *(inferred)*.
 
 ---
@@ -257,6 +261,7 @@ For Ranger the "downstream user" is the **cluster operator** who deploys Admin +
 - **Leaving the default admin account credentials in place** *(inferred)*.
 - **Disabling audit and then relying on it for compliance evidence** *(inferred)*.
 - **Setting a service's `service.admin.groups` to `public`.** Every authenticated user then becomes Service Admin and can manage every Ranger role (§2) *(inferred)*.
+- **Setting `ranger.admin.allow.unauthenticated.access=true` in production.** Plugin grant/revoke and download endpoints then accept callers with no authenticated session (§5a) *(documented — `ranger-admin-default-site.xml`)*.
 
 ---
 
