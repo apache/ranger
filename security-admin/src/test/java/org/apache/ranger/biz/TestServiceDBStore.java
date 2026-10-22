@@ -38,6 +38,7 @@ import org.apache.ranger.db.RangerDaoManager;
 import org.apache.ranger.db.XXAccessTypeDefDao;
 import org.apache.ranger.db.XXAccessTypeDefGrantsDao;
 import org.apache.ranger.db.XXAuthSessionDao;
+import org.apache.ranger.db.XXConstraintDefDao;
 import org.apache.ranger.db.XXContextEnricherDefDao;
 import org.apache.ranger.db.XXDataHistDao;
 import org.apache.ranger.db.XXDataMaskTypeDefDao;
@@ -74,6 +75,7 @@ import org.apache.ranger.db.XXTrxLogV2Dao;
 import org.apache.ranger.db.XXUserDao;
 import org.apache.ranger.entity.XXAccessTypeDef;
 import org.apache.ranger.entity.XXAccessTypeDefGrants;
+import org.apache.ranger.entity.XXConstraintDef;
 import org.apache.ranger.entity.XXContextEnricherDef;
 import org.apache.ranger.entity.XXDataHist;
 import org.apache.ranger.entity.XXDataMaskTypeDef;
@@ -423,6 +425,9 @@ public class TestServiceDBStore {
         Mockito.when(daoMgr.getXXResourceDef()).thenReturn(xResourceDefDao);
         Mockito.when(daoMgr.getXXAccessTypeDef()).thenReturn(xAccessTypeDefDao);
         Mockito.when(daoMgr.getXXPolicyConditionDef()).thenReturn(xPolicyConditionDefDao);
+        XXConstraintDefDao xConstraintDefDao = Mockito.mock(XXConstraintDefDao.class);
+        Mockito.when(daoMgr.getXXConstraintDef()).thenReturn(xConstraintDefDao);
+        Mockito.when(xConstraintDefDao.findByServiceDefId(serviceDefId)).thenReturn(new ArrayList<>());
         Mockito.when(daoMgr.getXXContextEnricherDef()).thenReturn(xContextEnricherDefDao);
         Mockito.when(daoMgr.getXXEnumDef()).thenReturn(xEnumDefDao);
         Mockito.when(daoMgr.getXXDataMaskTypeDef()).thenReturn(xDataMaskDefDao);
@@ -753,6 +758,14 @@ public class TestServiceDBStore {
         Mockito.when(daoMgr.getXXPolicyConditionDef()).thenReturn(xPolicyConditionDefDao);
         Mockito.when(xPolicyConditionDefDao.findByServiceDefId(serviceDefId)).thenReturn(xConditionDefList);
 
+        XXConstraintDefDao xConstraintDefDao = Mockito.mock(XXConstraintDefDao.class);
+        XXConstraintDef    xConstraintDef    = new XXConstraintDef();
+        xConstraintDef.setId(Id);
+        List<XXConstraintDef> xConstraintDefList = new ArrayList<>();
+        xConstraintDefList.add(xConstraintDef);
+        Mockito.when(daoMgr.getXXConstraintDef()).thenReturn(xConstraintDefDao);
+        Mockito.when(xConstraintDefDao.findByServiceDefId(serviceDefId)).thenReturn(xConstraintDefList);
+
         Mockito.when(daoMgr.getXXResourceDef()).thenReturn(xResourceDefDao);
         Mockito.when(xResourceDefDao.findByServiceDefId(serviceDefId)).thenReturn(resDefList);
 
@@ -772,6 +785,7 @@ public class TestServiceDBStore {
         Mockito.when(xDataMaskDefDao.findByServiceDefId(serviceDefId)).thenReturn(new ArrayList<>());
 
         serviceDBStore.deleteServiceDef(Id, true);
+        Mockito.verify(xConstraintDefDao).remove(xConstraintDef);
         Mockito.verify(daoMgr).getXXContextEnricherDef();
         Mockito.verify(daoMgr).getXXEnumDef();
     }
@@ -6492,6 +6506,9 @@ public class TestServiceDBStore {
         xCond60.setItemId(60L);
         xCond60.setName("country");
         Mockito.when(daoMgr.getXXPolicyConditionDef()).thenReturn(xCondDao);
+        XXConstraintDefDao xConstraintDao = Mockito.mock(XXConstraintDefDao.class);
+        Mockito.when(daoMgr.getXXConstraintDef()).thenReturn(xConstraintDao);
+        Mockito.when(xConstraintDao.findByServiceDefId(1L)).thenReturn(new ArrayList<>());
         Mockito.when(xCondDao.findByServiceDefId(1L)).thenReturn(new ArrayList<XXPolicyConditionDef>() {
             {
                 add(xCond60);
@@ -6568,6 +6585,7 @@ public class TestServiceDBStore {
         Mockito.when(daoMgr.getXXPolicyRefResource()).thenReturn(xPolRefResDao);
         Mockito.when(daoMgr.getXXAccessTypeDefGrants()).thenReturn(xGrantDao);
         Mockito.when(daoMgr.getXXPolicyConditionDef()).thenReturn(xCondDao);
+        Mockito.when(daoMgr.getXXConstraintDef()).thenReturn(xConstraintDao);
         Mockito.when(daoMgr.getXXContextEnricherDef()).thenReturn(xEnrDao);
         Mockito.when(daoMgr.getXXEnumDef()).thenReturn(xEnumDao);
         Mockito.when(daoMgr.getXXEnumElementDef()).thenReturn(xEnumEleDao);
@@ -6662,10 +6680,10 @@ public class TestServiceDBStore {
 
         Method m = ServiceDBStore.class.getDeclaredMethod("updateChildObjectsOfServiceDef", XXServiceDef.class,
                 List.class, List.class, List.class, List.class, List.class, List.class,
-                RangerServiceDef.RangerDataMaskDef.class, RangerServiceDef.RangerRowFilterDef.class);
+                RangerServiceDef.RangerDataMaskDef.class, RangerServiceDef.RangerRowFilterDef.class, List.class);
         m.setAccessible(true);
         try {
-            m.invoke(serviceDBStore, createdSvcDef, configs, resources, accessTypes, conds, enrs, enums, dmDef, rfDef);
+            m.invoke(serviceDBStore, createdSvcDef, configs, resources, accessTypes, conds, enrs, enums, dmDef, rfDef, new ArrayList<>());
         } catch (InvocationTargetException ite) {
             // ignore exception; we'll verify interactions below for coverage
         }
@@ -6715,13 +6733,13 @@ public class TestServiceDBStore {
 
         Method m = ServiceDBStore.class.getDeclaredMethod("updateChildObjectsOfServiceDef", XXServiceDef.class,
                 List.class, List.class, List.class, List.class, List.class, List.class,
-                RangerServiceDef.RangerDataMaskDef.class, RangerServiceDef.RangerRowFilterDef.class);
+                RangerServiceDef.RangerDataMaskDef.class, RangerServiceDef.RangerRowFilterDef.class, List.class);
         m.setAccessible(true);
 
         Assertions.assertThrows(RuntimeException.class, () -> {
             try {
                 m.invoke(serviceDBStore, createdSvcDef, new ArrayList<>(), new ArrayList<>(), new ArrayList<>(),
-                        new ArrayList<>(), new ArrayList<>(), new ArrayList<>(), null, null);
+                        new ArrayList<>(), new ArrayList<>(), new ArrayList<>(), null, null, new ArrayList<>());
             } catch (InvocationTargetException e) {
                 Throwable cause = e.getCause();
                 if (cause instanceof RuntimeException) {
@@ -6792,6 +6810,207 @@ public class TestServiceDBStore {
         RangerServiceDef out = serviceDBStore.createServiceDef(sd);
         Assertions.assertNotNull(out);
         Mockito.verify(svcDefServiceWithAssignedId).create(sd);
+    }
+
+    @Test
+    public void test262createServiceDef_persistsConstraintDefs() throws Exception {
+        serviceDBStore.setPopulateExistingBaseFields(false);
+
+        XXServiceDefDao xSvcDefDao = Mockito.mock(XXServiceDefDao.class);
+        XXServiceDef    created    = new XXServiceDef();
+        created.setId(1L);
+        Mockito.when(daoMgr.getXXServiceDef()).thenReturn(xSvcDefDao);
+        Mockito.when(xSvcDefDao.findByName("agent")).thenReturn(null);
+        Mockito.when(xSvcDefDao.getById(1L)).thenReturn(created);
+
+        XXServiceConfigDefDao    xCfgDao        = Mockito.mock(XXServiceConfigDefDao.class);
+        XXResourceDefDao         xResDao        = Mockito.mock(XXResourceDefDao.class);
+        XXAccessTypeDefDao       xAtdDao        = Mockito.mock(XXAccessTypeDefDao.class);
+        XXPolicyConditionDefDao  xCondDao       = Mockito.mock(XXPolicyConditionDefDao.class);
+        XXConstraintDefDao       xConstraintDao = Mockito.mock(XXConstraintDefDao.class);
+        XXContextEnricherDefDao  xEnrDao        = Mockito.mock(XXContextEnricherDefDao.class);
+        XXEnumDefDao             xEnumDao       = Mockito.mock(XXEnumDefDao.class);
+        XXDataMaskTypeDefDao     xDmDao         = Mockito.mock(XXDataMaskTypeDefDao.class);
+        Mockito.when(daoMgr.getXXServiceConfigDef()).thenReturn(xCfgDao);
+        Mockito.when(daoMgr.getXXResourceDef()).thenReturn(xResDao);
+        Mockito.when(daoMgr.getXXAccessTypeDef()).thenReturn(xAtdDao);
+        Mockito.when(daoMgr.getXXPolicyConditionDef()).thenReturn(xCondDao);
+        Mockito.when(daoMgr.getXXConstraintDef()).thenReturn(xConstraintDao);
+        Mockito.when(daoMgr.getXXContextEnricherDef()).thenReturn(xEnrDao);
+        Mockito.when(daoMgr.getXXEnumDef()).thenReturn(xEnumDao);
+        Mockito.when(daoMgr.getXXDataMaskTypeDef()).thenReturn(xDmDao);
+        Mockito.when(xAtdDao.findByServiceDefId(1L)).thenReturn(new ArrayList<>());
+        Mockito.when(xResDao.findByServiceDefId(1L)).thenReturn(new ArrayList<>());
+        Mockito.when(xDmDao.findByServiceDefId(1L)).thenReturn(new ArrayList<>());
+        Mockito.when(xConstraintDao.create(Mockito.any())).thenAnswer(inv -> inv.getArgument(0));
+        Mockito.when(serviceDefService.populateRangerConstraintDefToXX(Mockito.any(), Mockito.any(), Mockito.any(), Mockito.anyInt())).thenAnswer(inv -> {
+            RangerServiceDef.RangerConstraintDef view   = inv.getArgument(0);
+            XXConstraintDef                      entity = inv.getArgument(1);
+            entity.setItemId(view.getItemId());
+            entity.setName(view.getName());
+            return entity;
+        });
+
+        RangerServiceDef sd = new RangerServiceDef();
+        sd.setName("agent");
+        RangerServiceDef.RangerConstraintDef constraintDef = new RangerServiceDef.RangerConstraintDef();
+        constraintDef.setItemId(1L);
+        constraintDef.setName("requireApproval");
+        sd.getConstraintDefs().add(constraintDef);
+
+        Mockito.when(serviceDefService.create(Mockito.any())).thenAnswer(inv -> {
+            RangerServiceDef createdDef = inv.getArgument(0);
+            createdDef.setId(1L);
+            return createdDef;
+        });
+        Mockito.when(serviceDefService.getPopulatedViewObject(Mockito.any(XXServiceDef.class))).thenReturn(sd);
+
+        RangerServiceDef out = serviceDBStore.createServiceDef(sd);
+        Assertions.assertNotNull(out);
+
+        ArgumentCaptor<XXConstraintDef> createdConstraint = ArgumentCaptor.forClass(XXConstraintDef.class);
+        Mockito.verify(xConstraintDao).create(createdConstraint.capture());
+        Assertions.assertEquals(Long.valueOf(1L), createdConstraint.getValue().getItemId());
+        Assertions.assertEquals(Integer.valueOf(0), createdConstraint.getValue().getOrder());
+    }
+
+    @Test
+    public void test263updateChildObjectsOfServiceDef_constraintDefs() throws Exception {
+        XXServiceDef createdSvcDef = new XXServiceDef();
+        createdSvcDef.setId(1L);
+
+        XXServiceConfigDefDao   xCfgDao        = Mockito.mock(XXServiceConfigDefDao.class);
+        XXResourceDefDao        xResDao        = Mockito.mock(XXResourceDefDao.class);
+        XXAccessTypeDefDao      xAtdDao        = Mockito.mock(XXAccessTypeDefDao.class);
+        XXPolicyConditionDefDao xCondDao       = Mockito.mock(XXPolicyConditionDefDao.class);
+        XXConstraintDefDao      xConstraintDao = Mockito.mock(XXConstraintDefDao.class);
+        XXContextEnricherDefDao xEnrDao        = Mockito.mock(XXContextEnricherDefDao.class);
+        XXEnumDefDao            xEnumDao       = Mockito.mock(XXEnumDefDao.class);
+        XXDataMaskTypeDefDao    xDmDao         = Mockito.mock(XXDataMaskTypeDefDao.class);
+
+        XXConstraintDef existingUpdate = new XXConstraintDef();
+        existingUpdate.setId(2L);
+        existingUpdate.setItemId(2L);
+        existingUpdate.setName("maxRows");
+        XXConstraintDef existingRemove = new XXConstraintDef();
+        existingRemove.setId(3L);
+        existingRemove.setItemId(3L);
+        existingRemove.setName("gone");
+        List<XXConstraintDef> existing = new ArrayList<>();
+        existing.add(existingUpdate);
+        existing.add(existingRemove);
+
+        Mockito.when(daoMgr.getXXServiceConfigDef()).thenReturn(xCfgDao);
+        Mockito.when(daoMgr.getXXResourceDef()).thenReturn(xResDao);
+        Mockito.when(daoMgr.getXXAccessTypeDef()).thenReturn(xAtdDao);
+        Mockito.when(daoMgr.getXXPolicyConditionDef()).thenReturn(xCondDao);
+        Mockito.when(daoMgr.getXXConstraintDef()).thenReturn(xConstraintDao);
+        Mockito.when(daoMgr.getXXContextEnricherDef()).thenReturn(xEnrDao);
+        Mockito.when(daoMgr.getXXEnumDef()).thenReturn(xEnumDao);
+        Mockito.when(daoMgr.getXXDataMaskTypeDef()).thenReturn(xDmDao);
+        Mockito.when(xCfgDao.findByServiceDefId(1L)).thenReturn(new ArrayList<>());
+        Mockito.when(xResDao.findByServiceDefId(1L)).thenReturn(new ArrayList<>());
+        Mockito.when(xAtdDao.findByServiceDefId(1L)).thenReturn(new ArrayList<>());
+        Mockito.when(xCondDao.findByServiceDefId(1L)).thenReturn(new ArrayList<>());
+        Mockito.when(xConstraintDao.findByServiceDefId(1L)).thenReturn(existing);
+        Mockito.when(xEnrDao.findByServiceDefId(1L)).thenReturn(new ArrayList<>());
+        Mockito.when(xEnumDao.findByServiceDefId(1L)).thenReturn(new ArrayList<>());
+        Mockito.when(xDmDao.findByServiceDefId(1L)).thenReturn(new ArrayList<>());
+        Mockito.when(xConstraintDao.create(Mockito.any())).thenAnswer(inv -> inv.getArgument(0));
+        Mockito.when(xConstraintDao.update(Mockito.any())).thenAnswer(inv -> inv.getArgument(0));
+        Mockito.when(serviceDefService.populateRangerConstraintDefToXX(Mockito.any(), Mockito.any(), Mockito.any(), Mockito.anyInt())).thenAnswer(inv -> {
+            RangerServiceDef.RangerConstraintDef view   = inv.getArgument(0);
+            XXConstraintDef                      entity = inv.getArgument(1);
+            entity.setItemId(view.getItemId());
+            entity.setName(view.getName());
+            return entity;
+        });
+        Mockito.when(serviceDefService.populateXXToRangerConstraintDef(Mockito.any())).thenReturn(new RangerServiceDef.RangerConstraintDef());
+
+        RangerServiceDef.RangerConstraintDef createDef = new RangerServiceDef.RangerConstraintDef();
+        createDef.setItemId(1L);
+        createDef.setName("requireApproval");
+        RangerServiceDef.RangerConstraintDef updateDef = new RangerServiceDef.RangerConstraintDef();
+        updateDef.setItemId(2L);
+        updateDef.setName("maxRows");
+        List<RangerServiceDef.RangerConstraintDef> constraintDefs = new ArrayList<>();
+        constraintDefs.add(createDef);
+        constraintDefs.add(updateDef);
+
+        Method m = ServiceDBStore.class.getDeclaredMethod("updateChildObjectsOfServiceDef", XXServiceDef.class,
+                List.class, List.class, List.class, List.class, List.class, List.class,
+                RangerServiceDef.RangerDataMaskDef.class, RangerServiceDef.RangerRowFilterDef.class, List.class);
+        m.setAccessible(true);
+        m.invoke(serviceDBStore, createdSvcDef, new ArrayList<>(), new ArrayList<>(), new ArrayList<>(),
+                new ArrayList<>(), new ArrayList<>(), new ArrayList<>(), new RangerServiceDef.RangerDataMaskDef(),
+                new RangerServiceDef.RangerRowFilterDef(), constraintDefs);
+
+        ArgumentCaptor<XXConstraintDef> createdConstraint = ArgumentCaptor.forClass(XXConstraintDef.class);
+        Mockito.verify(xConstraintDao).create(createdConstraint.capture());
+        Assertions.assertEquals(Long.valueOf(1L), createdConstraint.getValue().getItemId());
+        Assertions.assertEquals(Integer.valueOf(0), createdConstraint.getValue().getOrder());
+
+        ArgumentCaptor<XXConstraintDef> updatedConstraint = ArgumentCaptor.forClass(XXConstraintDef.class);
+        Mockito.verify(xConstraintDao).update(updatedConstraint.capture());
+        Assertions.assertEquals(Long.valueOf(2L), updatedConstraint.getValue().getItemId());
+        Assertions.assertEquals(Integer.valueOf(1), updatedConstraint.getValue().getOrder());
+        Mockito.verify(xConstraintDao).remove(existingRemove);
+        Mockito.verify(daoMgr, Mockito.never()).getXXPolicyRefCondition();
+    }
+
+    @Test
+    public void test264deleteServiceDef_removesEachConstraintDef() throws Exception {
+        setup();
+
+        RangerServiceDef serviceDef = new RangerServiceDef();
+        serviceDef.setId(1L);
+        serviceDef.setName("agent");
+        serviceDef.setVersion(1L);
+        Mockito.when(serviceDefService.read(1L)).thenReturn(serviceDef);
+
+        XXServiceDao xServiceDao = Mockito.mock(XXServiceDao.class);
+        Mockito.when(daoMgr.getXXService()).thenReturn(xServiceDao);
+        Mockito.when(xServiceDao.findByServiceDefId(1L)).thenReturn(new ArrayList<>());
+
+        XXDataMaskTypeDefDao    xDmDao         = Mockito.mock(XXDataMaskTypeDefDao.class);
+        XXAccessTypeDefDao      xAtdDao        = Mockito.mock(XXAccessTypeDefDao.class);
+        XXContextEnricherDefDao xEnrDao        = Mockito.mock(XXContextEnricherDefDao.class);
+        XXEnumDefDao            xEnumDao       = Mockito.mock(XXEnumDefDao.class);
+        XXPolicyConditionDefDao xCondDao       = Mockito.mock(XXPolicyConditionDefDao.class);
+        XXConstraintDefDao      xConstraintDao = Mockito.mock(XXConstraintDefDao.class);
+        XXResourceDefDao        xResDao        = Mockito.mock(XXResourceDefDao.class);
+        XXServiceConfigDefDao   xCfgDao        = Mockito.mock(XXServiceConfigDefDao.class);
+        Mockito.when(daoMgr.getXXDataMaskTypeDef()).thenReturn(xDmDao);
+        Mockito.when(xDmDao.findByServiceDefId(1L)).thenReturn(new ArrayList<>());
+        Mockito.when(daoMgr.getXXAccessTypeDef()).thenReturn(xAtdDao);
+        Mockito.when(xAtdDao.findByServiceDefId(1L)).thenReturn(new ArrayList<>());
+        Mockito.when(daoMgr.getXXContextEnricherDef()).thenReturn(xEnrDao);
+        Mockito.when(xEnrDao.findByServiceDefId(1L)).thenReturn(new ArrayList<>());
+        Mockito.when(daoMgr.getXXEnumDef()).thenReturn(xEnumDao);
+        Mockito.when(xEnumDao.findByServiceDefId(1L)).thenReturn(new ArrayList<>());
+        Mockito.when(daoMgr.getXXPolicyConditionDef()).thenReturn(xCondDao);
+        Mockito.when(xCondDao.findByServiceDefId(1L)).thenReturn(new ArrayList<>());
+        Mockito.when(daoMgr.getXXResourceDef()).thenReturn(xResDao);
+        Mockito.when(xResDao.findByServiceDefId(1L)).thenReturn(new ArrayList<>());
+        Mockito.when(daoMgr.getXXServiceConfigDef()).thenReturn(xCfgDao);
+        Mockito.when(xCfgDao.findByServiceDefId(1L)).thenReturn(new ArrayList<>());
+
+        XXConstraintDef requireApproval = new XXConstraintDef();
+        requireApproval.setId(11L);
+        requireApproval.setName("requireApproval");
+        XXConstraintDef maxRows = new XXConstraintDef();
+        maxRows.setId(12L);
+        maxRows.setName("maxRows");
+        List<XXConstraintDef> rows = new ArrayList<>();
+        rows.add(requireApproval);
+        rows.add(maxRows);
+        Mockito.when(daoMgr.getXXConstraintDef()).thenReturn(xConstraintDao);
+        Mockito.when(xConstraintDao.findByServiceDefId(1L)).thenReturn(rows);
+
+        serviceDBStore.deleteServiceDef(1L, true);
+
+        Mockito.verify(xConstraintDao).remove(requireApproval);
+        Mockito.verify(xConstraintDao).remove(maxRows);
     }
 
     @Test

@@ -49,6 +49,7 @@
 		<class>org.apache.ranger.entity.XXAccessTypeDef</class>
 		<class>org.apache.ranger.entity.XXAccessTypeDefGrants</class>
 		<class>org.apache.ranger.entity.XXPolicyConditionDef</class>
+		<class>org.apache.ranger.entity.XXConstraintDef</class>
 		<class>org.apache.ranger.entity.XXContextEnricherDef</class>
 		<class>org.apache.ranger.entity.XXEnumDef</class>
 		<class>org.apache.ranger.entity.XXEnumElementDef</class>

@@ -142,6 +142,10 @@ public abstract class RangerDaoManagerBase {
         return new XXPolicyConditionDefDao(this);
     }
 
+    public XXConstraintDefDao getXXConstraintDef() {
+        return new XXConstraintDefDao(this);
+    }
+
     public XXContextEnricherDefDao getXXContextEnricherDef() {
         return new XXContextEnricherDefDao(this);
     }

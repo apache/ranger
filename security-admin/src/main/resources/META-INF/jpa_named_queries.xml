@@ -691,6 +691,15 @@
 		<query>select obj.id, obj.name from XXPolicyConditionDef obj where obj.defId = :serviceDefId and obj.name IN :names order by obj.order</query>
 	</named-query>
 
+	<!-- XXConstraintDef -->
+	<named-query name="XXConstraintDef.findByServiceDefId">
+		<query>select obj from XXConstraintDef obj where obj.defId = :serviceDefId order by obj.order</query>
+	</named-query>
+
+	<named-query name="XXConstraintDef.findByServiceDefIdAndName">
+		<query>select obj from XXConstraintDef obj where obj.defId = :serviceDefId and obj.name = :name order by obj.order</query>
+	</named-query>
+
 	<!-- XXContextEnricherDef -->
 	<named-query name="XXContextEnricherDef.findByServiceDefId">
 		<query>select obj from XXContextEnricherDef obj where obj.defId = :serviceDefId order by obj.order</query>

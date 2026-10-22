@@ -71,6 +71,8 @@ public class XPortalUserService extends XPortalUserServiceBase<XXPortalUser, VXP
         daoManager.getXXAccessTypeDefGrants().updateUserIDReference("upd_by_id", xXPortalUserId);
         daoManager.getXXPolicyConditionDef().updateUserIDReference("added_by_id", xXPortalUserId);
         daoManager.getXXPolicyConditionDef().updateUserIDReference("upd_by_id", xXPortalUserId);
+        daoManager.getXXConstraintDef().updateUserIDReference("added_by_id", xXPortalUserId);
+        daoManager.getXXConstraintDef().updateUserIDReference("upd_by_id", xXPortalUserId);
         daoManager.getXXContextEnricherDef().updateUserIDReference("added_by_id", xXPortalUserId);
         daoManager.getXXContextEnricherDef().updateUserIDReference("upd_by_id", xXPortalUserId);
         daoManager.getXXEnumDef().updateUserIDReference("added_by_id", xXPortalUserId);

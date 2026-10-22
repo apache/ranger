@@ -17,6 +17,7 @@
 
 package org.apache.ranger.service;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.ranger.common.AppConstants;
@@ -29,6 +30,7 @@ import org.apache.ranger.common.SearchField.DATA_TYPE;
 import org.apache.ranger.common.SearchField.SEARCH_TYPE;
 import org.apache.ranger.common.SortField;
 import org.apache.ranger.entity.XXAccessTypeDef;
+import org.apache.ranger.entity.XXConstraintDef;
 import org.apache.ranger.entity.XXContextEnricherDef;
 import org.apache.ranger.entity.XXDataMaskTypeDef;
 import org.apache.ranger.entity.XXEnumDef;
@@ -41,6 +43,8 @@ import org.apache.ranger.entity.XXServiceDefBase;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerAccessTypeDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerAccessTypeDef.AccessTypeCategory;
+import org.apache.ranger.plugin.model.RangerServiceDef.RangerConstraintDef;
+import org.apache.ranger.plugin.model.RangerServiceDef.RangerConstraintParamDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerContextEnricherDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerDataMaskDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerDataMaskTypeDef;
@@ -50,6 +54,7 @@ import org.apache.ranger.plugin.model.RangerServiceDef.RangerPolicyConditionDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerResourceDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerRowFilterDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerServiceConfigDef;
+import org.apache.ranger.plugin.util.JsonUtilsV2;
 import org.apache.ranger.plugin.util.SearchFilter;
 import org.apache.ranger.plugin.util.ServiceDefUtil;
 import org.apache.ranger.view.RangerServiceDefList;
@@ -74,6 +79,9 @@ public abstract class RangerServiceDefServiceBase<T extends XXServiceDefBase, V 
 
     private static final String OPTION_RESOURCE_ACCESS_TYPE_RESTRICTIONS  = "__accessTypeRestrictions";
     private static final String OPTION_RESOURCE_IS_VALID_LEAF             = "__isValidLeaf";
+
+    private static final TypeReference<List<String>>                   TYPE_REF_LIST_STRING           = new TypeReference<List<String>>() {};
+    private static final TypeReference<List<RangerConstraintParamDef>> TYPE_REF_LIST_CONSTRAINT_PARAM = new TypeReference<List<RangerConstraintParamDef>>() {};
 
     @Autowired
     RangerAuditFields<?> rangerAuditFields;
@@ -346,6 +354,48 @@ public abstract class RangerServiceDefServiceBase<T extends XXServiceDefBase, V 
         return vObj;
     }
 
+    public XXConstraintDef populateRangerConstraintDefToXX(RangerConstraintDef vObj, XXConstraintDef xObj, XXServiceDef serviceDef, int operationContext) {
+        if (serviceDef == null) {
+            LOG.error("RangerServiceDefServiceBase.populateRangerConstraintDefToXX, serviceDef can not be null");
+
+            throw restErrorUtil.createRESTException("RangerServiceDef cannot be null.", MessageEnums.DATA_NOT_FOUND);
+        }
+
+        xObj = rangerAuditFields.populateAuditFields(xObj, serviceDef);
+
+        xObj.setDefid(serviceDef.getId());
+        xObj.setItemId(vObj.getItemId());
+        xObj.setName(vObj.getName());
+        xObj.setLabel(vObj.getLabel());
+        xObj.setDescription(vObj.getDescription());
+        xObj.setRbkeylabel(vObj.getRbKeyLabel());
+        xObj.setRbkeydescription(vObj.getRbKeyDescription());
+        xObj.setResources(vObj.getResources() == null ? null : jsonUtil.readListToString(vObj.getResources()));
+        xObj.setAccessTypes(vObj.getAccessTypes() == null ? null : jsonUtil.readListToString(vObj.getAccessTypes()));
+        xObj.setParameters(vObj.getParameters() == null ? null : objectToJson(new ArrayList<>(vObj.getParameters())));
+        xObj.setOptions(mapToJsonString(vObj.getOptions()));
+        xObj.setOrder(AppConstants.DEFAULT_SORT_ORDER);
+
+        return xObj;
+    }
+
+    public RangerConstraintDef populateXXToRangerConstraintDef(XXConstraintDef xObj) {
+        RangerConstraintDef vObj = new RangerConstraintDef();
+
+        vObj.setItemId(xObj.getItemId());
+        vObj.setName(xObj.getName());
+        vObj.setLabel(xObj.getLabel());
+        vObj.setDescription(xObj.getDescription());
+        vObj.setRbKeyLabel(xObj.getRbkeylabel());
+        vObj.setRbKeyDescription(xObj.getRbkeydescription());
+        vObj.setResources(jsonToStringList(xObj.getResources()));
+        vObj.setAccessTypes(jsonToStringList(xObj.getAccessTypes()));
+        vObj.setParameters(jsonToConstraintParams(xObj.getParameters()));
+        vObj.setOptions(jsonStringToMap(xObj.getOptions()));
+
+        return vObj;
+    }
+
     public XXContextEnricherDef populateRangerContextEnricherDefToXX(RangerContextEnricherDef vObj, XXContextEnricherDef xObj, XXServiceDef serviceDef, int operationContext) {
         if (serviceDef == null) {
             LOG.error("RangerServiceDefServiceBase.populateRangerContextEnricherDefToXX, serviceDef can not be null");
@@ -537,6 +587,34 @@ public abstract class RangerServiceDefServiceBase<T extends XXServiceDefBase, V 
         return ret;
     }
 
+    private List<String> jsonToStringList(String jsonStr) {
+        List<String> ret = null;
+
+        if (StringUtils.isNotEmpty(jsonStr)) {
+            try {
+                ret = JsonUtilsV2.jsonToObj(jsonStr, TYPE_REF_LIST_STRING);
+            } catch (Exception excp) {
+                LOG.warn("jsonToStringList() failed to convert json to object: {}", jsonStr, excp);
+            }
+        }
+
+        return ret;
+    }
+
+    private List<RangerConstraintParamDef> jsonToConstraintParams(String jsonStr) {
+        List<RangerConstraintParamDef> ret = null;
+
+        if (StringUtils.isNotEmpty(jsonStr)) {
+            try {
+                ret = JsonUtilsV2.jsonToObj(jsonStr, TYPE_REF_LIST_CONSTRAINT_PARAM);
+            } catch (Exception excp) {
+                LOG.warn("jsonToConstraintParams() failed to convert json to object: {}", jsonStr, excp);
+            }
+        }
+
+        return ret;
+    }
+
     @Override
     protected T mapViewToEntityBean(V vObj, T xObj, int operationContext) {
         String guid = (StringUtils.isEmpty(vObj.getGuid())) ? guidUtil.genGUID() : vObj.getGuid();
@@ -633,6 +711,20 @@ public abstract class RangerServiceDefServiceBase<T extends XXServiceDefBase, V 
             }
 
             serviceDef.setPolicyConditions(policyConditions);
+        }
+
+        List<XXConstraintDef> xConstraintDefs = daoMgr.getXXConstraintDef().findByServiceDefId(serviceDefId);
+
+        if (!stringUtil.isEmpty(xConstraintDefs)) {
+            List<RangerConstraintDef> constraintDefs = new ArrayList<>();
+
+            for (XXConstraintDef xConstraintDef : xConstraintDefs) {
+                RangerConstraintDef constraintDef = populateXXToRangerConstraintDef(xConstraintDef);
+
+                constraintDefs.add(constraintDef);
+            }
+
+            serviceDef.setConstraintDefs(constraintDefs);
         }
 
         List<XXContextEnricherDef> xContextEnrichers = daoMgr.getXXContextEnricherDef().findByServiceDefId(serviceDefId);

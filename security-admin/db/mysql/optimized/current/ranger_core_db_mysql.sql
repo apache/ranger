@@ -59,6 +59,7 @@ DROP TABLE IF EXISTS `x_service_config_map`;
 DROP TABLE IF EXISTS `x_enum_element_def`;
 DROP TABLE IF EXISTS `x_enum_def`;
 DROP TABLE IF EXISTS `x_context_enricher_def`;
+DROP TABLE IF EXISTS `x_constraint_def`;
 DROP TABLE IF EXISTS `x_policy_condition_def`;
 DROP TABLE IF EXISTS `x_access_type_def_grants`;
 DROP TABLE IF EXISTS `x_access_type_def`;
@@ -827,6 +828,31 @@ CONSTRAINT `x_policy_condition_def_FK_added_by_id` FOREIGN KEY (`added_by_id`) R
 CONSTRAINT `x_policy_condition_def_FK_upd_by_id` FOREIGN KEY (`upd_by_id`) REFERENCES `x_portal_user` (`id`)
 )ROW_FORMAT=DYNAMIC;
 
+CREATE TABLE `x_constraint_def` (
+`id` bigint(20) NOT NULL AUTO_INCREMENT ,
+`guid` varchar(1024) DEFAULT NULL,
+`create_time` datetime DEFAULT NULL,
+`update_time` datetime DEFAULT NULL,
+`added_by_id` bigint(20) DEFAULT NULL,
+`upd_by_id` bigint(20) DEFAULT NULL,
+`def_id` bigint(20) NOT NULL,
+`item_id` bigint(20) NOT NULL,
+`name` varchar(1024) DEFAULT NULL,
+`label` varchar(1024) DEFAULT NULL,
+`description` varchar(1024) DEFAULT NULL,
+`rb_key_label` varchar(1024) DEFAULT NULL,
+`rb_key_description` varchar(1024) DEFAULT NULL,
+`resources` mediumtext DEFAULT NULL,
+`access_types` mediumtext DEFAULT NULL,
+`parameters` mediumtext DEFAULT NULL,
+`options` mediumtext DEFAULT NULL,
+`sort_order` int DEFAULT 0,
+primary key (`id`)   ,
+CONSTRAINT `x_constraint_def_FK_defid` FOREIGN KEY (`def_id`) REFERENCES `x_service_def` (`id`),
+CONSTRAINT `x_constraint_def_FK_added_by_id` FOREIGN KEY (`added_by_id`) REFERENCES `x_portal_user` (`id`),
+CONSTRAINT `x_constraint_def_FK_upd_by_id` FOREIGN KEY (`upd_by_id`) REFERENCES `x_portal_user` (`id`)
+)ROW_FORMAT=DYNAMIC;
+
 CREATE TABLE `x_context_enricher_def` (
 `id` bigint(20) NOT NULL AUTO_INCREMENT ,
 `guid` varchar(1024) DEFAULT NULL,
@@ -1504,6 +1530,7 @@ CREATE INDEX x_resource_def_IDX_def_id ON x_resource_def(def_id);
 CREATE INDEX x_access_type_def_IDX_def_id ON x_access_type_def(def_id);
 CREATE INDEX x_access_type_def_IDX_grants_atd_id ON x_access_type_def_grants(atd_id);
 CREATE INDEX x_context_enricher_def_IDX_def_id ON x_context_enricher_def(def_id);
+CREATE INDEX x_constraint_def_IDX_def_id ON x_constraint_def(def_id);
 CREATE INDEX x_enum_def_IDX_def_id ON x_enum_def(def_id);
 CREATE INDEX x_enum_element_def_IDX_enum_def_id ON x_enum_element_def(enum_def_id);
 CREATE INDEX x_service_config_map_IDX_service ON x_service_config_map(service);
@@ -1975,6 +2002,7 @@ INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('076',UTC_TIMESTAMP(),'Ranger 3.0.0',UTC_TIMESTAMP(),'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('077',UTC_TIMESTAMP(),'Ranger 3.0.0',UTC_TIMESTAMP(),'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('078',UTC_TIMESTAMP(),'Ranger 3.0.0',UTC_TIMESTAMP(),'localhost','Y');
+INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('079',UTC_TIMESTAMP(),'Ranger 3.0.0',UTC_TIMESTAMP(),'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('DB_PATCHES',UTC_TIMESTAMP(),'Ranger 1.0.0',UTC_TIMESTAMP(),'localhost','Y');
 
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('J10001',UTC_TIMESTAMP(),'Ranger 1.0.0',UTC_TIMESTAMP(),'localhost','Y');

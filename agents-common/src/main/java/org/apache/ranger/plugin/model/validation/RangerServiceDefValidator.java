@@ -27,6 +27,8 @@ import org.apache.ranger.plugin.errors.ValidationErrorCode;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerAccessTypeDef;
+import org.apache.ranger.plugin.model.RangerServiceDef.RangerConstraintDef;
+import org.apache.ranger.plugin.model.RangerServiceDef.RangerConstraintParamDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerDataMaskTypeDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerEnumDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerEnumElementDef;
@@ -50,7 +52,8 @@ import java.util.Set;
 public class RangerServiceDefValidator extends RangerValidator {
     private static final Logger LOG = LoggerFactory.getLogger(RangerServiceDefValidator.class);
 
-    private static final Set<String> VALID_CONFIG_TYPES = ImmutableSet.of("bool", "enum", "int", "string", "password", "path");
+    private static final Set<String> VALID_CONFIG_TYPES           = ImmutableSet.of("bool", "enum", "int", "string", "password", "path");
+    private static final Set<String> VALID_CONSTRAINT_PARAM_TYPES = ImmutableSet.of("string", "int", "bool", "enum", "user", "group", "role");
 
     public RangerServiceDefValidator(ServiceStore store) {
         super(store);
@@ -220,6 +223,7 @@ public class RangerServiceDefValidator extends RangerValidator {
             }
 
             valid = isValidPolicyConditions(serviceDef.getId(), serviceDef.getPolicyConditions(), failures, action) && valid;
+            valid = isValidConstraintDefs(serviceDef, failures) && valid;
             valid = isValidDataMaskTypes(serviceDef.getId(), serviceDef.getDataMaskDef().getMaskTypes(), failures, action) && valid;
         }
 
@@ -530,6 +534,270 @@ public class RangerServiceDefValidator extends RangerValidator {
         LOG.debug("<== RangerServiceDefValidator.isValidPolicyConditions({}, {}): {}", policyConditions, failures, valid);
 
         return valid;
+    }
+
+    boolean isValidConstraintDefs(RangerServiceDef serviceDef, List<ValidationFailureDetails> failures) {
+        LOG.debug("==> RangerServiceDefValidator.isValidConstraintDefs({}, {})", serviceDef, failures);
+
+        boolean valid = true;
+
+        if (serviceDef == null || CollectionUtils.isEmpty(serviceDef.getConstraintDefs())) {
+            LOG.debug("constraint def collection was null/empty. Ok.");
+        } else {
+            Map<String, RangerResourceDef> resourceDefs   = resourceDefMap(serviceDef.getResources());
+            Set<String>                    accessTypes    = accessTypeNames(serviceDef.getAccessTypes());
+            Map<String, RangerEnumDef>     enumDefs       = getEnumDefMap(serviceDef.getEnums());
+            Set<Long>                      ids            = new HashSet<>();
+            Set<String>                    names          = new HashSet<>();
+
+            for (RangerConstraintDef constraintDef : serviceDef.getConstraintDefs()) {
+                if (constraintDef == null) {
+                    failures.add(new ValidationFailureDetailsBuilder()
+                            .field("constraint def")
+                            .isMissing()
+                            .becauseOf("constraint def was null")
+                            .build());
+
+                    valid = false;
+
+                    continue;
+                }
+
+                String constraintName = constraintDef.getName();
+
+                valid = isUnique(constraintDef.getItemId(), ids, "constraint def itemId", "constraint defs", failures) && valid;
+                valid = isUnique(constraintName, names, "constraint def name", "constraint defs", failures) && valid;
+                valid = isValidConstraintResources(constraintDef, resourceDefs, failures) && valid;
+                valid = isValidConstraintAccessTypes(constraintDef, accessTypes, failures) && valid;
+                valid = isValidConstraintParams(constraintDef, enumDefs, failures) && valid;
+            }
+        }
+
+        LOG.debug("<== RangerServiceDefValidator.isValidConstraintDefs({}, {}): {}", serviceDef, failures, valid);
+
+        return valid;
+    }
+
+    private boolean isValidConstraintResources(RangerConstraintDef constraintDef, Map<String, RangerResourceDef> resourceDefs, List<ValidationFailureDetails> failures) {
+        boolean      valid          = true;
+        List<String> resources      = constraintDef.getResources();
+        String       constraintName = constraintDef.getName();
+
+        if (CollectionUtils.isEmpty(resources)) {
+            return true;
+        }
+
+        Set<String> listed = new HashSet<>();
+
+        for (String resourceName : resources) {
+            if (StringUtils.isNotBlank(resourceName)) {
+                listed.add(resourceName);
+            }
+        }
+
+        for (String resourceName : resources) {
+            if (StringUtils.isBlank(resourceName) || !resourceDefs.containsKey(resourceName)) {
+                ValidationErrorCode error = ValidationErrorCode.SERVICE_DEF_VALIDATION_ERR_CONSTRAINT_UNKNOWN_RESOURCE;
+
+                failures.add(new ValidationFailureDetailsBuilder()
+                        .field("constraint def resource")
+                        .subField(StringUtils.isBlank(resourceName) ? constraintName : resourceName)
+                        .isSemanticallyIncorrect()
+                        .errorCode(error.getErrorCode())
+                        .becauseOf(error.getMessage(resourceName, constraintName))
+                        .build());
+
+                valid = false;
+
+                continue;
+            }
+
+            if (!hasConstraintAncestors(resourceName, listed, resourceDefs, constraintName, failures)) {
+                valid = false;
+            }
+        }
+
+        return valid;
+    }
+
+    private boolean hasConstraintAncestors(String resourceName, Set<String> listed, Map<String, RangerResourceDef> resourceDefs, String constraintName, List<ValidationFailureDetails> failures) {
+        Set<String>       seen        = new HashSet<>();
+        RangerResourceDef resourceDef = resourceDefs.get(resourceName);
+        String            parent      = resourceDef == null ? null : resourceDef.getParent();
+
+        seen.add(resourceName);
+
+        while (StringUtils.isNotBlank(parent)) {
+            if (!seen.add(parent)) {
+                break;
+            }
+
+            if (!listed.contains(parent)) {
+                ValidationErrorCode error = ValidationErrorCode.SERVICE_DEF_VALIDATION_ERR_CONSTRAINT_MISSING_ANCESTOR;
+
+                failures.add(new ValidationFailureDetailsBuilder()
+                        .field("constraint def ancestor")
+                        .subField(resourceName)
+                        .isSemanticallyIncorrect()
+                        .errorCode(error.getErrorCode())
+                        .becauseOf(error.getMessage(constraintName, resourceName, parent))
+                        .build());
+
+                return false;
+            }
+
+            RangerResourceDef parentDef = resourceDefs.get(parent);
+
+            parent = parentDef == null ? null : parentDef.getParent();
+        }
+
+        return true;
+    }
+
+    private boolean isValidConstraintAccessTypes(RangerConstraintDef constraintDef, Set<String> accessTypes, List<ValidationFailureDetails> failures) {
+        boolean      valid                  = true;
+        List<String> constraintAccessTypes = constraintDef.getAccessTypes();
+
+        if (CollectionUtils.isEmpty(constraintAccessTypes)) {
+            return true;
+        }
+
+        String constraintName = constraintDef.getName();
+
+        for (String accessType : constraintAccessTypes) {
+            if (StringUtils.isBlank(accessType) || !accessTypes.contains(accessType)) {
+                ValidationErrorCode error = ValidationErrorCode.SERVICE_DEF_VALIDATION_ERR_CONSTRAINT_UNKNOWN_ACCESS_TYPE;
+
+                failures.add(new ValidationFailureDetailsBuilder()
+                        .field("constraint def access type")
+                        .subField(StringUtils.isBlank(accessType) ? constraintName : accessType)
+                        .isSemanticallyIncorrect()
+                        .errorCode(error.getErrorCode())
+                        .becauseOf(error.getMessage(accessType, constraintName))
+                        .build());
+
+                valid = false;
+            }
+        }
+
+        return valid;
+    }
+
+    private boolean isValidConstraintParams(RangerConstraintDef constraintDef, Map<String, RangerEnumDef> enumDefs, List<ValidationFailureDetails> failures) {
+        boolean                        valid          = true;
+        List<RangerConstraintParamDef> parameters     = constraintDef.getParameters();
+        String                         constraintName = constraintDef.getName();
+
+        if (CollectionUtils.isEmpty(parameters)) {
+            return true;
+        }
+
+        Set<String> paramNames = new HashSet<>();
+
+        for (RangerConstraintParamDef parameter : parameters) {
+            if (parameter == null) {
+                failures.add(new ValidationFailureDetailsBuilder()
+                        .field("constraint def parameter")
+                        .subField(constraintName)
+                        .isMissing()
+                        .becauseOf("constraint def parameter was null")
+                        .build());
+
+                valid = false;
+
+                continue;
+            }
+
+            String paramName = parameter.getName();
+
+            valid = isUnique(paramName, constraintName, paramNames, "constraint def parameter name", "constraint def parameters", failures) && valid;
+
+            String type = parameter.getType();
+
+            if (StringUtils.isBlank(type)) {
+                ValidationErrorCode error = ValidationErrorCode.SERVICE_DEF_VALIDATION_ERR_CONSTRAINT_PARAM_MISSING_TYPE;
+
+                failures.add(new ValidationFailureDetailsBuilder()
+                        .field("constraint def parameter type")
+                        .subField(paramName)
+                        .isMissing()
+                        .errorCode(error.getErrorCode())
+                        .becauseOf(error.getMessage(constraintName, paramName))
+                        .build());
+
+                valid = false;
+            } else if (!VALID_CONSTRAINT_PARAM_TYPES.contains(type)) {
+                ValidationErrorCode error = ValidationErrorCode.SERVICE_DEF_VALIDATION_ERR_CONSTRAINT_PARAM_INVALID_TYPE;
+
+                failures.add(new ValidationFailureDetailsBuilder()
+                        .field("constraint def parameter type")
+                        .subField(paramName)
+                        .isSemanticallyIncorrect()
+                        .errorCode(error.getErrorCode())
+                        .becauseOf(error.getMessage(type, constraintName, paramName, VALID_CONSTRAINT_PARAM_TYPES))
+                        .build());
+
+                valid = false;
+            } else if ("enum".equals(type)) {
+                String subType = parameter.getSubType();
+
+                if (StringUtils.isBlank(subType) || !enumDefs.containsKey(subType)) {
+                    ValidationErrorCode error = ValidationErrorCode.SERVICE_DEF_VALIDATION_ERR_CONSTRAINT_PARAM_UNKNOWN_ENUM;
+
+                    failures.add(new ValidationFailureDetailsBuilder()
+                            .field("constraint def parameter subtype")
+                            .subField(paramName)
+                            .isSemanticallyIncorrect()
+                            .errorCode(error.getErrorCode())
+                            .becauseOf(error.getMessage(subType, constraintName, paramName, enumDefs.keySet()))
+                            .build());
+
+                    valid = false;
+                }
+            } else if (StringUtils.isNotBlank(parameter.getSubType())) {
+                ValidationErrorCode error = ValidationErrorCode.SERVICE_DEF_VALIDATION_ERR_CONSTRAINT_PARAM_SUBTYPE_NOT_EMPTY;
+
+                failures.add(new ValidationFailureDetailsBuilder()
+                        .field("constraint def parameter subtype")
+                        .subField(paramName)
+                        .isSemanticallyIncorrect()
+                        .errorCode(error.getErrorCode())
+                        .becauseOf(error.getMessage(parameter.getSubType(), constraintName, paramName, type))
+                        .build());
+
+                valid = false;
+            }
+        }
+
+        return valid;
+    }
+
+    private Map<String, RangerResourceDef> resourceDefMap(List<RangerResourceDef> resources) {
+        Map<String, RangerResourceDef> resourceDefs = new HashMap<>();
+
+        if (resources != null) {
+            for (RangerResourceDef resourceDef : resources) {
+                if (resourceDef != null && StringUtils.isNotBlank(resourceDef.getName())) {
+                    resourceDefs.put(resourceDef.getName(), resourceDef);
+                }
+            }
+        }
+
+        return resourceDefs;
+    }
+
+    private Set<String> accessTypeNames(List<RangerAccessTypeDef> accessTypeDefs) {
+        Set<String> accessTypes = new HashSet<>();
+
+        if (accessTypeDefs != null) {
+            for (RangerAccessTypeDef accessTypeDef : accessTypeDefs) {
+                if (accessTypeDef != null && StringUtils.isNotBlank(accessTypeDef.getName())) {
+                    accessTypes.add(accessTypeDef.getName());
+                }
+            }
+        }
+
+        return accessTypes;
     }
 
     boolean isValidConfigs(List<RangerServiceConfigDef> configs, List<RangerEnumDef> enumDefs, List<ValidationFailureDetails> failures) {

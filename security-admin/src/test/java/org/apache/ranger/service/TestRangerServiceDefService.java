@@ -27,6 +27,7 @@ import org.apache.ranger.common.db.BaseDao;
 import org.apache.ranger.db.RangerDaoManager;
 import org.apache.ranger.db.XXAccessTypeDefDao;
 import org.apache.ranger.db.XXAccessTypeDefGrantsDao;
+import org.apache.ranger.db.XXConstraintDefDao;
 import org.apache.ranger.db.XXContextEnricherDefDao;
 import org.apache.ranger.db.XXDataMaskTypeDefDao;
 import org.apache.ranger.db.XXEnumDefDao;
@@ -35,6 +36,7 @@ import org.apache.ranger.db.XXPolicyConditionDefDao;
 import org.apache.ranger.db.XXPortalUserDao;
 import org.apache.ranger.db.XXResourceDefDao;
 import org.apache.ranger.db.XXServiceConfigDefDao;
+import org.apache.ranger.entity.XXConstraintDef;
 import org.apache.ranger.entity.XXContextEnricherDef;
 import org.apache.ranger.entity.XXDataMaskTypeDef;
 import org.apache.ranger.entity.XXEnumDef;
@@ -71,6 +73,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
@@ -295,6 +298,7 @@ public class TestRangerServiceDefService {
         Mockito.when(daoMgr.getXXAccessTypeDefGrants()).thenReturn(xxAccessTypeDefGrantsDao);
 
         Mockito.when(daoMgr.getXXPolicyConditionDef()).thenReturn(xPolicyConditionDefDao);
+        Mockito.when(daoMgr.getXXConstraintDef()).thenReturn(Mockito.mock(XXConstraintDefDao.class));
 
         Mockito.when(daoMgr.getXXContextEnricherDef()).thenReturn(xContextEnricherDefDao);
         Mockito.when(xContextEnricherDefDao.findByServiceDefId(serviceDef.getId())).thenReturn(contextEnrichersList);
@@ -493,6 +497,7 @@ public class TestRangerServiceDefService {
         Mockito.when(daoMgr.getXXAccessTypeDefGrants()).thenReturn(xxAccessTypeDefGrantsDao);
 
         Mockito.when(daoMgr.getXXPolicyConditionDef()).thenReturn(xPolicyConditionDefDao);
+        Mockito.when(daoMgr.getXXConstraintDef()).thenReturn(Mockito.mock(XXConstraintDefDao.class));
 
         Mockito.when(daoMgr.getXXContextEnricherDef()).thenReturn(xContextEnricherDefDao);
         Mockito.when(xContextEnricherDefDao.findByServiceDefId(serviceDef.getId())).thenReturn(contextEnrichersList);
@@ -668,6 +673,7 @@ public class TestRangerServiceDefService {
         Mockito.when(daoMgr.getXXAccessTypeDefGrants()).thenReturn(xxAccessTypeDefGrantsDao);
 
         Mockito.when(daoMgr.getXXPolicyConditionDef()).thenReturn(xPolicyConditionDefDao);
+        Mockito.when(daoMgr.getXXConstraintDef()).thenReturn(Mockito.mock(XXConstraintDefDao.class));
 
         Mockito.when(daoMgr.getXXContextEnricherDef()).thenReturn(xContextEnricherDefDao);
         Mockito.when(xContextEnricherDefDao.findByServiceDefId(serviceDef.getId())).thenReturn(contextEnrichersList);
@@ -909,6 +915,71 @@ public class TestRangerServiceDefService {
         } catch (Exception e) {
             // Ignore the exception
         }
+    }
+
+    @Test
+    public void test6PopulateViewBeanLoadsConstraintDefs() {
+        serviceDefService.bizUtil    = Mockito.mock(RangerBizUtil.class);
+        serviceDefService.stringUtil = new StringUtil();
+
+        XXServiceDef serviceDef = serviceDef();
+        XXPortalUser portalUser = new XXPortalUser();
+        portalUser.setId(Id);
+        portalUser.setFirstName("Admin");
+
+        XXConstraintDef xConstraintDef = new XXConstraintDef();
+        xConstraintDef.setId(Id);
+        xConstraintDef.setDefid(serviceDef.getId());
+        xConstraintDef.setItemId(4L);
+        xConstraintDef.setName("requireApproval");
+        xConstraintDef.setResources("[\"database\",\"udf\"]");
+        xConstraintDef.setAccessTypes("[\"select\"]");
+        xConstraintDef.setParameters("[{\"itemId\":1,\"name\":\"approver\",\"type\":\"user\",\"mandatory\":true}]");
+        List<XXConstraintDef> xConstraintDefs = new ArrayList<>();
+        xConstraintDefs.add(xConstraintDef);
+
+        XXPortalUserDao          xPortalUserDao          = Mockito.mock(XXPortalUserDao.class);
+        XXServiceConfigDefDao    xServiceConfigDefDao    = Mockito.mock(XXServiceConfigDefDao.class);
+        XXResourceDefDao         xResourceDefDao         = Mockito.mock(XXResourceDefDao.class);
+        XXAccessTypeDefDao       xAccessTypeDefDao       = Mockito.mock(XXAccessTypeDefDao.class);
+        XXAccessTypeDefGrantsDao xAccessTypeDefGrantsDao = Mockito.mock(XXAccessTypeDefGrantsDao.class);
+        XXPolicyConditionDefDao  xPolicyConditionDefDao  = Mockito.mock(XXPolicyConditionDefDao.class);
+        XXConstraintDefDao       xConstraintDefDao       = Mockito.mock(XXConstraintDefDao.class);
+        XXContextEnricherDefDao  xContextEnricherDefDao  = Mockito.mock(XXContextEnricherDefDao.class);
+        XXEnumDefDao             xEnumDefDao             = Mockito.mock(XXEnumDefDao.class);
+        XXDataMaskTypeDefDao     xDataMaskTypeDao        = Mockito.mock(XXDataMaskTypeDefDao.class);
+
+        Mockito.when(daoMgr.getXXPortalUser()).thenReturn(xPortalUserDao);
+        Mockito.when(xPortalUserDao.getById(Id)).thenReturn(portalUser);
+        Mockito.when(daoMgr.getXXServiceConfigDef()).thenReturn(xServiceConfigDefDao);
+        Mockito.when(xServiceConfigDefDao.findByServiceDefId(serviceDef.getId())).thenReturn(new ArrayList<>());
+        Mockito.when(daoMgr.getXXResourceDef()).thenReturn(xResourceDefDao);
+        Mockito.when(xResourceDefDao.findByServiceDefId(serviceDef.getId())).thenReturn(new ArrayList<>());
+        Mockito.when(daoMgr.getXXAccessTypeDef()).thenReturn(xAccessTypeDefDao);
+        Mockito.when(xAccessTypeDefDao.findByServiceDefId(serviceDef.getId())).thenReturn(new ArrayList<>());
+        Mockito.when(daoMgr.getXXAccessTypeDefGrants()).thenReturn(xAccessTypeDefGrantsDao);
+        Mockito.when(xAccessTypeDefGrantsDao.findImpliedGrantsByServiceDefId(serviceDef.getId())).thenReturn(Collections.emptyMap());
+        Mockito.when(daoMgr.getXXPolicyConditionDef()).thenReturn(xPolicyConditionDefDao);
+        Mockito.when(xPolicyConditionDefDao.findByServiceDefId(serviceDef.getId())).thenReturn(new ArrayList<>());
+        Mockito.when(daoMgr.getXXConstraintDef()).thenReturn(xConstraintDefDao);
+        Mockito.when(xConstraintDefDao.findByServiceDefId(serviceDef.getId())).thenReturn(xConstraintDefs);
+        Mockito.when(daoMgr.getXXContextEnricherDef()).thenReturn(xContextEnricherDefDao);
+        Mockito.when(xContextEnricherDefDao.findByServiceDefId(serviceDef.getId())).thenReturn(new ArrayList<>());
+        Mockito.when(daoMgr.getXXEnumDef()).thenReturn(xEnumDefDao);
+        Mockito.when(xEnumDefDao.findByServiceDefId(serviceDef.getId())).thenReturn(new ArrayList<>());
+        Mockito.when(daoMgr.getXXDataMaskTypeDef()).thenReturn(xDataMaskTypeDao);
+        Mockito.when(xDataMaskTypeDao.findByServiceDefId(serviceDef.getId())).thenReturn(new ArrayList<>());
+
+        RangerServiceDef loaded = serviceDefService.populateViewBean(serviceDef);
+
+        assertNotNull(loaded.getConstraintDefs());
+        assertEquals(1, loaded.getConstraintDefs().size());
+        assertEquals(Long.valueOf(4L), loaded.getConstraintDefs().get(0).getItemId());
+        assertEquals("requireApproval", loaded.getConstraintDefs().get(0).getName());
+        assertEquals(Arrays.asList("database", "udf"), loaded.getConstraintDefs().get(0).getResources());
+        assertEquals(Collections.singletonList("select"), loaded.getConstraintDefs().get(0).getAccessTypes());
+        assertEquals("approver", loaded.getConstraintDefs().get(0).getParameters().get(0).getName());
+        assertEquals("user", loaded.getConstraintDefs().get(0).getParameters().get(0).getType());
     }
 
     private boolean hasActionMatchesCondition(RangerServiceDef serviceDef) {

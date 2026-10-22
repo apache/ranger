@@ -67,6 +67,13 @@ public enum ValidationErrorCode {
     SERVICE_DEF_VALIDATION_ERR_INVALID_SERVICE_RESOURCE_LEVELS(2021, "Resource-def levels are not in increasing order in an hierarchy"),
     SERVICE_DEF_VALIDATION_ERR_NOT_LOWERCASE_NAME(2022, "{0}:[{1}] Invalid resource name. Resource name should consist of only lowercase, hyphen or underscore characters"),
     SERVICE_DEF_VALIDATION_ERR_INVALID_MANADORY_VALUE_FOR_SERVICE_RESOURCE(2023, "{0} cannot be mandatory because {1}(parent) is not mandatory"),
+    SERVICE_DEF_VALIDATION_ERR_CONSTRAINT_UNKNOWN_RESOURCE(2026, "resource[{0}] of constraint def[{1}] is not defined on the service def"),
+    SERVICE_DEF_VALIDATION_ERR_CONSTRAINT_MISSING_ANCESTOR(2027, "constraint def[{0}] lists resource[{1}] without ancestor[{2}]"),
+    SERVICE_DEF_VALIDATION_ERR_CONSTRAINT_UNKNOWN_ACCESS_TYPE(2028, "access type[{0}] of constraint def[{1}] is not defined on the service def"),
+    SERVICE_DEF_VALIDATION_ERR_CONSTRAINT_PARAM_MISSING_TYPE(2029, "type of constraint def[{0}] parameter[{1}] was null/empty"),
+    SERVICE_DEF_VALIDATION_ERR_CONSTRAINT_PARAM_INVALID_TYPE(2030, "type[{0}] of constraint def[{1}] parameter[{2}] is not among valid types: {3}"),
+    SERVICE_DEF_VALIDATION_ERR_CONSTRAINT_PARAM_UNKNOWN_ENUM(2031, "subtype[{0}] of constraint def[{1}] parameter[{2}] was not among defined enums[{3}]"),
+    SERVICE_DEF_VALIDATION_ERR_CONSTRAINT_PARAM_SUBTYPE_NOT_EMPTY(2032, "subtype[{0}] of constraint def[{1}] parameter[{2}] must be empty when type is [{3}]"),
 
     // POLICY VALIDATION
     POLICY_VALIDATION_ERR_UNSUPPORTED_ACTION(3001, "Internal error: method signature isValid(Long) is only supported for DELETE"),
