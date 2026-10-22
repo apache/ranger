@@ -18,11 +18,13 @@
 package org.apache.ranger.authorization.elasticsearch.plugin.rest.filter;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.ranger.authorization.elasticsearch.plugin.authc.ElasticsearchAuthenticatedUserResolver;
 import org.apache.ranger.authorization.elasticsearch.plugin.authc.user.UsernamePasswordToken;
 import org.apache.ranger.authorization.elasticsearch.plugin.utils.RequestUtils;
 import org.elasticsearch.ElasticsearchStatusException;
 import org.elasticsearch.client.node.NodeClient;
 import org.elasticsearch.common.component.AbstractLifecycleComponent;
+import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.util.concurrent.ThreadContext;
 import org.elasticsearch.rest.RestChannel;
 import org.elasticsearch.rest.RestHandler;
@@ -34,29 +36,32 @@ import org.slf4j.LoggerFactory;
 public class RangerSecurityRestFilter extends AbstractLifecycleComponent implements RestHandler {
     private static final Logger LOG = LoggerFactory.getLogger(RangerSecurityRestFilter.class);
 
+    private final Settings      settings;
     private final RestHandler   restHandler;
     private final ThreadContext threadContext;
 
-    public RangerSecurityRestFilter(final ThreadContext threadContext, final RestHandler restHandler) {
+    public RangerSecurityRestFilter(final Settings settings, final ThreadContext threadContext, final RestHandler restHandler) {
         super();
 
+        this.settings      = settings;
         this.restHandler   = restHandler;
         this.threadContext = threadContext;
     }
 
     @Override
     public void handleRequest(final RestRequest request, final RestChannel channel, final NodeClient client) throws Exception {
-        // Now only support to get user from request,
-        // it should work with other elasticsearch identity authentication plugins in fact.
-        UsernamePasswordToken user = UsernamePasswordToken.parseToken(request);
+        ElasticsearchAuthenticatedUserResolver authResolver = new ElasticsearchAuthenticatedUserResolver(settings, threadContext);
 
-        if (user == null) {
-            throw new ElasticsearchStatusException("Error: User is null, the request requires user authentication.", RestStatus.UNAUTHORIZED);
-        } else {
-            LOG.debug("Success to parse user[{}] from request[{}].", user, request);
+        if (authResolver.requiresAuthenticatedUser()) {
+            String username = authResolver.resolveUsername();
+
+            if (StringUtils.isEmpty(username)) {
+                throw new ElasticsearchStatusException("Error: Request requires authenticated user.", RestStatus.UNAUTHORIZED);
+            }
+
+            threadContext.putTransient(UsernamePasswordToken.USERNAME, username);
+            LOG.debug("Using Elasticsearch-verified user[{}] for request[{}].", username, request);
         }
-
-        threadContext.putTransient(UsernamePasswordToken.USERNAME, user.getUsername());
 
         String clientIPAddress = RequestUtils.getClientIPAddress(request);
 

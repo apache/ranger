@@ -72,13 +72,6 @@ public class RangerPluginConfig extends RangerConfiguration {
 
         addResourcesForServiceType(serviceType);
 
-        this.serviceType    = serviceType;
-        this.appId          = StringUtils.isEmpty(appId) ? serviceType : appId;
-        this.propertyPrefix = "ranger.plugin." + serviceType;
-        this.serviceName    = StringUtils.isEmpty(serviceName) ? this.get(propertyPrefix + ".service.name") : serviceName;
-
-        addResourcesForServiceName(this.serviceType, this.serviceName);
-
         if (additionalConfigFiles != null) {
             for (File configFile : additionalConfigFiles) {
                 try {
@@ -88,6 +81,13 @@ public class RangerPluginConfig extends RangerConfiguration {
                 }
             }
         }
+
+        this.serviceType    = serviceType;
+        this.appId          = StringUtils.isEmpty(appId) ? serviceType : appId;
+        this.propertyPrefix = "ranger.plugin." + serviceType;
+        this.serviceName    = StringUtils.isEmpty(serviceName) ? this.get(propertyPrefix + ".service.name") : serviceName;
+
+        addResourcesForServiceName(this.serviceType, this.serviceName);
 
         String trustedProxyAddressString = this.get(propertyPrefix + ".trusted.proxy.ipaddresses");
 

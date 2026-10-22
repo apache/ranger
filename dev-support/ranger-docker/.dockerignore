@@ -17,5 +17,6 @@
 !dist/ranger-*-trino-plugin.tar.gz
 !dist/ranger-*-ozone-plugin.tar.gz
 !dist/ranger-*-solr-plugin.tar.gz
+!dist/ranger-*-elasticsearch-plugin.tar.gz
 !downloads/*
 !scripts/*

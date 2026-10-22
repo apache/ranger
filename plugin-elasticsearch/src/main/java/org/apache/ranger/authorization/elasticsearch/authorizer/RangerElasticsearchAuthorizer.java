@@ -21,6 +21,7 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.thirdparty.com.google.common.collect.Sets;
 import org.apache.ranger.audit.provider.MiscUtil;
+import org.apache.ranger.authorization.hadoop.config.RangerPluginConfig;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequestImpl;
 import org.apache.ranger.plugin.policyengine.RangerAccessResourceImpl;
 import org.apache.ranger.plugin.policyengine.RangerAccessResult;
@@ -30,6 +31,7 @@ import org.apache.ranger.services.elasticsearch.privilege.IndexPrivilegeUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -39,9 +41,16 @@ public class RangerElasticsearchAuthorizer implements RangerElasticsearchAccessC
 
     private static volatile RangerElasticsearchInnerPlugin elasticsearchPlugin;
 
+    private final String configDir;
+
     public RangerElasticsearchAuthorizer() {
+        this(null);
+    }
+
+    public RangerElasticsearchAuthorizer(String configDir) {
         LOG.debug("==> RangerElasticsearchAuthorizer.RangerElasticsearchAuthorizer()");
 
+        this.configDir = configDir;
         this.init();
 
         LOG.debug("<== RangerElasticsearchAuthorizer.RangerElasticsearchAuthorizer()");
@@ -57,7 +66,7 @@ public class RangerElasticsearchAuthorizer implements RangerElasticsearchAccessC
                 plugin = elasticsearchPlugin;
 
                 if (plugin == null) {
-                    plugin = new RangerElasticsearchInnerPlugin();
+                    plugin = new RangerElasticsearchInnerPlugin(configDir);
 
                     plugin.init();
 
@@ -95,8 +104,23 @@ public class RangerElasticsearchAuthorizer implements RangerElasticsearchAccessC
     }
 
     static class RangerElasticsearchInnerPlugin extends RangerBasePlugin {
-        public RangerElasticsearchInnerPlugin() {
-            super("elasticsearch", "elasticsearch");
+        public RangerElasticsearchInnerPlugin(String configDir) {
+            super(createPluginConfig(configDir));
+        }
+
+        private static RangerPluginConfig createPluginConfig(String configDir) {
+            List<File> additionalConfigFiles = null;
+
+            if (configDir != null) {
+                File dir = new File(configDir);
+
+                additionalConfigFiles = new ArrayList<>();
+                additionalConfigFiles.add(new File(dir, "ranger-elasticsearch-audit.xml"));
+                additionalConfigFiles.add(new File(dir, "ranger-elasticsearch-security.xml"));
+                additionalConfigFiles.add(new File(dir, "ranger-policymgr-ssl.xml"));
+            }
+
+            return new RangerPluginConfig("elasticsearch", null, "elasticsearch", null, null, additionalConfigFiles, null);
         }
 
         @Override

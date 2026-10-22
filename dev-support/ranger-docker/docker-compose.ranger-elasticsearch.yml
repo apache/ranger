@@ -1,0 +1,58 @@
+services:
+  ranger-elasticsearch:
+    build:
+      context: .
+      dockerfile: Dockerfile.ranger-elasticsearch
+      args:
+        - RANGER_BASE_IMAGE=${RANGER_BASE_IMAGE}
+        - RANGER_BASE_VERSION=${RANGER_BASE_VERSION}
+        - ELASTICSEARCH_VERSION=${ELASTICSEARCH_VERSION}
+        - ELASTICSEARCH_PLUGIN_VERSION=${ELASTICSEARCH_PLUGIN_VERSION}
+    image: ranger-elasticsearch
+    container_name: ranger-elasticsearch
+    hostname: ranger-elasticsearch.rangernw
+    volumes:
+      - ./dist/version:/home/ranger/dist/version:ro
+      - ./dist/keytabs/ranger-elasticsearch:/etc/keytabs
+      - ./scripts/kdc/krb5.conf:/etc/krb5.conf:ro
+      - ./scripts/elasticsearch/elasticsearch.yml:/home/ranger/scripts/elasticsearch.yml:ro
+      - ./scripts/elasticsearch/ranger-elasticsearch-plugin-install.properties:/opt/ranger/ranger-elasticsearch-plugin/install.properties
+      - ./scripts/elasticsearch/patch-ranger-audit-xml.py:/home/ranger/scripts/patch-ranger-audit-xml.py:ro
+      - ./scripts/elasticsearch/ranger-elasticsearch.sh:/home/ranger/scripts/ranger-elasticsearch.sh:ro
+      - elasticsearch-data:/opt/elasticsearch/data
+      - elasticsearch-logs:/opt/elasticsearch/logs
+    stdin_open: true
+    tty: true
+    networks:
+      - ranger
+    ports:
+      - "9201:9200"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+      nofile:
+        soft: 65536
+        hard: 65536
+    depends_on:
+      ranger-kdc:
+        condition: service_started
+      ranger:
+        condition: service_started
+    environment:
+      - KERBEROS_ENABLED=${KERBEROS_ENABLED}
+      - KRB5_CONFIG=/etc/krb5.conf
+      - ELASTICSEARCH_VERSION
+      - ELASTICSEARCH_PLUGIN_VERSION
+      - ELASTICSEARCH_BOOTSTRAP_PASSWORD
+      - RANGER_ADMIN_USER
+      - RANGER_ADMIN_PASSWORD
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+
+volumes:
+  elasticsearch-data:
+  elasticsearch-logs:
+
+networks:
+  ranger:
+    name: rangernw
