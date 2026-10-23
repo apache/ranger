@@ -634,7 +634,7 @@ public abstract class RangerServiceDefServiceBase<T extends XXServiceDefBase, V 
     }
 
     private void loadChildTables(V serviceDef, T xServiceDef) {
-        Long serviceDefId = xServiceDef.getId();
+        Long                     serviceDefId = xServiceDef.getId();
         List<XXServiceConfigDef> xConfigs     = daoMgr.getXXServiceConfigDef().findByServiceDefId(serviceDefId);
 
         if (!stringUtil.isEmpty(xConfigs)) {

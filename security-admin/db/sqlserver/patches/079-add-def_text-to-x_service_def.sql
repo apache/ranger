@@ -19,3 +19,4 @@ BEGIN
 	ALTER TABLE [dbo].[x_service_def] ADD [def_text] [nvarchar](max) DEFAULT NULL NULL;
 END
 GO
+exit

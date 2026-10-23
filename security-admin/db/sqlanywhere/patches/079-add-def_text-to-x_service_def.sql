@@ -17,3 +17,4 @@ IF NOT EXISTS(select * from SYS.SYSCOLUMNS where tname = 'x_service_def' and cna
 		ALTER TABLE dbo.x_service_def ADD def_text text DEFAULT NULL NULL;
 END IF;
 GO
+exit
