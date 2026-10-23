@@ -56,7 +56,6 @@ import org.apache.ranger.db.RangerDaoManager;
 import org.apache.ranger.db.XXAccessTypeDefDao;
 import org.apache.ranger.db.XXAccessTypeDefGrantsDao;
 import org.apache.ranger.db.XXAuthSessionDao;
-import org.apache.ranger.db.XXConstraintDefDao;
 import org.apache.ranger.db.XXContextEnricherDefDao;
 import org.apache.ranger.db.XXDataMaskTypeDefDao;
 import org.apache.ranger.db.XXEnumDefDao;
@@ -74,7 +73,6 @@ import org.apache.ranger.db.XXServiceVersionInfoDao;
 import org.apache.ranger.db.XXTrxLogV2Dao;
 import org.apache.ranger.entity.XXAccessTypeDef;
 import org.apache.ranger.entity.XXAccessTypeDefGrants;
-import org.apache.ranger.entity.XXConstraintDef;
 import org.apache.ranger.entity.XXContextEnricherDef;
 import org.apache.ranger.entity.XXDataHist;
 import org.apache.ranger.entity.XXDataMaskTypeDef;
@@ -470,6 +468,7 @@ public class ServiceDBStore extends AbstractServiceStore {
         List<RangerEnumDef>            enums                = serviceDef.getEnums();
         RangerDataMaskDef              dataMaskDef          = serviceDef.getDataMaskDef();
         RangerRowFilterDef             rowFilterDef         = serviceDef.getRowFilterDef();
+        List<RangerConstraintDef>      constraintDefs       = serviceDef.getConstraintDefs();
         List<RangerDataMaskTypeDef>    dataMaskTypes        = dataMaskDef == null || dataMaskDef.getMaskTypes() == null ? new ArrayList<>() : dataMaskDef.getMaskTypes();
         List<RangerAccessTypeDef>      dataMaskAccessTypes  = dataMaskDef == null || dataMaskDef.getAccessTypes() == null ? new ArrayList<>() : dataMaskDef.getAccessTypes();
         List<RangerResourceDef>        dataMaskResources    = dataMaskDef == null || dataMaskDef.getResources() == null ? new ArrayList<>() : dataMaskDef.getResources();
@@ -570,23 +569,6 @@ public class ServiceDBStore extends AbstractServiceStore {
             xPolicyCondition.setOrder(i);
 
             xxPolCondDao.create(xPolicyCondition);
-        }
-
-        List<RangerConstraintDef> constraintDefs = serviceDef.getConstraintDefs() != null ? serviceDef.getConstraintDefs() : new ArrayList<>();
-
-        if (CollectionUtils.isNotEmpty(constraintDefs)) {
-            XXConstraintDefDao xxConstraintDefDao = daoMgr.getXXConstraintDef();
-
-            for (int i = 0; i < constraintDefs.size(); i++) {
-                RangerConstraintDef constraintDef  = constraintDefs.get(i);
-                XXConstraintDef     xConstraintDef = new XXConstraintDef();
-
-                xConstraintDef = serviceDefService.populateRangerConstraintDefToXX(constraintDef, xConstraintDef, createdSvcDef, RangerServiceDefService.OPERATION_CREATE_CONTEXT);
-
-                xConstraintDef.setOrder(i);
-
-                xxConstraintDefDao.create(xConstraintDef);
-            }
         }
 
         XXContextEnricherDefDao xxContextEnricherDao = daoMgr.getXXContextEnricherDef();
@@ -718,6 +700,8 @@ public class ServiceDBStore extends AbstractServiceStore {
             }
         }
 
+        updateServiceDefText(createdSvcDef, constraintDefs);
+
         RangerServiceDef createdServiceDef = serviceDefService.getPopulatedViewObject(createdSvcDef);
 
         dataHistService.createObjectDataHistory(createdServiceDef, RangerDataHistService.ACTION_CREATE);
@@ -755,11 +739,11 @@ public class ServiceDBStore extends AbstractServiceStore {
         List<RangerResourceDef>        resources        = serviceDef.getResources() != null ? serviceDef.getResources() : new ArrayList<>();
         List<RangerAccessTypeDef>      accessTypes      = serviceDef.getAccessTypes() != null ? serviceDef.getAccessTypes() : new ArrayList<>();
         List<RangerPolicyConditionDef> policyConditions = serviceDef.getPolicyConditions() != null ? serviceDef.getPolicyConditions() : new ArrayList<>();
-        List<RangerConstraintDef>      constraintDefs   = serviceDef.getConstraintDefs() != null ? serviceDef.getConstraintDefs() : new ArrayList<>();
         List<RangerContextEnricherDef> contextEnrichers = serviceDef.getContextEnrichers() != null ? serviceDef.getContextEnrichers() : new ArrayList<>();
         List<RangerEnumDef>            enums            = serviceDef.getEnums() != null ? serviceDef.getEnums() : new ArrayList<>();
         RangerDataMaskDef              dataMaskDef      = serviceDef.getDataMaskDef();
         RangerRowFilterDef             rowFilterDef     = serviceDef.getRowFilterDef();
+        List<RangerConstraintDef>      constraintDefs   = serviceDef.getConstraintDefs();
         RangerServiceDefHelper         defHelper        = new RangerServiceDefHelper(serviceDef, false);
 
         defHelper.patchServiceDefWithDefaultValues();
@@ -772,7 +756,9 @@ public class ServiceDBStore extends AbstractServiceStore {
 
         XXServiceDef createdSvcDef = daoMgr.getXXServiceDef().getById(serviceDefId);
 
-        updateChildObjectsOfServiceDef(createdSvcDef, configs, resources, accessTypes, policyConditions, contextEnrichers, enums, dataMaskDef, rowFilterDef, constraintDefs);
+        updateChildObjectsOfServiceDef(createdSvcDef, configs, resources, accessTypes, policyConditions, contextEnrichers, enums, dataMaskDef, rowFilterDef);
+
+        updateServiceDefText(createdSvcDef, constraintDefs);
 
         RangerServiceDef updatedSvcDef = getServiceDef(serviceDefId);
 
@@ -864,15 +850,6 @@ public class ServiceDBStore extends AbstractServiceStore {
             }
 
             policyCondDao.remove(policyCond);
-        }
-
-        XXConstraintDefDao    constraintDefDao  = daoMgr.getXXConstraintDef();
-        List<XXConstraintDef> constraintDefList = constraintDefDao.findByServiceDefId(serviceDefId);
-
-        if (constraintDefList != null) {
-            for (XXConstraintDef constraintDef : constraintDefList) {
-                constraintDefDao.remove(constraintDef);
-            }
         }
 
         List<XXResourceDef> resDefList = daoMgr.getXXResourceDef().findByServiceDefId(serviceDefId);
@@ -3278,28 +3255,29 @@ public class ServiceDBStore extends AbstractServiceStore {
         return ret;
     }
 
+    // Writes x_service_def.def_text after the child rows. constraintDefs are stored only in this JSON.
+    private void updateServiceDefText(XXServiceDef xServiceDef, List<RangerConstraintDef> constraintDefs) {
+        if (xServiceDef == null) {
+            return;
+        }
+
+        xServiceDef.setDefText(serviceDefService.buildDefText(xServiceDef, constraintDefs));
+
+        daoMgr.getXXServiceDef().update(xServiceDef);
+    }
+
     private void updateChildObjectsOfServiceDef(XXServiceDef createdSvcDef, List<RangerServiceConfigDef> configs,
             List<RangerResourceDef> resources, List<RangerAccessTypeDef> accessTypes,
             List<RangerPolicyConditionDef> policyConditions, List<RangerContextEnricherDef> contextEnrichers,
-            List<RangerEnumDef> enums, RangerDataMaskDef dataMaskDef, RangerRowFilterDef rowFilterDef,
-            List<RangerConstraintDef> constraintDefs) {
+            List<RangerEnumDef> enums, RangerDataMaskDef dataMaskDef, RangerRowFilterDef rowFilterDef) {
         Long                       serviceDefId       = createdSvcDef.getId();
         List<XXServiceConfigDef>   xxConfigs          = daoMgr.getXXServiceConfigDef().findByServiceDefId(serviceDefId);
         List<XXResourceDef>        xxResources        = daoMgr.getXXResourceDef().findByServiceDefId(serviceDefId);
         List<XXAccessTypeDef>      xxAccessTypes      = daoMgr.getXXAccessTypeDef().findByServiceDefId(serviceDefId);
         List<XXPolicyConditionDef> xxPolicyConditions = daoMgr.getXXPolicyConditionDef().findByServiceDefId(serviceDefId);
-        List<XXConstraintDef>      xxConstraintDefs   = daoMgr.getXXConstraintDef().findByServiceDefId(serviceDefId);
         List<XXContextEnricherDef> xxContextEnrichers = daoMgr.getXXContextEnricherDef().findByServiceDefId(serviceDefId);
         List<XXEnumDef>            xxEnums            = daoMgr.getXXEnumDef().findByServiceDefId(serviceDefId);
         XXServiceConfigDefDao      xxServiceConfigDao = daoMgr.getXXServiceConfigDef();
-
-        if (xxConstraintDefs == null) {
-            xxConstraintDefs = new ArrayList<>();
-        }
-
-        if (constraintDefs == null) {
-            constraintDefs = new ArrayList<>();
-        }
 
         for (int i = 0; i < configs.size(); i++) {
             RangerServiceConfigDef config = configs.get(i);
@@ -3558,54 +3536,6 @@ public class ServiceDBStore extends AbstractServiceStore {
                 }
 
                 xxPolCondDao.remove(xCondition);
-            }
-        }
-
-        XXConstraintDefDao xxConstraintDefDao = daoMgr.getXXConstraintDef();
-
-        for (int i = 0; i < constraintDefs.size(); i++) {
-            RangerConstraintDef constraintDef = constraintDefs.get(i);
-            boolean             found         = false;
-
-            for (XXConstraintDef xConstraintDef : xxConstraintDefs) {
-                if (constraintDef.getItemId() != null && constraintDef.getItemId().equals(xConstraintDef.getItemId())) {
-                    found          = true;
-                    xConstraintDef = serviceDefService.populateRangerConstraintDefToXX(constraintDef, xConstraintDef, createdSvcDef, RangerServiceDefService.OPERATION_UPDATE_CONTEXT);
-
-                    xConstraintDef.setOrder(i);
-
-                    xConstraintDef = xxConstraintDefDao.update(xConstraintDef);
-                    constraintDef  = serviceDefService.populateXXToRangerConstraintDef(xConstraintDef);
-                    break;
-                }
-            }
-
-            if (!found) {
-                XXConstraintDef xConstraintDef = new XXConstraintDef();
-
-                xConstraintDef = serviceDefService.populateRangerConstraintDefToXX(constraintDef, xConstraintDef, createdSvcDef, RangerServiceDefService.OPERATION_CREATE_CONTEXT);
-
-                xConstraintDef.setOrder(i);
-
-                xConstraintDef = xxConstraintDefDao.create(xConstraintDef);
-
-                serviceDefService.populateXXToRangerConstraintDef(xConstraintDef);
-            }
-        }
-
-        for (XXConstraintDef xConstraintDef : xxConstraintDefs) {
-            boolean found = false;
-
-            for (RangerConstraintDef constraintDef : constraintDefs) {
-                if (xConstraintDef.getItemId() != null && xConstraintDef.getItemId().equals(constraintDef.getItemId())) {
-                    found = true;
-                    break;
-                }
-            }
-
-            if (!found) {
-                // TODO RANGER-5852: reject removal while constraint policies reference this constraint (x_policy_ref_constraint)
-                xxConstraintDefDao.remove(xConstraintDef);
             }
         }
 

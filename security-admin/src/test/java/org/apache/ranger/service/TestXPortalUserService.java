@@ -24,7 +24,6 @@ import org.apache.ranger.db.XXAccessTypeDefGrantsDao;
 import org.apache.ranger.db.XXAssetDao;
 import org.apache.ranger.db.XXAuditMapDao;
 import org.apache.ranger.db.XXAuthSessionDao;
-import org.apache.ranger.db.XXConstraintDefDao;
 import org.apache.ranger.db.XXContextEnricherDefDao;
 import org.apache.ranger.db.XXCredentialStoreDao;
 import org.apache.ranger.db.XXDataMaskTypeDefDao;
@@ -118,7 +117,6 @@ public class TestXPortalUserService {
     @Mock private XXAccessTypeDefDao             xxAccessTypeDefDao;
     @Mock private XXAccessTypeDefGrantsDao       xxAccessTypeDefGrantsDao;
     @Mock private XXPolicyConditionDefDao        xxPolicyConditionDefDao;
-    @Mock private XXConstraintDefDao             xxConstraintDefDao;
     @Mock private XXContextEnricherDefDao        xxContextEnricherDefDao;
     @Mock private XXEnumDefDao                   xxEnumDefDao;
     @Mock private XXEnumElementDefDao            xxEnumElementDefDao;
@@ -178,7 +176,6 @@ public class TestXPortalUserService {
         when(daoManager.getXXAccessTypeDef()).thenReturn(xxAccessTypeDefDao);
         when(daoManager.getXXAccessTypeDefGrants()).thenReturn(xxAccessTypeDefGrantsDao);
         when(daoManager.getXXPolicyConditionDef()).thenReturn(xxPolicyConditionDefDao);
-        when(daoManager.getXXConstraintDef()).thenReturn(xxConstraintDefDao);
         when(daoManager.getXXContextEnricherDef()).thenReturn(xxContextEnricherDefDao);
         when(daoManager.getXXEnumDef()).thenReturn(xxEnumDefDao);
         when(daoManager.getXXEnumElementDef()).thenReturn(xxEnumElementDefDao);

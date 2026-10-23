@@ -29,7 +29,6 @@ import org.apache.ranger.db.RangerDaoManager;
 import org.apache.ranger.db.XXEnumElementDefDao;
 import org.apache.ranger.db.XXResourceDefDao;
 import org.apache.ranger.entity.XXAccessTypeDef;
-import org.apache.ranger.entity.XXConstraintDef;
 import org.apache.ranger.entity.XXContextEnricherDef;
 import org.apache.ranger.entity.XXEnumDef;
 import org.apache.ranger.entity.XXEnumElementDef;
@@ -65,6 +64,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import javax.ws.rs.WebApplicationException;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
@@ -595,13 +595,63 @@ public class TestRangerServiceDefServiceBase {
     }
 
     @Test
-    public void test22populateRangerConstraintDefRoundTrip() {
-        rangerServiceDefService.jsonUtil = new JSONUtil();
+    public void test22mapViewToEntityBeanLeavesDefTextUnset() {
+        RangerServiceDef view = rangerServiceDef();
+        view.setGuid("column-guid");
+        view.setName("hdfs");
+        view.getConstraintDefs().add(constraintDef());
 
+        XXServiceDef stored = rangerServiceDefService.mapViewToEntityBean(view, serviceDef(), 1);
+
+        Assertions.assertNull(stored.getDefText());
+    }
+
+    @Test
+    public void test23populateViewBeanReadsDefTextWithoutOverwritingColumns() throws Exception {
+        JSONUtil jsonUtil = new JSONUtil();
+        rangerServiceDefService.jsonUtil = jsonUtil;
+
+        RangerServiceDef jsonBody = new RangerServiceDef();
+        jsonBody.setName("json-name");
+        jsonBody.setGuid("json-guid");
+        jsonBody.setLabel("json-label");
+        jsonBody.setDescription("json-description");
+        Map<String, String> jsonOptions = new HashMap<>();
+        jsonOptions.put("fromJson", "yes");
+        jsonBody.setOptions(jsonOptions);
+        jsonBody.getConstraintDefs().add(constraintDef());
+
+        XXServiceDef row = serviceDef();
+        row.setAddedByUserId(null);
+        row.setUpdatedByUserId(null);
+        row.setName("hdfs");
+        row.setGuid("column-guid");
+        row.setLabel("column-label");
+        row.setDescription("column-description");
+        row.setDefOptions("{\"stored\":\"yes\"}");
+        row.setDefText(jsonUtil.writeObjectAsString(jsonBody));
+
+        RangerServiceDef loaded = rangerServiceDefService.populateViewBean(row);
+
+        Assertions.assertEquals("hdfs", loaded.getName());
+        Assertions.assertEquals("column-guid", loaded.getGuid());
+        Assertions.assertEquals("column-label", loaded.getLabel());
+        Assertions.assertEquals("column-description", loaded.getDescription());
+        Assertions.assertEquals("yes", loaded.getOptions().get("stored"));
+        Assertions.assertNull(loaded.getOptions().get("fromJson"));
+        Assertions.assertEquals(1, loaded.getConstraintDefs().size());
+        Assertions.assertEquals("requireApproval", loaded.getConstraintDefs().get(0).getName());
+        Assertions.assertEquals(Arrays.asList("database", "udf"), loaded.getConstraintDefs().get(0).getResources());
+        Assertions.assertEquals(Collections.singletonList("select"), loaded.getConstraintDefs().get(0).getAccessTypes());
+        Assertions.assertEquals("approver", loaded.getConstraintDefs().get(0).getParameters().get(0).getName());
+        Assertions.assertEquals("user", loaded.getConstraintDefs().get(0).getParameters().get(0).getType());
+        Assertions.assertEquals("authType", loaded.getConstraintDefs().get(0).getParameters().get(1).getSubType());
+    }
+
+    private RangerConstraintDef constraintDef() {
         RangerConstraintParamDef approver = new RangerConstraintParamDef();
         approver.setItemId(1L);
         approver.setName("approver");
-        approver.setLabel("Approver");
         approver.setType("user");
         approver.setMandatory(true);
 
@@ -621,89 +671,15 @@ public class TestRangerServiceDefServiceBase {
         List<RangerConstraintParamDef> parameters = new ArrayList<>();
         parameters.add(approver);
         parameters.add(mode);
-        Map<String, String> options = new HashMap<>();
-        options.put("ui", "tab");
 
         RangerConstraintDef constraintDef = new RangerConstraintDef();
         constraintDef.setItemId(4L);
         constraintDef.setName("requireApproval");
-        constraintDef.setLabel("Require approval");
-        constraintDef.setDescription("Pause for approval");
-        constraintDef.setRbKeyLabel("rb.label");
-        constraintDef.setRbKeyDescription("rb.description");
         constraintDef.setResources(resources);
         constraintDef.setAccessTypes(accessTypes);
         constraintDef.setParameters(parameters);
-        constraintDef.setOptions(options);
 
-        XXConstraintDef xConstraintDef = new XXConstraintDef();
-        XXServiceDef    serviceDef     = new XXServiceDef();
-        serviceDef.setId(Id);
-        Mockito.when((XXConstraintDef) rangerAuditFields.populateAuditFields(xConstraintDef, serviceDef)).thenReturn(xConstraintDef);
-
-        XXConstraintDef stored = rangerServiceDefService.populateRangerConstraintDefToXX(constraintDef, xConstraintDef, serviceDef, 1);
-        Assertions.assertEquals(Integer.valueOf(0), stored.getOrder());
-        Assertions.assertEquals(serviceDef.getId(), stored.getDefid());
-
-        RangerConstraintDef roundTrip = rangerServiceDefService.populateXXToRangerConstraintDef(stored);
-        Assertions.assertEquals(Long.valueOf(4L), roundTrip.getItemId());
-        Assertions.assertEquals("requireApproval", roundTrip.getName());
-        Assertions.assertEquals("Require approval", roundTrip.getLabel());
-        Assertions.assertEquals("Pause for approval", roundTrip.getDescription());
-        Assertions.assertEquals("rb.label", roundTrip.getRbKeyLabel());
-        Assertions.assertEquals("rb.description", roundTrip.getRbKeyDescription());
-        Assertions.assertEquals(resources, roundTrip.getResources());
-        Assertions.assertEquals(accessTypes, roundTrip.getAccessTypes());
-        Assertions.assertEquals("tab", roundTrip.getOptions().get("ui"));
-        Assertions.assertEquals(2, roundTrip.getParameters().size());
-
-        RangerConstraintParamDef approverOut = roundTrip.getParameters().get(0);
-        Assertions.assertEquals("approver", approverOut.getName());
-        Assertions.assertEquals("user", approverOut.getType());
-        Assertions.assertNull(approverOut.getSubType());
-        Assertions.assertEquals(Boolean.TRUE, approverOut.getMandatory());
-
-        RangerConstraintParamDef modeOut = roundTrip.getParameters().get(1);
-        Assertions.assertEquals("mode", modeOut.getName());
-        Assertions.assertEquals("enum", modeOut.getType());
-        Assertions.assertEquals("authType", modeOut.getSubType());
-        Assertions.assertEquals(Boolean.FALSE, modeOut.getMandatory());
-        Assertions.assertEquals("simple", modeOut.getDefaultValue());
-    }
-
-    @Test
-    public void test23populateRangerConstraintDefToXXNullServiceDef() {
-        Mockito.when(restErrorUtil.createRESTException("RangerServiceDef cannot be null.", MessageEnums.DATA_NOT_FOUND)).thenThrow(new WebApplicationException());
-
-        assertThrows(WebApplicationException.class, () -> {
-            rangerServiceDefService.populateRangerConstraintDefToXX(new RangerConstraintDef(), new XXConstraintDef(), null, 1);
-        });
-    }
-
-    @Test
-    public void test24populateRangerConstraintDefNullListsStoredAsNull() {
-        rangerServiceDefService.jsonUtil = new JSONUtil();
-
-        RangerConstraintDef constraintDef = Mockito.spy(new RangerConstraintDef());
-        constraintDef.setItemId(1L);
-        constraintDef.setName("requireApproval");
-        Mockito.doReturn(null).when(constraintDef).getResources();
-        Mockito.doReturn(null).when(constraintDef).getAccessTypes();
-
-        XXConstraintDef xConstraintDef = new XXConstraintDef();
-        XXServiceDef    serviceDef     = new XXServiceDef();
-        serviceDef.setId(Id);
-        Mockito.when((XXConstraintDef) rangerAuditFields.populateAuditFields(xConstraintDef, serviceDef)).thenReturn(xConstraintDef);
-
-        XXConstraintDef stored = rangerServiceDefService.populateRangerConstraintDefToXX(constraintDef, xConstraintDef, serviceDef, 1);
-
-        Assertions.assertNull(stored.getResources());
-        Assertions.assertNull(stored.getAccessTypes());
-
-        RangerConstraintDef roundTrip = rangerServiceDefService.populateXXToRangerConstraintDef(stored);
-
-        Assertions.assertTrue(roundTrip.getResources().isEmpty());
-        Assertions.assertTrue(roundTrip.getAccessTypes().isEmpty());
+        return constraintDef;
     }
 
     private RangerServiceDef rangerServiceDef() {

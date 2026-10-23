@@ -237,10 +237,6 @@ IF (OBJECT_ID('x_atd_grants_FK_atdid') IS NOT NULL)
 BEGIN
     ALTER TABLE [dbo].[x_access_type_def_grants] DROP CONSTRAINT x_atd_grants_FK_atdid
 END
-IF (OBJECT_ID('x_constraint_def_FK_defid') IS NOT NULL)
-BEGIN
-    ALTER TABLE [dbo].[x_constraint_def] DROP CONSTRAINT x_constraint_def_FK_defid
-END
 IF (OBJECT_ID('x_policy_condition_def_FK_defid') IS NOT NULL)
 BEGIN
     ALTER TABLE [dbo].[x_policy_condition_def] DROP CONSTRAINT x_policy_condition_def_FK_defid
@@ -914,10 +910,6 @@ IF (OBJECT_ID('x_context_enricher_def') IS NOT NULL)
 BEGIN
     DROP TABLE [dbo].[x_context_enricher_def]
 END
-IF (OBJECT_ID('x_constraint_def') IS NOT NULL)
-BEGIN
-    DROP TABLE [dbo].[x_constraint_def]
-END
 IF (OBJECT_ID('x_policy_condition_def') IS NOT NULL)
 BEGIN
     DROP TABLE [dbo].[x_policy_condition_def]
@@ -1505,6 +1497,7 @@ CREATE TABLE [dbo].[x_service_def](
         [rb_key_description] [varchar](1024) DEFAULT NULL NULL,
         [is_enabled] [tinyint] DEFAULT 1 NULL,
         [def_options] [varchar](1024) DEFAULT NULL NULL,
+        [def_text] [nvarchar](max) DEFAULT NULL NULL,
         PRIMARY KEY CLUSTERED
 (
         [id] ASC
@@ -1778,30 +1771,6 @@ CREATE TABLE [dbo].[x_policy_condition_def] (
         [rb_key_label] [varchar](1024) DEFAULT NULL NULL,
         [rb_key_description] [varchar](1024) DEFAULT NULL NULL,
         [rb_key_validation_message] [varchar](1024) DEFAULT NULL NULL,
-        [sort_order] [int] DEFAULT 0  NULL,
-        PRIMARY KEY CLUSTERED
-(
-        [id] ASC
-)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
-) ON [PRIMARY]
-CREATE TABLE [dbo].[x_constraint_def] (
-        [id] [bigint] IDENTITY(1,1) NOT NULL,
-        [guid] [varchar](1024) DEFAULT NULL NULL,
-        [create_time] [datetime2] DEFAULT NULL NULL,
-        [update_time] [datetime2] DEFAULT NULL NULL,
-        [added_by_id] [bigint] DEFAULT NULL NULL,
-        [upd_by_id] [bigint] DEFAULT NULL NULL,
-        [def_id] [bigint] NOT NULL,
-        [item_id] [bigint] NOT NULL,
-        [name] [varchar](1024) DEFAULT NULL NULL,
-        [label] [varchar](1024) DEFAULT NULL NULL,
-        [description] [varchar](1024) DEFAULT NULL NULL,
-        [rb_key_label] [varchar](1024) DEFAULT NULL NULL,
-        [rb_key_description] [varchar](1024) DEFAULT NULL NULL,
-        [resources] [nvarchar](max) DEFAULT NULL NULL,
-        [access_types] [nvarchar](max) DEFAULT NULL NULL,
-        [parameters] [nvarchar](max) DEFAULT NULL NULL,
-        [options] [nvarchar](max) DEFAULT NULL NULL,
         [sort_order] [int] DEFAULT 0  NULL,
         PRIMARY KEY CLUSTERED
 (
@@ -2955,15 +2924,6 @@ ALTER TABLE [dbo].[x_policy_condition_def] CHECK CONSTRAINT [x_policy_condition_
 ALTER TABLE [dbo].[x_policy_condition_def]  WITH CHECK ADD  CONSTRAINT [x_policy_condition_def_FK_upd_by] FOREIGN KEY([upd_by_id])
 REFERENCES [dbo].[x_portal_user] ([id])
 ALTER TABLE [dbo].[x_policy_condition_def] CHECK CONSTRAINT [x_policy_condition_def_FK_upd_by]
-ALTER TABLE [dbo].[x_constraint_def]  WITH CHECK ADD  CONSTRAINT [x_constraint_def_FK_defid] FOREIGN KEY([def_id])
-REFERENCES [dbo].[x_service_def] ([id])
-ALTER TABLE [dbo].[x_constraint_def] CHECK CONSTRAINT [x_constraint_def_FK_defid]
-ALTER TABLE [dbo].[x_constraint_def]  WITH CHECK ADD  CONSTRAINT [x_constraint_def_FK_added_by] FOREIGN KEY([added_by_id])
-REFERENCES [dbo].[x_portal_user] ([id])
-ALTER TABLE [dbo].[x_constraint_def] CHECK CONSTRAINT [x_constraint_def_FK_added_by]
-ALTER TABLE [dbo].[x_constraint_def]  WITH CHECK ADD  CONSTRAINT [x_constraint_def_FK_upd_by] FOREIGN KEY([upd_by_id])
-REFERENCES [dbo].[x_portal_user] ([id])
-ALTER TABLE [dbo].[x_constraint_def] CHECK CONSTRAINT [x_constraint_def_FK_upd_by]
 ALTER TABLE [dbo].[x_context_enricher_def]  WITH CHECK ADD  CONSTRAINT [x_context_enricher_def_FK_defid] FOREIGN KEY([def_id])
 REFERENCES [dbo].[x_service_def] ([id])
 ALTER TABLE [dbo].[x_context_enricher_def] CHECK CONSTRAINT [x_context_enricher_def_FK_defid]
@@ -3745,11 +3705,6 @@ CREATE NONCLUSTERED INDEX [x_access_type_def_IDX_grants_atd_id] ON [x_access_typ
 )
 WITH (SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, IGNORE_DUP_KEY = OFF, ONLINE = OFF) ON [PRIMARY]
 CREATE NONCLUSTERED INDEX [x_context_enricher_def_IDX_def_id] ON [x_context_enricher_def]
-(
-   [def_id] ASC
-)
-WITH (SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, IGNORE_DUP_KEY = OFF, ONLINE = OFF) ON [PRIMARY]
-CREATE NONCLUSTERED INDEX [x_constraint_def_IDX_def_id] ON [x_constraint_def]
 (
    [def_id] ASC
 )
@@ -4673,5 +4628,6 @@ INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('J10064',CURRENT_TIMESTAMP,'Ranger 3.0.0',CURRENT_TIMESTAMP,'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('J10065',CURRENT_TIMESTAMP,'Ranger 3.0.0',CURRENT_TIMESTAMP,'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('J10066',CURRENT_TIMESTAMP,'Ranger 3.0.0',CURRENT_TIMESTAMP,'localhost','Y');
+INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('J10067',CURRENT_TIMESTAMP,'Ranger 3.0.0',CURRENT_TIMESTAMP,'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('JAVA_PATCHES',CURRENT_TIMESTAMP,'Ranger 1.0.0',CURRENT_TIMESTAMP,'localhost','Y');
 GO

@@ -58,7 +58,6 @@ DROP TABLE IF EXISTS x_service_config_map CASCADE;
 DROP TABLE IF EXISTS x_enum_element_def CASCADE;
 DROP TABLE IF EXISTS x_enum_def CASCADE;
 DROP TABLE IF EXISTS x_context_enricher_def CASCADE;
-DROP TABLE IF EXISTS x_constraint_def CASCADE;
 DROP TABLE IF EXISTS x_policy_condition_def CASCADE;
 DROP TABLE IF EXISTS x_access_type_def_grants CASCADE;
 DROP TABLE IF EXISTS x_access_type_def CASCADE;
@@ -144,7 +143,6 @@ DROP SEQUENCE IF EXISTS x_service_config_map_seq;
 DROP SEQUENCE IF EXISTS x_enum_element_def_seq;
 DROP SEQUENCE IF EXISTS x_enum_def_seq;
 DROP SEQUENCE IF EXISTS x_context_enricher_def_seq;
-DROP SEQUENCE IF EXISTS x_constraint_def_seq;
 DROP SEQUENCE IF EXISTS x_policy_condition_def_seq;
 DROP SEQUENCE IF EXISTS x_access_type_def_grants_seq;
 DROP SEQUENCE IF EXISTS x_access_type_def_seq;
@@ -551,6 +549,7 @@ rb_key_label VARCHAR(1024) DEFAULT NULL NULL,
 rb_key_description VARCHAR(1024) DEFAULT NULL NULL,
 is_enabled BOOLEAN DEFAULT '1' NULL,
 def_options VARCHAR(1024) DEFAULT NULL NULL,
+def_text TEXT DEFAULT NULL NULL,
 PRIMARY KEY(id),
 CONSTRAINT x_service_def_FK_added_by_id FOREIGN KEY(added_by_id) REFERENCES x_portal_user(id),
 CONSTRAINT x_service_def_FK_upd_by_id FOREIGN KEY(upd_by_id) REFERENCES x_portal_user(id)
@@ -793,32 +792,6 @@ primary key(id),
 CONSTRAINT x_policy_cond_def_FK_defid FOREIGN KEY(def_id) REFERENCES x_service_def(id),
 CONSTRAINT x_policy_cond_def_FK_added_by FOREIGN KEY(added_by_id) REFERENCES x_portal_user(id),
 CONSTRAINT x_policy_cond_def_FK_upd_by FOREIGN KEY(upd_by_id) REFERENCES x_portal_user(id)
-);
-
-CREATE SEQUENCE x_constraint_def_seq;
-CREATE TABLE x_constraint_def(
-id BIGINT DEFAULT nextval('x_constraint_def_seq'::regclass),
-guid VARCHAR(1024) DEFAULT NULL NULL,
-create_time TIMESTAMP DEFAULT NULL NULL,
-update_time TIMESTAMP DEFAULT NULL NULL,
-added_by_id BIGINT DEFAULT NULL NULL,
-upd_by_id BIGINT DEFAULT NULL NULL,
-def_id BIGINT NOT NULL,
-item_id BIGINT NOT NULL,
-name VARCHAR(1024) DEFAULT NULL NULL,
-label VARCHAR(1024) DEFAULT NULL NULL,
-description VARCHAR(1024) DEFAULT NULL NULL,
-rb_key_label VARCHAR(1024) DEFAULT NULL NULL,
-rb_key_description VARCHAR(1024) DEFAULT NULL NULL,
-resources TEXT DEFAULT NULL NULL,
-access_types TEXT DEFAULT NULL NULL,
-parameters TEXT DEFAULT NULL NULL,
-options TEXT DEFAULT NULL NULL,
-sort_order INT DEFAULT '0' NULL,
-primary key(id),
-CONSTRAINT x_constraint_def_FK_defid FOREIGN KEY(def_id) REFERENCES x_service_def(id),
-CONSTRAINT x_constraint_def_FK_added_by FOREIGN KEY(added_by_id) REFERENCES x_portal_user(id),
-CONSTRAINT x_constraint_def_FK_upd_by FOREIGN KEY(upd_by_id) REFERENCES x_portal_user(id)
 );
 
 CREATE SEQUENCE x_context_enricher_def_seq;
@@ -1970,7 +1943,6 @@ CREATE INDEX x_resource_def_IDX_def_id ON x_resource_def(def_id);
 CREATE INDEX x_access_type_def_IDX_def_id ON x_access_type_def(def_id);
 CREATE INDEX x_access_type_def_IDX_grants_atd_id ON x_access_type_def_grants(atd_id);
 CREATE INDEX x_context_enricher_def_IDX_def_id ON x_context_enricher_def(def_id);
-CREATE INDEX x_constraint_def_IDX_def_id ON x_constraint_def(def_id);
 CREATE INDEX x_enum_def_IDX_def_id ON x_enum_def(def_id);
 CREATE INDEX x_enum_element_def_IDX_enum_def_id ON x_enum_element_def(enum_def_id);
 CREATE INDEX x_service_config_map_IDX_service ON x_service_config_map(service);
@@ -2216,6 +2188,7 @@ INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('J10064',current_timestamp,'Ranger 3.0.0',current_timestamp,'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('J10065',current_timestamp,'Ranger 3.0.0',current_timestamp,'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('J10066',current_timestamp,'Ranger 3.0.0',current_timestamp,'localhost','Y');
+INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('J10067',current_timestamp,'Ranger 3.0.0',current_timestamp,'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('JAVA_PATCHES',current_timestamp,'Ranger 1.0.0',current_timestamp,'localhost','Y');
 
 DROP VIEW IF EXISTS vx_principal;

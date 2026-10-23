@@ -58,7 +58,6 @@ call spdropsequence('X_ENUM_ELEMENT_DEF_SEQ');
 call spdropsequence('X_RESOURCE_DEF_SEQ');
 call spdropsequence('X_ACCESS_TYPE_DEF_SEQ');
 call spdropsequence('X_ACCESS_TYPE_DEF_GRANTS_SEQ');
-call spdropsequence('X_CONSTRAINT_DEF_SEQ');
 call spdropsequence('X_POLICY_CONDITION_DEF_SEQ');
 call spdropsequence('X_ENUM_DEF_SEQ');
 call spdropsequence('X_SERVICE_CONFIG_MAP_SEQ');
@@ -140,7 +139,6 @@ CREATE SEQUENCE X_RESOURCE_DEF_SEQ START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE;
 CREATE SEQUENCE X_ACCESS_TYPE_DEF_SEQ START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE;
 CREATE SEQUENCE X_ACCESS_TYPE_DEF_GRANTS_SEQ START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE;
 CREATE SEQUENCE X_POLICY_CONDITION_DEF_SEQ START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE;
-CREATE SEQUENCE X_CONSTRAINT_DEF_SEQ START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE;
 CREATE SEQUENCE X_ENUM_DEF_SEQ START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE;
 CREATE SEQUENCE X_ENUM_ELEMENT_DEF_SEQ START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE;
 CREATE SEQUENCE X_SERVICE_CONFIG_MAP_SEQ START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE;
@@ -272,7 +270,6 @@ call spdroptable('x_service_config_map');
 call spdroptable('x_enum_element_def');
 call spdroptable('x_enum_def');
 call spdroptable('x_context_enricher_def');
-call spdroptable('x_constraint_def');
 call spdroptable('x_policy_condition_def');
 call spdroptable('x_access_type_def_grants');
 call spdroptable('x_access_type_def');
@@ -665,6 +662,7 @@ rb_key_label VARCHAR(1024) DEFAULT NULL NULL,
 rb_key_description VARCHAR(1024) DEFAULT NULL NULL,
 is_enabled NUMBER(1) DEFAULT '1' NULL,
 def_options VARCHAR(1024) DEFAULT NULL NULL,
+def_text CLOB DEFAULT NULL NULL,
 PRIMARY KEY (id),
 CONSTRAINT x_service_def_FK_added_by_id FOREIGN KEY (added_by_id) REFERENCES x_portal_user (id),
 CONSTRAINT x_service_def_FK_upd_by_id FOREIGN KEY (upd_by_id) REFERENCES x_portal_user (id)
@@ -950,31 +948,6 @@ primary key (id),
 CONSTRAINT x_policy_cond_def_FK_defid FOREIGN KEY (def_id) REFERENCES x_service_def (id),
 CONSTRAINT x_policy_cond_def_FK_added_by FOREIGN KEY (added_by_id) REFERENCES x_portal_user (id),
 CONSTRAINT x_policy_cond_def_FK_upd_by FOREIGN KEY (upd_by_id) REFERENCES x_portal_user (id)
-);
-
-CREATE TABLE x_constraint_def (
-id NUMBER(20) NOT NULL,
-guid VARCHAR(1024) DEFAULT NULL NULL,
-create_time DATE DEFAULT NULL NULL,
-update_time DATE DEFAULT NULL NULL,
-added_by_id NUMBER(20) DEFAULT NULL NULL,
-upd_by_id NUMBER(20) DEFAULT NULL NULL,
-def_id NUMBER(20) NOT NULL,
-item_id NUMBER(20) NOT NULL,
-name VARCHAR(1024) DEFAULT NULL NULL,
-label VARCHAR(1024) DEFAULT NULL NULL,
-description VARCHAR(1024) DEFAULT NULL NULL,
-rb_key_label VARCHAR(1024) DEFAULT NULL NULL,
-rb_key_description VARCHAR(1024) DEFAULT NULL NULL,
-resources CLOB DEFAULT NULL NULL,
-access_types CLOB DEFAULT NULL NULL,
-parameters CLOB DEFAULT NULL NULL,
-options CLOB DEFAULT NULL NULL,
-sort_order NUMBER(10) DEFAULT '0' NULL,
-primary key (id),
-CONSTRAINT x_constraint_def_FK_defid FOREIGN KEY (def_id) REFERENCES x_service_def (id),
-CONSTRAINT x_constraint_def_FK_added_by FOREIGN KEY (added_by_id) REFERENCES x_portal_user (id),
-CONSTRAINT x_constraint_def_FK_upd_by FOREIGN KEY (upd_by_id) REFERENCES x_portal_user (id)
 );
 
 CREATE TABLE x_context_enricher_def(
@@ -1750,7 +1723,6 @@ CREATE INDEX x_resource_def_IDX_def_id ON x_resource_def(def_id);
 CREATE INDEX x_access_type_def_IDX_def_id ON x_access_type_def(def_id);
 CREATE INDEX x_atd_grants_IDX_atdid ON x_access_type_def_grants(atd_id);
 CREATE INDEX x_cont_enr_def_IDX_defid ON x_context_enricher_def(def_id);
-CREATE INDEX x_constraint_def_IDX_def_id ON x_constraint_def(def_id);
 CREATE INDEX x_enum_def_IDX_def_id ON x_enum_def(def_id);
 CREATE INDEX x_enum_element_def_IDX_defid ON x_enum_element_def(enum_def_id);
 CREATE INDEX x_service_conf_map_IDX_service ON x_service_config_map(service);
@@ -2283,5 +2255,6 @@ INSERT INTO x_db_version_h (id,version,inst_at,inst_by,updated_at,updated_by,act
 INSERT INTO x_db_version_h (id,version,inst_at,inst_by,updated_at,updated_by,active) VALUES (X_DB_VERSION_H_SEQ.nextval,'J10064',sys_extract_utc(systimestamp),'Ranger 3.0.0',sys_extract_utc(systimestamp),'localhost','Y');
 INSERT INTO x_db_version_h (id,version,inst_at,inst_by,updated_at,updated_by,active) VALUES (X_DB_VERSION_H_SEQ.nextval,'J10065',sys_extract_utc(systimestamp),'Ranger 3.0.0',sys_extract_utc(systimestamp),'localhost','Y');
 INSERT INTO x_db_version_h (id,version,inst_at,inst_by,updated_at,updated_by,active) VALUES (X_DB_VERSION_H_SEQ.nextval,'J10066',sys_extract_utc(systimestamp),'Ranger 3.0.0',sys_extract_utc(systimestamp),'localhost','Y');
+INSERT INTO x_db_version_h (id,version,inst_at,inst_by,updated_at,updated_by,active) VALUES (X_DB_VERSION_H_SEQ.nextval,'J10067',sys_extract_utc(systimestamp),'Ranger 3.0.0',sys_extract_utc(systimestamp),'localhost','Y');
 INSERT INTO x_db_version_h (id,version,inst_at,inst_by,updated_at,updated_by,active) VALUES (X_DB_VERSION_H_SEQ.nextval,'JAVA_PATCHES',sys_extract_utc(systimestamp),'Ranger 1.0.0',sys_extract_utc(systimestamp),'localhost','Y');
 commit;

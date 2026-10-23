@@ -126,8 +126,6 @@ call dbo.removeForeignKeysAndTable('x_enum_def')
 GO
 call dbo.removeForeignKeysAndTable('x_context_enricher_def')
 GO
-call dbo.removeForeignKeysAndTable('x_constraint_def')
-GO
 call dbo.removeForeignKeysAndTable('x_policy_condition_def')
 GO
 call dbo.removeForeignKeysAndTable('x_access_type_def_grants')
@@ -499,6 +497,7 @@ create table dbo.x_service_def(
 	rb_key_description varchar(1024) DEFAULT NULL NULL,
 	is_enabled tinyint DEFAULT 1 NULL,
 	def_options varchar(1024) DEFAULT NULL NULL,
+	def_text text DEFAULT NULL NULL,
 	CONSTRAINT x_service_def_PK_id PRIMARY KEY CLUSTERED(id)
 )
 GO
@@ -701,28 +700,6 @@ create table dbo.x_policy_condition_def (
 	rb_key_validation_message varchar(1024) DEFAULT NULL NULL,
 	sort_order int DEFAULT 0 NULL,
 	CONSTRAINT x_policy_condition_def_grants_PK_id PRIMARY KEY CLUSTERED(id)
-)
-GO
-create table dbo.x_constraint_def (
-	id bigint IDENTITY NOT NULL,
-	guid varchar(1024) DEFAULT NULL NULL,
-	create_time datetime DEFAULT NULL NULL,
-	update_time datetime DEFAULT NULL NULL,
-	added_by_id bigint DEFAULT NULL NULL,
-	upd_by_id bigint DEFAULT NULL NULL,
-	def_id bigint NOT NULL,
-	item_id bigint NOT NULL,
-	name varchar(1024) DEFAULT NULL NULL,
-	label varchar(1024) DEFAULT NULL NULL,
-	description varchar(1024) DEFAULT NULL NULL,
-	rb_key_label varchar(1024) DEFAULT NULL NULL,
-	rb_key_description varchar(1024) DEFAULT NULL NULL,
-	resources text DEFAULT NULL NULL,
-	access_types text DEFAULT NULL NULL,
-	parameters text DEFAULT NULL NULL,
-	options text DEFAULT NULL NULL,
-	sort_order int DEFAULT 0 NULL,
-	CONSTRAINT x_constraint_def_PK_id PRIMARY KEY CLUSTERED(id)
 )
 GO
 create table dbo.x_context_enricher_def(
@@ -1505,12 +1482,6 @@ ALTER TABLE dbo.x_policy_condition_def ADD CONSTRAINT x_policy_condition_def_FK_
 GO
 ALTER TABLE dbo.x_policy_condition_def ADD CONSTRAINT x_policy_condition_def_FK_upd_by FOREIGN KEY(upd_by_id)REFERENCES dbo.x_portal_user (id)
 GO
-ALTER TABLE dbo.x_constraint_def ADD CONSTRAINT x_constraint_def_FK_defid FOREIGN KEY(def_id)REFERENCES dbo.x_service_def (id)
-GO
-ALTER TABLE dbo.x_constraint_def ADD CONSTRAINT x_constraint_def_FK_added_by FOREIGN KEY(added_by_id)REFERENCES dbo.x_portal_user (id)
-GO
-ALTER TABLE dbo.x_constraint_def ADD CONSTRAINT x_constraint_def_FK_upd_by FOREIGN KEY(upd_by_id)REFERENCES dbo.x_portal_user (id)
-GO
 ALTER TABLE dbo.x_context_enricher_def ADD CONSTRAINT x_context_enricher_def_FK_defid FOREIGN KEY(def_id)REFERENCES dbo.x_service_def (id)
 GO
 ALTER TABLE dbo.x_context_enricher_def ADD CONSTRAINT x_context_enricher_def_FK_added_by_id FOREIGN KEY(added_by_id)REFERENCES dbo.x_portal_user (id)
@@ -1980,8 +1951,6 @@ GO
 CREATE NONCLUSTERED INDEX x_access_type_def_IDX_grants_atd_id ON dbo.x_access_type_def_grants(atd_id ASC)
 GO
 CREATE NONCLUSTERED INDEX x_context_enricher_def_IDX_def_id ON dbo.x_context_enricher_def(def_id ASC)
-GO
-CREATE NONCLUSTERED INDEX x_constraint_def_IDX_def_id ON dbo.x_constraint_def(def_id ASC)
 GO
 CREATE NONCLUSTERED INDEX x_enum_def_IDX_def_id ON dbo.x_enum_def(def_id ASC)
 GO
@@ -2453,6 +2422,7 @@ GO
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('J10065',CURRENT_TIMESTAMP,'Ranger 3.0.0',CURRENT_TIMESTAMP,'localhost','Y');
 GO
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('J10066',CURRENT_TIMESTAMP,'Ranger 3.0.0',CURRENT_TIMESTAMP,'localhost','Y');
+INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('J10067',CURRENT_TIMESTAMP,'Ranger 3.0.0',CURRENT_TIMESTAMP,'localhost','Y');
 GO
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('JAVA_PATCHES',CURRENT_TIMESTAMP,'Ranger 1.0.0',CURRENT_TIMESTAMP,'localhost','Y');
 GO
