@@ -30,6 +30,7 @@ import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerAccessTypeDef;
+import org.apache.ranger.plugin.model.RangerServiceDef.RangerConstraintDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerResourceDef;
 import org.apache.ranger.plugin.resourcematcher.RangerAbstractResourceMatcher;
 import org.apache.ranger.plugin.resourcematcher.RangerPathResourceMatcher;
@@ -311,6 +312,66 @@ public class RangerServiceDefHelper {
 
         if (LOG.isDebugEnabled()) {
             LOG.debug("<== getResourceHierarchies(policyType={}, keys={}) : {}", policyType, StringUtils.join(keys, ","), StringUtils.join(ret, ""));
+        }
+
+        return ret;
+    }
+
+    /**
+     * Resource hierarchies for one constraint. Each access hierarchy contributes its longest prefix
+     * whose resources are all named on the constraint def. A def that lists no resources uses the access hierarchy.
+     * A prefix is returned only when it contains every key.
+     */
+    public Set<List<RangerResourceDef>> getResourceHierarchiesForConstraint(String constraint, Collection<String> keys) {
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("==> getResourceHierarchiesForConstraint(constraint={}, keys={})", constraint, StringUtils.join(keys, ","));
+        }
+
+        Set<List<RangerResourceDef>> ret           = new HashSet<>();
+        RangerConstraintDef          constraintDef = getConstraintDef(constraint);
+
+        if (constraintDef == null) {
+            ret = Collections.emptySet();
+        } else if (CollectionUtils.isEmpty(constraintDef.getResources())) {
+            ret.addAll(getResourceHierarchies(RangerPolicy.POLICY_TYPE_ACCESS, keys));
+        } else {
+            Set<String> names = new HashSet<>(constraintDef.getResources());
+
+            for (List<RangerResourceDef> hierarchy : getResourceHierarchies(RangerPolicy.POLICY_TYPE_ACCESS)) {
+                List<RangerResourceDef> prefix = new ArrayList<>();
+
+                for (RangerResourceDef resourceDef : hierarchy) {
+                    if (!names.contains(resourceDef.getName())) {
+                        break;
+                    }
+
+                    prefix.add(resourceDef);
+                }
+
+                if (CollectionUtils.isNotEmpty(prefix) && hierarchyHasAllResources(prefix, keys)) {
+                    ret.add(prefix);
+                }
+            }
+        }
+
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("<== getResourceHierarchiesForConstraint(constraint={}, keys={}): {}", constraint, StringUtils.join(keys, ","), StringUtils.join(ret, ""));
+        }
+
+        return ret;
+    }
+
+    private RangerConstraintDef getConstraintDef(String constraint) {
+        RangerConstraintDef ret = null;
+
+        if (StringUtils.isNotEmpty(constraint) && CollectionUtils.isNotEmpty(delegate.servicedef.getConstraintDefs())) {
+            for (RangerConstraintDef constraintDef : delegate.servicedef.getConstraintDefs()) {
+                if (constraintDef != null && StringUtils.equals(constraint, constraintDef.getName())) {
+                    ret = constraintDef;
+
+                    break;
+                }
+            }
         }
 
         return ret;

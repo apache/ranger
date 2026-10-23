@@ -24,6 +24,7 @@ import org.apache.ranger.authorization.utils.JsonUtils;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerAccessTypeDef;
+import org.apache.ranger.plugin.model.RangerServiceDef.RangerConstraintDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerDataMaskDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerResourceDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerRowFilterDef;
@@ -130,6 +131,56 @@ public class TestRangerServiceDefHelper {
         }
 
         assertTrue(expectedHierarchies.isEmpty());
+    }
+
+    @Test
+    public void test_getResourceHierarchiesForConstraint() {
+        RangerServiceDef serviceDef = mock(RangerServiceDef.class);
+        when(serviceDef.getName()).thenReturn("constraint-hierarchies");
+        when(serviceDef.getUpdateTime()).thenReturn(getNow());
+
+        RangerResourceDef database       = createRealResourceDef("Database", null, 1, null);
+        RangerResourceDef udf            = createRealResourceDef("UDF", "Database", 2, null);
+        RangerResourceDef table          = createRealResourceDef("Table", "Database", 2, null);
+        RangerResourceDef column         = createRealResourceDef("Column", "Table", 3, true);
+        RangerResourceDef tableAttribute = createRealResourceDef("Table-Attribute", "Table", 3, true);
+
+        when(serviceDef.getResources()).thenReturn(Lists.newArrayList(column, database, table, tableAttribute, udf));
+        when(serviceDef.getAccessTypes()).thenReturn(new ArrayList<>());
+
+        RangerConstraintDef maxRows = new RangerConstraintDef();
+        maxRows.setName("maxRows");
+        maxRows.setResources(Arrays.asList("Table", "Database"));
+
+        RangerConstraintDef sibling = new RangerConstraintDef();
+        sibling.setName("sibling");
+        sibling.setResources(Arrays.asList("Database", "Table", "UDF"));
+
+        RangerConstraintDef udfOnly = new RangerConstraintDef();
+        udfOnly.setName("udfOnly");
+        udfOnly.setResources(Collections.singletonList("UDF"));
+
+        RangerConstraintDef unrestricted = new RangerConstraintDef();
+        unrestricted.setName("unrestricted");
+
+        when(serviceDef.getConstraintDefs()).thenReturn(Arrays.asList(maxRows, sibling, udfOnly, unrestricted));
+
+        RangerServiceDefHelper helper    = new RangerServiceDefHelper(serviceDef);
+        List<String>            tableKeys = Arrays.asList("Table");
+
+        Set<List<RangerResourceDef>> maxRowsHierarchies = helper.getResourceHierarchiesForConstraint("maxRows", tableKeys);
+
+        assertEquals(Collections.singleton(Arrays.asList("Database", "Table")), hierarchyNames(helper, maxRowsHierarchies));
+        assertTrue(helper.getResourceHierarchiesForConstraint("maxRows", Arrays.asList("Database", "Column")).isEmpty());
+
+        assertEquals(Collections.singleton(Arrays.asList("Database", "UDF")), hierarchyNames(helper, helper.getResourceHierarchiesForConstraint("sibling", Arrays.asList("Database", "UDF"))));
+        assertEquals(Collections.singleton(Arrays.asList("Database", "Table")), hierarchyNames(helper, helper.getResourceHierarchiesForConstraint("sibling", Arrays.asList("Database", "Table"))));
+        assertTrue(helper.getResourceHierarchiesForConstraint("udfOnly", Arrays.asList("Database", "UDF")).isEmpty());
+
+        assertEquals(helper.getResourceHierarchies(RangerPolicy.POLICY_TYPE_ACCESS, Arrays.asList("Database", "Table")), helper.getResourceHierarchiesForConstraint("unrestricted", Arrays.asList("Database", "Table")));
+        assertTrue(helper.getResourceHierarchiesForConstraint("missing", tableKeys).isEmpty());
+        assertTrue(helper.getResourceHierarchies(RangerPolicy.POLICY_TYPE_CONSTRAINTS).isEmpty());
+        assertTrue(helper.getResourceHierarchies(RangerPolicy.POLICY_TYPE_CONSTRAINTS, tableKeys).isEmpty());
     }
 
     @Test
@@ -956,6 +1007,16 @@ public class TestRangerServiceDefHelper {
             when(resourceDef.getIsValidLeaf()).thenReturn(isValidLeaf);
         }
         return resourceDef;
+    }
+
+    private Set<List<String>> hierarchyNames(RangerServiceDefHelper helper, Set<List<RangerResourceDef>> hierarchies) {
+        Set<List<String>> ret = new HashSet<>();
+
+        for (List<RangerResourceDef> hierarchy : hierarchies) {
+            ret.add(helper.getAllResourceNamesOrdered(hierarchy));
+        }
+
+        return ret;
     }
 
     private RangerResourceDef createRealResourceDef(String name, String parent, int level, Boolean isValidLeaf) {
