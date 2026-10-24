@@ -115,6 +115,7 @@ import org.apache.ranger.plugin.model.RangerSecurityZone.RangerSecurityZoneServi
 import org.apache.ranger.plugin.model.RangerService;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerAccessTypeDef;
+import org.apache.ranger.plugin.model.RangerServiceDef.RangerConstraintDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerContextEnricherDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerDataMaskDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerDataMaskTypeDef;
@@ -467,6 +468,7 @@ public class ServiceDBStore extends AbstractServiceStore {
         List<RangerEnumDef>            enums                = serviceDef.getEnums();
         RangerDataMaskDef              dataMaskDef          = serviceDef.getDataMaskDef();
         RangerRowFilterDef             rowFilterDef         = serviceDef.getRowFilterDef();
+        List<RangerConstraintDef>      constraintDefs       = serviceDef.getConstraintDefs();
         List<RangerDataMaskTypeDef>    dataMaskTypes        = dataMaskDef == null || dataMaskDef.getMaskTypes() == null ? new ArrayList<>() : dataMaskDef.getMaskTypes();
         List<RangerAccessTypeDef>      dataMaskAccessTypes  = dataMaskDef == null || dataMaskDef.getAccessTypes() == null ? new ArrayList<>() : dataMaskDef.getAccessTypes();
         List<RangerResourceDef>        dataMaskResources    = dataMaskDef == null || dataMaskDef.getResources() == null ? new ArrayList<>() : dataMaskDef.getResources();
@@ -698,6 +700,8 @@ public class ServiceDBStore extends AbstractServiceStore {
             }
         }
 
+        updateServiceDefText(createdSvcDef, constraintDefs);
+
         RangerServiceDef createdServiceDef = serviceDefService.getPopulatedViewObject(createdSvcDef);
 
         dataHistService.createObjectDataHistory(createdServiceDef, RangerDataHistService.ACTION_CREATE);
@@ -739,6 +743,7 @@ public class ServiceDBStore extends AbstractServiceStore {
         List<RangerEnumDef>            enums            = serviceDef.getEnums() != null ? serviceDef.getEnums() : new ArrayList<>();
         RangerDataMaskDef              dataMaskDef      = serviceDef.getDataMaskDef();
         RangerRowFilterDef             rowFilterDef     = serviceDef.getRowFilterDef();
+        List<RangerConstraintDef>      constraintDefs   = serviceDef.getConstraintDefs();
         RangerServiceDefHelper         defHelper        = new RangerServiceDefHelper(serviceDef, false);
 
         defHelper.patchServiceDefWithDefaultValues();
@@ -752,6 +757,8 @@ public class ServiceDBStore extends AbstractServiceStore {
         XXServiceDef createdSvcDef = daoMgr.getXXServiceDef().getById(serviceDefId);
 
         updateChildObjectsOfServiceDef(createdSvcDef, configs, resources, accessTypes, policyConditions, contextEnrichers, enums, dataMaskDef, rowFilterDef);
+
+        updateServiceDefText(createdSvcDef, constraintDefs);
 
         RangerServiceDef updatedSvcDef = getServiceDef(serviceDefId);
 
@@ -3246,6 +3253,17 @@ public class ServiceDBStore extends AbstractServiceStore {
         }
 
         return ret;
+    }
+
+    // Writes x_service_def.def_text after the child rows. constraintDefs are stored only in this JSON.
+    private void updateServiceDefText(XXServiceDef xServiceDef, List<RangerConstraintDef> constraintDefs) {
+        if (xServiceDef == null) {
+            return;
+        }
+
+        xServiceDef.setDefText(serviceDefService.buildDefText(xServiceDef, constraintDefs));
+
+        daoMgr.getXXServiceDef().update(xServiceDef);
     }
 
     private void updateChildObjectsOfServiceDef(XXServiceDef createdSvcDef, List<RangerServiceConfigDef> configs,
