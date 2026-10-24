@@ -644,7 +644,7 @@ public class TestRangerServiceDefServiceBase {
         Assertions.assertEquals(Arrays.asList("database", "udf"), loaded.getConstraintDefs().get(0).getResources());
         Assertions.assertEquals(Collections.singletonList("select"), loaded.getConstraintDefs().get(0).getAccessTypes());
         Assertions.assertEquals("approver", loaded.getConstraintDefs().get(0).getParameters().get(0).getName());
-        Assertions.assertEquals("user", loaded.getConstraintDefs().get(0).getParameters().get(0).getType());
+        Assertions.assertEquals("string", loaded.getConstraintDefs().get(0).getParameters().get(0).getType());
         Assertions.assertEquals("authType", loaded.getConstraintDefs().get(0).getParameters().get(1).getSubType());
     }
 
@@ -652,7 +652,7 @@ public class TestRangerServiceDefServiceBase {
         RangerConstraintParamDef approver = new RangerConstraintParamDef();
         approver.setItemId(1L);
         approver.setName("approver");
-        approver.setType("user");
+        approver.setType("string");
         approver.setMandatory(true);
 
         RangerConstraintParamDef mode = new RangerConstraintParamDef();

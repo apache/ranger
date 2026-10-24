@@ -365,7 +365,7 @@ public class TestRangerServiceDef {
         param.setName("approver");
         param.setLabel("Approver");
         param.setDescription("User who must approve");
-        param.setType("user");
+        param.setType("string");
         param.setSubType(null);
         Assertions.assertNull(param.getSubType());
         param.setMandatory(null);
@@ -472,7 +472,7 @@ public class TestRangerServiceDef {
                 + "\"name\":\"approver\","
                 + "\"label\":\"Approver\","
                 + "\"description\":\"User who must approve\","
-                + "\"type\":\"user\","
+                + "\"type\":\"string\","
                 + "\"mandatory\":true,"
                 + "\"defaultValue\":\"alice\","
                 + "\"rbKeyLabel\":\"rb.approver\","
@@ -496,13 +496,13 @@ public class TestRangerServiceDef {
         Map<String, String> tbl = new HashMap<>();
         String canonicalResource = StringUtil.dedupString(new String("tool"), tbl);
         String canonicalName = StringUtil.dedupString(new String("requireApproval"), tbl);
-        String canonicalType    = StringUtil.dedupString(new String("user"), tbl);
+        String canonicalType    = StringUtil.dedupString(new String("string"), tbl);
         String canonicalSubType = StringUtil.dedupString(new String("MaskTypes"), tbl);
         parsedDef.setName(new String("requireApproval"));
         List<String> resources = new ArrayList<>();
         resources.add(new String("tool"));
         parsedDef.setResources(resources);
-        parsedDef.getParameters().get(0).setType(new String("user"));
+        parsedDef.getParameters().get(0).setType(new String("string"));
         parsedDef.getParameters().get(0).setSubType(new String("MaskTypes"));
         parsedDef.dedupStrings(tbl);
         Assertions.assertSame(canonicalName, parsedDef.getName());

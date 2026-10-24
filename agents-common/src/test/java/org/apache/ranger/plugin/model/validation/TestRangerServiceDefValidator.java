@@ -677,9 +677,9 @@ public class TestRangerServiceDefValidator {
         RangerServiceDef def = constraintServiceDef();
         RangerConstraintDef valid = constraintDef(1L, "requireApproval", Arrays.asList("database", "udf"), Arrays.asList("execute"));
         List<RangerConstraintParamDef> validParams = new ArrayList<>();
-        validParams.add(param("approver", "user", null, true));
-        validParams.add(param("approverGroup", "group", null, false));
-        validParams.add(param("approverRole", "role", null, false));
+        validParams.add(param("approver", "string", null, true));
+        validParams.add(param("rowCount", "int", null, false));
+        validParams.add(param("enabled", "bool", null, false));
         validParams.add(param("mode", "enum", "authType", false));
         valid.setParameters(validParams);
         def.setConstraintDefs(Collections.singletonList(valid));
@@ -687,7 +687,7 @@ public class TestRangerServiceDefValidator {
         assertTrue(failures.isEmpty());
 
         RangerConstraintDef emptyResources = constraintDef(1L, "requireApproval", new ArrayList<>(), Arrays.asList("execute"));
-        emptyResources.setParameters(Collections.singletonList(param("approver", "user", null, true)));
+        emptyResources.setParameters(Collections.singletonList(param("approver", "string", null, true)));
         def.setConstraintDefs(Collections.singletonList(emptyResources));
         assertTrue(validator.isValidConstraintDefs(def, failures));
         assertTrue(failures.isEmpty());
@@ -730,7 +730,10 @@ public class TestRangerServiceDefValidator {
         params.add(null);
         params.add(param("mode", "enum", "no-such-enum", false));
         params.add(param("kind", "enum", " ", false));
-        params.add(param("approver", "user", "authType", true));
+        params.add(param("approver", "string", "authType", true));
+        params.add(param("approverUser", "user", null, false));
+        params.add(param("approverGroup", "group", null, false));
+        params.add(param("approverRole", "role", null, false));
         params.add(param("limit", null, null, false));
         invalid.setParameters(params);
         constraintDefs.add(invalid);
@@ -749,6 +752,9 @@ public class TestRangerServiceDefValidator {
         utils.checkFailureForSemanticError(failures, "constraint def resource", "missing");
         utils.checkFailureForSemanticError(failures, "constraint def access type", "drop");
         utils.checkFailureForSemanticError(failures, "constraint def parameter type", "rowCount");
+        utils.checkFailureForSemanticError(failures, "constraint def parameter type", "approverUser");
+        utils.checkFailureForSemanticError(failures, "constraint def parameter type", "approverGroup");
+        utils.checkFailureForSemanticError(failures, "constraint def parameter type", "approverRole");
         utils.checkFailureForSemanticError(failures, "constraint def parameter name", "rowCount");
         utils.checkFailureForMissingValue(failures, "constraint def parameter");
         utils.checkFailureForSemanticError(failures, "constraint def parameter subtype", "mode");

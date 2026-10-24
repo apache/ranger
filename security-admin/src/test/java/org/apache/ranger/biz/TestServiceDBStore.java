@@ -6979,7 +6979,7 @@ public class TestServiceDBStore {
 
         approver.setItemId(1L);
         approver.setName("approver");
-        approver.setType("group");
+        approver.setType("string");
         approver.setMandatory(true);
 
         RangerConstraintDef constraintDef = new RangerConstraintDef();

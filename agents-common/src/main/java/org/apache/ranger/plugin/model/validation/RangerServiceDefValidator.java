@@ -53,7 +53,7 @@ public class RangerServiceDefValidator extends RangerValidator {
     private static final Logger LOG = LoggerFactory.getLogger(RangerServiceDefValidator.class);
 
     private static final Set<String> VALID_CONFIG_TYPES           = ImmutableSet.of("bool", "enum", "int", "string", "password", "path");
-    private static final Set<String> VALID_CONSTRAINT_PARAM_TYPES = ImmutableSet.of("string", "int", "bool", "enum", "user", "group", "role");
+    private static final Set<String> VALID_CONSTRAINT_PARAM_TYPES = ImmutableSet.of("string", "int", "bool", "enum");
 
     public RangerServiceDefValidator(ServiceStore store) {
         super(store);

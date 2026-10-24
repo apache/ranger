@@ -928,7 +928,7 @@ public class TestRangerServiceDefService {
         RangerServiceDef.RangerConstraintParamDef approver = new RangerServiceDef.RangerConstraintParamDef();
         approver.setItemId(1L);
         approver.setName("approver");
-        approver.setType("user");
+        approver.setType("string");
         approver.setMandatory(true);
         constraintDef.getParameters().add(approver);
 
@@ -953,7 +953,7 @@ public class TestRangerServiceDefService {
         assertEquals(Arrays.asList("database", "udf"), loaded.getConstraintDefs().get(0).getResources());
         assertEquals(Collections.singletonList("select"), loaded.getConstraintDefs().get(0).getAccessTypes());
         assertEquals("approver", loaded.getConstraintDefs().get(0).getParameters().get(0).getName());
-        assertEquals("user", loaded.getConstraintDefs().get(0).getParameters().get(0).getType());
+        assertEquals("string", loaded.getConstraintDefs().get(0).getParameters().get(0).getType());
     }
 
     @Test
@@ -1099,7 +1099,7 @@ public class TestRangerServiceDefService {
         RangerServiceDef.RangerConstraintParamDef approver = new RangerServiceDef.RangerConstraintParamDef();
         approver.setItemId(1L);
         approver.setName("approver");
-        approver.setType("group");
+        approver.setType("string");
         approver.setMandatory(true);
 
         RangerConstraintDef ret = new RangerConstraintDef();
