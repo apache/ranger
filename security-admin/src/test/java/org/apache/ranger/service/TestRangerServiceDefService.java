@@ -18,8 +18,10 @@ package org.apache.ranger.service;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.ranger.authorization.hadoop.config.RangerAdminConfig;
+import org.apache.ranger.authorization.utils.JsonUtils;
 import org.apache.ranger.biz.RangerBizUtil;
 import org.apache.ranger.common.ContextUtil;
+import org.apache.ranger.common.JSONUtil;
 import org.apache.ranger.common.PropertiesUtil;
 import org.apache.ranger.common.StringUtil;
 import org.apache.ranger.common.UserSessionBase;
@@ -50,6 +52,7 @@ import org.apache.ranger.entity.XXServiceDef;
 import org.apache.ranger.entity.XXServiceDefWithAssignedId;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerAccessTypeDef;
+import org.apache.ranger.plugin.model.RangerServiceDef.RangerConstraintDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerContextEnricherDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerEnumDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerPolicyConditionDef;
@@ -71,6 +74,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
@@ -85,6 +89,7 @@ import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 
@@ -909,6 +914,202 @@ public class TestRangerServiceDefService {
         } catch (Exception e) {
             // Ignore the exception
         }
+    }
+
+    @Test
+    public void test6PopulateViewBeanLoadsConstraintDefs() throws Exception {
+        serviceDefService.jsonUtil = new JSONUtil();
+
+        RangerConstraintDef constraintDef = new RangerConstraintDef();
+        constraintDef.setItemId(4L);
+        constraintDef.setName("requireApproval");
+        constraintDef.setResources(Arrays.asList("database", "udf"));
+        constraintDef.setAccessTypes(Collections.singletonList("select"));
+        RangerServiceDef.RangerConstraintParamDef approver = new RangerServiceDef.RangerConstraintParamDef();
+        approver.setItemId(1L);
+        approver.setName("approver");
+        approver.setType("string");
+        approver.setMandatory(true);
+        constraintDef.getParameters().add(approver);
+
+        RangerServiceDef jsonBody = new RangerServiceDef();
+        jsonBody.setName("json-name");
+        jsonBody.getConstraintDefs().add(constraintDef);
+
+        XXServiceDef serviceDef = serviceDef();
+        serviceDef.setAddedByUserId(null);
+        serviceDef.setUpdatedByUserId(null);
+        serviceDef.setName("hdfs");
+        serviceDef.setDefOptions("{}");
+        serviceDef.setDefText(serviceDefService.objectToJson(jsonBody));
+
+        RangerServiceDef loaded = serviceDefService.populateViewBean(serviceDef);
+
+        assertNotNull(loaded.getConstraintDefs());
+        assertEquals(serviceDef.getName(), loaded.getName());
+        assertEquals(1, loaded.getConstraintDefs().size());
+        assertEquals(Long.valueOf(4L), loaded.getConstraintDefs().get(0).getItemId());
+        assertEquals("requireApproval", loaded.getConstraintDefs().get(0).getName());
+        assertEquals(Arrays.asList("database", "udf"), loaded.getConstraintDefs().get(0).getResources());
+        assertEquals(Collections.singletonList("select"), loaded.getConstraintDefs().get(0).getAccessTypes());
+        assertEquals("approver", loaded.getConstraintDefs().get(0).getParameters().get(0).getName());
+        assertEquals("string", loaded.getConstraintDefs().get(0).getParameters().get(0).getType());
+    }
+
+    @Test
+    public void testPopulateViewBeanReadsDefText() {
+        mockBaseFieldsForPopulateViewBean();
+
+        RangerResourceDef tool = new RangerResourceDef();
+        tool.setItemId(1L);
+        tool.setName("tool");
+        tool.setLevel(10);
+
+        RangerAccessTypeDef execute = new RangerAccessTypeDef();
+        execute.setItemId(1L);
+        execute.setName("execute");
+
+        RangerServiceDef stored = new RangerServiceDef();
+        stored.setName("stale-name-in-json");
+        stored.setResources(Collections.singletonList(tool));
+        stored.setAccessTypes(Collections.singletonList(execute));
+        stored.setConstraintDefs(Collections.singletonList(constraintDef()));
+
+        XXServiceDef xServiceDef = serviceDef();
+        xServiceDef.setName("agent");
+        xServiceDef.setDefOptions("{}");
+        xServiceDef.setDefText(JsonUtils.objectToJson(stored));
+
+        RangerServiceDef loaded = serviceDefService.populateViewBean(xServiceDef);
+
+        assertEquals("agent", loaded.getName());
+        assertEquals(1, loaded.getResources().size());
+        assertEquals("tool", loaded.getResources().get(0).getName());
+        assertEquals("execute", loaded.getAccessTypes().get(0).getName());
+        assertEquals(1, loaded.getConstraintDefs().size());
+        assertEquals("requireApproval", loaded.getConstraintDefs().get(0).getName());
+        assertEquals(Collections.singletonList("tool"), loaded.getConstraintDefs().get(0).getResources());
+        assertEquals("approver", loaded.getConstraintDefs().get(0).getParameters().get(0).getName());
+        verify(daoMgr, never()).getXXResourceDef();
+        verify(daoMgr, never()).getXXAccessTypeDef();
+        verify(daoMgr, never()).getXXServiceConfigDef();
+    }
+
+    @Test
+    public void testPopulateViewBeanFallsBackToChildTables() {
+        mockBaseFieldsForPopulateViewBean();
+        mockEmptyChildTables(Id);
+
+        XXServiceDef xServiceDef = serviceDef();
+        xServiceDef.setDefOptions("{}");
+        xServiceDef.setDefText("not-a-json");
+
+        RangerServiceDef loaded = serviceDefService.populateViewBean(xServiceDef);
+
+        assertNotNull(loaded);
+        assertTrue(loaded.getConstraintDefs().isEmpty());
+        verify(daoMgr).getXXResourceDef();
+        verify(daoMgr).getXXAccessTypeDef();
+    }
+
+    @Test
+    public void testBuildDefTextIncludesConstraintDefsAndNoDerivedValues() {
+        serviceDefService.stringUtil = new StringUtil();
+        serviceDefService.jsonUtil   = new JSONUtil();
+
+        mockEmptyChildTables(Id);
+
+        XXServiceDef xServiceDef = serviceDef();
+        xServiceDef.setName("agent");
+        xServiceDef.setDefOptions("{\"custom\":\"value\"}");
+
+        String defText = serviceDefService.buildDefText(xServiceDef, Collections.singletonList(constraintDef()));
+
+        assertNotNull(defText);
+        assertFalse(defText.contains("markerAccessTypes"));
+        assertFalse(defText.contains(RangerServiceDef.OPTION_ENABLE_DENY_AND_EXCEPTIONS_IN_POLICIES));
+
+        RangerServiceDef stored = JsonUtils.jsonToObject(defText, RangerServiceDef.class);
+
+        assertNotNull(stored);
+        assertEquals("agent", stored.getName());
+        assertEquals("value", stored.getOptions().get("custom"));
+        assertEquals(1, stored.getConstraintDefs().size());
+        assertEquals("requireApproval", stored.getConstraintDefs().get(0).getName());
+        assertEquals(Arrays.asList("execute"), stored.getConstraintDefs().get(0).getAccessTypes());
+    }
+
+    @Test
+    public void testBuildDefTextWithoutConstraintDefs() {
+        serviceDefService.stringUtil = new StringUtil();
+
+        mockEmptyChildTables(Id);
+
+        String           defText = serviceDefService.buildDefText(serviceDef(), null);
+        RangerServiceDef stored  = JsonUtils.jsonToObject(defText, RangerServiceDef.class);
+
+        assertNotNull(stored);
+        assertTrue(stored.getConstraintDefs() == null || stored.getConstraintDefs().isEmpty());
+    }
+
+    private void mockBaseFieldsForPopulateViewBean() {
+        serviceDefService.bizUtil    = Mockito.mock(RangerBizUtil.class);
+        serviceDefService.stringUtil = new StringUtil();
+        serviceDefService.jsonUtil   = new JSONUtil();
+
+        XXPortalUserDao xPortalUserDao = Mockito.mock(XXPortalUserDao.class);
+        XXPortalUser    portalUser     = new XXPortalUser();
+
+        portalUser.setId(Id);
+        portalUser.setFirstName("Admin");
+
+        Mockito.lenient().when(daoMgr.getXXPortalUser()).thenReturn(xPortalUserDao);
+        Mockito.lenient().when(xPortalUserDao.getById(Id)).thenReturn(portalUser);
+    }
+
+    private void mockEmptyChildTables(Long serviceDefId) {
+        XXServiceConfigDefDao    xServiceConfigDefDao    = Mockito.mock(XXServiceConfigDefDao.class);
+        XXResourceDefDao         xResourceDefDao         = Mockito.mock(XXResourceDefDao.class);
+        XXAccessTypeDefDao       xAccessTypeDefDao       = Mockito.mock(XXAccessTypeDefDao.class);
+        XXAccessTypeDefGrantsDao xAccessTypeDefGrantsDao = Mockito.mock(XXAccessTypeDefGrantsDao.class);
+        XXPolicyConditionDefDao  xPolicyConditionDefDao  = Mockito.mock(XXPolicyConditionDefDao.class);
+        XXContextEnricherDefDao  xContextEnricherDefDao  = Mockito.mock(XXContextEnricherDefDao.class);
+        XXEnumDefDao             xEnumDefDao             = Mockito.mock(XXEnumDefDao.class);
+        XXDataMaskTypeDefDao     xDataMaskTypeDefDao     = Mockito.mock(XXDataMaskTypeDefDao.class);
+
+        Mockito.when(daoMgr.getXXServiceConfigDef()).thenReturn(xServiceConfigDefDao);
+        Mockito.when(xServiceConfigDefDao.findByServiceDefId(serviceDefId)).thenReturn(new ArrayList<>());
+        Mockito.when(daoMgr.getXXResourceDef()).thenReturn(xResourceDefDao);
+        Mockito.when(xResourceDefDao.findByServiceDefId(serviceDefId)).thenReturn(new ArrayList<>());
+        Mockito.when(daoMgr.getXXAccessTypeDef()).thenReturn(xAccessTypeDefDao);
+        Mockito.when(xAccessTypeDefDao.findByServiceDefId(serviceDefId)).thenReturn(new ArrayList<>());
+        Mockito.when(daoMgr.getXXAccessTypeDefGrants()).thenReturn(xAccessTypeDefGrantsDao);
+        Mockito.when(xAccessTypeDefGrantsDao.findImpliedGrantsByServiceDefId(serviceDefId)).thenReturn(Collections.emptyMap());
+        Mockito.when(daoMgr.getXXPolicyConditionDef()).thenReturn(xPolicyConditionDefDao);
+        Mockito.when(xPolicyConditionDefDao.findByServiceDefId(serviceDefId)).thenReturn(new ArrayList<>());
+        Mockito.when(daoMgr.getXXContextEnricherDef()).thenReturn(xContextEnricherDefDao);
+        Mockito.when(xContextEnricherDefDao.findByServiceDefId(serviceDefId)).thenReturn(new ArrayList<>());
+        Mockito.when(daoMgr.getXXEnumDef()).thenReturn(xEnumDefDao);
+        Mockito.when(xEnumDefDao.findByServiceDefId(serviceDefId)).thenReturn(new ArrayList<>());
+        Mockito.when(daoMgr.getXXDataMaskTypeDef()).thenReturn(xDataMaskTypeDefDao);
+        Mockito.when(xDataMaskTypeDefDao.findByServiceDefId(serviceDefId)).thenReturn(new ArrayList<>());
+    }
+
+    private RangerConstraintDef constraintDef() {
+        RangerServiceDef.RangerConstraintParamDef approver = new RangerServiceDef.RangerConstraintParamDef();
+        approver.setItemId(1L);
+        approver.setName("approver");
+        approver.setType("string");
+        approver.setMandatory(true);
+
+        RangerConstraintDef ret = new RangerConstraintDef();
+        ret.setItemId(1L);
+        ret.setName("requireApproval");
+        ret.setResources(Collections.singletonList("tool"));
+        ret.setAccessTypes(Collections.singletonList("execute"));
+        ret.setParameters(Collections.singletonList(approver));
+
+        return ret;
     }
 
     private boolean hasActionMatchesCondition(RangerServiceDef serviceDef) {

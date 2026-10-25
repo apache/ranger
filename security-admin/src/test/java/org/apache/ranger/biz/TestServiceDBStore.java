@@ -116,6 +116,7 @@ import org.apache.ranger.plugin.model.RangerSecurityZone;
 import org.apache.ranger.plugin.model.RangerService;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerAccessTypeDef;
+import org.apache.ranger.plugin.model.RangerServiceDef.RangerConstraintDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerContextEnricherDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerEnumDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerPolicyConditionDef;
@@ -284,7 +285,11 @@ public class TestServiceDBStore {
         List<XXResourceDef> xResourceDefs = new ArrayList<>();
         xResourceDefs.add(xResourceDef);
 
-        RangerServiceDef serviceDef = new RangerServiceDef();
+        RangerServiceDef          serviceDef     = new RangerServiceDef();
+        List<RangerConstraintDef> constraintDefs = Collections.singletonList(constraintDef());
+
+        serviceDef.setConstraintDefs(constraintDefs);
+
         Mockito.when(serviceDefService.create(serviceDef)).thenReturn(serviceDef);
 
         Mockito.when(daoMgr.getXXServiceDef()).thenReturn(xServiceDefDao);
@@ -323,6 +328,8 @@ public class TestServiceDBStore {
         Assertions.assertEquals(dbServiceDef.getResources(), serviceDef.getResources());
         Mockito.verify(serviceDefService).getPopulatedViewObject(xServiceDef);
         Mockito.verify(serviceDefService).create(serviceDef);
+        Mockito.verify(serviceDefService).buildDefText(xServiceDef, constraintDefs);
+        Mockito.verify(xServiceDefDao).update(xServiceDef);
         Mockito.verify(daoMgr).getXXServiceConfigDef();
         Mockito.verify(daoMgr).getXXEnumDef();
         Mockito.verify(daoMgr).getXXAccessTypeDef();
@@ -342,8 +349,11 @@ public class TestServiceDBStore {
         XXDataMaskTypeDefDao xDataMaskDefDao           = Mockito.mock(XXDataMaskTypeDefDao.class);
         XXServiceDao         xServiceDao               = Mockito.mock(XXServiceDao.class);
 
-        RangerServiceDef rangerServiceDef = rangerServiceDef();
-        Long             serviceDefId     = rangerServiceDef.getId();
+        RangerServiceDef          rangerServiceDef = rangerServiceDef();
+        Long                      serviceDefId     = rangerServiceDef.getId();
+        List<RangerConstraintDef> constraintDefs   = Collections.singletonList(constraintDef());
+
+        rangerServiceDef.setConstraintDefs(constraintDefs);
 
         List<XXServiceConfigDef> svcConfDefList      = new ArrayList<>();
         XXServiceConfigDef       serviceConfigDefObj = new XXServiceConfigDef();
@@ -444,6 +454,9 @@ public class TestServiceDBStore {
         Assertions.assertEquals(dbServiceDef.getConfigs(), rangerServiceDef.getConfigs());
         Assertions.assertEquals(dbServiceDef.getVersion(), rangerServiceDef.getVersion());
         Assertions.assertEquals(dbServiceDef.getResources(), rangerServiceDef.getResources());
+        // update() returns a different object, so this checks the request's constraintDefs were kept
+        Mockito.verify(serviceDefService).buildDefText(xServiceDef, constraintDefs);
+        Mockito.verify(xServiceDefDao).update(xServiceDef);
     }
 
     @Test
@@ -6959,6 +6972,25 @@ public class TestServiceDBStore {
         rangerServiceDef.setEnums(enums);
 
         return rangerServiceDef;
+    }
+
+    private RangerConstraintDef constraintDef() {
+        RangerServiceDef.RangerConstraintParamDef approver = new RangerServiceDef.RangerConstraintParamDef();
+
+        approver.setItemId(1L);
+        approver.setName("approver");
+        approver.setType("string");
+        approver.setMandatory(true);
+
+        RangerConstraintDef constraintDef = new RangerConstraintDef();
+
+        constraintDef.setItemId(1L);
+        constraintDef.setName("requireApproval");
+        constraintDef.setResources(Collections.singletonList("tool"));
+        constraintDef.setAccessTypes(Collections.singletonList("execute"));
+        constraintDef.setParameters(Collections.singletonList(approver));
+
+        return constraintDef;
     }
 
     private RangerService rangerService() {

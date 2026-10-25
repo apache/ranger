@@ -19,6 +19,7 @@ package org.apache.ranger.service;
 
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.ranger.authorization.utils.JsonUtils;
 import org.apache.ranger.common.AppConstants;
 import org.apache.ranger.common.GUIDUtil;
 import org.apache.ranger.common.JSONUtil;
@@ -41,6 +42,7 @@ import org.apache.ranger.entity.XXServiceDefBase;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerAccessTypeDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerAccessTypeDef.AccessTypeCategory;
+import org.apache.ranger.plugin.model.RangerServiceDef.RangerConstraintDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerContextEnricherDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerDataMaskDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerDataMaskTypeDef;
@@ -557,6 +559,39 @@ public abstract class RangerServiceDefServiceBase<T extends XXServiceDefBase, V 
 
     @Override
     protected V mapEntityToViewBean(V vObj, T xObj) {
+        return mapServiceDefColumns(vObj, xObj);
+    }
+
+    @Override
+    protected V populateViewBean(T xServiceDef) {
+        V serviceDef = super.populateViewBean(xServiceDef);
+
+        if (!applyDefText(serviceDef, xServiceDef.getDefText())) {
+            loadChildTables(serviceDef, xServiceDef);
+        }
+
+        serviceDef.setMarkerAccessTypes(ServiceDefUtil.getMarkerAccessTypes(serviceDef.getAccessTypes()));
+        addImplicitConditionExpressionIfNeeded(serviceDef);
+        ServiceDefUtil.normalize(serviceDef);
+
+        return serviceDef;
+    }
+
+    // JSON for x_service_def.def_text, built after the child rows are written.
+    // Marker access types, the implicit condition, and read-time options are left out.
+    public String buildDefText(T xServiceDef, List<RangerConstraintDef> constraintDefs) {
+        V serviceDef = createViewObject();
+
+        serviceDef.setId(xServiceDef.getId());
+        mapServiceDefColumns(serviceDef, xServiceDef);
+        loadChildTables(serviceDef, xServiceDef);
+        serviceDef.setConstraintDefs(constraintDefs);
+        serviceDef.setMarkerAccessTypes(null);
+
+        return JsonUtils.objectToJson(serviceDef);
+    }
+
+    private V mapServiceDefColumns(V vObj, T xObj) {
         vObj.setGuid(xObj.getGuid());
         vObj.setVersion(xObj.getVersion());
         vObj.setName(xObj.getName());
@@ -572,9 +607,33 @@ public abstract class RangerServiceDefServiceBase<T extends XXServiceDefBase, V 
         return vObj;
     }
 
-    @Override
-    protected V populateViewBean(T xServiceDef) {
-        V                        serviceDef   = super.populateViewBean(xServiceDef);
+    private boolean applyDefText(V serviceDef, String defText) {
+        if (StringUtils.isEmpty(defText)) {
+            return false;
+        }
+
+        V fromJson = JsonUtils.jsonToObject(defText, tViewClass);
+
+        if (fromJson == null) {
+            LOG.warn("failed to read def_text of service-def(id={}, name={}); loading it from child tables", serviceDef.getId(), serviceDef.getName());
+
+            return false;
+        }
+
+        serviceDef.setConfigs(fromJson.getConfigs());
+        serviceDef.setResources(fromJson.getResources());
+        serviceDef.setAccessTypes(fromJson.getAccessTypes());
+        serviceDef.setPolicyConditions(fromJson.getPolicyConditions());
+        serviceDef.setConstraintDefs(fromJson.getConstraintDefs());
+        serviceDef.setContextEnrichers(fromJson.getContextEnrichers());
+        serviceDef.setEnums(fromJson.getEnums());
+        serviceDef.setDataMaskDef(fromJson.getDataMaskDef());
+        serviceDef.setRowFilterDef(fromJson.getRowFilterDef());
+
+        return true;
+    }
+
+    private void loadChildTables(V serviceDef, T xServiceDef) {
         Long                     serviceDefId = xServiceDef.getId();
         List<XXServiceConfigDef> xConfigs     = daoMgr.getXXServiceConfigDef().findByServiceDefId(serviceDefId);
 
@@ -618,8 +677,6 @@ public abstract class RangerServiceDefServiceBase<T extends XXServiceDefBase, V 
 
             serviceDef.setAccessTypes(accessTypes);
         }
-
-        serviceDef.setMarkerAccessTypes(ServiceDefUtil.getMarkerAccessTypes(serviceDef.getAccessTypes()));
 
         List<XXPolicyConditionDef> xPolicyConditions = daoMgr.getXXPolicyConditionDef().findByServiceDefId(serviceDefId);
 
@@ -713,12 +770,6 @@ public abstract class RangerServiceDefServiceBase<T extends XXServiceDefBase, V 
 
         serviceDef.setDataMaskDef(dataMaskDef);
         serviceDef.setRowFilterDef(rowFilterDef);
-
-        addImplicitConditionExpressionIfNeeded(serviceDef);
-
-        ServiceDefUtil.normalize(serviceDef);
-
-        return serviceDef;
     }
 
     protected Map<String, String> jsonStringToMap(String jsonStr) {
