@@ -1688,7 +1688,7 @@ public class RoleREST {
 
             for (RangerRole.RoleMember roleMember : current.getRoles()) {
                 if (roleMembers.add(roleMember.getName())) {
-                    RangerRole memberRole = getNestedRoleIfExists(roleMember.getName());
+                    RangerRole memberRole = getRoleIfExists(roleMember.getName());
 
                     if (memberRole != null) {
                         pending.add(memberRole);
@@ -1716,7 +1716,7 @@ public class RoleREST {
                 roleMembers.add(roleMember);
 
                 if (!loaded.containsKey(roleMember.getName())) {
-                    RangerRole memberRole = getNestedRoleIfExists(roleMember.getName());
+                    RangerRole memberRole = getRoleIfExists(roleMember.getName());
 
                     loaded.put(roleMember.getName(), memberRole);
 
@@ -1736,11 +1736,11 @@ public class RoleREST {
      * RoleDBStore.getRole(String) throws WebApplicationException only when the role is not found (by name, or by id
      * in roleService.read() if deleted in between); DB failures surface as persistence exceptions and still propagate.
      */
-    private RangerRole getNestedRoleIfExists(String roleName) {
+    private RangerRole getRoleIfExists(String roleName) {
         try {
             return roleStore.getRole(roleName);
         } catch (WebApplicationException excp) {
-            LOG.warn("Nested role {} does not exist; skipping it", roleName);
+            LOG.warn("Role {} does not exist; skipping it", roleName);
 
             return null;
         }
