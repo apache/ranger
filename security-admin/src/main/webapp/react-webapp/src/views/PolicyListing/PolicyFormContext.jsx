@@ -19,11 +19,11 @@
 
 import React, { useEffect, useState } from "react";
 import { Outlet, useParams, useNavigate, useLocation } from "react-router-dom";
-import { cloneDeep, pick } from "lodash";
+import { cloneDeep, isUndefined, pick } from "lodash";
 import { Loader } from "Components/CommonComponents";
 import { fetchApi } from "Utils/fetchAPI";
 import { getServiceDef } from "Utils/appState";
-import { commonBreadcrumb } from "Utils/XAUtils";
+import { commonBreadcrumb, getSupportedPolicyTypes } from "Utils/XAUtils";
 
 const PolicyFormContext = () => {
   const { serviceId, policyType, policyId } = useParams();
@@ -74,19 +74,17 @@ const PolicyFormContext = () => {
     let serviceCompData = serviceDefs?.allServiceDefs?.find((serviceDef) => {
       return serviceDef.name == serviceData.type;
     });
-    if (serviceCompData) {
-      let serviceDefPolicyType = 0;
+
+    // `policyType` is only present in the URL on the create route
+    // (/service/:serviceId/policies/create/:policyType). The edit route
+    // (/service/:serviceId/policies/:policyId/edit) has no such param, so
+    // there is nothing to validate there.
+    if (serviceCompData && !isUndefined(policyType)) {
       if (
-        serviceCompData?.dataMaskDef &&
-        Object.keys(serviceCompData.dataMaskDef).length != 0
-      )
-        serviceDefPolicyType++;
-      if (
-        serviceCompData?.rowFilterDef &&
-        Object.keys(serviceCompData.rowFilterDef).length != 0
-      )
-        serviceDefPolicyType++;
-      if (+policyType > serviceDefPolicyType) navigate("/pageNotFound");
+        !getSupportedPolicyTypes(serviceCompData).includes(Number(policyType))
+      ) {
+        navigate("/pageNotFound");
+      }
     }
     let fetchedPolicyData = null;
     if (policyId) {

@@ -27,7 +27,8 @@ import {
   isRenderRowFilter,
   isKeyAdmin,
   isKMSAuditor,
-  updateTagActive
+  updateTagActive,
+  getSupportedPolicyTypes
 } from "Utils/XAUtils";
 import { Loader } from "Components/CommonComponents";
 import TopNavBar from "../SideBar/TopNavBar";
@@ -128,17 +129,28 @@ export const PolicyListingTabView = () => {
 
     setZones(getZones?.data || []);
 
-    dispatch({
-      type: "SERVICES_DATA",
-      allServicesData: getAllServicesData?.data || [],
-      serviceData: getServiceData?.data,
-      serviceDefData: getServiceDefData
-    });
-    if (!isEmpty(getServiceData) && !isEmpty(getServiceDefData)) {
+    let isInvalidPolicyType = false;
+    if (!isEmpty(getServiceDefData)) {
+      isInvalidPolicyType = !getSupportedPolicyTypes(
+        getServiceDefData
+      ).includes(Number(params.policyType));
+    }
+
+    if (isInvalidPolicyType) {
+      navigate("/pageNotFound");
+    } else {
       dispatch({
-        type: "SET_LOADER",
-        loader: false
+        type: "SERVICES_DATA",
+        allServicesData: getAllServicesData?.data || [],
+        serviceData: getServiceData?.data,
+        serviceDefData: getServiceDefData
       });
+      if (!isEmpty(getServiceData) && !isEmpty(getServiceDefData)) {
+        dispatch({
+          type: "SET_LOADER",
+          loader: false
+        });
+      }
     }
     document
       .getElementById("resourceSelectedZone")
