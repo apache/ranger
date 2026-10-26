@@ -29,6 +29,7 @@ import org.apache.ranger.common.RangerRoleCache;
 import org.apache.ranger.common.UserSessionBase;
 import org.apache.ranger.common.db.RangerTransactionSynchronizationAdapter;
 import org.apache.ranger.db.RangerDaoManager;
+import org.apache.ranger.db.XXRoleDao;
 import org.apache.ranger.entity.XXRole;
 import org.apache.ranger.entity.XXRoleRefGroup;
 import org.apache.ranger.entity.XXRoleRefUser;
@@ -470,6 +471,7 @@ public class RoleDBStore implements RoleStore {
      * using their stored definitions. Each role is loaded at most once; a role with no nested roles costs nothing.
      */
     private void ensureRoleNotNestedInItself(RangerRole role) {
+        XXRoleDao     roleDao = daoMgr.getXXRole();
         Set<String>   visited = new HashSet<>();
         Deque<String> pending = new ArrayDeque<>();
 
@@ -480,30 +482,14 @@ public class RoleDBStore implements RoleStore {
         }
 
         while (!pending.isEmpty()) {
-            String nestedRoleName = pending.poll();
+            String memberRoleName = pending.poll();
 
-            if (StringUtils.equals(nestedRoleName, role.getName())) {
+            if (StringUtils.equals(memberRoleName, role.getName())) {
                 throw createNestingCycleException(role.getName());
             }
 
-            if (!visited.add(nestedRoleName)) {
-                continue;
-            }
-
-            XXRole xxNestedRole = daoMgr.getXXRole().findByRoleName(nestedRoleName);
-
-            if (xxNestedRole == null) { // will be created empty
-                continue;
-            }
-
-            RangerRole nestedRole = roleService.read(xxNestedRole.getId());
-
-            if (nestedRole != null) {
-                for (RangerRole.RoleMember member : nestedRole.getRoles()) {
-                    if (member != null && StringUtils.isNotEmpty(member.getName())) {
-                        pending.add(member.getName());
-                    }
-                }
+            if (visited.add(memberRoleName)) {
+                pending.addAll(roleDao.getRoleMemberNames(memberRoleName)); // empty if the role will be created empty
             }
         }
     }

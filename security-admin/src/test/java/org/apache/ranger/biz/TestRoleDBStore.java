@@ -614,17 +614,13 @@ public class TestRoleDBStore {
         // roleB (stored, e.g. earlier in the same import) lists test-role, whose ref row is still pending;
         // creating test-role containing roleB must be rejected from the stored definitions
         RangerRole rangerRole = getRangerRole();
-        XXRole     xxRoleB    = new XXRole();
         XXRoleDao  xxRoleDao  = Mockito.mock(XXRoleDao.class);
 
-        xxRoleB.setId(20L);
-        xxRoleB.setName("roleB");
         rangerRole.setRoles(Collections.singletonList(new RoleMember("roleB", false)));
 
         Mockito.when(daoMgr.getXXRole()).thenReturn(xxRoleDao);
         Mockito.when(xxRoleDao.findByRoleName(roleName)).thenReturn(null);
-        Mockito.when(xxRoleDao.findByRoleName("roleB")).thenReturn(xxRoleB);
-        Mockito.when(roleService.read(20L)).thenReturn(new RangerRole("roleB", "roleB", null, null, null, Collections.singletonList(new RoleMember(roleName, false))));
+        Mockito.when(xxRoleDao.getRoleMemberNames("roleB")).thenReturn(Collections.singletonList(roleName));
         Mockito.when(restErrorUtil.createRESTException(Mockito.anyString(), Mockito.any())).thenReturn(new WebApplicationException());
 
         Assertions.assertThrows(WebApplicationException.class, () -> roleDBStore.createRole(rangerRole, false, false));
