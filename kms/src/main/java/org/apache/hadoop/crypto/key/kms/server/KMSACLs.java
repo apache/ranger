@@ -243,6 +243,11 @@ public class KMSACLs implements Runnable, KeyACLs {
   }
 
   @Override
+  public boolean hasAccess(Type type, UserGroupInformation ugi, String key, String clientIp) {
+      return hasAccess(type, ugi, clientIp);
+  }
+
+  @Override
   public void assertAccess(Type aclType,
       UserGroupInformation ugi, KMSOp operation, String key, String clientIp)
       throws AccessControlException {

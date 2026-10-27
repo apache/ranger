@@ -152,6 +152,28 @@ public class RangerKmsAuthorizer implements Runnable, KeyACLs {
 		return ret;
 	}
 
+    @Override
+    public boolean hasAccess(Type aclType, UserGroupInformation ugi, String key, String clientIp) {
+        if(LOG.isDebugEnabled()) {
+            LOG.debug("==> RangerKmsAuthorizer.hasAccess({}, {}, {})", aclType, ugi, key);
+        }
+
+        boolean ret = false;
+
+        try {
+            activatePluginClassLoader();
+
+            ret = implKeyACLs.hasAccess(aclType, ugi, key, clientIp);
+        } finally {
+            deactivatePluginClassLoader();
+        }
+        if(LOG.isDebugEnabled()) {
+            LOG.debug("<== RangerKmsAuthorizer.hasAccess({}, {}, {})", aclType, ugi, key);
+        }
+
+        return ret;
+    }
+
 	@Override
 	public void assertAccess(Type aclType, UserGroupInformation ugi,KMSOp operation, String key, String clientIp) throws AccessControlException {
 		if(LOG.isDebugEnabled()) {
