@@ -353,6 +353,8 @@ public class KeyAuthorizationKeyProvider extends KeyProviderCryptoExtension {
 
         boolean hasAccess(KMSACLsType.Type aclType, UserGroupInformation ugi, String clientIp);
 
+        boolean hasAccess(KMSACLsType.Type aclType, UserGroupInformation ugi, String key, String clientIp);
+
         void assertAccess(KMSACLsType.Type aclType, UserGroupInformation ugi, KMSOp operation, String key, String clientIp) throws AccessControlException;
     }
 }

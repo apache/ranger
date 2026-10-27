@@ -113,6 +113,7 @@ public class RangerKmsAuthorizer implements Runnable, KeyACLs {
         }
     }
 
+    @Override
     public boolean hasAccess(Type type, UserGroupInformation ugi, String keyName, String clientIp) {
         LOG.debug("==> RangerKmsAuthorizer.hasAccess( {}, {}, {} )", type, ugi, keyName);
 

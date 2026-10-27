@@ -155,7 +155,7 @@ public class KMS {
 
             kmsAudit.ok(user, KMSOp.CREATE_KEY, name, "UserProvidedMaterial:" + (material != null) + " Description:" + description);
 
-            if (!KMSWebApp.getACLs().hasAccess(Type.GET, user, getClientIp(request))) {
+            if (!KMSWebApp.getACLs().hasAccess(Type.GET, user, name, getClientIp(request))) {
                 keyVersion = removeKeyMaterial(keyVersion);
             }
 
@@ -265,7 +265,7 @@ public class KMS {
 
             kmsAudit.ok(user, KMSOp.ROLL_NEW_VERSION, keyName, "UserProvidedMaterial:" + (material != null) + " NewVersion:" + keyVersion.getVersionName());
 
-            if (!KMSWebApp.getACLs().hasAccess(Type.GET, user, getClientIp(request))) {
+            if (!KMSWebApp.getACLs().hasAccess(Type.GET, user, keyName, getClientIp(request))) {
                 keyVersion = removeKeyMaterial(keyVersion);
             }
 
