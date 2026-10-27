@@ -71,14 +71,15 @@ synchronized mirror and is where reviews take place.
 Ranger builds with Apache Maven and requires JDK 17 (`java.version.required` in the root `pom.xml`):
 
 ```bash
-mvn clean install                # full build with unit tests
-mvn clean package -DskipTests    # faster: skip unit tests
-mvn -T 8 clean verify            # what CI runs; includes checkstyle and spotbugs
+mvn clean install                # full build: unit tests and code checks
+mvn clean package -DskipTests    # faster: skips unit tests and code checks
+mvn -T 8 clean verify            # what CI runs; includes checkstyle, PMD, SpotBugs and RAT
 ```
 
 Build artifacts (`ranger-<version>-admin.tar.gz`, `ranger-<version>-<plugin>-plugin.tar.gz`, ...) land in `target/`.
-To try your change end to end, `./ranger_in_docker up` builds and starts Ranger Admin and its dependencies in
-Docker.
+To try your change end to end, copy the archives into `dev-support/ranger-docker/dist/` and start Ranger Admin
+and its dependencies with the compose files in `dev-support/ranger-docker`, as described in
+[Running with Docker](../getting-started/docker.md#build-from-source).
 
 ### Find something to work on
 
@@ -152,7 +153,8 @@ The PR template is in
 Every push and pull request runs the `CI` GitHub Actions workflow
 ([`.github/workflows/ci.yml`](https://github.com/apache/ranger/blob/master/.github/workflows/ci.yml)). It:
 
-- builds the project on JDK 17 with `mvn -T 8 clean verify`, which runs unit tests, checkstyle and spotbugs;
+- builds the project on JDK 17 with `mvn -T 8 clean verify`, which runs unit tests, Checkstyle, PMD, SpotBugs and
+  the RAT license-header check;
 - collects JaCoCo code coverage;
 - builds the Docker images for Ranger services and plugins from the build output and brings the containers up
   to check that they start.
@@ -196,7 +198,8 @@ candidate and vote (only PMC votes are binding). When a release manager sends a 
    `dist.apache.org/repos/dist/dev/ranger/<version>-<rc>` location given in the mail, plus the project
    [KEYS](https://dist.apache.org/repos/dist/release/ranger/KEYS) file.
 2. Verify the signature and checksums.
-3. Build the source with tests and, ideally, run it (for example with `./ranger_in_docker up`).
+3. Build the source with tests and, ideally, run it (for example with the compose setup in
+   `dev-support/ranger-docker`; see [Running with Docker](../getting-started/docker.md#build-from-source)).
 4. Reply to the vote thread with `+1`, `0` or `-1` and what you tested, following the
    [Apache voting process](https://www.apache.org/foundation/voting.html).
 

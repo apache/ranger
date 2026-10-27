@@ -100,3 +100,13 @@ h3 {
   width: auto;       /* preserve aspect ratio */
   max-height: 40px;  /* keep header tidy on small screens */
 }
+
+/* Keep JIRA ids such as RANGER-1234 on one line */
+.md-typeset a[href*="issues.apache.org/jira/browse/"] {
+  white-space: nowrap;
+}
+
+/* Mermaid: draw group boxes as outlines so edge labels blend with the page */
+.md-typeset .mermaid {
+  --md-default-fg-color--lightest: transparent;
+}
