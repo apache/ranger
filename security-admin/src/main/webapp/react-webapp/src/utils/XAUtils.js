@@ -106,6 +106,23 @@ export const isRenderRowFilter = (rowFilterDef) => {
     : false;
 };
 
+// Returns the policy types (Access / Masking / Row Filter) supported by a service def.
+// Access is always supported; Masking and Row Filter depend on the service def.
+export const getSupportedPolicyTypes = (serviceDef) => {
+  const supportedPolicyTypes = [
+    RangerPolicyType.RANGER_ACCESS_POLICY_TYPE.value
+  ];
+  if (isRenderMasking(serviceDef?.dataMaskDef)) {
+    supportedPolicyTypes.push(RangerPolicyType.RANGER_MASKING_POLICY_TYPE.value);
+  }
+  if (isRenderRowFilter(serviceDef?.rowFilterDef)) {
+    supportedPolicyTypes.push(
+      RangerPolicyType.RANGER_ROW_FILTER_POLICY_TYPE.value
+    );
+  }
+  return supportedPolicyTypes;
+};
+
 export const getUserAccessRoleList = () => {
   var userRoleList = [];
   filter(UserRoles, function (val, key) {
