@@ -669,7 +669,8 @@ const CreateNewPolicyForm = () => {
                     isDenyAllElse: false, // For deny all toggle
                     isEnabled: true, // Policy enabled by default
                     isAuditEnabled: true, // Audit enabled by default
-                    policyPriority: 0 // Normal priority by default
+                    policyPriority: 0, // Normal priority by default
+                    constraintPolicyItems: [{}] // For constraint
                   }}
                   blockUI={blockUI}
                   preventUnBlock={preventUnBlock}

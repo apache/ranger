@@ -46,7 +46,11 @@ import {
   cloneDeep,
   toUpper,
   groupBy,
-  isArray
+  isArray,
+  startsWith,
+  pickBy,
+  uniqBy,
+  difference
 } from "lodash";
 import { matchRoutes } from "react-router-dom";
 import dateFormat from "dateformat";
@@ -106,6 +110,10 @@ export const isRenderRowFilter = (rowFilterDef) => {
     : false;
 };
 
+export const isRenderConstraint = (constraintDef) => {
+  return constraintDef && constraintDef.length > 0 ? true : false;
+};
+
 // Returns the policy types (Access / Masking / Row Filter) supported by a service def.
 // Access is always supported; Masking and Row Filter depend on the service def.
 export const getSupportedPolicyTypes = (serviceDef) => {
@@ -113,11 +121,18 @@ export const getSupportedPolicyTypes = (serviceDef) => {
     RangerPolicyType.RANGER_ACCESS_POLICY_TYPE.value
   ];
   if (isRenderMasking(serviceDef?.dataMaskDef)) {
-    supportedPolicyTypes.push(RangerPolicyType.RANGER_MASKING_POLICY_TYPE.value);
+    supportedPolicyTypes.push(
+      RangerPolicyType.RANGER_MASKING_POLICY_TYPE.value
+    );
   }
   if (isRenderRowFilter(serviceDef?.rowFilterDef)) {
     supportedPolicyTypes.push(
       RangerPolicyType.RANGER_ROW_FILTER_POLICY_TYPE.value
+    );
+  }
+  if (isRenderConstraint(serviceDef?.constraintDef)) {
+    supportedPolicyTypes.push(
+      RangerPolicyType.RANGER_CONSTRAINT_POLICY_TYPE.value
     );
   }
   return supportedPolicyTypes;
@@ -1519,7 +1534,9 @@ export const requestDataTitle = (serviceType) => {
 //Policy condition evaluation
 
 export const policyConditionUpdatedJSON = (policyCond) => {
-  let newPolicyConditionJSON = [...(Array.isArray(policyCond) ? policyCond : [])];
+  let newPolicyConditionJSON = [
+    ...(Array.isArray(policyCond) ? policyCond : [])
+  ];
   newPolicyConditionJSON.filter(function (key) {
     if (!key?.uiHint || key?.uiHint == "") {
       if (
@@ -1545,10 +1562,65 @@ export const getResourcesDefVal = (serviceDef, policyType) => {
     RangerPolicyType.RANGER_ROW_FILTER_POLICY_TYPE.value == policyType
   ) {
     resources = sortBy(serviceDef.rowFilterDef.resources, "itemId");
+  } else if (
+    RangerPolicyType.RANGER_CONSTRAINT_POLICY_TYPE.value == policyType
+  ) {
+    resources = sortBy(getConstraintResources(serviceDef), "itemId");
   } else {
     resources = sortBy(serviceDef.resources, "itemId");
   }
   return resources;
+};
+
+export const getConstraintResources = (serviceDef) => {
+  let uniqueResources = uniq(flatMap(serviceDef?.constraintDefs, "resources"));
+  let result = filter(serviceDef?.resources, (item) =>
+    uniqueResources.includes(item.name)
+  );
+  //NOTE : CHANGE ISVALIDLEAF TO FALSE FOR CONSTRAINT POLICY
+  return map(result, (resource) => ({
+    ...resource,
+    isValidLeaf: false
+  }));
+};
+
+export const getConstraintNameFromField = (constraintNameField) => {
+  if (!constraintNameField) {
+    return null;
+  }
+  if (
+    typeof constraintNameField === "object" &&
+    constraintNameField.value != null
+  ) {
+    return constraintNameField.value;
+  }
+  if (typeof constraintNameField === "string") {
+    return constraintNameField;
+  }
+  return null;
+};
+
+export const getConstraintDefByName = (serviceDef, constraintName) => {
+  if (!serviceDef || !constraintName) {
+    return null;
+  }
+  return find(serviceDef.constraintDefs, { name: constraintName }) || null;
+};
+
+export const getAccessTypesForConstraintDef = (serviceDef, constraintDef) => {
+  const allAccessTypes = serviceDef?.accessTypes || [];
+  if (!constraintDef?.accessTypes?.length) {
+    return allAccessTypes;
+  }
+  const allowed = new Set(constraintDef.accessTypes);
+  return filter(allAccessTypes, (item) => allowed.has(item.name));
+};
+
+export const mapAccessTypesToSelectOptions = (accessTypes) => {
+  return sortBy(
+    (accessTypes || []).map(({ label, name: value }) => ({ label, value })),
+    [(option) => option.label.toLowerCase()]
+  );
 };
 
 // Get defult landing page
@@ -1727,7 +1799,11 @@ export const getResourceLevelKeysSorted = (serviceCompDetails) => {
   return grpResourcesKeys;
 };
 
-export const getAccessTypesByResource = (formValues, serviceCompDetails) => {
+export const getAccessTypesByResource = (
+  formValues,
+  serviceCompDetails,
+  getMatchedConstraint
+) => {
   if (!formValues || !serviceCompDetails) {
     return [];
   }
@@ -1747,40 +1823,126 @@ export const getAccessTypesByResource = (formValues, serviceCompDetails) => {
     formValues.policyType
   ) {
     srcOp = serviceCompDetails.rowFilterDef?.accessTypes || [];
+  } else if (
+    RangerPolicyType.RANGER_CONSTRAINT_POLICY_TYPE.value ==
+    formValues.policyType
+  ) {
+    srcOp =
+      getAccessTypesFromMatchedDefs(getMatchedConstraint, serviceCompDetails) ||
+      [];
   } else {
     srcOp = serviceCompDetails.accessTypes;
   }
 
-  map(formValues.additionalResources, (resourceObj) => {
-    for (let i = grpResourcesKeys.length - 1; i >= 0; i--) {
-      let selectedResource = `resourceName-${grpResourcesKeys[i]}`;
-      if (
-        resourceObj[selectedResource] &&
-        resourceObj[selectedResource].value !== accessTypeNoneOption.value
-      ) {
-        if (resourceObj[selectedResource].accessTypeRestrictions?.length > 0) {
-          let op = [];
-          for (const name of resourceObj[selectedResource]
-            .accessTypeRestrictions) {
-            let typeOp = find(srcOp, { name });
-            if (typeOp) {
-              op.push(typeOp);
+  if (
+    RangerPolicyType.RANGER_CONSTRAINT_POLICY_TYPE.value !=
+    formValues.policyType
+  ) {
+    map(formValues.additionalResources, (resourceObj) => {
+      for (let i = grpResourcesKeys.length - 1; i >= 0; i--) {
+        let selectedResource = `resourceName-${grpResourcesKeys[i]}`;
+        if (
+          resourceObj[selectedResource] &&
+          resourceObj[selectedResource].value !== accessTypeNoneOption.value
+        ) {
+          if (
+            resourceObj[selectedResource].accessTypeRestrictions?.length > 0
+          ) {
+            let op = [];
+            for (const name of resourceObj[selectedResource]
+              .accessTypeRestrictions) {
+              let typeOp = find(srcOp, { name });
+              if (typeOp) {
+                op.push(typeOp);
+              }
             }
+            multiplePermissionItem = [...multiplePermissionItem, ...op];
+          } else {
+            multiplePermissionItem = [...srcOp];
           }
-          multiplePermissionItem = [...multiplePermissionItem, ...op];
-        } else {
-          multiplePermissionItem = [...srcOp];
+          break;
         }
-        break;
       }
-    }
-  });
-  srcOp = [...new Set(multiplePermissionItem)];
+    });
+    srcOp = [...new Set(multiplePermissionItem)];
+  }
   return sortBy(
     srcOp.map(({ label, name: value }) => ({ label, value })),
     [(o) => o.label.toLowerCase()]
   );
 };
+
+// // get constraint policy access types
+// export const getConstraintPolicyAccessTypes = (
+//   serviceCompDetails,
+//   formValues
+// ) => {
+//   const additionalResources = formValues?.additionalResources;
+//   const constraintDefs = serviceCompDetails?.constraintDefs;
+//   const allAccessTypes = serviceCompDetails?.accessTypes;
+
+//   if (
+//     !Array.isArray(additionalResources) ||
+//     !Array.isArray(constraintDefs) ||
+//     !Array.isArray(allAccessTypes)
+//   ) {
+//     return [];
+//   }
+
+//   // Helper: check if two arrays contain the exact same unique resources
+//   const isExactResourceMatch = (resA = [], resB = []) => {
+//     if (resA.length !== resB.length) return false;
+//     const setB = new Set(resB);
+//     return resA.every((name) => setB.has(name));
+//   };
+
+//   const matchedAccessTypeNames = new Set();
+//   const evaluatedSignatures = new Set();
+
+//   for (const row of additionalResources) {
+//     // Extract resource names in level order: ["caiiservicecrn", "namespace", ...]
+//     const resourceNames = [];
+//     for (const [key, val] of Object.entries(row)) {
+//       if (key.startsWith("resourceName-") && val?.name) {
+//         resourceNames.push(val.name);
+//       }
+//     }
+
+//     if (resourceNames.length === 0) continue;
+
+//     // Skip redundant evaluations if the same resource combination exists in another row
+//     const signature = resourceNames.slice().sort().join(",");
+//     if (evaluatedSignatures.has(signature)) continue;
+//     evaluatedSignatures.add(signature);
+
+//     // Find all constraintDefs that match this exact resource combination
+//     for (const def of constraintDefs) {
+//       if (isExactResourceMatch(resourceNames, def.resources)) {
+//         if (Array.isArray(def.accessTypes)) {
+//           def.accessTypes.forEach((type) => matchedAccessTypeNames.add(type));
+//         }
+//       }
+//     }
+//   }
+
+//   // Filter full accessType objects that exist in our matched names
+//   return allAccessTypes.filter((item) => matchedAccessTypeNames.has(item.name));
+// };
+
+// export const getAllConstraintAccessTypes = (serviceCompDetails) => {
+//   const constraintDefs = serviceCompDetails?.constraintDefs || [];
+//   const accessTypesList = serviceCompDetails?.accessTypes || [];
+
+//   // 1. Collect all unique accessType strings from every constraintDef
+//   const targetAccessTypeNames = new Set(
+//     flatMap(constraintDefs, (def) => def.accessTypes || [])
+//   );
+
+//   // 2. Filter the full objects matching those names
+//   return filter(accessTypesList, (item) =>
+//     targetAccessTypeNames.has(item.name)
+//   );
+// };
 
 export const prunePolicyItemAccessesToAllowedTypes = (
   form,
@@ -1862,4 +2024,52 @@ export const getPolicyPermissionItemDisplayLbl = (
       return sortBy(accessTypeDisplayLblObj, "label");
     }
   }
+};
+
+//Common function to get constraint policy items
+export const getMatchedConstraintDefs = (serviceCompDetails, formValues) => {
+  const additionalResources = formValues?.additionalResources || [];
+  const constraintDefs = serviceCompDetails?.constraintDefs || [];
+
+  if (isEmpty(additionalResources) || isEmpty(constraintDefs)) {
+    return [];
+  }
+
+  // Step 1: Extract resource names from each row (e.g. [['caiiservicecrn', 'namespace', 'endpoint']])
+  const allSelectedResources = map(additionalResources, (row) => {
+    const resourceKeys = pickBy(row, (val, key) =>
+      startsWith(key, "resourceName-")
+    );
+    return map(resourceKeys, "name");
+  });
+
+  // Step 2: Helper to check if two arrays have the same items (regardless of order)
+  const isMatch = (arr1, arr2) =>
+    arr1.length === arr2.length && isEmpty(difference(arr1, arr2));
+
+  // Step 3: Find constraintDefs whose resources match any selected row
+  const matchedDefs = filter(constraintDefs, (def) =>
+    some(allSelectedResources, (selected) => isMatch(selected, def.resources))
+  );
+
+  // Step 4: Remove duplicates by def.name
+  return uniqBy(matchedDefs, "name");
+};
+
+export const getAccessTypesFromMatchedDefs = (
+  matchedDefs,
+  serviceCompDetails
+) => {
+  const allAccessTypes = serviceCompDetails?.accessTypes || [];
+
+  // Extract unique accessType names: ['execute', 'select', ...]
+  const accessTypeNames = _.chain(matchedDefs)
+    .flatMap("accessTypes")
+    .uniq()
+    .value();
+
+  // Filter full objects from serviceCompDetails.accessTypes
+  return _.filter(allAccessTypes, (item) =>
+    _.includes(accessTypeNames, item.name)
+  );
 };
