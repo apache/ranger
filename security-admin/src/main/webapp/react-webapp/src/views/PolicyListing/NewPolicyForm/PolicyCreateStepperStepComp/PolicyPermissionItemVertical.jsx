@@ -33,6 +33,9 @@ import { RangerPolicyType } from "Utils/XAEnums";
 import { find, isEmpty, isArray, toUpper, map } from "lodash";
 import PolicyConditionsComp from "../../PolicyConditionsComp";
 import UsersGroupsAndRolesSelectionComponent from "./UsersGroupsAndRolesSelectionComponent";
+import ConstraintPolicyParameterFields, {
+  buildDefaultConstraintParameters
+} from "./ConstraintPolicyParameterFields";
 import TagBasePermissionItem from "../../TagBasePermissionItem";
 import {
   getAccessTypesByResource,
@@ -147,7 +150,15 @@ export default function PolicyPermissionItemVertical({
   const handleConstraintNameChange = (input, fieldName, option) => {
     input.onChange(option || null);
     form.change(`${fieldName}.accesses`, undefined);
-    form.change(`${fieldName}.constraintInfo.parameters`, undefined);
+    if (!option?.value) {
+      form.change(`${fieldName}.constraintInfo.parameters`, undefined);
+      return;
+    }
+    const def = getConstraintDefByName(serviceCompDetails, option.value);
+    form.change(
+      `${fieldName}.constraintInfo.parameters`,
+      buildDefaultConstraintParameters(def?.parameters)
+    );
   };
 
   // Helper function to clear all data from a permission item
@@ -675,73 +686,26 @@ export default function PolicyPermissionItemVertical({
 
                     {isConstraintPolicy && (
                       <Col xs={12} className="mb-4">
-                        <Row>
-                          <Col className="column-1-fixed text-end">
-                            <FormB.Label>Parameters</FormB.Label>
-                          </Col>
-                          <Col>
-                            {!rowConstraintName ? (
-                              <p className="text-muted mb-0">
-                                {constraintSelectFirstMsg}
-                              </p>
-                            ) : (
-                              (rowConstraintDef?.parameters || []).map(
-                                (param) => (
-                                  <Row key={param.name} className="mb-3">
-                                    <Col sm={4} md={3} className="text-end">
-                                      <FormB.Label className="mb-0">
-                                        {param.label || param.name}
-                                        {param.mandatory ? (
-                                          <span className="required-mark">
-                                            *
-                                          </span>
-                                        ) : null}
-                                      </FormB.Label>
-                                    </Col>
-                                    <Col sm={8} md={6}>
-                                      <Field
-                                        name={`${name}.constraintInfo.parameters.${param.name}`}
-                                        validate={
-                                          param.mandatory ? required : undefined
-                                        }
-                                      >
-                                        {({ input, meta }) => (
-                                          <>
-                                            <FormB.Control
-                                              {...input}
-                                              value={input.value ?? ""}
-                                              type={
-                                                param.type === "int"
-                                                  ? "number"
-                                                  : "text"
-                                              }
-                                              placeholder={
-                                                param.type === "user" ||
-                                                param.subType === "user" ||
-                                                param.type === "group" ||
-                                                param.type === "role"
-                                                  ? "Enter user, group, or role"
-                                                  : `Enter ${param.label || param.name}`
-                                              }
-                                              isInvalid={
-                                                meta.touched && meta.error
-                                              }
-                                            />
-                                            {meta.touched && meta.error && (
-                                              <FormB.Control.Feedback type="invalid">
-                                                {meta.error}
-                                              </FormB.Control.Feedback>
-                                            )}
-                                          </>
-                                        )}
-                                      </Field>
-                                    </Col>
-                                  </Row>
-                                )
-                              )
-                            )}
-                          </Col>
-                        </Row>
+                        {!rowConstraintName ? (
+                          <Row>
+                            <Col className="column-1-fixed text-end">
+                              <FormB.Label>Parameters</FormB.Label>
+                            </Col>
+                            <>
+                              <Col>
+                                <p className="text-muted mb-0">
+                                  {constraintSelectFirstMsg}
+                                </p>
+                              </Col>
+                              <Col className="column-3-fixed"></Col>
+                            </>
+                          </Row>
+                        ) : (
+                          <ConstraintPolicyParameterFields
+                            parameters={rowConstraintDef?.parameters || []}
+                            fieldNamePrefix={`${name}.constraintInfo.parameters`}
+                          />
+                        )}
                       </Col>
                     )}
 
