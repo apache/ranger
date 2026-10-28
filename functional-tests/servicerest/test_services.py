@@ -186,7 +186,10 @@ def test_grant_access_update_existing_policy_by_admin(log):
     service_name = 'dev_hive'
 
     # Step 1: Create a new policy first
-    create_url = base_url + f'/plugins/services/grant/{service_name}'
+    # NOTE: /plugins/services/grant is an unsecured (security="none") endpoint, so basic-auth
+    # credentials are ignored and the call fails with "Unauthenticated access not allowed" (400).
+    # Use the secure grant endpoint for authenticated (admin) calls.
+    create_url = base_url + f'/plugins/secure/services/grant/{service_name}'
     request_data = get_request_data('test_grant_revoke_base3.json', str_variable_dict, test_data_path)
 
     log.info("Creating initial policy for update test", extra={"service_name": service_name})
@@ -216,7 +219,7 @@ def test_grant_access_update_existing_policy_by_admin(log):
 
     try:
         # Step 2: Update the existing policy
-        update_url = base_url + f'/plugins/services/grant/{service_name}'
+        update_url = base_url + f'/plugins/secure/services/grant/{service_name}'
         fields_to_update = {"users": ["hive", str_variable_dict['user3']]}
         update_data = get_updated_request_data(request_data=request_data, fields_to_update=fields_to_update)
 
