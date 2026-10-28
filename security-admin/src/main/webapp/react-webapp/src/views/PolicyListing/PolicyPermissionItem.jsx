@@ -177,7 +177,7 @@ export default function PolicyPermissionItem(props) {
     const def = getConstraintDefByName(serviceCompDetails, option.value);
     form.change(
       `${fieldName}.constraintInfo.parameters`,
-      buildDefaultConstraintParameters(def?.parameters)
+      buildDefaultConstraintParameters(def?.parameters, serviceCompDetails)
     );
   };
 
@@ -751,6 +751,7 @@ export default function PolicyPermissionItem(props) {
                                 fieldNamePrefix={`${name}.constraintInfo.parameters`}
                                 constraintSelected={Boolean(rowConstraintName)}
                                 selectFirstMessage={constraintSelectFirstMsg}
+                                serviceCompDetails={serviceCompDetails}
                               />
                             </td>
                           );

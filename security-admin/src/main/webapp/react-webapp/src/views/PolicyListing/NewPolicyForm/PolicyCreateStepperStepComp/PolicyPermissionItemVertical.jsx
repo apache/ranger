@@ -157,7 +157,7 @@ export default function PolicyPermissionItemVertical({
     const def = getConstraintDefByName(serviceCompDetails, option.value);
     form.change(
       `${fieldName}.constraintInfo.parameters`,
-      buildDefaultConstraintParameters(def?.parameters)
+      buildDefaultConstraintParameters(def?.parameters, serviceCompDetails)
     );
   };
 
@@ -704,6 +704,7 @@ export default function PolicyPermissionItemVertical({
                           <ConstraintPolicyParameterFields
                             parameters={rowConstraintDef?.parameters || []}
                             fieldNamePrefix={`${name}.constraintInfo.parameters`}
+                            serviceCompDetails={serviceCompDetails}
                           />
                         )}
                       </Col>
