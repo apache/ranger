@@ -130,7 +130,7 @@ export const getSupportedPolicyTypes = (serviceDef) => {
       RangerPolicyType.RANGER_ROW_FILTER_POLICY_TYPE.value
     );
   }
-  if (isRenderConstraint(serviceDef?.constraintDef)) {
+  if (isRenderConstraint(serviceDef?.constraintDefs)) {
     supportedPolicyTypes.push(
       RangerPolicyType.RANGER_CONSTRAINT_POLICY_TYPE.value
     );
