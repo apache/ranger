@@ -32,62 +32,16 @@ function getServiceDef() {
   return serviceDefData;
 }
 
-function updateServiceDef(serviceDef, constraintDefs) {
-  return serviceDef.map((item) => {
-    if (item.id === 208) {
-      return { ...item, constraintDefs: constraintDefs }; // or shorthand { ...item, constraintDefs }
-    }
-    return item;
-  });
-}
-
 function setServiceDef(
   serviceDef,
   tagServiceDef,
   gdsServiceDef,
   allServiceDefs
 ) {
-  let constraintDefs = [
-    {
-      itemId: 1,
-      name: "requireApproval",
-      label: "Require approval",
-      resources: ["caiiservicecrn", "namespace", "endpoint"],
-      accessTypes: ["view", "access"],
-      parameters: [
-        {
-          itemId: 1,
-          name: "approver",
-          label: "Approver",
-          type: "user",
-          mandatory: true
-        }
-      ]
-    },
-    {
-      itemId: 2,
-      name: "maxRows",
-      label: "Maximum rows",
-      resources: ["caiiservicecrn", "namespace", "application"],
-      accessTypes: ["access", "manage"],
-      parameters: [
-        {
-          itemId: 1,
-          name: "rowCount",
-          type: "int",
-          mandatory: true
-        }
-      ]
-    }
-  ];
-
-  serviceDefData.serviceDefs = updateServiceDef(serviceDef, constraintDefs);
+  serviceDefData.serviceDefs = serviceDef;
   serviceDefData.tagServiceDefs = tagServiceDef;
   serviceDefData.gdsServiceDef = gdsServiceDef;
-  serviceDefData.allServiceDefs = updateServiceDef(
-    allServiceDefs,
-    constraintDefs
-  );
+  serviceDefData.allServiceDefs = allServiceDefs;
 }
 
 export { getUserProfile, setUserProfile, getServiceDef, setServiceDef };
