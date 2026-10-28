@@ -25,7 +25,9 @@ import { fetchApi } from "Utils/fetchAPI";
 import {
   getResourcesDefVal,
   prunePolicyItemAccessesToAllowedTypes,
-  policyConditionUpdatedJSON
+  pruneConstraintPolicyItemsToMatchedResources,
+  policyConditionUpdatedJSON,
+  getConstraintNameFromField
 } from "Utils/XAUtils";
 import {
   buildActionReqsMapFromConditionDef,
@@ -40,7 +42,8 @@ import { RangerPolicyType } from "Utils/XAEnums";
 import {
   validatePolicyItems,
   validatePolicyDetails,
-  hasMissingAccessPermissionOnPolicyItems
+  hasMissingAccessPermissionOnPolicyItems,
+  hasMissingConstraintFieldsOnPolicyItems
 } from "./policyFormValidation";
 import ServiceStep from "./PolicyCreateStepperStepComp/ServiceStep";
 import ResourcesStep from "./PolicyCreateStepperStepComp/ResourcesStep";
@@ -68,6 +71,154 @@ const CreateNewPolicyForm = () => {
     }
   };
 
+  const principalName = (p) => {
+    if (typeof p !== "object") return p;
+    if (p.name) return p.name;
+    if (p.value) {
+      const colonIdx = p.value.indexOf(":");
+      return colonIdx !== -1 ? p.value.slice(colonIdx + 1) : p.value;
+    }
+    return p;
+  };
+
+  const appendAccessesPrincipalsAndConditions = (obj, key) => {
+    if (key?.accesses) {
+      if (key.accesses.tableList && isArray(key.accesses.tableList)) {
+        obj.accesses = key.accesses.tableList.flatMap((tableItem) => {
+          if (tableItem.permission && isArray(tableItem.permission)) {
+            return tableItem.permission.map((perm) => ({
+              type: perm,
+              isAllowed: true
+            }));
+          }
+          return [];
+        });
+      } else if (isArray(key.accesses) && key.accesses.length > 0) {
+        obj.accesses = key.accesses.map((access) => {
+          if (access.type && access.isAllowed !== undefined) {
+            return {
+              type: access.type,
+              isAllowed: access.isAllowed
+            };
+          }
+          return {
+            type:
+              typeof access === "object" && access.value
+                ? access.value
+                : access.type || access,
+            isAllowed: true
+          };
+        });
+      }
+    }
+
+    if (key.users) {
+      if (isArray(key.users)) {
+        obj.users = key.users.map(principalName);
+      } else if (key.users.users && isArray(key.users.users)) {
+        obj.users = key.users.users.map(principalName);
+      }
+    }
+
+    if (
+      key.users?.groups &&
+      isArray(key.users.groups) &&
+      key.users.groups.length > 0
+    ) {
+      obj.groups = key.users.groups.map(principalName);
+    } else if (key.groups && isArray(key.groups) && key.groups.length > 0) {
+      obj.groups = key.groups.map(principalName);
+    }
+
+    if (
+      key.users?.roles &&
+      isArray(key.users.roles) &&
+      key.users.roles.length > 0
+    ) {
+      obj.roles = key.users.roles.map(principalName);
+    } else if (key.roles && isArray(key.roles) && key.roles.length > 0) {
+      obj.roles = key.roles.map(principalName);
+    }
+
+    if (key?.conditions && !isEmpty(key.conditions)) {
+      obj.conditions = [];
+      Object.entries(key.conditions).forEach(
+        ([conditionKey, conditionValue]) => {
+          if (conditionValue != "" && conditionValue != null) {
+            obj.conditions.push({
+              type: conditionKey,
+              values: isArray(conditionValue)
+                ? conditionValue.map((m) =>
+                    typeof m === "object" && m.value ? m.value : m
+                  )
+                : [conditionValue]
+            });
+          }
+        }
+      );
+    }
+  };
+
+  const buildConstraintInfoForApi = (constraintInfoForm) => {
+    if (!constraintInfoForm) {
+      return null;
+    }
+    const constraintName = getConstraintNameFromField(
+      constraintInfoForm.constraintName
+    );
+    if (!constraintName) {
+      return null;
+    }
+
+    const info = { constraintName };
+    const rawParams = constraintInfoForm.parameters;
+    if (rawParams && typeof rawParams === "object") {
+      const parameters = {};
+      Object.entries(rawParams).forEach(([paramKey, paramVal]) => {
+        if (paramVal === "" || paramVal == null) {
+          return;
+        }
+        parameters[paramKey] =
+          typeof paramVal === "object" && paramVal.value != null
+            ? paramVal.value
+            : String(paramVal);
+      });
+      if (!isEmpty(parameters)) {
+        info.parameters = parameters;
+      }
+    }
+    return info;
+  };
+
+  /** Constraint policy (type 4) — API shape for constraintPolicyItems */
+  const getConstraintPolicyItemsVal = (formData) => {
+    const items = formData?.constraintPolicyItems;
+    if (!items || items.length === 0) {
+      return [];
+    }
+
+    const policyResourceItem = [];
+    for (const key of items) {
+      if (isEmpty(key) || Object.entries(key).length === 0) {
+        continue;
+      }
+
+      const obj = {};
+      appendAccessesPrincipalsAndConditions(obj, key);
+
+      const constraintInfo = buildConstraintInfoForApi(key.constraintInfo);
+      if (constraintInfo) {
+        obj.constraintInfo = constraintInfo;
+      }
+
+      if (!isEmpty(obj)) {
+        policyResourceItem.push(obj);
+      }
+    }
+
+    return policyResourceItem;
+  };
+
   // Transform policy items to API format
   const getPolicyItemsVal = (formData, name) => {
     if (!formData[name] || formData[name].length === 0) {
@@ -92,85 +243,7 @@ const CreateNewPolicyForm = () => {
           }
         }
 
-        // Accesses (permissions) - handle both regular and tag-based
-        if (key?.accesses) {
-          // For tag-based policies with tableList structure
-          if (key.accesses.tableList && isArray(key.accesses.tableList)) {
-            obj.accesses = key.accesses.tableList.flatMap((tableItem) => {
-              if (tableItem.permission && isArray(tableItem.permission)) {
-                return tableItem.permission.map((perm) => ({
-                  type: perm,
-                  isAllowed: true
-                }));
-              }
-              return [];
-            });
-          }
-          // For regular policies with array of accesses
-          else if (isArray(key.accesses) && key.accesses.length > 0) {
-            obj.accesses = key.accesses.map((access) => {
-              // Handle if access is already in correct format {type: "read", isAllowed: true}
-              if (access.type && access.isAllowed !== undefined) {
-                return {
-                  type: access.type,
-                  isAllowed: access.isAllowed
-                };
-              }
-              // Handle if access is object with value property
-              return {
-                type:
-                  typeof access === "object" && access.value
-                    ? access.value
-                    : access.type || access,
-                isAllowed: true
-              };
-            });
-          }
-        }
-
-        // Resolve a stored principal object to its plain name string.
-        // Items are stored as { value: "USER:admin", name: "admin", type: "USER" }.
-        // We always prefer .name; fall back to stripping the "TYPE:" prefix from .value.
-        const principalName = (p) => {
-          if (typeof p !== "object") return p;
-          if (p.name) return p.name;
-          if (p.value) {
-            const colonIdx = p.value.indexOf(":");
-            return colonIdx !== -1 ? p.value.slice(colonIdx + 1) : p.value;
-          }
-          return p;
-        };
-
-        // Users
-        if (key.users) {
-          if (isArray(key.users)) {
-            obj.users = key.users.map(principalName);
-          } else if (key.users.users && isArray(key.users.users)) {
-            obj.users = key.users.users.map(principalName);
-          }
-        }
-
-        // Groups
-        if (
-          key.users?.groups &&
-          isArray(key.users.groups) &&
-          key.users.groups.length > 0
-        ) {
-          obj.groups = key.users.groups.map(principalName);
-        } else if (key.groups && isArray(key.groups) && key.groups.length > 0) {
-          obj.groups = key.groups.map(principalName);
-        }
-
-        // Roles
-        if (
-          key.users?.roles &&
-          isArray(key.users.roles) &&
-          key.users.roles.length > 0
-        ) {
-          obj.roles = key.users.roles.map(principalName);
-        } else if (key.roles && isArray(key.roles) && key.roles.length > 0) {
-          obj.roles = key.roles.map(principalName);
-        }
+        appendAccessesPrincipalsAndConditions(obj, key);
 
         // Row Filter Info (for row filter policies)
         if (
@@ -179,14 +252,12 @@ const CreateNewPolicyForm = () => {
           key.rowFilterInfo !== ""
         ) {
           obj.rowFilterInfo = {};
-          // If it's already an object with filterExpr
           if (
             typeof key.rowFilterInfo === "object" &&
             key.rowFilterInfo.filterExpr
           ) {
             obj.rowFilterInfo.filterExpr = key.rowFilterInfo.filterExpr;
           } else {
-            // If it's a string, use it directly as filterExpr
             obj.rowFilterInfo.filterExpr = key.rowFilterInfo;
           }
         }
@@ -198,40 +269,15 @@ const CreateNewPolicyForm = () => {
           !isEmpty(key.dataMaskInfo)
         ) {
           obj.dataMaskInfo = {};
-
-          // Handle if dataMaskInfo is an object with value property
           if (typeof key.dataMaskInfo === "object") {
             obj.dataMaskInfo.dataMaskType =
               key.dataMaskInfo.value || key.dataMaskInfo.dataMaskType;
-
-            // Include valueExpr for custom masking
             if (key.dataMaskInfo.valueExpr) {
               obj.dataMaskInfo.valueExpr = key.dataMaskInfo.valueExpr;
             }
           } else {
-            // Handle if dataMaskInfo is a string
             obj.dataMaskInfo.dataMaskType = key.dataMaskInfo;
           }
-        }
-
-        // Conditions (rule-level conditions)
-        if (key?.conditions && !isEmpty(key.conditions)) {
-          obj.conditions = [];
-          Object.entries(key.conditions).map(
-            ([conditionKey, conditionValue]) => {
-              if (conditionValue != "" && conditionValue != null) {
-                return obj.conditions.push({
-                  type: conditionKey,
-                  values: isArray(conditionValue)
-                    ? conditionValue.map((m) =>
-                        typeof m === "object" && m.value ? m.value : m
-                      )
-                    : [conditionValue]
-                });
-              }
-              return null;
-            }
-          );
         }
 
         policyResourceItem.push(obj);
@@ -248,32 +294,53 @@ const CreateNewPolicyForm = () => {
       );
       return;
     }
+    if (
+      hasMissingConstraintFieldsOnPolicyItems(
+        values,
+        selectedServiceComponentDef
+      )
+    ) {
+      toast.error(
+        "Please complete each constraint rule in the Access Rules step: select a constraint name, choose permissions, and fill all required parameters."
+      );
+      return;
+    }
     try {
       setBlockUI(true);
       let data = {};
+      const isConstraintPolicy =
+        values.policyType ===
+        RangerPolicyType.RANGER_CONSTRAINT_POLICY_TYPE.value;
 
-      // Policy Items (Allow Conditions)
-      data.policyItems = getPolicyItemsVal(values, "policyItems");
-      data.allowExceptions = getPolicyItemsVal(values, "allowExceptions");
-
-      // Deny Policy Items
-      if (values?.isDenyAllElse) {
+      if (isConstraintPolicy) {
+        data.constraintPolicyItems = getConstraintPolicyItemsVal(values);
+        data.policyItems = [];
+        data.allowExceptions = [];
         data.denyPolicyItems = [];
         data.denyExceptions = [];
+        data.dataMaskPolicyItems = [];
+        data.rowFilterPolicyItems = [];
       } else {
-        data.denyPolicyItems = getPolicyItemsVal(values, "denyPolicyItems");
-        data.denyExceptions = getPolicyItemsVal(values, "denyExceptions");
-      }
+        data.policyItems = getPolicyItemsVal(values, "policyItems");
+        data.allowExceptions = getPolicyItemsVal(values, "allowExceptions");
 
-      // Masking and Row Filter Policy Items
-      data.dataMaskPolicyItems = getPolicyItemsVal(
-        values,
-        "dataMaskPolicyItems"
-      );
-      data.rowFilterPolicyItems = getPolicyItemsVal(
-        values,
-        "rowFilterPolicyItems"
-      );
+        if (values?.isDenyAllElse) {
+          data.denyPolicyItems = [];
+          data.denyExceptions = [];
+        } else {
+          data.denyPolicyItems = getPolicyItemsVal(values, "denyPolicyItems");
+          data.denyExceptions = getPolicyItemsVal(values, "denyExceptions");
+        }
+
+        data.dataMaskPolicyItems = getPolicyItemsVal(
+          values,
+          "dataMaskPolicyItems"
+        );
+        data.rowFilterPolicyItems = getPolicyItemsVal(
+          values,
+          "rowFilterPolicyItems"
+        );
+      }
 
       // Basic policy fields
       data.name = values.policyName;
@@ -428,6 +495,9 @@ const CreateNewPolicyForm = () => {
       } else {
         localStorage.removeItem("zoneDetails");
       }
+
+      // eslint-disable-next-line no-console
+      console.log("Create policy payload:", JSON.stringify(data, null, 2));
 
       const getPolicyCount = await fetchApi({
         url: "plugins/policies/count",
@@ -591,7 +661,8 @@ const CreateNewPolicyForm = () => {
           selectedServiceComponentDef={selectedServiceComponentDef}
         />
       ),
-      validate: validatePolicyItems
+      validate: (values) =>
+        validatePolicyItems(values, selectedServiceComponentDef)
     },
     {
       title: "Policy Details",
@@ -631,6 +702,10 @@ const CreateNewPolicyForm = () => {
                   onBeforeNavigate={({ fromStep, form }) => {
                     if (fromStep === 1) {
                       prunePolicyItemAccessesToAllowedTypes(
+                        form,
+                        selectedServiceComponentDef
+                      );
+                      pruneConstraintPolicyItemsToMatchedResources(
                         form,
                         selectedServiceComponentDef
                       );

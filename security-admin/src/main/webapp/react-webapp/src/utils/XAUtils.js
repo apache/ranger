@@ -1993,6 +1993,82 @@ export const prunePolicyItemAccessesToAllowedTypes = (
   }
 };
 
+/**
+ * When resources change, drop constraint-specific fields on rules whose
+ * constraint is no longer matched; prune accesses on rules that remain valid.
+ */
+export const pruneConstraintPolicyItemsToMatchedResources = (
+  form,
+  selectedServiceComponentDef
+) => {
+  const formValues = form.getState().values;
+  if (
+    formValues?.policyType !==
+    RangerPolicyType.RANGER_CONSTRAINT_POLICY_TYPE.value
+  ) {
+    return;
+  }
+
+  const attrName = "constraintPolicyItems";
+  const items = formValues?.[attrName];
+  if (!Array.isArray(items)) {
+    return;
+  }
+
+  const matchedDefs = getMatchedConstraintDefs(
+    selectedServiceComponentDef,
+    formValues
+  );
+  const allowedConstraintNames = new Set(
+    (matchedDefs || []).map((def) => def.name).filter(Boolean)
+  );
+
+  for (let i = 0; i < items.length; i++) {
+    const item = items[i];
+    if (!item || typeof item !== "object") {
+      continue;
+    }
+
+    const constraintName = getConstraintNameFromField(
+      item.constraintInfo?.constraintName
+    );
+    if (!constraintName) {
+      continue;
+    }
+
+    if (!allowedConstraintNames.has(constraintName)) {
+      form.change(`${attrName}[${i}].constraintInfo.constraintName`, undefined);
+      form.change(`${attrName}[${i}].constraintInfo.parameters`, undefined);
+      form.change(`${attrName}[${i}].accesses`, undefined);
+      continue;
+    }
+
+    const constraintDef = getConstraintDefByName(
+      selectedServiceComponentDef,
+      constraintName
+    );
+    const allowedAccessTypes = new Set(
+      (
+        getAccessTypesForConstraintDef(
+          selectedServiceComponentDef,
+          constraintDef
+        ) || []
+      ).map((at) => at.name)
+    );
+
+    if (!Array.isArray(item.accesses) || allowedAccessTypes.size === 0) {
+      continue;
+    }
+
+    const prunedAccesses = item.accesses.filter(
+      (a) => a?.type && allowedAccessTypes.has(a.type)
+    );
+    if (prunedAccesses.length !== item.accesses.length) {
+      form.change(`${attrName}[${i}].accesses`, prunedAccesses);
+    }
+  }
+};
+
 //CommonFunction to get display label for policy permission item
 export const getPolicyPermissionItemDisplayLbl = (
   serviceDef,
