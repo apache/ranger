@@ -23,7 +23,10 @@ import { isEmpty, isArray, find, map } from "lodash";
 import moment from "moment";
 import {
   getResourcesDefVal,
-  getPolicyConditionDisplayLbl
+  getPolicyConditionDisplayLbl,
+  getConstraintNameFromField,
+  getConstraintDefByName,
+  getAccessTypesForConstraintDef
 } from "Utils/XAUtils";
 import { DefStatus, RangerPolicyType } from "Utils/XAEnums";
 import userColourIcon from "Images/user-colour.svg";
@@ -91,6 +94,8 @@ const ReviewConfirmStep = ({ values, selectedServiceComponentDef }) => {
     policyType == RangerPolicyType.RANGER_MASKING_POLICY_TYPE.value;
   const isRowFilter =
     policyType == RangerPolicyType.RANGER_ROW_FILTER_POLICY_TYPE.value;
+  const isConstraint =
+    policyType == RangerPolicyType.RANGER_CONSTRAINT_POLICY_TYPE.value;
   const enableDenyAndExceptions =
     selectedServiceComponentDef?.options?.enableDenyAndExceptionsInPolicies ===
     "true";
@@ -99,14 +104,25 @@ const ReviewConfirmStep = ({ values, selectedServiceComponentDef }) => {
     ? "Masking"
     : isRowFilter
       ? "Row Filter"
-      : "Access";
+      : isConstraint
+        ? RangerPolicyType.RANGER_CONSTRAINT_POLICY_TYPE.label
+        : "Access";
 
-  const displayTagPermissionItem = (permission) => {
+  const displayTagPermissionItem = (permission, constraintName) => {
     let srcOp = [];
     if (isMasking) {
       srcOp = selectedServiceComponentDef.dataMaskDef?.accessTypes || [];
     } else if (isRowFilter) {
       srcOp = selectedServiceComponentDef.rowFilterDef?.accessTypes || [];
+    } else if (isConstraint && constraintName) {
+      const constraintDef = getConstraintDefByName(
+        selectedServiceComponentDef,
+        constraintName
+      );
+      srcOp = getAccessTypesForConstraintDef(
+        selectedServiceComponentDef,
+        constraintDef
+      );
     } else {
       srcOp = selectedServiceComponentDef.accessTypes;
     }
@@ -245,7 +261,25 @@ const ReviewConfirmStep = ({ values, selectedServiceComponentDef }) => {
     const hasRowFilter = !!(
       item.rowFilterInfo && String(item.rowFilterInfo).trim()
     );
-    const hasDelegateAdmin = !isMasking && !isRowFilter && !isTagAccesses;
+    const constraintName = getConstraintNameFromField(
+      item.constraintInfo?.constraintName
+    );
+    const constraintDef = constraintName
+      ? getConstraintDefByName(selectedServiceComponentDef, constraintName)
+      : null;
+    const constraintParams = item.constraintInfo?.parameters;
+    const hasConstraintParams =
+      constraintParams &&
+      typeof constraintParams === "object" &&
+      Object.keys(constraintParams).some(
+        (k) =>
+          constraintParams[k] !== "" &&
+          constraintParams[k] != null &&
+          constraintParams[k] !== undefined
+      );
+    const hasConstraintName = Boolean(constraintName);
+    const hasDelegateAdmin =
+      !isMasking && !isRowFilter && !isConstraint && !isTagAccesses;
 
     if (
       !hasPrincipal &&
@@ -253,6 +287,8 @@ const ReviewConfirmStep = ({ values, selectedServiceComponentDef }) => {
       !hasConditions &&
       !hasDataMask &&
       !hasRowFilter &&
+      !hasConstraintName &&
+      !hasConstraintParams &&
       !hasDelegateAdmin
     ) {
       return null;
@@ -269,6 +305,14 @@ const ReviewConfirmStep = ({ values, selectedServiceComponentDef }) => {
 
         {/* rule body */}
         <div className="px-3 py-2">
+          {isConstraint && hasConstraintName && (
+            <InfoRow label="Constraint Name">
+              <Badge bg="info">
+                {constraintDef?.label || constraintName}
+              </Badge>
+            </InfoRow>
+          )}
+
           {hasAccesses && (
             <InfoRow label="Permissions">
               {isTagAccesses ? (
@@ -288,7 +332,10 @@ const ReviewConfirmStep = ({ values, selectedServiceComponentDef }) => {
                         <td>
                           <div className="d-flex flex-wrap gap-1">
                             {(
-                              displayTagPermissionItem(t.permission || []) || []
+                              displayTagPermissionItem(
+                                t.permission || [],
+                                constraintName
+                              ) || []
                             ).map((p, pi) => (
                               <Badge key={pi} bg="primary">
                                 {p}
@@ -381,10 +428,40 @@ const ReviewConfirmStep = ({ values, selectedServiceComponentDef }) => {
 
           {/* Row filter - ONLY SHOW IF HAS ROW FILTER */}
           {hasRowFilter && (
-            <InfoRow label="Row Level Filter" isLast={true}>
+            <InfoRow label="Row Level Filter" isLast={!hasConstraintParams}>
               <code className="bg-light border rounded px-2 py-1 small d-inline-block">
                 {String(item.rowFilterInfo)}
               </code>
+            </InfoRow>
+          )}
+
+          {isConstraint && hasConstraintParams && (
+            <InfoRow label="Parameters" isLast={true}>
+              <Table bordered size="sm" className="mb-0 align-middle">
+                <thead className="table-light">
+                  <tr>
+                    <th className="small p-2">Parameter</th>
+                    <th className="small p-2">Value</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {Object.keys(constraintParams).map((paramKey) => {
+                    const paramVal = constraintParams[paramKey];
+                    if (paramVal === "" || paramVal == null) return null;
+                    const paramDef = find(constraintDef?.parameters || [], {
+                      name: paramKey
+                    });
+                    return (
+                      <tr key={paramKey}>
+                        <td style={{ minWidth: "210px" }}>
+                          {paramDef?.label || paramKey}
+                        </td>
+                        <td className="text-word-break">{String(paramVal)}</td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </Table>
             </InfoRow>
           )}
 
@@ -445,6 +522,13 @@ const ReviewConfirmStep = ({ values, selectedServiceComponentDef }) => {
     if (isRowFilter)
       return (
         <RuleGroup attrName="rowFilterPolicyItems" title="Row Filter Rules" />
+      );
+    if (isConstraint)
+      return (
+        <RuleGroup
+          attrName="constraintPolicyItems"
+          title="Constraint Rules"
+        />
       );
 
     return (
@@ -584,7 +668,15 @@ const ReviewConfirmStep = ({ values, selectedServiceComponentDef }) => {
             </InfoRow>
             <InfoRow label="Policy Type" isLast={true}>
               <Badge
-                bg={isMasking ? "warning" : isRowFilter ? "info" : "primary"}
+                bg={
+                  isMasking
+                    ? "warning"
+                    : isRowFilter
+                      ? "info"
+                      : isConstraint
+                        ? "secondary"
+                        : "primary"
+                }
                 text={isMasking ? "dark" : undefined}
               >
                 {policyTypeLabel}
@@ -604,7 +696,17 @@ const ReviewConfirmStep = ({ values, selectedServiceComponentDef }) => {
         {/* Step 3 — Access Rules */}
         <Accordion.Item eventKey="3">
           <Accordion.Header>
-            <SectionHeader title="Access Rules" />
+            <SectionHeader
+              title={
+                isMasking
+                  ? "Mask Rules"
+                  : isRowFilter
+                    ? "Row Filter Rules"
+                    : isConstraint
+                      ? "Constraint Rules"
+                      : "Access Rules"
+              }
+            />
           </Accordion.Header>
           <Accordion.Body>{renderAccessRules()}</Accordion.Body>
         </Accordion.Item>

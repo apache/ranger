@@ -18,6 +18,10 @@
  */
 
 import { isEmpty, isArray } from "lodash";
+import {
+  getConstraintNameFromField,
+  getConstraintDefByName
+} from "Utils/XAUtils";
 
 export const validatePolicyName = (policyName) => {
   if (!policyName || policyName.trim() === "") {
@@ -117,7 +121,61 @@ const validateRowFilterPolicyItem = (item) => {
   return ruleErrors;
 };
 
-export const validateSinglePolicyItem = (item, policyType) => {
+const hasConstraintNameInItem = (item) =>
+  Boolean(getConstraintNameFromField(item.constraintInfo?.constraintName));
+
+const hasMissingMandatoryConstraintParameters = (item, serviceDef) => {
+  if (!serviceDef) {
+    return false;
+  }
+  const constraintName = getConstraintNameFromField(
+    item.constraintInfo?.constraintName
+  );
+  if (!constraintName) {
+    return false;
+  }
+  const def = getConstraintDefByName(serviceDef, constraintName);
+  const parameters = item.constraintInfo?.parameters || {};
+  for (const param of def?.parameters || []) {
+    if (param.mandatory) {
+      const val = parameters[param.name];
+      if (val === "" || val == null) {
+        return true;
+      }
+    }
+  }
+  return false;
+};
+
+const validateConstraintPolicyItem = (item, serviceDef) => {
+  const ruleErrors = {};
+  const principals = hasPrincipals(item);
+  const accesses = hasAccessesInItem(item);
+  const constraintName = hasConstraintNameInItem(item);
+  const missingMandatoryParams = hasMissingMandatoryConstraintParameters(
+    item,
+    serviceDef
+  );
+
+  if (principals && !constraintName) {
+    ruleErrors.constraintName =
+      "Please select a constraint name for this policy";
+  }
+  if (principals && constraintName && !accesses) {
+    ruleErrors.accesses = "Please select permission for this policy";
+  }
+  if (principals && constraintName && missingMandatoryParams) {
+    ruleErrors.parameters =
+      "Please provide all required parameters for this constraint";
+  }
+  if ((accesses || constraintName) && !principals) {
+    ruleErrors.users = "Please select users/groups/roles for this policy";
+  }
+
+  return ruleErrors;
+};
+
+export const validateSinglePolicyItem = (item, policyType, serviceDef) => {
   if (!item || isEmpty(item)) {
     return {};
   }
@@ -127,6 +185,8 @@ export const validateSinglePolicyItem = (item, policyType) => {
       return validateDataMaskPolicyItem(item);
     case 2:
       return validateRowFilterPolicyItem(item);
+    case 4:
+      return validateConstraintPolicyItem(item, serviceDef);
     case 0:
     default:
       return validateAccessPolicyItem(item);
@@ -138,6 +198,8 @@ const getArraysToValidate = (policyType) => {
     return ["dataMaskPolicyItems"];
   } else if (policyType == 2) {
     return ["rowFilterPolicyItems"];
+  } else if (policyType == 4) {
+    return ["constraintPolicyItems"];
   }
   return [
     "policyItems",
@@ -147,13 +209,17 @@ const getArraysToValidate = (policyType) => {
   ];
 };
 
-export const validatePolicyItemsArray = (values, policyType) => {
+export const validatePolicyItemsArray = (values, policyType, serviceDef) => {
   const errors = {};
   const arraysToValidate = getArraysToValidate(policyType);
 
   arraysToValidate.forEach((key) => {
     (values[key] || []).forEach((item, i) => {
-      const ruleErrors = validateSinglePolicyItem(item, policyType);
+      const ruleErrors = validateSinglePolicyItem(
+        item,
+        policyType,
+        serviceDef
+      );
 
       if (!isEmpty(ruleErrors)) {
         if (!errors[key]) errors[key] = [];
@@ -179,9 +245,9 @@ export const validatePolicyDetails = (values) => {
   return errors;
 };
 
-export const validatePolicyItems = (values) => {
+export const validatePolicyItems = (values, serviceDef) => {
   const policyType = values.policyType ?? 0;
-  return validatePolicyItemsArray(values, policyType);
+  return validatePolicyItemsArray(values, policyType, serviceDef);
 };
 
 /**
@@ -204,6 +270,36 @@ export const hasMissingAccessPermissionOnPolicyItems = (values) => {
       if (itemError && itemError.accesses) {
         return true;
       }
+    }
+  }
+  return false;
+};
+
+/**
+ * True when a constraint rule is missing constraint name, permissions, or
+ * mandatory parameters (e.g. after resources changed). Use on final submit.
+ */
+export const hasMissingConstraintFieldsOnPolicyItems = (values, serviceDef) => {
+  if ((values.policyType ?? 0) !== 4) {
+    return false;
+  }
+  const errors = validatePolicyItemsArray(values, 4, serviceDef);
+  if (isEmpty(errors)) {
+    return false;
+  }
+  const arr = errors.constraintPolicyItems;
+  if (!isArray(arr)) {
+    return false;
+  }
+  for (let i = 0; i < arr.length; i++) {
+    const itemError = arr[i];
+    if (
+      itemError &&
+      (itemError.accesses ||
+        itemError.constraintName ||
+        itemError.parameters)
+    ) {
+      return true;
     }
   }
   return false;
