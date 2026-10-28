@@ -923,6 +923,8 @@ export const showGroupsOrUsersOrRolesForPolicy = (
     ];
   } else if (policyType == "1") {
     itemList = ["dataMaskPolicyItems"];
+  } else if (policyType == "4") {
+    itemList = ["constraintPolicyItems"];
   } else {
     itemList = ["rowFilterPolicyItems"];
   }
@@ -2003,7 +2005,7 @@ export const pruneConstraintPolicyItemsToMatchedResources = (
 ) => {
   const formValues = form.getState().values;
   if (
-    formValues?.policyType !==
+    Number(formValues?.policyType) !==
     RangerPolicyType.RANGER_CONSTRAINT_POLICY_TYPE.value
   ) {
     return;
@@ -2060,14 +2062,151 @@ export const pruneConstraintPolicyItemsToMatchedResources = (
       continue;
     }
 
-    const prunedAccesses = item.accesses.filter(
-      (a) => a?.type && allowedAccessTypes.has(a.type)
-    );
+    const prunedAccesses = item.accesses.filter((a) => {
+      const accessType = a?.type ?? a?.value;
+      return accessType && allowedAccessTypes.has(accessType);
+    });
     if (prunedAccesses.length !== item.accesses.length) {
       form.change(`${attrName}[${i}].accesses`, prunedAccesses);
     }
   }
 };
+
+export const buildConstraintInfoForApi = (constraintInfoForm) => {
+  if (!constraintInfoForm) {
+    return null;
+  }
+  const constraintName = getConstraintNameFromField(
+    constraintInfoForm.constraintName
+  );
+  if (!constraintName) {
+    return null;
+  }
+
+  const info = { constraintName };
+  const rawParams = constraintInfoForm.parameters;
+  if (rawParams && typeof rawParams === "object") {
+    const parameters = {};
+    Object.entries(rawParams).forEach(([paramKey, paramVal]) => {
+      if (paramVal === "" || paramVal == null) {
+        return;
+      }
+      parameters[paramKey] =
+        typeof paramVal === "object" && paramVal.value != null
+          ? paramVal.value
+          : String(paramVal);
+    });
+    if (!isEmpty(parameters)) {
+      info.parameters = parameters;
+    }
+  }
+  return info;
+};
+
+const legacyFormPrincipalName = (principal) => {
+  if (typeof principal !== "object") {
+    return principal;
+  }
+  if (principal.value != null) {
+    return principal.value;
+  }
+  if (principal.name != null) {
+    return principal.name;
+  }
+  return principal;
+};
+
+/** Serialize constraintPolicyItems from legacy AddUpdatePolicyForm state. */
+export const serializeConstraintPolicyItemsForApi = (
+  formData,
+  serviceCompDetails
+) => {
+  const items = formData?.constraintPolicyItems;
+  if (!items || items.length === 0) {
+    return [];
+  }
+
+  const isTagService = serviceCompDetails?.name === "tag";
+  const policyResourceItem = [];
+
+  for (const key of items) {
+    if (isEmpty(key) || Object.entries(key).length === 0) {
+      continue;
+    }
+
+    const obj = {};
+
+    if (key?.accesses?.length > 0 && !isTagService) {
+      obj.accesses = key.accesses.map((access) => ({
+        type: access.type ?? access.value,
+        isAllowed: true
+      }));
+    } else if (
+      key?.accesses?.tableList?.length > 0 &&
+      isTagService
+    ) {
+      let accessesData = [];
+      for (const data in key.accesses.tableList) {
+        accessesData = [
+          ...accessesData,
+          ...key.accesses.tableList[data].permission
+        ];
+      }
+      obj.accesses = accessesData.map((value) => ({
+        type: value,
+        isAllowed: true
+      }));
+    }
+
+    if (key.users && key.users.length > 0) {
+      obj.users = key.users.map(legacyFormPrincipalName);
+    }
+    if (key.groups && key.groups.length > 0) {
+      obj.groups = key.groups.map(legacyFormPrincipalName);
+    }
+    if (key.roles && key.roles.length > 0) {
+      obj.roles = key.roles.map(legacyFormPrincipalName);
+    }
+
+    if (key?.conditions && !isEmpty(key.conditions)) {
+      obj.conditions = [];
+      Object.entries(key.conditions).forEach(
+        ([conditionKey, conditionValue]) => {
+          if (conditionValue !== "" && conditionValue != null) {
+            obj.conditions.push({
+              type: conditionKey,
+              values: isArray(conditionValue)
+                ? conditionValue.map((m) =>
+                    typeof m === "object" && m.value != null ? m.value : m
+                  )
+                : [conditionValue]
+            });
+          }
+        }
+      );
+    }
+
+    const constraintInfo = buildConstraintInfoForApi(key.constraintInfo);
+    if (constraintInfo) {
+      obj.constraintInfo = constraintInfo;
+    }
+
+    if (!isEmpty(obj)) {
+      policyResourceItem.push(obj);
+    }
+  }
+
+  return policyResourceItem;
+};
+
+export const getEmptyPolicyItemArraysForNonConstraintType = () => ({
+  policyItems: [],
+  allowExceptions: [],
+  denyPolicyItems: [],
+  denyExceptions: [],
+  dataMaskPolicyItems: [],
+  rowFilterPolicyItems: []
+});
 
 //CommonFunction to get display label for policy permission item
 export const getPolicyPermissionItemDisplayLbl = (

@@ -27,7 +27,7 @@ import {
   prunePolicyItemAccessesToAllowedTypes,
   pruneConstraintPolicyItemsToMatchedResources,
   policyConditionUpdatedJSON,
-  getConstraintNameFromField
+  buildConstraintInfoForApi
 } from "Utils/XAUtils";
 import {
   buildActionReqsMapFromConditionDef,
@@ -157,37 +157,6 @@ const CreateNewPolicyForm = () => {
         }
       );
     }
-  };
-
-  const buildConstraintInfoForApi = (constraintInfoForm) => {
-    if (!constraintInfoForm) {
-      return null;
-    }
-    const constraintName = getConstraintNameFromField(
-      constraintInfoForm.constraintName
-    );
-    if (!constraintName) {
-      return null;
-    }
-
-    const info = { constraintName };
-    const rawParams = constraintInfoForm.parameters;
-    if (rawParams && typeof rawParams === "object") {
-      const parameters = {};
-      Object.entries(rawParams).forEach(([paramKey, paramVal]) => {
-        if (paramVal === "" || paramVal == null) {
-          return;
-        }
-        parameters[paramKey] =
-          typeof paramVal === "object" && paramVal.value != null
-            ? paramVal.value
-            : String(paramVal);
-      });
-      if (!isEmpty(parameters)) {
-        info.parameters = parameters;
-      }
-    }
-    return info;
   };
 
   /** Constraint policy (type 4) — API shape for constraintPolicyItems */

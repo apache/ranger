@@ -74,8 +74,15 @@ import {
   getAllTimeZoneList,
   policyConditionUpdatedJSON,
   policyInfo,
-  getPolicyConditionDisplayLbl
+  getPolicyConditionDisplayLbl,
+  serializeConstraintPolicyItemsForApi,
+  pruneConstraintPolicyItemsToMatchedResources,
+  getEmptyPolicyItemArraysForNonConstraintType
 } from "Utils/XAUtils";
+import {
+  hasMissingConstraintFieldsOnPolicyItems,
+  validatePolicyItemsArray
+} from "./NewPolicyForm/policyFormValidation";
 import { useAccordionButton } from "react-bootstrap/AccordionButton";
 import AccordionContext from "react-bootstrap/AccordionContext";
 import usePrompt from "Hooks/usePrompt";
@@ -305,6 +312,16 @@ export default function AddUpdatePolicyForm() {
             serviceCompData
           )
         : [{}];
+    data.constraintPolicyItems =
+      policyId && policyData?.constraintPolicyItems?.length > 0
+        ? setPolicyItemVal(
+            policyData.constraintPolicyItems,
+            serviceCompData?.accessTypes,
+            null,
+            serviceCompData?.name,
+            serviceCompData
+          )
+        : [{}];
     let serviceCompResourcesDetails = getResourcesDefVal(
       serviceCompData,
       data.policyType
@@ -318,6 +335,12 @@ export default function AddUpdatePolicyForm() {
           setChangePolicyItemPermissions(true);
         }
       });
+    }
+    if (
+      Number(data.policyType) ===
+      RangerPolicyType.RANGER_CONSTRAINT_POLICY_TYPE.value
+    ) {
+      setChangePolicyItemPermissions(true);
     }
     if (policyId) {
       data.policyName = policyData?.name;
@@ -532,6 +555,23 @@ export default function AddUpdatePolicyForm() {
             }
           );
         }
+        if (key?.constraintInfo?.constraintName) {
+          const constraintName =
+            typeof key.constraintInfo.constraintName === "object"
+              ? key.constraintInfo.constraintName.value
+              : key.constraintInfo.constraintName;
+          if (constraintName) {
+            obj.constraintInfo = { constraintName };
+            if (
+              key.constraintInfo.parameters &&
+              !isEmpty(key.constraintInfo.parameters)
+            ) {
+              obj.constraintInfo.parameters = {
+                ...key.constraintInfo.parameters
+              };
+            }
+          }
+        }
 
         if (
           !isEmpty(obj) &&
@@ -652,36 +692,83 @@ export default function AddUpdatePolicyForm() {
         }
       }
 
+      if (val?.constraintInfo?.constraintName) {
+        const cName = val.constraintInfo.constraintName;
+        const def = find(serviceData?.constraintDefs, { name: cName });
+        obj.constraintInfo = {
+          constraintName: {
+            label: def?.label || cName,
+            value: cName
+          },
+          parameters: { ...(val.constraintInfo.parameters || {}) }
+        };
+      }
+
       return obj;
     });
   };
 
-  const handleSubmit = async (values) => {
+  const handleSubmit = async (values, form) => {
+    const isConstraintPolicy =
+      Number(values.policyType) ===
+      RangerPolicyType.RANGER_CONSTRAINT_POLICY_TYPE.value;
+
+    if (isConstraintPolicy && form) {
+      pruneConstraintPolicyItemsToMatchedResources(form, serviceCompDetails);
+      values = form.getState().values;
+    }
+
+    if (hasMissingConstraintFieldsOnPolicyItems(values, serviceCompDetails)) {
+      toast.error(
+        "Please complete each constraint rule: constraint name, permissions, and required parameters.",
+        { toastId: "constraintPolicyItems" }
+      );
+      return;
+    }
+
     let data = {};
 
-    data.allowExceptions = getPolicyItemsVal(values, "allowExceptions");
-
-    data.policyItems = getPolicyItemsVal(values, "policyItems");
-    if (values?.isDenyAllElse) {
-      data.denyPolicyItems = [];
-      data.denyExceptions = [];
+    if (isConstraintPolicy) {
+      Object.assign(data, getEmptyPolicyItemArraysForNonConstraintType());
+      data.constraintPolicyItems = serializeConstraintPolicyItemsForApi(
+        values,
+        serviceCompDetails
+      );
+      if (data.constraintPolicyItems.length === 0) {
+        toast.error("Please add at least one complete constraint rule.", {
+          toastId: "constraintPolicyItemsEmpty"
+        });
+        return;
+      }
+      data.isDenyAllElse = false;
     } else {
-      data.denyPolicyItems = getPolicyItemsVal(values, "denyPolicyItems");
-      data.denyExceptions = getPolicyItemsVal(values, "denyExceptions");
+      data.allowExceptions = getPolicyItemsVal(values, "allowExceptions");
+      data.policyItems = getPolicyItemsVal(values, "policyItems");
+      if (values?.isDenyAllElse) {
+        data.denyPolicyItems = [];
+        data.denyExceptions = [];
+      } else {
+        data.denyPolicyItems = getPolicyItemsVal(values, "denyPolicyItems");
+        data.denyExceptions = getPolicyItemsVal(values, "denyExceptions");
+      }
+      data.dataMaskPolicyItems = getPolicyItemsVal(
+        values,
+        "dataMaskPolicyItems"
+      );
+      data.rowFilterPolicyItems = getPolicyItemsVal(
+        values,
+        "rowFilterPolicyItems"
+      );
+      data.constraintPolicyItems = [];
     }
-    data.dataMaskPolicyItems = getPolicyItemsVal(values, "dataMaskPolicyItems");
-    data.rowFilterPolicyItems = getPolicyItemsVal(
-      values,
-      "rowFilterPolicyItems"
-    );
     data.description = values.description ?? "";
     data.isAuditEnabled = values.isAuditEnabled ?? true;
-    data.isDenyAllElse = values.isDenyAllElse;
+    data.isDenyAllElse = isConstraintPolicy ? false : values.isDenyAllElse;
     data.isEnabled = values.isEnabled ?? true;
     data.name = values.policyName;
     data.policyLabels = (values.policyLabel || [])?.map(({ value }) => value);
     data.policyPriority = values.policyPriority ? "1" : "0";
-    data.policyType = values.policyType;
+    data.policyType = Number(values.policyType);
     data.service = serviceDetails.name;
     let serviceCompRes;
     if (values.policyType != null) {
@@ -878,12 +965,15 @@ export default function AddUpdatePolicyForm() {
         setBlockUI(false);
         toast.dismiss(toastId.current);
         toastId.current = toast.success("Policy save successfully!!");
-        navigate(`/service/${serviceId}/policies/${policyType}`, {
-          state: {
-            showLastPage: true,
-            addPageData: tablePageData
+        navigate(
+          `/service/${serviceId}/policies/${Number(values.policyType ?? policyType)}`,
+          {
+            state: {
+              showLastPage: true,
+              addPageData: tablePageData
+            }
           }
-        });
+        );
       } catch (error) {
         setBlockUI(false);
         let errorMsg = `Failed to save policy form`;
@@ -963,9 +1053,22 @@ export default function AddUpdatePolicyForm() {
       }
     });
 
-    return errorField !== undefined && errorField?.accesses
-      ? toast.error(errorField?.accesses, { toastId: "error1" })
-      : toast.error(errorField?.delegateAdmin, { toastId: "error1" });
+    if (errorField === undefined) {
+      return null;
+    }
+    if (errorField?.accesses) {
+      return toast.error(errorField.accesses, { toastId: "error1" });
+    }
+    if (errorField?.constraintName) {
+      return toast.error(errorField.constraintName, { toastId: "error1" });
+    }
+    if (errorField?.parameters) {
+      return toast.error(errorField.parameters, { toastId: "error1" });
+    }
+    if (errorField?.users) {
+      return toast.error(errorField.users, { toastId: "error1" });
+    }
+    return toast.error(errorField?.delegateAdmin, { toastId: "error1" });
   };
 
   const resourceErrorCheck = (errors, values) => {
@@ -1012,6 +1115,15 @@ export default function AddUpdatePolicyForm() {
                   text: "Required"
                 };
               }
+              const policyTypeNum = Number(values.policyType);
+              Object.assign(
+                errors,
+                validatePolicyItemsArray(
+                  values,
+                  policyTypeNum,
+                  serviceCompDetails
+                )
+              );
 
               return errors;
             }}
@@ -1694,6 +1806,38 @@ export default function AddUpdatePolicyForm() {
                                   formValues={values}
                                   addPolicyItem={addPolicyItem}
                                   attrName="dataMaskPolicyItems"
+                                  fetchUsersData={fetchUsersData}
+                                  fetchGroupsData={fetchGroupsData}
+                                  fetchRolesData={fetchRolesData}
+                                  changePolicyItemPermissions={
+                                    changePolicyItemPermissions
+                                  }
+                                  isMultiResources={isMultiResources}
+                                />
+                              </div>
+                            </>
+                          </Accordion.Collapse>
+                        </>
+                      </Accordion>
+                    </div>
+                  ) : values.policyType ==
+                    RangerPolicyType.RANGER_CONSTRAINT_POLICY_TYPE.value ? (
+                    <div>
+                      <Accordion defaultActiveKey="0">
+                        <>
+                          <p className="formHeader">
+                            Constraint Rules:
+                            <CustomToggle eventKey="0"></CustomToggle>
+                          </p>
+                          <Accordion.Collapse eventKey="0">
+                            <>
+                              <div className="wrap">
+                                <PolicyPermissionItem
+                                  serviceDetails={serviceDetails}
+                                  serviceCompDetails={serviceCompDetails}
+                                  formValues={values}
+                                  addPolicyItem={addPolicyItem}
+                                  attrName="constraintPolicyItems"
                                   fetchUsersData={fetchUsersData}
                                   fetchGroupsData={fetchGroupsData}
                                   fetchRolesData={fetchRolesData}

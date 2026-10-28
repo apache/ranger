@@ -31,6 +31,15 @@ export const validatePolicyName = (policyName) => {
 };
 
 const hasPrincipals = (item) => {
+  if (isArray(item.users) && item.users.length > 0) {
+    return true;
+  }
+  if (isArray(item.groups) && item.groups.length > 0) {
+    return true;
+  }
+  if (isArray(item.roles) && item.roles.length > 0) {
+    return true;
+  }
   const usersObj = item.users || {};
   return (
     (usersObj.users || []).length > 0 ||
