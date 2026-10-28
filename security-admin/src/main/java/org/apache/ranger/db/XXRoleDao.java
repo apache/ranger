@@ -20,8 +20,10 @@ package org.apache.ranger.db;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.ListUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.ranger.authorization.utils.JsonUtils;
 import org.apache.ranger.common.db.BaseDao;
 import org.apache.ranger.entity.XXRole;
+import org.apache.ranger.plugin.model.RangerRole;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -150,6 +152,36 @@ public class XXRoleDao extends BaseDao<XXRole> {
         }
 
         return Collections.emptyMap();
+    }
+
+    /**
+     * Returns names of the roles listed as members of the given role, read from the role's stored definition
+     * (x_role.role_text) with a single query. The stored definition is used rather than x_role_ref_role because a
+     * reference to a role created with createNonExistUserGroupRole is written to the ref table only after commit.
+     *
+     * @return member role names; empty if the role does not exist or has no member roles
+     */
+    public List<String> getRoleMemberNames(String roleName) {
+        List<String> ret = new ArrayList<>();
+
+        if (StringUtils.isNotEmpty(roleName)) {
+            try {
+                String     roleText = getEntityManager().createNamedQuery("XXRole.getRoleTextByName", String.class).setParameter("roleName", roleName).getSingleResult();
+                RangerRole role     = JsonUtils.jsonToObject(roleText, RangerRole.class);
+
+                if (role != null) {
+                    for (RangerRole.RoleMember member : role.getRoles()) {
+                        if (member != null && StringUtils.isNotEmpty(member.getName())) {
+                            ret.add(member.getName());
+                        }
+                    }
+                }
+            } catch (NoResultException e) {
+                logger.debug("getRoleMemberNames({}): role not found", roleName);
+            }
+        }
+
+        return ret;
     }
 }
 
