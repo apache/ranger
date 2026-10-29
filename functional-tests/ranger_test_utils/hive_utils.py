@@ -13,19 +13,25 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Hive Docker helpers for Ranger functional-tests (HS2 + plugin enforcement)."""
+"""Hive Docker helpers and declarative plugin scenarios (beeline, policies, ``HivePluginTest``)."""
 
 import socket
 import time
 
 import pytest
 
+from ranger_test_utils.plugin_test_users import PLUGIN_TEST_USER
+from ranger_test_utils.plugin_enforcement_utils import (
+    logger as plugin_enforcement_logger,
+    normalize_audit_log_filter,
+)
 from ranger_test_utils.utils import (
     DOCKER_PLUGIN_TEST_USER_PASSWORD,
     POLICY_URL,
     RANGER_ADMIN_BASE_URL,
     assert_http_ok,
     get_test_logger,
+    log_testcase_begin,
     unique_suffix,
 )
 
@@ -47,7 +53,7 @@ HIVE_JDBC_BEELINE = (
     "jdbc:hive2://localhost:10000/default;principal=" + HIVE_HS2_PRINCIPAL
 )
 
-HIVE_TEST_USER = "hrt_21"
+HIVE_TEST_USER = PLUGIN_TEST_USER
 HIVE_TEST_USER_PASSWORD = DOCKER_PLUGIN_TEST_USER_PASSWORD
 
 HIVE_AUTHZ_DENIED_SUBSTR = "Permission denied"
@@ -152,8 +158,8 @@ def _log_text_block(title, text, max_chars=BEELINE_COMPLETE_LOG_MAX_CHARS):
         logger.info("%s", line)
 
 
-def _log_beeline_qe_style(exit_code, stdout, stderr, combined, sql, beeline_cmd, expect_substring=None):
-    """beeline logging: query, command, exit code, stdout, stderr."""
+def _log_beeline_run_detail(exit_code, stdout, stderr, combined, sql, beeline_cmd, expect_substring=None):
+    """Log beeline query, command, exit code, stdout, and stderr."""
     logger.info("Exit Code: %s", exit_code)
     _log_text_block("Output of beeline command is:", stdout)
     _log_text_block("Error of beeline command is:", stderr)
@@ -190,53 +196,12 @@ def _log_beeline_qe_style(exit_code, stdout, stderr, combined, sql, beeline_cmd,
 
 def ensure_kerberos_user(username):
     """Create a user Kerberos principal and keytab on KDC, visible in ranger-hive."""
-    kdc = get_docker_client().containers.get(KDC_CONTAINER)
-    principal = _user_principal(username)
-    keytab_in_kdc = "/etc/keytabs/ranger-hive/" + username + ".keytab"
-    keytab_in_hive = _user_keytab_in_hive_container(username)
-
-    logger.info(
-        "Kerberos setup on %s: addprinc/ktadd for %s -> %s (visible in hive as %s)",
-        KDC_CONTAINER,
-        principal,
-        keytab_in_kdc,
-        keytab_in_hive,
+    from ranger_test_utils.plugin_test_users import (
+        PLUGIN_KERBEROS_STACK_HIVE,
+        ensure_kerberos_keytab_for_stack,
     )
 
-    add_cmd = 'kadmin.local -q "addprinc -randkey ' + principal + '"'
-    exit_add, out_add = kdc.exec_run(add_cmd, user="root", demux=True)
-    _log_multiline_block(
-        "kadmin addprinc exit_code=%s" % exit_add,
-        ((out_add[0] or b"") + (out_add[1] or b"")).decode(),
-        max_chars=2000,
-    )
-
-    kdc.exec_run("rm -f " + keytab_in_kdc, user="root")
-    ktadd_cmd = (
-        'kadmin.local -q "ktadd -k '
-        + keytab_in_kdc
-        + " "
-        + principal
-        + '"'
-    )
-    exit_kt, out_kt = kdc.exec_run(ktadd_cmd, user="root", demux=True)
-    kt_out = ((out_kt[0] or b"") + (out_kt[1] or b"")).decode()
-    _log_multiline_block(
-        "kadmin ktadd exit_code=%s" % exit_kt,
-        kt_out,
-        max_chars=2000,
-    )
-    if exit_kt != 0:
-        raise RuntimeError(
-            "ktadd failed for "
-            + principal
-            + " (keytab "
-            + keytab_in_hive
-            + "): "
-            + kt_out
-        )
-    kdc.exec_run("chmod 444 " + keytab_in_kdc, user="root")
-    verify_kerberos_keytab_in_hive(username)
+    ensure_kerberos_keytab_for_stack(username, PLUGIN_KERBEROS_STACK_HIVE)
 
 
 def verify_kerberos_keytab_in_hive(username):
@@ -356,7 +321,7 @@ def run_beeline(username, sql, service_user=False, expect_substring=None):
     stderr = (output[1] or b"").decode()
     combined = stdout + stderr
 
-    _log_beeline_qe_style(
+    _log_beeline_run_detail(
         exit_code,
         stdout,
         stderr,
@@ -467,3 +432,184 @@ def delete_policies_by_id(session, policy_ids):
 def wait_for_policy_propagation(seconds=POLICY_PROPAGATION_SLEEP_SEC):
     logger.info("Waiting %ss for Hive plugin policy propagation", seconds)
     time.sleep(seconds)
+
+
+def execute_hive_test(
+    sql,
+    username=HIVE_TEST_USER,
+    *,
+    admin_session=None,
+    verify_output_contains=None,
+    verify_output_not_contains=None,
+    audit_filter=None,
+    expect_audit_event=True,
+    repo_name=HIVE_SERVICE_NAME,
+):
+    """
+    Run beeline as ``username``, assert on CLI output, optionally validate access audits.
+
+    Uses :func:`ranger_test_utils.access_audit_utils.begin_access_audit_capture`
+    for Solr/OpenSearch-backed audit checks (shared with other plugin suites).
+    """
+    from ranger_test_utils.access_audit_utils import begin_access_audit_capture
+
+    audit_capture = None
+    if audit_filter is not None and admin_session is not None:
+        audit_capture = begin_access_audit_capture(
+            admin_session,
+            repo_name,
+            username,
+        )
+
+    exit_code, output = run_beeline(
+        username,
+        sql,
+        expect_substring=verify_output_contains,
+    )
+
+    if verify_output_contains is not None:
+        assert verify_output_contains in output, (
+            "Expected text not found in beeline output; exit_code="
+            + str(exit_code)
+            + " output="
+            + output
+        )
+    if verify_output_not_contains is not None:
+        assert verify_output_not_contains not in output, (
+            "Unexpected text in beeline output; exit_code="
+            + str(exit_code)
+            + " output="
+            + output
+        )
+
+    if audit_capture is not None:
+        audit_capture.verify(
+            audit_filter,
+            expect_audit_event=expect_audit_event,
+        )
+
+    return exit_code, output
+
+
+class HivePluginTestContext:
+    """
+    Per-module context (assign ``admin_session`` in ``setup_module``).
+
+    Class attributes mirror common ranger-qe ``XAHiveTestCase`` fields used in ports.
+    """
+
+    USER_USER1 = HIVE_TEST_USER
+    USER_USER2 = "hrt_22"
+    PASS_USER1 = None
+    PASS_USER2 = None
+
+    result_denied = "0"
+    result_allowed = "1"
+
+    access_type = {
+        "CREATE": "CREATE",
+        "USE": "USE",
+        "DROP": "DROP",
+        "SELECT": "SELECT",
+        "UPDATE": "UPDATE",
+        "ALTER": "ALTER",
+        "INSERT": "INSERT",
+        "DELETE": "DELETE",
+        "GRANT": "GRANT",
+        "REVOKE": "REVOKE",
+    }
+
+    def __init__(self):
+        self.admin_session = None
+        self.repo_name = HIVE_SERVICE_NAME
+
+
+class HivePluginTest:
+    """One Hive enforcement scenario: log id, beeline SQL, verify output, optional audit."""
+
+    STDERR_CONTAINS = "stderr_contains"
+    STDOUT_CONTAINS = "stdout_contains"
+    STDERR_NOT_CONTAINS = "stderr_not_contains"
+    STDOUT_NOT_CONTAINS = "stdout_not_contains"
+
+    def __init__(
+        self,
+        test_id,
+        test_case,
+        sql,
+        req_user,
+        req_user_pass=None,
+        *,
+        verify_criteria=STDERR_CONTAINS,
+        verify_str=None,
+        new_audit_log_must_exist=True,
+        audit_log_filter=None,
+        validate_impala=False,
+        verifyCriteria=None,
+        verifyStr=None,
+        newAuditLogMustExist=None,
+        auditLogFilter=None,
+        validateImpala=None,
+        hSql=None,
+    ):
+        self.test_id = test_id
+        self.test_case = test_case
+        self.sql = hSql if hSql is not None else sql
+        self.req_user = req_user
+        self.req_user_pass = req_user_pass
+
+        self.verify_criteria = (
+            verifyCriteria if verifyCriteria is not None else verify_criteria
+        )
+        self.verify_str = (
+            verifyStr
+            if verifyStr is not None
+            else (verify_str if verify_str is not None else HIVE_AUTHZ_DENIED_SUBSTR)
+        )
+        self.new_audit_log_must_exist = (
+            newAuditLogMustExist
+            if newAuditLogMustExist is not None
+            else new_audit_log_must_exist
+        )
+        self.audit_log_filter = (
+            auditLogFilter if auditLogFilter is not None else audit_log_filter
+        )
+        self.validate_impala = (
+            validateImpala if validateImpala is not None else validate_impala
+        )
+
+    def execute(self):
+        if self.validate_impala:
+            pytest.skip("Impala validation is not enabled in Docker functional-tests")
+
+        log_testcase_begin(plugin_enforcement_logger, self.test_id)
+
+        verify_contains = None
+        verify_not_contains = None
+        if self.verify_criteria in (
+            self.STDERR_CONTAINS,
+            self.STDOUT_CONTAINS,
+        ):
+            verify_contains = self.verify_str
+        elif self.verify_criteria in (
+            self.STDERR_NOT_CONTAINS,
+            self.STDOUT_NOT_CONTAINS,
+        ):
+            verify_not_contains = self.verify_str
+        else:
+            raise ValueError("Unsupported verify_criteria: " + str(self.verify_criteria))
+
+        admin_session = getattr(self.test_case, "admin_session", None)
+        repo_name = getattr(self.test_case, "repo_name", HIVE_SERVICE_NAME)
+        audit_filter = normalize_audit_log_filter(self.audit_log_filter)
+
+        execute_hive_test(
+            self.sql,
+            username=self.req_user,
+            admin_session=admin_session,
+            verify_output_contains=verify_contains,
+            verify_output_not_contains=verify_not_contains,
+            audit_filter=audit_filter,
+            expect_audit_event=self.new_audit_log_must_exist,
+            repo_name=repo_name,
+        )

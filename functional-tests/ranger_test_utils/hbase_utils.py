@@ -13,7 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""HBase Docker helpers for Ranger functional-tests (HBase shell + plugin enforcement)."""
+"""HBase Docker helpers and declarative plugin scenarios (shell, policies, ``HBasePluginTest``)."""
 
 import base64
 import socket
@@ -21,18 +21,23 @@ import time
 
 import pytest
 
+from ranger_test_utils.plugin_enforcement_utils import (
+    logger as plugin_enforcement_logger,
+    normalize_audit_log_filter,
+)
 from ranger_test_utils.utils import (
     POLICY_URL,
     assert_http_ok,
     get_test_logger,
+    log_testcase_begin,
     unique_suffix,
 )
 from ranger_test_utils.hive_utils import (
-    HIVE_TEST_USER,
     KDC_CONTAINER,
     POLICY_PROPAGATION_SLEEP_SEC,
     get_docker_client,
 )
+from ranger_test_utils.plugin_test_users import PLUGIN_TEST_USER
 
 logger = get_test_logger(__name__)
 
@@ -47,7 +52,7 @@ KERBEROS_REALM = "EXAMPLE.COM"
 HBASE_SERVICE_PRINCIPAL = "hbase/ranger-hbase.rangernw@" + KERBEROS_REALM
 HBASE_SERVICE_KEYTAB = "/etc/keytabs/hbase.keytab"
 
-HBASE_TEST_USER = HIVE_TEST_USER
+HBASE_TEST_USER = PLUGIN_TEST_USER
 
 HBASE_AUTHZ_DENIED_SUBSTR = "AccessDeniedException"
 
@@ -120,53 +125,12 @@ def _log_multiline_block(header, text, max_chars=HBASE_SHELL_LOG_OUTPUT_MAX_CHAR
 
 def ensure_kerberos_user(username):
     """Create a user Kerberos principal and keytab on KDC, visible in ranger-hbase."""
-    kdc = get_docker_client().containers.get(KDC_CONTAINER)
-    principal = _user_principal(username)
-    keytab_in_kdc = "/etc/keytabs/ranger-hbase/" + username + ".keytab"
-    keytab_in_hbase = _user_keytab_in_hbase_container(username)
-
-    logger.info(
-        "Kerberos setup on %s: addprinc/ktadd for %s -> %s (visible in hbase as %s)",
-        KDC_CONTAINER,
-        principal,
-        keytab_in_kdc,
-        keytab_in_hbase,
+    from ranger_test_utils.plugin_test_users import (
+        PLUGIN_KERBEROS_STACK_HBASE,
+        ensure_kerberos_keytab_for_stack,
     )
 
-    add_cmd = 'kadmin.local -q "addprinc -randkey ' + principal + '"'
-    exit_add, out_add = kdc.exec_run(add_cmd, user="root", demux=True)
-    _log_multiline_block(
-        "kadmin addprinc exit_code=%s" % exit_add,
-        ((out_add[0] or b"") + (out_add[1] or b"")).decode(),
-        max_chars=2000,
-    )
-
-    kdc.exec_run("rm -f " + keytab_in_kdc, user="root")
-    ktadd_cmd = (
-        'kadmin.local -q "ktadd -k '
-        + keytab_in_kdc
-        + " "
-        + principal
-        + '"'
-    )
-    exit_kt, out_kt = kdc.exec_run(ktadd_cmd, user="root", demux=True)
-    kt_out = ((out_kt[0] or b"") + (out_kt[1] or b"")).decode()
-    _log_multiline_block(
-        "kadmin ktadd exit_code=%s" % exit_kt,
-        kt_out,
-        max_chars=2000,
-    )
-    if exit_kt != 0:
-        raise RuntimeError(
-            "ktadd failed for "
-            + principal
-            + " (keytab "
-            + keytab_in_hbase
-            + "): "
-            + kt_out
-        )
-    kdc.exec_run("chmod 444 " + keytab_in_kdc, user="root")
-    verify_kerberos_keytab_in_hbase(username)
+    ensure_kerberos_keytab_for_stack(username, PLUGIN_KERBEROS_STACK_HBASE)
 
 
 def verify_kerberos_keytab_in_hbase(username):
@@ -355,3 +319,191 @@ def create_audit_only_policy(session, suffix=None, service_name=HBASE_SERVICE_NA
 def wait_for_hbase_policy_propagation(seconds=POLICY_PROPAGATION_SLEEP_SEC):
     logger.info("Waiting %ss for HBase plugin policy propagation", seconds)
     time.sleep(seconds)
+
+
+def execute_hbase_test(
+    shell_lines,
+    username=HBASE_TEST_USER,
+    *,
+    admin_session=None,
+    verify_output_contains=None,
+    verify_output_not_contains=None,
+    audit_filter=None,
+    expect_audit_event=True,
+    repo_name=HBASE_SERVICE_NAME,
+    service_user=False,
+):
+    """
+    Run HBase shell as ``username``, assert on output, optionally validate access audits.
+
+    Uses :func:`ranger_test_utils.access_audit_utils.begin_access_audit_capture`
+    (Solr/OpenSearch via Admin REST when the audit pipeline is enabled).
+    """
+    from ranger_test_utils.access_audit_utils import begin_access_audit_capture
+
+    if isinstance(shell_lines, str):
+        shell_lines = [shell_lines]
+
+    audit_capture = None
+    if (
+        audit_filter is not None
+        and admin_session is not None
+        and not service_user
+    ):
+        audit_capture = begin_access_audit_capture(
+            admin_session,
+            repo_name,
+            username,
+        )
+
+    exit_code, output = run_hbase_shell(
+        username,
+        shell_lines,
+        service_user=service_user,
+        expect_substring=verify_output_contains,
+    )
+
+    if verify_output_contains is not None:
+        assert verify_output_contains in output, (
+            "Expected text not found in HBase shell output; exit_code="
+            + str(exit_code)
+            + " output="
+            + output
+        )
+    if verify_output_not_contains is not None:
+        assert verify_output_not_contains not in output, (
+            "Unexpected text in HBase shell output; exit_code="
+            + str(exit_code)
+            + " output="
+            + output
+        )
+
+    if audit_capture is not None:
+        audit_capture.verify(
+            audit_filter,
+            expect_audit_event=expect_audit_event,
+        )
+
+    return exit_code, output
+
+
+class HBasePluginTestContext:
+    """
+    Per-module context (assign ``admin_session`` in ``setup_module``).
+
+    Class attributes mirror common ranger-qe ``XAHBaseTestCase`` fields used in ports.
+    """
+
+    USER_USER1 = HBASE_TEST_USER
+    USER_USER2 = "hrt_22"
+
+    result_denied = "0"
+    result_allowed = "1"
+
+    access_type = {
+        "CREATE_TABLE": "createTable",
+        "PUT": "put",
+        "SCAN": "scannerOpen",
+        "GET": "get",
+        "DISABLE_TABLE": "disableTable",
+        "DELETE_TABLE": "deleteTable",
+        "GRANT": "grant",
+        "REVOKE": "revoke",
+    }
+
+    def __init__(self):
+        self.admin_session = None
+        self.repo_name = HBASE_SERVICE_NAME
+
+
+class HBasePluginTest:
+    """One HBase enforcement scenario: log id, shell cmds, verify output, optional audit."""
+
+    STDERR_CONTAINS = "stderr_contains"
+    STDOUT_CONTAINS = "stdout_contains"
+    STDERR_NOT_CONTAINS = "stderr_not_contains"
+    STDOUT_NOT_CONTAINS = "stdout_not_contains"
+
+    def __init__(
+        self,
+        test_id,
+        test_case,
+        shell_cmds=None,
+        req_user=None,
+        *,
+        verify_criteria=STDOUT_CONTAINS,
+        verify_str=None,
+        new_audit_log_must_exist=True,
+        audit_log_filter=None,
+        logoutput=True,
+        verifyCriteria=None,
+        verifyStr=None,
+        newAuditLogMustExist=None,
+        auditLogFilter=None,
+        hBaseCmds=None,
+        reqUser=None,
+        checkAuditLog=None,
+    ):
+        self.test_id = test_id
+        self.test_case = test_case
+        if hBaseCmds is not None:
+            self.shell_cmds = hBaseCmds
+        elif shell_cmds is not None:
+            self.shell_cmds = shell_cmds
+        else:
+            raise ValueError("Provide shell_cmds or hBaseCmds")
+        self.req_user = reqUser if reqUser is not None else req_user
+        if self.req_user is None:
+            raise ValueError("Provide req_user or reqUser")
+        self.logoutput = logoutput
+
+        self.verify_criteria = (
+            verifyCriteria if verifyCriteria is not None else verify_criteria
+        )
+        self.verify_str = (
+            verifyStr
+            if verifyStr is not None
+            else (verify_str if verify_str is not None else HBASE_AUTHZ_DENIED_SUBSTR)
+        )
+        self.new_audit_log_must_exist = (
+            newAuditLogMustExist
+            if newAuditLogMustExist is not None
+            else new_audit_log_must_exist
+        )
+        self.audit_log_filter = (
+            auditLogFilter if auditLogFilter is not None else audit_log_filter
+        )
+        _ = checkAuditLog
+
+    def execute(self):
+        log_testcase_begin(plugin_enforcement_logger, self.test_id)
+
+        verify_contains = None
+        verify_not_contains = None
+        if self.verify_criteria in (
+            self.STDERR_CONTAINS,
+            self.STDOUT_CONTAINS,
+        ):
+            verify_contains = self.verify_str
+        elif self.verify_criteria in (
+            self.STDERR_NOT_CONTAINS,
+            self.STDOUT_NOT_CONTAINS,
+        ):
+            verify_not_contains = self.verify_str
+        else:
+            raise ValueError("Unsupported verify_criteria: " + str(self.verify_criteria))
+
+        admin_session = getattr(self.test_case, "admin_session", None)
+        repo_name = getattr(self.test_case, "repo_name", HBASE_SERVICE_NAME)
+        audit_filter = normalize_audit_log_filter(self.audit_log_filter)
+
+        execute_hbase_test(
+            self.shell_cmds,
+            username=self.req_user,
+            admin_session=admin_session,
+            verify_output_contains=verify_contains,
+            verify_output_not_contains=verify_not_contains,
+            audit_filter=audit_filter,
+            expect_audit_event=self.new_audit_log_must_exist,
+            repo_name=repo_name,
+        )

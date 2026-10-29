@@ -38,6 +38,9 @@ XUSERS_BASE = RANGER_ADMIN_BASE_URL + "/xusers"
 
 DEFAULT_ADMIN_AUTH = ("admin", "rangerR0cks!")
 
+# Avoid indefinite hangs when Ranger Admin or Docker is not up (plugin session setup).
+RANGER_ADMIN_REQUEST_TIMEOUT_SEC = 30
+
 DEFAULT_JSON_HEADERS = {
     "Accept": "application/json",
     "Content-Type": "application/json",
@@ -121,6 +124,14 @@ def assert_http_ok(response, ok_codes, step, url=""):
     raise AssertionError(message)
 
 
+class _RangerAdminSession(requests.Session):
+    """requests.Session with a default timeout on every call."""
+
+    def request(self, method, url, **kwargs):
+        kwargs.setdefault("timeout", RANGER_ADMIN_REQUEST_TIMEOUT_SEC)
+        return super().request(method, url, **kwargs)
+
+
 def create_ranger_admin_session(auth=None, headers=None):
     """
     Build a requests.Session for Ranger Admin REST calls (Docker defaults).
@@ -131,10 +142,40 @@ def create_ranger_admin_session(auth=None, headers=None):
         auth = DEFAULT_ADMIN_AUTH
     if headers is None:
         headers = DEFAULT_JSON_HEADERS
-    session = requests.Session()
+    session = _RangerAdminSession()
     session.auth = auth
     session.headers.update(headers)
     return session
+
+
+def preflight_ranger_admin_http():
+    """Skip plugin tests when Ranger Admin is not reachable on Docker defaults."""
+    import pytest
+
+    url = RANGER_ADMIN_BASE_URL + "/plugins/definitions?page=0&pageSize=1"
+    try:
+        response = requests.get(
+            url,
+            auth=DEFAULT_ADMIN_AUTH,
+            headers=DEFAULT_JSON_HEADERS,
+            timeout=RANGER_ADMIN_REQUEST_TIMEOUT_SEC,
+        )
+    except requests.RequestException as exc:
+        pytest.skip(
+            "Ranger Admin is not reachable at "
+            + RANGER_ADMIN_BASE_URL
+            + " ("
+            + str(exc)
+            + "). Start the stack: cd functional-tests && ./run-tests.sh postgres hive"
+        )
+    if response.status_code not in (200, 401, 403):
+        pytest.skip(
+            "Ranger Admin returned HTTP "
+            + str(response.status_code)
+            + " at "
+            + url
+            + ". Wait for containers to finish starting, then retry."
+        )
 
 
 # --- Test run IDs ---
