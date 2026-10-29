@@ -391,7 +391,8 @@ const KeyManager = () => {
       try {
         selectedServicesResponse = await fetchApi({
           url: "/keys/keys",
-          params: params
+          params: params,
+          skipNavigate: true
         });
         selectedServicesData = selectedServicesResponse.data.vXKeys;
         totalCount = selectedServicesResponse.data.totalCount;
