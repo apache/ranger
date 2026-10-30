@@ -34,6 +34,7 @@ A Docker-based test execution framework that validates Apache Ranger service int
 | **api_tests** | Public API v2 user REST calls by role: admin, keyadmin, auditor, user role, and negative cases (admin Docker only) |
 | **hive** | Hive Ranger plugin enforcement via HS2/beeline (requires `ranger-hadoop` + `ranger-hive`) |
 | **hbase** | HBase Ranger plugin enforcement via HBase shell (requires `ranger-hadoop` + `ranger-hbase`) |
+| **jvm_locale_test** | Ranger Admin JVM locale tests. Run with `run-jvm-locale-tests.sh`. |
 | **kafka** | Kafka Ranger plugin enforcement via console producer (requires `ranger-kafka`) |
 
 ### Directory Structure
@@ -45,6 +46,7 @@ functional-tests/
 |
 ├── pytest.ini                   # Registers custom pytest markers
 ├── run-tests.sh                 # Script to automate setup and test execution
+├── run-jvm-locale-tests.sh      # Dedicated runner for Ranger Admin JVM locale tests
 ├── requirements.txt             # Python dependencies
 └── readme.md                    # This documentation
 ├── ranger_test_utils/utils.py   # Shared logging, HTTP asserts, Public API v2 helpers
@@ -93,7 +95,7 @@ Enter DB type (press Enter to default to postgres): postgres
 Available audit stores: opensearch, solr, none
 Enter audit store (press Enter to default to opensearch): opensearch
 
-Available test suites: rolerest xuserrest servicerest tagrest hdfs kms api hive ...
+Available test suites: rolerest xuserrest servicerest tagrest hdfs kms api hive
 Enter test suites space-separated (press Enter to run ALL): hdfs kms
 
 Available containers : hadoop hive hbase knox trino ozone kafka
@@ -231,6 +233,24 @@ Brought up based on what you enter at the containers prompt (or `SELECTED_CONTAI
   export SELECTED_CONTAINERS=hadoop
   ./run-tests.sh postgres hdfs
   ```
+
+### JVM locale suite notes
+
+Use the dedicated runner for Ranger Admin JVM locale tests:
+
+```text
+./run-jvm-locale-tests.sh
+```
+
+The runner prompts for DB type and JVM locale. Defaults are `postgres` and `france`.
+
+To skip prompts:
+
+```text
+./run-jvm-locale-tests.sh postgres france
+```
+
+Supported JVM locale values are `us`, `uk`, `france`, and `china`. The runner starts the base Ranger stack, recreates only the `ranger` container with the selected JVM locale, runs `jvm_locale_test/`, and restores `ranger` with the original JVM options.
 
 ## Test Reports
 
