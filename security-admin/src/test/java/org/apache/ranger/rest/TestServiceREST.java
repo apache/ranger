@@ -335,6 +335,14 @@ public class TestServiceREST {
         return xServiceDef;
     }
 
+    private void stubStoredServiceForUpdate(RangerService existingService, XXServiceDef xServiceDef) throws Exception {
+        XXServiceDefDao xServiceDefDao = Mockito.mock(XXServiceDefDao.class);
+
+        Mockito.when(daoManager.getXXServiceDef()).thenReturn(xServiceDefDao);
+        Mockito.when(svcStore.getService(existingService.getId())).thenReturn(existingService);
+        Mockito.when(xServiceDefDao.findByName(existingService.getType())).thenReturn(xServiceDef);
+    }
+
     public XXService xService() {
         XXService xService = new XXService();
         xService.setAddedByUserId(Id);
@@ -545,11 +553,9 @@ public class TestServiceREST {
         HttpServletRequest  request       = null;
         Map<String, Object> options       = null;
 
-        XXServiceDefDao xServiceDefDao = Mockito.mock(XXServiceDefDao.class);
         Mockito.when(validatorFactory.getServiceValidator(svcStore)).thenReturn(serviceValidator);
 
-        Mockito.when(daoManager.getXXServiceDef()).thenReturn(xServiceDefDao);
-        Mockito.when(xServiceDefDao.findByName(rangerService.getType())).thenReturn(xServiceDef);
+        stubStoredServiceForUpdate(rangerService, xServiceDef);
 
         Mockito.when(svcStore.updateService(Mockito.any(), Mockito.any())).thenReturn(rangerService);
 
@@ -3553,8 +3559,8 @@ public class TestServiceREST {
         RangerService service = rangerService();
         HttpServletRequest request = Mockito.mock(HttpServletRequest.class);
         XXServiceDef xServiceDef = serviceDef();
-        XXServiceDefDao xServiceDefDao = Mockito.mock(XXServiceDefDao.class);
 
+        stubStoredServiceForUpdate(service, xServiceDef);
         Mockito.when(validatorFactory.getServiceValidator(svcStore)).thenThrow(new RuntimeException("Validation failed"));
         Mockito.when(restErrorUtil.createRESTException(Mockito.anyString())).thenReturn(new WebApplicationException());
 
@@ -3758,11 +3764,9 @@ public class TestServiceREST {
         service.setDisplayName("  display-name-with-spaces  ");
         HttpServletRequest request = Mockito.mock(HttpServletRequest.class);
         XXServiceDef xServiceDef = serviceDef();
-        XXServiceDefDao xServiceDefDao = Mockito.mock(XXServiceDefDao.class);
 
         Mockito.when(validatorFactory.getServiceValidator(svcStore)).thenReturn(serviceValidator);
-        Mockito.when(daoManager.getXXServiceDef()).thenReturn(xServiceDefDao);
-        Mockito.when(xServiceDefDao.findByName(service.getType())).thenReturn(xServiceDef);
+        stubStoredServiceForUpdate(service, xServiceDef);
         Mockito.when(svcStore.updateService(Mockito.any(), Mockito.any())).thenReturn(service);
 
         RangerService result = serviceREST.updateService(service, request);
@@ -3771,6 +3775,23 @@ public class TestServiceREST {
         Assertions.assertEquals("service-with-spaces", service.getName().trim());
         Assertions.assertEquals("display-name-with-spaces", service.getDisplayName().trim());
         Mockito.verify(svcStore).updateService(Mockito.any(RangerService.class), Mockito.any());
+    }
+
+    @Test
+    public void test157UpdateServiceRejectsTypeChange() throws Exception {
+        RangerService service = rangerService();
+        service.setType("kms");
+        HttpServletRequest request = Mockito.mock(HttpServletRequest.class);
+        RangerService storedService = rangerService();
+
+        Mockito.when(svcStore.getService(storedService.getId())).thenReturn(storedService);
+        Mockito.when(restErrorUtil.createRESTException("Service type cannot be changed on update", MessageEnums.DATA_NOT_UPDATABLE))
+                .thenThrow(new WebApplicationException());
+
+        Assertions.assertThrows(WebApplicationException.class, () -> serviceREST.updateService(service, request));
+
+        Mockito.verify(restErrorUtil).createRESTException("Service type cannot be changed on update", MessageEnums.DATA_NOT_UPDATABLE);
+        Mockito.verify(svcStore, Mockito.never()).updateService(Mockito.any(), Mockito.any());
     }
 
     @Test

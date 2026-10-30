@@ -516,12 +516,47 @@ public class TestRangerServiceValidator {
         when(service.getId()).thenReturn(7L);
         RangerService existingService = mock(RangerService.class);
         when(existingService.getId()).thenReturn(7L);
+        when(existingService.getType()).thenReturn("aType");
         when(store.getService(7L)).thenReturn(existingService);
         when(store.getServiceByName("aName")).thenReturn(existingService);
         assertTrue(validator.isValid(service, Action.UPDATE, failures));
         // name need not point to a service for update to work, of course.
         when(store.getServiceByName("aName")).thenReturn(null);
         assertTrue(validator.isValid(service, Action.UPDATE, failures));
+    }
+
+    @Test
+    public void test_isValid_update_serviceTypeNotUpdatable() throws Exception {
+        initialize();
+        Object[][] serviceDefInput = new Object[][] {
+                {"param1", true},
+                {"param2", true},
+                {"param3", false},
+                {"param4", false},
+                {"param5", true},
+        };
+        List<RangerServiceConfigDef> configDefs = utils.createServiceConditionDefs(serviceDefInput);
+        RangerServiceDef             serviceDef = mock(RangerServiceDef.class);
+        when(serviceDef.getConfigs()).thenReturn(configDefs);
+
+        RangerService service = mock(RangerService.class);
+        when(service.getId()).thenReturn(7L);
+        when(service.getName()).thenReturn("aName");
+        when(service.getDisplayName()).thenReturn("aDisplayName");
+        when(service.getType()).thenReturn("aType");
+        String[]            configs   = new String[] {"param1", "param2", "param3", "param5", "param6"};
+        Map<String, String> configMap = utils.createMap(configs);
+        when(service.getConfigs()).thenReturn(configMap);
+
+        when(store.getServiceDefByName("aType")).thenReturn(serviceDef);
+        when(store.getServiceByName("aName")).thenReturn(null);
+
+        RangerService existingService = mock(RangerService.class);
+        when(existingService.getType()).thenReturn("storedType");
+        when(store.getService(7L)).thenReturn(existingService);
+
+        checkFailure_isValid(validator, service, Action.UPDATE, failures, "semantic", "type");
+        assertEquals(ValidationErrorCode.SERVICE_VALIDATION_ERR_SERVICE_TYPE_NOT_UPDATABLE.getErrorCode(), failures.get(0).errorCode);
     }
 
     @Test

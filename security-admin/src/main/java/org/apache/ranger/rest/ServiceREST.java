@@ -728,12 +728,16 @@ public class ServiceREST {
         return ret;
     }
 
+    public RangerService updateService(RangerService service, HttpServletRequest request) {
+        return updateService(service, null, request);
+    }
+
     @PUT
     @Path("/services/{id}")
     @Consumes("application/json")
     @Produces("application/json")
     @PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.UPDATE_SERVICE + "\")")
-    public RangerService updateService(RangerService service, @Context HttpServletRequest request) {
+    public RangerService updateService(RangerService service, @PathParam("id") Long reqServiceId, @Context HttpServletRequest request) {
         LOG.debug("==> ServiceREST.updateService(): {}", service);
         // if service.id and param 'id' are specified, service.id should be same as the param 'id'
         // if service.id is null, then set param 'id' into service Object
@@ -764,6 +768,14 @@ public class ServiceREST {
                 perf = RangerPerfTracer.getPerfTracer(PERF_LOG, "ServiceREST.updateService(serviceName=" + service.getName() + ")");
             }
 
+            if (reqServiceId != null) {
+                if (service.getId() == null) {
+                    service.setId(reqServiceId);
+                } else if (!service.getId().equals(reqServiceId)) {
+                    throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST, "service id mismatch", true);
+                }
+            }
+
             /**
              * If display name is blank (EMPTY String or NULL), use previous display name.
              */
@@ -778,10 +790,6 @@ public class ServiceREST {
                 }
             }
 
-            RangerServiceValidator validator = validatorFactory.getServiceValidator(svcStore);
-
-            validator.validate(service, Action.UPDATE);
-
             if (!StringUtils.isEmpty(service.getName().trim())) {
                 service.setName(service.getName().trim());
             }
@@ -792,13 +800,27 @@ public class ServiceREST {
 
             bizUtil.hasAdminPermissions("Services");
 
-            // TODO: As of now we are allowing SYS_ADMIN to create all the
-            // services including KMS
+            RangerService existingService = svcStore.getService(service.getId());
+            String        storedType      = existingService.getType();
 
-            XXServiceDef xxServiceDef = daoManager.getXXServiceDef().findByName(service.getType());
+            if (StringUtils.isNotBlank(service.getType()) && !StringUtils.equals(storedType, service.getType())) {
+                throw restErrorUtil.createRESTException("Service type cannot be changed on update", MessageEnums.DATA_NOT_UPDATABLE);
+            }
+
+            service.setType(storedType);
+
+            XXServiceDef xxServiceDef = daoManager.getXXServiceDef().findByName(storedType);
+
+            if (xxServiceDef == null) {
+                throw restErrorUtil.createRESTException("Service def not found: service-def-name=" + storedType, MessageEnums.INVALID_INPUT_DATA);
+            }
 
             bizUtil.hasKMSPermissions("Service", xxServiceDef.getImplclassname());
             bizUtil.blockAuditorRoleUser();
+
+            RangerServiceValidator validator = validatorFactory.getServiceValidator(svcStore);
+
+            validator.validate(service, Action.UPDATE);
 
             Map<String, Object> options = getOptions(request);
 

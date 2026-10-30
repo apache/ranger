@@ -1074,6 +1074,13 @@ public class ServiceDBStore extends AbstractServiceStore {
 
         RangerService existing = svcService.getPopulatedViewObject(xExisting);
 
+        if (StringUtils.isNotBlank(service.getType()) && !StringUtils.equals(existing.getType(), service.getType())) {
+            throw restErrorUtil.createRESTException(
+                    "Service type cannot be changed on update. Existing type=[" + existing.getType() + "], requested type=[" + service.getType() + "]",
+                    MessageEnums.DATA_NOT_UPDATABLE);
+        }
+        service.setType(existing.getType());
+
         String existingName = existing.getName();
 
         boolean renamed = !StringUtils.equalsIgnoreCase(service.getName(), existingName);
