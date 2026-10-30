@@ -803,7 +803,10 @@
 
 	<named-query name="XXService.getAllServiceHeaders">
 		<query>
-			SELECT obj.id, obj.name, obj.displayName, svcDef.name, obj.isEnabled FROM XXService obj
+			SELECT obj.id, obj.name, obj.displayName, svcDef.name, obj.isEnabled,
+			       (SELECT svcCfg.configValue FROM XXServiceConfigMap svcCfg WHERE svcCfg.serviceId = obj.id AND svcCfg.configKey = 'service.admin.users'),
+			       (SELECT svcCfg.configValue FROM XXServiceConfigMap svcCfg WHERE svcCfg.serviceId = obj.id AND svcCfg.configKey = 'service.admin.groups')
+			  FROM XXService obj
 			  LEFT OUTER JOIN XXServiceDef svcDef ON obj.type = svcDef.id
 		</query>
 	</named-query>

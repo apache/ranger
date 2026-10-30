@@ -17,6 +17,7 @@
 
 package org.apache.ranger.db;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.common.db.BaseDao;
 import org.apache.ranger.entity.XXService;
 import org.apache.ranger.plugin.model.RangerServiceHeaderInfo;
@@ -25,6 +26,7 @@ import org.springframework.stereotype.Service;
 import javax.persistence.NoResultException;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -177,7 +179,19 @@ public class XXServiceDao extends BaseDao<XXService> {
             ret = new ArrayList<>(results.size());
 
             for (Object[] result : results) {
-                ret.add(new RangerServiceHeaderInfo((Long) result[0], (String) result[1], (String) result[2], (String) result[3], (Boolean) result[4]));
+                RangerServiceHeaderInfo svcHeader   = new RangerServiceHeaderInfo((Long) result[0], (String) result[1], (String) result[2], (String) result[3], (Boolean) result[4]);
+                String                  adminUsers  = (String) result[5];
+                String                  adminGroups = (String) result[6];
+
+                if (StringUtils.isNotBlank(adminUsers)) {
+                    svcHeader.setAdminUsers(Arrays.asList(adminUsers.split(",")));
+                }
+
+                if (StringUtils.isNotBlank(adminGroups)) {
+                    svcHeader.setAdminGroups(List.of(adminGroups.split(",")));
+                }
+
+                ret.add(svcHeader);
             }
         } catch (NoResultException excp) {
             ret = Collections.emptyList();

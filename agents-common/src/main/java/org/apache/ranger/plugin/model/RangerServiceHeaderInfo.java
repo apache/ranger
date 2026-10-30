@@ -21,6 +21,9 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonInclude;
 
+import java.util.Collections;
+import java.util.List;
+
 import static org.apache.ranger.plugin.store.EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_TAG_NAME;
 
 @JsonAutoDetect(getterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE, fieldVisibility = Visibility.ANY)
@@ -28,11 +31,13 @@ import static org.apache.ranger.plugin.store.EmbeddedServiceDefsUtil.EMBEDDED_SE
 public class RangerServiceHeaderInfo extends RangerBaseModelObject implements java.io.Serializable {
     private static final long serialVersionUID = 1L;
 
-    private String  name;
-    private String  displayName;
-    private String  type;
-    private Boolean isTagService;
-    private Boolean isGdsService;
+    private String       name;
+    private String       displayName;
+    private String       type;
+    private Boolean      isTagService;
+    private Boolean      isGdsService;
+    private List<String> adminUsers  = Collections.emptyList();
+    private List<String> adminGroups = Collections.emptyList();
 
     public RangerServiceHeaderInfo() {
         this(-1L, "", false, false);
@@ -107,5 +112,21 @@ public class RangerServiceHeaderInfo extends RangerBaseModelObject implements ja
 
     public void setIsGdsService(Boolean isGdsService) {
         this.isGdsService = isGdsService;
+    }
+
+    public List<String> getAdminUsers() {
+        return adminUsers;
+    }
+
+    public void setAdminUsers(List<String> adminUsers) {
+        this.adminUsers = adminUsers;
+    }
+
+    public List<String> getAdminGroups() {
+        return adminGroups;
+    }
+
+    public void setAdminGroups(List<String> adminGroups) {
+        this.adminGroups = adminGroups;
     }
 }
