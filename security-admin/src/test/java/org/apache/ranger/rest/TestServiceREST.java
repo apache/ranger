@@ -360,6 +360,14 @@ public class TestServiceREST {
 		return xServiceDef;
 	}
 
+	private void stubStoredServiceForUpdate(RangerService existingService, XXServiceDef xServiceDef) throws Exception {
+		XXServiceDefDao xServiceDefDao = Mockito.mock(XXServiceDefDao.class);
+
+		Mockito.when(daoManager.getXXServiceDef()).thenReturn(xServiceDefDao);
+		Mockito.when(svcStore.getService(existingService.getId())).thenReturn(existingService);
+		Mockito.when(xServiceDefDao.findByName(existingService.getType())).thenReturn(xServiceDef);
+	}
+
 	public XXService xService() {
 		XXService xService = new XXService();
 		xService.setAddedByUserId(Id);
@@ -683,13 +691,10 @@ public class TestServiceREST {
         HttpServletRequest request = null;
 		Map<String, Object> options = null;
 
-		XXServiceDefDao xServiceDefDao = Mockito.mock(XXServiceDefDao.class);
 		Mockito.when(validatorFactory.getServiceValidator(svcStore))
 				.thenReturn(serviceValidator);
 
-		Mockito.when(daoManager.getXXServiceDef()).thenReturn(xServiceDefDao);
-		Mockito.when(xServiceDefDao.findByName(rangerService.getType()))
-				.thenReturn(xServiceDef);
+		stubStoredServiceForUpdate(rangerService, xServiceDef);
 
 		Mockito.when(
 				svcStore.updateService((RangerService) Mockito.any(), (Map<String, Object>) Mockito.any()))
@@ -2955,5 +2960,22 @@ public class TestServiceREST {
 		RangerContextHolder.setSecurityContext(null);
 		Mockito.when(restErrorUtil.createRESTException(Mockito.anyString())).thenReturn(new WebApplicationException());
 		Assert.assertThrows(WebApplicationException.class, () -> serviceREST.grantAccess("HDFS_1", grantRequest, request));
+	}
+
+	@Test
+	public void test157UpdateServiceRejectsTypeChange() throws Exception {
+		RangerService service = rangerService();
+		service.setType("kms");
+		HttpServletRequest request = Mockito.mock(HttpServletRequest.class);
+		RangerService storedService = rangerService();
+
+		Mockito.when(svcStore.getService(storedService.getId())).thenReturn(storedService);
+		Mockito.when(restErrorUtil.createRESTException("Service type cannot be changed on update", MessageEnums.DATA_NOT_UPDATABLE))
+				.thenThrow(new WebApplicationException());
+
+		Assert.assertThrows(WebApplicationException.class, () -> serviceREST.updateService(service, request));
+
+		Mockito.verify(restErrorUtil).createRESTException("Service type cannot be changed on update", MessageEnums.DATA_NOT_UPDATABLE);
+		Mockito.verify(svcStore, Mockito.never()).updateService(Mockito.any(), Mockito.any());
 	}
 }

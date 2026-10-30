@@ -249,6 +249,20 @@ public class RangerServiceValidator extends RangerValidator {
 						.build());
 					valid = false;
 				}
+
+				if (serviceDef != null && action == Action.UPDATE && valid) {
+					RangerService existingForType = getService(id);
+					if (existingForType != null && !StringUtils.equals(existingForType.getType(), type)) {
+						ValidationErrorCode error = ValidationErrorCode.SERVICE_VALIDATION_ERR_SERVICE_TYPE_NOT_UPDATABLE;
+						failures.add(new ValidationFailureDetailsBuilder()
+								.field("type")
+								.isSemanticallyIncorrect()
+								.errorCode(error.getErrorCode())
+								.becauseOf(error.getMessage(existingForType.getType(), type))
+								.build());
+						valid = false;
+					}
+				}
 			}
 			if (nameSpecified && serviceDef != null) {
 				// check if required parameters were specified
