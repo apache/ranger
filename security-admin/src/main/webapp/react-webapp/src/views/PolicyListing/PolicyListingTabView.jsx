@@ -28,7 +28,8 @@ import {
   isKeyAdmin,
   isKMSAuditor,
   updateTagActive,
-  getSupportedPolicyTypes
+  getSupportedPolicyTypes,
+  isRenderConstraint
 } from "Utils/XAUtils";
 import { Loader } from "Components/CommonComponents";
 import TopNavBar from "../SideBar/TopNavBar";
@@ -242,9 +243,9 @@ export const PolicyListingTabView = () => {
       />
       {loader ? (
         <Loader />
-      ) : (isRenderMasking(serviceDefData.dataMaskDef) ||
-          isRenderRowFilter(serviceDefData.rowFilterDef)) &&
-        params.policyType < 3 ? (
+      ) : isRenderMasking(serviceDefData.dataMaskDef) ||
+        isRenderRowFilter(serviceDefData.rowFilterDef) ||
+        isRenderConstraint(serviceDefData.constraintDefs) ? (
         <Tabs
           id="PolicyListing"
           activeKey={params.policyType}
@@ -273,6 +274,17 @@ export const PolicyListingTabView = () => {
           {isRenderRowFilter(serviceDefData.rowFilterDef) && (
             <Tab eventKey="2" title="Row Level Filter">
               {params.policyType == "2" && (
+                <PolicyListing
+                  serviceDef={serviceDefData}
+                  serviceData={serviceData}
+                  serviceZone={getServiceZone()}
+                />
+              )}
+            </Tab>
+          )}
+          {isRenderConstraint(serviceDefData.constraintDefs) && (
+            <Tab eventKey="4" title="Constraint">
+              {params.policyType == "4" && (
                 <PolicyListing
                   serviceDef={serviceDefData}
                   serviceData={serviceData}

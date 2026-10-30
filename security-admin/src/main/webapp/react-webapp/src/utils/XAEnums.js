@@ -551,6 +551,12 @@ export const RangerPolicyType = {
     label: "Row Level Filter",
     rbkey: "xa.enum.AccessResult.ACCESS_RESULT_DENIED",
     tt: "lbl.AccessResult_ACCESS_RESULT_DENIED"
+  },
+  RANGER_CONSTRAINT_POLICY_TYPE: {
+    value: 4,
+    label: "Constraint",
+    rbkey: "xa.enum.AccessResult.ACCESS_RESULT_ALLOWED",
+    tt: "lbl.AccessResult_ACCESS_RESULT_ALLOWED"
   }
 };
 

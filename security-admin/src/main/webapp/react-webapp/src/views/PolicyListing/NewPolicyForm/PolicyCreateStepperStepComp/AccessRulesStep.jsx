@@ -132,6 +132,12 @@ const AccessRulesStep = ({
       title: "Row Filter Rules",
       msg: "Row filter rules grants access to resources when the specific criteria are met."
     });
+  } else if (policyType == 4) {
+    policyPermissionItems.push({
+      attrName: "constraintPolicyItems",
+      title: "Constraint Rules",
+      msg: "Constraint rules grants access to resources when the specific criteria are met."
+    });
   } else if (policyType == 0 && !enableDenyAndExceptions) {
     policyPermissionItems.push({
       attrName: "policyItems",

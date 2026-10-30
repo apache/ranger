@@ -18,6 +18,7 @@
  */
 
 import React, { useState } from "react";
+import Select from "react-select";
 import { FieldArray } from "react-final-form-arrays";
 import {
   Row,
@@ -32,10 +33,18 @@ import { RangerPolicyType } from "Utils/XAEnums";
 import { find, isEmpty, isArray, toUpper, map } from "lodash";
 import PolicyConditionsComp from "../../PolicyConditionsComp";
 import UsersGroupsAndRolesSelectionComponent from "./UsersGroupsAndRolesSelectionComponent";
+import ConstraintPolicyParameterFields, {
+  buildDefaultConstraintParameters
+} from "./ConstraintPolicyParameterFields";
 import TagBasePermissionItem from "../../TagBasePermissionItem";
 import {
   getAccessTypesByResource,
-  getPolicyConditionDisplayLbl
+  getPolicyConditionDisplayLbl,
+  getMatchedConstraintDefs,
+  getConstraintNameFromField,
+  getConstraintDefByName,
+  getAccessTypesForConstraintDef,
+  mapAccessTypesToSelectOptions
 } from "Utils/XAUtils";
 import { CustomTooltip } from "Components/CommonComponents";
 import { getSelectedAccessTypesForRow } from "Utils/policyConditionUtils";
@@ -52,6 +61,7 @@ export default function PolicyPermissionItemVertical({
   const [showTagPermissionModalIndex, setShowTagPermissionModalIndex] =
     useState(null);
   const form = useForm(); // Get form instance
+  let getMatchedConstraint = [];
 
   const { conditionDefVal, actionReqsMap, leafResourceTypes } =
     usePolicyPermissionConditionContext({
@@ -61,11 +71,25 @@ export default function PolicyPermissionItemVertical({
       form,
       enableResourcePruneDefer
     });
-
+  if (
+    RangerPolicyType.RANGER_CONSTRAINT_POLICY_TYPE.value ==
+    formValues.policyType
+  ) {
+    getMatchedConstraint = getMatchedConstraintDefs(
+      serviceCompDetails,
+      formValues
+    );
+  }
   const accessTypeOptions = getAccessTypesByResource(
     formValues,
-    serviceCompDetails
+    serviceCompDetails,
+    getMatchedConstraint
   );
+
+  const constraintSelectOptions = getMatchedConstraint.map((constraint) => ({
+    label: constraint.label || constraint.name,
+    value: constraint.name
+  }));
 
   const getMaskingAccessTypeOptions = (index) => {
     if (serviceCompDetails?.dataMaskDef?.maskTypes?.length > 0) {
@@ -121,6 +145,22 @@ export default function PolicyPermissionItemVertical({
   // Required field validation
   const required = (value) => (value ? undefined : "Required");
 
+  const constraintSelectFirstMsg = "Please select constraint name first";
+
+  const handleConstraintNameChange = (input, fieldName, option) => {
+    input.onChange(option || null);
+    form.change(`${fieldName}.accesses`, undefined);
+    if (!option?.value) {
+      form.change(`${fieldName}.constraintInfo.parameters`, undefined);
+      return;
+    }
+    const def = getConstraintDefByName(serviceCompDetails, option.value);
+    form.change(
+      `${fieldName}.constraintInfo.parameters`,
+      buildDefaultConstraintParameters(def?.parameters, serviceCompDetails)
+    );
+  };
+
   // Helper function to clear all data from a permission item
   const clearPermissionItem = (index) => {
     // Reset the entire permission item to an empty object
@@ -171,11 +211,81 @@ export default function PolicyPermissionItemVertical({
               </Row>
             )}
 
-            {fields.map((name, index) => (
+            {fields.map((name, index) => {
+              const isConstraintPolicy =
+                formValues?.policyType ===
+                RangerPolicyType.RANGER_CONSTRAINT_POLICY_TYPE.value;
+              const rowConstraintName = getConstraintNameFromField(
+                fields.value[index]?.constraintInfo?.constraintName
+              );
+              const rowConstraintDef = getConstraintDefByName(
+                serviceCompDetails,
+                rowConstraintName
+              );
+              const rowAccessTypeOptions = rowConstraintDef
+                ? mapAccessTypesToSelectOptions(
+                    getAccessTypesForConstraintDef(
+                      serviceCompDetails,
+                      rowConstraintDef
+                    )
+                  )
+                : [];
+              const permissionAccessOptions = isConstraintPolicy
+                ? rowAccessTypeOptions
+                : accessTypeOptions;
+              return (
               <React.Fragment key={name}>
                 <Row key={name} className="py-3">
                   {/* Rule Header */}
                   <Col sm={11}>
+                    {RangerPolicyType.RANGER_CONSTRAINT_POLICY_TYPE.value ==
+                      formValues?.policyType && (
+                      <Col xs={12} className="mb-4">
+                        <Row>
+                          <Col className="column-1-fixed text-end">
+                            <FormB.Label>Constraint Name</FormB.Label>
+                          </Col>
+                          <>
+                            <Col>
+                              <Field
+                                name={`${name}.constraintInfo.constraintName`}
+                                validate={required}
+                              >
+                                {({ input, meta }) => (
+                                  <>
+                                    <Select
+                                      inputId={`${name}-constraint-name`}
+                                      options={constraintSelectOptions}
+                                      value={input.value}
+                                      onChange={(option) =>
+                                        handleConstraintNameChange(
+                                          input,
+                                          name,
+                                          option
+                                        )
+                                      }
+                                      onBlur={input.onBlur}
+                                      placeholder="Select constraint"
+                                      tabSelectsValue={false}
+                                      isClearable
+                                      isDisabled={
+                                        constraintSelectOptions.length === 0
+                                      }
+                                    />
+                                    {meta.touched && meta.error && (
+                                      <span className="text-danger d-block mt-1">
+                                        {meta.error}
+                                      </span>
+                                    )}
+                                  </>
+                                )}
+                              </Field>
+                            </Col>
+                            <Col className="column-3-fixed"></Col>
+                          </>
+                        </Row>
+                      </Col>
+                    )}
                     {/* Permissions Section */}
                     <Col xs={12} className="mb-4">
                       <Row>
@@ -183,8 +293,12 @@ export default function PolicyPermissionItemVertical({
                           <FormB.Label>Permissions</FormB.Label>
                         </Col>
                         <Col>
-                          {/* Tag-based policy - use modal with table layout */}
-                          {serviceCompDetails?.name === "tag" ? (
+                          {isConstraintPolicy && !rowConstraintName ? (
+                            <p className="text-muted mb-0">
+                              {constraintSelectFirstMsg}
+                            </p>
+                          ) : serviceCompDetails?.name === "tag" ? (
+                          /* Tag-based policy - use modal with table layout */
                             <Field name={`${name}.accesses`}>
                               {({ input, meta }) => (
                                 <>
@@ -265,7 +379,7 @@ export default function PolicyPermissionItemVertical({
                                   {/* Tag Permission Modal */}
                                   {showTagPermissionModalIndex === index && (
                                     <TagBasePermissionItem
-                                      options={accessTypeOptions}
+                                      options={permissionAccessOptions}
                                       inputVal={{
                                         ...input,
                                         onChange: (value) => {
@@ -298,8 +412,8 @@ export default function PolicyPermissionItemVertical({
                               {({ input, meta }) => {
                                 const currentValue = input.value || [];
                                 const allSelected =
-                                  accessTypeOptions.length > 0 &&
-                                  accessTypeOptions.every((access) =>
+                                  permissionAccessOptions.length > 0 &&
+                                  permissionAccessOptions.every((access) =>
                                     currentValue.some(
                                       (a) => a.type === access.value
                                     )
@@ -311,13 +425,12 @@ export default function PolicyPermissionItemVertical({
                                     input.onChange([]);
                                   } else {
                                     // Select all
-                                    const allAccesses = accessTypeOptions.map(
-                                      (a) => ({
+                                    const allAccesses =
+                                      permissionAccessOptions.map((a) => ({
                                         type: a.value,
                                         isAllowed: true,
                                         label: a.label
-                                      })
-                                    );
+                                      }));
                                     input.onChange(allAccesses);
                                   }
                                 };
@@ -327,7 +440,7 @@ export default function PolicyPermissionItemVertical({
                                     <Container fluid className="p-0">
                                       <div className="gx-3 gy-1 permissions-checkboxes">
                                         {/* Select All Link - Only show if more than 1 option */}
-                                        {accessTypeOptions.length > 1 && (
+                                        {permissionAccessOptions.length > 1 && (
                                           <div className="mb-1">
                                             <FormB.Check
                                               type="checkbox"
@@ -339,7 +452,8 @@ export default function PolicyPermissionItemVertical({
                                             />
                                           </div>
                                         )}
-                                        {accessTypeOptions.map((access) => {
+                                        {permissionAccessOptions.map(
+                                          (access) => {
                                           const isChecked =
                                             Array.isArray(input.value) &&
                                             input.value.some(
@@ -382,7 +496,8 @@ export default function PolicyPermissionItemVertical({
                                               />
                                             </div>
                                           );
-                                        })}
+                                        }
+                                        )}
                                       </div>
                                     </Container>
                                     {meta.error && (
@@ -566,6 +681,32 @@ export default function PolicyPermissionItemVertical({
                             />
                           )}
                         </Row>
+                      </Col>
+                    )}
+
+                    {isConstraintPolicy && (
+                      <Col xs={12} className="mb-4">
+                        {!rowConstraintName ? (
+                          <Row>
+                            <Col className="column-1-fixed text-end">
+                              <FormB.Label>Parameters</FormB.Label>
+                            </Col>
+                            <>
+                              <Col>
+                                <p className="text-muted mb-0">
+                                  {constraintSelectFirstMsg}
+                                </p>
+                              </Col>
+                              <Col className="column-3-fixed"></Col>
+                            </>
+                          </Row>
+                        ) : (
+                          <ConstraintPolicyParameterFields
+                            parameters={rowConstraintDef?.parameters || []}
+                            fieldNamePrefix={`${name}.constraintInfo.parameters`}
+                            serviceCompDetails={serviceCompDetails}
+                          />
+                        )}
                       </Col>
                     )}
 
@@ -886,7 +1027,8 @@ export default function PolicyPermissionItemVertical({
                 </Row>
                 <hr />
               </React.Fragment>
-            ))}
+            );
+            })}
 
             {/* Add More Rules Button */}
             <Row className="my-3">
