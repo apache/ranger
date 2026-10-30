@@ -215,12 +215,16 @@ def _kinit_with_retry(principal: str, keytab: str, ensure_keytab_fn, max_attempt
         ensure_keytab_fn()
 
     kms.exec_run("kdestroy -A 2>/dev/null || true", user="root")
-    for _ in range(max_attempts):
+    for attempt in range(max_attempts):
         exit_code, output = kms.exec_run(
             f"kinit -kt {keytab} {principal}", user="root"
         )
         if exit_code == 0:
             return
+        if attempt == 0:
+            # kinit failed even though keytab file exists — keytab may be stale
+            # (e.g. KDC container was restarted). Recreate the keytab and retry.
+            ensure_keytab_fn()
         time.sleep(wait)
     raise RuntimeError(f"kinit failed for {principal} after {max_attempts} attempts: {output.decode()}")
 
@@ -333,3 +337,21 @@ def delete_test_user(username: str) -> None:
     if r.status_code in (200, 204, 404):
         return
     raise RuntimeError(f"Failed to delete Ranger user {username}: {r.status_code} {r.text}")
+
+def update_kms_policy(policy_id, username, accesses):
+    update_url = f"{BASE_URL_RANGER}/{policy_id}"
+    response = requests.get(update_url, auth=RANGER_KMS_AUTH)
+    if response.status_code != 200:
+        raise RuntimeError(f"Failed to fetch policy: {response.text}")
+    policy_data = response.json()
+    policy_data["policyItems"] = []
+    if accesses:
+        policy_data["policyItems"].append({
+            "accesses": [{"type": a.lower(), "isAllowed": True} for a in accesses],
+            "users": [username],
+            "delegateAdmin": False,
+        })
+    response = requests.put(update_url, auth=RANGER_KMS_AUTH, json=policy_data)
+    time.sleep(5)
+    if response.status_code != 200:
+        raise RuntimeError(f"Failed to update policy: {response.text}")

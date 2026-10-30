@@ -177,6 +177,28 @@ public class TestKMSACLs {
         Assertions.assertEquals(1, acls.defaultKeyAcls.size(), "Got unexpected sized acls:" + acls.defaultKeyAcls);
     }
 
+    @Test
+    void testHasAccessWithKeyName_delegatesAndIgnoresKeyName() {
+        // KMSACLs has no per-key policy; the 4-arg overload must delegate
+        // to the 3-arg version and ignore the key name entirely.
+        final Configuration conf = new Configuration(false);
+        conf.set(Type.GET.getAclConfigKey(), "alice"); // only "alice" has GET
+
+        final KMSACLs acls = new KMSACLs(conf);
+
+        UserGroupInformation allowed = UserGroupInformation.createRemoteUser("alice");
+        UserGroupInformation denied  = UserGroupInformation.createRemoteUser("bob");
+
+        // Allowed user — key name must have no effect
+        Assertions.assertTrue(acls.hasAccess(Type.GET, allowed, "some_key",  ipAddress));
+        Assertions.assertTrue(acls.hasAccess(Type.GET, allowed, "other_key", ipAddress));
+        Assertions.assertTrue(acls.hasAccess(Type.GET, allowed, "",          ipAddress));
+
+        Assertions.assertFalse(acls.hasAccess(Type.GET, denied, "some_key",  ipAddress));
+        Assertions.assertFalse(acls.hasAccess(Type.GET, denied, "other_key", ipAddress));
+        Assertions.assertFalse(acls.hasAccess(Type.GET, denied, "",          ipAddress));
+    }
+
     private void assertDefaultKeyAcl(final KMSACLs acls, final KeyOpType op,
             final String... names) {
         final AccessControlList acl = acls.defaultKeyAcls.get(op);

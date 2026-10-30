@@ -63,10 +63,12 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isNull;
+import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -74,7 +76,7 @@ import static org.mockito.Mockito.when;
 @TestMethodOrder(MethodOrderer.MethodName.class)
 public class TestKMS {
     private static final String CLIENT_IP     = "127.0.0.1";
-    private static final String TEST_KEY      = "testKey";
+    private static final String TEST_KEY      = "testkey";
     private static final String SENSITIVE_KEY = "sensitive_key";
 
     private static final String[] KMS_WEB_APP_MUTABLE_STATIC_FIELDS = {
@@ -303,7 +305,7 @@ public class TestKMS {
         KeyProvider.KeyVersion keyVersion = createKeyVersion(TEST_KEY, TEST_KEY + "@0", new byte[] {1, 2, 3});
 
         when(mockProvider.createKey(eq(TEST_KEY), any(KeyProvider.Options.class))).thenReturn(keyVersion);
-        when(mockAcls.hasAccess(eq(Type.GET), eq(user), eq(CLIENT_IP))).thenReturn(true);
+        when(mockAcls.hasAccess(eq(Type.GET), eq(user), eq(TEST_KEY), eq(CLIENT_IP))).thenReturn(true);
 
         KMS      kms      = newKms();
         Response response = kms.createKey(jsonKey, request);
@@ -347,7 +349,7 @@ public class TestKMS {
         KeyProvider.KeyVersion keyVersion = createKeyVersion(TEST_KEY, TEST_KEY + "@0", new byte[] {1});
         when(mockProvider.createKey(eq(TEST_KEY), any(byte[].class), any(KeyProvider.Options.class)))
                 .thenReturn(keyVersion);
-        when(mockAcls.hasAccess(eq(Type.GET), eq(user), eq(CLIENT_IP))).thenReturn(true);
+        when(mockAcls.hasAccess(eq(Type.GET), eq(user), eq(TEST_KEY), eq(CLIENT_IP))).thenReturn(true);
 
         KMS kms = newKms();
         kms.createKey(jsonKey, request);
@@ -397,7 +399,7 @@ public class TestKMS {
         Map<String, Object>    jsonMaterial = new HashMap<>();
         KeyProvider.KeyVersion keyVersion   = createKeyVersion(TEST_KEY, TEST_KEY + "@1", new byte[] {5});
         when(mockProvider.rollNewVersion(TEST_KEY)).thenReturn(keyVersion);
-        when(mockAcls.hasAccess(eq(Type.GET), eq(user), eq(CLIENT_IP))).thenReturn(true);
+        when(mockAcls.hasAccess(eq(Type.GET), eq(user), eq(TEST_KEY), eq(CLIENT_IP))).thenReturn(true);
 
         KMS      kms      = newKms();
         Response response = kms.rolloverKey(TEST_KEY, jsonMaterial, request);
@@ -424,6 +426,101 @@ public class TestKMS {
         assertThrows(AccessControlException.class,
                 () -> kms.rolloverKey(TEST_KEY, new HashMap<>(), request));
         verify(mockProvider, never()).rollNewVersion(anyString());
+    }
+
+    @Test
+    public void testCreateKey_keyMaterialStrippedWhenGetDenied() throws Exception {
+        UserGroupInformation user = createTestUser();
+        setHttpUserInContext(user);
+        setMdcContext(user, "http://localhost/kms/v1/keys");
+
+        HttpServletRequest     request    = mockRequest();
+        Map<String, Object>    jsonKey    = baseKeyJson(TEST_KEY);
+        KeyProvider.KeyVersion keyVersion = createKeyVersion(TEST_KEY, TEST_KEY + "@0", new byte[] {1, 2, 3});
+
+        when(mockProvider.createKey(eq(TEST_KEY), any(KeyProvider.Options.class))).thenReturn(keyVersion);
+        // GET denied for this specific key
+        when(mockAcls.hasAccess(eq(Type.GET), eq(user), eq(TEST_KEY), eq(CLIENT_IP))).thenReturn(false);
+
+        KMS      kms      = newKms();
+        Response response = kms.createKey(jsonKey, request);
+
+        assertEquals(Response.Status.CREATED.getStatusCode(), response.getStatus());
+        @SuppressWarnings("unchecked")
+        Map<String, Object> entity = (Map<String, Object>) response.getEntity();
+        assertNull(entity.get(KMSRESTConstants.MATERIAL_FIELD),
+                "Key material must not be returned when GET is denied for the key");
+        // Verify the actual key name (not null/empty) was passed to the GET check
+        verify(mockAcls).hasAccess(eq(Type.GET), eq(user), eq(TEST_KEY), eq(CLIENT_IP));
+    }
+
+    @Test
+    public void testCreateKey_keyMaterialPreservedWhenGetAllowed() throws Exception {
+        UserGroupInformation user = createTestUser();
+        setHttpUserInContext(user);
+        setMdcContext(user, "http://localhost/kms/v1/keys");
+
+        HttpServletRequest     request    = mockRequest();
+        Map<String, Object>    jsonKey    = baseKeyJson(TEST_KEY);
+        KeyProvider.KeyVersion keyVersion = createKeyVersion(TEST_KEY, TEST_KEY + "@0", new byte[] {1, 2, 3});
+
+        when(mockProvider.createKey(eq(TEST_KEY), any(KeyProvider.Options.class))).thenReturn(keyVersion);
+        when(mockAcls.hasAccess(eq(Type.GET), eq(user), eq(TEST_KEY), eq(CLIENT_IP))).thenReturn(true);
+
+        KMS      kms      = newKms();
+        Response response = kms.createKey(jsonKey, request);
+
+        assertEquals(Response.Status.CREATED.getStatusCode(), response.getStatus());
+        @SuppressWarnings("unchecked")
+        Map<String, Object> entity = (Map<String, Object>) response.getEntity();
+        assertNotNull(entity.get(KMSRESTConstants.MATERIAL_FIELD),
+                "Key material must be present in response when GET is allowed");
+    }
+
+    @Test
+    public void testRolloverKey_keyMaterialStrippedWhenGetDenied() throws Exception {
+        UserGroupInformation user = createTestUser();
+        setHttpUserInContext(user);
+
+        HttpServletRequest     request      = mockRequest();
+        Map<String, Object>    jsonMaterial = new HashMap<>();
+        KeyProvider.KeyVersion keyVersion   = createKeyVersion(TEST_KEY, TEST_KEY + "@1", new byte[] {5, 6, 7});
+
+        when(mockProvider.rollNewVersion(TEST_KEY)).thenReturn(keyVersion);
+        // GET denied for this specific key
+        when(mockAcls.hasAccess(eq(Type.GET), eq(user), eq(TEST_KEY), eq(CLIENT_IP))).thenReturn(false);
+
+        KMS      kms      = newKms();
+        Response response = kms.rolloverKey(TEST_KEY, jsonMaterial, request);
+
+        assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
+        @SuppressWarnings("unchecked")
+        Map<String, Object> entity = (Map<String, Object>) response.getEntity();
+        assertNull(entity.get(KMSRESTConstants.MATERIAL_FIELD),
+                "Key material must not be returned in rollover response when GET is denied");
+        verify(mockAcls).hasAccess(eq(Type.GET), eq(user), eq(TEST_KEY), eq(CLIENT_IP));
+    }
+
+    @Test
+    public void testRolloverKey_keyMaterialPreservedWhenGetAllowed() throws Exception {
+        UserGroupInformation user = createTestUser();
+        setHttpUserInContext(user);
+
+        HttpServletRequest     request      = mockRequest();
+        Map<String, Object>    jsonMaterial = new HashMap<>();
+        KeyProvider.KeyVersion keyVersion   = createKeyVersion(TEST_KEY, TEST_KEY + "@1", new byte[] {5, 6, 7});
+
+        when(mockProvider.rollNewVersion(TEST_KEY)).thenReturn(keyVersion);
+        when(mockAcls.hasAccess(eq(Type.GET), eq(user), eq(TEST_KEY), eq(CLIENT_IP))).thenReturn(true);
+
+        KMS      kms      = newKms();
+        Response response = kms.rolloverKey(TEST_KEY, jsonMaterial, request);
+
+        assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
+        @SuppressWarnings("unchecked")
+        Map<String, Object> entity = (Map<String, Object>) response.getEntity();
+        assertNotNull(entity.get(KMSRESTConstants.MATERIAL_FIELD),
+                "Key material must be present in rollover response when GET is allowed");
     }
 
     @Test
@@ -714,7 +811,7 @@ public class TestKMS {
         Method method = KMS.class.getDeclaredMethod("getKeyURI", String.class, String.class);
         method.setAccessible(true);
         URI result = (URI) method.invoke(null, "v1", TEST_KEY);
-        assertEquals("v1/key/testKey", result.toString());
+        assertEquals("v1/key/testkey", result.toString());
     }
 
     @Test
@@ -736,6 +833,106 @@ public class TestKMS {
         KMS                 kms     = newKms();
 
         assertThrows(NullPointerException.class, () -> kms.createKey(jsonKey, request));
+    }
+
+    @Test
+    public void testAllMethods_keyNameNormalizedToLowerCase() throws Exception {
+        final String mixedCaseKey = "TeStKeY";
+        final String lowerCaseKey = "testkey";
+
+        UserGroupInformation user = createTestUser();
+        setHttpUserInContext(user);
+        setMdcContext(user, "http://localhost/kms/v1/keys");
+        HttpServletRequest request = mockRequest();
+        KMS kms = newKms();
+
+        // ── createKey
+        when(mockProvider.createKey(eq(lowerCaseKey), any(KeyProvider.Options.class)))
+                .thenReturn(createKeyVersion(lowerCaseKey, lowerCaseKey + "@0", new byte[] {1}));
+        when(mockAcls.hasAccess(eq(Type.GET), eq(user), eq(TEST_KEY), eq(CLIENT_IP))).thenReturn(true);
+        kms.createKey(baseKeyJson(mixedCaseKey), request);
+        verify(mockProvider).createKey(eq(lowerCaseKey), any(KeyProvider.Options.class));
+
+        // ── deleteKey
+        kms.deleteKey(mixedCaseKey, request);
+        verify(mockProvider).deleteKey(lowerCaseKey);
+
+        // ── rolloverKey
+        when(mockProvider.rollNewVersion(lowerCaseKey))
+                .thenReturn(createKeyVersion(lowerCaseKey, lowerCaseKey + "@1", new byte[] {2}));
+        kms.rolloverKey(mixedCaseKey, new HashMap<>(), request);
+        verify(mockProvider).rollNewVersion(lowerCaseKey);
+
+        // ── invalidateCache
+        kms.invalidateCache(mixedCaseKey, request);
+        verify(mockProvider).invalidateCache(lowerCaseKey);
+
+        // ── getMetadata
+        KeyProvider.Metadata meta = mockMetadata();
+        when(mockProvider.getMetadata(lowerCaseKey)).thenReturn(meta);
+        kms.getMetadata(mixedCaseKey, request);
+        verify(mockProvider).getMetadata(lowerCaseKey);
+
+        // ── getKey (delegates to getMetadata with lowercase)
+        kms.getKey(mixedCaseKey, request);
+        verify(mockProvider, times(2)).getMetadata(lowerCaseKey); // +1 from getKey → total 2
+
+        // ── getKeysMetadata (list normalized via stream+toLowerCase)
+        KeyProvider.Metadata[] metaArray = {mockMetadata()}; // extract BEFORE thenReturn()
+        when(mockProvider.getKeysMetadata((String[]) any())).thenReturn(metaArray);
+        List<String> mixedKeysList = new ArrayList<>();
+        mixedKeysList.add(mixedCaseKey);
+        kms.getKeysMetadata(mixedKeysList, request);
+        verify(mockProvider).getKeysMetadata((String[]) any());
+
+        // ── getCurrentVersion
+        when(mockProvider.getCurrentKey(lowerCaseKey))
+                .thenReturn(createKeyVersion(lowerCaseKey, lowerCaseKey + "@0", new byte[] {3}));
+        kms.getCurrentVersion(mixedCaseKey, request);
+        verify(mockProvider).getCurrentKey(lowerCaseKey);
+
+        // ── getKeyVersions
+        List<KeyProvider.KeyVersion> versions = new ArrayList<>();
+        versions.add(createKeyVersion(lowerCaseKey, lowerCaseKey + "@0", new byte[] {4}));
+        when(mockProvider.getKeyVersions(lowerCaseKey)).thenReturn(versions);
+        kms.getKeyVersions(mixedCaseKey, request);
+        verify(mockProvider).getKeyVersions(lowerCaseKey);
+
+        // ── generateEncryptedKeys
+        // extract BEFORE when() — avoids nested Mockito stubbing
+        EncryptedKeyVersion generatedEkv = mockEncryptedKeyVersion(lowerCaseKey, lowerCaseKey + "@0");
+        when(mockProvider.generateEncryptedKey(lowerCaseKey)).thenReturn(generatedEkv);
+        kms.generateEncryptedKeys(mixedCaseKey, KMSRESTConstants.EEK_GENERATE, 1, request);
+        verify(mockProvider).generateEncryptedKey(lowerCaseKey);
+
+        // ── generateDataKey
+        EncryptedKeyVersion dataKeyEkv = mockEncryptedKeyVersion(lowerCaseKey, lowerCaseKey + "@0");
+        when(mockProvider.generateEncryptedKey(lowerCaseKey)).thenReturn(dataKeyEkv);
+        when(mockProvider.decryptEncryptedKey(any()))
+                .thenReturn(createKeyVersion(lowerCaseKey, lowerCaseKey + "@0", new byte[] {7}));
+        kms.generateDataKey(mixedCaseKey, request);
+        verify(mockProvider, times(2)).generateEncryptedKey(lowerCaseKey); // +1 from generateDataKey → total 2
+
+        // ── reencryptEncryptedKeys
+        kms.reencryptEncryptedKeys(mixedCaseKey, buildReencryptPayload(mixedCaseKey, 1), request);
+        verify(mockAcls).assertAccess(
+                eq(Type.GENERATE_EEK), eq(user), eq(KMSOp.REENCRYPT_EEK_BATCH), eq(lowerCaseKey), eq(CLIENT_IP));
+
+        // ── handleEncryptedKeyOp
+        String versionName = lowerCaseKey + "@0";
+        when(mockProvider.decryptEncryptedKey(any()))
+                .thenReturn(createKeyVersion(lowerCaseKey, versionName, new byte[] {5}));
+        kms.handleEncryptedKeyOp(versionName, KMSRESTConstants.EEK_DECRYPT, buildDecryptPayload(mixedCaseKey), request);
+        verify(mockAcls, atLeastOnce()).assertAccess(
+                eq(Type.DECRYPT_EEK), eq(user), eq(KMSOp.DECRYPT_EEK), eq(lowerCaseKey), eq(CLIENT_IP));
+
+        // ── getKeyVersion
+        // versionName (with "@") must NOT be lowercased
+        String mixedVersionName = mixedCaseKey + "@0";   // "TeStKeY@0"
+        when(mockProvider.getKeyVersion(mixedVersionName))
+                .thenReturn(createKeyVersion(lowerCaseKey, mixedVersionName, new byte[] {6}));
+        kms.getKeyVersion(mixedVersionName, request);
+        verify(mockProvider).getKeyVersion(mixedVersionName);  // NOT "testkey@0"
     }
 
     // Helpers
