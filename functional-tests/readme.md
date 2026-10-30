@@ -218,6 +218,7 @@ Brought up based on what you enter at the containers prompt (or `SELECTED_CONTAI
 - Tests assert on client output only (beeline, HBase shell, Kafka console producer). Access-audit checks are deferred; helpers are in `ranger_test_utils/access_audit_utils.py`.
 - `hive` and `hbase` start `ranger-hadoop` automatically. `kafka` starts `ranger-kafka`.
 - Example: `SELECTED_CONTAINERS="hive hbase kafka" ./run-tests.sh postgres hive hbase kafka`
+- **Shared plugin user/Kerberos setup** (session hook, markers, flow diagrams): [docs/plugin-enforcement-setup.md](docs/plugin-enforcement-setup.md)
 
 
 ### HDFS suite notes

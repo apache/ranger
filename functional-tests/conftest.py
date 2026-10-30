@@ -20,6 +20,7 @@ from pathlib import Path
 
 import pytest
 
+from ranger_test_utils.plugin_conftest import ensure_plugin_test_users_for_session
 from ranger_test_utils.utils import LOGS_DIR, ensure_logs_directory
 
 LOG_FORMAT = "%(asctime)s %(levelname)s [%(name)s] %(message)s"
@@ -36,6 +37,20 @@ def pytest_configure(config):
     ensure_logs_directory()
     if getattr(config.option, "log_file", None):
         config.option.log_file = None
+
+
+@pytest.fixture(scope="session", autouse=True)
+def _ensure_plugin_test_users_for_enforcement_suites(request):
+    """
+    Before plugin enforcement tests (markers: hive, hbase, kafka, hdfs_policy),
+    create shared Ranger xusers and Kerberos keytabs via plugin_conftest.
+    REST-only suites (api_test, kms, …) are unchanged.
+    """
+    if not request.session.items:
+        yield
+        return
+    ensure_plugin_test_users_for_session(request.session)
+    yield
 
 
 @pytest.fixture(scope="module", autouse=True)

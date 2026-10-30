@@ -14,13 +14,10 @@
 # limitations under the License.
 
 """
-Authorization is asserted via HBase shell output only. Access-audit asserts are deferred until
-HBase plugin audits are reliably indexed in Docker — use ranger_test_utils.access_audit_utils
-when ready.
+HBase plugin enforcement via HBase shell and optional access-audit validation.
 
-AUDIT_FILTERS (future):
-  test_01_01: accessType=createTable, accessResult=0, aclEnforcer=ranger-acl,
-              resourceName=<table>, repoName=dev_hbase, requestUser=hrt_21
+Set ``AUDIT_INDEX_STORE`` to ``opensearch`` or ``solr`` when starting Docker
+(see functional-tests readme) so access audits are indexed and asserted.
 """
 
 import pytest
@@ -28,35 +25,30 @@ import pytest
 from ranger_test_utils.hbase_utils import (
     HBASE_AUTHZ_DENIED_SUBSTR,
     HBASE_SERVICE_NAME,
-    HBASE_TEST_USER,
+    HBasePluginTest,
+    HBasePluginTestContext,
     cleanup_hbase_test_table,
     create_audit_only_policy,
-    ensure_kerberos_user,
     preflight_hbase_stack,
     prepare_hbase_test_table,
-    run_hbase_shell,
     wait_for_hbase_policy_propagation,
 )
 from ranger_test_utils.hive_utils import delete_policies_by_id, set_all_policies_enabled
-from ranger_test_utils.utils import (
-    DOCKER_PLUGIN_TEST_USER_PASSWORD,
+from ranger_test_utils.plugin_enforcement_utils import (
     configure_test_logging,
     create_ranger_admin_session,
-    ensure_user_exists,
-    get_test_logger,
-    log_testcase_begin_for_pytest,
-    unique_suffix,
+    logger,
 )
 
 pytestmark = pytest.mark.hbase
 
-logger = get_test_logger(__name__)
+TEST_CASE = None
+
+HBASE_TEST_TABLE = "iemployee"
 
 _admin_session = None
 _audit_policy_id = None
 _audit_suffix = None
-_run_suffix = None
-_test_table = None
 
 
 def setup_module():
@@ -64,24 +56,18 @@ def setup_module():
     logger.info("=== setup_module: start ===")
     preflight_hbase_stack()
 
-    global _admin_session, _audit_policy_id, _audit_suffix
-    global _run_suffix, _test_table
+    global TEST_CASE, _admin_session, _audit_policy_id, _audit_suffix
+    TEST_CASE = HBasePluginTestContext()
     _admin_session = create_ranger_admin_session()
-    _run_suffix = unique_suffix(4)
-    _test_table = "iemployee_" + _run_suffix
-    logger.info("Test table: %s", _test_table)
+    TEST_CASE.admin_session = _admin_session
 
-    logger.info("Ensuring Ranger user and Kerberos principal for %s", HBASE_TEST_USER)
-    ensure_user_exists(
-        _admin_session,
-        HBASE_TEST_USER,
-        password=DOCKER_PLUGIN_TEST_USER_PASSWORD,
-        last_name="hive_test",
+    logger.info(
+        "Plugin user %s (Ranger + Kerberos) ensured by functional-tests/conftest.py",
+        HBasePluginTestContext.USER_USER1,
     )
-    ensure_kerberos_user(HBASE_TEST_USER)
 
-    logger.info("HBase setup: drop table %s if present", _test_table)
-    prepare_hbase_test_table(_test_table)
+    logger.info("HBase setup: drop table %s if present", HBASE_TEST_TABLE)
+    prepare_hbase_test_table(HBASE_TEST_TABLE)
 
     logger.info(
         "Disabling all policies on %s and creating audit-only policy",
@@ -99,9 +85,8 @@ def teardown_module():
         return
 
     logger.info("=== teardown_module: start ===")
-    if _test_table is not None:
-        logger.info("HBase cleanup: drop table %s", _test_table)
-        cleanup_hbase_test_table(_test_table)
+    logger.info("HBase cleanup: drop table %s", HBASE_TEST_TABLE)
+    cleanup_hbase_test_table(HBASE_TEST_TABLE)
 
     if _audit_policy_id is not None:
         logger.info("Deleting audit policy id=%s", _audit_policy_id)
@@ -113,26 +98,20 @@ def teardown_module():
     logger.info("=== teardown_module: done ===")
 
 
-def test_01_01_create_hbase_table_case1a_deny(request):
-    log_testcase_begin_for_pytest(logger, request.node.name, suite="HBASE")
-    create_cmd = (
-        "create '"
-        + _test_table
-        + "','personal','payroll','medical'"
-    )
-    logger.info(
-        "Running HBase CREATE TABLE as %s (expect deny): %s",
-        HBASE_TEST_USER,
-        create_cmd,
-    )
-    exit_code, output = run_hbase_shell(
-        HBASE_TEST_USER,
-        [create_cmd],
-        expect_substring=HBASE_AUTHZ_DENIED_SUBSTR,
-    )
-    assert HBASE_AUTHZ_DENIED_SUBSTR in output, (
-        "Expected authorization denial in HBase shell output; exit_code="
-        + str(exit_code)
-        + " output="
-        + output
-    )
+def test_01_01_CreateHbaseTableCase1A():
+    HBasePluginTest(
+        "HBASE.test_01_01_CreateHbaseTableCase1A",
+        TEST_CASE,
+        hBaseCmds=["create 'iemployee','personal','payroll','medical'"],
+        reqUser=HBasePluginTestContext.USER_USER1,
+        verifyCriteria=HBasePluginTest.STDOUT_CONTAINS,
+        verifyStr=HBASE_AUTHZ_DENIED_SUBSTR,
+        checkAuditLog=False,
+        newAuditLogMustExist=True,
+        auditLogFilter={
+            "accessType": TEST_CASE.access_type["CREATE_TABLE"],
+            "accessResult": TEST_CASE.result_denied,
+            "accessEnforcer": "ranger-acl",
+            "resourceName": "iemployee",
+        },
+    ).execute()
