@@ -735,6 +735,8 @@ public class ServiceDBStore extends AbstractServiceStore {
             }
         }
 
+        validateConstraintDefsNotInUse(serviceDefId, serviceDef.getConstraintDefs());
+
         List<RangerServiceConfigDef>   configs          = serviceDef.getConfigs() != null ? serviceDef.getConfigs() : new ArrayList<>();
         List<RangerResourceDef>        resources        = serviceDef.getResources() != null ? serviceDef.getResources() : new ArrayList<>();
         List<RangerAccessTypeDef>      accessTypes      = serviceDef.getAccessTypes() != null ? serviceDef.getAccessTypes() : new ArrayList<>();
@@ -3253,6 +3255,39 @@ public class ServiceDBStore extends AbstractServiceStore {
         }
 
         return ret;
+    }
+
+    // A constraintDef used by policies can't be removed or renamed: policies refer to constraints by name
+    private void validateConstraintDefsNotInUse(Long serviceDefId, List<RangerConstraintDef> constraintDefs) throws Exception {
+        RangerServiceDef existingDef = getServiceDef(serviceDefId);
+
+        if (existingDef == null || CollectionUtils.isEmpty(existingDef.getConstraintDefs())) {
+            return;
+        }
+
+        Set<String> constraintNames = new HashSet<>();
+
+        if (constraintDefs != null) {
+            for (RangerConstraintDef constraintDef : constraintDefs) {
+                if (constraintDef != null && constraintDef.getName() != null) {
+                    constraintNames.add(constraintDef.getName());
+                }
+            }
+        }
+
+        for (RangerConstraintDef existingConstraintDef : existingDef.getConstraintDefs()) {
+            String constraintName = existingConstraintDef != null ? existingConstraintDef.getName() : null;
+
+            if (constraintName == null || constraintNames.contains(constraintName)) {
+                continue;
+            }
+
+            List<Long> policyIds = daoMgr.getXXPolicyRefConstraint().findPolicyIdsByServiceDefIdAndConstraintName(serviceDefId, constraintName);
+
+            if (CollectionUtils.isNotEmpty(policyIds)) {
+                throw restErrorUtil.createRESTException("Policy/Policies are referring to this constraint: " + constraintName + ". Please remove such references from policy before updating service-def. policy IDs=" + policyIds, MessageEnums.DATA_NOT_UPDATABLE);
+            }
+        }
     }
 
     // Writes x_service_def.def_text after the child rows. constraintDefs are stored only in this JSON.

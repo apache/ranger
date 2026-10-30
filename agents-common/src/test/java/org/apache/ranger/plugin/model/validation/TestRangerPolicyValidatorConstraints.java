@@ -17,7 +17,6 @@
  * under the License.
  */
 
-
 package org.apache.ranger.plugin.model.validation;
 
 import org.apache.ranger.plugin.errors.ValidationErrorCode;

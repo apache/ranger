@@ -946,6 +946,23 @@
 		<query>DELETE FROM XXPolicyRefCondition obj WHERE obj.id IN :ids </query>
 	</named-query>
 
+	<!-- XXPolicyRefConstraint -->
+	<named-query name="XXPolicyRefConstraint.findByPolicyId">
+		<query>select obj from XXPolicyRefConstraint obj where obj.policyId = :policyId</query>
+	</named-query>
+
+	<named-query name="XXPolicyRefConstraint.findIdsByPolicyId">
+		<query>select obj.id from XXPolicyRefConstraint obj where obj.policyId = :policyId</query>
+	</named-query>
+
+	<named-query name="XXPolicyRefConstraint.findPolicyIdsByServiceDefIdAndConstraintName">
+		<query>select obj.policyId from XXPolicyRefConstraint obj where obj.serviceDefId = :serviceDefId and obj.constraintName = :constraintName</query>
+	</named-query>
+
+	<named-query name="XXPolicyRefConstraint.deleteByIds">
+		<query>DELETE FROM XXPolicyRefConstraint obj WHERE obj.id IN :ids</query>
+	</named-query>
+
 	<!-- XXPolicyRefGroup -->
 	<named-query name="XXPolicyRefGroup.findByPolicyId">
 		<query>select obj from XXPolicyRefGroup obj where obj.policyId = :policyId </query>

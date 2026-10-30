@@ -53,6 +53,7 @@ import org.apache.ranger.db.XXPolicyExportAuditDao;
 import org.apache.ranger.db.XXPolicyLabelMapDao;
 import org.apache.ranger.db.XXPolicyRefAccessTypeDao;
 import org.apache.ranger.db.XXPolicyRefConditionDao;
+import org.apache.ranger.db.XXPolicyRefConstraintDao;
 import org.apache.ranger.db.XXPolicyRefResourceDao;
 import org.apache.ranger.db.XXPortalUserDao;
 import org.apache.ranger.db.XXRMSMappingProviderDao;
@@ -5938,6 +5939,71 @@ public class TestServiceDBStore {
         def.setId(2L);
         def.setName("new");
         Assertions.assertThrows(WebApplicationException.class, () -> serviceDBStore.updateServiceDef(def));
+    }
+
+    @Test
+    public void test229aUpdateServiceDef_removeConstraintInUse_throws() throws Exception {
+        XXServiceDefDao          xServiceDefDao    = Mockito.mock(XXServiceDefDao.class);
+        XXPolicyRefConstraintDao xRefConstraintDao = Mockito.mock(XXPolicyRefConstraintDao.class);
+        XXServiceDef             existing          = new XXServiceDef();
+        RangerServiceDef         existingDef       = new RangerServiceDef();
+
+        existing.setId(3L);
+        existing.setName("udf");
+        existingDef.setId(3L);
+        existingDef.setName("udf");
+        existingDef.setConstraintDefs(Collections.singletonList(constraintDef()));
+
+        Mockito.when(daoMgr.getXXServiceDef()).thenReturn(xServiceDefDao);
+        Mockito.when(xServiceDefDao.getById(3L)).thenReturn(existing);
+        Mockito.when(serviceDefService.read(3L)).thenReturn(existingDef);
+        Mockito.when(daoMgr.getXXPolicyRefConstraint()).thenReturn(xRefConstraintDao);
+        Mockito.when(xRefConstraintDao.findPolicyIdsByServiceDefIdAndConstraintName(3L, "requireApproval")).thenReturn(Collections.singletonList(11L));
+        Mockito.when(restErrorUtil.createRESTException(Mockito.contains("requireApproval"), Mockito.eq(MessageEnums.DATA_NOT_UPDATABLE)))
+                .thenReturn(new WebApplicationException());
+
+        RangerServiceDef def = new RangerServiceDef();
+
+        def.setId(3L);
+        def.setName("udf");
+        def.setConstraintDefs(Collections.emptyList()); // removes requireApproval, which policy 11 uses
+
+        Assertions.assertThrows(WebApplicationException.class, () -> serviceDBStore.updateServiceDef(def));
+        Mockito.verify(serviceDefService, Mockito.never()).update(Mockito.any());
+    }
+
+    @Test
+    public void test229bValidateConstraintDefsNotInUse_unusedConstraintCanBeRenamed() throws Exception {
+        XXPolicyRefConstraintDao xRefConstraintDao = Mockito.mock(XXPolicyRefConstraintDao.class);
+        RangerServiceDef         existingDef       = new RangerServiceDef();
+        RangerConstraintDef      renamed           = constraintDef();
+
+        existingDef.setId(3L);
+        existingDef.setConstraintDefs(Collections.singletonList(constraintDef()));
+        renamed.setName("requireApproval2");
+
+        Mockito.when(serviceDefService.read(3L)).thenReturn(existingDef);
+        Mockito.when(daoMgr.getXXPolicyRefConstraint()).thenReturn(xRefConstraintDao);
+        Mockito.when(xRefConstraintDao.findPolicyIdsByServiceDefIdAndConstraintName(3L, "requireApproval")).thenReturn(Collections.emptyList());
+
+        invokePrivate("validateConstraintDefsNotInUse", new Class<?>[] {Long.class, List.class}, 3L, Collections.singletonList(renamed));
+
+        Mockito.verify(xRefConstraintDao).findPolicyIdsByServiceDefIdAndConstraintName(3L, "requireApproval");
+        Mockito.verify(restErrorUtil, Mockito.never()).createRESTException(Mockito.anyString(), Mockito.eq(MessageEnums.DATA_NOT_UPDATABLE));
+    }
+
+    @Test
+    public void test229cValidateConstraintDefsNotInUse_keptConstraintNotChecked() throws Exception {
+        RangerServiceDef existingDef = new RangerServiceDef();
+
+        existingDef.setId(3L);
+        existingDef.setConstraintDefs(Collections.singletonList(constraintDef()));
+
+        Mockito.when(serviceDefService.read(3L)).thenReturn(existingDef);
+
+        invokePrivate("validateConstraintDefsNotInUse", new Class<?>[] {Long.class, List.class}, 3L, Collections.singletonList(constraintDef()));
+
+        Mockito.verify(daoMgr, Mockito.never()).getXXPolicyRefConstraint();
     }
 
     @Test

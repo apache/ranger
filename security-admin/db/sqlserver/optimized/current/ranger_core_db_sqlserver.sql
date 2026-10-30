@@ -293,6 +293,22 @@ IF (OBJECT_ID('x_policy_ref_condition') IS NOT NULL)
 BEGIN
   DROP TABLE [dbo].[x_policy_ref_condition]
 END
+IF (OBJECT_ID('x_policy_ref_constraint_FK_policy_id') IS NOT NULL)
+BEGIN
+  ALTER TABLE [dbo].[x_policy_ref_constraint] DROP CONSTRAINT x_policy_ref_constraint_FK_policy_id
+END
+IF (OBJECT_ID('x_policy_ref_constraint_FK_svc_def_id') IS NOT NULL)
+BEGIN
+  ALTER TABLE [dbo].[x_policy_ref_constraint] DROP CONSTRAINT x_policy_ref_constraint_FK_svc_def_id
+END
+IF (OBJECT_ID('x_policy_ref_constraint_UK') IS NOT NULL)
+BEGIN
+    ALTER TABLE [dbo].[x_policy_ref_constraint] DROP CONSTRAINT x_policy_ref_constraint_UK
+END
+IF (OBJECT_ID('x_policy_ref_constraint') IS NOT NULL)
+BEGIN
+  DROP TABLE [dbo].[x_policy_ref_constraint]
+END
 IF (OBJECT_ID('x_policy_ref_datamask_type_FK_policy_id') IS NOT NULL)
 BEGIN
   ALTER TABLE [dbo].[x_policy_ref_datamask_type] DROP CONSTRAINT x_policy_ref_datamask_type_FK_policy_id
@@ -785,6 +801,10 @@ END
 IF (OBJECT_ID('x_policy_ref_user') IS NOT NULL)
 BEGIN
     DROP TABLE [dbo].[x_policy_ref_user]
+END
+IF (OBJECT_ID('x_policy_ref_constraint') IS NOT NULL)
+BEGIN
+    DROP TABLE [dbo].[x_policy_ref_constraint]
 END
 IF (OBJECT_ID('x_policy_ref_datamask_type') IS NOT NULL)
 BEGIN
@@ -2368,6 +2388,23 @@ CREATE TABLE [dbo].[x_policy_ref_condition] (
 SET ANSI_NULLS ON
 SET QUOTED_IDENTIFIER ON
 SET ANSI_PADDING ON
+CREATE TABLE [dbo].[x_policy_ref_constraint] (
+  [id] [bigint] IDENTITY (1, 1) NOT NULL,
+  [policy_id] [bigint] NOT NULL,
+  [service_def_id] [bigint] NOT NULL,
+  [constraint_name] [varchar](255) NOT NULL,
+  PRIMARY KEY CLUSTERED
+  (
+  [id] ASC
+  ) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY],
+    CONSTRAINT [x_policy_ref_constraint$x_policy_ref_constraint_UK] UNIQUE NONCLUSTERED
+(
+        [policy_id] ASC, [constraint_name] ASC
+)WITH (PAD_INDEX = OFF,STATISTICS_NORECOMPUTE = OFF,IGNORE_DUP_KEY = OFF,ALLOW_ROW_LOCKS = ON,ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+) ON [PRIMARY]
+SET ANSI_NULLS ON
+SET QUOTED_IDENTIFIER ON
+SET ANSI_PADDING ON
 CREATE TABLE [dbo].[x_policy_ref_datamask_type] (
   [id] [bigint] IDENTITY (1, 1) NOT NULL,
   [policy_id] [bigint] NOT NULL,
@@ -3082,6 +3119,13 @@ ALTER TABLE [dbo].[x_policy_ref_condition] CHECK CONSTRAINT [x_policy_ref_condit
 ALTER TABLE [dbo].[x_policy_ref_condition] WITH CHECK ADD CONSTRAINT [x_policy_ref_condition_FK_res_def_id] FOREIGN KEY ([condition_def_id])
 REFERENCES [dbo].[x_policy_condition_def] ([id])
 ALTER TABLE [dbo].[x_policy_ref_condition] CHECK CONSTRAINT [x_policy_ref_condition_FK_res_def_id]
+
+ALTER TABLE [dbo].[x_policy_ref_constraint] WITH CHECK ADD CONSTRAINT [x_policy_ref_constraint_FK_policy_id] FOREIGN KEY ([policy_id])
+REFERENCES [dbo].[x_policy] ([id])
+ALTER TABLE [dbo].[x_policy_ref_constraint] CHECK CONSTRAINT [x_policy_ref_constraint_FK_policy_id]
+ALTER TABLE [dbo].[x_policy_ref_constraint] WITH CHECK ADD CONSTRAINT [x_policy_ref_constraint_FK_svc_def_id] FOREIGN KEY ([service_def_id])
+REFERENCES [dbo].[x_service_def] ([id])
+ALTER TABLE [dbo].[x_policy_ref_constraint] CHECK CONSTRAINT [x_policy_ref_constraint_FK_svc_def_id]
 
 ALTER TABLE [dbo].[x_policy_ref_datamask_type] WITH CHECK ADD CONSTRAINT [x_policy_ref_datamask_type_FK_policy_id] FOREIGN KEY ([policy_id])
 REFERENCES [dbo].[x_policy] ([id])
@@ -4540,6 +4584,7 @@ INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('077',CURRENT_TIMESTAMP,'Ranger 3.0.0',CURRENT_TIMESTAMP,'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('078',CURRENT_TIMESTAMP,'Ranger 3.0.0',CURRENT_TIMESTAMP,'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('079',CURRENT_TIMESTAMP,'Ranger 3.0.0',CURRENT_TIMESTAMP,'localhost','Y');
+INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('080',CURRENT_TIMESTAMP,'Ranger 3.0.0',CURRENT_TIMESTAMP,'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('DB_PATCHES',CURRENT_TIMESTAMP,'Ranger 1.0.0',CURRENT_TIMESTAMP,'localhost','Y');
 INSERT INTO x_user_module_perm (user_id,module_id,create_time,update_time,added_by_id,upd_by_id,is_allowed) VALUES (dbo.getXportalUIdByLoginId('admin'),dbo.getModulesIdByName('Reports'),CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,dbo.getXportalUIdByLoginId('admin'),dbo.getXportalUIdByLoginId('admin'),1);
 INSERT INTO x_user_module_perm (user_id,module_id,create_time,update_time,added_by_id,upd_by_id,is_allowed) VALUES (dbo.getXportalUIdByLoginId('admin'),dbo.getModulesIdByName('Resource Based Policies'),CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,dbo.getXportalUIdByLoginId('admin'),dbo.getXportalUIdByLoginId('admin'),1);

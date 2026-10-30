@@ -72,6 +72,7 @@ call spdropsequence('X_POLICY_ITEM_GROUP_PERM_SEQ');
 call spdropsequence('X_POLICY_REF_RESOURCE_SEQ');
 call spdropsequence('X_POLICY_REF_ACCESS_TYPE_SEQ');
 call spdropsequence('X_POLICY_REF_CONDITION_SEQ');
+call spdropsequence('X_POLICY_REF_CONSTRAINT_SEQ');
 call spdropsequence('X_POLICY_REF_DATAMASK_TYPE_SEQ');
 call spdropsequence('X_POLICY_REF_USER_SEQ');
 call spdropsequence('X_POLICY_REF_GROUP_SEQ');
@@ -153,6 +154,7 @@ CREATE SEQUENCE X_POLICY_ITEM_GROUP_PERM_SEQ START WITH 1 INCREMENT BY 1 NOCACHE
 CREATE SEQUENCE X_POLICY_REF_RESOURCE_SEQ START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE;
 CREATE SEQUENCE X_POLICY_REF_ACCESS_TYPE_SEQ START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE;
 CREATE SEQUENCE X_POLICY_REF_CONDITION_SEQ START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE;
+CREATE SEQUENCE X_POLICY_REF_CONSTRAINT_SEQ START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE;
 CREATE SEQUENCE X_POLICY_REF_DATAMASK_TYPE_SEQ START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE;
 CREATE SEQUENCE X_POLICY_REF_USER_SEQ START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE;
 CREATE SEQUENCE X_POLICY_REF_GROUP_SEQ START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE;
@@ -239,6 +241,7 @@ call spdroptable('x_policy_change_log');
 call spdroptable('x_security_zone_ref_resource');
 call spdroptable('x_policy_ref_group');
 call spdroptable('x_policy_ref_user');
+call spdroptable('x_policy_ref_constraint');
 call spdroptable('x_policy_ref_datamask_type');
 call spdroptable('x_policy_ref_condition');
 call spdroptable('x_policy_ref_access_type');
@@ -1456,6 +1459,17 @@ CONSTRAINT x_p_ref_dmsk_FK_policy_id FOREIGN KEY (policy_id) REFERENCES x_policy
 CONSTRAINT x_p_ref_dmsk_FK_dmk_def_id FOREIGN KEY (datamask_def_id) REFERENCES x_datamask_type_def (id)
 );
 commit;
+CREATE TABLE x_policy_ref_constraint (
+id NUMBER(20) NOT NULL,
+policy_id NUMBER(20) NOT NULL,
+service_def_id NUMBER(20) NOT NULL,
+constraint_name VARCHAR(255) NOT NULL,
+primary key (id),
+CONSTRAINT x_p_ref_cnst_UK_polId_cName UNIQUE(policy_id, constraint_name),
+CONSTRAINT x_p_ref_cnst_FK_policy_id FOREIGN KEY (policy_id) REFERENCES x_policy (id),
+CONSTRAINT x_p_ref_cnst_FK_sdef_id FOREIGN KEY (service_def_id) REFERENCES x_service_def (id)
+);
+commit;
 CREATE TABLE x_policy_ref_user (
 id NUMBER(20) NOT NULL,
 policy_id NUMBER(20) NOT NULL,
@@ -2166,6 +2180,7 @@ INSERT INTO x_db_version_h (id,version,inst_at,inst_by,updated_at,updated_by,act
 INSERT INTO x_db_version_h (id,version,inst_at,inst_by,updated_at,updated_by,active) VALUES (X_DB_VERSION_H_SEQ.nextval, '077',sys_extract_utc(systimestamp),'Ranger 3.0.0',sys_extract_utc(systimestamp),'localhost','Y');
 INSERT INTO x_db_version_h (id,version,inst_at,inst_by,updated_at,updated_by,active) VALUES (X_DB_VERSION_H_SEQ.nextval, '078',sys_extract_utc(systimestamp),'Ranger 3.0.0',sys_extract_utc(systimestamp),'localhost','Y');
 INSERT INTO x_db_version_h (id,version,inst_at,inst_by,updated_at,updated_by,active) VALUES (X_DB_VERSION_H_SEQ.nextval, '079',sys_extract_utc(systimestamp),'Ranger 3.0.0',sys_extract_utc(systimestamp),'localhost','Y');
+INSERT INTO x_db_version_h (id,version,inst_at,inst_by,updated_at,updated_by,active) VALUES (X_DB_VERSION_H_SEQ.nextval, '080',sys_extract_utc(systimestamp),'Ranger 3.0.0',sys_extract_utc(systimestamp),'localhost','Y');
 INSERT INTO x_db_version_h (id,version,inst_at,inst_by,updated_at,updated_by,active) VALUES (X_DB_VERSION_H_SEQ.nextval, 'DB_PATCHES',sys_extract_utc(systimestamp),'Ranger 1.0.0',sys_extract_utc(systimestamp),'localhost','Y');
 
 INSERT INTO x_user_module_perm (id,user_id,module_id,create_time,update_time,added_by_id,upd_by_id,is_allowed) VALUES (X_USER_MODULE_PERM_SEQ.nextval,getXportalUIdByLoginId('admin'),getModulesIdByName('Reports'),sys_extract_utc(systimestamp),sys_extract_utc(systimestamp),getXportalUIdByLoginId('admin'),getXportalUIdByLoginId('admin'),1);
