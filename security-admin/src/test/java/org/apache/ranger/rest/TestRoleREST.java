@@ -1528,6 +1528,67 @@ public class TestRoleREST {
 		Mockito.verify(restErrorUtil).createRESTException(Mockito.anyString());
 	}
 
+    @Test
+    public void test36GetRoleByIdCyclicRoleDeniedWithoutRecursion() throws Exception {
+        // roleA <-> roleB cycle; a non-member, non-admin caller must get a clean denial, not a StackOverflowError
+        RangerRole roleA = createNestingRole("roleA", "roleB", false);
+        RangerRole roleB = createNestingRole("roleB", "roleA", false);
+
+        roleA.setId(roleId);
+
+        Mockito.when(bizUtil.isUserRangerAdmin(Mockito.anyString())).thenReturn(false);
+        Mockito.when(roleStore.getRole(roleId)).thenReturn(roleA);
+        Mockito.when(roleStore.getRole("roleA")).thenReturn(roleA);
+        Mockito.when(roleStore.getRole("roleB")).thenReturn(roleB);
+        Mockito.when(restErrorUtil.createRESTException(Mockito.anyString())).thenReturn(new WebApplicationException());
+
+        Assert.assertThrows(WebApplicationException.class, () -> roleRest.getRole(roleId));
+
+        // each nested role is loaded at most once
+        Mockito.verify(roleStore, Mockito.atMost(1)).getRole("roleA");
+        Mockito.verify(roleStore, Mockito.atMost(1)).getRole("roleB");
+    }
+
+    @Test
+    public void test37GetUserRolesCyclicRoleTerminates() throws Exception {
+        RangerRole roleA = createNestingRole("roleA", "roleB", false);
+        RangerRole roleB = createNestingRole("roleB", "roleA", false);
+
+        Mockito.when(xUserService.getXUserByUserName(Mockito.anyString())).thenReturn(createVXUser());
+        Mockito.when(roleStore.getRoleNames(Mockito.anyString(), Mockito.any())).thenReturn(new HashSet<>(Collections.singletonList(roleA)));
+        Mockito.when(roleStore.getRole("roleA")).thenReturn(roleA);
+        Mockito.when(roleStore.getRole("roleB")).thenReturn(roleB);
+
+        List<String> returnedRoles = roleRest.getUserRoles(adminLoginID, Mockito.mock(HttpServletRequest.class));
+
+        Assert.assertEquals(new HashSet<>(Arrays.asList("roleA", "roleB")), new HashSet<>(returnedRoles));
+        Mockito.verify(roleStore, Mockito.times(1)).getRole("roleA");
+        Mockito.verify(roleStore, Mockito.times(1)).getRole("roleB");
+    }
+
+    @Test
+    public void test38MissingNestedRoleSkippedOnRead() throws Exception {
+        // roleA lists "pending" (not created yet) with admin option and roleB; reads must skip it, not fail
+        List<RangerRole.RoleMember> members = new ArrayList<>(Arrays.asList(new RangerRole.RoleMember("pending", true), new RangerRole.RoleMember("roleB", true)));
+        RangerRole                  roleA   = new RangerRole("roleA", "roleA", null, new ArrayList<>(), new ArrayList<>(), members);
+        RangerRole                  roleB   = createRangerRole(adminLoginID, false);
+
+        roleA.setId(roleId);
+
+        Mockito.when(bizUtil.isUserRangerAdmin(Mockito.anyString())).thenReturn(false);
+        Mockito.when(roleStore.getRole(roleId)).thenReturn(roleA);
+        Mockito.when(roleStore.getRole("pending")).thenThrow(new WebApplicationException());
+        Mockito.when(roleStore.getRole("roleB")).thenReturn(roleB);
+
+        Assert.assertEquals(roleA, roleRest.getRole(roleId));
+    }
+
+    private RangerRole createNestingRole(String name, String nestedRoleName, boolean isAdmin) {
+        List<RangerRole.RoleMember> roles = new ArrayList<>(Collections.singletonList(new RangerRole.RoleMember(nestedRoleName, isAdmin)));
+
+        return new RangerRole(name, name, null, new ArrayList<>(), new ArrayList<>(), roles);
+    }
+
     private RangerRole createRole(){
         String name = "test-role";
         String name2 = "admin";

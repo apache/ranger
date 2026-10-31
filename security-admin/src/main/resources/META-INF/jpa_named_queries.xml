@@ -1991,6 +1991,10 @@
         <query>SELECT obj.id, obj.name FROM XXRole obj WHERE obj.name IN :roleNames</query>
     </named-query>
 
+    <named-query name="XXRole.getRoleTextByName">
+        <query>SELECT obj.roleText FROM XXRole obj WHERE obj.name = :roleName</query>
+    </named-query>
+
 	<!-- XXRoleRef* -->
 
     <named-query name="XXRoleRefUser.findByRoleId">
