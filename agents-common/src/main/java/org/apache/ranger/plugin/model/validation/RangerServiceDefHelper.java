@@ -30,6 +30,7 @@ import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerAccessTypeDef;
+import org.apache.ranger.plugin.model.RangerServiceDef.RangerConstraintDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerResourceDef;
 import org.apache.ranger.plugin.resourcematcher.RangerAbstractResourceMatcher;
 import org.apache.ranger.plugin.resourcematcher.RangerPathResourceMatcher;
@@ -316,6 +317,36 @@ public class RangerServiceDefHelper {
         return ret;
     }
 
+    /**
+     * Resource hierarchies for one constraint that contain every key. Hierarchies are computed once per constraint
+     * from the resources listed in the constraint def, as for data-mask and row-filter defs. A def that lists no
+     * resources uses the access hierarchies.
+     */
+    public Set<List<RangerResourceDef>> getResourceHierarchiesForConstraint(String constraint, Collection<String> keys) {
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("==> getResourceHierarchiesForConstraint(constraint={}, keys={})", constraint, StringUtils.join(keys, ","));
+        }
+
+        Set<List<RangerResourceDef>> ret         = new HashSet<>();
+        Set<List<RangerResourceDef>> hierarchies = delegate.getConstraintHierarchies(constraint);
+
+        for (List<RangerResourceDef> hierarchy : hierarchies) {
+            if (hierarchyHasAllResources(hierarchy, keys)) {
+                ret.add(hierarchy);
+            }
+        }
+
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("<== getResourceHierarchiesForConstraint(constraint={}, keys={}): {}", constraint, StringUtils.join(keys, ","), StringUtils.join(ret, ""));
+        }
+
+        return ret;
+    }
+
+    public RangerConstraintDef getConstraintDef(String constraint) {
+        return constraint == null ? null : delegate.constraintDefs.get(constraint);
+    }
+
     public boolean hierarchyHasAllResources(List<RangerResourceDef> hierarchy, Collection<String> resourceNames) {
         if (LOG.isDebugEnabled()) {
             LOG.debug("==> hierarchyHasAllResources(hierarchy={}, resourceNames={})",  StringUtils.join(hierarchy, ","), StringUtils.join(resourceNames, ","));
@@ -482,6 +513,8 @@ public class RangerServiceDefHelper {
         final char                                         rrnResourceSepChar;
         final Map<String, String>                          rrnTemplates = new HashMap<>();
         final Map<String, RangerResourceNameParser>        rrnParsers = new HashMap<>();
+        final Map<String, RangerConstraintDef>             constraintDefs;
+        final Map<String, Set<List<RangerResourceDef>>>    constraintHierarchies;
 
         public Delegate(RangerServiceDef serviceDef, boolean checkForCycles) {
             // NOTE: we assume serviceDef, its name and update time are can never by null.
@@ -526,6 +559,9 @@ public class RangerServiceDefHelper {
                     wildcardEnabledResourceDefs.put(policyType, Collections.emptyMap());
                 }
             }
+
+            constraintDefs        = buildConstraintDefs(serviceDef);
+            constraintHierarchies = buildConstraintHierarchies(serviceDef);
 
             String optRrnResourceSep = serviceDef.getOptions() != null ? serviceDef.getOptions().get(OPTION_RRN_RESOURCE_SEP_CHAR) : null;
 
@@ -594,6 +630,89 @@ public class RangerServiceDefHelper {
 
                         break;
                     }
+                }
+            }
+
+            return ret;
+        }
+
+        public Set<List<RangerResourceDef>> getConstraintHierarchies(String constraint) {
+            Set<List<RangerResourceDef>> ret = constraint == null ? null : constraintHierarchies.get(constraint);
+
+            return ret == null ? EMPTY_RESOURCE_HIERARCHY : ret;
+        }
+
+        private Map<String, RangerConstraintDef> buildConstraintDefs(RangerServiceDef serviceDef) {
+            Map<String, RangerConstraintDef> ret = new HashMap<>();
+
+            if (CollectionUtils.isNotEmpty(serviceDef.getConstraintDefs())) {
+                for (RangerConstraintDef constraintDef : serviceDef.getConstraintDefs()) {
+                    if (constraintDef != null && StringUtils.isNotEmpty(constraintDef.getName())) {
+                        ret.putIfAbsent(constraintDef.getName(), constraintDef);
+                    }
+                }
+            }
+
+            return Collections.unmodifiableMap(ret);
+        }
+
+        /*
+         * Hierarchies of each constraint, built from the resources listed in the constraint def - same as for data-mask and row-filter defs.
+         * Building a graph keeps sibling resources (like database->table and database->udf) in separate hierarchies.
+         * A constraint def that lists no resources uses the access hierarchies.
+         * A constraint def that lists a resource without its parent has no hierarchies; service-def validation rejects such defs.
+         */
+        private Map<String, Set<List<RangerResourceDef>>> buildConstraintHierarchies(RangerServiceDef serviceDef) {
+            Map<String, Set<List<RangerResourceDef>>> ret = new HashMap<>();
+
+            for (RangerConstraintDef constraintDef : constraintDefs.values()) {
+                final Set<List<RangerResourceDef>> hierarchies;
+
+                if (CollectionUtils.isEmpty(constraintDef.getResources())) {
+                    hierarchies = getResourceHierarchies(RangerPolicy.POLICY_TYPE_ACCESS);
+                } else {
+                    List<RangerResourceDef> resources = getConstraintResourceDefs(serviceDef, constraintDef);
+                    DirectedGraph           graph     = resources == null ? null : createGraph(resources);
+
+                    if (graph != null) {
+                        Map<String, RangerResourceDef> resourceDefMap = getResourcesAsMap(resources);
+
+                        hierarchies = isValid(graph, resourceDefMap) ? Collections.unmodifiableSet(getHierarchies(graph, resourceDefMap)) : EMPTY_RESOURCE_HIERARCHY;
+                    } else {
+                        hierarchies = EMPTY_RESOURCE_HIERARCHY;
+                    }
+                }
+
+                ret.put(constraintDef.getName(), hierarchies);
+            }
+
+            return Collections.unmodifiableMap(ret);
+        }
+
+        // resource-defs listed in the constraint def; null if a listed resource or its parent is not found
+        private List<RangerResourceDef> getConstraintResourceDefs(RangerServiceDef serviceDef, RangerConstraintDef constraintDef) {
+            Set<String>             names = new HashSet<>(constraintDef.getResources());
+            List<RangerResourceDef> ret   = new ArrayList<>(names.size());
+
+            if (serviceDef.getResources() != null) {
+                for (RangerResourceDef resourceDef : serviceDef.getResources()) {
+                    if (resourceDef != null && names.contains(resourceDef.getName())) {
+                        ret.add(resourceDef);
+                    }
+                }
+            }
+
+            if (ret.size() != names.size()) {
+                LOG.warn("constraint-def {}: unknown resources in {}", constraintDef.getName(), constraintDef.getResources());
+
+                return null;
+            }
+
+            for (RangerResourceDef resourceDef : ret) {
+                if (StringUtils.isNotEmpty(resourceDef.getParent()) && !names.contains(resourceDef.getParent())) {
+                    LOG.warn("constraint-def {}: resource {} is listed without its parent {}", constraintDef.getName(), resourceDef.getName(), resourceDef.getParent());
+
+                    return null;
                 }
             }
 

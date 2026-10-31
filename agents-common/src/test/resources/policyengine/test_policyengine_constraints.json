@@ -1,0 +1,595 @@
+{
+  "serviceName": "agent-studio",
+  "serviceDef": {
+    "name": "agent-studio",
+    "resources": [
+      {
+        "name": "tool",
+        "type": "string",
+        "level": 10,
+        "mandatory": true,
+        "lookupSupported": true,
+        "matcher": "org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
+        "matcherOptions": {"wildCard": true, "ignoreCase": true},
+        "label": "Tool",
+        "description": "Agent tool"
+      }
+    ],
+    "accessTypes": [
+      {"name": "execute", "label": "Execute"},
+      {"name": "select", "label": "Select"}
+    ],
+    "policyConditions": [
+      {
+        "itemId": 1,
+        "name": "expression",
+        "evaluator": "org.apache.ranger.plugin.conditionevaluator.RangerScriptConditionEvaluator",
+        "evaluatorOptions": {"engineName": "JavaScript"},
+        "label": "Expression",
+        "description": "Boolean expression"
+      }
+    ],
+    "constraintDefs": [
+      {
+        "itemId": 1,
+        "name": "requireApproval",
+        "label": "Require approval",
+        "resources": ["tool"],
+        "accessTypes": ["execute"],
+        "parameters": [
+          {"itemId": 1, "name": "approver", "type": "user", "mandatory": true}
+        ]
+      },
+      {
+        "itemId": 2,
+        "name": "maxRows",
+        "label": "Max rows",
+        "resources": ["tool"],
+        "accessTypes": ["execute"],
+        "parameters": [
+          {"itemId": 1, "name": "rowCount", "type": "int", "mandatory": true}
+        ]
+      }
+    ]
+  },
+  "policies": [
+    {
+      "id": 1,
+      "version": 1,
+      "name": "allow-execute-and-select",
+      "isEnabled": true,
+      "isAuditEnabled": true,
+      "isDenyAllElse": false,
+      "policyPriority": 0,
+      "resources": {"tool": {"values": ["transfer"]}},
+      "policyItems": [
+        {
+          "accesses": [
+            {"type": "execute", "isAllowed": true},
+            {"type": "select", "isAllowed": true}
+          ],
+          "users": [],
+          "groups": ["public"],
+          "delegateAdmin": false
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "version": 2,
+      "name": "deny-carol",
+      "isEnabled": true,
+      "isAuditEnabled": true,
+      "isDenyAllElse": false,
+      "policyPriority": 0,
+      "resources": {"tool": {"values": ["transfer"]}},
+      "policyItems": [],
+      "denyPolicyItems": [
+        {
+          "accesses": [{"type": "execute", "isAllowed": true}],
+          "users": ["carol"],
+          "groups": [],
+          "delegateAdmin": false
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "version": 1,
+      "name": "allow-lookup",
+      "isEnabled": true,
+      "isAuditEnabled": true,
+      "isDenyAllElse": false,
+      "policyPriority": 0,
+      "resources": {"tool": {"values": ["lookup"]}},
+      "policyItems": [
+        {
+          "accesses": [{"type": "execute", "isAllowed": true}],
+          "users": [],
+          "groups": ["public"],
+          "delegateAdmin": false
+        }
+      ]
+    },
+    {
+      "id": 10,
+      "version": 3,
+      "name": "constraint-eve",
+      "policyType": 4,
+      "isEnabled": true,
+      "isAuditEnabled": true,
+      "policyPriority": 0,
+      "resources": {"tool": {"values": ["transfer"]}},
+      "constraintPolicyItems": [
+        {
+          "accesses": [{"type": "execute", "isAllowed": true}],
+          "users": ["eve"],
+          "groups": [],
+          "delegateAdmin": false,
+          "constraintInfo": {
+            "constraintName": "requireApproval",
+            "parameters": {"approver": "eve-approver"}
+          }
+        }
+      ]
+    },
+    {
+      "id": 11,
+      "version": 4,
+      "name": "constraint-alice-approval",
+      "policyType": 4,
+      "isEnabled": true,
+      "isAuditEnabled": true,
+      "policyPriority": 0,
+      "resources": {"tool": {"values": ["transfer"]}},
+      "constraintPolicyItems": [
+        {
+          "accesses": [{"type": "execute", "isAllowed": true}],
+          "users": ["alice"],
+          "groups": [],
+          "delegateAdmin": false,
+          "constraintInfo": {
+            "constraintName": "requireApproval",
+            "parameters": {"approver": "finance-approvers"}
+          }
+        }
+      ]
+    },
+    {
+      "id": 12,
+      "version": 5,
+      "name": "constraint-finance-maxrows",
+      "policyType": 4,
+      "isEnabled": true,
+      "isAuditEnabled": true,
+      "policyPriority": 1,
+      "resources": {"tool": {"values": ["transfer"]}},
+      "constraintPolicyItems": [
+        {
+          "accesses": [{"type": "execute", "isAllowed": true}],
+          "users": [],
+          "groups": ["finance"],
+          "delegateAdmin": false,
+          "constraintInfo": {
+            "constraintName": "maxRows",
+            "parameters": {"rowCount": 100}
+          }
+        }
+      ]
+    },
+    {
+      "id": 13,
+      "version": 6,
+      "name": "constraint-bob-amount",
+      "policyType": 4,
+      "isEnabled": true,
+      "isAuditEnabled": true,
+      "policyPriority": 0,
+      "resources": {"tool": {"values": ["transfer"]}},
+      "constraintPolicyItems": [
+        {
+          "accesses": [{"type": "execute", "isAllowed": true}],
+          "users": ["bob"],
+          "groups": [],
+          "delegateAdmin": false,
+          "conditions": [
+            {"type": "expression", "values": ["ATTR.trx_amount > 10000"]}
+          ],
+          "constraintInfo": {
+            "constraintName": "requireApproval",
+            "parameters": {"approver": "bob-approver"}
+          }
+        }
+      ]
+    },
+    {
+      "id": 14,
+      "version": 7,
+      "name": "constraint-carol-not-returned-on-deny",
+      "policyType": 4,
+      "isEnabled": true,
+      "isAuditEnabled": true,
+      "policyPriority": 0,
+      "resources": {"tool": {"values": ["transfer"]}},
+      "constraintPolicyItems": [
+        {
+          "accesses": [{"type": "execute", "isAllowed": true}],
+          "users": ["carol"],
+          "groups": [],
+          "delegateAdmin": false,
+          "constraintInfo": {
+            "constraintName": "requireApproval",
+            "parameters": {"approver": "carol-approver"}
+          }
+        }
+      ]
+    },
+    {
+      "id": 15,
+      "version": 8,
+      "name": "constraint-iris-disabled",
+      "policyType": 4,
+      "isEnabled": false,
+      "isAuditEnabled": true,
+      "policyPriority": 0,
+      "resources": {"tool": {"values": ["transfer"]}},
+      "constraintPolicyItems": [
+        {
+          "accesses": [{"type": "execute", "isAllowed": true}],
+          "users": ["iris"],
+          "groups": [],
+          "delegateAdmin": false,
+          "constraintInfo": {
+            "constraintName": "requireApproval",
+            "parameters": {"approver": "disabled-approver"}
+          }
+        }
+      ]
+    },
+    {
+      "id": 16,
+      "version": 9,
+      "name": "constraint-frank-schedule",
+      "policyType": 4,
+      "isEnabled": true,
+      "isAuditEnabled": true,
+      "policyPriority": 0,
+      "resources": {"tool": {"values": ["transfer"]}},
+      "validitySchedules": [
+        {
+          "startTime": "2018/01/01 00:00:00",
+          "endTime": "2018/12/31 23:59:59",
+          "timeZone": "GMT"
+        }
+      ],
+      "constraintPolicyItems": [
+        {
+          "accesses": [{"type": "execute", "isAllowed": true}],
+          "users": ["frank"],
+          "groups": [],
+          "delegateAdmin": false,
+          "constraintInfo": {
+            "constraintName": "requireApproval",
+            "parameters": {"approver": "frank-approver"}
+          }
+        }
+      ]
+    }
+  ],
+  "tests": [
+    {
+      "name": "no matching constraint",
+      "request": {
+        "resource": {"elements": {"tool": "transfer"}},
+        "accessType": "execute",
+        "user": "dave",
+        "userGroups": [],
+        "requestData": "execute transfer"
+      },
+      "result": {"isAllowed": true, "isAudited": true, "constraints": []}
+    },
+    {
+      "name": "one matching constraint",
+      "request": {
+        "resource": {"elements": {"tool": "transfer"}},
+        "accessType": "execute",
+        "user": "eve",
+        "userGroups": [],
+        "requestData": "execute transfer"
+      },
+      "result": {
+        "isAllowed": true,
+        "isAudited": true,
+        "constraints": [
+          {
+            "constraintName": "requireApproval",
+            "parameters": {"approver": "eve-approver"},
+            "policyId": 10,
+            "policyVersion": 3,
+            "matchType": "SELF"
+          }
+        ]
+      }
+    },
+    {
+      "name": "multiple constraints from different policies, in policy-priority order",
+      "request": {
+        "resource": {"elements": {"tool": "transfer"}},
+        "accessType": "execute",
+        "user": "alice",
+        "userGroups": ["finance"],
+        "requestData": "execute transfer"
+      },
+      "result": {
+        "isAllowed": true,
+        "isAudited": true,
+        "constraints": [
+          {
+            "constraintName": "maxRows",
+            "parameters": {"rowCount": 100},
+            "policyId": 12,
+            "policyVersion": 5,
+            "policyPriority": 1,
+            "matchType": "SELF"
+          },
+          {
+            "constraintName": "requireApproval",
+            "parameters": {"approver": "finance-approvers"},
+            "policyId": 11,
+            "policyVersion": 4,
+            "matchType": "SELF"
+          }
+        ]
+      }
+    },
+    {
+      "name": "constraint with ATTR condition matches",
+      "request": {
+        "resource": {"elements": {"tool": "transfer"}},
+        "accessType": "execute",
+        "user": "bob",
+        "userGroups": [],
+        "requestData": "execute transfer",
+        "context": {"_ATTR_JSON": "{\"trx_amount\":50000}"}
+      },
+      "result": {
+        "isAllowed": true,
+        "isAudited": true,
+        "constraints": [
+          {
+            "constraintName": "requireApproval",
+            "parameters": {"approver": "bob-approver"},
+            "policyId": 13,
+            "policyVersion": 6,
+            "matchType": "SELF"
+          }
+        ]
+      }
+    },
+    {
+      "name": "ATTR condition does not match",
+      "request": {
+        "resource": {"elements": {"tool": "transfer"}},
+        "accessType": "execute",
+        "user": "bob",
+        "userGroups": [],
+        "requestData": "execute transfer",
+        "context": {"_ATTR_JSON": "{\"trx_amount\":10000}"}
+      },
+      "result": {"isAllowed": true, "isAudited": true, "constraints": []}
+    },
+    {
+      "name": "deny returns no constraints",
+      "request": {
+        "resource": {"elements": {"tool": "transfer"}},
+        "accessType": "execute",
+        "user": "carol",
+        "userGroups": [],
+        "requestData": "execute transfer"
+      },
+      "result": {"isAllowed": false, "isAudited": true, "constraints": []}
+    },
+    {
+      "name": "access type does not match",
+      "request": {
+        "resource": {"elements": {"tool": "transfer"}},
+        "accessType": "select",
+        "user": "eve",
+        "userGroups": [],
+        "requestData": "select transfer"
+      },
+      "result": {"isAllowed": true, "isAudited": true, "constraints": []}
+    },
+    {
+      "name": "different tool does not match",
+      "request": {
+        "resource": {"elements": {"tool": "lookup"}},
+        "accessType": "execute",
+        "user": "eve",
+        "userGroups": [],
+        "requestData": "execute lookup"
+      },
+      "result": {"isAllowed": true, "isAudited": true, "constraints": []}
+    },
+    {
+      "name": "condition attribute missing",
+      "request": {
+        "resource": {"elements": {"tool": "transfer"}},
+        "accessType": "execute",
+        "user": "bob",
+        "userGroups": [],
+        "requestData": "execute transfer"
+      },
+      "result": {"isAllowed": true, "isAudited": true, "constraints": []}
+    },
+    {
+      "name": "disabled constraint policy is ignored",
+      "request": {
+        "resource": {"elements": {"tool": "transfer"}},
+        "accessType": "execute",
+        "user": "iris",
+        "userGroups": [],
+        "requestData": "execute transfer"
+      },
+      "result": {"isAllowed": true, "isAudited": true, "constraints": []}
+    },
+    {
+      "name": "constraint policy is inside its validity schedule",
+      "request": {
+        "resource": {"elements": {"tool": "transfer"}},
+        "accessType": "execute",
+        "user": "frank",
+        "userGroups": [],
+        "accessTime": "20180615-12:00:00.000-0800",
+        "requestData": "execute transfer"
+      },
+      "result": {
+        "isAllowed": true,
+        "isAudited": true,
+        "constraints": [
+          {
+            "constraintName": "requireApproval",
+            "parameters": {"approver": "frank-approver"},
+            "policyId": 16,
+            "policyVersion": 9,
+            "matchType": "SELF"
+          }
+        ]
+      }
+    },
+    {
+      "name": "constraint policy is outside its validity schedule",
+      "request": {
+        "resource": {"elements": {"tool": "transfer"}},
+        "accessType": "execute",
+        "user": "frank",
+        "userGroups": [],
+        "accessTime": "20261015-12:00:00.000-0800",
+        "requestData": "execute transfer"
+      },
+      "result": {"isAllowed": true, "isAudited": true, "constraints": []}
+    },
+    {
+      "name": "main access type matches when several types are requested",
+      "request": {
+        "resource": {"elements": {"tool": "transfer"}},
+        "accessType": "execute",
+        "user": "eve",
+        "userGroups": [],
+        "requestData": "execute transfer",
+        "context": {"ALLACCESSTYPES": ["execute", "select"]}
+      },
+      "result": {
+        "isAllowed": true,
+        "isAudited": true,
+        "constraints": [
+          {
+            "constraintName": "requireApproval",
+            "parameters": {"approver": "eve-approver"},
+            "policyId": 10,
+            "policyVersion": 3,
+            "matchType": "SELF"
+          }
+        ]
+      }
+    },
+    {
+      "name": "other access type in the same request is not checked",
+      "request": {
+        "resource": {"elements": {"tool": "transfer"}},
+        "accessType": "select",
+        "user": "eve",
+        "userGroups": [],
+        "requestData": "select transfer",
+        "context": {"ALLACCESSTYPES": ["execute", "select"]}
+      },
+      "result": {"isAllowed": true, "isAudited": true, "constraints": []}
+    },
+    {
+      "name": "any access does not match a typed constraint",
+      "request": {
+        "resource": {"elements": {"tool": "transfer"}},
+        "accessType": "_any",
+        "user": "eve",
+        "userGroups": [],
+        "requestData": "any transfer"
+      },
+      "result": {"isAllowed": true, "isAudited": true, "constraints": []}
+    }
+  ],
+  "updatedPolicies": {
+    "policyDeltas": [
+      {
+        "changeType": 2,
+        "policy": {
+          "id": 10,
+          "version": 3,
+          "policyType": 4,
+          "serviceType": "agent-studio"
+        }
+      },
+      {
+        "changeType": 0,
+        "policy": {
+          "id": 20,
+          "version": 1,
+          "serviceType": "agent-studio",
+          "name": "constraint-gina",
+          "policyType": 4,
+          "isEnabled": true,
+          "isAuditEnabled": true,
+          "policyPriority": 0,
+          "resources": {"tool": {"values": ["transfer"]}},
+          "constraintPolicyItems": [
+            {
+              "accesses": [{"type": "execute", "isAllowed": true}],
+              "users": ["gina"],
+              "groups": [],
+              "delegateAdmin": false,
+              "constraintInfo": {
+                "constraintName": "requireApproval",
+                "parameters": {"approver": "gina-approver"}
+              }
+            }
+          ]
+        }
+      }
+    ]
+  },
+  "updatedTests": [
+    {
+      "name": "deleted constraint policy no longer matches",
+      "request": {
+        "resource": {"elements": {"tool": "transfer"}},
+        "accessType": "execute",
+        "user": "eve",
+        "userGroups": [],
+        "requestData": "execute transfer"
+      },
+      "result": {"isAllowed": true, "isAudited": true, "constraints": []}
+    },
+    {
+      "name": "constraint policy added by a delta matches",
+      "request": {
+        "resource": {"elements": {"tool": "transfer"}},
+        "accessType": "execute",
+        "user": "gina",
+        "userGroups": [],
+        "requestData": "execute transfer"
+      },
+      "result": {
+        "isAllowed": true,
+        "isAudited": true,
+        "constraints": [
+          {
+            "constraintName": "requireApproval",
+            "parameters": {"approver": "gina-approver"},
+            "policyId": 20,
+            "policyVersion": 1,
+            "matchType": "SELF"
+          }
+        ]
+      }
+    }
+  ]
+}

@@ -40,6 +40,7 @@ import org.slf4j.LoggerFactory;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -55,6 +56,7 @@ public class RangerDefaultPolicyResourceMatcher implements RangerPolicyResourceM
     protected     RangerServiceDef                   serviceDef;
     protected     int                                policyType;
     protected     Map<String, RangerPolicyResource>  policyResources;
+    private       Set<String>                        constraintNames;
 
     private Map<String, RangerResourceMatcher> allMatchers;
     private boolean                            needsDynamicEval;
@@ -567,7 +569,7 @@ public class RangerDefaultPolicyResourceMatcher implements RangerPolicyResourceM
         if (policyResources != null && !policyResources.isEmpty() && serviceDef != null) {
             serviceDefHelper = serviceDefHelper == null ? new RangerServiceDefHelper(serviceDef, false) : serviceDefHelper;
 
-            Set<List<RangerResourceDef>> resourceHierarchies   = serviceDefHelper.getResourceHierarchies(policyType, policyResources.keySet());
+            Set<List<RangerResourceDef>> resourceHierarchies   = getResourceHierarchies(policyResources.keySet());
             int                          validHierarchiesCount = 0;
 
             for (List<RangerResourceDef> resourceHierarchy : resourceHierarchies) {
@@ -684,6 +686,14 @@ public class RangerDefaultPolicyResourceMatcher implements RangerPolicyResourceM
         this.policyType      = policyType;
     }
 
+    public void setConstraintNames(Collection<String> constraintNames) {
+        this.constraintNames = CollectionUtils.isEmpty(constraintNames) ? Collections.emptySet() : new HashSet<>(constraintNames);
+    }
+
+    public Set<String> getConstraintNames() {
+        return constraintNames == null ? Collections.emptySet() : constraintNames;
+    }
+
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
@@ -695,7 +705,7 @@ public class RangerDefaultPolicyResourceMatcher implements RangerPolicyResourceM
         List<RangerResourceDef> ret = null;
 
         if (CollectionUtils.isNotEmpty(resourceKeys) && serviceDefHelper != null) {
-            Set<List<RangerResourceDef>> resourceHierarchies = serviceDefHelper.getResourceHierarchies(policyType, resourceKeys);
+            Set<List<RangerResourceDef>> resourceHierarchies = getResourceHierarchies(resourceKeys);
 
             // pick the shortest hierarchy
             for (List<RangerResourceDef> resourceHierarchy : resourceHierarchies) {
@@ -710,6 +720,24 @@ public class RangerDefaultPolicyResourceMatcher implements RangerPolicyResourceM
                     }
                 }
             }
+        }
+
+        return ret;
+    }
+
+    private Set<List<RangerResourceDef>> getResourceHierarchies(Collection<String> keys) {
+        final Set<List<RangerResourceDef>> ret;
+
+        if (policyType == RangerPolicy.POLICY_TYPE_CONSTRAINTS) {
+            ret = new HashSet<>();
+
+            if (serviceDefHelper != null) {
+                for (String constraintName : getConstraintNames()) {
+                    ret.addAll(serviceDefHelper.getResourceHierarchiesForConstraint(constraintName, keys));
+                }
+            }
+        } else {
+            ret = serviceDefHelper.getResourceHierarchies(policyType, keys);
         }
 
         return ret;
