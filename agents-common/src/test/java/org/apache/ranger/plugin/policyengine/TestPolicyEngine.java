@@ -69,7 +69,6 @@ import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Comparator;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
@@ -929,7 +928,7 @@ public class TestPolicyEngine {
                 assertNotNull(result, "result was null! - " + test.name);
                 assertEquals(expected.getIsAllowed(), result.getIsAllowed(), "isAllowed mismatched! - " + test.name);
                 assertEquals(expected.getIsAudited(), result.getIsAudited(), "isAudited mismatched! - " + test.name);
-                assertEquals(sortedConstraints(expected.getConstraints()), sortedConstraints(result.getConstraints()), "constraints mismatched! - " + test.name);
+                assertEquals(expected.getConstraints(), result.getConstraints(), "constraints mismatched! - " + test.name); // order matters: by policy priority
             }
 
             if (test.dataMaskResult != null) {
@@ -971,17 +970,6 @@ public class TestPolicyEngine {
                 assertEquals(expected.getDeniedGroups(), result.getDeniedGroups(), "deniedGroups mismatched! - " + test.name);
             }
         });
-    }
-
-    private static List<RangerConstraintResult> sortedConstraints(List<RangerConstraintResult> constraints) {
-        List<RangerConstraintResult> ret = new ArrayList<>();
-
-        if (constraints != null) {
-            ret.addAll(constraints);
-            ret.sort(Comparator.comparingLong(RangerConstraintResult::getPolicyId).thenComparing(constraintResult -> constraintResult.getConstraintName() == null ? "" : constraintResult.getConstraintName()));
-        }
-
-        return ret;
     }
 
     private void setPluginConfig(RangerPluginConfig conf, String suffix, Set<String> value) {

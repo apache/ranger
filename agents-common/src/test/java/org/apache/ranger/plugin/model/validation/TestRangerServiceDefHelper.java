@@ -163,7 +163,11 @@ public class TestRangerServiceDefHelper {
         RangerConstraintDef unrestricted = new RangerConstraintDef();
         unrestricted.setName("unrestricted");
 
-        when(serviceDef.getConstraintDefs()).thenReturn(Arrays.asList(maxRows, sibling, udfOnly, unrestricted));
+        RangerConstraintDef databaseUdf = new RangerConstraintDef();
+        databaseUdf.setName("databaseUdf");
+        databaseUdf.setResources(Arrays.asList("UDF", "Database"));
+
+        when(serviceDef.getConstraintDefs()).thenReturn(Arrays.asList(maxRows, sibling, udfOnly, unrestricted, databaseUdf));
 
         RangerServiceDefHelper helper    = new RangerServiceDefHelper(serviceDef);
         List<String>            tableKeys = Arrays.asList("Table");
@@ -179,6 +183,14 @@ public class TestRangerServiceDefHelper {
 
         assertEquals(helper.getResourceHierarchies(RangerPolicy.POLICY_TYPE_ACCESS, Arrays.asList("Database", "Table")), helper.getResourceHierarchiesForConstraint("unrestricted", Arrays.asList("Database", "Table")));
         assertTrue(helper.getResourceHierarchiesForConstraint("missing", tableKeys).isEmpty());
+
+        // Database is not a valid leaf: [Database] alone is not a hierarchy of databaseUdf, same as for access policies
+        assertEquals(Collections.singleton(Arrays.asList("Database", "UDF")), hierarchyNames(helper, helper.getResourceHierarchiesForConstraint("databaseUdf", Collections.singletonList("Database"))));
+
+        // constraint-defs are looked up by name
+        assertSame(maxRows, helper.getConstraintDef("maxRows"));
+        assertNull(helper.getConstraintDef("missing"));
+        assertNull(helper.getConstraintDef(null));
         assertTrue(helper.getResourceHierarchies(RangerPolicy.POLICY_TYPE_CONSTRAINTS).isEmpty());
         assertTrue(helper.getResourceHierarchies(RangerPolicy.POLICY_TYPE_CONSTRAINTS, tableKeys).isEmpty());
     }

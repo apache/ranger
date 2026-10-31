@@ -312,7 +312,7 @@
       }
     },
     {
-      "name": "multiple constraints from different policies",
+      "name": "multiple constraints from different policies, in policy-priority order",
       "request": {
         "resource": {"elements": {"tool": "transfer"}},
         "accessType": "execute",
@@ -325,18 +325,18 @@
         "isAudited": true,
         "constraints": [
           {
-            "constraintName": "requireApproval",
-            "parameters": {"approver": "finance-approvers"},
-            "policyId": 11,
-            "policyVersion": 4,
-            "matchType": "SELF"
-          },
-          {
             "constraintName": "maxRows",
             "parameters": {"rowCount": 100},
             "policyId": 12,
             "policyVersion": 5,
             "policyPriority": 1,
+            "matchType": "SELF"
+          },
+          {
+            "constraintName": "requireApproval",
+            "parameters": {"approver": "finance-approvers"},
+            "policyId": 11,
+            "policyVersion": 4,
             "matchType": "SELF"
           }
         ]

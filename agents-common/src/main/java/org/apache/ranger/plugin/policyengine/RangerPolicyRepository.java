@@ -1010,7 +1010,8 @@ public class RangerPolicyRepository {
         rowFilterPolicyEvaluators.sort(RangerPolicyEvaluator.NAME_COMPARATOR);
         this.rowFilterPolicyEvaluators = rowFilterPolicyEvaluators;
 
-        // Constraint matches are all returned. Do not sort them by policy priority.
+        // all matching constraints are returned; sorting orders them by policy priority (higher first), so that callers don't need to sort on each request
+        constraintPolicyEvaluators.sort(RangerPolicyEvaluator.EVAL_ORDER_COMPARATOR);
         this.constraintPolicyEvaluators = constraintPolicyEvaluators;
 
         this.policyEvaluatorsMap = createPolicyEvaluatorsMap();

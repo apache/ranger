@@ -81,6 +81,7 @@ public abstract class RangerAbstractPolicyEvaluator implements RangerPolicyEvalu
     private   boolean                             needsDynamicEval;
     private   int                                 evalOrder;
     private   List<RangerPolicyResourceEvaluator> resourceEvaluators = Collections.emptyList();
+    private   Set<String>                         constraintNames    = Collections.emptySet();
 
     public RangerPluginContext getPluginContext() {
         return pluginContext;
@@ -97,6 +98,7 @@ public abstract class RangerAbstractPolicyEvaluator implements RangerPolicyEvalu
         this.policy           = getPrunedPolicy(policy);
         this.serviceDef       = serviceDef;
         this.needsDynamicEval = false;
+        this.constraintNames  = getPolicyType() == RangerPolicy.POLICY_TYPE_CONSTRAINTS ? computeConstraintNames(this.policy) : Collections.emptySet();
 
         List<RangerPolicyResourceEvaluator>  resourceEvaluators = new ArrayList<>();
         RangerDefaultPolicyResourceEvaluator resourceEvaluator  = new RangerDefaultPolicyResourceEvaluator(NEXT_RESOURCE_EVALUATOR_ID.getAndIncrement(), policy.getResources(), getPolicyType(), serviceDef, options.getServiceDefHelper());
@@ -525,7 +527,8 @@ public abstract class RangerAbstractPolicyEvaluator implements RangerPolicyEvalu
         return ret;
     }
 
-    private Set<String> getConstraintNames() {
+    // computed once in init(), and shared by resource matchers of all resource specs in the policy
+    private static Set<String> computeConstraintNames(RangerPolicy policy) {
         Set<String> ret = new HashSet<>();
 
         if (policy != null && CollectionUtils.isNotEmpty(policy.getConstraintPolicyItems())) {
@@ -536,7 +539,7 @@ public abstract class RangerAbstractPolicyEvaluator implements RangerPolicyEvalu
             }
         }
 
-        return ret;
+        return Collections.unmodifiableSet(ret);
     }
 
     public class RangerDefaultPolicyResourceEvaluator implements RangerPolicyResourceEvaluator {
@@ -555,7 +558,7 @@ public abstract class RangerAbstractPolicyEvaluator implements RangerPolicyEvalu
             this.resourceMatcher.setPolicyResources(resource, policyType);
 
             if (policyType == RangerPolicy.POLICY_TYPE_CONSTRAINTS) {
-                this.resourceMatcher.setConstraintNames(getConstraintNames());
+                this.resourceMatcher.setConstraintNames(constraintNames);
             }
 
             this.resourceMatcher.setServiceDef(serviceDef);
