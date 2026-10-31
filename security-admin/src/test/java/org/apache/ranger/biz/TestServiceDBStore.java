@@ -5858,6 +5858,25 @@ public class TestServiceDBStore {
         Assertions.assertEquals("Access", a);
         Assertions.assertEquals("Masking", d);
         Assertions.assertEquals("Row Level Filter", r);
+        Assertions.assertEquals("Constraints", m.invoke(serviceDBStore, org.apache.ranger.plugin.model.RangerPolicy.POLICY_TYPE_CONSTRAINTS));
+    }
+
+    @Test
+    public void test224aGetConstraintInfo() {
+        RangerPolicy.RangerConstraintPolicyItem item       = new RangerPolicy.RangerConstraintPolicyItem();
+        Map<String, Object>                     parameters = new HashMap<>();
+
+        parameters.put("rowCount", 10);
+        parameters.put("approver", "finance");
+        item.setConstraintInfo(new RangerPolicy.RangerPolicyItemConstraintInfo("maxRows", parameters));
+
+        Assertions.assertEquals("constraint=[maxRows]; parameters={approver=finance, rowCount=10}", ServiceDBStore.getConstraintInfo(item));
+
+        item.setConstraintInfo(new RangerPolicy.RangerPolicyItemConstraintInfo("requireApproval", null));
+        Assertions.assertEquals("constraint=[requireApproval]", ServiceDBStore.getConstraintInfo(item));
+
+        Assertions.assertEquals("", ServiceDBStore.getConstraintInfo(new RangerPolicyItem()));
+        Assertions.assertEquals("", ServiceDBStore.getConstraintInfo(null));
     }
 
     @Test
@@ -6267,6 +6286,40 @@ public class TestServiceDBStore {
         StringBuilder sb = (StringBuilder) m.invoke(serviceDBStore, Collections.singletonList(p), "f.csv", resp);
         Assertions.assertNotNull(sb);
         Assertions.assertTrue(sb.length() > 0);
+    }
+
+    @Test
+    public void test245aWriteCSV_constraintPolicy() throws Exception {
+        Method m = ServiceDBStore.class.getDeclaredMethod("writeCSV", List.class, String.class, HttpServletResponse.class);
+        m.setAccessible(true);
+
+        RangerPolicy.RangerConstraintPolicyItem item = new RangerPolicy.RangerConstraintPolicyItem();
+        item.setUsers(Collections.singletonList("alice"));
+        item.setAccesses(Collections.singletonList(new RangerPolicy.RangerPolicyItemAccess("select")));
+        item.setConstraintInfo(new RangerPolicy.RangerPolicyItemConstraintInfo("maxRows", Collections.singletonMap("rowCount", 10)));
+
+        RangerPolicy.RangerPolicyResource rsrc = new RangerPolicy.RangerPolicyResource();
+        rsrc.setValues(Collections.singletonList("db1"));
+        rsrc.setIsExcludes(Boolean.FALSE);
+        rsrc.setIsRecursive(Boolean.FALSE);
+
+        RangerPolicy p = new RangerPolicy();
+        p.setId(1L);
+        p.setName("p1");
+        p.setService("s1");
+        p.setServiceType("hive");
+        p.setPolicyType(RangerPolicy.POLICY_TYPE_CONSTRAINTS);
+        p.setResources(Collections.singletonMap("database", rsrc));
+        p.setConstraintPolicyItems(Collections.singletonList(item));
+
+        String   csv   = m.invoke(serviceDBStore, Collections.singletonList(p), "f.csv", Mockito.mock(HttpServletResponse.class)).toString();
+        String[] lines = csv.split("\n");
+
+        Assertions.assertEquals(2, lines.length, csv);
+        Assertions.assertTrue(lines[0].endsWith("|Constraint"));
+        Assertions.assertTrue(lines[1].contains("alice"), lines[1]);
+        Assertions.assertTrue(lines[1].contains("|Constraints|"), lines[1]);
+        Assertions.assertTrue(lines[1].contains("constraint=[maxRows]; parameters={rowCount=10}"), lines[1]);
     }
 
     @Test

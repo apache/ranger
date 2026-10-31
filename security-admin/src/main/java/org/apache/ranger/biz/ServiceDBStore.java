@@ -102,6 +102,7 @@ import org.apache.ranger.entity.XXUser;
 import org.apache.ranger.plugin.model.AuditFilter;
 import org.apache.ranger.plugin.model.RangerBaseModelObject;
 import org.apache.ranger.plugin.model.RangerPolicy;
+import org.apache.ranger.plugin.model.RangerPolicy.RangerConstraintPolicyItem;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerDataMaskPolicyItem;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItem;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemAccess;
@@ -214,6 +215,7 @@ import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Set;
 import java.util.StringTokenizer;
+import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -246,6 +248,7 @@ public class ServiceDBStore extends AbstractServiceStore {
     private static final    String                        POLICY_TYPE_ACCESS                = "Access";
     private static final    String                        POLICY_TYPE_DATAMASK              = "Masking";
     private static final    String                        POLICY_TYPE_ROWFILTER             = "Row Level Filter";
+    private static final    String                        POLICY_TYPE_CONSTRAINTS           = "Constraints";
     private static final    String                        HOSTNAME                          = "Host name";
     private static final    String                        USER_NAME                         = "Exported by";
     private static final    String                        RANGER_VERSION                    = "Ranger apache version";
@@ -255,7 +258,7 @@ public class ServiceDBStore extends AbstractServiceStore {
     private static final    String                        AMBARI_SERVICE_CHECK_USER         = "ambari.service.check.user";
     private static final    String                        RANGER_PLUGIN_CONFIG_PREFIX       = "ranger.plugin.";
     private static final    String                        LINE_SEPARATOR                    = "\n";
-    private static final    String                        FILE_HEADER                       = "ID|Name|Resources|Roles|Groups|Users|Accesses|Service Type|Status|Policy Type|Delegate Admin|isRecursive|isExcludes|Service Name|Description|isAuditEnabled|Policy Conditions|Policy Condition Type|Masking Options|Row Filter Expr|Policy Label Name";
+    private static final    String                        FILE_HEADER                       = "ID|Name|Resources|Roles|Groups|Users|Accesses|Service Type|Status|Policy Type|Delegate Admin|isRecursive|isExcludes|Service Name|Description|isAuditEnabled|Policy Conditions|Policy Condition Type|Masking Options|Row Filter Expr|Policy Label Name|Constraint";
     private static final    String                        COMMA_DELIMITER                   = "|";
     private static final    String                        DEFAULT_CSV_SANITIZATION_PATTERN  = "^[=+\\-@\\t\\r]";
     private static final    Pattern                       CSV_SANITIZATION_PATTERN          = Pattern.compile(PropertiesUtil.getProperty("ranger.admin.csv.sanitization.pattern", DEFAULT_CSV_SANITIZATION_PATTERN));
@@ -4508,6 +4511,12 @@ public class ServiceDBStore extends AbstractServiceStore {
             collectRolesFromPolicyItems(policyItems, ret);
         }
 
+        policyItems = policy.getConstraintPolicyItems();
+
+        if (CollectionUtils.isNotEmpty(policyItems)) {
+            collectRolesFromPolicyItems(policyItems, ret);
+        }
+
         return ret;
     }
 
@@ -4682,6 +4691,12 @@ public class ServiceDBStore extends AbstractServiceStore {
 
                             writeBookForPolicyItems(svcNameToSvcType, policy, null, null, rowFilterPolicyItem, row, null);
                         }
+                    } else if (CollectionUtils.isNotEmpty(policy.getConstraintPolicyItems())) {
+                        for (RangerConstraintPolicyItem constraintPolicyItem : policy.getConstraintPolicyItems()) {
+                            Row row = sheet.createRow(++rowCount);
+
+                            writeBookForPolicyItems(svcNameToSvcType, policy, constraintPolicyItem, null, null, row, null);
+                        }
                     } else if (serviceType.equalsIgnoreCase(EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_TAG_NAME)) {
                         if (CollectionUtils.isEmpty(policyItems)) {
                             Row              row        = sheet.createRow(++rowCount);
@@ -4792,6 +4807,10 @@ public class ServiceDBStore extends AbstractServiceStore {
                 } else if (CollectionUtils.isNotEmpty(rowFilterPolicyItems)) {
                     for (RangerRowFilterPolicyItem rowFilterPolicyItem : rowFilterPolicyItems) {
                         writeCSVForPolicyItems(svcNameToSvcType, policy, null, null, rowFilterPolicyItem, csvBuffer, null);
+                    }
+                } else if (CollectionUtils.isNotEmpty(policy.getConstraintPolicyItems())) {
+                    for (RangerConstraintPolicyItem constraintPolicyItem : policy.getConstraintPolicyItems()) {
+                        writeCSVForPolicyItems(svcNameToSvcType, policy, constraintPolicyItem, null, null, csvBuffer, null);
                     }
                 } else if (serviceType.equalsIgnoreCase(EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_TAG_NAME)) {
                     if (CollectionUtils.isEmpty(policyItems)) {
@@ -5062,6 +5081,8 @@ public class ServiceDBStore extends AbstractServiceStore {
         csvBuffer.append(COMMA_DELIMITER);
         csvBuffer.append(sanitizeCell(policyLabelName));
         csvBuffer.append(COMMA_DELIMITER);
+        csvBuffer.append(sanitizeCell(getConstraintInfo(policyItem)));
+        csvBuffer.append(COMMA_DELIMITER);
         csvBuffer.append(LINE_SEPARATOR);
     }
 
@@ -5323,6 +5344,7 @@ public class ServiceDBStore extends AbstractServiceStore {
         }
 
         row.createCell(20).setCellValue(sanitizeCell(policyLabelNames));
+        row.createCell(21).setCellValue(sanitizeCell(getConstraintInfo(policyItem)));
     }
 
     private String getPolicyTypeString(int policyType) {
@@ -5333,6 +5355,8 @@ public class ServiceDBStore extends AbstractServiceStore {
                 return POLICY_TYPE_DATAMASK;
             case RangerPolicy.POLICY_TYPE_ROWFILTER:
                 return POLICY_TYPE_ROWFILTER;
+            case RangerPolicy.POLICY_TYPE_CONSTRAINTS:
+                return POLICY_TYPE_CONSTRAINTS;
             default:
                 return "";
         }
@@ -5431,6 +5455,29 @@ public class ServiceDBStore extends AbstractServiceStore {
         Cell cellPolicyLabelName = row.createCell(20);
         cellPolicyLabelName.setCellStyle(cellStyle);
         cellPolicyLabelName.setCellValue("Policy Labels Name");
+
+        Cell cellConstraint = row.createCell(21);
+        cellConstraint.setCellStyle(cellStyle);
+        cellConstraint.setCellValue("Constraint");
+    }
+
+    // constraint name and parameters of a constraint policy item, for export; empty for other policy items
+    static String getConstraintInfo(RangerPolicyItem policyItem) {
+        String ret = "";
+
+        if (policyItem instanceof RangerConstraintPolicyItem) {
+            RangerPolicy.RangerPolicyItemConstraintInfo constraintInfo = ((RangerConstraintPolicyItem) policyItem).getConstraintInfo();
+
+            if (constraintInfo != null && StringUtils.isNotEmpty(constraintInfo.getConstraintName())) {
+                ret = "constraint=[" + constraintInfo.getConstraintName() + "]";
+
+                if (MapUtils.isNotEmpty(constraintInfo.getParameters())) {
+                    ret = ret + "; parameters=" + new TreeMap<>(constraintInfo.getParameters());
+                }
+            }
+        }
+
+        return ret;
     }
 
     private RangerPolicyList searchRangerPolicies(SearchFilter searchFilter) {

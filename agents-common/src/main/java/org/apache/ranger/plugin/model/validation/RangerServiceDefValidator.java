@@ -42,6 +42,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -549,6 +550,7 @@ public class RangerServiceDefValidator extends RangerValidator {
             Map<String, RangerEnumDef>     enumDefs       = getEnumDefMap(serviceDef.getEnums());
             Set<Long>                      ids            = new HashSet<>();
             Set<String>                    names          = new HashSet<>();
+            RangerServiceDefHelper         defHelper      = null;
 
             for (RangerConstraintDef constraintDef : serviceDef.getConstraintDefs()) {
                 if (constraintDef == null) {
@@ -567,13 +569,43 @@ public class RangerServiceDefValidator extends RangerValidator {
 
                 valid = isUnique(constraintDef.getItemId(), ids, "constraint def itemId", "constraint defs", failures) && valid;
                 valid = isUnique(constraintName, names, "constraint def name", "constraint defs", failures) && valid;
-                valid = isValidConstraintResources(constraintDef, resourceDefs, failures) && valid;
+                boolean isValidResources = isValidConstraintResources(constraintDef, resourceDefs, failures);
+
+                if (isValidResources && CollectionUtils.isNotEmpty(constraintDef.getResources()) && StringUtils.isNotBlank(constraintName)) {
+                    if (defHelper == null) {
+                        // We don't want this helper to get into the cache or to use what is in the cache!!
+                        defHelper = factory.createServiceDefHelper(serviceDef, false);
+                    }
+
+                    isValidResources = isValidConstraintHierarchy(constraintDef, defHelper, failures);
+                }
+
+                valid = isValidResources && valid;
                 valid = isValidConstraintAccessTypes(constraintDef, accessTypes, failures) && valid;
                 valid = isValidConstraintParams(constraintDef, enumDefs, failures) && valid;
             }
         }
 
         LOG.debug("<== RangerServiceDefValidator.isValidConstraintDefs({}, {}): {}", serviceDef, failures, valid);
+
+        return valid;
+    }
+
+    // resources listed in a constraint def must form at least one valid hierarchy, same as resources of data-mask and row-filter defs
+    private boolean isValidConstraintHierarchy(RangerConstraintDef constraintDef, RangerServiceDefHelper defHelper, List<ValidationFailureDetails> failures) {
+        boolean valid = !defHelper.getResourceHierarchiesForConstraint(constraintDef.getName(), Collections.emptySet()).isEmpty();
+
+        if (!valid) {
+            ValidationErrorCode error = ValidationErrorCode.SERVICE_DEF_VALIDATION_ERR_CONSTRAINT_INVALID_HIERARCHY;
+
+            failures.add(new ValidationFailureDetailsBuilder()
+                    .field("constraint def resources")
+                    .subField(constraintDef.getName())
+                    .isSemanticallyIncorrect()
+                    .errorCode(error.getErrorCode())
+                    .becauseOf(error.getMessage(constraintDef.getResources(), constraintDef.getName()))
+                    .build());
+        }
 
         return valid;
     }
