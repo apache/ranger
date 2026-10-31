@@ -44,6 +44,7 @@ import {
   getConstraintNameFromField,
   getConstraintDefByName,
   getAccessTypesForConstraintDef,
+  getLeafAccessTypeRestrictions,
   mapAccessTypesToSelectOptions
 } from "Utils/XAUtils";
 import { CustomTooltip } from "Components/CommonComponents";
@@ -85,6 +86,12 @@ export default function PolicyPermissionItemVertical({
     serviceCompDetails,
     getMatchedConstraint
   );
+
+  // For constraint policy: leaf resource accessTypeRestrictions (computed once, reused per row)
+  const leafRestrictions =
+    RangerPolicyType.RANGER_CONSTRAINT_POLICY_TYPE.value == formValues.policyType
+      ? getLeafAccessTypeRestrictions(formValues, serviceCompDetails)
+      : null;
 
   const constraintSelectOptions = getMatchedConstraint.map((constraint) => ({
     label: constraint.label || constraint.name,
@@ -226,7 +233,8 @@ export default function PolicyPermissionItemVertical({
                 ? mapAccessTypesToSelectOptions(
                     getAccessTypesForConstraintDef(
                       serviceCompDetails,
-                      rowConstraintDef
+                      rowConstraintDef,
+                      leafRestrictions
                     )
                   )
                 : [];

@@ -49,6 +49,7 @@ import {
   getConstraintDefByName,
   getConstraintNameFromField,
   getAccessTypesForConstraintDef,
+  getLeafAccessTypeRestrictions,
   mapAccessTypesToSelectOptions
 } from "Utils/XAUtils";
 import {
@@ -202,7 +203,11 @@ export default function PolicyPermissionItem(props) {
         rowConstraintName
       );
       srcOp = rowConstraintName
-        ? getAccessTypesForConstraintDef(serviceCompDetails, rowDef)
+        ? getAccessTypesForConstraintDef(
+            serviceCompDetails,
+            rowDef,
+            getLeafAccessTypeRestrictions(formValues, serviceCompDetails)
+          )
         : [];
       return mapAccessTypesToSelectOptions(srcOp);
     } else {

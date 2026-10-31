@@ -1609,13 +1609,76 @@ export const getConstraintDefByName = (serviceDef, constraintName) => {
   return find(serviceDef.constraintDefs, { name: constraintName }) || null;
 };
 
-export const getAccessTypesForConstraintDef = (serviceDef, constraintDef) => {
-  const allAccessTypes = serviceDef?.accessTypes || [];
-  if (!constraintDef?.accessTypes?.length) {
-    return allAccessTypes;
+/**
+ * For constraint policy (type 4) — walk the deepest selected resource in a row
+ * and return its accessTypeRestrictions names (or null when none).
+ * Checks the form-value option first (it carries the property from ResourceSelectComp),
+ * then falls back to the service-def resource definition.
+ */
+export const getLeafAccessTypeRestrictions = (formValues, serviceCompDetails) => {
+  if (!formValues || !serviceCompDetails) {
+    return null;
   }
-  const allowed = new Set(constraintDef.accessTypes);
-  return filter(allAccessTypes, (item) => allowed.has(item.name));
+  const grpResourcesKeys = getResourceLevelKeysSorted(serviceCompDetails);
+  const allResources = serviceCompDetails?.resources || [];
+
+  const findInRow = (row) => {
+    for (let i = grpResourcesKeys.length - 1; i >= 0; i--) {
+      const sel = row[`resourceName-${grpResourcesKeys[i]}`];
+      if (!sel || sel.value === "none") {
+        continue;
+      }
+      // from the react-select option (ResourceSelectComp attaches it)
+      if (sel.accessTypeRestrictions?.length) {
+        return sel.accessTypeRestrictions;
+      }
+      // fall back to service-def resource
+      const resDef = find(allResources, { name: sel.name ?? sel.value });
+      if (resDef?.accessTypeRestrictions?.length) {
+        return resDef.accessTypeRestrictions;
+      }
+      return null; // deepest leaf found, no restrictions
+    }
+    return null;
+  };
+
+  if (formValues.additionalResources?.length) {
+    for (const row of formValues.additionalResources) {
+      const r = findInRow(row);
+      if (r?.length) {
+        return r;
+      }
+    }
+  }
+  return findInRow(formValues);
+};
+
+/**
+ * Access types for a single constraint rule row.
+ * Priority:
+ *   1. constraintDef.accessTypes (non-empty) → use those
+ *   2. else → all service-def accessTypes
+ * Then narrow by the selected leaf resource's accessTypeRestrictions (same as
+ * access-policy behaviour).
+ */
+export const getAccessTypesForConstraintDef = (
+  serviceDef,
+  constraintDef,
+  leafRestrictions = null
+) => {
+  const allAccessTypes = serviceDef?.accessTypes || [];
+  let base;
+  if (constraintDef?.accessTypes?.length) {
+    const allowed = new Set(constraintDef.accessTypes);
+    base = filter(allAccessTypes, (item) => allowed.has(item.name));
+  } else {
+    base = allAccessTypes;
+  }
+  if (leafRestrictions?.length) {
+    const restrictionSet = new Set(leafRestrictions);
+    return filter(base, (item) => restrictionSet.has(item.name));
+  }
+  return base;
 };
 
 export const mapAccessTypesToSelectOptions = (accessTypes) => {
@@ -2049,12 +2112,15 @@ export const pruneConstraintPolicyItemsToMatchedResources = (
       selectedServiceComponentDef,
       constraintName
     );
+    const leafRestrictions = getLeafAccessTypeRestrictions(
+      formValues,
+      selectedServiceComponentDef
+    );
     const allowedAccessTypes = new Set(
-      (
-        getAccessTypesForConstraintDef(
-          selectedServiceComponentDef,
-          constraintDef
-        ) || []
+      getAccessTypesForConstraintDef(
+        selectedServiceComponentDef,
+        constraintDef,
+        leafRestrictions
       ).map((at) => at.name)
     );
 
@@ -2083,10 +2149,9 @@ export const buildConstraintInfoForApi = (constraintInfoForm) => {
     return null;
   }
 
-  const info = { constraintName };
+  const parameters = {};
   const rawParams = constraintInfoForm.parameters;
   if (rawParams && typeof rawParams === "object") {
-    const parameters = {};
     Object.entries(rawParams).forEach(([paramKey, paramVal]) => {
       if (paramVal === "" || paramVal == null) {
         return;
@@ -2096,11 +2161,9 @@ export const buildConstraintInfoForApi = (constraintInfoForm) => {
           ? paramVal.value
           : String(paramVal);
     });
-    if (!isEmpty(parameters)) {
-      info.parameters = parameters;
-    }
   }
-  return info;
+  // always include parameters (empty map when def has no parameters)
+  return { constraintName, parameters };
 };
 
 const legacyFormPrincipalName = (principal) => {
