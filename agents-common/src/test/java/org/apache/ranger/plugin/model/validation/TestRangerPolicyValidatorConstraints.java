@@ -158,7 +158,7 @@ public class TestRangerPolicyValidatorConstraints {
     public void testConstraintPolicyWithOtherItems() {
         RangerPolicy policy = constraintPolicy(resources("database"), item("maxRows", "select", params("rowCount", 10)));
 
-        policy.getPolicyItems().add(new RangerPolicyItem(Collections.singletonList(new RangerPolicyItemAccess("select")), Collections.singletonList("alice"), null, null, null, false));
+        policy.addPolicyItem(new RangerPolicyItem(Collections.singletonList(new RangerPolicyItemAccess("select")), Collections.singletonList("alice"), null, null, null, false));
 
         assertFalse(validator.isValidConstraintPolicy(policy, failures, serviceDef));
         assertErrorCode(ValidationErrorCode.POLICY_VALIDATION_ERR_CONSTRAINT_POLICY_HAS_OTHER_ITEMS);
