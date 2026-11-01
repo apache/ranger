@@ -11,8 +11,6 @@ services:
       - ./scripts/wait_for_keytab.sh:/opt/wait_for_keytab.sh:ro
     networks:
       - ranger
-    ports:
-      - 9864
     depends_on:
       ranger-kdc:
         condition: service_healthy
@@ -43,9 +41,6 @@ services:
       - ./scripts/wait_for_keytab.sh:/opt/wait_for_keytab.sh:ro
     networks:
       - ranger
-    ports:
-      - 9874:9874
-      - 9862:9862
     depends_on:
       ranger-kdc:
         condition: service_healthy
@@ -78,9 +73,6 @@ services:
       - ./scripts/wait_for_keytab.sh:/opt/wait_for_keytab.sh:ro
     networks:
       - ranger
-    ports:
-      - 9876:9876
-      - 9860:9860
     depends_on:
       ranger-kdc:
         condition: service_healthy

@@ -27,8 +27,6 @@ services:
     tty: true
     networks:
       - ranger
-    ports:
-      - "9092:9092"
     depends_on:
       ranger:
         condition: service_started
