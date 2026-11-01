@@ -2502,7 +2502,7 @@ public class ServiceREST {
             if (policyTypeStr != null) {
                 int policyType = Integer.parseInt(policyTypeStr);
 
-                if (IntStream.of(RangerPolicy.POLICY_TYPES).noneMatch(x -> x == policyType)) {
+                if (policyType != RangerPolicy.POLICY_TYPE_CONSTRAINTS && IntStream.of(RangerPolicy.POLICY_TYPES).noneMatch(x -> x == policyType)) {
                     throw restErrorUtil.createRESTException("policyTypes with id: " + policyTypeStr + " does not exist", MessageEnums.DATA_NOT_FOUND, Long.parseLong(policyTypeStr), null, "readResource : No Object found with given id.");
                 }
             }

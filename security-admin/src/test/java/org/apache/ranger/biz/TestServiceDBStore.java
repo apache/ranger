@@ -5410,6 +5410,74 @@ public class TestServiceDBStore {
     }
 
     @Test
+    public void test202aApplyResourceFilter_constraintPolicies() throws Exception {
+        RangerServiceDef.RangerResourceDef database = new RangerServiceDef.RangerResourceDef();
+        RangerServiceDef.RangerResourceDef table    = new RangerServiceDef.RangerResourceDef();
+
+        database.setName("database");
+        database.setLevel(10);
+        table.setName("table");
+        table.setParent("database");
+        table.setLevel(20);
+
+        RangerConstraintDef maxRows = new RangerConstraintDef();
+
+        maxRows.setName("maxRows");
+        maxRows.setResources(Arrays.asList("database", "table"));
+
+        RangerServiceDef def = new RangerServiceDef();
+
+        def.setName("constraint-search-" + System.nanoTime());
+        def.setUpdateTime(new Date());
+        def.setResources(new ArrayList<>(Arrays.asList(database, table)));
+        def.setAccessTypes(new ArrayList<>());
+        def.setConstraintDefs(Collections.singletonList(maxRows));
+
+        Map<String, RangerPolicy.RangerPolicyResource> resources = new HashMap<>();
+
+        resources.put("database", new RangerPolicy.RangerPolicyResource("db1"));
+        resources.put("table", new RangerPolicy.RangerPolicyResource("t1"));
+
+        RangerPolicy.RangerConstraintPolicyItem item = new RangerPolicy.RangerConstraintPolicyItem();
+
+        item.setConstraintInfo(new RangerPolicy.RangerPolicyItemConstraintInfo("maxRows", Collections.singletonMap("rowCount", 10)));
+
+        RangerPolicy constraintPolicy = new RangerPolicy();
+
+        constraintPolicy.setId(1L);
+        constraintPolicy.setPolicyType(RangerPolicy.POLICY_TYPE_CONSTRAINTS);
+        constraintPolicy.setResources(resources);
+        constraintPolicy.setConstraintPolicyItems(Collections.singletonList(item));
+
+        RangerPolicy accessPolicy = new RangerPolicy();
+
+        accessPolicy.setId(2L);
+        accessPolicy.setPolicyType(RangerPolicy.POLICY_TYPE_ACCESS);
+        accessPolicy.setResources(resources);
+
+        List<RangerPolicy>  policies        = Arrays.asList(constraintPolicy, accessPolicy);
+        Map<String, String> filterResources = new HashMap<>();
+
+        filterResources.put("database", "db1");
+        filterResources.put("table", "t1");
+
+        // no policyType: constraint policies are returned along with other policy types
+        SearchFilter filter = new SearchFilter();
+
+        Assertions.assertEquals(policies, serviceDBStore.applyResourceFilter(def, policies, filterResources, filter, RangerPolicyResourceMatcher.MatchScope.SELF));
+
+        // policyType=4: only constraint policies
+        filter.setParam(SearchFilter.POLICY_TYPE, String.valueOf(RangerPolicy.POLICY_TYPE_CONSTRAINTS));
+
+        Assertions.assertEquals(Collections.singletonList(constraintPolicy), serviceDBStore.applyResourceFilter(def, policies, filterResources, filter, RangerPolicyResourceMatcher.MatchScope.SELF));
+
+        // policyType=0: no constraint policies
+        filter.setParam(SearchFilter.POLICY_TYPE, String.valueOf(RangerPolicy.POLICY_TYPE_ACCESS));
+
+        Assertions.assertEquals(Collections.singletonList(accessPolicy), serviceDBStore.applyResourceFilter(def, policies, filterResources, filter, RangerPolicyResourceMatcher.MatchScope.SELF));
+    }
+
+    @Test
     public void test203searchRangerTagPoliciesOnBasisOfServiceName() throws Exception {
         RangerPolicy rp = new RangerPolicy();
         rp.setService("s1");

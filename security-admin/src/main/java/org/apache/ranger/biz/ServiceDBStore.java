@@ -2893,14 +2893,21 @@ public class ServiceDBStore extends AbstractServiceStore {
     List<RangerPolicyResourceMatcher> getMatchers(RangerServiceDef serviceDef, Map<String, String> filterResources, SearchFilter filter) {
         LOG.debug("==> ServiceDBStore.getMatchers(filterResources={})", filterResources);
 
-        List<RangerPolicyResourceMatcher> ret              = new ArrayList<>();
-        RangerServiceDefHelper            serviceDefHelper = new RangerServiceDefHelper(serviceDef);
-        String                            policyTypeStr    = filter.getParam(SearchFilter.POLICY_TYPE);
-        int[]                             policyTypes      = RangerPolicy.POLICY_TYPES;
+        List<RangerPolicyResourceMatcher> ret                = new ArrayList<>();
+        RangerServiceDefHelper            serviceDefHelper   = new RangerServiceDefHelper(serviceDef);
+        String                            policyTypeStr      = filter.getParam(SearchFilter.POLICY_TYPE);
+        int[]                             policyTypes        = RangerPolicy.POLICY_TYPES;
+        boolean                           includeConstraints = true; // constraint policies are not in POLICY_TYPES
 
         if (StringUtils.isNotBlank(policyTypeStr)) {
-            policyTypes    = new int[1];
-            policyTypes[0] = Integer.parseInt(policyTypeStr);
+            int policyType = Integer.parseInt(policyTypeStr);
+
+            if (policyType == RangerPolicy.POLICY_TYPE_CONSTRAINTS) {
+                policyTypes = new int[0];
+            } else {
+                policyTypes        = new int[] {policyType};
+                includeConstraints = false;
+            }
         }
 
         for (Integer policyType : policyTypes) {
@@ -2908,32 +2915,58 @@ public class ServiceDBStore extends AbstractServiceStore {
 
             LOG.debug("Found {} valid resource hierarchies for key-set {}", validResourceHierarchies.size(), filterResources.keySet());
 
-            List<List<RangerResourceDef>> resourceHierarchies = new ArrayList<>(validResourceHierarchies);
+            for (List<RangerResourceDef> validResourceHierarchy : validResourceHierarchies) {
+                ret.add(createMatcher(serviceDef, validResourceHierarchy, filterResources, policyType, null));
+            }
+        }
 
-            for (List<RangerResourceDef> validResourceHierarchy : resourceHierarchies) {
-                LOG.debug("validResourceHierarchy:[{}]", validResourceHierarchy);
+        if (includeConstraints && CollectionUtils.isNotEmpty(serviceDef.getConstraintDefs())) {
+            // hierarchies of a constraint policy come from the constraints it uses, so the matcher needs the constraint names
+            Set<String>                  constraintNames          = new HashSet<>();
+            Set<List<RangerResourceDef>> validResourceHierarchies = new HashSet<>();
 
-                Map<String, RangerPolicyResource> policyResources = new HashMap<>();
-
-                for (RangerResourceDef resourceDef : validResourceHierarchy) {
-                    policyResources.put(resourceDef.getName(), new RangerPolicyResource(filterResources.get(resourceDef.getName()), false, resourceDef.getRecursiveSupported()));
+            for (RangerConstraintDef constraintDef : serviceDef.getConstraintDefs()) {
+                if (constraintDef != null && StringUtils.isNotEmpty(constraintDef.getName())) {
+                    constraintNames.add(constraintDef.getName());
+                    validResourceHierarchies.addAll(serviceDefHelper.getResourceHierarchiesForConstraint(constraintDef.getName(), filterResources.keySet()));
                 }
+            }
 
-                RangerDefaultPolicyResourceMatcher matcher = new RangerDefaultPolicyResourceMatcher();
+            LOG.debug("Found {} valid constraint resource hierarchies for key-set {}", validResourceHierarchies.size(), filterResources.keySet());
 
-                matcher.setServiceDef(serviceDef);
-                matcher.setPolicyResources(policyResources, policyType);
-                matcher.init();
-
-                ret.add(matcher);
-
-                LOG.debug("Added matcher:[{}]", matcher);
+            for (List<RangerResourceDef> validResourceHierarchy : validResourceHierarchies) {
+                ret.add(createMatcher(serviceDef, validResourceHierarchy, filterResources, RangerPolicy.POLICY_TYPE_CONSTRAINTS, constraintNames));
             }
         }
 
         LOG.debug("<== ServiceDBStore.getMatchers(filterResources={}, , count={})", filterResources, ret.size());
 
         return ret;
+    }
+
+    private RangerPolicyResourceMatcher createMatcher(RangerServiceDef serviceDef, List<RangerResourceDef> resourceHierarchy, Map<String, String> filterResources, int policyType, Set<String> constraintNames) {
+        LOG.debug("validResourceHierarchy:[{}]", resourceHierarchy);
+
+        Map<String, RangerPolicyResource> policyResources = new HashMap<>();
+
+        for (RangerResourceDef resourceDef : resourceHierarchy) {
+            policyResources.put(resourceDef.getName(), new RangerPolicyResource(filterResources.get(resourceDef.getName()), false, resourceDef.getRecursiveSupported()));
+        }
+
+        RangerDefaultPolicyResourceMatcher matcher = new RangerDefaultPolicyResourceMatcher();
+
+        matcher.setServiceDef(serviceDef);
+        matcher.setPolicyResources(policyResources, policyType);
+
+        if (constraintNames != null) {
+            matcher.setConstraintNames(constraintNames); // must be set before init()
+        }
+
+        matcher.init();
+
+        LOG.debug("Added matcher:[{}]", matcher);
+
+        return matcher;
     }
 
     ServicePolicies getServicePoliciesWithDeltas(RangerServiceDef serviceDef, XXService service, RangerServiceDef tagServiceDef, XXService tagService, Long lastKnownVersion, Long maxNeededVersion) {
