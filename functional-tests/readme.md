@@ -95,7 +95,7 @@ Enter DB type (press Enter to default to postgres): postgres
 Available audit stores: opensearch, solr, none
 Enter audit store (press Enter to default to opensearch): opensearch
 
-Available test suites: rolerest xuserrest servicerest tagrest hdfs kms api hive
+Available test suites: rolerest xuserrest servicerest tagrest hdfs kms api hive ...
 Enter test suites space-separated (press Enter to run ALL): hdfs kms
 
 Available containers : hadoop hive hbase knox trino ozone kafka
