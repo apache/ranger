@@ -686,11 +686,20 @@ public class TestRangerServiceDefValidator {
         assertTrue(validator.isValidConstraintDefs(def, failures));
         assertTrue(failures.isEmpty());
 
+        // a constraint def must list at least one resource
         RangerConstraintDef emptyResources = constraintDef(1L, "requireApproval", new ArrayList<>(), Arrays.asList("execute"));
         emptyResources.setParameters(Collections.singletonList(param("approver", "string", null, true)));
         def.setConstraintDefs(Collections.singletonList(emptyResources));
-        assertTrue(validator.isValidConstraintDefs(def, failures));
-        assertTrue(failures.isEmpty());
+        assertFalse(validator.isValidConstraintDefs(def, failures));
+        utils.checkFailureForMissingValue(failures, "constraint def resources", "requireApproval");
+        assertHasErrorCode(ValidationErrorCode.SERVICE_DEF_VALIDATION_ERR_CONSTRAINT_NO_RESOURCES.getErrorCode());
+        failures.clear();
+
+        RangerConstraintDef nullResources = constraintDef(1L, "requireApproval", null, Arrays.asList("execute"));
+        def.setConstraintDefs(Collections.singletonList(nullResources));
+        assertFalse(validator.isValidConstraintDefs(def, failures));
+        assertHasErrorCode(ValidationErrorCode.SERVICE_DEF_VALIDATION_ERR_CONSTRAINT_NO_RESOURCES.getErrorCode());
+        failures.clear();
 
         assertFalse(validator.isValidConfigType("user", "approver", failures));
         utils.checkFailureForSemanticError(failures, "config def type", "approver");

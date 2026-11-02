@@ -75,6 +75,7 @@ public enum ValidationErrorCode {
     SERVICE_DEF_VALIDATION_ERR_CONSTRAINT_PARAM_UNKNOWN_ENUM(2031, "subtype[{0}] of constraint def[{1}] parameter[{2}] was not among defined enums[{3}]"),
     SERVICE_DEF_VALIDATION_ERR_CONSTRAINT_PARAM_SUBTYPE_NOT_EMPTY(2032, "subtype[{0}] of constraint def[{1}] parameter[{2}] must be empty when type is [{3}]"),
     SERVICE_DEF_VALIDATION_ERR_CONSTRAINT_INVALID_HIERARCHY(2033, "resources{0} of constraint def[{1}] do not form a valid resource hierarchy: each hierarchy must end with a resource that can be a leaf"),
+    SERVICE_DEF_VALIDATION_ERR_CONSTRAINT_NO_RESOURCES(2034, "constraint def[{0}] must list at least one resource"),
 
     // POLICY VALIDATION
     POLICY_VALIDATION_ERR_UNSUPPORTED_ACTION(3001, "Internal error: method signature isValid(Long) is only supported for DELETE"),

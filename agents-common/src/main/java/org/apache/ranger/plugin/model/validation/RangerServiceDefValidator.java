@@ -616,7 +616,17 @@ public class RangerServiceDefValidator extends RangerValidator {
         String       constraintName = constraintDef.getName();
 
         if (CollectionUtils.isEmpty(resources)) {
-            return true;
+            ValidationErrorCode error = ValidationErrorCode.SERVICE_DEF_VALIDATION_ERR_CONSTRAINT_NO_RESOURCES;
+
+            failures.add(new ValidationFailureDetailsBuilder()
+                    .field("constraint def resources")
+                    .subField(constraintName)
+                    .isMissing()
+                    .errorCode(error.getErrorCode())
+                    .becauseOf(error.getMessage(constraintName))
+                    .build());
+
+            return false;
         }
 
         Set<String> listed = new HashSet<>();
