@@ -33,6 +33,8 @@ import java.security.SecureRandom;
 import java.security.UnrecoverableKeyException;
 import java.security.cert.CertificateException;
 import java.util.Base64;
+import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
@@ -122,7 +124,9 @@ public class RangerRESTClient {
 	private volatile Supplier<String> tokenSupplier;
 	private          ClientFilter jwtAuthFilter;
 	private          ClientFilter basicAuthFilter;
+	private          ClientFilter trustedAuthFilter;
 	private volatile String       basicAuthHeader;
+	private volatile Map<String, String> trustedAuthHeaders = Collections.emptyMap();
 
 	public RangerRESTClient(String url, String sslConfigFileName, Configuration config) {
 		this(url, sslConfigFileName, config, getPropertyPrefix(config));
@@ -186,6 +190,33 @@ public class RangerRESTClient {
 	public int getRetryIntervalMs() { return retryIntervalMs; }
 
 	public void setRetryIntervalMs(int retryIntervalMs) { this.retryIntervalMs = retryIntervalMs; }
+
+	/**
+	 * Trusted HTTP headers for SPIFFE or other header-based auth.
+	 * Applied to every REST request from this client.
+	 */
+	public void setTrustedAuthHeaders(Map<String, String> headers) {
+		if (headers == null || headers.isEmpty()) {
+			trustedAuthHeaders = Collections.emptyMap();
+			trustedAuthFilter  = null;
+		} else {
+			trustedAuthHeaders = Collections.unmodifiableMap(new LinkedHashMap<>(headers));
+
+			final Map<String, String> headersToSend = trustedAuthHeaders;
+
+			trustedAuthFilter = new ClientFilter() {
+				@Override
+				public ClientResponse handle(ClientRequest clientRequest) throws ClientHandlerException {
+					for (Map.Entry<String, String> entry : headersToSend.entrySet()) {
+						clientRequest.getHeaders().add(entry.getKey(), entry.getValue());
+					}
+
+					return getNext().handle(clientRequest);
+				}
+			};
+		}
+		resetClient();
+	}
 
 	public void setBasicAuthInfo(String username, String password) {
 		mUsername = username;
@@ -291,6 +322,10 @@ public class RangerRESTClient {
 
 		if (authFilter != null && !client.isFilterPresent(authFilter)) {
 			client.addFilter(authFilter);
+		}
+
+		if (trustedAuthFilter != null && !client.isFilterPresent(trustedAuthFilter)) {
+			client.addFilter(trustedAuthFilter);
 		}
 
 		// Set Connection Timeout and ReadTime for the PolicyRefresh
