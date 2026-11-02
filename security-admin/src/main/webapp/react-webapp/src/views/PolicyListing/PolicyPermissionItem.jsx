@@ -17,7 +17,7 @@
  * under the License.
  */
 
-import React, { useRef, useState, useEffect } from "react";
+import React, { useRef, useState, useEffect, useMemo } from "react";
 import { Table, Button, Form } from "react-bootstrap";
 import { FieldArray } from "react-final-form-arrays";
 import { Col } from "react-bootstrap";
@@ -32,7 +32,8 @@ import {
   filter,
   some,
   isEqual,
-  sortBy
+  sortBy,
+  uniqBy
 } from "lodash";
 import { toast } from "react-toastify";
 import Editable from "Components/Editable";
@@ -107,11 +108,41 @@ export default function PolicyPermissionItem(props) {
     serviceCompDetails,
     formValues
   );
-  const constraintSelectOptions = matchedConstraintDefs.map((constraint) => ({
+
+  // Keep saved constraint names in the dropdown on edit (even if resources changed).
+  // Memoized so getConstraintDefByName is not called on every render —
+  // only re-runs when constraint names in the items actually change.
+  const constraintNamesKey = (formValues?.[attrName] || [])
+    .map((i) => getConstraintNameFromField(i?.constraintInfo?.constraintName) || "")
+    .join(",");
+  const savedConstraintDefs = useMemo(
+    () =>
+      (formValues?.[attrName] || [])
+        .map((item) =>
+          getConstraintDefByName(
+            serviceCompDetails,
+            getConstraintNameFromField(item?.constraintInfo?.constraintName)
+          )
+        )
+        .filter(Boolean),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [constraintNamesKey, serviceCompDetails]
+  );
+
+  const constraintDefsForSelect = uniqBy(
+    [...matchedConstraintDefs, ...savedConstraintDefs],
+    "name"
+  );
+
+  const constraintSelectOptions = constraintDefsForSelect.map((constraint) => ({
     label: constraint.label || constraint.name,
     value: constraint.name
   }));
   const constraintSelectFirstMsg = "Please select constraint name first";
+
+  // Serialized key of current allowed constraint names — used as a stable
+  // dep for the pruning effect below (avoids an inline .map().join() in deps).
+  const constraintOptionKey = constraintSelectOptions.map((o) => o.value).join(",");
 
   // When resources change, clear any constraint name that is no longer valid for
   // the selected resources (avoids stale state without a render-time side-effect).
@@ -120,6 +151,9 @@ export default function PolicyPermissionItem(props) {
       return;
     }
     const allowedNames = new Set(constraintSelectOptions.map((o) => o.value));
+    if (allowedNames.size === 0) {
+      return;
+    }
     const items = formValues?.[attrName] || [];
     items.forEach((item, index) => {
       const rowConstraintName = getConstraintNameFromField(
@@ -132,7 +166,7 @@ export default function PolicyPermissionItem(props) {
       }
     });
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [constraintSelectOptions.map((o) => o.value).join(","), isConstraintPolicy, changePolicyItemPermissions]);
+  }, [constraintOptionKey, isConstraintPolicy, changePolicyItemPermissions]);
 
   if (serviceCompDetails?.policyConditions?.length > 0) {
     permList.push("Rule Conditions");
@@ -223,6 +257,8 @@ export default function PolicyPermissionItem(props) {
         serviceCompDetails,
         rowConstraintName
       );
+      // Assign srcOp and fall through to the shared sortBy return below,
+      // keeping format consistent with all other policy type branches.
       srcOp = rowConstraintName
         ? getAccessTypesForConstraintDef(
             serviceCompDetails,
@@ -230,7 +266,6 @@ export default function PolicyPermissionItem(props) {
             getLeafAccessTypeRestrictions(formValues, serviceCompDetails)
           )
         : [];
-      return mapAccessTypesToSelectOptions(srcOp);
     } else {
       srcOp = serviceCompDetails.accessTypes;
     }
@@ -293,6 +328,55 @@ export default function PolicyPermissionItem(props) {
       serviceCompDetails?.name == "tag" ? "value" : "label"
     );
   };
+
+  // Serialize the active leaf resource-level access-type restrictions so the
+  // pruning effect below can detect when the available permission set changes.
+  const accessRestrictionKey = (() => {
+    if (!changePolicyItemPermissions || isConstraintPolicy) return "";
+    if (isMultiResources) {
+      return (formValues?.additionalResources || [])
+        .map((resourceObj) => {
+          for (let i = grpResourcesKeys.length - 1; i >= 0; i--) {
+            const sel = resourceObj?.[`resourceName-${grpResourcesKeys[i]}`];
+            if (sel && sel.value !== noneOptions.value) {
+              return (
+                (sel.accessTypeRestrictions || []).slice().sort().join(",") ||
+                "all"
+              );
+            }
+          }
+          return "";
+        })
+        .join("|");
+    }
+    for (let i = grpResourcesKeys.length - 1; i >= 0; i--) {
+      const sel = formValues?.[`resourceName-${grpResourcesKeys[i]}`];
+      if (sel && sel.value !== noneOptions.value) {
+        return (
+          (sel.accessTypeRestrictions || []).slice().sort().join(",") || "all"
+        );
+      }
+    }
+    return "";
+  })();
+
+  // Prune stale accesses when the resource selection changes the available
+  // access-type options.  Replaces the former render-time input.onChange call
+  // (the same anti-pattern addressed by Fix 6 for form.change calls).
+  useEffect(() => {
+    if (!changePolicyItemPermissions || isConstraintPolicy) return;
+    const items = formValues?.[attrName] || [];
+    items.forEach((item, idx) => {
+      const accesses = item?.accesses;
+      if (!isArray(accesses)) return;
+      const opts = getAccessTypeOptions(idx);
+      const filtered = filter(accesses, (m) => some(opts, m));
+      if (!isEqual(filtered, accesses)) {
+        form.change(`${attrName}[${idx}].accesses`, filtered);
+      }
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [accessRestrictionKey, changePolicyItemPermissions, attrName, isConstraintPolicy]);
 
   const getMaskingAccessTypeOptions = (index) => {
     if (serviceCompDetails?.dataMaskDef?.maskTypes?.length > 0) {
@@ -778,11 +862,14 @@ export default function PolicyPermissionItem(props) {
                                 <Field
                                   className="form-control"
                                   name={`${name}.accesses`}
-                                  validate={(value, formValues) =>
-                                    requiredForPolicyItem(
-                                      formValues[attrName],
-                                      index
-                                    )
+                                  validate={
+                                    isConstraintPolicy
+                                      ? undefined
+                                      : (value, formValues) =>
+                                          requiredForPolicyItem(
+                                            formValues[attrName],
+                                            index
+                                          )
                                   }
                                   render={({ input }) => (
                                     <div className="table-editable">
@@ -806,42 +893,28 @@ export default function PolicyPermissionItem(props) {
                                 <Field
                                   className="form-control"
                                   name={`${name}.accesses`}
-                                  validate={(value, formValues) =>
-                                    requiredForPolicyItem(
-                                      formValues[attrName],
-                                      index
-                                    )
+                                  validate={
+                                    isConstraintPolicy
+                                      ? undefined
+                                      : (value, formValues) =>
+                                          requiredForPolicyItem(
+                                            formValues[attrName],
+                                            index
+                                          )
                                   }
-                                  render={({ input }) => {
-                                    if (
-                                      formValues[attrName][index]?.accesses &&
-                                      isArray(
-                                        formValues[attrName][index].accesses
-                                      ) &&
-                                      changePolicyItemPermissions
-                                    ) {
-                                      let accTypeVal = filter(
-                                        formValues[attrName][index].accesses,
-                                        (m) => some(accessTypeOptions, m)
-                                      );
-                                      if (!isEqual(input.value, accTypeVal)) {
-                                        input.onChange(accTypeVal);
-                                      }
-                                    }
-                                    return (
-                                      <div className="table-editable">
-                                        <Editable
-                                          {...input}
-                                          placement="auto"
-                                          type="checkbox"
-                                          options={accessTypeOptions}
-                                          showSelectAll={true}
-                                          selectAllLabel="Select All"
-                                          popOverheader="Add/Edit Permissions"
-                                        />
-                                      </div>
-                                    );
-                                  }}
+                                  render={({ input }) => (
+                                    <div className="table-editable">
+                                      <Editable
+                                        {...input}
+                                        placement="auto"
+                                        type="checkbox"
+                                        options={accessTypeOptions}
+                                        showSelectAll={true}
+                                        selectAllLabel="Select All"
+                                        popOverheader="Add/Edit Permissions"
+                                      />
+                                    </div>
+                                  )}
                                 />
                               </td>
                             );

@@ -44,7 +44,8 @@ import {
   map,
   isUndefined,
   forEach,
-  reject
+  reject,
+  some
 } from "lodash";
 import { toast } from "react-toastify";
 import {
@@ -326,20 +327,14 @@ export default function AddUpdatePolicyForm() {
       serviceCompData,
       data.policyType
     );
-    if (serviceCompResourcesDetails) {
-      forEach(serviceCompResourcesDetails, (val) => {
-        if (
-          val.accessTypeRestrictions &&
-          val.accessTypeRestrictions.length > 0
-        ) {
-          setChangePolicyItemPermissions(true);
-        }
-      });
-    }
-    if (
+    const hasAccessTypeRestrictions = some(
+      serviceCompResourcesDetails,
+      (val) => val.accessTypeRestrictions?.length > 0
+    );
+    const isConstraintPolicyType =
       Number(data.policyType) ===
-      RangerPolicyType.RANGER_CONSTRAINT_POLICY_TYPE.value
-    ) {
+      RangerPolicyType.RANGER_CONSTRAINT_POLICY_TYPE.value;
+    if (hasAccessTypeRestrictions || isConstraintPolicyType) {
       setChangePolicyItemPermissions(true);
     }
     if (policyId) {
@@ -555,6 +550,10 @@ export default function AddUpdatePolicyForm() {
             }
           );
         }
+        // Note: for policyType 4 (constraint), constraintInfo is serialized via
+        // serializeConstraintPolicyItemsForApi in handleSubmit — getPolicyItemsVal
+        // is never called for constraint items.  This block is a safety fallback
+        // for any other path that might carry constraintInfo incidentally.
         if (key?.constraintInfo?.constraintName) {
           const constraintName =
             typeof key.constraintInfo.constraintName === "object"
@@ -573,18 +572,9 @@ export default function AddUpdatePolicyForm() {
           }
         }
 
-        if (
-          !isEmpty(obj) &&
-          !isEmpty(obj?.delegateAdmin) &&
-          Object.keys(obj)?.length > 1
-        ) {
-          policyResourceItem.push(obj);
-        }
-        if (
-          !isEmpty(obj) &&
-          isEmpty(obj?.delegateAdmin) &&
-          Object.keys(obj)?.length > 1
-        ) {
+        // Push when obj has any key beyond delegateAdmin — the two former blocks
+        // (one for non-empty delegateAdmin, one for empty) together reduce to this.
+        if (!isEmpty(obj) && Object.keys(obj).length > 1) {
           policyResourceItem.push(obj);
         }
       }

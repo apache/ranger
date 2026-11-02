@@ -95,9 +95,15 @@ const AccessRulesStep = ({
     "true";
   const policyPermissionItems = [];
   const policyType = values.policyType;
+  const isAccessPolicy =
+    policyType == RangerPolicyType.RANGER_ACCESS_POLICY_TYPE.value;
 
-  if (policyType == RangerPolicyType.RANGER_ACCESS_POLICY_TYPE.value) {
-    // Count items in each category
+  // Tab badge counts — only meaningful for access policies (type 0).
+  let allowTabTotal = 0;
+  let denyTabTotal = 0;
+  let allowAccordionDefault = ["0"];
+
+  if (isAccessPolicy) {
     const allowRulesCount = hasItems(values?.policyItems)
       ? values.policyItems.filter((item) => !isEmpty(item)).length
       : 0;
@@ -114,13 +120,11 @@ const AccessRulesStep = ({
       ? values.denyExceptions.filter((item) => !isEmpty(item)).length
       : 0;
 
-    // Total counts for tab display
-    const allowTabTotal = allowRulesCount + allowExceptionsCount;
-    const denyTabTotal = denyRulesCount + denyExceptionsCount;
+    allowTabTotal = allowRulesCount + allowExceptionsCount;
+    denyTabTotal = denyRulesCount + denyExceptionsCount;
 
-    // Auto-open "Exclude from Allow Rules" accordion item if it has saved values
     const hasAllowExceptions = hasItems(values?.allowExceptions);
-    const allowAccordionDefault = hasAllowExceptions ? ["0", "1"] : ["0"];
+    allowAccordionDefault = hasAllowExceptions ? ["0", "1"] : ["0"];
   }
 
   if (policyType == RangerPolicyType.RANGER_MASKING_POLICY_TYPE.value) {

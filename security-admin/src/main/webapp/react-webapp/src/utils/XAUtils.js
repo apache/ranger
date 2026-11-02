@@ -2098,15 +2098,23 @@ export const buildConstraintInfoForApi = (constraintInfoForm) => {
   return { constraintName, parameters };
 };
 
+/**
+ * Extract a plain principal name from either form format:
+ *  - Legacy AddUpdatePolicyForm: { label: "admin", value: "admin" }
+ *  - New PolicyPermissionItemVertical (UsersGroupsAndRolesSelectionComponent):
+ *      { value: "USER:admin", name: "admin", type: "USER" }
+ * Checking `name` before `value` ensures we don't return the "USER:" prefixed string.
+ */
 const legacyFormPrincipalName = (principal) => {
   if (typeof principal !== "object") {
     return principal;
   }
-  if (principal.value != null) {
-    return principal.value;
-  }
+  // UsersGroupsAndRolesSelectionComponent format stores the bare name in `name`
   if (principal.name != null) {
     return principal.name;
+  }
+  if (principal.value != null) {
+    return principal.value;
   }
   return principal;
 };
@@ -2150,13 +2158,28 @@ export const serializeConstraintPolicyItemsForApi = (
       }));
     }
 
-    if (key.users && key.users.length > 0) {
-      obj.users = key.users.map(legacyFormPrincipalName);
+    // Support both form formats for principals:
+    //   Legacy (AddUpdatePolicyForm): key.users / key.groups / key.roles are separate arrays of {label, value}
+    //   Vertical (PolicyPermissionItemVertical): key.users is a combined object {users, groups, roles}
+    //     where each principal is {value: "USER:name", name, type} from UsersGroupsAndRolesSelectionComponent
+    if (key.users) {
+      if (isArray(key.users)) {
+        if (key.users.length > 0) obj.users = key.users.map(legacyFormPrincipalName);
+      } else {
+        // Combined object format from UsersGroupsAndRolesSelectionComponent
+        if (key.users.users?.length > 0)
+          obj.users = key.users.users.map(legacyFormPrincipalName);
+        if (key.users.groups?.length > 0)
+          obj.groups = key.users.groups.map(legacyFormPrincipalName);
+        if (key.users.roles?.length > 0)
+          obj.roles = key.users.roles.map(legacyFormPrincipalName);
+      }
     }
-    if (key.groups && key.groups.length > 0) {
+    // Fallback: separate group/role arrays (legacy format)
+    if (!obj.groups && key.groups?.length > 0) {
       obj.groups = key.groups.map(legacyFormPrincipalName);
     }
-    if (key.roles && key.roles.length > 0) {
+    if (!obj.roles && key.roles?.length > 0) {
       obj.roles = key.roles.map(legacyFormPrincipalName);
     }
 
@@ -2238,17 +2261,35 @@ export const getMatchedConstraintDefs = (serviceCompDetails, formValues) => {
   const additionalResources = formValues?.additionalResources || [];
   const constraintDefs = serviceCompDetails?.constraintDefs || [];
 
-  if (isEmpty(additionalResources) || isEmpty(constraintDefs)) {
+  if (isEmpty(constraintDefs)) {
     return [];
   }
 
-  // Step 1: Extract resource names from each row (e.g. [['caiiservicecrn', 'namespace', 'endpoint']])
+  // No resource rows yet — list all constraint defs (create / edit before resources are set).
+  if (isEmpty(additionalResources)) {
+    return uniqBy(constraintDefs, "name");
+  }
+
+  // Step 1: Extract resource names from each row (e.g. [['catalog', 'schema', 'table']])
   const allSelectedResources = map(additionalResources, (row) => {
+    if (!row || typeof row !== "object") {
+      return [];
+    }
     const resourceKeys = pickBy(row, (val, key) =>
       startsWith(key, "resourceName-")
     );
-    return map(resourceKeys, "name");
+    return map(resourceKeys, "name").filter(Boolean);
   });
+
+  const hasAnyResourceSelection = some(
+    allSelectedResources,
+    (selected) => selected.length > 0
+  );
+
+  // Policy resources not specified — match any constraint (same as empty resource path on create).
+  if (!hasAnyResourceSelection) {
+    return uniqBy(constraintDefs, "name");
+  }
 
   // Step 2: Helper to check if two arrays have the same items (regardless of order)
   const isMatch = (arr1, arr2) =>
@@ -2256,7 +2297,7 @@ export const getMatchedConstraintDefs = (serviceCompDetails, formValues) => {
 
   // Step 3: Find constraintDefs whose resources match any selected row
   const matchedDefs = filter(constraintDefs, (def) =>
-    some(allSelectedResources, (selected) => isMatch(selected, def.resources))
+    some(allSelectedResources, (selected) => isMatch(selected, def.resources || []))
   );
 
   // Step 4: Remove duplicates by def.name

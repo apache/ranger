@@ -31,7 +31,10 @@ import {
   policyConditionUpdatedJSON,
   isPolicyExpired,
   policyInfo,
-  getAccessTypesByResource
+  getAccessTypesByResource,
+  serializeConstraintPolicyItemsForApi,
+  getEmptyPolicyItemArraysForNonConstraintType,
+  pruneConstraintPolicyItemsToMatchedResources
 } from "Utils/XAUtils";
 import { RangerPolicyType } from "Utils/XAEnums";
 import {
@@ -57,7 +60,11 @@ import {
   Row,
   Modal
 } from "react-bootstrap";
-import { validatePolicyForm } from "../policyFormValidation";
+import {
+  validatePolicyDetails,
+  validatePolicyItemsArray,
+  hasMissingConstraintFieldsOnPolicyItems
+} from "../policyFormValidation";
 import ResourcesStep from "../PolicyCreateStepperStepComp/ResourcesStep";
 import AccessRulesStep from "../PolicyCreateStepperStepComp/AccessRulesStep";
 import PolicyDetailsStep from "../PolicyCreateStepperStepComp/PolicyDetailsStep";
@@ -121,12 +128,6 @@ const setPolicyItemVal = (
     }
 
     // Users / Groups / Roles – merge into UsersGroupsAndRolesSelectionComponent format
-    const toNormalisedPrincipal = (name, type) => ({
-      value: `${type}:${name}`,
-      name: name,
-      type: type
-    });
-
     obj.users = {
       users: (val?.users || []).map((u) => toNormalisedPrincipal(u, "USER")),
       groups: (val?.groups || []).map((g) => toNormalisedPrincipal(g, "GROUP")),
@@ -322,8 +323,84 @@ const generateFormData = (policyData, serviceCompData) => {
     finalAccessTypes
   );
 
+  // ── Constraint policy items (policyType 4) ────────────────────────────────
+  const isConstraintType =
+    Number(data.policyType) ===
+    RangerPolicyType.RANGER_CONSTRAINT_POLICY_TYPE.value;
+
+  if (isConstraintType && policyData?.constraintPolicyItems?.length > 0) {
+    const allAccessTypes = serviceCompData.accessTypes || [];
+
+    data.constraintPolicyItems = policyData.constraintPolicyItems.map((val) => {
+      const obj = {};
+
+      // Principals – UsersGroupsAndRolesSelectionComponent format
+      obj.users = {
+        users: (val?.users || []).map((u) => toNormalisedPrincipal(u, "USER")),
+        groups: (val?.groups || []).map((g) => toNormalisedPrincipal(g, "GROUP")),
+        roles: (val?.roles || []).map((r) => toNormalisedPrincipal(r, "ROLE"))
+      };
+
+      // Accesses: API {type, isAllowed} → form {type, isAllowed, label} for checkboxes
+      if (val?.accesses?.length > 0) {
+        obj.accesses = val.accesses.map((a) => {
+          const def = allAccessTypes.find((t) => t.name === a.type);
+          return { type: a.type, isAllowed: true, label: def?.label || a.type };
+        });
+      } else {
+        obj.accesses = [];
+      }
+
+      // Constraint info: { constraintName: {label, value}, parameters: {...} }
+      if (val?.constraintInfo?.constraintName) {
+        const cName = val.constraintInfo.constraintName;
+        const constraintDef = find(serviceCompData.constraintDefs || [], {
+          name: cName
+        });
+        obj.constraintInfo = {
+          constraintName: {
+            label: constraintDef?.label || cName,
+            value: cName
+          },
+          parameters: { ...(val.constraintInfo.parameters || {}) }
+        };
+      }
+
+      // Conditions
+      if (val?.conditions?.length > 0) {
+        obj.conditions = {};
+        for (const condData of val.conditions) {
+          const conditionObj = find(
+            policyConditionUpdatedJSON(serviceCompData?.policyConditions),
+            (m) => m.name === condData.type
+          );
+          if (conditionObj && !isEmpty(conditionObj.uiHint)) {
+            obj.conditions[condData.type] = JSON.parse(conditionObj.uiHint)
+              .isMultiValue
+              ? condData.values
+              : condData.values.toString().trim();
+          }
+        }
+      }
+
+      return obj;
+    });
+  } else {
+    data.constraintPolicyItems = [{}];
+  }
+
   return data;
 };
+
+/**
+ * Normalise a plain string principal name into the format expected by
+ * UsersGroupsAndRolesSelectionComponent: { value: "TYPE:name", name, type }.
+ */
+const toNormalisedPrincipal = (name, type) => ({
+  value: `${type}:${name}`,
+  name,
+  type
+});
 
 /** Resolve a stored principal object to its plain name */
 const principalName = (p) => {
@@ -518,46 +595,85 @@ export default function EditPolicyForm() {
     }
   };
 
-  const handleSubmit = async (values) => {
+  const handleSubmit = async (values, form) => {
+    const isConstraintPolicy =
+      Number(values.policyType) ===
+      RangerPolicyType.RANGER_CONSTRAINT_POLICY_TYPE.value;
+
+    // Prune stale constraint items when resources change before submit
+    if (isConstraintPolicy && form) {
+      pruneConstraintPolicyItemsToMatchedResources(form, serviceCompDef);
+      values = form.getState().values;
+    }
+
+    // Block submit if any constraint rule is incomplete
+    if (hasMissingConstraintFieldsOnPolicyItems(values, serviceCompDef)) {
+      toast.error(
+        "Please complete each constraint rule: constraint name, permissions, and required parameters.",
+        { toastId: "constraintPolicyItems" }
+      );
+      return;
+    }
+
     try {
       setPreventUnblock(true);
       setBlockUI(true);
 
       const data = {};
-      const finalAccessTypes = getAccessTypesByResource(values, serviceCompDef);
-      data.policyItems = getPolicyItemsVal(
-        values,
-        "policyItems",
-        finalAccessTypes
-      );
-      data.allowExceptions = getPolicyItemsVal(
-        values,
-        "allowExceptions",
-        finalAccessTypes
-      );
-      data.denyPolicyItems = values.isDenyAllElse
-        ? []
-        : getPolicyItemsVal(values, "denyPolicyItems", finalAccessTypes);
-      data.denyExceptions = values.isDenyAllElse
-        ? []
-        : getPolicyItemsVal(values, "denyExceptions", finalAccessTypes);
-      data.dataMaskPolicyItems = getPolicyItemsVal(
-        values,
-        "dataMaskPolicyItems",
-        finalAccessTypes
-      );
-      data.rowFilterPolicyItems = getPolicyItemsVal(
-        values,
-        "rowFilterPolicyItems",
-        finalAccessTypes
-      );
+
+      if (isConstraintPolicy) {
+        // Constraint policy: send only constraintPolicyItems; zero other arrays
+        Object.assign(data, getEmptyPolicyItemArraysForNonConstraintType());
+        data.constraintPolicyItems = serializeConstraintPolicyItemsForApi(
+          values,
+          serviceCompDef
+        );
+        if (data.constraintPolicyItems.length === 0) {
+          setBlockUI(false);
+          toast.error("Please add at least one complete constraint rule.", {
+            toastId: "constraintPolicyItemsEmpty"
+          });
+          return;
+        }
+        data.isDenyAllElse = false;
+      } else {
+        const finalAccessTypes = getAccessTypesByResource(values, serviceCompDef);
+        data.policyItems = getPolicyItemsVal(
+          values,
+          "policyItems",
+          finalAccessTypes
+        );
+        data.allowExceptions = getPolicyItemsVal(
+          values,
+          "allowExceptions",
+          finalAccessTypes
+        );
+        data.denyPolicyItems = values.isDenyAllElse
+          ? []
+          : getPolicyItemsVal(values, "denyPolicyItems", finalAccessTypes);
+        data.denyExceptions = values.isDenyAllElse
+          ? []
+          : getPolicyItemsVal(values, "denyExceptions", finalAccessTypes);
+        data.dataMaskPolicyItems = getPolicyItemsVal(
+          values,
+          "dataMaskPolicyItems",
+          finalAccessTypes
+        );
+        data.rowFilterPolicyItems = getPolicyItemsVal(
+          values,
+          "rowFilterPolicyItems",
+          finalAccessTypes
+        );
+        data.constraintPolicyItems = [];
+        data.isDenyAllElse = values.isDenyAllElse || false;
+      }
 
       data.id = policyId;
       data.name = values.policyName;
       data.description = values.description || "";
       data.isEnabled = values.isEnabled !== false;
       data.isAuditEnabled = values.isAuditEnabled !== false;
-      data.isDenyAllElse = values.isDenyAllElse || false;
+      // isDenyAllElse is already set inside the isConstraintPolicy branch above
       data.policyPriority = values.policyPriority === 1 ? 1 : 0;
       data.policyType = values.policyType ?? 0;
       data.service = serviceDetails?.name;
@@ -692,13 +808,17 @@ export default function EditPolicyForm() {
       ? "Masking"
       : formData.policyType === 2
         ? "Row Filter"
-        : "Access";
+        : formData.policyType === RangerPolicyType.RANGER_CONSTRAINT_POLICY_TYPE.value
+          ? RangerPolicyType.RANGER_CONSTRAINT_POLICY_TYPE.label
+          : "Access";
   const policyTypeBg =
     formData.policyType === 1
       ? "warning"
       : formData.policyType === 2
         ? "info"
-        : "primary";
+        : formData.policyType === RangerPolicyType.RANGER_CONSTRAINT_POLICY_TYPE.value
+          ? "secondary"
+          : "primary";
 
   return (
     <>
@@ -707,7 +827,14 @@ export default function EditPolicyForm() {
           onSubmit={handleSubmit}
           mutators={{ ...arrayMutators }}
           initialValues={formData}
-          validate={validatePolicyForm}
+          validate={(values) => ({
+            ...validatePolicyDetails(values),
+            ...validatePolicyItemsArray(
+              values,
+              Number(values.policyType ?? 0),
+              serviceCompDef
+            )
+          })}
           render={({
             handleSubmit: submitForm,
             values,
