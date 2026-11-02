@@ -110,8 +110,6 @@ services:
       - ./scripts/kdc/krb5.conf:/etc/krb5.conf
     networks:
       - ranger
-    ports:
-      - "8983:8983"
     depends_on:
       ranger-kdc:
         condition: service_started
@@ -138,9 +136,6 @@ services:
       - opensearch-logs:/usr/share/opensearch/logs
     networks:
       - ranger
-    ports:
-      - "9200:9200"
-      - "9300:9300"
     depends_on:
       ranger-kdc:
         condition: service_started
@@ -216,8 +211,6 @@ services:
     container_name: ranger-audit-dispatcher-solr
     hostname: ranger-audit-dispatcher-solr.rangernw
     command: ["solr"]
-    ports:
-      - "7091:7090"
     depends_on:
       ranger-kdc:
         condition: service_started
@@ -252,8 +245,6 @@ services:
     container_name: ranger-audit-dispatcher-opensearch
     hostname: ranger-audit-dispatcher-opensearch.rangernw
     command: ["opensearch"]
-    ports:
-      - "7093:7090"
     depends_on:
       ranger-kdc:
         condition: service_healthy
@@ -291,8 +282,6 @@ services:
     container_name: ranger-audit-dispatcher-hdfs
     hostname: ranger-audit-dispatcher-hdfs.rangernw
     command: ["hdfs"]
-    ports:
-      - "7092:7090"
     depends_on:
       ranger-kdc:
         condition: service_started
