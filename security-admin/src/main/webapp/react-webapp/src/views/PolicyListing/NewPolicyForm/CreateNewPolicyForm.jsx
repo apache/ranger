@@ -175,7 +175,10 @@ const CreateNewPolicyForm = () => {
       const obj = {};
       appendAccessesPrincipalsAndConditions(obj, key);
 
-      const constraintInfo = buildConstraintInfoForApi(key.constraintInfo);
+      const constraintInfo = buildConstraintInfoForApi(
+        key.constraintInfo,
+        selectedServiceComponentDef
+      );
       if (constraintInfo) {
         obj.constraintInfo = constraintInfo;
       }
@@ -464,9 +467,6 @@ const CreateNewPolicyForm = () => {
       } else {
         localStorage.removeItem("zoneDetails");
       }
-
-      // eslint-disable-next-line no-console
-      console.log("Create policy payload:", JSON.stringify(data, null, 2));
 
       const getPolicyCount = await fetchApi({
         url: "plugins/policies/count",

@@ -110,9 +110,8 @@ export const isRenderRowFilter = (rowFilterDef) => {
     : false;
 };
 
-export const isRenderConstraint = (constraintDef) => {
-  return constraintDef && constraintDef.length > 0 ? true : false;
-};
+export const isRenderConstraint = (constraintDefs) =>
+  Array.isArray(constraintDefs) && constraintDefs.length > 0;
 
 // Returns the policy types (Access / Masking / Row Filter) supported by a service def.
 // Access is always supported; Masking and Row Filter depend on the service def.
@@ -1555,7 +1554,6 @@ export const policyConditionUpdatedJSON = (policyCond) => {
 };
 
 // Get resources with help of policy type
-
 export const getResourcesDefVal = (serviceDef, policyType) => {
   let resources = [];
   if (RangerPolicyType.RANGER_MASKING_POLICY_TYPE.value == policyType) {
@@ -1574,6 +1572,7 @@ export const getResourcesDefVal = (serviceDef, policyType) => {
   return resources;
 };
 
+// Get constraint resources
 export const getConstraintResources = (serviceDef) => {
   let uniqueResources = uniq(flatMap(serviceDef?.constraintDefs, "resources"));
   let result = filter(serviceDef?.resources, (item) =>
@@ -1615,7 +1614,10 @@ export const getConstraintDefByName = (serviceDef, constraintName) => {
  * Checks the form-value option first (it carries the property from ResourceSelectComp),
  * then falls back to the service-def resource definition.
  */
-export const getLeafAccessTypeRestrictions = (formValues, serviceCompDetails) => {
+export const getLeafAccessTypeRestrictions = (
+  formValues,
+  serviceCompDetails
+) => {
   if (!formValues || !serviceCompDetails) {
     return null;
   }
@@ -1867,7 +1869,7 @@ export const getResourceLevelKeysSorted = (serviceCompDetails) => {
 export const getAccessTypesByResource = (
   formValues,
   serviceCompDetails,
-  getMatchedConstraint
+  getMatchedConstraintItems
 ) => {
   if (!formValues || !serviceCompDetails) {
     return [];
@@ -1893,8 +1895,10 @@ export const getAccessTypesByResource = (
     formValues.policyType
   ) {
     srcOp =
-      getAccessTypesFromMatchedDefs(getMatchedConstraint, serviceCompDetails) ||
-      [];
+      getAccessTypesFromMatchedDefs(
+        getMatchedConstraintItems,
+        serviceCompDetails
+      ) || [];
   } else {
     srcOp = serviceCompDetails.accessTypes;
   }
@@ -1936,78 +1940,6 @@ export const getAccessTypesByResource = (
     [(o) => o.label.toLowerCase()]
   );
 };
-
-// // get constraint policy access types
-// export const getConstraintPolicyAccessTypes = (
-//   serviceCompDetails,
-//   formValues
-// ) => {
-//   const additionalResources = formValues?.additionalResources;
-//   const constraintDefs = serviceCompDetails?.constraintDefs;
-//   const allAccessTypes = serviceCompDetails?.accessTypes;
-
-//   if (
-//     !Array.isArray(additionalResources) ||
-//     !Array.isArray(constraintDefs) ||
-//     !Array.isArray(allAccessTypes)
-//   ) {
-//     return [];
-//   }
-
-//   // Helper: check if two arrays contain the exact same unique resources
-//   const isExactResourceMatch = (resA = [], resB = []) => {
-//     if (resA.length !== resB.length) return false;
-//     const setB = new Set(resB);
-//     return resA.every((name) => setB.has(name));
-//   };
-
-//   const matchedAccessTypeNames = new Set();
-//   const evaluatedSignatures = new Set();
-
-//   for (const row of additionalResources) {
-//     // Extract resource names in level order: ["caiiservicecrn", "namespace", ...]
-//     const resourceNames = [];
-//     for (const [key, val] of Object.entries(row)) {
-//       if (key.startsWith("resourceName-") && val?.name) {
-//         resourceNames.push(val.name);
-//       }
-//     }
-
-//     if (resourceNames.length === 0) continue;
-
-//     // Skip redundant evaluations if the same resource combination exists in another row
-//     const signature = resourceNames.slice().sort().join(",");
-//     if (evaluatedSignatures.has(signature)) continue;
-//     evaluatedSignatures.add(signature);
-
-//     // Find all constraintDefs that match this exact resource combination
-//     for (const def of constraintDefs) {
-//       if (isExactResourceMatch(resourceNames, def.resources)) {
-//         if (Array.isArray(def.accessTypes)) {
-//           def.accessTypes.forEach((type) => matchedAccessTypeNames.add(type));
-//         }
-//       }
-//     }
-//   }
-
-//   // Filter full accessType objects that exist in our matched names
-//   return allAccessTypes.filter((item) => matchedAccessTypeNames.has(item.name));
-// };
-
-// export const getAllConstraintAccessTypes = (serviceCompDetails) => {
-//   const constraintDefs = serviceCompDetails?.constraintDefs || [];
-//   const accessTypesList = serviceCompDetails?.accessTypes || [];
-
-//   // 1. Collect all unique accessType strings from every constraintDef
-//   const targetAccessTypeNames = new Set(
-//     flatMap(constraintDefs, (def) => def.accessTypes || [])
-//   );
-
-//   // 2. Filter the full objects matching those names
-//   return filter(accessTypesList, (item) =>
-//     targetAccessTypeNames.has(item.name)
-//   );
-// };
 
 export const prunePolicyItemAccessesToAllowedTypes = (
   form,
@@ -2204,10 +2136,7 @@ export const serializeConstraintPolicyItemsForApi = (
         type: access.type ?? access.value,
         isAllowed: true
       }));
-    } else if (
-      key?.accesses?.tableList?.length > 0 &&
-      isTagService
-    ) {
+    } else if (key?.accesses?.tableList?.length > 0 && isTagService) {
       let accessesData = [];
       for (const data in key.accesses.tableList) {
         accessesData = [
@@ -2340,14 +2269,11 @@ export const getAccessTypesFromMatchedDefs = (
 ) => {
   const allAccessTypes = serviceCompDetails?.accessTypes || [];
 
-  // Extract unique accessType names: ['execute', 'select', ...]
-  const accessTypeNames = _.chain(matchedDefs)
-    .flatMap("accessTypes")
-    .uniq()
-    .value();
-
-  // Filter full objects from serviceCompDetails.accessTypes
-  return _.filter(allAccessTypes, (item) =>
-    _.includes(accessTypeNames, item.name)
+  // Collect unique accessType names across all matched constraint defs
+  const accessTypeNames = uniq(
+    flatMap(matchedDefs, (def) => def.accessTypes || []).filter(Boolean)
   );
+
+  // Return matching full accessType objects from the service def
+  return filter(allAccessTypes, (item) => includes(accessTypeNames, item.name));
 };

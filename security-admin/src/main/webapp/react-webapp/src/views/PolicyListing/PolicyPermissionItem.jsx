@@ -17,7 +17,7 @@
  * under the License.
  */
 
-import React, { useRef, useState } from "react";
+import React, { useRef, useState, useEffect } from "react";
 import { Table, Button, Form } from "react-bootstrap";
 import { FieldArray } from "react-final-form-arrays";
 import { Col } from "react-bootstrap";
@@ -112,6 +112,27 @@ export default function PolicyPermissionItem(props) {
     value: constraint.name
   }));
   const constraintSelectFirstMsg = "Please select constraint name first";
+
+  // When resources change, clear any constraint name that is no longer valid for
+  // the selected resources (avoids stale state without a render-time side-effect).
+  useEffect(() => {
+    if (!isConstraintPolicy || !changePolicyItemPermissions) {
+      return;
+    }
+    const allowedNames = new Set(constraintSelectOptions.map((o) => o.value));
+    const items = formValues?.[attrName] || [];
+    items.forEach((item, index) => {
+      const rowConstraintName = getConstraintNameFromField(
+        item?.constraintInfo?.constraintName
+      );
+      if (rowConstraintName && !allowedNames.has(rowConstraintName)) {
+        form.change(`${attrName}[${index}].constraintInfo.constraintName`, null);
+        form.change(`${attrName}[${index}].constraintInfo.parameters`, undefined);
+        form.change(`${attrName}[${index}].accesses`, undefined);
+      }
+    });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [constraintSelectOptions.map((o) => o.value).join(","), isConstraintPolicy, changePolicyItemPermissions]);
 
   if (serviceCompDetails?.policyConditions?.length > 0) {
     permList.push("Rule Conditions");
@@ -689,54 +710,31 @@ export default function PolicyPermissionItem(props) {
                           );
                         }
                         if (colName == "Constraint Name") {
-                          const allowedNames = new Set(
-                            constraintSelectOptions.map((o) => o.value)
-                          );
-                          const rowConstraintName = getConstraintNameFromField(
-                            fields.value[index]?.constraintInfo?.constraintName
-                          );
                           return (
                             <td key={colName} className="align-middle">
                               <Field
                                 name={`${name}.constraintInfo.constraintName`}
-                                render={({ input }) => {
-                                  if (
-                                    changePolicyItemPermissions &&
-                                    rowConstraintName &&
-                                    !allowedNames.has(rowConstraintName)
-                                  ) {
-                                    form.change(
-                                      `${name}.constraintInfo.constraintName`,
-                                      null
-                                    );
-                                    form.change(
-                                      `${name}.constraintInfo.parameters`,
-                                      undefined
-                                    );
-                                    form.change(`${name}.accesses`, undefined);
-                                  }
-                                  return (
-                                    <Select
-                                      inputId={`${name}-constraint-name`}
-                                      options={constraintSelectOptions}
-                                      value={input.value}
-                                      onChange={(option) =>
-                                        handleConstraintNameChange(
-                                          input,
-                                          name,
-                                          option
-                                        )
-                                      }
-                                      onBlur={input.onBlur}
-                                      placeholder="Select constraint"
-                                      isClearable
-                                      isDisabled={
-                                        constraintSelectOptions.length === 0
-                                      }
-                                      styles={selectInputCustomStyles}
-                                    />
-                                  );
-                                }}
+                                render={({ input }) => (
+                                  <Select
+                                    inputId={`${name}-constraint-name`}
+                                    options={constraintSelectOptions}
+                                    value={input.value}
+                                    onChange={(option) =>
+                                      handleConstraintNameChange(
+                                        input,
+                                        name,
+                                        option
+                                      )
+                                    }
+                                    onBlur={input.onBlur}
+                                    placeholder="Select constraint"
+                                    isClearable
+                                    isDisabled={
+                                      constraintSelectOptions.length === 0
+                                    }
+                                    styles={selectInputCustomStyles}
+                                  />
+                                )}
                               />
                             </td>
                           );
