@@ -181,7 +181,9 @@ public class TestRangerServiceDefHelper {
         assertEquals(Collections.singleton(Arrays.asList("Database", "Table")), hierarchyNames(helper, helper.getResourceHierarchiesForConstraint("sibling", Arrays.asList("Database", "Table"))));
         assertTrue(helper.getResourceHierarchiesForConstraint("udfOnly", Arrays.asList("Database", "UDF")).isEmpty());
 
-        assertEquals(helper.getResourceHierarchies(RangerPolicy.POLICY_TYPE_ACCESS, Arrays.asList("Database", "Table")), helper.getResourceHierarchiesForConstraint("unrestricted", Arrays.asList("Database", "Table")));
+        // a constraint-def without resources is invalid: it is ignored
+        assertTrue(helper.getResourceHierarchiesForConstraint("unrestricted", Arrays.asList("Database", "Table")).isEmpty());
+        assertNull(helper.getConstraintDef("unrestricted"));
         assertTrue(helper.getResourceHierarchiesForConstraint("missing", tableKeys).isEmpty());
 
         // Database is not a valid leaf: [Database] alone is not a hierarchy of databaseUdf, same as for access policies
