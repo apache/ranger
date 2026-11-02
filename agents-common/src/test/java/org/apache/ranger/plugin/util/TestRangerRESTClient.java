@@ -29,7 +29,9 @@ import org.junit.jupiter.api.Test;
 
 import java.net.InetSocketAddress;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
 
@@ -43,6 +45,7 @@ public class TestRangerRESTClient {
     private static final String SERVICE_NAME = "test-service";
     private static final String APP_ID = "test-app";
     private static final String ERR_MESSAGE = "Ranger URL is null or empty.";
+    private static final String VALID_SPIFFE  = "spiffe://example.org/ns/default/sa/default";
 
     @Test
     public void testPluginInit_WithNoUrl_ThrowsException() {
@@ -69,6 +72,46 @@ public class TestRangerRESTClient {
     @Test
     public void tokenSupplierWithoutTokenFallsBackToBasicAuth() throws Exception {
         assertEquals("Basic dXNlcjE6cGFzc3dvcmQx", captureAuthHeader(() -> null, "user1", "password1"));
+    }
+
+    @Test
+    public void setTrustedAuthHeadersAddsHeaderToOutboundRequest() throws Exception {
+        AtomicReference<String> capturedSpiffeHeader = new AtomicReference<>();
+        HttpServer              httpServer           = HttpServer.create(new InetSocketAddress(0), 0);
+
+        httpServer.createContext("/", exchange -> {
+            List<String> values = exchange.getRequestHeaders().get("X-Spiffe-Id");
+
+            if (values != null && !values.isEmpty()) {
+                capturedSpiffeHeader.set(values.get(0));
+            }
+
+            exchange.sendResponseHeaders(200, -1);
+            exchange.close();
+        });
+
+        httpServer.start();
+
+        try {
+            String              serverUrl = "http://localhost:" + httpServer.getAddress().getPort();
+            Configuration       conf      = new Configuration();
+            RangerRESTClient    client    = new RangerRESTClient(serverUrl, null, conf);
+            Map<String, String> headers   = new LinkedHashMap<>();
+
+            headers.put("X-Spiffe-Id", VALID_SPIFFE);
+            client.setTrustedAuthHeaders(headers);
+
+            ClientResponse response = client.get("/test", Collections.emptyMap());
+            try {
+                assertEquals(200, response.getStatus());
+            } finally {
+                response.close();
+            }
+
+            assertEquals(VALID_SPIFFE, capturedSpiffeHeader.get());
+        } finally {
+            httpServer.stop(0);
+        }
     }
 
     private String captureAuthHeader(Supplier<String> tokenSupplier, String username, String password) throws Exception {
