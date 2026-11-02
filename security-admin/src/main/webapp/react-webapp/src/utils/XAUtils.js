@@ -50,7 +50,8 @@ import {
   startsWith,
   pickBy,
   uniqBy,
-  difference
+  difference,
+  capitalize
 } from "lodash";
 import { matchRoutes } from "react-router-dom";
 import dateFormat from "dateformat";
@@ -1608,6 +1609,14 @@ export const getConstraintDefByName = (serviceDef, constraintName) => {
   return find(serviceDef.constraintDefs, { name: constraintName }) || null;
 };
 
+/** Enum definition for a constraint parameter (param.subType → serviceDef.enums). */
+export const getConstraintParamEnumDef = (serviceDef, parameterDef) => {
+  if (!parameterDef?.subType || !serviceDef?.enums) {
+    return null;
+  }
+  return find(serviceDef.enums, { name: parameterDef.subType });
+};
+
 /**
  * For constraint policy (type 4) — walk the deepest selected resource in a row
  * and return its accessTypeRestrictions names (or null when none).
@@ -2164,7 +2173,8 @@ export const serializeConstraintPolicyItemsForApi = (
     //     where each principal is {value: "USER:name", name, type} from UsersGroupsAndRolesSelectionComponent
     if (key.users) {
       if (isArray(key.users)) {
-        if (key.users.length > 0) obj.users = key.users.map(legacyFormPrincipalName);
+        if (key.users.length > 0)
+          obj.users = key.users.map(legacyFormPrincipalName);
       } else {
         // Combined object format from UsersGroupsAndRolesSelectionComponent
         if (key.users.users?.length > 0)
@@ -2223,6 +2233,16 @@ export const getEmptyPolicyItemArraysForNonConstraintType = () => ({
   rowFilterPolicyItems: []
 });
 
+/** lodash capitalize on label only; keeps name/value fields unchanged. */
+const mapAccessTypeDefsWithCapitalizedLabels = (accessTypeDefs) =>
+  sortBy(
+    map(accessTypeDefs, (obj) => ({
+      ...obj,
+      label: capitalize(String(obj.label ?? obj.name ?? ""))
+    })),
+    "label"
+  );
+
 //CommonFunction to get display label for policy permission item
 export const getPolicyPermissionItemDisplayLbl = (
   serviceDef,
@@ -2244,16 +2264,14 @@ export const getPolicyPermissionItemDisplayLbl = (
   }
   if (serviceDef.name == "tag") {
     return map(sortBy(accesTypeKeys), (val) => ({ label: val }));
-  } else {
-    if (accessType.length == accessTypeDefVal.length) {
-      return sortBy(accessTypeDefVal, "label");
-    } else {
-      const accessTypeDisplayLblObj = filter(accessTypeDefVal, (obj) =>
-        includes(accesTypeKeys, obj.name)
-      );
-      return sortBy(accessTypeDisplayLblObj, "label");
-    }
   }
+  if (accessType.length == accessTypeDefVal.length) {
+    return mapAccessTypeDefsWithCapitalizedLabels(accessTypeDefVal);
+  }
+  const accessTypeDisplayLblObj = filter(accessTypeDefVal, (obj) =>
+    includes(accesTypeKeys, obj.name)
+  );
+  return mapAccessTypeDefsWithCapitalizedLabels(accessTypeDisplayLblObj);
 };
 
 //Common function to get constraint policy items
@@ -2297,7 +2315,9 @@ export const getMatchedConstraintDefs = (serviceCompDetails, formValues) => {
 
   // Step 3: Find constraintDefs whose resources match any selected row
   const matchedDefs = filter(constraintDefs, (def) =>
-    some(allSelectedResources, (selected) => isMatch(selected, def.resources || []))
+    some(allSelectedResources, (selected) =>
+      isMatch(selected, def.resources || [])
+    )
   );
 
   // Step 4: Remove duplicates by def.name

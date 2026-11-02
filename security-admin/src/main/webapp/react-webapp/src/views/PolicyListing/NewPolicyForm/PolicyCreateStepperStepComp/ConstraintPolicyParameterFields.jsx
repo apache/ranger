@@ -22,20 +22,13 @@ import { Field } from "react-final-form";
 import { Row, Col, Form as FormB } from "react-bootstrap";
 import BootstrapSwitchButton from "bootstrap-switch-button-react";
 import Select from "react-select";
-import { find } from "lodash";
 import { selectInputCustomStyles } from "Components/CommonComponents";
+import { getConstraintParamEnumDef } from "Utils/XAUtils";
 
 const required = (value) =>
   value !== undefined && value !== null && value !== ""
     ? undefined
     : "Required";
-
-export const getConstraintParamEnumDef = (serviceCompDetails, param) => {
-  if (!param?.subType || !serviceCompDetails?.enums) {
-    return null;
-  }
-  return find(serviceCompDetails.enums, { name: param.subType });
-};
 
 export const getConstraintParamEnumSelectOptions = (
   serviceCompDetails,
@@ -95,7 +88,10 @@ export const buildDefaultConstraintParameters = (
   const defaults = {};
   parameters.forEach((param) => {
     if (param.type === "boolean") {
-      defaults[param.name] = getInitialParameterValue(param, serviceCompDetails);
+      defaults[param.name] = getInitialParameterValue(
+        param,
+        serviceCompDetails
+      );
       return;
     }
     if (param.type === "enum") {
@@ -366,9 +362,7 @@ export const ConstraintPolicyParameterTableCell = ({
         <div key={param.name} className="mb-2 text-start">
           <FormB.Label className="small mb-1 d-block">
             {param.label || param.name}
-            {param.mandatory ? (
-              <span className="required-mark">*</span>
-            ) : null}
+            {param.mandatory ? <span className="required-mark">*</span> : null}
           </FormB.Label>
           <Field
             name={`${fieldNamePrefix}.${param.name}`}

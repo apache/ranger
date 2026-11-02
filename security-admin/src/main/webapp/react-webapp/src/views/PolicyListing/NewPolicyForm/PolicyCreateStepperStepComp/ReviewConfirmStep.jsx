@@ -307,9 +307,7 @@ const ReviewConfirmStep = ({ values, selectedServiceComponentDef }) => {
         <div className="px-3 py-2">
           {isConstraint && hasConstraintName && (
             <InfoRow label="Constraint Name">
-              <Badge bg="info">
-                {constraintDef?.label || constraintName}
-              </Badge>
+              <Badge bg="info">{constraintDef?.label || constraintName}</Badge>
             </InfoRow>
           )}
 
@@ -350,7 +348,7 @@ const ReviewConfirmStep = ({ values, selectedServiceComponentDef }) => {
               ) : item.accesses.length > 0 ? (
                 <div className="d-flex flex-wrap gap-1">
                   {item.accesses.map((a, ai) => (
-                    <Badge key={ai} bg="primary">
+                    <Badge key={ai} bg="primary" className="text-capitalize">
                       {a?.label}
                     </Badge>
                   ))}
@@ -525,10 +523,7 @@ const ReviewConfirmStep = ({ values, selectedServiceComponentDef }) => {
       );
     if (isConstraint)
       return (
-        <RuleGroup
-          attrName="constraintPolicyItems"
-          title="Constraint Rules"
-        />
+        <RuleGroup attrName="constraintPolicyItems" title="Constraint Rules" />
       );
 
     return (

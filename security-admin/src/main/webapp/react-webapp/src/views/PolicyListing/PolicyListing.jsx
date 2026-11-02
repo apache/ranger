@@ -343,8 +343,7 @@ function PolicyListing(props) {
       try {
         const response = await fetchApi({
           url: `plugins/policies/service/${serviceId}`,
-          params: params,
-          skipNavigate: true
+          params: params
         });
         policyData = response.data?.policies || [];
         totalCount = response.data?.totalCount || 0;

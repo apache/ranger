@@ -113,7 +113,9 @@ export default function PolicyPermissionItem(props) {
   // Memoized so getConstraintDefByName is not called on every render —
   // only re-runs when constraint names in the items actually change.
   const constraintNamesKey = (formValues?.[attrName] || [])
-    .map((i) => getConstraintNameFromField(i?.constraintInfo?.constraintName) || "")
+    .map(
+      (i) => getConstraintNameFromField(i?.constraintInfo?.constraintName) || ""
+    )
     .join(",");
   const savedConstraintDefs = useMemo(
     () =>
@@ -142,7 +144,9 @@ export default function PolicyPermissionItem(props) {
 
   // Serialized key of current allowed constraint names — used as a stable
   // dep for the pruning effect below (avoids an inline .map().join() in deps).
-  const constraintOptionKey = constraintSelectOptions.map((o) => o.value).join(",");
+  const constraintOptionKey = constraintSelectOptions
+    .map((o) => o.value)
+    .join(",");
 
   // When resources change, clear any constraint name that is no longer valid for
   // the selected resources (avoids stale state without a render-time side-effect).
@@ -160,12 +164,18 @@ export default function PolicyPermissionItem(props) {
         item?.constraintInfo?.constraintName
       );
       if (rowConstraintName && !allowedNames.has(rowConstraintName)) {
-        form.change(`${attrName}[${index}].constraintInfo.constraintName`, null);
-        form.change(`${attrName}[${index}].constraintInfo.parameters`, undefined);
+        form.change(
+          `${attrName}[${index}].constraintInfo.constraintName`,
+          null
+        );
+        form.change(
+          `${attrName}[${index}].constraintInfo.parameters`,
+          undefined
+        );
         form.change(`${attrName}[${index}].accesses`, undefined);
       }
     });
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [constraintOptionKey, isConstraintPolicy, changePolicyItemPermissions]);
 
   if (serviceCompDetails?.policyConditions?.length > 0) {
@@ -376,7 +386,12 @@ export default function PolicyPermissionItem(props) {
       }
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [accessRestrictionKey, changePolicyItemPermissions, attrName, isConstraintPolicy]);
+  }, [
+    accessRestrictionKey,
+    changePolicyItemPermissions,
+    attrName,
+    isConstraintPolicy
+  ]);
 
   const getMaskingAccessTypeOptions = (index) => {
     if (serviceCompDetails?.dataMaskDef?.maskTypes?.length > 0) {

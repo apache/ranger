@@ -27,7 +27,7 @@ import {
   Col,
   Badge
 } from "react-bootstrap";
-import { find, findIndex, isArray, isEmpty, sortBy } from "lodash";
+import { find, findIndex, isArray, isEmpty, sortBy, capitalize } from "lodash";
 import { isObject } from "Utils/XAUtils";
 import CreatableSelect from "react-select/creatable";
 import Select from "react-select";
@@ -111,7 +111,7 @@ const CheckboxComp = (props) => {
           <Form.Check
             checked={isChecked(obj)}
             type="checkbox"
-            label={obj.label}
+            label={capitalize(obj.label)}
             onChange={(e) => handleChange(e, obj)}
           />
         </Form.Group>
@@ -630,7 +630,9 @@ const Editable = (props) => {
               <span className="editable-edit-text">
                 {sortBy(selectVal, "label").map((op, index) => (
                   <h6 className="d-inline me-1" key={index}>
-                    <Badge bg="info">{op.label}</Badge>
+                    <Badge bg="info" className="text-capitalize">
+                      {op.label}
+                    </Badge>
                   </h6>
                 ))}
               </span>
