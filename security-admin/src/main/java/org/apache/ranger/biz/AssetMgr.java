@@ -55,6 +55,7 @@ import org.apache.ranger.entity.XXPluginInfo;
 import org.apache.ranger.entity.XXPolicyExportAudit;
 import org.apache.ranger.entity.XXPortalUser;
 import org.apache.ranger.entity.XXUser;
+import org.apache.ranger.opensearch.OpenSearchAccessAuditsService;
 import org.apache.ranger.plugin.model.RangerPluginInfo;
 import org.apache.ranger.plugin.store.PList;
 import org.apache.ranger.plugin.util.RangerPluginCapability;
@@ -119,6 +120,9 @@ public class AssetMgr extends AssetMgrBase {
 
 	@Autowired
 	ElasticSearchAccessAuditsService elasticSearchAccessAuditsService;
+
+	@Autowired
+	OpenSearchAccessAuditsService openSearchAccessAuditsService;
 
 	@Autowired
 	CloudWatchAccessAuditsService cloudWatchAccessAuditsService;
@@ -1171,6 +1175,8 @@ public class AssetMgr extends AssetMgrBase {
             return solrAccessAuditsService.searchXAccessAudits(searchCriteria);
         } else if (RangerBizUtil.AUDIT_STORE_ELASTIC_SEARCH.equalsIgnoreCase(xaBizUtil.getAuditDBType())) {
             return elasticSearchAccessAuditsService.searchXAccessAudits(searchCriteria);
+        } else if (RangerBizUtil.AUDIT_STORE_OPENSEARCH.equalsIgnoreCase(xaBizUtil.getAuditDBType())) {
+            return openSearchAccessAuditsService.searchXAccessAudits(searchCriteria);
         } else if (RangerBizUtil.AUDIT_STORE_CLOUD_WATCH.equalsIgnoreCase(xaBizUtil.getAuditDBType())) {
             return cloudWatchAccessAuditsService.searchXAccessAudits(searchCriteria);
         } else {
