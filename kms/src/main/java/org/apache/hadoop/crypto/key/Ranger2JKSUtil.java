@@ -101,6 +101,7 @@ public class Ranger2JKSUtil {
             RangerKeyStore dbStore;
             char[]         masterKey   = null;
             String         password    = conf.get(ENCRYPTION_KEY);
+            RangerKMSCryptoConfigManager kmsCryptoConfigApi = new RangerKMSCryptoConfigManager(RangerKeyStoreProvider.DBKS_SITE_XML);
 
             if (conf != null && StringUtils.isNotEmpty(conf.get(KEYSECURE_ENABLED)) && conf.get(KEYSECURE_ENABLED).equalsIgnoreCase("true")) {
                 getFromJceks(conf, CREDENTIAL_PATH, KEYSECURE_PASSWORD_ALIAS, KEYSECURE_PASSWORD);
@@ -112,7 +113,7 @@ public class Ranger2JKSUtil {
                 RangerSafenetKeySecure rangerSafenetKeySecure = new RangerSafenetKeySecure(conf);
 
                 masterKey = rangerSafenetKeySecure.getMasterKey(password).toCharArray();
-                dbStore   = new RangerKeyStore(daoManager);
+                dbStore   = new RangerKeyStore(daoManager, kmsCryptoConfigApi);
             } else if (conf != null && StringUtils.isNotEmpty(conf.get(AZURE_KEYVAULT_ENABLED)) && conf.get(AZURE_KEYVAULT_ENABLED).equalsIgnoreCase("true")) {
                 getFromJceks(conf, CREDENTIAL_PATH, AZURE_CLIENT_SECRET_ALIAS, AZURE_CLIENT_SECRET);
 
@@ -124,7 +125,7 @@ public class Ranger2JKSUtil {
 
                 String azureClientSecret = conf.get(AZURE_CLIENT_SECRET);
 
-                dbStore = new RangerKeyStore(daoManager);
+                dbStore = new RangerKeyStore(daoManager, kmsCryptoConfigApi);
 
                 AzureKeyVaultClientAuthenticator azureKVClientAuthenticator;
                 KeyVaultClient                   kvClient = null;
@@ -160,10 +161,10 @@ public class Ranger2JKSUtil {
                     dbStore   = new RangerKeyStore(daoManager, conf, kvClient);
                 }
             } else {
-                RangerMasterKey rangerMasterKey = new RangerMasterKey(daoManager);
+                RangerMasterKey rangerMasterKey = new RangerMasterKey(daoManager, kmsCryptoConfigApi);
 
                 masterKey = rangerMasterKey.getMasterKey(password).toCharArray();
-                dbStore   = new RangerKeyStore(daoManager);
+                dbStore   = new RangerKeyStore(daoManager, kmsCryptoConfigApi);
             }
 
             try (OutputStream out = new FileOutputStream(new File(keyStoreFileName))) {
