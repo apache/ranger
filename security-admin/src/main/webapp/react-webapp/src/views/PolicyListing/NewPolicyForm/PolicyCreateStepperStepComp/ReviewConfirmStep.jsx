@@ -379,8 +379,12 @@ const ReviewConfirmStep = ({ values, selectedServiceComponentDef }) => {
                 <Table bordered size="sm" className="mb-0 align-middle">
                   <thead className="table-light">
                     <tr>
-                      <th className="small p-2">Condition</th>
-                      <th className="small p-2">Value</th>
+                      <th className="small p-2" width="25%">
+                        Condition
+                      </th>
+                      <th className="small p-2" width="75%">
+                        Value
+                      </th>
                     </tr>
                   </thead>
                   <tbody>
@@ -438,8 +442,12 @@ const ReviewConfirmStep = ({ values, selectedServiceComponentDef }) => {
               <Table bordered size="sm" className="mb-0 align-middle">
                 <thead className="table-light">
                   <tr>
-                    <th className="small p-2">Parameter</th>
-                    <th className="small p-2">Value</th>
+                    <th className="small p-2" width="25%">
+                      Parameter
+                    </th>
+                    <th className="small p-2" width="75%">
+                      Value
+                    </th>
                   </tr>
                 </thead>
                 <tbody>

@@ -242,8 +242,8 @@ export function PolicyViewDetails(props) {
       <>
         {sortBy(filterResources, "level").map((obj) => (
           <tr key={obj.level}>
-            <td>{obj.label}</td>
-            <td>
+            <td style={{ width: "30%" }}>{obj.label}</td>
+            <td style={{ width: "70%" }}>
               <Row>
                 <Col md={9} className="d-flex flex-wrap">
                   {obj.values.map((val, index) => (

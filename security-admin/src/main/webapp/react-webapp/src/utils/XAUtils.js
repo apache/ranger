@@ -1575,8 +1575,10 @@ export const getResourcesDefVal = (serviceDef, policyType) => {
 
 // Get constraint resources
 export const getConstraintResources = (serviceDef) => {
-  let uniqueResources = uniq(flatMap(serviceDef?.constraintDefs, "resources"));
-  let result = filter(serviceDef?.resources, (item) =>
+  const uniqueResources = uniq(
+    flatMap(serviceDef?.constraintDefs, "resources")
+  );
+  const result = filter(serviceDef?.resources, (item) =>
     uniqueResources.includes(item.name)
   );
   //NOTE : CHANGE ISVALIDLEAF TO FALSE FOR CONSTRAINT POLICY

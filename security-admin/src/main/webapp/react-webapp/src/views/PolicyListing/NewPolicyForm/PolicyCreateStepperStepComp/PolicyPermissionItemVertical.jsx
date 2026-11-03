@@ -345,7 +345,7 @@ export default function PolicyPermissionItemVertical({
                                                             tableItem.serviceName
                                                           )}
                                                         </td>
-                                                        <td className="text-word-break text-capitalize">
+                                                        <td className="text-word-break">
                                                           {displayTagPermissionItem(
                                                             tableItem.permission
                                                           ).join(", ")}
@@ -451,7 +451,7 @@ export default function PolicyPermissionItemVertical({
                                   return (
                                     <div>
                                       <Container fluid className="p-0">
-                                        <div className="gx-3 gy-1 permissions-checkboxes text-capitalize">
+                                        <div className="gx-3 gy-1 permissions-checkboxes">
                                           {/* Select All Link - Only show if more than 1 option */}
                                           {permissionAccessOptions.length >
                                             1 && (

@@ -337,7 +337,9 @@ const generateFormData = (policyData, serviceCompData) => {
       // Principals – UsersGroupsAndRolesSelectionComponent format
       obj.users = {
         users: (val?.users || []).map((u) => toNormalisedPrincipal(u, "USER")),
-        groups: (val?.groups || []).map((g) => toNormalisedPrincipal(g, "GROUP")),
+        groups: (val?.groups || []).map((g) =>
+          toNormalisedPrincipal(g, "GROUP")
+        ),
         roles: (val?.roles || []).map((r) => toNormalisedPrincipal(r, "ROLE"))
       };
 
@@ -637,7 +639,10 @@ export default function EditPolicyForm() {
         }
         data.isDenyAllElse = false;
       } else {
-        const finalAccessTypes = getAccessTypesByResource(values, serviceCompDef);
+        const finalAccessTypes = getAccessTypesByResource(
+          values,
+          serviceCompDef
+        );
         data.policyItems = getPolicyItemsVal(
           values,
           "policyItems",
@@ -808,7 +813,8 @@ export default function EditPolicyForm() {
       ? "Masking"
       : formData.policyType === 2
         ? "Row Filter"
-        : formData.policyType === RangerPolicyType.RANGER_CONSTRAINT_POLICY_TYPE.value
+        : formData.policyType ===
+            RangerPolicyType.RANGER_CONSTRAINT_POLICY_TYPE.value
           ? RangerPolicyType.RANGER_CONSTRAINT_POLICY_TYPE.label
           : "Access";
   const policyTypeBg =
@@ -816,7 +822,8 @@ export default function EditPolicyForm() {
       ? "warning"
       : formData.policyType === 2
         ? "info"
-        : formData.policyType === RangerPolicyType.RANGER_CONSTRAINT_POLICY_TYPE.value
+        : formData.policyType ===
+            RangerPolicyType.RANGER_CONSTRAINT_POLICY_TYPE.value
           ? "secondary"
           : "primary";
 

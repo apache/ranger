@@ -224,11 +224,7 @@ export const validatePolicyItemsArray = (values, policyType, serviceDef) => {
 
   arraysToValidate.forEach((key) => {
     (values[key] || []).forEach((item, i) => {
-      const ruleErrors = validateSinglePolicyItem(
-        item,
-        policyType,
-        serviceDef
-      );
+      const ruleErrors = validateSinglePolicyItem(item, policyType, serviceDef);
 
       if (!isEmpty(ruleErrors)) {
         if (!errors[key]) errors[key] = [];
@@ -304,9 +300,7 @@ export const hasMissingConstraintFieldsOnPolicyItems = (values, serviceDef) => {
     const itemError = arr[i];
     if (
       itemError &&
-      (itemError.accesses ||
-        itemError.constraintName ||
-        itemError.parameters)
+      (itemError.accesses || itemError.constraintName || itemError.parameters)
     ) {
       return true;
     }
