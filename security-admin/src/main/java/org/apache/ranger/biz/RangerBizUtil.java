@@ -1193,6 +1193,21 @@ public class RangerBizUtil {
         return ret;
     }
 
+    public boolean isServiceAccountUser(RangerService rangerService) {
+        boolean ret      = false;
+        String  userName = getCurrentUserLoginId();
+
+        if (userName != null) {
+            ret = isUserInConfigParameter(rangerService, ServiceDBStore.SERVICE_ACCOUNT_USERS, userName);
+
+            if (!ret && userMgr != null && userMgr.xUserMgr != null) {
+                ret = isAnyGroupInConfigParameter(rangerService, ServiceDBStore.SERVICE_ACCOUNT_GROUPS, userMgr.xUserMgr.getGroupsForUser(userName));
+            }
+        }
+
+        return ret;
+    }
+
     public boolean isUserInConfigParameter(RangerService rangerService, String configParamName, String userName) {
         Map<String, String> map = rangerService.getConfigs();
 

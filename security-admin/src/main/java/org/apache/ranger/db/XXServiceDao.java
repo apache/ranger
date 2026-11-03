@@ -17,7 +17,7 @@
 
 package org.apache.ranger.db;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.ranger.common.db.BaseDao;
 import org.apache.ranger.entity.XXService;
 import org.apache.ranger.plugin.model.RangerServiceHeaderInfo;
@@ -179,16 +179,16 @@ public class XXServiceDao extends BaseDao<XXService> {
             ret = new ArrayList<>(results.size());
 
             for (Object[] result : results) {
-                RangerServiceHeaderInfo svcHeader   = new RangerServiceHeaderInfo((Long) result[0], (String) result[1], (String) result[2], (String) result[3], (Boolean) result[4]);
-                String                  adminUsers  = (String) result[5];
-                String                  adminGroups = (String) result[6];
+                RangerServiceHeaderInfo svcHeader     = new RangerServiceHeaderInfo((Long) result[0], (String) result[1], (String) result[2], (String) result[3], (Boolean) result[4]);
+                String                  svcAcctUsers  = (String) result[5];
+                String                  svcAcctGroups = (String) result[6];
 
-                if (StringUtils.isNotBlank(adminUsers)) {
-                    svcHeader.setAdminUsers(Arrays.asList(adminUsers.split(",")));
+                if (StringUtils.isNotBlank(svcAcctUsers)) {
+                    svcHeader.setServiceAccountUsers(Arrays.asList(svcAcctUsers.split(",")));
                 }
 
-                if (StringUtils.isNotBlank(adminGroups)) {
-                    svcHeader.setAdminGroups(List.of(adminGroups.split(",")));
+                if (StringUtils.isNotBlank(svcAcctGroups)) {
+                    svcHeader.setServiceAccountGroups(Arrays.asList(svcAcctGroups.split(",")));
                 }
 
                 ret.add(svcHeader);

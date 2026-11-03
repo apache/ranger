@@ -36,8 +36,8 @@ public class RangerServiceHeaderInfo extends RangerBaseModelObject implements ja
     private String       type;
     private Boolean      isTagService;
     private Boolean      isGdsService;
-    private List<String> adminUsers  = Collections.emptyList();
-    private List<String> adminGroups = Collections.emptyList();
+    private List<String> serviceAccountUsers  = Collections.emptyList();
+    private List<String> serviceAccountGroups = Collections.emptyList();
 
     public RangerServiceHeaderInfo() {
         this(-1L, "", false, false);
@@ -114,19 +114,19 @@ public class RangerServiceHeaderInfo extends RangerBaseModelObject implements ja
         this.isGdsService = isGdsService;
     }
 
-    public List<String> getAdminUsers() {
-        return adminUsers;
+    public List<String> getServiceAccountUsers() {
+        return serviceAccountUsers;
     }
 
-    public void setAdminUsers(List<String> adminUsers) {
-        this.adminUsers = adminUsers;
+    public void setServiceAccountUsers(List<String> serviceAccountUsers) {
+        this.serviceAccountUsers = serviceAccountUsers;
     }
 
-    public List<String> getAdminGroups() {
-        return adminGroups;
+    public List<String> getServiceAccountGroups() {
+        return serviceAccountGroups;
     }
 
-    public void setAdminGroups(List<String> adminGroups) {
-        this.adminGroups = adminGroups;
+    public void setServiceAccountGroups(List<String> serviceAccountGroups) {
+        this.serviceAccountGroups = serviceAccountGroups;
     }
 }

@@ -2610,7 +2610,7 @@ public class ServiceREST {
                         isAllowed = true;
                     } else {
                         if (rangerService != null) {
-                            isAllowed = bizUtil.isUserAllowed(rangerService, Allowed_User_List_For_Download);
+                            isAllowed = bizUtil.isUserAllowed(rangerService, Allowed_User_List_For_Download) || bizUtil.isServiceAccountUser(rangerService);
 
                             if (!isAllowed) {
                                 isAllowed = bizUtil.isUserAllowed(rangerService, Allowed_User_List_For_Grant_Revoke);
@@ -2624,7 +2624,7 @@ public class ServiceREST {
                         isAllowed = true;
                     } else {
                         if (rangerService != null) {
-                            isAllowed = bizUtil.isUserAllowed(rangerService, Allowed_User_List_For_Download);
+                            isAllowed = bizUtil.isUserAllowed(rangerService, Allowed_User_List_For_Download) || bizUtil.isServiceAccountUser(rangerService);
 
                             if (!isAllowed) {
                                 isAllowed = bizUtil.isUserAllowed(rangerService, Allowed_User_List_For_Grant_Revoke);
