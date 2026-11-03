@@ -36,6 +36,7 @@ public interface RangerPolicyItemEvaluator {
     int POLICY_ITEM_TYPE_DENY_EXCEPTIONS  = 3;
     int POLICY_ITEM_TYPE_DATAMASK         = 4;
     int POLICY_ITEM_TYPE_ROWFILTER        = 5;
+    int POLICY_ITEM_TYPE_CONSTRAINT       = 6;
 
     void init();
 
