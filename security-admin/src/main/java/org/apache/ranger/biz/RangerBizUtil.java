@@ -130,7 +130,7 @@ public class RangerBizUtil {
     private final Class<?>[]   groupEditableClassesList = {};
     private final int          maxFirstNameLength;
     private final SecureRandom random;
-    public final Set<String>   serviceAccountInfoViewers;
+    private final Set<String>  serviceAccountInfoViewers;
 
     Set<Class<?>> groupEditableClasses;
     int           maxDisplayNameLength = 150;
