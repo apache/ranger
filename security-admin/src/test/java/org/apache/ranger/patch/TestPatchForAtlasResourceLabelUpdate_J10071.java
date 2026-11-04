@@ -20,8 +20,10 @@ package org.apache.ranger.patch;
 import org.apache.ranger.biz.ServiceDBStore;
 import org.apache.ranger.common.RangerValidatorFactory;
 import org.apache.ranger.db.RangerDaoManager;
+import org.apache.ranger.db.XXAccessTypeDefDao;
 import org.apache.ranger.db.XXServiceDefDao;
 import org.apache.ranger.entity.XXServiceDef;
+import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.model.validation.RangerServiceDefValidator;
 import org.apache.ranger.plugin.store.EmbeddedServiceDefsUtil;
@@ -180,6 +182,69 @@ class TestPatchForAtlasResourceLabelUpdate_J10071 {
         List<RangerServiceDef.RangerResourceDef> dbResources = Collections.singletonList(dbResource);
         boolean updated = (boolean) sync.invoke(patch, dbResources, embeddedByName);
         assertTrue(updated);
+    }
+
+    @Test
+    void testRemoveAtlasAccessesFromPolicyItems() throws Exception {
+        PatchForAtlasResourceLabelUpdate_J10071 patch = new PatchForAtlasResourceLabelUpdate_J10071();
+        Method m = PatchForAtlasResourceLabelUpdate_J10071.class.getDeclaredMethod("removeAtlasAccessesFromPolicyItems", List.class);
+        m.setAccessible(true);
+
+        RangerPolicy.RangerPolicyItemAccess atlasAccess = new RangerPolicy.RangerPolicyItemAccess();
+        atlasAccess.setType("atlas:entity-read");
+
+        RangerPolicy.RangerPolicyItemAccess hiveAccess = new RangerPolicy.RangerPolicyItemAccess();
+        hiveAccess.setType("hive:select");
+
+        RangerPolicy.RangerPolicyItem policyItem = new RangerPolicy.RangerPolicyItem();
+        List<RangerPolicy.RangerPolicyItemAccess> accesses = new ArrayList<>();
+        accesses.add(atlasAccess);
+        accesses.add(hiveAccess);
+        policyItem.setAccesses(accesses);
+
+        List<RangerPolicy.RangerPolicyItem> policyItems = new ArrayList<>(Collections.singletonList(policyItem));
+        boolean updated = (boolean) m.invoke(patch, policyItems);
+
+        assertTrue(updated);
+        Assertions.assertEquals(1, policyItem.getAccesses().size());
+        Assertions.assertEquals("hive:select", policyItem.getAccesses().get(0).getType());
+    }
+
+    @Test
+    void testRemoveAtlasAccessTypesFromTagServiceDef() throws Exception {
+        PatchForAtlasResourceLabelUpdate_J10071 patch = new PatchForAtlasResourceLabelUpdate_J10071();
+
+        RangerServiceDef.RangerAccessTypeDef atlasAccessType = new RangerServiceDef.RangerAccessTypeDef();
+        atlasAccessType.setName("atlas:entity-read");
+
+        RangerServiceDef dbTagServiceDef = new RangerServiceDef();
+        dbTagServiceDef.setId(2L);
+        dbTagServiceDef.setAccessTypes(new ArrayList<>(Collections.singletonList(atlasAccessType)));
+
+        ServiceDBStore svcStore = Mockito.mock(ServiceDBStore.class);
+        Mockito.when(svcStore.getServiceDefByName(EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_TAG_NAME)).thenReturn(dbTagServiceDef);
+        Mockito.when(svcStore.updateServiceDef(Mockito.any())).thenAnswer(invocation -> invocation.getArgument(0));
+
+        XXServiceDef xxTagServiceDef = new XXServiceDef();
+        xxTagServiceDef.setId(2L);
+
+        RangerDaoManager daoMgr = Mockito.mock(RangerDaoManager.class);
+        XXServiceDefDao xxServiceDefDao = Mockito.mock(XXServiceDefDao.class);
+        XXAccessTypeDefDao xxAccessTypeDefDao = Mockito.mock(XXAccessTypeDefDao.class);
+        Mockito.when(daoMgr.getXXServiceDef()).thenReturn(xxServiceDefDao);
+        Mockito.when(daoMgr.getXXAccessTypeDef()).thenReturn(xxAccessTypeDefDao);
+        Mockito.when(xxServiceDefDao.findByName(EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_TAG_NAME)).thenReturn(xxTagServiceDef);
+        Mockito.when(xxAccessTypeDefDao.findByServiceDefId(2L)).thenReturn(Collections.emptyList());
+
+        setIfPresent(patch, "daoMgr", daoMgr);
+        setIfPresent(patch, "svcStore", svcStore);
+
+        Method m = PatchForAtlasResourceLabelUpdate_J10071.class.getDeclaredMethod("removeAtlasAccessTypesFromTagServiceDef");
+        m.setAccessible(true);
+        m.invoke(patch);
+
+        Mockito.verify(svcStore, Mockito.times(1)).updateServiceDef(Mockito.any());
+        Assertions.assertTrue(dbTagServiceDef.getAccessTypes().isEmpty());
     }
 
     @Test
