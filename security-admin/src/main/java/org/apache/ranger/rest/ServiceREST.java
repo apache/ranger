@@ -1102,6 +1102,13 @@ public class ServiceREST {
 			}
 		}
 
+		if (!bizUtil.hasServiceAccountInfoAccess()) {
+			for (RangerServiceHeaderInfo serviceHeader : ret) {
+				serviceHeader.setServiceAccountUsers(null);
+				serviceHeader.setServiceAccountGroups(null);
+			}
+		}
+
 		LOG.debug("<== ServiceREST.getServiceHeaders(namePrefix={}, svcType={}): ret={}", namePrefix, svcType, ret);
 
 		return ret;
@@ -3233,7 +3240,7 @@ public class ServiceREST {
 						isAllowed = true;
 					} else {
 						if (rangerService != null) {
-							isAllowed = bizUtil.isUserAllowed(rangerService, Allowed_User_List_For_Download);
+							isAllowed = bizUtil.isUserAllowed(rangerService, Allowed_User_List_For_Download) || bizUtil.isServiceAccountUser(rangerService);
 							if (!isAllowed) {
 								isAllowed = bizUtil.isUserAllowed(rangerService, Allowed_User_List_For_Grant_Revoke);
 							}
@@ -3245,7 +3252,7 @@ public class ServiceREST {
 						isAllowed = true;
 					} else {
 						if (rangerService != null) {
-							isAllowed = bizUtil.isUserAllowed(rangerService, Allowed_User_List_For_Download);
+							isAllowed = bizUtil.isUserAllowed(rangerService, Allowed_User_List_For_Download) || bizUtil.isServiceAccountUser(rangerService);
 							if (!isAllowed) {
 								isAllowed = bizUtil.isUserAllowed(rangerService, Allowed_User_List_For_Grant_Revoke);
 							}

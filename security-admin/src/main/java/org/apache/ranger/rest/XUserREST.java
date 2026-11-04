@@ -1515,7 +1515,7 @@ public class XUserREST {
 					if (isKeyAdmin) {
 						isAllowed = true;
 					} else if (rangerService != null) {
-						isAllowed = bizUtil.isUserAllowed(rangerService, USERSTORE_DOWNLOAD_USERS);
+						isAllowed = bizUtil.isUserAllowed(rangerService, USERSTORE_DOWNLOAD_USERS) || bizUtil.isServiceAccountUser(rangerService);
 					}
 				} else {
 					rangerService = svcStore.getServiceByName(serviceName);
@@ -1523,7 +1523,7 @@ public class XUserREST {
 					if (isAdmin) {
 						isAllowed = true;
 					} else if (rangerService != null) {
-						isAllowed = bizUtil.isUserAllowed(rangerService, USERSTORE_DOWNLOAD_USERS);
+						isAllowed = bizUtil.isUserAllowed(rangerService, USERSTORE_DOWNLOAD_USERS) || bizUtil.isServiceAccountUser(rangerService);
 					}
 				}
 

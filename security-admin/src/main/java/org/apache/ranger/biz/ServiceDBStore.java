@@ -247,6 +247,8 @@ public class ServiceDBStore extends AbstractServiceStore {
     private static final String AMBARI_SERVICE_CHECK_USER = "ambari.service.check.user";
 	public static final String SERVICE_ADMIN_USERS     = "service.admin.users";
 	public static final String SERVICE_ADMIN_GROUPS    = "service.admin.groups";
+	public static final String SERVICE_ACCOUNT_USERS   = "service.account.users";
+	public static final String SERVICE_ACCOUNT_GROUPS  = "service.account.groups";
 
 	private static boolean isRolesDownloadedByService = false;
 

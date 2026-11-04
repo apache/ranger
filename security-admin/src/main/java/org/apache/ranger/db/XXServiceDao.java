@@ -23,6 +23,8 @@ import java.util.List;
 
 import javax.persistence.NoResultException;
 
+import org.apache.commons.lang3.StringUtils;
+import org.apache.ranger.authorization.utils.StringUtil;
 import org.apache.ranger.common.db.BaseDao;
 import org.apache.ranger.entity.XXService;
 import org.apache.ranger.plugin.model.RangerServiceHeaderInfo;
@@ -160,7 +162,19 @@ public class XXServiceDao extends BaseDao<XXService> {
 			ret = new ArrayList<>(results.size());
 
 			for (Object[] result : results) {
-				ret.add(new RangerServiceHeaderInfo((Long) result[0], (String) result[1], (String) result[2], (String) result[3], (Boolean) result[4]));
+				RangerServiceHeaderInfo svcHeader     = new RangerServiceHeaderInfo((Long) result[0], (String) result[1], (String) result[2], (String) result[3], (Boolean) result[4]);
+				String                  svcAcctUsers  = (String) result[5];
+				String                  svcAcctGroups = (String) result[6];
+
+				if (StringUtils.isNotBlank(svcAcctUsers)) {
+					svcHeader.setServiceAccountUsers(StringUtil.toSet(svcAcctUsers));
+				}
+
+				if (StringUtils.isNotBlank(svcAcctGroups)) {
+					svcHeader.setServiceAccountGroups(StringUtil.toSet(svcAcctGroups));
+				}
+
+				ret.add(svcHeader);
 			}
 		} catch (NoResultException excp) {
 			ret = Collections.emptyList();

@@ -1123,7 +1123,7 @@ public class RoleREST {
                     if (isKeyAdmin) {
                         isAllowed = true;
                     } else if (rangerService != null) {
-                        isAllowed = bizUtil.isUserAllowed(rangerService, POLICY_DOWNLOAD_USERS);
+                        isAllowed = bizUtil.isUserAllowed(rangerService, POLICY_DOWNLOAD_USERS) || bizUtil.isServiceAccountUser(rangerService);
                     }
                 } else {
                     rangerService = svcStore.getServiceByName(serviceName);
@@ -1131,7 +1131,7 @@ public class RoleREST {
                     if (isAdmin) {
                         isAllowed = true;
                     } else if (rangerService != null) {
-                        isAllowed = bizUtil.isUserAllowed(rangerService, POLICY_DOWNLOAD_USERS);
+                        isAllowed = bizUtil.isUserAllowed(rangerService, POLICY_DOWNLOAD_USERS) || bizUtil.isServiceAccountUser(rangerService);
                     }
                 }
 

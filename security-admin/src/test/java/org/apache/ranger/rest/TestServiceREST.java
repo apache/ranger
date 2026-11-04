@@ -2935,6 +2935,33 @@ public class TestServiceREST {
 		Assert.assertEquals(dbRangerPolicy.getId(), rangerPolicy.getId());
 		Assert.assertEquals(dbRangerPolicy.getName(), rangerPolicy.getName());
 	}
+
+    @Test
+    public void test82ServiceAccountViewers() throws Exception {
+        HttpServletRequest      request = Mockito.mock(HttpServletRequest.class);
+        RangerServiceHeaderInfo devHdfs = new RangerServiceHeaderInfo(1L, "dev_hdfs", "Dev HDFS", "hdfs");
+
+        devHdfs.setServiceAccountUsers(Collections.singleton("hdfs"));
+        devHdfs.setServiceAccountGroups(Collections.singleton("hadoop"));
+
+        List<RangerServiceHeaderInfo> serviceHeaders = Collections.singletonList(devHdfs);
+
+        Mockito.when(daoManager.getXXService().findServiceHeaders()).thenReturn(serviceHeaders);
+        Mockito.when(bizUtil.hasAccess(Mockito.any(), Mockito.any())).thenReturn(true);
+        Mockito.when(bizUtil.hasServiceAccountInfoAccess()).thenReturn(false);
+
+        List<RangerServiceHeaderInfo> result = serviceREST.getServiceHeaders(request);
+        Assert.assertNotNull(result);
+        Assert.assertEquals(1, result.size());
+
+        RangerServiceHeaderInfo res1 = result.get(0);
+
+        Assert.assertEquals("dev_hdfs", res1.getName());
+        Assert.assertEquals("hdfs", res1.getType());
+        Assert.assertNull(res1.getServiceAccountUsers());
+        Assert.assertNull(res1.getServiceAccountGroups());
+    }
+
 	@Test
 	public void test155DownloadBlockedWhenUnauthenticatedAndFlagFalse() throws Exception {
 		HttpServletRequest request = Mockito.mock(HttpServletRequest.class);

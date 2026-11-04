@@ -20,7 +20,9 @@ import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.WebApplicationException;
@@ -43,6 +45,7 @@ import org.apache.ranger.entity.XXAsset;
 import org.apache.ranger.entity.XXPortalUser;
 import org.apache.ranger.entity.XXResource;
 import org.apache.ranger.entity.XXUser;
+import org.apache.ranger.plugin.model.RangerService;
 import org.apache.ranger.plugin.store.EmbeddedServiceDefsUtil;
 import org.apache.ranger.security.context.RangerContextHolder;
 import org.apache.ranger.security.context.RangerSecurityContext;
@@ -820,6 +823,40 @@ public class TestRangerBizUtil {
 			Assert.fail("Expected no exception, but got: " + e.getMessage());
 		}
 	}
+
+    @Test
+    public void testIsServiceAccountUser() {
+        RangerService       svc = new RangerService();
+        Map<String, String> cfg = new HashMap<>();
+
+        cfg.put(ServiceDBStore.SERVICE_ACCOUNT_USERS, "kafka-1,kafka-2");
+        cfg.put(ServiceDBStore.SERVICE_ACCOUNT_GROUPS, "streamer-managers,mirror-makers");
+        svc.setConfigs(cfg);
+
+        UserSessionBase session = RangerContextHolder.getSecurityContext().getUserSession();
+
+        session.setXXPortalUser(new XXPortalUser());
+
+        session.getXXPortalUser().setLoginId("kafka-1");
+        Assert.assertTrue(rangerBizUtil.isServiceAccountUser(svc)); // kafka-1 is a configured service account user
+
+        session.getXXPortalUser().setLoginId("kafka-2");
+        Assert.assertTrue(rangerBizUtil.isServiceAccountUser(svc)); // kafka-2 is a configured service account user
+
+        userMgr.xUserMgr      = xUserMgr;
+        rangerBizUtil.userMgr = userMgr;
+
+        session.getXXPortalUser().setLoginId("stream-manager-1");
+        Mockito.when(xUserMgr.getGroupsForUser("stream-manager-1")).thenReturn(Collections.singleton("streamer-managers"));
+        Assert.assertTrue(rangerBizUtil.isServiceAccountUser(svc)); // stream-manager-1 is member of a configured service account group
+
+        session.getXXPortalUser().setLoginId("mirror-maker-1");
+        Mockito.when(xUserMgr.getGroupsForUser("mirror-maker-1")).thenReturn(Collections.singleton("mirror-makers"));
+        Assert.assertTrue(rangerBizUtil.isServiceAccountUser(svc)); // mirror-maker-1 is member of a configured service account group
+
+        session.getXXPortalUser().setLoginId("some-service-account");
+        Assert.assertFalse(rangerBizUtil.isServiceAccountUser(svc)); // some-service-account is neither a configured service account user nor in any configured service account group
+    }
 
 	private void setField(String name, Object value) throws Exception {
 		Field f = RangerBizUtil.class.getDeclaredField(name);

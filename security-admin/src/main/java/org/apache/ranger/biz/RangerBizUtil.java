@@ -28,7 +28,9 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
+import java.util.stream.Collectors;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.collections.CollectionUtils;
@@ -127,6 +129,7 @@ public class RangerBizUtil {
 	String auditDBType = AUDIT_STORE_SOLR;
 	private final boolean allowUnauthenticatedAccessInSecureEnvironment;
 	private final boolean allowUnauthenticatedDownloadAccessInSecureEnvironment;
+	private final Set<String> serviceAccountInfoViewers;
 
 	static String fileSeparator = PropertiesUtil.getProperty("ranger.file.separator", "/");
 
@@ -149,6 +152,17 @@ public class RangerBizUtil {
 		logger.info("java.library.path is " + System.getProperty("java.library.path"));
 		logger.info("Audit datasource is " + auditDBType);
                 random = new SecureRandom();
+
+		String svcAccountInfoViewers = PropertiesUtil.getProperty("ranger.admin.service.account.info.viewers");
+
+		if (StringUtils.isNotBlank(svcAccountInfoViewers)) {
+			serviceAccountInfoViewers = Arrays.stream(svcAccountInfoViewers.split(","))
+			              .map(StringUtils::trimToNull)
+			              .filter(Objects::nonNull)
+			              .collect(Collectors.toSet());
+		} else {
+			serviceAccountInfoViewers = Collections.emptySet();
+		}
 	}
 
 	// Access control methods
@@ -1352,6 +1366,12 @@ public class RangerBizUtil {
 		}
 	}
 
+	public boolean hasServiceAccountInfoAccess() {
+		UserSessionBase session = ContextUtil.getCurrentUserSession();
+
+		return session != null && serviceAccountInfoViewers.contains(session.getLoginId());
+	}
+
 	public boolean checkUserAccessible(VXUser vXUser) {
                 boolean isAccessible = true;
                 Collection<String> roleList = userMgr.getDBRolesByLoginId(vXUser
@@ -1469,6 +1489,21 @@ public class RangerBizUtil {
 
 		if (!ret && userMgr != null && userMgr.xUserMgr != null) {
 			ret = isAnyGroupInConfigParameter(rangerService, ServiceDBStore.SERVICE_ADMIN_GROUPS, userMgr.xUserMgr.getGroupsForUser(userName));
+		}
+
+		return ret;
+	}
+
+	public boolean isServiceAccountUser(RangerService rangerService) {
+		boolean ret      = false;
+		String  userName = getCurrentUserLoginId();
+
+		if (userName != null) {
+			ret = isUserInConfigParameter(rangerService, ServiceDBStore.SERVICE_ACCOUNT_USERS, userName);
+
+			if (!ret && userMgr != null && userMgr.xUserMgr != null) {
+				ret = isAnyGroupInConfigParameter(rangerService, ServiceDBStore.SERVICE_ACCOUNT_GROUPS, userMgr.xUserMgr.getGroupsForUser(userName));
+			}
 		}
 
 		return ret;
