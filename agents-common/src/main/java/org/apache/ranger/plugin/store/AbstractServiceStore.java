@@ -66,9 +66,7 @@ public abstract class AbstractServiceStore implements ServiceStore {
 		}
 		List<RangerServiceDef> allServiceDefs = getServiceDefs(new SearchFilter());
 		for (RangerServiceDef serviceDef : allServiceDefs) {
-			if (ServiceDefUtil.getOption_enableTagBasedPolicies(serviceDef, config)) {
-				updateTagServiceDefForUpdatingAccessTypes(serviceDef);
-			}
+			updateTagServiceDefForUpdatingAccessTypes(serviceDef);
 		}
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("<== ServiceDefDBStore.updateTagServiceDefForAccessTypes()");
@@ -280,6 +278,14 @@ public abstract class AbstractServiceStore implements ServiceStore {
 
 	private void updateTagServiceDefForUpdatingAccessTypes(RangerServiceDef serviceDef) throws Exception {
 		if (StringUtils.equals(serviceDef.getName(), EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_TAG_NAME)) {
+			return;
+		}
+
+		if (!ServiceDefUtil.getOption_enableTagBasedPolicies(serviceDef, config)) {
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("AbstractServiceStore.updateTagServiceDefForUpdatingAccessTypes(" + serviceDef.getName() + "): tag-based policies disabled");
+			}
+
 			return;
 		}
 
