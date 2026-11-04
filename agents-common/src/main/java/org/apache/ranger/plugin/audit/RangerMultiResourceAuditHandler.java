@@ -65,7 +65,7 @@ public class RangerMultiResourceAuditHandler extends RangerDefaultAuditHandler {
                 super.logAuthzAudit(auditEvent);
             }
         } catch (Throwable t) {
-            LOG.error("Error occured while writing audit log... ", t);
+            LOG.error("Error occurred while writing audit log... ", t);
         } finally {
             // reset auditEvents once audits are logged
             auditEvents = new ArrayList<>();
