@@ -1046,6 +1046,13 @@ public class ServiceREST {
             }
         }
 
+        if (!bizUtil.hasServiceAccountInfoAccess()) {
+            for (RangerServiceHeaderInfo serviceHeader : ret) {
+                serviceHeader.setServiceAccountUsers(null);
+                serviceHeader.setServiceAccountGroups(null);
+            }
+        }
+
         LOG.debug("<== ServiceREST.getServiceHeaders(namePrefix={}, svcType={}): ret={}", namePrefix, svcType, ret);
 
         return ret;

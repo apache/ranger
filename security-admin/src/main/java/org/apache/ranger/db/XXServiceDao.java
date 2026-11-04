@@ -18,6 +18,7 @@
 package org.apache.ranger.db;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.ranger.authorization.utils.StringUtil;
 import org.apache.ranger.common.db.BaseDao;
 import org.apache.ranger.entity.XXService;
 import org.apache.ranger.plugin.model.RangerServiceHeaderInfo;
@@ -26,7 +27,6 @@ import org.springframework.stereotype.Service;
 import javax.persistence.NoResultException;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -184,11 +184,11 @@ public class XXServiceDao extends BaseDao<XXService> {
                 String                  svcAcctGroups = (String) result[6];
 
                 if (StringUtils.isNotBlank(svcAcctUsers)) {
-                    svcHeader.setServiceAccountUsers(Arrays.asList(svcAcctUsers.split(",")));
+                    svcHeader.setServiceAccountUsers(StringUtil.toSet(svcAcctUsers));
                 }
 
                 if (StringUtils.isNotBlank(svcAcctGroups)) {
-                    svcHeader.setServiceAccountGroups(Arrays.asList(svcAcctGroups.split(",")));
+                    svcHeader.setServiceAccountGroups(StringUtil.toSet(svcAcctGroups));
                 }
 
                 ret.add(svcHeader);

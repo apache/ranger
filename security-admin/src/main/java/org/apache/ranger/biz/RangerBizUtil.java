@@ -77,7 +77,9 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Component
 public class RangerBizUtil {
@@ -128,6 +130,7 @@ public class RangerBizUtil {
     private final Class<?>[]   groupEditableClassesList = {};
     private final int          maxFirstNameLength;
     private final SecureRandom random;
+    public final Set<String>   serviceAccountInfoViewers;
 
     Set<Class<?>> groupEditableClasses;
     int           maxDisplayNameLength = 150;
@@ -152,6 +155,17 @@ public class RangerBizUtil {
         logger.info("Audit datasource is {}", auditDBType);
 
         random = new SecureRandom();
+
+        String svcAccountInfoViewers = PropertiesUtil.getProperty("ranger.admin.service.account.info.viewers");
+
+        if (StringUtils.isNotBlank(svcAccountInfoViewers)) {
+            serviceAccountInfoViewers = Arrays.stream(svcAccountInfoViewers.split(","))
+                    .map(StringUtils::trimToNull)
+                    .filter(Objects::nonNull)
+                    .collect(Collectors.toSet());
+        } else {
+            serviceAccountInfoViewers = Collections.emptySet();
+        }
     }
 
     /**
@@ -1050,6 +1064,12 @@ public class RangerBizUtil {
         if (session.isUserAdmin() && isKmsServiceType && "Service-Def".equalsIgnoreCase(objType)) {
             throw restErrorUtil.createRESTException("System Admin cannot create/update/delete KMS " + objType, MessageEnums.OPER_NO_PERMISSION);
         }
+    }
+
+    public boolean hasServiceAccountInfoAccess() {
+        UserSessionBase session = ContextUtil.getCurrentUserSession();
+
+        return session != null && serviceAccountInfoViewers.contains(session.getLoginId());
     }
 
     public boolean checkUserAccessible(VXUser vXUser) {
