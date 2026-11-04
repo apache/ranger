@@ -66,6 +66,7 @@ import {
   hasMissingConstraintFieldsOnPolicyItems
 } from "../policyFormValidation";
 import ResourcesStep from "../PolicyCreateStepperStepComp/ResourcesStep";
+import ConstraintPolicyResourcesSection from "./ConstraintPolicyResourcesSection";
 import AccessRulesStep from "../PolicyCreateStepperStepComp/AccessRulesStep";
 import PolicyDetailsStep from "../PolicyCreateStepperStepComp/PolicyDetailsStep";
 
@@ -78,6 +79,16 @@ const PromptDialog = (props) => {
 };
 
 const noneOptions = { label: "None", value: "none" };
+
+/**
+ * Normalise a plain string principal name into the format expected by
+ * UsersGroupsAndRolesSelectionComponent: { value: "TYPE:name", name, type }.
+ */
+const toNormalisedPrincipal = (name, type) => ({
+  value: `${type}:${name}`,
+  name,
+  type
+});
 
 /** Convert API policy items into form state compatible with the new components */
 const setPolicyItemVal = (
@@ -394,16 +405,6 @@ const generateFormData = (policyData, serviceCompData) => {
   return data;
 };
 
-/**
- * Normalise a plain string principal name into the format expected by
- * UsersGroupsAndRolesSelectionComponent: { value: "TYPE:name", name, type }.
- */
-const toNormalisedPrincipal = (name, type) => ({
-  value: `${type}:${name}`,
-  name,
-  type
-});
-
 /** Resolve a stored principal object to its plain name */
 const principalName = (p) => {
   if (typeof p !== "object") return p;
@@ -678,7 +679,6 @@ export default function EditPolicyForm() {
       data.description = values.description || "";
       data.isEnabled = values.isEnabled !== false;
       data.isAuditEnabled = values.isAuditEnabled !== false;
-      // isDenyAllElse is already set inside the isConstraintPolicy branch above
       data.policyPriority = values.policyPriority === 1 ? 1 : 0;
       data.policyType = values.policyType ?? 0;
       data.service = serviceDetails?.name;
@@ -959,11 +959,20 @@ export default function EditPolicyForm() {
                 <Accordion.Item eventKey="resources">
                   <Accordion.Header>Resources</Accordion.Header>
                   <Accordion.Body>
-                    <ResourcesStep
-                      values={values}
-                      form={form}
-                      selectedServiceComponentDef={serviceCompDef}
-                    />
+                    {Number(values.policyType) ===
+                    RangerPolicyType.RANGER_CONSTRAINT_POLICY_TYPE.value ? (
+                      <ConstraintPolicyResourcesSection
+                        values={values}
+                        form={form}
+                        selectedServiceComponentDef={serviceCompDef}
+                      />
+                    ) : (
+                      <ResourcesStep
+                        values={values}
+                        form={form}
+                        selectedServiceComponentDef={serviceCompDef}
+                      />
+                    )}
                   </Accordion.Body>
                 </Accordion.Item>
 
