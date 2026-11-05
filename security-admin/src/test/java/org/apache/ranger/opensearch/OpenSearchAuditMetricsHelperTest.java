@@ -44,8 +44,10 @@ import javax.ws.rs.WebApplicationException;
 import java.io.ByteArrayInputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
@@ -134,6 +136,20 @@ class OpenSearchAuditMetricsHelperTest {
         assertEquals(25L, metrics.get(0).getNumberOfAudits());
         assertEquals("dev_hdfs", metrics.get(0).getServiceName());
         assertEquals("hdfs", metrics.get(0).getServiceType());
+    }
+
+    @Test
+    void getAuditAccessMetricsByDays_aggregatesCountsByDate() throws Exception {
+        OpenSearchAuditMetricsHelper helper = createHelper();
+        stubOpenSearchResponse(helper,
+                "{\"aggregations\":{\"per_day\":{\"buckets\":[{\"key_as_string\":\"2026-08-11T00:00:00.000Z\",\"doc_count\":10}]}}}",
+                200);
+
+        List<Map<String, Object>> metrics = helper.getAuditAccessMetricsByDays(7, "UTC");
+
+        assertEquals(1, metrics.size());
+        assertEquals(10L, metrics.get(0).get("numberOfAudits"));
+        assertNotNull(metrics.get(0).get("auditDate"));
     }
 
     @Test

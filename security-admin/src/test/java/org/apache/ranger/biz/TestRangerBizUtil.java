@@ -945,6 +945,40 @@ public class TestRangerBizUtil {
     }
 
     @Test
+    public void testIsServiceAccountUser() {
+        RangerService       svc = new RangerService();
+        Map<String, String> cfg = new HashMap<>();
+
+        cfg.put(ServiceDBStore.SERVICE_ACCOUNT_USERS, "kafka-1,kafka-2");
+        cfg.put(ServiceDBStore.SERVICE_ACCOUNT_GROUPS, "streamer-managers,mirror-makers");
+        svc.setConfigs(cfg);
+
+        UserSessionBase session = RangerContextHolder.getSecurityContext().getUserSession();
+
+        session.setXXPortalUser(new XXPortalUser());
+
+        session.getXXPortalUser().setLoginId("kafka-1");
+        Assertions.assertTrue(rangerBizUtil.isServiceAccountUser(svc)); // kafka-1 is a configured service account user
+
+        session.getXXPortalUser().setLoginId("kafka-2");
+        Assertions.assertTrue(rangerBizUtil.isServiceAccountUser(svc)); // kafka-2 is a configured service account user
+
+        userMgr.xUserMgr      = xUserMgr;
+        rangerBizUtil.userMgr = userMgr;
+
+        session.getXXPortalUser().setLoginId("stream-manager-1");
+        Mockito.when(xUserMgr.getGroupsForUser("stream-manager-1")).thenReturn(Collections.singleton("streamer-managers"));
+        Assertions.assertTrue(rangerBizUtil.isServiceAccountUser(svc)); // stream-manager-1 is member of a configured service account group
+
+        session.getXXPortalUser().setLoginId("mirror-maker-1");
+        Mockito.when(xUserMgr.getGroupsForUser("mirror-maker-1")).thenReturn(Collections.singleton("mirror-makers"));
+        Assertions.assertTrue(rangerBizUtil.isServiceAccountUser(svc)); // mirror-maker-1 is member of a configured service account group
+
+        session.getXXPortalUser().setLoginId("some-service-account");
+        Assertions.assertFalse(rangerBizUtil.isServiceAccountUser(svc)); // some-service-account is neither a configured service account user nor in any configured service account group
+    }
+
+    @Test
     public void testGetCreatePrincipalsIfAbsent_trueWhenSetInOpContext() {
         RangerAdminOpContext opCtx = RangerContextHolder.getOrCreateOpContext();
         opCtx.setCreatePrincipalsIfAbsent(true);

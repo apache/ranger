@@ -43,6 +43,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -196,10 +197,10 @@ public class AtlasTagSource extends AbstractTagSource {
 
         private final List<RangerAtlasEntityWithTags>             atlasEntitiesWithTags = new ArrayList<>();
         private final List<AtlasKafkaMessage<EntityNotification>> messages              = new ArrayList<>();
-        private       AtlasKafkaMessage<EntityNotification>       lastUnhandledMessage;
+        private final List<AtlasKafkaMessage<EntityNotification>> unhandledMessages       = new ArrayList<>();
 
-        private long    offsetOfLastMessageCommittedToKafka = -1L;
-        private boolean isHandlingDeleteOps;
+        private final Map<TopicPartition, Long> offsetOfLastMessageCommittedToKafkaByPartition = new HashMap<>();
+        private       boolean                   isHandlingDeleteOps;
 
         private ConsumerRunnable(NotificationConsumer<EntityNotification> consumer) {
             this.consumer = consumer;
@@ -251,7 +252,7 @@ public class AtlasTagSource extends AbstractTagSource {
                                             messages.add(message);
                                         } else {
                                             AtlasNotificationMapper.logUnhandledEntityNotification(notificationWrapper);
-                                            lastUnhandledMessage = message;
+                                            unhandledMessages.add(message);
                                         }
                                     }
                                 } else {
@@ -262,15 +263,16 @@ public class AtlasTagSource extends AbstractTagSource {
                                 buildAndUploadServiceTags();
                             }
                         }
+                        if (CollectionUtils.isNotEmpty(unhandledMessages)) {
+                            commitOffsetsForMessages(unhandledMessages);
+                            unhandledMessages.clear();
+                        }
+
                         eventStopWatch.stop();
                         long timeElapsed = TimeUnit.MILLISECONDS.convert(eventStopWatch.now(), TimeUnit.NANOSECONDS);
                         RangerTagSyncMetricsSourceTags.updateTotalEventsTime(timeElapsed);
                         if (isTagAssociated()) {
                             RangerTagSyncMetricsSourceTags.updateTotalUploadsTime(timeElapsed);
-                        }
-                        if (lastUnhandledMessage != null) {
-                            commitToKafka(lastUnhandledMessage);
-                            lastUnhandledMessage = null;
                         }
                     } catch (Exception exception) {
                         LOG.error("Caught exception..: ", exception);
@@ -327,36 +329,55 @@ public class AtlasTagSource extends AbstractTagSource {
                     }
                 }
 
-                AtlasKafkaMessage<EntityNotification> latestMessageDeliveredToRanger = messages.get(messages.size() - 1);
-                commitToKafka(latestMessageDeliveredToRanger);
+                int batchSize = messages.size();
+
+                commitOffsetsForMessages(messages);
 
                 atlasEntitiesWithTags.clear();
                 messages.clear();
 
-                LOG.debug("Completed processing batch of messages of size:[{}] received from NotificationConsumer", messages.size());
+                LOG.debug("Completed processing batch of messages of size:[{}] received from NotificationConsumer", batchSize);
             }
 
             LOG.debug("<== buildAndUploadServiceTags()");
         }
 
-        private void commitToKafka(AtlasKafkaMessage<EntityNotification> messageToCommit) {
-            LOG.debug("==> commitToKafka({})", messageToCommit);
+        private void commitOffsetsForMessages(List<AtlasKafkaMessage<EntityNotification>> messagesToCommit) {
+            LOG.debug("==> commitOffsetsForMessages({} messages)", messagesToCommit.size());
 
-            long messageOffset = messageToCommit.getOffset();
-            int  partitionId   = messageToCommit.getPartition();
+            Map<TopicPartition, Long> maxOffsetByPartition = new HashMap<>();
 
-            if (offsetOfLastMessageCommittedToKafka < messageOffset) {
-                TopicPartition partition = new TopicPartition(messageToCommit.getTopic(), partitionId);
+            for (AtlasKafkaMessage<EntityNotification> message : messagesToCommit) {
+                TopicPartition partition = new TopicPartition(message.getTopic(), message.getPartition());
+
+                maxOffsetByPartition.merge(partition, message.getOffset(), Math::max);
+            }
+
+            for (Map.Entry<TopicPartition, Long> entry : maxOffsetByPartition.entrySet()) {
+                commitPartitionOffset(entry.getKey(), entry.getValue());
+            }
+
+            LOG.debug("<== commitOffsetsForMessages({} messages)", messagesToCommit.size());
+        }
+
+        private void commitPartitionOffset(TopicPartition partition, long messageOffset) {
+            LOG.debug("==> commitPartitionOffset({}, offset={})", partition, messageOffset);
+
+            Long lastCommittedOffset = offsetOfLastMessageCommittedToKafkaByPartition.get(partition);
+            long lastCommitted       = lastCommittedOffset != null ? lastCommittedOffset : -1L;
+
+            if (lastCommitted < messageOffset) {
                 try {
-                    LOG.debug("Committing message with offset:[{}] to Kafka", messageOffset);
+                    LOG.debug("Committing message with offset:[{}] on partition:[{}] to Kafka", messageOffset, partition);
                     consumer.commit(partition, messageOffset);
-                    offsetOfLastMessageCommittedToKafka = messageOffset;
+                    offsetOfLastMessageCommittedToKafkaByPartition.put(partition, messageOffset);
                 } catch (Exception commitException) {
-                    LOG.warn("Ranger tagsync already processed message at offset {}. Ignoring failure in committing message:[{}]", messageOffset, messageToCommit, commitException);
+                    LOG.warn("Ranger tagsync already processed message at offset {} on partition {}. Ignoring failure in committing offset",
+                            messageOffset, partition, commitException);
                 }
             }
 
-            LOG.debug("<== commitToKafka({})", messageToCommit);
+            LOG.debug("<== commitPartitionOffset({}, offset={})", partition, messageOffset);
         }
     }
 }

@@ -142,6 +142,10 @@ public class RangerAPIMapping {
         apiAssociatedWithReports.add(RangerAPIList.SECURE_GET_X_GROUP);
         apiAssociatedWithReports.add(RangerAPIList.SECURE_GET_X_USER);
 
+        apiAssociatedWithReports.add(RangerAPIList.GET_DAYS_AUDIT_ADMIN_METRICS);
+        apiAssociatedWithReports.add(RangerAPIList.GET_DAYS_AUDIT_ACCESS_METRICS);
+        apiAssociatedWithReports.add(RangerAPIList.GET_DAYS_PLUGIN_POLICY_SYNC_METRICS);
+
         rangerAPIMappingWithUI.put(TAB_REPORTS, apiAssociatedWithReports);
 
         for (String api : apiAssociatedWithReports) {
@@ -222,6 +226,10 @@ public class RangerAPIMapping {
         apiAssociatedWithTagBasedPolicy.add(RangerAPIList.SET_USER_ROLES);
         apiAssociatedWithTagBasedPolicy.add(RangerAPIList.DEACTIVATE_USER);
 
+        apiAssociatedWithTagBasedPolicy.add(RangerAPIList.GET_DAYS_AUDIT_ADMIN_METRICS);
+        apiAssociatedWithTagBasedPolicy.add(RangerAPIList.GET_DAYS_AUDIT_ACCESS_METRICS);
+        apiAssociatedWithTagBasedPolicy.add(RangerAPIList.GET_DAYS_PLUGIN_POLICY_SYNC_METRICS);
+
         rangerAPIMappingWithUI.put(TAB_TAG_BASED_POLICIES, apiAssociatedWithTagBasedPolicy);
 
         for (String api : apiAssociatedWithTagBasedPolicy) {
@@ -267,6 +275,10 @@ public class RangerAPIMapping {
         apiAssociatedWithKeyManager.add(RangerAPIList.GET_KEY);
         apiAssociatedWithKeyManager.add(RangerAPIList.ROLLOVER_KEYS);
         apiAssociatedWithKeyManager.add(RangerAPIList.SEARCH_KEYS);
+
+        apiAssociatedWithKeyManager.add(RangerAPIList.GET_DAYS_AUDIT_ADMIN_METRICS);
+        apiAssociatedWithKeyManager.add(RangerAPIList.GET_DAYS_AUDIT_ACCESS_METRICS);
+        apiAssociatedWithKeyManager.add(RangerAPIList.GET_DAYS_PLUGIN_POLICY_SYNC_METRICS);
 
         rangerAPIMappingWithUI.put(TAB_KEY_MANAGER, apiAssociatedWithKeyManager);
 
@@ -432,6 +444,9 @@ public class RangerAPIMapping {
         apiAssociatedWithAudit.add(RangerAPIList.GET_ALL_LATEST_AUDIT_METRICS);
         apiAssociatedWithAudit.add(RangerAPIList.GET_DAILY_AUDIT_METRICS);
         apiAssociatedWithAudit.add(RangerAPIList.GET_DAYS_AUDIT_METRICS);
+        apiAssociatedWithAudit.add(RangerAPIList.GET_DAYS_AUDIT_ADMIN_METRICS);
+        apiAssociatedWithAudit.add(RangerAPIList.GET_DAYS_AUDIT_ACCESS_METRICS);
+        apiAssociatedWithAudit.add(RangerAPIList.GET_DAYS_PLUGIN_POLICY_SYNC_METRICS);
 
         rangerAPIMappingWithUI.put(TAB_AUDIT, apiAssociatedWithAudit);
 
@@ -513,6 +528,10 @@ public class RangerAPIMapping {
         apiAssociatedWithRBPolicies.add(RangerAPIList.UPDATE);
         apiAssociatedWithRBPolicies.add(RangerAPIList.SET_USER_ROLES);
         apiAssociatedWithRBPolicies.add(RangerAPIList.DEACTIVATE_USER);
+
+        apiAssociatedWithRBPolicies.add(RangerAPIList.GET_DAYS_AUDIT_ADMIN_METRICS);
+        apiAssociatedWithRBPolicies.add(RangerAPIList.GET_DAYS_AUDIT_ACCESS_METRICS);
+        apiAssociatedWithRBPolicies.add(RangerAPIList.GET_DAYS_PLUGIN_POLICY_SYNC_METRICS);
 
         rangerAPIMappingWithUI.put(TAB_RESOURCE_BASED_POLICIES, apiAssociatedWithRBPolicies);
 

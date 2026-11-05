@@ -182,6 +182,11 @@ public class OpenSearchAccessAuditsService extends AccessAuditsService implement
         return auditMetricsHelper.getAuditMetricsByHours(filter, timezone);
     }
 
+    @Override
+    public List<Map<String, Object>> getAuditAccessMetricsByDays(int olderThanInDays, String timezone) {
+        return auditMetricsHelper.getAuditAccessMetricsByDays(olderThanInDays, timezone);
+    }
+
     private VXAccessAudit populateViewBean(Map<String, Object> source) {
         VXAccessAudit accessAudit = new VXAccessAudit();
         Object        value;

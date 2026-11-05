@@ -77,7 +77,9 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Component
 public class RangerBizUtil {
@@ -128,6 +130,7 @@ public class RangerBizUtil {
     private final Class<?>[]   groupEditableClassesList = {};
     private final int          maxFirstNameLength;
     private final SecureRandom random;
+    private final Set<String>  serviceAccountInfoViewers;
 
     Set<Class<?>> groupEditableClasses;
     int           maxDisplayNameLength = 150;
@@ -152,6 +155,17 @@ public class RangerBizUtil {
         logger.info("Audit datasource is {}", auditDBType);
 
         random = new SecureRandom();
+
+        String svcAccountInfoViewers = PropertiesUtil.getProperty("ranger.admin.service.account.info.viewers");
+
+        if (StringUtils.isNotBlank(svcAccountInfoViewers)) {
+            serviceAccountInfoViewers = Arrays.stream(svcAccountInfoViewers.split(","))
+                    .map(StringUtils::trimToNull)
+                    .filter(Objects::nonNull)
+                    .collect(Collectors.toSet());
+        } else {
+            serviceAccountInfoViewers = Collections.emptySet();
+        }
     }
 
     /**
@@ -1052,6 +1066,12 @@ public class RangerBizUtil {
         }
     }
 
+    public boolean hasServiceAccountInfoAccess() {
+        UserSessionBase session = ContextUtil.getCurrentUserSession();
+
+        return session != null && serviceAccountInfoViewers.contains(session.getLoginId());
+    }
+
     public boolean checkUserAccessible(VXUser vXUser) {
         boolean            isAccessible = true;
         Collection<String> roleList     = userMgr.getDBRolesByLoginId(vXUser.getName());
@@ -1188,6 +1208,21 @@ public class RangerBizUtil {
 
         if (!ret && userMgr != null && userMgr.xUserMgr != null) {
             ret = isAnyGroupInConfigParameter(rangerService, ServiceDBStore.SERVICE_ADMIN_GROUPS, userMgr.xUserMgr.getGroupsForUser(userName));
+        }
+
+        return ret;
+    }
+
+    public boolean isServiceAccountUser(RangerService rangerService) {
+        boolean ret      = false;
+        String  userName = getCurrentUserLoginId();
+
+        if (userName != null) {
+            ret = isUserInConfigParameter(rangerService, ServiceDBStore.SERVICE_ACCOUNT_USERS, userName);
+
+            if (!ret && userMgr != null && userMgr.xUserMgr != null) {
+                ret = isAnyGroupInConfigParameter(rangerService, ServiceDBStore.SERVICE_ACCOUNT_GROUPS, userMgr.xUserMgr.getGroupsForUser(userName));
+            }
         }
 
         return ret;

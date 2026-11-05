@@ -40,6 +40,7 @@ public enum ValidationErrorCode {
     SERVICE_VALIDATION_ERR_MISSING_SERVICE_DEF(1009, "Missing service def"),
     SERVICE_VALIDATION_ERR_INVALID_SERVICE_DEF(1010, "Service def not found: service-def-name=[{0}]"),
     SERVICE_VALIDATION_ERR_REQUIRED_PARM_MISSING(1011, "Missing required configuration parameter(s): missing parameters={0}"),
+    SERVICE_VALIDATION_ERR_SERVICE_TYPE_NOT_UPDATABLE(1012, "Service type cannot be changed on update: existing type=[{0}], requested type=[{1}]"),
 
     // SERVICE-DEF VALIDATION
     SERVICE_DEF_VALIDATION_ERR_UNSUPPORTED_ACTION(2001, "Internal error: unsupported action[{0}]; isValid(Long) is only supported for DELETE"),
