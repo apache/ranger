@@ -167,8 +167,11 @@ const validateConstraintPolicyItem = (item, serviceDef) => {
   );
 
   if (principals && !constraintName) {
-    ruleErrors.constraintName =
-      "Please select a constraint name for this policy";
+    const constraintNameMsg = "Please select a constraint name for this policy";
+    // Legacy form reads `constraintName`; the new form's Field is
+    // `constraintInfo.constraintName`, so errors must exist on that path too.
+    ruleErrors.constraintName = constraintNameMsg;
+    ruleErrors.constraintInfo = { constraintName: constraintNameMsg };
   }
   if (principals && constraintName && !accesses) {
     ruleErrors.accesses = "Please select permission for this policy";

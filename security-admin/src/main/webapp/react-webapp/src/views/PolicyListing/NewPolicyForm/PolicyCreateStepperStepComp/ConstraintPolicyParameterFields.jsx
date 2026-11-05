@@ -364,10 +364,7 @@ export const ConstraintPolicyParameterTableCell = ({
             {param.label || param.name}
             {param.mandatory ? <span className="required-mark">*</span> : null}
           </FormB.Label>
-          <Field
-            name={`${fieldNamePrefix}.${param.name}`}
-            validate={validateParameter(param)}
-          >
+          <Field name={`${fieldNamePrefix}.${param.name}`}>
             {({ input, meta }) => (
               <ParameterControl
                 param={param}

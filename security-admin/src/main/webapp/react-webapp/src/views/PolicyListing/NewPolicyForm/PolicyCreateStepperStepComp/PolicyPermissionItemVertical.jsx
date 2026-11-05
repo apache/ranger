@@ -155,6 +155,13 @@ export default function PolicyPermissionItemVertical({
   // Required field validation
   const required = (value) => (value ? undefined : "Required");
 
+  // Same definition of "has a constraint name" and same message as
+  // validateConstraintPolicyItem, so field-level and rule-level errors match.
+  const requiredConstraintName = (value) =>
+    getConstraintNameFromField(value)
+      ? undefined
+      : "Please select a constraint name for this policy";
+
   const constraintSelectFirstMsg = "Please select constraint name first";
 
   const handleConstraintNameChange = (input, fieldName, option) => {
@@ -260,7 +267,7 @@ export default function PolicyPermissionItemVertical({
                               <Col>
                                 <Field
                                   name={`${name}.constraintInfo.constraintName`}
-                                  validate={required}
+                                  validate={requiredConstraintName}
                                 >
                                   {({ input, meta }) => (
                                     <>
@@ -284,7 +291,8 @@ export default function PolicyPermissionItemVertical({
                                         }
                                       />
                                       {meta.touched && meta.error && (
-                                        <span className="text-danger d-block mt-1">
+                                        <span className="text-danger small mt-1">
+                                          <i className="fa fa-exclamation-circle me-1" />
                                           {meta.error}
                                         </span>
                                       )}

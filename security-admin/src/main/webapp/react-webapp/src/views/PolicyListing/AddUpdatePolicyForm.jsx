@@ -734,12 +734,6 @@ export default function AddUpdatePolicyForm() {
         values,
         serviceCompDetails
       );
-      if (data.constraintPolicyItems.length === 0) {
-        toast.error("Please add at least one complete constraint rule.", {
-          toastId: "constraintPolicyItemsEmpty"
-        });
-        return;
-      }
       data.isDenyAllElse = false;
     } else {
       data.allowExceptions = getPolicyItemsVal(values, "allowExceptions");
