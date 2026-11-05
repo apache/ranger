@@ -94,4 +94,5 @@
   <suppress files="PatchForOzoneServiceDefPolicyConditionUpdate_J10066" checks="TypeName"/>
   <suppress files="PatchForOzoneServiceDefAssumeRoleUpdate_J10065" checks="TypeName"/>
   <suppress files="PatchForServiceDefJson_J10067" checks="TypeName"/>
+  <suppress files="PatchForAtlasResourceLabelUpdate_J10071" checks="TypeName"/>
 </suppressions>
