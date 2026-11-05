@@ -469,7 +469,7 @@ public class PublicAPIsv2 {
 			throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST , "service id mismatch", true);
 		}
 
-		return serviceREST.updateService(service, request);
+		return serviceREST.updateService(service, id, request);
 	}
 
 	@PUT

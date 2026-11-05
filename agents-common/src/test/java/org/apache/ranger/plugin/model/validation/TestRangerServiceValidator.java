@@ -535,12 +535,46 @@ public class TestRangerServiceValidator {
 		when(service.getId()).thenReturn(7L);
 		RangerService existingService = mock(RangerService.class);
 		when(existingService.getId()).thenReturn(Long.valueOf(7L));
+		when(existingService.getType()).thenReturn("aType");
 		when(_store.getService(7L)).thenReturn(existingService);
 		when(_store.getServiceByName("aName")).thenReturn(existingService);
 		Assert.assertTrue(_validator.isValid(service, Action.UPDATE, _failures));
 		// name need not point to a service for update to work, of course.
 		when(_store.getServiceByName("aName")).thenReturn(null);
 		Assert.assertTrue(_validator.isValid(service, Action.UPDATE, _failures));
+	}
+
+	@Test
+	public void test_isValid_update_serviceTypeNotUpdatable() throws Exception {
+		Object[][] serviceDefInput = new Object[][] {
+				{ "param1", true },
+				{ "param2", true },
+				{ "param3", false },
+				{ "param4", false },
+				{ "param5", true },
+		};
+		List<RangerServiceConfigDef> configDefs = _utils.createServiceConditionDefs(serviceDefInput);
+		RangerServiceDef serviceDef = mock(RangerServiceDef.class);
+		when(serviceDef.getConfigs()).thenReturn(configDefs);
+
+		RangerService service = mock(RangerService.class);
+		when(service.getId()).thenReturn(7L);
+		when(service.getName()).thenReturn("aName");
+		when(service.getDisplayName()).thenReturn("aDisplayName");
+		when(service.getType()).thenReturn("aType");
+		String[] configs = new String[] { "param1", "param2", "param3", "param5", "param6" };
+		Map<String, String> configMap = _utils.createMap(configs);
+		when(service.getConfigs()).thenReturn(configMap);
+
+		when(_store.getServiceDefByName("aType")).thenReturn(serviceDef);
+		when(_store.getServiceByName("aName")).thenReturn(null);
+
+		RangerService existingService = mock(RangerService.class);
+		when(existingService.getType()).thenReturn("storedType");
+		when(_store.getService(7L)).thenReturn(existingService);
+
+		checkFailure_isValid(_validator, service, Action.UPDATE, _failures, "semantic", "type");
+		Assert.assertEquals(ValidationErrorCode.SERVICE_VALIDATION_ERR_SERVICE_TYPE_NOT_UPDATABLE.getErrorCode(), _failures.get(0)._errorCode);
 	}
 
 	@Test
