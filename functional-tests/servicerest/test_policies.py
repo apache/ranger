@@ -171,7 +171,7 @@ def test_create_policy_by_ROLE_USER():
     resp = requests.post(request_url, verify=False, auth=HTTPBasicAuth(str_variable_dict['user3'],'Test@12345'), headers=headers, data=json.dumps(request_data))
     assert resp.status_code == 403, "Expected status code not returned,user with ROLE_USER should not be able to create policy"
 
-@pytest.mark.skip
+
 def test_create_policies_using_apply_by_admin(log):
     request_url = base_url + '/plugins/policies/apply'
     request_data = get_request_data('test_create_policies_using_apply.json', str_variable_dict, test_data_path)
@@ -466,12 +466,17 @@ def test_service_admins_allowed_to_call_cache_reset():
     assert resp.status_code == 200, "Expected status code not returned , service admin should be able to reset cache for policies of that service"
 
 
-@pytest.mark.skip(reason="This test is failing intermittently, need to investigate and fix the root cause")
+
 def test_download_policies_by_admin(log):
-    request_url = base_url + '/plugins/policies/download/{service_1_name}'
+    # NOTE: /plugins/policies/download/** is an unsecured (security="none") endpoint, so the
+    # basic-auth credentials are ignored and the call fails with
+    # 400 "Unauthenticated access not allowed" (see RangerBizUtil.failUnauthenticatedDownloadIfNotAllowed).
+    # The authenticated equivalent is /plugins/secure/policies/download/{serviceName}.
+    request_url = base_url + '/plugins/secure/policies/download/{service_1_name}'
     request_url = request_url.format(**str_variable_dict)
     # download called for the first time ,for the first time the status code should be 200
     resp = requests.get(request_url, verify=False, auth=admin_auth, headers=headers)
+    assert resp.status_code == 200, f"First policy download failed with {resp.status_code}: {resp.text}"
     version_number =resp.json()['policyVersion']
     request_url=request_url+f'?lastKnownVersion={version_number}'
 
@@ -509,7 +514,7 @@ def test_download_policies_by_admin(log):
             log.error("Failed to delete policy with id %s after download test. Response code: %s, Response content: %s", policy_id, delete_resp.status_code, delete_resp.content)
 
 
-@pytest.mark.skip(reason="This test is failing intermittently, need to investigate and fix the root cause")
+
 def test_get_policy_from_event_time_by_admin(create_policy_for_test):
     """
     Test retrieves a policy at a specific event time using policyId and eventTime parameters.
@@ -526,11 +531,15 @@ def test_get_policy_from_event_time_by_admin(create_policy_for_test):
     # Update the policy to create a new version
     policy_json= create_policy_for_test['policy_json']
     policy_id=policy_json['id']
-    original_event_time=policy_json['updateTime']
+    # The eventTime API expects a string in "yyyy-MM-dd'T'HH:mm:ss'Z'" format (see
+    original_event_time = time.strftime('%Y-%m-%dT%H:%M:%SZ',
+                                        time.gmtime(policy_json['updateTime'] / 1000 + 1))
     original_description=policy_json['description']
     fields_to_update = {"description": "Modified description for event time test"}
     updated_data = get_updated_request_data(request_data=policy_json, fields_to_update=fields_to_update)
 
+    # make sure the new version's history record is strictly after 'original_event_time'
+    time.sleep(2)
 
     update_url = base_url + f'/plugins/policies/{policy_id}'
     update_resp = requests.put(update_url, verify=False, auth=admin_auth, headers=headers,
@@ -548,7 +557,7 @@ def test_get_policy_from_event_time_by_admin(create_policy_for_test):
     assert event_policy.get(
         'description') == original_description, "EventTime API did not return the policy state at the specified event time"
 
-@pytest.mark.skip(reason="This test is failing intermittently, need to investigate and fix the root cause")
+@pytest.mark.skip
 def test_get_policy_from_event_time_with_version_number(create_policy_for_test):
     """
     Test retrieves a specific policy version using policyId, eventTime, and versionNo parameters.
@@ -606,7 +615,7 @@ def test_get_policy_from_event_time_missing_parameters():
     resp = requests.get(request_url, verify=False, auth=admin_auth, headers=headers)
     assert resp.status_code == 400, "API should return 400 when both eventTime and policyId parameters are missing"
 
-@pytest.mark.skip(reason="This test is failing intermittently, need to investigate and fix the root cause")
+@pytest.mark.skip
 def test_get_policy_from_event_time_invalid_policy_id():
     """
     Test validates that the API returns 404 error when an invalid or non-existent policyId is provided.
@@ -619,7 +628,7 @@ def test_get_policy_from_event_time_invalid_policy_id():
     resp = requests.get(request_url, verify=False, auth=admin_auth, headers=headers)
     assert resp.status_code == 404, "API should return 404 for non-existent policy ID"
 
-@pytest.mark.skip(reason="This test is failing intermittently, need to investigate and fix the root cause")
+@pytest.mark.skip
 def test_get_policy_from_event_time_by_auditor(create_policy_for_test):
     """
     Test validates that auditor role has access to retrieve policies by event time.
@@ -638,7 +647,7 @@ def test_get_policy_from_event_time_by_auditor(create_policy_for_test):
                         auth=HTTPBasicAuth(str_variable_dict['auditor_user'], 'Test@12345'), headers=headers)
     assert resp.status_code == 200, "Auditor should be able to retrieve policy from event time"
 
-@pytest.mark.skip(reason="This test is failing intermittently, need to investigate and fix the root cause")
+@pytest.mark.skip
 def test_get_policy_from_event_time_by_unauthorized_user(log):
     """
     Test validates that users without proper permissions cannot retrieve policies by event time.
@@ -829,7 +838,7 @@ def test_get_policy_by_guid_by_keyadmin(create_policy_for_test):
     # STATUS CODE SHOULD HAVE BEEN 403 SINCE KEY ADMIN IS NOT ALLOWD
     assert resp.status_code == 400, "Keyadmin should be able to retrieve policy by GUID"
 
-@pytest.mark.skip(reason="This test is failing intermittently, need to investigate and fix the root cause")
+@pytest.mark.skip(reason="Need to correct the  apache ranger code base, the api calls are  failing due to guids being treated case sensitive")
 def test_get_policy_by_guid_case_sensitivity():
     """
     Test validates GUID case sensitivity.
@@ -875,7 +884,7 @@ def test_get_policy_by_guid_deleted_policy():
     assert get_resp.status_code == 404, "API should return 404 for deleted policy GUID"
 
 
-@pytest.mark.skip(reason="This test is failing intermittently, need to investigate and fix the root cause")
+@pytest.mark.skip
 def test_get_policies_for_resource_by_admin():
     """
     Test retrieves policies matching specific resource using service definition name.
@@ -909,7 +918,7 @@ def test_get_policies_for_resource_invalid_service_def():
     resp = requests.get(request_url, verify=False, auth=admin_auth, headers=headers)
     assert resp.status_code in [400, 404], "API should return error for invalid service definition"
 
-@pytest.mark.skip(reason="This test is failing intermittently, need to investigate and fix the root cause")
+@pytest.mark.skip
 def test_get_policies_for_resource_with_matching_policy(create_policy_for_test):
     """
     Test retrieves policies that match a specific resource path.
@@ -1162,7 +1171,7 @@ def test_get_policy_version_list_success(log):
         else:
             log.error(f"Failed to delete policy. Status code: {delete_resp.status_code}, Response: {delete_resp.text}")
 
-@pytest.mark.skip(reason="This test is failing intermittently, need to investigate and fix the root cause")
+@pytest.mark.skip(reason="Need to correct the  apache ranger code base, API is returning wrong response code 200 for invalid policy ID")
 def test_get_policy_version_list_invalid_policy_id():
     """
     Test validates that API returns 404/400 for non-existent policy ID.
@@ -1190,7 +1199,7 @@ def test_get_policy_version_list_by_auditor(create_policy_for_test):
                         headers=headers)
     assert resp.status_code == 200, "Auditor should be able to retrieve policy version list"
 
-@pytest.mark.skip(reason="This test is failing intermittently, need to investigate and fix the root cause")
+@pytest.mark.skip(reason="Need to correct the code base, API is returning wrong response code 200 for keyadmin accessing non-KMS policy version list")
 def test_get_policy_version_list_by_keyadmin_for_non_kms_policy(create_policy_for_test):
     """
     Test validates that keyadmin role cannot retrieve non-KMS policy version list.
@@ -1216,7 +1225,7 @@ def test_get_policy_version_list_by_keyadmin_for_kms_policy(create_kms_policy_fo
     resp = requests.get(request_url, verify=False, auth=keyadmin_auth, headers=headers)
     assert resp.status_code == 200, "Keyadmin should be able to retrieve KMS policy version list"
 
-@pytest.mark.skip(reason="This test is failing intermittently, need to investigate and fix the root cause")
+@pytest.mark.skip(reason="Need to correct the code base, API is returning wrong response code 200 for a policy which has been deleted")
 def test_get_policy_version_list_deleted_policy(log):
     """
     Test validates that version list of a deleted policy cannot be retrieved.
