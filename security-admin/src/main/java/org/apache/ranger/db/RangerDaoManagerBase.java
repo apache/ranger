@@ -270,6 +270,10 @@ public abstract class RangerDaoManagerBase {
         return new XXPolicyRefConditionDao(this);
     }
 
+    public XXPolicyRefConstraintDao getXXPolicyRefConstraint() {
+        return new XXPolicyRefConstraintDao(this);
+    }
+
     public XXPolicyRefGroupDao getXXPolicyRefGroup() {
         return new XXPolicyRefGroupDao(this);
     }

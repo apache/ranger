@@ -71,6 +71,7 @@ import org.apache.ranger.entity.XXUser;
 import org.apache.ranger.entity.XXUserPermission;
 import org.apache.ranger.plugin.model.GroupInfo;
 import org.apache.ranger.plugin.model.RangerPolicy;
+import org.apache.ranger.plugin.model.RangerPolicy.RangerConstraintPolicyItem;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerDataMaskPolicyItem;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItem;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
@@ -692,6 +693,10 @@ public class XUserMgr extends XUserMgrBase {
                 List<RangerRowFilterPolicyItem> rowFilterItems = rangerPolicy.getRowFilterPolicyItems();
                 removeUserGroupReferences(rowFilterItems, null, vXGroup.getName());
                 rangerPolicy.setRowFilterPolicyItems(rowFilterItems);
+
+                List<RangerConstraintPolicyItem> constraintItems = rangerPolicy.getConstraintPolicyItems();
+                removeUserGroupReferences(constraintItems, null, vXGroup.getName());
+                rangerPolicy.setConstraintPolicyItems(constraintItems);
 
                 try {
                     if (StringUtils.equals(rangerPolicy.getServiceType(), EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_GDS_NAME)) {
@@ -1377,6 +1382,11 @@ public class XUserMgr extends XUserMgrBase {
 
                 removeUserGroupReferences(rowFilterItems, vXUser.getName(), null);
                 rangerPolicy.setRowFilterPolicyItems(rowFilterItems);
+
+                List<RangerConstraintPolicyItem> constraintItems = rangerPolicy.getConstraintPolicyItems();
+
+                removeUserGroupReferences(constraintItems, vXUser.getName(), null);
+                rangerPolicy.setConstraintPolicyItems(constraintItems);
 
                 try {
                     if (StringUtils.equals(rangerPolicy.getServiceType(), EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_GDS_NAME)) {

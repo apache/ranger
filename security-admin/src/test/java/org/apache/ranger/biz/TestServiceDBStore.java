@@ -53,6 +53,7 @@ import org.apache.ranger.db.XXPolicyExportAuditDao;
 import org.apache.ranger.db.XXPolicyLabelMapDao;
 import org.apache.ranger.db.XXPolicyRefAccessTypeDao;
 import org.apache.ranger.db.XXPolicyRefConditionDao;
+import org.apache.ranger.db.XXPolicyRefConstraintDao;
 import org.apache.ranger.db.XXPolicyRefResourceDao;
 import org.apache.ranger.db.XXPortalUserDao;
 import org.apache.ranger.db.XXRMSMappingProviderDao;
@@ -5409,6 +5410,74 @@ public class TestServiceDBStore {
     }
 
     @Test
+    public void test202aApplyResourceFilter_constraintPolicies() throws Exception {
+        RangerServiceDef.RangerResourceDef database = new RangerServiceDef.RangerResourceDef();
+        RangerServiceDef.RangerResourceDef table    = new RangerServiceDef.RangerResourceDef();
+
+        database.setName("database");
+        database.setLevel(10);
+        table.setName("table");
+        table.setParent("database");
+        table.setLevel(20);
+
+        RangerConstraintDef maxRows = new RangerConstraintDef();
+
+        maxRows.setName("maxRows");
+        maxRows.setResources(Arrays.asList("database", "table"));
+
+        RangerServiceDef def = new RangerServiceDef();
+
+        def.setName("constraint-search-" + System.nanoTime());
+        def.setUpdateTime(new Date());
+        def.setResources(new ArrayList<>(Arrays.asList(database, table)));
+        def.setAccessTypes(new ArrayList<>());
+        def.setConstraintDefs(Collections.singletonList(maxRows));
+
+        Map<String, RangerPolicy.RangerPolicyResource> resources = new HashMap<>();
+
+        resources.put("database", new RangerPolicy.RangerPolicyResource("db1"));
+        resources.put("table", new RangerPolicy.RangerPolicyResource("t1"));
+
+        RangerPolicy.RangerConstraintPolicyItem item = new RangerPolicy.RangerConstraintPolicyItem();
+
+        item.setConstraintInfo(new RangerPolicy.RangerPolicyItemConstraintInfo("maxRows", Collections.singletonMap("rowCount", 10)));
+
+        RangerPolicy constraintPolicy = new RangerPolicy();
+
+        constraintPolicy.setId(1L);
+        constraintPolicy.setPolicyType(RangerPolicy.POLICY_TYPE_CONSTRAINTS);
+        constraintPolicy.setResources(resources);
+        constraintPolicy.setConstraintPolicyItems(Collections.singletonList(item));
+
+        RangerPolicy accessPolicy = new RangerPolicy();
+
+        accessPolicy.setId(2L);
+        accessPolicy.setPolicyType(RangerPolicy.POLICY_TYPE_ACCESS);
+        accessPolicy.setResources(resources);
+
+        List<RangerPolicy>  policies        = Arrays.asList(constraintPolicy, accessPolicy);
+        Map<String, String> filterResources = new HashMap<>();
+
+        filterResources.put("database", "db1");
+        filterResources.put("table", "t1");
+
+        // no policyType: constraint policies are returned along with other policy types
+        SearchFilter filter = new SearchFilter();
+
+        Assertions.assertEquals(policies, serviceDBStore.applyResourceFilter(def, policies, filterResources, filter, RangerPolicyResourceMatcher.MatchScope.SELF));
+
+        // policyType=4: only constraint policies
+        filter.setParam(SearchFilter.POLICY_TYPE, String.valueOf(RangerPolicy.POLICY_TYPE_CONSTRAINTS));
+
+        Assertions.assertEquals(Collections.singletonList(constraintPolicy), serviceDBStore.applyResourceFilter(def, policies, filterResources, filter, RangerPolicyResourceMatcher.MatchScope.SELF));
+
+        // policyType=0: no constraint policies
+        filter.setParam(SearchFilter.POLICY_TYPE, String.valueOf(RangerPolicy.POLICY_TYPE_ACCESS));
+
+        Assertions.assertEquals(Collections.singletonList(accessPolicy), serviceDBStore.applyResourceFilter(def, policies, filterResources, filter, RangerPolicyResourceMatcher.MatchScope.SELF));
+    }
+
+    @Test
     public void test203searchRangerTagPoliciesOnBasisOfServiceName() throws Exception {
         RangerPolicy rp = new RangerPolicy();
         rp.setService("s1");
@@ -5857,6 +5926,25 @@ public class TestServiceDBStore {
         Assertions.assertEquals("Access", a);
         Assertions.assertEquals("Masking", d);
         Assertions.assertEquals("Row Level Filter", r);
+        Assertions.assertEquals("Constraints", m.invoke(serviceDBStore, org.apache.ranger.plugin.model.RangerPolicy.POLICY_TYPE_CONSTRAINTS));
+    }
+
+    @Test
+    public void test224aGetConstraintInfo() {
+        RangerPolicy.RangerConstraintPolicyItem item       = new RangerPolicy.RangerConstraintPolicyItem();
+        Map<String, Object>                     parameters = new HashMap<>();
+
+        parameters.put("rowCount", 10);
+        parameters.put("approver", "finance");
+        item.setConstraintInfo(new RangerPolicy.RangerPolicyItemConstraintInfo("maxRows", parameters));
+
+        Assertions.assertEquals("constraint=[maxRows]; parameters={approver=finance, rowCount=10}", ServiceDBStore.getConstraintInfo(item));
+
+        item.setConstraintInfo(new RangerPolicy.RangerPolicyItemConstraintInfo("requireApproval", null));
+        Assertions.assertEquals("constraint=[requireApproval]", ServiceDBStore.getConstraintInfo(item));
+
+        Assertions.assertEquals("", ServiceDBStore.getConstraintInfo(new RangerPolicyItem()));
+        Assertions.assertEquals("", ServiceDBStore.getConstraintInfo(null));
     }
 
     @Test
@@ -5938,6 +6026,71 @@ public class TestServiceDBStore {
         def.setId(2L);
         def.setName("new");
         Assertions.assertThrows(WebApplicationException.class, () -> serviceDBStore.updateServiceDef(def));
+    }
+
+    @Test
+    public void test229aUpdateServiceDef_removeConstraintInUse_throws() throws Exception {
+        XXServiceDefDao          xServiceDefDao    = Mockito.mock(XXServiceDefDao.class);
+        XXPolicyRefConstraintDao xRefConstraintDao = Mockito.mock(XXPolicyRefConstraintDao.class);
+        XXServiceDef             existing          = new XXServiceDef();
+        RangerServiceDef         existingDef       = new RangerServiceDef();
+
+        existing.setId(3L);
+        existing.setName("udf");
+        existingDef.setId(3L);
+        existingDef.setName("udf");
+        existingDef.setConstraintDefs(Collections.singletonList(constraintDef()));
+
+        Mockito.when(daoMgr.getXXServiceDef()).thenReturn(xServiceDefDao);
+        Mockito.when(xServiceDefDao.getById(3L)).thenReturn(existing);
+        Mockito.when(serviceDefService.read(3L)).thenReturn(existingDef);
+        Mockito.when(daoMgr.getXXPolicyRefConstraint()).thenReturn(xRefConstraintDao);
+        Mockito.when(xRefConstraintDao.findPolicyIdsByServiceDefIdAndConstraintName(3L, "requireApproval")).thenReturn(Collections.singletonList(11L));
+        Mockito.when(restErrorUtil.createRESTException(Mockito.contains("requireApproval"), Mockito.eq(MessageEnums.DATA_NOT_UPDATABLE)))
+                .thenReturn(new WebApplicationException());
+
+        RangerServiceDef def = new RangerServiceDef();
+
+        def.setId(3L);
+        def.setName("udf");
+        def.setConstraintDefs(Collections.emptyList()); // removes requireApproval, which policy 11 uses
+
+        Assertions.assertThrows(WebApplicationException.class, () -> serviceDBStore.updateServiceDef(def));
+        Mockito.verify(serviceDefService, Mockito.never()).update(Mockito.any());
+    }
+
+    @Test
+    public void test229bValidateConstraintDefsNotInUse_unusedConstraintCanBeRenamed() throws Exception {
+        XXPolicyRefConstraintDao xRefConstraintDao = Mockito.mock(XXPolicyRefConstraintDao.class);
+        RangerServiceDef         existingDef       = new RangerServiceDef();
+        RangerConstraintDef      renamed           = constraintDef();
+
+        existingDef.setId(3L);
+        existingDef.setConstraintDefs(Collections.singletonList(constraintDef()));
+        renamed.setName("requireApproval2");
+
+        Mockito.when(serviceDefService.read(3L)).thenReturn(existingDef);
+        Mockito.when(daoMgr.getXXPolicyRefConstraint()).thenReturn(xRefConstraintDao);
+        Mockito.when(xRefConstraintDao.findPolicyIdsByServiceDefIdAndConstraintName(3L, "requireApproval")).thenReturn(Collections.emptyList());
+
+        invokePrivate("validateConstraintDefsNotInUse", new Class<?>[] {Long.class, List.class}, 3L, Collections.singletonList(renamed));
+
+        Mockito.verify(xRefConstraintDao).findPolicyIdsByServiceDefIdAndConstraintName(3L, "requireApproval");
+        Mockito.verify(restErrorUtil, Mockito.never()).createRESTException(Mockito.anyString(), Mockito.eq(MessageEnums.DATA_NOT_UPDATABLE));
+    }
+
+    @Test
+    public void test229cValidateConstraintDefsNotInUse_keptConstraintNotChecked() throws Exception {
+        RangerServiceDef existingDef = new RangerServiceDef();
+
+        existingDef.setId(3L);
+        existingDef.setConstraintDefs(Collections.singletonList(constraintDef()));
+
+        Mockito.when(serviceDefService.read(3L)).thenReturn(existingDef);
+
+        invokePrivate("validateConstraintDefsNotInUse", new Class<?>[] {Long.class, List.class}, 3L, Collections.singletonList(constraintDef()));
+
+        Mockito.verify(daoMgr, Mockito.never()).getXXPolicyRefConstraint();
     }
 
     @Test
@@ -6201,6 +6354,40 @@ public class TestServiceDBStore {
         StringBuilder sb = (StringBuilder) m.invoke(serviceDBStore, Collections.singletonList(p), "f.csv", resp);
         Assertions.assertNotNull(sb);
         Assertions.assertTrue(sb.length() > 0);
+    }
+
+    @Test
+    public void test245aWriteCSV_constraintPolicy() throws Exception {
+        Method m = ServiceDBStore.class.getDeclaredMethod("writeCSV", List.class, String.class, HttpServletResponse.class);
+        m.setAccessible(true);
+
+        RangerPolicy.RangerConstraintPolicyItem item = new RangerPolicy.RangerConstraintPolicyItem();
+        item.setUsers(Collections.singletonList("alice"));
+        item.setAccesses(Collections.singletonList(new RangerPolicy.RangerPolicyItemAccess("select")));
+        item.setConstraintInfo(new RangerPolicy.RangerPolicyItemConstraintInfo("maxRows", Collections.singletonMap("rowCount", 10)));
+
+        RangerPolicy.RangerPolicyResource rsrc = new RangerPolicy.RangerPolicyResource();
+        rsrc.setValues(Collections.singletonList("db1"));
+        rsrc.setIsExcludes(Boolean.FALSE);
+        rsrc.setIsRecursive(Boolean.FALSE);
+
+        RangerPolicy p = new RangerPolicy();
+        p.setId(1L);
+        p.setName("p1");
+        p.setService("s1");
+        p.setServiceType("hive");
+        p.setPolicyType(RangerPolicy.POLICY_TYPE_CONSTRAINTS);
+        p.setResources(Collections.singletonMap("database", rsrc));
+        p.setConstraintPolicyItems(Collections.singletonList(item));
+
+        String   csv   = m.invoke(serviceDBStore, Collections.singletonList(p), "f.csv", Mockito.mock(HttpServletResponse.class)).toString();
+        String[] lines = csv.split("\n");
+
+        Assertions.assertEquals(2, lines.length, csv);
+        Assertions.assertTrue(lines[0].endsWith("|Constraint"));
+        Assertions.assertTrue(lines[1].contains("alice"), lines[1]);
+        Assertions.assertTrue(lines[1].contains("|Constraints|"), lines[1]);
+        Assertions.assertTrue(lines[1].contains("constraint=[maxRows]; parameters={rowCount=10}"), lines[1]);
     }
 
     @Test

@@ -1009,6 +1009,21 @@ public class TestServiceREST {
     }
 
     @Test
+    public void test22aGetServicePoliciesById_constraintPolicyType() throws Exception {
+        HttpServletRequest request = Mockito.mock(HttpServletRequest.class);
+        SearchFilter       filter  = new SearchFilter();
+
+        filter.setParam(SearchFilter.POLICY_TYPE, String.valueOf(RangerPolicy.POLICY_TYPE_CONSTRAINTS));
+        Mockito.when(searchUtil.getSearchFilter(request, policyService.sortFields)).thenReturn(filter);
+
+        // policyType=4 is not in RangerPolicy.POLICY_TYPES, but must not be rejected as an unknown policy type
+        RangerPolicyList ret = serviceREST.getServicePolicies(Id, request);
+
+        Assertions.assertNotNull(ret);
+        Mockito.verify(svcStore).getServicePolicies(Id, filter);
+    }
+
+    @Test
     public void test23getServicePoliciesByName() throws Exception {
         HttpServletRequest request      = Mockito.mock(HttpServletRequest.class);
         RangerPolicy       rangerPolicy = rangerPolicy();

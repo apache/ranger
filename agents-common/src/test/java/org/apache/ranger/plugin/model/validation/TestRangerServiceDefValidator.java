@@ -686,11 +686,20 @@ public class TestRangerServiceDefValidator {
         assertTrue(validator.isValidConstraintDefs(def, failures));
         assertTrue(failures.isEmpty());
 
+        // a constraint def must list at least one resource
         RangerConstraintDef emptyResources = constraintDef(1L, "requireApproval", new ArrayList<>(), Arrays.asList("execute"));
         emptyResources.setParameters(Collections.singletonList(param("approver", "string", null, true)));
         def.setConstraintDefs(Collections.singletonList(emptyResources));
-        assertTrue(validator.isValidConstraintDefs(def, failures));
-        assertTrue(failures.isEmpty());
+        assertFalse(validator.isValidConstraintDefs(def, failures));
+        utils.checkFailureForMissingValue(failures, "constraint def resources", "requireApproval");
+        assertHasErrorCode(ValidationErrorCode.SERVICE_DEF_VALIDATION_ERR_CONSTRAINT_NO_RESOURCES.getErrorCode());
+        failures.clear();
+
+        RangerConstraintDef nullResources = constraintDef(1L, "requireApproval", null, Arrays.asList("execute"));
+        def.setConstraintDefs(Collections.singletonList(nullResources));
+        assertFalse(validator.isValidConstraintDefs(def, failures));
+        assertHasErrorCode(ValidationErrorCode.SERVICE_DEF_VALIDATION_ERR_CONSTRAINT_NO_RESOURCES.getErrorCode());
+        failures.clear();
 
         assertFalse(validator.isValidConfigType("user", "approver", failures));
         utils.checkFailureForSemanticError(failures, "config def type", "approver");
@@ -768,6 +777,29 @@ public class TestRangerServiceDefValidator {
         assertHasErrorCode(ValidationErrorCode.SERVICE_DEF_VALIDATION_ERR_CONSTRAINT_PARAM_INVALID_TYPE.getErrorCode());
         assertHasErrorCode(ValidationErrorCode.SERVICE_DEF_VALIDATION_ERR_CONSTRAINT_PARAM_UNKNOWN_ENUM.getErrorCode());
         assertHasErrorCode(ValidationErrorCode.SERVICE_DEF_VALIDATION_ERR_CONSTRAINT_PARAM_SUBTYPE_NOT_EMPTY.getErrorCode());
+    }
+
+    @Test
+    public final void test_isValidConstraintDefs_invalidHierarchy() {
+        RangerServiceDef def = constraintServiceDef();
+
+        for (RangerResourceDef resourceDef : def.getResources()) {
+            if ("udf".equals(resourceDef.getName())) {
+                resourceDef.setIsValidLeaf(false);
+            }
+        }
+
+        // udf can't be a leaf, so {database, udf} has no valid hierarchy
+        def.setConstraintDefs(Collections.singletonList(constraintDef(1L, "requireApproval", Arrays.asList("database", "udf"), Arrays.asList("execute"))));
+        assertFalse(validator.isValidConstraintDefs(def, failures));
+        utils.checkFailureForSemanticError(failures, "constraint def resources", "requireApproval");
+        assertHasErrorCode(ValidationErrorCode.SERVICE_DEF_VALIDATION_ERR_CONSTRAINT_INVALID_HIERARCHY.getErrorCode());
+
+        // siblings are separate hierarchies: {database, table} is valid even though database->udf is not
+        failures.clear();
+        def.setConstraintDefs(Collections.singletonList(constraintDef(1L, "maxRows", Arrays.asList("database", "table"), Arrays.asList("select"))));
+        assertTrue(validator.isValidConstraintDefs(def, failures));
+        assertTrue(failures.isEmpty());
     }
 
     private void assertHasErrorCode(int errorCode) {
