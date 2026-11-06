@@ -19,29 +19,14 @@ import time
 
 from kms.utils import (
     krb_requests, BASE_URL, PARAMS, find_conflicting_policies,
-    ensure_testuser_keytab, ensure_testuser_ticket, ensure_keyadmin_ticket,
-    TESTUSER_PARAMS, ensure_test_user_exists, delete_test_user,
-    BASE_URL_RANGER, BASE_URL_RANGER_USERS, BASE_URL_RANGER_USERS_BY_NAME,
-    RANGER_ADMIN_AUTH, RANGER_KMS_AUTH, KMS_SERVICE_NAME, TEST_USER,
-    container, KEYADMIN_KEYTAB, KEYADMIN_PRINCIPAL, TESTUSER_KEYTAB, TESTUSER_PRINCIPAL
+    ensure_testuser_ticket, ensure_keyadmin_ticket,
+    BASE_URL_RANGER, RANGER_KMS_AUTH, KMS_SERVICE_NAME, TEST_USER,
+    update_kms_policy,
 )
 
-
-@pytest.fixture(scope="session", autouse=True)
-def test_user_lifecycle():
-    ensure_test_user_exists(TEST_USER)
-    try:
-        yield
-    finally:
-        delete_test_user(TEST_USER)
-
-
-@pytest.fixture(scope="session", autouse=True)
-def setup_keytabs():
-    """Create keytabs for both principals once per session — keytab creation is expensive."""
-    ensure_testuser_keytab()
-    # keyadmin keytab is handled by the global setup_kerberos_ticket in conftest.py
-
+@pytest.fixture(autouse=True)
+def _use_testuser(kms_as_testuser, testuser_lifecycle, testuser_keytabs):
+    pass
 
 # create base policy ------------------------------------------------------------------
 @pytest.fixture(scope="module", autouse=True)
@@ -88,56 +73,6 @@ def create_initial_kms_policy():
     finally:
         # Delete once at module teardown, not after every test
         requests.delete(f"{BASE_URL_RANGER}/{policy_id}", auth=RANGER_KMS_AUTH)
-
-@pytest.fixture(autouse=True)
-def kms_as_testuser():
-    """Switch to testuser ticket for the test body; restore keyadmin ticket in teardown.
-    Keytab creation is handled once by setup_keytabs (session-scoped), so this fixture
-    only does the cheap kinit/kdestroy calls."""
-    container.exec_run("kdestroy -A 2>/dev/null || true", user="root")
-    exit_code, output = container.exec_run(
-        f"kinit -kt {TESTUSER_KEYTAB} {TESTUSER_PRINCIPAL}", user="root"
-    )
-    if exit_code != 0:
-        raise RuntimeError(f"testuser kinit failed: {output.decode()}")
-    yield
-    container.exec_run("kdestroy -A 2>/dev/null || true", user="root")
-    exit_code, output = container.exec_run(
-        f"kinit -kt {KEYADMIN_KEYTAB} {KEYADMIN_PRINCIPAL}", user="root"
-    )
-    if exit_code != 0:
-        raise RuntimeError(f"keyadmin kinit restore failed: {output.decode()}")
-
-# method to update policy---------------------------------------------------------------
-def update_kms_policy(policy_id, username, accesses):
-    update_url = f"{BASE_URL_RANGER}/{policy_id}"
-
-    # Fetch existing policy
-    response = requests.get(update_url, auth=RANGER_KMS_AUTH)
-    if response.status_code != 200:
-        raise Exception(f"Failed to fetch policy: {response.text}")
-
-    policy_data = response.json()
-
-    # Ensure policyItems key exists
-    policy_data = response.json()
-    policy_data["policyItems"] = []   # reset, don't append stale items
-    if accesses:
-        policy_data["policyItems"].append({
-            "accesses": [
-                {"type": access.lower(), "isAllowed": True} for access in accesses
-            ],
-            "users": [username],
-            "delegateAdmin": False,
-        })
-
-    # Update the policy
-    response = requests.put(update_url, auth=RANGER_KMS_AUTH, json=policy_data)
-    #time.sleep(30)  # Reduced wait time; increase only if propagation is slow
-    time.sleep(5)  # Wait for Ranger to process the policy update
-    if response.status_code != 200:
-        raise Exception(f"Failed to update policy: {response.text}")
-
 
 
 

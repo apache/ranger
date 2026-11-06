@@ -20,8 +20,14 @@ import time
 from kms.utils import (
     fetch_logs, krb_requests,
     ensure_keyadmin_keytab, ensure_ticket,
-    BASE_URL, PARAMS, ensure_test_user_exists, ensure_keyadmin_ticket, ensure_testuser_ticket, delete_test_user, ensure_testuser_keytab
+    BASE_URL, PARAMS, ensure_test_user_exists, ensure_keyadmin_ticket,
+    ensure_testuser_ticket, delete_test_user, ensure_testuser_keytab,
+    container,
+    TEST_USER as TESTUSER_NAME,
+    TESTUSER_PRINCIPAL, TESTUSER_KEYTAB,
+    KEYADMIN_PRINCIPAL, KEYADMIN_KEYTAB,
 )
+
 
 RANGER_AUTH = ('keyadmin', 'rangerR0cks!')
 BASE_URL_RANGER = "http://localhost:6080/service/public/v2/api/policy"
@@ -33,6 +39,35 @@ HEADERS = {"Content-Type": "application/json"}
 def setup_kerberos_ticket():
     """Ensure keyadmin has a valid Kerberos ticket before any test runs."""
     ensure_keyadmin_ticket()
+
+@pytest.fixture(scope="session")
+def testuser_lifecycle():
+    ensure_test_user_exists(TESTUSER_NAME)
+    try:
+        yield
+    finally:
+        delete_test_user(TESTUSER_NAME)
+
+@pytest.fixture(scope="session")
+def testuser_keytabs():
+    ensure_testuser_keytab()
+
+@pytest.fixture
+def kms_as_testuser():
+    """Not autouse — each module opts in via a wrapper fixture."""
+    container.exec_run("kdestroy -A 2>/dev/null || true", user="root")
+    exit_code, output = container.exec_run(
+        f"kinit -kt {TESTUSER_KEYTAB} {TESTUSER_PRINCIPAL}", user="root"
+    )
+    if exit_code != 0:
+        raise RuntimeError(f"testuser kinit failed: {output.decode()}")
+    yield
+    container.exec_run("kdestroy -A 2>/dev/null || true", user="root")
+    exit_code, output = container.exec_run(
+        f"kinit -kt {KEYADMIN_KEYTAB} {KEYADMIN_PRINCIPAL}", user="root"
+    )
+    if exit_code != 0:
+        raise RuntimeError(f"keyadmin kinit restore failed: {output.decode()}")
 
 @pytest.fixture(scope="session")
 def headers():
