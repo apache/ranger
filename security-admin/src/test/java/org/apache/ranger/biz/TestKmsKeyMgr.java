@@ -119,7 +119,8 @@ public class TestKmsKeyMgr {
 
     private static final String TEST_REPO_NAME = "testKmsRepo";
     private static final String TEST_KEY_NAME = "testKey";
-    private static final String TEST_PROVIDER_URL = "kms://http@localhost:9292/kms";
+    // Non-loopback (TEST-NET-1) address: loopback providers are rejected before connecting, and an IP literal avoids DNS lookups
+    private static final String TEST_PROVIDER_URL = "kms://http@192.0.2.10:9292/kms";
     private static final String TEST_USERNAME = "testUser";
     private static final String TEST_PASSWORD = "testPassword";
 

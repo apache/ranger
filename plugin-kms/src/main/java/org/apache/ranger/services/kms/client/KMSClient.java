@@ -55,6 +55,7 @@ import java.util.Map;
 public class KMSClient {
     private static final Logger LOG = LoggerFactory.getLogger(KMSClient.class);
 
+    private static final String JERSEY_FOLLOW_REDIRECTS = "jersey.config.client.followRedirects";
     private static final String EXPECTED_MIME_TYPE    = "application/json";
     private static final String KMS_LIST_API_ENDPOINT = "v1/keys/names"; // GET
     private static final String ERROR_MSG             = " You can still save the repository and start creating policies, but you would not be able to use autocomplete for resource names. Check ranger_admin.log for more info.";
@@ -198,6 +199,10 @@ public class KMSClient {
             try {
                 // Use RangerJersey2ClientBuilder instead of unsafe ClientBuilder.newClient() to prevent MOXy usage
                 client = RangerJersey2ClientBuilder.newClient();
+
+                // Do not follow redirects: a provider could otherwise send Ranger Admin to a host the provider check rejects
+                client.property(JERSEY_FOLLOW_REDIRECTS, Boolean.FALSE);
+
                 Invocation.Builder builder;
                 final Subject sub;
 

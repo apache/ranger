@@ -45,6 +45,7 @@ import org.apache.ranger.plugin.util.PasswordUtils;
 import org.apache.ranger.plugin.util.RangerJersey2ClientBuilder;
 import org.apache.ranger.view.VXKmsKey;
 import org.apache.ranger.view.VXKmsKeyList;
+import org.glassfish.jersey.client.ClientProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -112,6 +113,8 @@ public class KmsKeyMgr {
 
         try {
             providers = getKMSURL(repoName);
+        } catch (WebApplicationException e) {
+            throw e;
         } catch (Exception e) {
             logger.error("getKey({}) failed", repoName, e);
             throwServiceNotFoundException(repoName);
@@ -241,6 +244,8 @@ public class KmsKeyMgr {
 
         try {
             providers = getKMSURL(provider);
+        } catch (WebApplicationException e) {
+            throw e;
         } catch (Exception e) {
             logger.error("rolloverKey({}, {}) failed", provider, vXKey.getName(), e);
             throwServiceNotFoundException(provider);
@@ -310,6 +315,8 @@ public class KmsKeyMgr {
 
         try {
             providers = getKMSURL(provider);
+        } catch (WebApplicationException e) {
+            throw e;
         } catch (Exception e) {
             logger.error("deleteKey({}, {}) failed", provider, name, e);
             throwServiceNotFoundException(provider);
@@ -372,6 +379,8 @@ public class KmsKeyMgr {
 
         try {
             providers = getKMSURL(provider);
+        } catch (WebApplicationException e) {
+            throw e;
         } catch (Exception e) {
             logger.error("createKey({}, {}) failed", provider, vXKey.getName(), e);
             throwServiceNotFoundException(provider);
@@ -441,6 +450,8 @@ public class KmsKeyMgr {
 
         try {
             providers = getKMSURL(provider);
+        } catch (WebApplicationException e) {
+            throw e;
         } catch (Exception e) {
             logger.error("getKey({}, {}) failed", provider, name, e);
             throwServiceNotFoundException(provider);
@@ -558,26 +569,37 @@ public class KmsKeyMgr {
 
     private String[] getKMSURL(String name) throws Exception {
         String[] providers;
+        String   dbKmsUrl;
 
         try {
             RangerService rangerService = svcStore.getServiceByName(name);
 
-            if (rangerService != null) {
-                String kmsUrl   = rangerService.getConfigs().get(KMS_URL_CONFIG);
-                String dbKmsUrl = kmsUrl;
-
-                if (providerList.containsKey(kmsUrl)) {
-                    kmsUrl = providerList.get(kmsUrl);
-                } else {
-                    providerList.put(kmsUrl, kmsUrl);
-                }
-
-                providers = createProvider(dbKmsUrl, kmsUrl);
-            } else {
+            if (rangerService == null) {
                 throw new Exception("Service " + name + " not found");
             }
+
+            dbKmsUrl = rangerService.getConfigs().get(KMS_URL_CONFIG);
         } catch (Exception excp) {
             logger.error("getServiceByName({}) failed", name, excp);
+
+            throw new Exception("getServiceByName(" + name + ") failed", excp);
+        }
+
+        // Validate the saved provider before Ranger Admin connects to it
+        validateProviderUrl(name, dbKmsUrl);
+
+        try {
+            String kmsUrl = dbKmsUrl;
+
+            if (providerList.containsKey(kmsUrl)) {
+                kmsUrl = providerList.get(kmsUrl);
+            } else {
+                providerList.put(kmsUrl, kmsUrl);
+            }
+
+            providers = createProvider(dbKmsUrl, kmsUrl);
+        } catch (Exception excp) {
+            logger.error("createProvider({}) failed", name, excp);
 
             throw new Exception("getServiceByName(" + name + ") failed", excp);
         }
@@ -586,7 +608,22 @@ public class KmsKeyMgr {
             throw new Exception("Providers for service " + name + " not found");
         }
 
+        // Validate each resolved URL as well, since these are what the client actually dials
+        for (String provider : providers) {
+            validateProviderUrl(name, provider);
+        }
+
         return providers;
+    }
+
+    private void validateProviderUrl(String serviceName, String url) {
+        try {
+            ServiceMgr.validateOutboundServiceConfigs(Collections.singletonMap(KMS_URL_CONFIG, url));
+        } catch (Exception e) {
+            logger.warn("Rejected KMS provider for service {}: {}", serviceName, e.getMessage());
+
+            throw restErrorUtil.createRESTException(e.getMessage(), MessageEnums.INVALID_INPUT_DATA);
+        }
     }
 
     private String[] createProvider(String dbKmsUrl, String uri) throws IOException, URISyntaxException {
@@ -717,7 +754,12 @@ public class KmsKeyMgr {
 
     private synchronized Client getClient() {
         // Use RangerJersey2ClientBuilder instead of unsafe ClientBuilder.newBuilder().build() to prevent MOXy usage
-        return RangerJersey2ClientBuilder.newClient();
+        Client client = RangerJersey2ClientBuilder.newClient();
+
+        // Do not follow redirects: a provider could otherwise send Ranger Admin to a host the provider check rejects
+        client.property(ClientProperties.FOLLOW_REDIRECTS, Boolean.FALSE);
+
+        return client;
     }
 
     private Predicate getPredicate(KeySearchFilter filter) {
