@@ -162,7 +162,8 @@ public class KMSClient {
 			boolean isKerberos = false;
 			try {
 				ClientConfig cc = new DefaultClientConfig();
-				cc.getProperties().put(ClientConfig.PROPERTY_FOLLOW_REDIRECTS, true);
+				// Do not follow redirects: a provider could otherwise send Ranger Admin to a host the provider check rejects
+				cc.getProperties().put(ClientConfig.PROPERTY_FOLLOW_REDIRECTS, false);
 				client = Client.create(cc);
 							
 				if(authType != null && authType.equalsIgnoreCase(AUTH_TYPE_KERBEROS)){
