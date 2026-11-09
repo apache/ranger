@@ -37,8 +37,31 @@ TEST_USER = "testuser"
 TESTUSER_PARAMS = {}
 BASE_URL = "http://ranger-kms.rangernw:9292/kms/v1"
 PARAMS = {"user.name": "keyadmin"}
-client = docker.from_env()
-container = client.containers.get(KMS_CONTAINER_NAME)
+
+_docker_client = None
+
+
+def get_docker_client():
+    global _docker_client
+    if _docker_client is None:
+        _docker_client = docker.from_env()
+    return _docker_client
+
+
+def get_kms_container():
+    """Return ranger-kms container (lazy — no Docker call at import time)."""
+    return get_docker_client().containers.get(KMS_CONTAINER_NAME)
+
+
+class _LazyKmsContainer:
+    """Backward-compatible alias; resolves ranger-kms on first use."""
+
+    def __getattr__(self, name):
+        return getattr(get_kms_container(), name)
+
+
+container = _LazyKmsContainer()
+
 KEYADMIN_PRINCIPAL = "keyadmin@EXAMPLE.COM"
 KEYADMIN_KEYTAB = "/etc/keytabs/keyadmin.keytab"
 KDC_CONTAINER = "ranger-kdc"
@@ -111,7 +134,9 @@ class KerberosRequests:
         # Output format:  <status_code>\n---BODY---\n<body text>
         shell_cmd = f'{curl_cmd}; echo "\\n---BODY---"; cat /tmp/curl_body.txt'
 
-        exit_code, output = container.exec_run(["sh", "-c", shell_cmd], user="root")
+        exit_code, output = get_kms_container().exec_run(
+            ["sh", "-c", shell_cmd], user="root"
+        )
         raw = output.decode() if output else ""
 
         separator = "\n---BODY---\n"
@@ -157,8 +182,8 @@ krb_requests = KerberosRequests()
 
 def _ensure_kdc_principal_keytab(principal: str, dest_container_name: str, dest_keytab_path: str, kdc_tmp_path: str, ) -> None:
     # create principal in KDC, export keytab, copy to target container
-    kdc = client.containers.get(KDC_CONTAINER)
-    dest = client.containers.get(dest_container_name)
+    kdc = get_docker_client().containers.get(KDC_CONTAINER)
+    dest = get_docker_client().containers.get(dest_container_name)
 
     exit_code, output = kdc.exec_run(f'kadmin.local -q "getprinc {principal}"', user="root")
     if exit_code != 0 or b"does not exist" in output:
@@ -184,13 +209,14 @@ def ensure_keyadmin_keytab():
 
 def _kinit_with_retry(principal: str, keytab: str, ensure_keytab_fn, max_attempts: int = 5, wait: int = 10) -> None:
     """Ensure the keytab exists then kinit, retrying to absorb KDC warm-up delays."""
-    exit_code, _ = container.exec_run(f"test -f {keytab}", user="root")
+    kms = get_kms_container()
+    exit_code, _ = kms.exec_run(f"test -f {keytab}", user="root")
     if exit_code != 0:
         ensure_keytab_fn()
 
-    container.exec_run("kdestroy -A 2>/dev/null || true", user="root")
+    kms.exec_run("kdestroy -A 2>/dev/null || true", user="root")
     for _ in range(max_attempts):
-        exit_code, output = container.exec_run(
+        exit_code, output = kms.exec_run(
             f"kinit -kt {keytab} {principal}", user="root"
         )
         if exit_code == 0:
@@ -226,7 +252,7 @@ def modify_blacklist_property(operation, users, action="add"):
 
     ensure_ticket()
 
-    result = container.exec_run(f"cat {dbks_site_path}", user="root")
+    result = get_kms_container().exec_run(f"cat {dbks_site_path}", user="root")
     if result.exit_code != 0:
         raise RuntimeError(f"Cannot read dbks-site.xml: {result.output.decode()}")
 
@@ -266,7 +292,10 @@ def modify_blacklist_property(operation, users, action="add"):
         tar.addfile(info, io.BytesIO(data))
     tarstream.seek(0)
 
-    container.put_archive(path="/opt/ranger/ranger-3.0.0-SNAPSHOT-kms/ews/webapp/WEB-INF/classes/conf/", data=tarstream)
+    get_kms_container().put_archive(
+        path="/opt/ranger/ranger-3.0.0-SNAPSHOT-kms/ews/webapp/WEB-INF/classes/conf/",
+        data=tarstream,
+    )
     print(f"Successfully {'added' if action == 'add' else 'removed'} {users} in {prop_name}")
 
 

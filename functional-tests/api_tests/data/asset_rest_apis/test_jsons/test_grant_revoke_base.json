@@ -1,0 +1,21 @@
+{
+    "repositoryName": "cm_hive",
+    "grantor": "admin",
+    "databases": "{grant_db_name}",
+    "tables": "{grant_table_name}",
+    "columns": "*",
+    "permMapList": [
+        {
+            "userList": [
+                "{user2}"
+            ],
+            "groupList": [],
+            "permList": [
+                "all"
+            ],
+            "ipAddress": null
+        }
+    ],
+    "isEnabled": true,
+    "isRecursive": false
+}

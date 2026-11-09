@@ -413,7 +413,8 @@ Merge the PR before Step 2.
 ```shell title="Minimal update (download + Releases menu only)"
 svn co https://svn.apache.org/repos/asf/ranger/site/trunk /tmp/ranger-site
 # Update download.html: set Current Stable → ${RANGER_VERSION}
-#   (tarball, PGP, digest links under downloads.apache.org/ranger/${RANGER_VERSION}/)
+#   (tarball links to www.apache.org/dyn/closer.lua/ranger/${RANGER_VERSION}/)
+#   (PGP, digest links under downloads.apache.org/ranger/${RANGER_VERSION}/)
 # Update Releases menu (top nav + footer) on all main pages — 11 files:
 #   download.html, index.html, faq.html, blogs.html, quick_start_guide.html,
 #   team-list.html, project-summary.html, project-info.html, license.html,

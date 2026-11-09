@@ -19,7 +19,6 @@
 
 package org.apache.ranger.audit.producer.kafka;
 
-import org.apache.kafka.clients.admin.AdminClientConfig;
 import org.apache.kafka.clients.producer.Callback;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerConfig;
@@ -27,8 +26,8 @@ import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.clients.producer.RecordMetadata;
 import org.apache.ranger.audit.provider.MiscUtil;
 import org.apache.ranger.audit.server.AuditServerConstants;
-import org.apache.ranger.audit.utils.AuditMessageQueueUtils;
 import org.apache.ranger.audit.utils.AuditServerLogFormatter;
+import org.apache.ranger.kafka.auth.RangerKafkaClientSecurityConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -167,15 +166,7 @@ public class AuditProducer implements Runnable {
                 producerPrefix + AuditServerConstants.PROP_PRODUCER_BATCH_SEND_TIMEOUT_MS,
                 AuditServerConstants.DEFAULT_PRODUCER_BATCH_SEND_TIMEOUT_MS);
 
-        String securityProtocol = MiscUtil.getStringProperty(props, propPrefix + "." + AuditServerConstants.PROP_SECURITY_PROTOCOL, AuditServerConstants.DEFAULT_SECURITY_PROTOCOL);
-        producerProps.put(AdminClientConfig.SECURITY_PROTOCOL_CONFIG, securityProtocol);
-
-        producerProps.put(AuditServerConstants.PROP_SASL_MECHANISM, MiscUtil.getStringProperty(props, propPrefix + "." + AuditServerConstants.PROP_SASL_MECHANISM, AuditServerConstants.DEFAULT_SASL_MECHANISM));
-        producerProps.put(AuditServerConstants.PROP_SASL_KERBEROS_SERVICE_NAME, AuditServerConstants.DEFAULT_SERVICE_NAME);
-
-        if (securityProtocol.toUpperCase().contains(AuditServerConstants.PROP_SECURITY_PROTOCOL_VALUE)) {
-            producerProps.put(AuditServerConstants.PROP_SASL_JAAS_CONFIG, AuditMessageQueueUtils.getJAASConfig(props, propPrefix));
-        }
+        RangerKafkaClientSecurityConfig.apply(props, propPrefix, producerProps);
 
         String configuredPlugins = MiscUtil.getStringProperty(props, propPrefix + "." + AuditServerConstants.PROP_CONFIGURED_PLUGINS, "");
         if (configuredPlugins != null && !configuredPlugins.trim().isEmpty()) {

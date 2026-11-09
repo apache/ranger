@@ -24,6 +24,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
@@ -121,6 +122,7 @@ public class RangerAuthzResult {
         private AccessResult            access;
         private DataMaskResult          dataMask;
         private RowFilterResult         rowFilter;
+        private List<ConstraintResult>  constraints;
         private Map<String, Object>     additionalInfo;
         private Map<String, ResultInfo> subResources;
 
@@ -143,6 +145,7 @@ public class RangerAuthzResult {
                 this.access         = result.getAccess();
                 this.dataMask       = result.getDataMask();
                 this.rowFilter      = result.getRowFilter();
+                this.constraints    = result.getConstraints();
                 this.additionalInfo = result.getAdditionalInfo();
             }
         }
@@ -180,6 +183,14 @@ public class RangerAuthzResult {
             this.rowFilter = rowFilter;
         }
 
+        public List<ConstraintResult> getConstraints() {
+            return constraints;
+        }
+
+        public void setConstraints(List<ConstraintResult> constraints) {
+            this.constraints = constraints;
+        }
+
         public Map<String, Object> getAdditionalInfo() {
             return additionalInfo;
         }
@@ -212,7 +223,7 @@ public class RangerAuthzResult {
 
         @Override
         public int hashCode() {
-            return Objects.hash(permission, access, dataMask, rowFilter, additionalInfo, subResources);
+            return Objects.hash(permission, access, dataMask, rowFilter, constraints, additionalInfo, subResources);
         }
 
         @Override
@@ -229,6 +240,7 @@ public class RangerAuthzResult {
                     Objects.equals(access, that.access) &&
                     Objects.equals(dataMask, that.dataMask) &&
                     Objects.equals(rowFilter, that.rowFilter) &&
+                    Objects.equals(constraints, that.constraints) &&
                     Objects.equals(additionalInfo, that.additionalInfo) &&
                     Objects.equals(subResources, that.subResources);
         }
@@ -240,6 +252,7 @@ public class RangerAuthzResult {
                     ", access=" + access +
                     ", dataMask=" + dataMask +
                     ", rowFilter=" + rowFilter +
+                    ", constraints=" + constraints +
                     ", additionalInfo=" + additionalInfo +
                     ", subResources=" + subResources +
                     '}';
@@ -250,10 +263,11 @@ public class RangerAuthzResult {
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
     @JsonIgnoreProperties(ignoreUnknown = true)
     public static class ResultInfo {
-        private AccessResult        access;
-        private DataMaskResult      dataMask;
-        private RowFilterResult     rowFilter;
-        private Map<String, Object> additionalInfo;
+        private AccessResult           access;
+        private DataMaskResult         dataMask;
+        private RowFilterResult        rowFilter;
+        private List<ConstraintResult> constraints;
+        private Map<String, Object>    additionalInfo;
 
         public ResultInfo() {
         }
@@ -289,6 +303,14 @@ public class RangerAuthzResult {
             this.rowFilter = rowFilter;
         }
 
+        public List<ConstraintResult> getConstraints() {
+            return constraints;
+        }
+
+        public void setConstraints(List<ConstraintResult> constraints) {
+            this.constraints = constraints;
+        }
+
         public Map<String, Object> getAdditionalInfo() {
             return additionalInfo;
         }
@@ -299,7 +321,7 @@ public class RangerAuthzResult {
 
         @Override
         public int hashCode() {
-            return Objects.hash(access, dataMask, rowFilter, additionalInfo);
+            return Objects.hash(access, dataMask, rowFilter, constraints, additionalInfo);
         }
 
         @Override
@@ -315,6 +337,7 @@ public class RangerAuthzResult {
             return Objects.equals(access, that.access) &&
                     Objects.equals(dataMask, that.dataMask) &&
                     Objects.equals(rowFilter, that.rowFilter) &&
+                    Objects.equals(constraints, that.constraints) &&
                     Objects.equals(additionalInfo, that.additionalInfo);
         }
 
@@ -324,6 +347,7 @@ public class RangerAuthzResult {
                     "access=" + access +
                     ", dataMask=" + dataMask +
                     ", rowFilter=" + rowFilter +
+                    ", constraints=" + constraints +
                     ", additionalInfo=" + additionalInfo +
                     '}';
         }
@@ -514,6 +538,89 @@ public class RangerAuthzResult {
             return "RowFilterResult{" +
                     "filterExpr='" + filterExpr + '\'' +
                     ", policy=" + policy +
+                    '}';
+        }
+    }
+
+    @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY)
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    public static class ConstraintResult {
+        private String              name;
+        private Map<String, Object> parameters;
+        private PolicyInfo          policy;
+        private Integer             policyPriority;
+
+        public ConstraintResult() {
+        }
+
+        public ConstraintResult(String name, Map<String, Object> parameters, PolicyInfo policy, Integer policyPriority) {
+            this.name           = name;
+            this.parameters     = parameters;
+            this.policy         = policy;
+            this.policyPriority = policyPriority;
+        }
+
+        public String getName() {
+            return name;
+        }
+
+        public void setName(String name) {
+            this.name = name;
+        }
+
+        public Map<String, Object> getParameters() {
+            return parameters;
+        }
+
+        public void setParameters(Map<String, Object> parameters) {
+            this.parameters = parameters;
+        }
+
+        public PolicyInfo getPolicy() {
+            return policy;
+        }
+
+        public void setPolicy(PolicyInfo policy) {
+            this.policy = policy;
+        }
+
+        public Integer getPolicyPriority() {
+            return policyPriority;
+        }
+
+        public void setPolicyPriority(Integer policyPriority) {
+            this.policyPriority = policyPriority;
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(name, parameters, policy, policyPriority);
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) {
+                return true;
+            } else if (o == null || getClass() != o.getClass()) {
+                return false;
+            }
+
+            ConstraintResult that = (ConstraintResult) o;
+
+            return Objects.equals(name, that.name) &&
+                    Objects.equals(parameters, that.parameters) &&
+                    Objects.equals(policy, that.policy) &&
+                    Objects.equals(policyPriority, that.policyPriority);
+        }
+
+        @Override
+        public String toString() {
+            return "ConstraintResult{" +
+                    "name='" + name + '\'' +
+                    ", parameters=" + parameters +
+                    ", policy=" + policy +
+                    ", policyPriority=" + policyPriority +
                     '}';
         }
     }

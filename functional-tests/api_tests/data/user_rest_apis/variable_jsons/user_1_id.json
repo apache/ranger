@@ -1,0 +1,17 @@
+{
+   "loginId":"test_user_{random_str}",
+   "firstName":"first_name_test_user_{random_str}",
+   "lastName":"last_name_test_user_{random_str}",
+   "emailAddress":"test_user_{random_str}@abc.com",
+   "password":"Password@123456789#!",
+   "description":"Create test user test_user_{random_str}",
+   "groupIdList":[
+      1
+   ],
+   "groupNameList":[
+      "public"
+   ],
+   "userRoleList":[
+      "ROLE_USER"
+   ]
+}

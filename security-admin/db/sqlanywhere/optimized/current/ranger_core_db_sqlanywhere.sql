@@ -64,6 +64,8 @@ call dbo.removeForeignKeysAndTable('x_policy_ref_group')
 GO
 call dbo.removeForeignKeysAndTable('x_policy_ref_user')
 GO
+call dbo.removeForeignKeysAndTable('x_policy_ref_constraint')
+GO
 call dbo.removeForeignKeysAndTable('x_policy_ref_datamask_type')
 GO
 call dbo.removeForeignKeysAndTable('x_policy_ref_condition')
@@ -497,6 +499,7 @@ create table dbo.x_service_def(
 	rb_key_description varchar(1024) DEFAULT NULL NULL,
 	is_enabled tinyint DEFAULT 1 NULL,
 	def_options varchar(1024) DEFAULT NULL NULL,
+	def_text text DEFAULT NULL NULL,
 	CONSTRAINT x_service_def_PK_id PRIMARY KEY CLUSTERED(id)
 )
 GO
@@ -1130,6 +1133,15 @@ create table dbo.x_policy_ref_condition (
 		CONSTRAINT x_p_ref_cond_UK_polId_cDefId UNIQUE NONCLUSTERED (policy_id, condition_def_id)
 )
 GO
+create table dbo.x_policy_ref_constraint (
+		id bigint IDENTITY NOT NULL,
+		policy_id bigint NOT NULL,
+		service_def_id bigint NOT NULL,
+		constraint_name varchar(255) NOT NULL,
+		CONSTRAINT x_policy_ref_cnst_PK_id PRIMARY KEY CLUSTERED(id),
+		CONSTRAINT x_p_ref_cnst_UK_polId_cName UNIQUE NONCLUSTERED (policy_id, constraint_name)
+)
+GO
 create table dbo.x_policy_ref_datamask_type (
 		id bigint IDENTITY NOT NULL,
 		guid varchar(1024) DEFAULT NULL NULL,
@@ -1637,6 +1649,10 @@ ALTER TABLE dbo.x_policy_ref_condition ADD CONSTRAINT x_policy_ref_condition_FK_
 GO
 ALTER TABLE dbo.x_policy_ref_condition ADD CONSTRAINT x_policy_ref_condition_FK_condition_def_id FOREIGN KEY (condition_def_id) REFERENCES dbo.x_policy_condition_def (id)
 GO
+ALTER TABLE dbo.x_policy_ref_constraint ADD CONSTRAINT x_policy_ref_constraint_FK_policy_id FOREIGN KEY (policy_id) REFERENCES dbo.x_policy (id)
+GO
+ALTER TABLE dbo.x_policy_ref_constraint ADD CONSTRAINT x_policy_ref_constraint_FK_svc_def_id FOREIGN KEY (service_def_id) REFERENCES dbo.x_service_def (id)
+GO
 ALTER TABLE dbo.x_policy_ref_datamask_type ADD CONSTRAINT x_policy_ref_datamask_type_FK_policy_id FOREIGN KEY (policy_id) REFERENCES dbo.x_policy (id)
 GO
 ALTER TABLE dbo.x_policy_ref_datamask_type ADD CONSTRAINT x_policy_ref_datamask_type_FK_datamask_def_id FOREIGN KEY (datamask_def_id) REFERENCES dbo.x_datamask_type_def (id)
@@ -1858,6 +1874,8 @@ GO
 CREATE NONCLUSTERED INDEX x_trx_log_v2_FK_added_by_id ON dbo.x_trx_log_v2(added_by_id ASC)
 GO
 CREATE NONCLUSTERED INDEX x_trx_log_v2_FK_trx_id ON dbo.x_trx_log_v2(trx_id ASC)
+GO
+CREATE NONCLUSTERED INDEX x_trx_log_v2_IDX_metrics ON dbo.x_trx_log_v2(create_time ASC, class_type ASC, action ASC)
 GO
 CREATE NONCLUSTERED INDEX x_user_cr_time ON dbo.x_user(create_time ASC)
 GO
@@ -2256,6 +2274,10 @@ GO
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('077',CURRENT_TIMESTAMP,'Ranger 3.0.0',CURRENT_TIMESTAMP,'localhost','Y');
 GO
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('078',CURRENT_TIMESTAMP,'Ranger 3.0.0',CURRENT_TIMESTAMP,'localhost','Y');
+INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('079',CURRENT_TIMESTAMP,'Ranger 3.0.0',CURRENT_TIMESTAMP,'localhost','Y');
+INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('080',CURRENT_TIMESTAMP,'Ranger 1.0.0',CURRENT_TIMESTAMP,'localhost','Y');
+GO
+INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('081',CURRENT_TIMESTAMP,'Ranger 3.0.0',CURRENT_TIMESTAMP,'localhost','Y');
 GO
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('DB_PATCHES',CURRENT_TIMESTAMP,'Ranger 1.0.0',CURRENT_TIMESTAMP,'localhost','Y');
 GO
@@ -2420,6 +2442,9 @@ GO
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('J10065',CURRENT_TIMESTAMP,'Ranger 3.0.0',CURRENT_TIMESTAMP,'localhost','Y');
 GO
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('J10066',CURRENT_TIMESTAMP,'Ranger 3.0.0',CURRENT_TIMESTAMP,'localhost','Y');
+INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('J10067',CURRENT_TIMESTAMP,'Ranger 3.0.0',CURRENT_TIMESTAMP,'localhost','Y');
+GO
+INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('J10071',CURRENT_TIMESTAMP,'Ranger 3.0.0',CURRENT_TIMESTAMP,'localhost','Y');
 GO
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('JAVA_PATCHES',CURRENT_TIMESTAMP,'Ranger 1.0.0',CURRENT_TIMESTAMP,'localhost','Y');
 GO

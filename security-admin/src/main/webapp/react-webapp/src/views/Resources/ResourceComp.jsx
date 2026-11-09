@@ -48,7 +48,7 @@ export default function ResourceComp(props) {
   const [rsrcState, setLoader] = useState({ loader: false, resourceKey: -1 });
   const toastId = useRef(null);
 
-  let resources = getResourcesDefVal(serviceCompDetails, policyType);
+  const resources = getResourcesDefVal(serviceCompDetails, policyType);
 
   useEffect(() => {
     if (rsrcState.loader) {

@@ -28,6 +28,7 @@ import org.apache.ranger.db.XXGroupDao;
 import org.apache.ranger.db.XXPolicyConditionDefDao;
 import org.apache.ranger.db.XXPolicyRefAccessTypeDao;
 import org.apache.ranger.db.XXPolicyRefConditionDao;
+import org.apache.ranger.db.XXPolicyRefConstraintDao;
 import org.apache.ranger.db.XXPolicyRefDataMaskTypeDao;
 import org.apache.ranger.db.XXPolicyRefGroupDao;
 import org.apache.ranger.db.XXPolicyRefResourceDao;
@@ -37,16 +38,19 @@ import org.apache.ranger.db.XXResourceDefDao;
 import org.apache.ranger.db.XXRoleDao;
 import org.apache.ranger.db.XXUserDao;
 import org.apache.ranger.entity.XXPolicy;
+import org.apache.ranger.entity.XXPolicyRefConstraint;
 import org.apache.ranger.entity.XXPolicyRefGroup;
 import org.apache.ranger.entity.XXPolicyRefRole;
 import org.apache.ranger.entity.XXPolicyRefUser;
 import org.apache.ranger.entity.XXServiceDef;
 import org.apache.ranger.entity.XXUser;
 import org.apache.ranger.plugin.model.RangerPolicy;
+import org.apache.ranger.plugin.model.RangerPolicy.RangerConstraintPolicyItem;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerDataMaskPolicyItem;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItem;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemAccess;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemCondition;
+import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemConstraintInfo;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemDataMaskInfo;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerRowFilterPolicyItem;
 import org.apache.ranger.plugin.model.RangerRole;
@@ -58,6 +62,7 @@ import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
@@ -118,8 +123,121 @@ public class TestPolicyRefUpdater {
         p.setDenyExceptions(Arrays.asList(new RangerPolicyItem()));
         p.setDataMaskPolicyItems(Arrays.asList(new RangerDataMaskPolicyItem()));
         p.setRowFilterPolicyItems(Arrays.asList(new RangerRowFilterPolicyItem()));
+        p.setConstraintPolicyItems(Arrays.asList(new RangerConstraintPolicyItem()));
         List<List<? extends RangerPolicyItem>> items = PolicyRefUpdater.getAllPolicyItems(p);
-        assertEquals(6, items.size());
+        assertEquals(7, items.size());
+    }
+
+    @Test
+    public void testGetAllPolicyItemsOfConstraintPolicy() {
+        RangerPolicy p = new RangerPolicy();
+        p.setPolicyType(RangerPolicy.POLICY_TYPE_CONSTRAINTS);
+        p.setConstraintPolicyItems(Arrays.asList(new RangerConstraintPolicyItem()));
+
+        // a constraint policy is not empty, so purgeEmptyPolicies() must not delete it
+        List<List<? extends RangerPolicyItem>> items = PolicyRefUpdater.getAllPolicyItems(p);
+        assertEquals(1, items.size());
+        assertEquals(p.getConstraintPolicyItems(), items.get(0));
+    }
+
+    @Test
+    public void testCreateNewPolMappingForRefTable_ConstraintPolicy() throws Exception {
+        RangerConstraintPolicyItem filterItem = new RangerConstraintPolicyItem();
+        filterItem.setUsers(Collections.singletonList("u1"));
+        filterItem.setAccesses(Collections.singletonList(new RangerPolicyItemAccess("search")));
+        filterItem.setConstraintInfo(new RangerPolicyItemConstraintInfo("search-filter", Collections.singletonMap("filterExpr", "x")));
+
+        RangerConstraintPolicyItem filterItem2 = new RangerConstraintPolicyItem();
+        filterItem2.setUsers(Collections.singletonList("u1"));
+        filterItem2.setAccesses(Collections.singletonList(new RangerPolicyItemAccess("search")));
+        filterItem2.setConstraintInfo(new RangerPolicyItemConstraintInfo("search-filter", Collections.singletonMap("filterExpr", "y")));
+
+        RangerConstraintPolicyItem approvalItem = new RangerConstraintPolicyItem();
+        approvalItem.setUsers(Collections.singletonList("u1"));
+        approvalItem.setAccesses(Collections.singletonList(new RangerPolicyItemAccess("search")));
+        approvalItem.setConstraintInfo(new RangerPolicyItemConstraintInfo("requireApproval", null));
+
+        RangerPolicy policy = new RangerPolicy();
+        policy.setId(7L);
+        policy.setName("constraints");
+        policy.setService("svc");
+        policy.setPolicyType(RangerPolicy.POLICY_TYPE_CONSTRAINTS);
+        policy.setResources(Collections.singletonMap("catalog", new RangerPolicy.RangerPolicyResource(Collections.singletonList("c1"), false, false)));
+        policy.setConstraintPolicyItems(Arrays.asList(filterItem, filterItem2, approvalItem));
+
+        XXPolicy xPolicy = new XXPolicy();
+        xPolicy.setId(7L);
+        xPolicy.setName("constraints");
+        xPolicy.setService(9L);
+        XXServiceDef xSvcDef = new XXServiceDef();
+        xSvcDef.setId(3L);
+
+        XXResourceDefDao resDefDao = mock(XXResourceDefDao.class);
+        when(daoMgr.getXXResourceDef()).thenReturn(resDefDao);
+        when(resDefDao.findResourceDefIdsByNameAndPolicyId(Mockito.anySet(), Mockito.eq(7L))).thenReturn(Collections.singletonMap("catalog", 1L));
+        when(daoMgr.getXXPolicyRefResource()).thenReturn(mock(XXPolicyRefResourceDao.class));
+        Mockito.lenient().when(rangerAuditFields.populateAuditFields(Mockito.any(), Mockito.any())).thenAnswer(inv -> inv.getArgument(0));
+
+        org.apache.ranger.db.XXPolicyDao policyDao = mock(org.apache.ranger.db.XXPolicyDao.class);
+        when(daoMgr.getXXPolicy()).thenReturn(policyDao);
+        when(policyDao.getCountById(7L)).thenReturn(1L);
+
+        XXUserDao userDao = mock(XXUserDao.class);
+        when(daoMgr.getXXUser()).thenReturn(userDao);
+        when(userDao.getIdsByUserNames(Mockito.anySet())).thenReturn(Collections.singletonMap("u1", 30L));
+        XXPolicyRefUserDao polUserDao = mock(XXPolicyRefUserDao.class);
+        when(daoMgr.getXXPolicyRefUser()).thenReturn(polUserDao);
+
+        XXAccessTypeDefDao accDefDao = mock(XXAccessTypeDefDao.class);
+        when(daoMgr.getXXAccessTypeDef()).thenReturn(accDefDao);
+        when(accDefDao.findAccessTypeDefIdsByNamesAndServiceId(Mockito.anySet(), Mockito.eq(9L))).thenReturn(Collections.singletonMap("search", 2L));
+        when(daoMgr.getXXPolicyRefAccessType()).thenReturn(mock(XXPolicyRefAccessTypeDao.class));
+
+        XXPolicyRefConstraintDao polConstraintDao = mock(XXPolicyRefConstraintDao.class);
+        when(daoMgr.getXXPolicyRefConstraint()).thenReturn(polConstraintDao);
+
+        updater.createNewPolMappingForRefTable(policy, xPolicy, xSvcDef, false, false);
+
+        // users of constraint items get ref entries, like other policy items
+        verify(polUserDao).batchCreate(Mockito.anyList());
+
+        @SuppressWarnings("unchecked")
+        ArgumentCaptor<List<XXPolicyRefConstraint>> captor = ArgumentCaptor.forClass(List.class);
+        verify(polConstraintDao).batchCreate(captor.capture());
+
+        Set<String> constraintNames = new HashSet<>();
+        for (XXPolicyRefConstraint ref : captor.getValue()) {
+            assertEquals(Long.valueOf(7L), ref.getPolicyId());
+            assertEquals(Long.valueOf(3L), ref.getServiceDefId());
+            constraintNames.add(ref.getConstraintName());
+        }
+        assertEquals(2, captor.getValue().size());
+        assertEquals(new HashSet<>(Arrays.asList("search-filter", "requireApproval")), constraintNames);
+    }
+
+    @Test
+    public void testCreateNewPolMappingForRefTable_NoConstraintRefsForAccessPolicy() throws Exception {
+        RangerPolicy policy = new RangerPolicy();
+        policy.setId(8L);
+        policy.setResources(Collections.singletonMap("catalog", new RangerPolicy.RangerPolicyResource(Collections.singletonList("c1"), false, false)));
+
+        XXPolicy xPolicy = new XXPolicy();
+        xPolicy.setId(8L);
+        xPolicy.setService(9L);
+        XXServiceDef xSvcDef = new XXServiceDef();
+        xSvcDef.setId(3L);
+
+        XXResourceDefDao resDefDao = mock(XXResourceDefDao.class);
+        when(daoMgr.getXXResourceDef()).thenReturn(resDefDao);
+        when(resDefDao.findResourceDefIdsByNameAndPolicyId(Mockito.anySet(), Mockito.eq(8L))).thenReturn(Collections.singletonMap("catalog", 1L));
+        when(daoMgr.getXXPolicyRefResource()).thenReturn(mock(XXPolicyRefResourceDao.class));
+        org.apache.ranger.db.XXPolicyDao policyDao = mock(org.apache.ranger.db.XXPolicyDao.class);
+        when(daoMgr.getXXPolicy()).thenReturn(policyDao);
+        when(policyDao.getCountById(8L)).thenReturn(1L);
+
+        updater.createNewPolMappingForRefTable(policy, xPolicy, xSvcDef, false, false);
+
+        verify(daoMgr, never()).getXXPolicyRefConstraint();
     }
 
     @Test
@@ -266,6 +384,7 @@ public class TestPolicyRefUpdater {
         XXPolicyRefAccessTypeDao accessDao = mock(XXPolicyRefAccessTypeDao.class);
         XXPolicyRefConditionDao conditionDao = mock(XXPolicyRefConditionDao.class);
         XXPolicyRefDataMaskTypeDao dataMaskDao = mock(XXPolicyRefDataMaskTypeDao.class);
+        XXPolicyRefConstraintDao constraintDao = mock(XXPolicyRefConstraintDao.class);
 
         when(daoMgr.getXXPolicyRefUser()).thenReturn(userDao);
         when(daoMgr.getXXPolicyRefRole()).thenReturn(roleDao);
@@ -274,6 +393,7 @@ public class TestPolicyRefUpdater {
         when(daoMgr.getXXPolicyRefAccessType()).thenReturn(accessDao);
         when(daoMgr.getXXPolicyRefCondition()).thenReturn(conditionDao);
         when(daoMgr.getXXPolicyRefDataMaskType()).thenReturn(dataMaskDao);
+        when(daoMgr.getXXPolicyRefConstraint()).thenReturn(constraintDao);
 
         when(userDao.findUserNameIdByPolicyId(policyId)).thenReturn(existingUsers);
         when(roleDao.findRoleNameIdByPolicyId(policyId)).thenReturn(existingRoles);
@@ -294,6 +414,7 @@ public class TestPolicyRefUpdater {
         verify(accessDao).deleteByPolicyId(policyId);
         verify(conditionDao).deleteByPolicyId(policyId);
         verify(dataMaskDao).deleteByPolicyId(policyId);
+        verify(constraintDao).deleteByPolicyId(policyId);
 
         verify(userDao, never()).deleteByPolicyId(policyId);
         verify(roleDao, never()).deleteByPolicyId(policyId);
@@ -309,10 +430,13 @@ public class TestPolicyRefUpdater {
         when(daoMgr.getXXPolicyRefAccessType()).thenReturn(mock(XXPolicyRefAccessTypeDao.class));
         when(daoMgr.getXXPolicyRefCondition()).thenReturn(mock(XXPolicyRefConditionDao.class));
         when(daoMgr.getXXPolicyRefDataMaskType()).thenReturn(mock(XXPolicyRefDataMaskTypeDao.class));
+        XXPolicyRefConstraintDao constraintDao = mock(XXPolicyRefConstraintDao.class);
+        when(daoMgr.getXXPolicyRefConstraint()).thenReturn(constraintDao);
 
         RangerPolicy p = new RangerPolicy();
         p.setId(77L);
         assertEquals(true, updater.cleanupRefTables(p));
+        verify(constraintDao).deleteByPolicyId(77L);
         assertEquals(false, updater.cleanupRefTables(null));
     }
 

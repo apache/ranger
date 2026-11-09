@@ -18,7 +18,13 @@ import pytest
 import docker
 import requests
 from hdfs.test_config import (KMS_CONTAINER, HADOOP_NAMENODE_LOG_PATH, KMS_LOG_PATH)
-from kms.utils import krb_requests, ensure_ticket, BASE_URL, PARAMS, container as kms_container
+from kms.utils import (
+    BASE_URL,
+    PARAMS,
+    ensure_ticket,
+    get_kms_container,
+    krb_requests,
+)
 from hdfs.test_config import HDFS_USER
 import subprocess
 import tempfile
@@ -318,7 +324,7 @@ def delete_kms_key(key_name: str) -> None:
     # Delete KMS key if present. Ignores missing-key responses.
     # Only refresh the keyadmin ticket when no valid ticket exists — avoids a full
     # kdestroy+kinit on every key deletion (e.g. 6 calls in cleanup_test_artifacts).
-    ec, _ = kms_container.exec_run("klist -s 2>/dev/null", user="root")
+    ec, _ = get_kms_container().exec_run("klist -s 2>/dev/null", user="root")
     if ec != 0:
         ensure_ticket()
     resp = krb_requests.delete(f"{BASE_URL}/key/{key_name}", params=PARAMS)

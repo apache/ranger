@@ -17,12 +17,13 @@
  * under the License.
  */
 
-import React, { useRef, useState } from "react";
+import React, { useRef, useState, useEffect } from "react";
 import { Table, Button, Form } from "react-bootstrap";
 import { FieldArray } from "react-final-form-arrays";
 import { Col } from "react-bootstrap";
 import { Field, useForm } from "react-final-form";
 import AsyncSelect from "react-select/async";
+import Select from "react-select";
 import {
   find,
   isEmpty,
@@ -43,8 +44,18 @@ import {
   drop,
   dragOver,
   getPolicyConditionDisplayLbl,
-  safeJsonParse
+  safeJsonParse,
+  getMatchedConstraintDefs,
+  getConstraintDefByName,
+  getConstraintNameFromField,
+  getAccessTypesForConstraintDef,
+  getLeafAccessTypeRestrictions,
+  mapAccessTypesToSelectOptions
 } from "Utils/XAUtils";
+import {
+  buildDefaultConstraintParameters,
+  ConstraintPolicyParameterTableCell
+} from "./NewPolicyForm/PolicyCreateStepperStepComp/ConstraintPolicyParameterFields";
 import {
   selectInputCustomStyles,
   ConfirmationClearIndicator
@@ -88,10 +99,60 @@ export default function PolicyPermissionItem(props) {
 
   const form = useForm();
 
+  const isConstraintPolicy =
+    RangerPolicyType.RANGER_CONSTRAINT_POLICY_TYPE.value ==
+    formValues?.policyType;
+
+  const matchedConstraintDefs = getMatchedConstraintDefs(
+    serviceCompDetails,
+    formValues
+  );
+  const constraintSelectOptions = matchedConstraintDefs.map((constraint) => ({
+    label: constraint.label || constraint.name,
+    value: constraint.name
+  }));
+  const constraintSelectFirstMsg = "Please select constraint name first";
+
+  // Re-run prune when allowed constraint names change (e.g. resource selection).
+  const constraintOptionKey = constraintSelectOptions
+    .map((option) => option.value)
+    .join(",");
+
+  useEffect(() => {
+    if (attrName !== "constraintPolicyItems" || !changePolicyItemPermissions) {
+      return;
+    }
+    const allowedNames = new Set(constraintSelectOptions.map((o) => o.value));
+    const items = formValues?.[attrName] || [];
+    items.forEach((item, index) => {
+      const rowConstraintName = getConstraintNameFromField(
+        item?.constraintInfo?.constraintName
+      );
+      if (rowConstraintName && !allowedNames.has(rowConstraintName)) {
+        form.change(
+          `${attrName}[${index}].constraintInfo.constraintName`,
+          null
+        );
+        form.change(
+          `${attrName}[${index}].constraintInfo.parameters`,
+          undefined
+        );
+        form.change(`${attrName}[${index}].accesses`, undefined);
+      }
+    });
+    // formValues / form intentionally omitted — prune only when allowed constraint names change
+  }, [constraintOptionKey, changePolicyItemPermissions]);
+
   if (serviceCompDetails?.policyConditions?.length > 0) {
     permList.push("Rule Conditions");
   }
+  if (isConstraintPolicy) {
+    permList.push("Constraint Name");
+  }
   permList.push("Permissions");
+  if (isConstraintPolicy) {
+    permList.push("Parameters");
+  }
   if (
     RangerPolicyType.RANGER_ACCESS_POLICY_TYPE.value ==
       formValues?.policyType &&
@@ -111,12 +172,17 @@ export default function PolicyPermissionItem(props) {
     permList.push("Row Level Filter");
   }
 
+  const columnWidths = {
+    "Delegate Admin": "100px",
+    "Constraint Name": "220px"
+  };
+
   const tableHeader = () => {
     return permList.map((data) => {
       return (
         <th
           key={data}
-          style={data === "Delegate Admin" ? { width: "100px" } : {}}
+          style={columnWidths[data] ? { width: columnWidths[data] } : {}}
         >
           {data}
         </th>
@@ -137,7 +203,21 @@ export default function PolicyPermissionItem(props) {
     enableResourcePruneDefer: true
   });
 
-  const getAccessTypeOptions = () => {
+  const handleConstraintNameChange = (input, fieldName, option) => {
+    input.onChange(option || null);
+    form.change(`${fieldName}.accesses`, undefined);
+    if (!option?.value) {
+      form.change(`${fieldName}.constraintInfo.parameters`, undefined);
+      return;
+    }
+    const def = getConstraintDefByName(serviceCompDetails, option.value);
+    form.change(
+      `${fieldName}.constraintInfo.parameters`,
+      buildDefaultConstraintParameters(def?.parameters, serviceCompDetails)
+    );
+  };
+
+  const getAccessTypeOptions = (rowIndex) => {
     let srcOp = [],
       multiplePermissionItem = [];
     if (
@@ -149,10 +229,26 @@ export default function PolicyPermissionItem(props) {
       formValues.policyType
     ) {
       srcOp = serviceCompDetails.rowFilterDef.accessTypes;
+    } else if (isConstraintPolicy) {
+      const rowConstraintName = getConstraintNameFromField(
+        formValues?.[attrName]?.[rowIndex]?.constraintInfo?.constraintName
+      );
+      const rowDef = getConstraintDefByName(
+        serviceCompDetails,
+        rowConstraintName
+      );
+      srcOp = rowConstraintName
+        ? getAccessTypesForConstraintDef(
+            serviceCompDetails,
+            rowDef,
+            getLeafAccessTypeRestrictions(formValues, serviceCompDetails)
+          )
+        : [];
+      return mapAccessTypesToSelectOptions(srcOp);
     } else {
       srcOp = serviceCompDetails.accessTypes;
     }
-    if (changePolicyItemPermissions) {
+    if (changePolicyItemPermissions && !isConstraintPolicy) {
       if (isMultiResources) {
         map(formValues.additionalResources, (resourceObj) => {
           for (let i = grpResourcesKeys.length - 1; i >= 0; i--) {
@@ -627,7 +723,73 @@ export default function PolicyPermissionItem(props) {
                             )
                           );
                         }
+                        if (colName == "Constraint Name") {
+                          return (
+                            <td
+                              key={colName}
+                              className="align-middle"
+                              style={{ width: columnWidths["Constraint Name"] }}
+                            >
+                              <Field
+                                name={`${name}.constraintInfo.constraintName`}
+                                render={({ input }) => (
+                                  <Select
+                                    inputId={`${name}-constraint-name`}
+                                    options={constraintSelectOptions}
+                                    value={input.value}
+                                    onChange={(option) =>
+                                      handleConstraintNameChange(
+                                        input,
+                                        name,
+                                        option
+                                      )
+                                    }
+                                    onBlur={input.onBlur}
+                                    placeholder="Select constraint"
+                                    isClearable
+                                    isDisabled={
+                                      constraintSelectOptions.length === 0
+                                    }
+                                    styles={selectInputCustomStyles}
+                                  />
+                                )}
+                              />
+                            </td>
+                          );
+                        }
+                        if (colName == "Parameters") {
+                          const rowConstraintName = getConstraintNameFromField(
+                            fields.value[index]?.constraintInfo?.constraintName
+                          );
+                          const rowConstraintDef = getConstraintDefByName(
+                            serviceCompDetails,
+                            rowConstraintName
+                          );
+                          return (
+                            <td key={colName} className="align-middle">
+                              <ConstraintPolicyParameterTableCell
+                                parameters={rowConstraintDef?.parameters || []}
+                                fieldNamePrefix={`${name}.constraintInfo.parameters`}
+                                constraintSelected={Boolean(rowConstraintName)}
+                                selectFirstMessage={constraintSelectFirstMsg}
+                                serviceCompDetails={serviceCompDetails}
+                              />
+                            </td>
+                          );
+                        }
                         if (colName == "Permissions") {
+                          const rowConstraintName = getConstraintNameFromField(
+                            fields.value[index]?.constraintInfo?.constraintName
+                          );
+                          if (isConstraintPolicy && !rowConstraintName) {
+                            return (
+                              <td key={colName} className="align-middle">
+                                <span className="text-muted small editable-add-text">
+                                  {constraintSelectFirstMsg}
+                                </span>
+                              </td>
+                            );
+                          }
                           if (serviceCompDetails?.name == "tag") {
                             return (
                               <td key={colName} className="align-middle">
@@ -643,7 +805,7 @@ export default function PolicyPermissionItem(props) {
                                   render={({ input }) => (
                                     <div className="table-editable">
                                       <TagBasePermissionItem
-                                        options={getAccessTypeOptions()}
+                                        options={getAccessTypeOptions(index)}
                                         inputVal={input}
                                         formValues={formValues}
                                         dataMaskIndex={index}
@@ -656,7 +818,7 @@ export default function PolicyPermissionItem(props) {
                               </td>
                             );
                           } else {
-                            let accessTypeOptions = getAccessTypeOptions();
+                            let accessTypeOptions = getAccessTypeOptions(index);
                             return (
                               <td key={colName} className="align-middle">
                                 <Field
@@ -678,11 +840,7 @@ export default function PolicyPermissionItem(props) {
                                     ) {
                                       let accTypeVal = filter(
                                         formValues[attrName][index].accesses,
-                                        (m) => {
-                                          if (some(accessTypeOptions, m)) {
-                                            return m;
-                                          }
-                                        }
+                                        (m) => some(accessTypeOptions, m)
                                       );
                                       if (!isEqual(input.value, accTypeVal)) {
                                         input.onChange(accTypeVal);

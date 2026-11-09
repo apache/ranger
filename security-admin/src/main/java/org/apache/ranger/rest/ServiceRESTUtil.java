@@ -21,6 +21,7 @@ package org.apache.ranger.rest;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.ranger.biz.ServiceDBStore;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItem;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemAccess;
@@ -37,7 +38,9 @@ import java.util.Set;
 import java.util.TreeSet;
 
 public class ServiceRESTUtil {
-    private static final Logger LOG = LoggerFactory.getLogger(ServiceRESTUtil.class);
+    private static final Logger LOG                              = LoggerFactory.getLogger(ServiceRESTUtil.class);
+    private static final String X_POLICY_SERVICE_SIGNATURE_UK    = "x_policy_UK_service_signature";
+    private static final String X_POLICY_NAME_SERVICE_ZONE_UK    = "x_policy_UK_name_service_zone";
 
     private ServiceRESTUtil() {
         //To block instantiation
@@ -211,6 +214,86 @@ public class ServiceRESTUtil {
         LOG.debug("<== ServiceRESTUtil.processRevokeRequest() : {}", policyUpdated);
 
         return policyUpdated;
+    }
+
+    public static boolean isXPolicyUniqueConstraintViolation(Throwable excp) {
+        return isXPolicyServiceSignatureUniqueConstraintViolation(excp) || isXPolicyNameServiceZoneUniqueConstraintViolation(excp);
+    }
+
+    public static boolean isXPolicyServiceSignatureUniqueConstraintViolation(Throwable excp) {
+        boolean   ret     = false;
+        Throwable current = excp;
+
+        // Supported DBs include the violated constraint name in unique-key errors.
+        // Match only known x_policy constraints to avoid masking unrelated failures.
+        while (current != null && !ret) {
+            String message = current.getMessage();
+
+            if (StringUtils.containsIgnoreCase(message, X_POLICY_SERVICE_SIGNATURE_UK)) {
+                ret = true;
+            }
+
+            current = current.getCause();
+        }
+
+        return ret;
+    }
+
+    public static boolean isXPolicyNameServiceZoneUniqueConstraintViolation(Throwable excp) {
+        boolean   ret     = false;
+        Throwable current = excp;
+
+        // Supported DBs include the violated constraint name in unique-key errors.
+        // Match only known x_policy constraints to avoid masking unrelated failures.
+        while (current != null && !ret) {
+            String message = current.getMessage();
+
+            if (StringUtils.containsIgnoreCase(message, X_POLICY_NAME_SERVICE_ZONE_UK)) {
+                ret = true;
+            }
+
+            current = current.getCause();
+        }
+
+        return ret;
+    }
+
+    public static boolean isOptimisticLockException(Throwable excp) {
+        boolean   ret     = false;
+        Throwable current = excp;
+
+        while (current != null && !ret) {
+            String className = current.getClass().getName();
+            String message   = current.getMessage();
+
+            if (StringUtils.containsIgnoreCase(className, "OptimisticLockException")
+                    || StringUtils.containsIgnoreCase(message, "OptimisticLockException")) {
+                ret = true;
+            }
+
+            current = current.getCause();
+        }
+
+        return ret;
+    }
+
+    /**
+     * Preserve persisted guid for GRANT update flow.
+     * GRANT should update privileges on an existing policy, not change policy guid.
+     */
+    public static void preserveExistingPolicyGuidForGrantUpdate(ServiceDBStore svcStore, RangerPolicy policy) throws Exception {
+        if (policy != null && StringUtils.isNotEmpty(policy.getGuid())) {
+            return;
+        }
+
+        if (svcStore != null && policy != null && policy.getId() != null) {
+            RangerPolicy existingPolicy = svcStore.getPolicy(policy.getId());
+
+            if (existingPolicy != null
+                    && StringUtils.isNotEmpty(existingPolicy.getGuid())) {
+                policy.setGuid(existingPolicy.getGuid());
+            }
+        }
     }
 
     public static void processApplyPolicy(RangerPolicy existingPolicy, RangerPolicy appliedPolicy) {

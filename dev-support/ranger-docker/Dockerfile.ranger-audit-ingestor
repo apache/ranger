@@ -27,6 +27,9 @@ RUN apt-get update && apt-get install -y \
     net-tools \
     && rm -rf /var/lib/apt/lists/*
 
+# audit-ingestor-config.py renders conf/ranger-audit-ingestor-site.xml from configs/*.yaml
+RUN pip install --no-cache-dir pyyaml
+
 # Volume for keytabs
 VOLUME /etc/keytabs
 
@@ -39,6 +42,7 @@ COPY ./dist/ranger-${RANGER_VERSION}-audit-ingestor.tar.gz /tmp/
 # Copy scripts and Kerberos configuration
 COPY ./scripts/audit-ingestor/service-check-functions.sh    ${RANGER_SCRIPTS}/
 COPY ./scripts/audit-ingestor/ranger-audit-ingestor.sh        ${RANGER_SCRIPTS}/
+COPY ./scripts/audit-ingestor/audit-ingestor-config.py        ${RANGER_SCRIPTS}/
 COPY ./scripts/kdc/krb5.conf /etc/krb5.conf
 
 # Extract and setup
@@ -51,7 +55,7 @@ RUN tar xzf /tmp/ranger-${RANGER_VERSION}-audit-ingestor.tar.gz -C /opt/ranger/a
     ln -sf /var/log/ranger/audit-ingestor /opt/ranger/audit-ingestor/logs && \
     chown -R ranger:ranger /opt/ranger/audit-ingestor/ /var/log/ranger/ ${RANGER_SCRIPTS} && \
     chmod -R 755 /opt/ranger/audit-ingestor && \
-    chmod 755 ${RANGER_SCRIPTS}/ranger-audit-ingestor.sh
+    chmod 755 ${RANGER_SCRIPTS}/ranger-audit-ingestor.sh ${RANGER_SCRIPTS}/audit-ingestor-config.py
 
 # Set Java home
 ENV JAVA_HOME=/opt/java/openjdk
@@ -60,6 +64,7 @@ ENV PATH=$JAVA_HOME/bin:$PATH
 # Environment variables for audit ingestor
 ENV AUDIT_INGESTOR_HOME_DIR=/opt/ranger/audit-ingestor
 ENV AUDIT_INGESTOR_CONF_DIR=/opt/ranger/audit-ingestor/conf
+ENV AUDIT_INGESTOR_CONFIGS=/opt/ranger/audit-ingestor/configs
 ENV AUDIT_INGESTOR_LOG_DIR=/var/log/ranger/audit-ingestor
 ENV RANGER_USER=ranger
 

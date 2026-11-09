@@ -18,6 +18,7 @@
 package org.apache.ranger.biz;
 
 import org.apache.ranger.authorization.hadoop.config.RangerAdminConfig;
+import org.apache.ranger.authorization.utils.JsonUtils;
 import org.apache.ranger.common.ContextUtil;
 import org.apache.ranger.common.RESTErrorUtil;
 import org.apache.ranger.common.RangerConstants;
@@ -590,6 +591,131 @@ public class TestRoleDBStore {
             roleDBStore.initStore();
             Mockito.verify(roleService).setPopulateExistingBaseFields(false);
         }
+    }
+
+    @Test
+    public void testCreateRole_selfNestingRejected() throws Exception {
+        RangerRole rangerRole = getRangerRole();
+        XXRoleDao  xxRoleDao  = Mockito.mock(XXRoleDao.class);
+
+        rangerRole.setRoles(Collections.singletonList(new RoleMember(roleName, false)));
+
+        Mockito.when(daoMgr.getXXRole()).thenReturn(xxRoleDao);
+        Mockito.when(xxRoleDao.findByRoleName(roleName)).thenReturn(null);
+        Mockito.when(restErrorUtil.createRESTException(Mockito.anyString(), Mockito.any())).thenReturn(new WebApplicationException());
+
+        Assertions.assertThrows(WebApplicationException.class, () -> roleDBStore.createRole(rangerRole, false, false));
+
+        Mockito.verify(roleService, Mockito.never()).create(Mockito.any());
+    }
+
+    @Test
+    public void testCreateRole_nestedRoleAlreadyContainingNewRoleRejected() throws Exception {
+        // roleB (stored, e.g. earlier in the same import) lists test-role, whose ref row is still pending;
+        // creating test-role containing roleB must be rejected from the stored definitions
+        RangerRole rangerRole = getRangerRole();
+        XXRoleDao  xxRoleDao  = Mockito.mock(XXRoleDao.class);
+
+        rangerRole.setRoles(Collections.singletonList(new RoleMember("roleB", false)));
+
+        Mockito.when(daoMgr.getXXRole()).thenReturn(xxRoleDao);
+        Mockito.when(xxRoleDao.findByRoleName(roleName)).thenReturn(null);
+        Mockito.when(xxRoleDao.getRoleMemberNames("roleB")).thenReturn(Collections.singletonList(roleName));
+        Mockito.when(restErrorUtil.createRESTException(Mockito.anyString(), Mockito.any())).thenReturn(new WebApplicationException());
+
+        Assertions.assertThrows(WebApplicationException.class, () -> roleDBStore.createRole(rangerRole, false, false));
+
+        Mockito.verify(roleService, Mockito.never()).create(Mockito.any());
+    }
+
+    @Test
+    public void testUpdateRole_selfNestingRejectedWithoutGraphWalk() throws Exception {
+        RangerRole rangerRole = getRangerRole();
+        XXRoleDao  xxRoleDao  = Mockito.mock(XXRoleDao.class);
+
+        rangerRole.setRoles(Collections.singletonList(new RoleMember(roleName, false)));
+
+        Mockito.when(daoMgr.getXXRole()).thenReturn(xxRoleDao);
+        Mockito.when(xxRoleDao.findByRoleId(rangerRole.getId())).thenReturn(getTestRole());
+        Mockito.when(restErrorUtil.createRESTException(Mockito.anyString(), Mockito.any())).thenReturn(new WebApplicationException());
+
+        Assertions.assertThrows(WebApplicationException.class, () -> roleDBStore.updateRole(rangerRole, false, true));
+
+        Mockito.verify(xxRoleDao, Mockito.never()).getIdsByRoleNames(Mockito.any());
+        Mockito.verify(roleService, Mockito.never()).update(Mockito.any());
+    }
+
+    @Test
+    public void testUpdateRole_addingAncestorAsNestedRoleRejected() throws Exception {
+        // stored: roleB (id 20) contains test-role (id 9). Update adds roleB into test-role -> cycle.
+        RangerRole       rangerRole       = getRangerRole();
+        XXRoleDao        xxRoleDao        = Mockito.mock(XXRoleDao.class);
+        XXRoleRefRoleDao xxRoleRefRoleDao = Mockito.mock(XXRoleRefRoleDao.class);
+
+        rangerRole.setRoles(Collections.singletonList(new RoleMember("roleB", false)));
+
+        Mockito.when(daoMgr.getXXRole()).thenReturn(xxRoleDao);
+        Mockito.when(daoMgr.getXXRoleRefRole()).thenReturn(xxRoleRefRoleDao);
+        Mockito.when(xxRoleDao.findByRoleId(rangerRole.getId())).thenReturn(getTestRole());
+        Mockito.when(xxRoleDao.getIdsByRoleNames(Collections.singleton("roleB"))).thenReturn(Collections.singletonMap("roleB", 20L));
+        Mockito.when(xxRoleRefRoleDao.getContainingRoles(roleId)).thenReturn(Collections.singleton(20L));
+        Mockito.when(restErrorUtil.createRESTException(Mockito.anyString(), Mockito.any())).thenReturn(new WebApplicationException());
+
+        Assertions.assertThrows(WebApplicationException.class, () -> roleDBStore.updateRole(rangerRole, false, true));
+
+        Mockito.verify(roleService, Mockito.never()).update(Mockito.any());
+    }
+
+    @Test
+    public void testUpdateRole_unchangedNestedRolesSkipCycleCheck() throws Exception {
+        // user/group-only updates must not pay for a graph walk
+        RangerRole rangerRole = getRangerRole();
+        XXRole     xxRole     = getTestRole();
+        XXRoleDao  xxRoleDao  = Mockito.mock(XXRoleDao.class);
+
+        rangerRole.setRoles(Collections.singletonList(new RoleMember("roleB", false)));
+        xxRole.setRoleText(JsonUtils.objectToJson(rangerRole));
+
+        Mockito.when(daoMgr.getXXRole()).thenReturn(xxRoleDao);
+        Mockito.when(xxRoleDao.findByRoleId(rangerRole.getId())).thenReturn(xxRole);
+        Mockito.doNothing().when(transactionSynchronizationAdapter).executeOnTransactionCommit(Mockito.any());
+        Mockito.when(roleService.update(rangerRole)).thenReturn(rangerRole);
+        Mockito.doNothing().when(roleRefUpdater).createNewRoleMappingForRefTable(Mockito.any(), Mockito.anyBoolean(), Mockito.anyBoolean());
+        Mockito.doNothing().when(roleService).updatePolicyVersions(rangerRole.getId());
+        Mockito.doNothing().when(roleService).createTransactionLog(Mockito.any(), Mockito.any(), Mockito.anyInt());
+
+        roleDBStore.updateRole(rangerRole, false, true);
+
+        Mockito.verify(xxRoleDao, Mockito.never()).getIdsByRoleNames(Mockito.any());
+        Mockito.verify(daoMgr, Mockito.never()).getXXRoleRefRole();
+    }
+
+    @Test
+    public void testUpdateRole_preexistingAncestorCycleTerminatesAndSucceeds() throws Exception {
+        // ancestors: 9 -> {30}, 30 -> {31}, 31 -> {30} (existing cycle above test-role); added roleC (id 20) is unrelated
+        RangerRole       rangerRole       = getRangerRole();
+        XXRoleDao        xxRoleDao        = Mockito.mock(XXRoleDao.class);
+        XXRoleRefRoleDao xxRoleRefRoleDao = Mockito.mock(XXRoleRefRoleDao.class);
+
+        rangerRole.setRoles(Collections.singletonList(new RoleMember("roleC", false)));
+
+        Mockito.when(daoMgr.getXXRole()).thenReturn(xxRoleDao);
+        Mockito.when(daoMgr.getXXRoleRefRole()).thenReturn(xxRoleRefRoleDao);
+        Mockito.when(xxRoleDao.findByRoleId(rangerRole.getId())).thenReturn(getTestRole());
+        Mockito.when(xxRoleDao.getIdsByRoleNames(Collections.singleton("roleC"))).thenReturn(Collections.singletonMap("roleC", 20L));
+        Mockito.when(xxRoleRefRoleDao.getContainingRoles(roleId)).thenReturn(Collections.singleton(30L));
+        Mockito.when(xxRoleRefRoleDao.getContainingRoles(30L)).thenReturn(Collections.singleton(31L));
+        Mockito.when(xxRoleRefRoleDao.getContainingRoles(31L)).thenReturn(Collections.singleton(30L));
+        Mockito.doNothing().when(transactionSynchronizationAdapter).executeOnTransactionCommit(Mockito.any());
+        Mockito.when(roleService.update(rangerRole)).thenReturn(rangerRole);
+        Mockito.doNothing().when(roleRefUpdater).createNewRoleMappingForRefTable(Mockito.any(), Mockito.anyBoolean(), Mockito.anyBoolean());
+        Mockito.doNothing().when(roleService).updatePolicyVersions(rangerRole.getId());
+        Mockito.doNothing().when(roleService).createTransactionLog(Mockito.any(), Mockito.any(), Mockito.anyInt());
+
+        Assertions.assertEquals(rangerRole, roleDBStore.updateRole(rangerRole, false, true));
+
+        Mockito.verify(xxRoleRefRoleDao, Mockito.times(1)).getContainingRoles(30L);
+        Mockito.verify(xxRoleRefRoleDao, Mockito.times(1)).getContainingRoles(31L);
     }
 
     private XXRole getTestRole() {

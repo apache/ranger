@@ -20,6 +20,7 @@
 package org.apache.ranger.authz.embedded;
 
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.ranger.authorization.hadoop.config.RangerPluginConfig;
 import org.apache.ranger.authz.api.RangerAuthzApiErrorCode;
@@ -30,6 +31,7 @@ import org.apache.ranger.authz.model.RangerAuthzRequest;
 import org.apache.ranger.authz.model.RangerAuthzResult;
 import org.apache.ranger.authz.model.RangerAuthzResult.AccessDecision;
 import org.apache.ranger.authz.model.RangerAuthzResult.AccessResult;
+import org.apache.ranger.authz.model.RangerAuthzResult.ConstraintResult;
 import org.apache.ranger.authz.model.RangerAuthzResult.DataMaskResult;
 import org.apache.ranger.authz.model.RangerAuthzResult.PermissionResult;
 import org.apache.ranger.authz.model.RangerAuthzResult.PolicyInfo;
@@ -47,6 +49,7 @@ import org.apache.ranger.plugin.policyengine.RangerAccessRequestImpl;
 import org.apache.ranger.plugin.policyengine.RangerAccessResource;
 import org.apache.ranger.plugin.policyengine.RangerAccessResourceImpl;
 import org.apache.ranger.plugin.policyengine.RangerAccessResult;
+import org.apache.ranger.plugin.policyengine.RangerConstraintResult;
 import org.apache.ranger.plugin.policyengine.RangerResourceACLs;
 import org.apache.ranger.plugin.service.RangerBasePlugin;
 import org.apache.ranger.plugin.util.RangerAccessRequestUtil;
@@ -54,8 +57,10 @@ import org.apache.ranger.plugin.util.ServicePolicies;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Properties;
@@ -133,6 +138,7 @@ class RangerAuthzPlugin {
             if (permResult.getAccess().getDecision() == AccessDecision.DENY) {
                 permResult.setDataMask(null);
                 permResult.setRowFilter(null);
+                permResult.setConstraints(null);
             }
 
             ret.getPermissions().put(permission, permResult);
@@ -306,6 +312,30 @@ class RangerAuthzPlugin {
             ret.setDataMask(new DataMaskResult(result.getMaskType(), result.getMaskedValue(), ret.getAccess().getPolicy()));
         } else if (result.getPolicyType() == RangerPolicy.POLICY_TYPE_ROWFILTER) {
             ret.setRowFilter(new RowFilterResult(result.getFilterExpr(), ret.getAccess().getPolicy()));
+        }
+
+        ret.setConstraints(toConstraintResults(result));
+
+        return ret;
+    }
+
+    // Constraints are returned only for an allowed access, ordered by RangerConstraintResult.CONSTRAINT_RESULT_COMPARATOR
+    static List<ConstraintResult> toConstraintResults(RangerAccessResult result) {
+        List<ConstraintResult> ret = null;
+
+        if (result != null && result.getIsAccessDetermined() && result.getIsAllowed() && CollectionUtils.isNotEmpty(result.getConstraints())) {
+            List<RangerConstraintResult> constraints = new ArrayList<>(result.getConstraints());
+
+            constraints.sort(RangerConstraintResult.CONSTRAINT_RESULT_COMPARATOR);
+
+            ret = new ArrayList<>(constraints.size());
+
+            for (RangerConstraintResult constraint : constraints) {
+                Map<String, Object> parameters = MapUtils.isEmpty(constraint.getParameters()) ? null : new HashMap<>(constraint.getParameters());
+                PolicyInfo          policy     = new PolicyInfo(constraint.getPolicyId(), constraint.getPolicyVersion());
+
+                ret.add(new ConstraintResult(constraint.getConstraintName(), parameters, policy, constraint.getPolicyPriority()));
+            }
         }
 
         return ret;

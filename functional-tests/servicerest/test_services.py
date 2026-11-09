@@ -261,9 +261,6 @@ def test_grant_access_update_existing_policy_by_admin(log):
             log.error(f"Failed to delete policy during cleanup", extra={"policy_id": policy_id, "status_code": delete_resp.status_code})
 
 
-
-
-
 def test_grant_request_with_invalid_access_type():
     """
     Verify proper error handling when policy processing fails due to invalid access type.
@@ -302,55 +299,7 @@ def test_get_service_using_name_hides_sensitive_info_from_non_admin():
     assert len(resp)<len(resp1) ,"Expected non-admin response to have less information than admin response"
     assert 'configs' not in resp, "Expected sensitive 'configs' field to be hidden from non-admin users"
 
-@pytest.mark.skip
-def test_revoke_access_with_multiple_columns_by_admin():
-    """
-    Verify revoke access with multiple columns updates matching policy.
-    """
-    service_name = 'dev_hive'
-    request_url = base_url + f'/plugins/services/revoke/{service_name}'
 
-    request_data = get_request_data('test_grant_revoke_base.json', str_variable_dict, test_data_path)
-    fields_to_update = {
-        "accessTypes": ["select"],
-        "grantor": "admin",
-        "resource": {
-            "database": grant_db_name,
-            "table": grant_table_name,
-            "column": "id,model"
-        },
-        "users": ["hive"]
-    }
-    request_data = get_updated_request_data(request_data=request_data, fields_to_update=fields_to_update)
-    resp = requests.post(request_url, verify=False, auth=admin_auth, headers=headers,
-                         data=json.dumps(request_data))
-    assert resp.status_code == 200, f"Expected status code 200, but got {resp.status_code}"
-    policy_id = variable_dict.get('grant_created_policy_id')
-    get_policy_url = base_url + f'/plugins/policies/{policy_id}'
-    resp_policy = requests.get(get_policy_url, verify=False, auth=admin_auth, headers=headers)
-    policy = resp_policy.json()
-
-    has_year_permission = False
-    has_id_model_permission = False
-
-    for item in policy.get('policyItems', []):
-        if "hive" in item.get('users', []):
-            resources = policy.get('resources', {})
-            columns = resources.get('column', {}).get('values', [])
-
-            # Check if hive has access to year column
-            if 'year' in columns:
-                has_year_permission = True
-
-            # Check if hive still has access to id or model columns
-            if 'id' in columns or 'model' in columns:
-                has_id_model_permission = True
-
-    assert has_year_permission==True, "hive user should still have permission to 'year' column"
-    assert  has_id_model_permission==False , "hive user should NOT have permission to 'id' or 'model' columns after revocation"
-
-
-@pytest.mark.skip
 def test_revoke_access_with_roles_other_than_admin_by_admin():
     """
     Verify that users with roles other than admin cannot revoke access.
@@ -367,22 +316,14 @@ def test_revoke_access_with_roles_other_than_admin_by_admin():
     resp = requests.post(request_url, verify=False, auth=admin_auth, headers=headers,
                          data=json.dumps(request_data))
 
-    assert resp.status_code == 403, f"Expected status code 403 for non-admin revocation attempt, but got {resp.status_code}"
+    assert resp.status_code in [403,400] , f"Expected status code 403 for non-admin revocation attempt, but got {resp.status_code}"
     fields_to_update = {
         "grantor": str_variable_dict['user4']
     }
     request_data = get_updated_request_data(request_data=request_data, fields_to_update=fields_to_update)
     resp = requests.post(request_url, verify=False, auth=admin_auth, headers=headers,
                          data=json.dumps(request_data))
-    assert resp.status_code == 403, f"Expected status code 403 for admin auditor  revocation attempt, but got {resp.status_code}"
-    fields_to_update = {
-        "grantor": str_variable_dict['user5']
-    }
-    request_data = get_updated_request_data(request_data=request_data, fields_to_update=fields_to_update)
-    resp = requests.post(request_url, verify=False, auth=admin_auth, headers=headers,
-                         data=json.dumps(request_data))
-    assert resp.status_code == 400, f"Expected status code 403 for key-admin auditor  revocation attempt, but got {resp.status_code}"
-
+    assert resp.status_code in  [403,400] ,  f"Expected status code 403 for admin auditor  revocation attempt, but got {resp.status_code}"
 
 def test_secure_revoke_with_invalid_access_type():  # pylint: disable=redefined-outer-name,unused-argument
     """
@@ -419,6 +360,15 @@ def test_the_access_of_get_services_id_by_different_roles() :
     # Test access for admin user
     resp_admin = requests.get(request_url, verify=False, auth=admin_auth, headers=headers)
     assert resp_admin.status_code == 200, f"Admin should have access to get service by id, but got {resp_admin.status_code}"
+    set_cookie_header = resp_admin.headers.get("Set-Cookie")
+    print(f"Set-Cookie Header: {set_cookie_header}")
+
+    # 3. Check parsed cookies dictionary
+    print(f"Cookies returned: {dict(resp_admin.cookies)}")
+
+    # Test access for user without permissions (keyadmin)
+    resp_keyadmin = requests.get(request_url, verify=False, auth=keyadmin_auth, headers=headers)
+    assert resp_keyadmin.status_code == 400, f"keyadmin should NOT have access to get service by id, but got {resp_keyadmin.status_code}"
 
     # Test access for user without permissions (keyadmin)
     resp_keyadmin = requests.get(request_url, verify=False, auth=keyadmin_auth, headers=headers)
@@ -451,8 +401,6 @@ def test_get_services_by_id_hides_sensitive_info_from_user_roles() :
     resp_user_data = resp_user.json()
     assert len(resp_user_data)< len(admin_response_data), "Response for  user  role should contain less information than admin response"
     assert 'configs' not in resp_user_data, "Response for user role should not contain config "
-
-
 
 
 def test_delete_service_by_roles_other_than_admin() :

@@ -21,6 +21,7 @@ package org.apache.ranger.biz;
 
 import org.apache.ranger.authorization.hadoop.config.RangerPluginConfig;
 import org.apache.ranger.plugin.model.RangerPolicy;
+import org.apache.ranger.plugin.model.RangerPolicy.RangerConstraintPolicyItem;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItem;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemAccess;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
@@ -830,6 +831,53 @@ public class TestRangerPolicyAdminImpl {
         assertTrue(ret.contains("read"));
         assertTrue(ret.contains("select"));
         assertFalse(ret.contains("write"));
+    }
+
+    @Test
+    public void testGetAllAccessTypes_constraintPolicy() throws Exception {
+        RangerPolicyAdminImpl admin = createAdminWithDefaultStubs();
+        RangerServiceDef      sd    = new RangerServiceDef();
+        RangerAccessTypeDef   read  = new RangerAccessTypeDef();
+        RangerAccessTypeDef   write = new RangerAccessTypeDef();
+
+        read.setName("read");
+        read.setImpliedGrants(Arrays.asList("select"));
+        write.setName("write");
+        sd.setName("svc-def");
+        sd.setResources(new ArrayList<>());
+        sd.setAccessTypes(new ArrayList<>(Arrays.asList(read, write)));
+
+        RangerConstraintPolicyItem item = new RangerConstraintPolicyItem();
+        item.addUser("u");
+        item.addAccess(new RangerPolicyItemAccess("read"));
+
+        RangerPolicy p = new RangerPolicy();
+        p.setPolicyType(RangerPolicy.POLICY_TYPE_CONSTRAINTS);
+        p.setConstraintPolicyItems(Collections.singletonList(item));
+
+        Method m = RangerPolicyAdminImpl.class.getDeclaredMethod("getAllAccessTypes", RangerPolicy.class, RangerServiceDef.class);
+        m.setAccessible(true);
+        @SuppressWarnings("unchecked")
+        Set<String> ret = (Set<String>) m.invoke(admin, p, sd);
+
+        // delegated-admin checks of a constraint policy use the access types of its constraint items
+        assertTrue(ret.contains("read"));
+        assertTrue(ret.contains("select"));
+        assertFalse(ret.contains("write"));
+        assertFalse(ret.contains(RangerPolicyEngine.ADMIN_ACCESS));
+
+        Method collect = RangerPolicyAdminImpl.class.getDeclaredMethod("collectAccessTypes", RangerPolicy.class, RangerServiceDef.class, Map.class, Map.class, Map.class);
+        collect.setAccessible(true);
+        Map<String, Set<String>> userAccesses = new HashMap<>();
+        collect.invoke(admin, p, sd, userAccesses, new HashMap<>(), new HashMap<>());
+        assertTrue(userAccesses.get("u").contains("read"));
+
+        item.setDelegateAdmin(true);
+        Method principals = RangerPolicyAdminImpl.class.getDeclaredMethod("getDelegateAdminPrincipals", RangerPolicy.class);
+        principals.setAccessible(true);
+        @SuppressWarnings("unchecked")
+        Set<String> delegateAdmins = (Set<String>) principals.invoke(null, p);
+        assertTrue(delegateAdmins.contains("user:u"));
     }
 
     @Test

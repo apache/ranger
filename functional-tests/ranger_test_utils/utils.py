@@ -38,6 +38,9 @@ XUSERS_BASE = RANGER_ADMIN_BASE_URL + "/xusers"
 
 DEFAULT_ADMIN_AUTH = ("admin", "rangerR0cks!")
 
+# Avoid indefinite hangs when Ranger Admin or Docker is not up (plugin session setup).
+RANGER_ADMIN_REQUEST_TIMEOUT_SEC = 30
+
 DEFAULT_JSON_HEADERS = {
     "Accept": "application/json",
     "Content-Type": "application/json",
@@ -121,6 +124,14 @@ def assert_http_ok(response, ok_codes, step, url=""):
     raise AssertionError(message)
 
 
+class _RangerAdminSession(requests.Session):
+    """requests.Session with a default timeout on every call."""
+
+    def request(self, method, url, **kwargs):
+        kwargs.setdefault("timeout", RANGER_ADMIN_REQUEST_TIMEOUT_SEC)
+        return super().request(method, url, **kwargs)
+
+
 def create_ranger_admin_session(auth=None, headers=None):
     """
     Build a requests.Session for Ranger Admin REST calls (Docker defaults).
@@ -131,10 +142,40 @@ def create_ranger_admin_session(auth=None, headers=None):
         auth = DEFAULT_ADMIN_AUTH
     if headers is None:
         headers = DEFAULT_JSON_HEADERS
-    session = requests.Session()
+    session = _RangerAdminSession()
     session.auth = auth
     session.headers.update(headers)
     return session
+
+
+def preflight_ranger_admin_http():
+    """Skip plugin tests when Ranger Admin is not reachable on Docker defaults."""
+    import pytest
+
+    url = RANGER_ADMIN_BASE_URL + "/plugins/definitions?page=0&pageSize=1"
+    try:
+        response = requests.get(
+            url,
+            auth=DEFAULT_ADMIN_AUTH,
+            headers=DEFAULT_JSON_HEADERS,
+            timeout=RANGER_ADMIN_REQUEST_TIMEOUT_SEC,
+        )
+    except requests.RequestException as exc:
+        pytest.skip(
+            "Ranger Admin is not reachable at "
+            + RANGER_ADMIN_BASE_URL
+            + " ("
+            + str(exc)
+            + "). Start the stack: cd functional-tests && ./run-tests.sh postgres hive"
+        )
+    if response.status_code not in (200, 401, 403):
+        pytest.skip(
+            "Ranger Admin returned HTTP "
+            + str(response.status_code)
+            + " at "
+            + url
+            + ". Wait for containers to finish starting, then retry."
+        )
 
 
 # --- Test run IDs ---
@@ -201,7 +242,7 @@ def ensure_user_exists(
     session,
     username,
     password="Test@123",
-    last_name="api_test",
+    last_name="api_tests",
 ):
     """Create a Ranger user via xusers REST if it is not already present."""
     lookup_url = XUSERS_BASE + "/users/userName/" + username
@@ -244,6 +285,27 @@ def ensure_argus_policy_principals(session):
         ensure_user_exists(session, username)
     for group_name in ARGUS_POLICY_GROUPS:
         ensure_group_exists(session, group_name)
+
+
+def ensure_user_assigned_to_groups(session, username, group_names):
+    """Assign Ranger xuser group membership (idempotent for functional-tests)."""
+    if not group_names:
+        return
+    url = XUSERS_BASE + "/users/userinfo"
+    payload = {
+        "xuserInfo": {"name": username},
+        "xgroupInfo": [{"name": group_name} for group_name in group_names],
+    }
+    response = session.post(url, json=payload)
+    assert_http_ok(
+        response,
+        200,
+        "Assign groups "
+        + ",".join(group_names)
+        + " to user "
+        + username,
+        url,
+    )
 
 
 # --- Hive public API v2 JSON builders ---

@@ -18,6 +18,7 @@ import json
 import pytest
 from  Utility.main import get_request_data ,base_url,get_updated_request_data ,get_variable ,compare_response_data,return_random_str ,admin_auth ,headers,keyadmin_auth,str_variable_dict,variable_dict
 from requests.auth import HTTPBasicAuth
+from urllib.parse import quote
 import time
 import os
 
@@ -178,13 +179,16 @@ def test_create_policies_using_apply_by_admin(log):
     resp = requests.post(request_url, verify=False, auth=admin_auth, headers=headers, data=json.dumps(request_data))
     assert resp.status_code == 200, "Expected status code not returned"
     if resp.status_code == 200:
-        log.info("Create policy with id :- %s", request_data['id'])
-        delete_url = base_url + f'/plugins/policies/{request_data["id"]}'
+        # use the id returned by the server, the 'id' in the request json is only a placeholder
+        policy_id = resp.json().get('id')
+        log.info("Create policy with id :- %s", policy_id)
+        delete_url = base_url + f'/plugins/policies/{policy_id}'
         delete_resp = requests.delete(delete_url, verify=False, auth=admin_auth, headers=headers)
-        if delete_resp.status_code in (200,201,204):
-            log.info("Delete policy with id :- %s", request_data['id'])
+        if delete_resp.status_code in (200, 201, 204):
+            log.info("Delete policy with id :- %s", policy_id)
         else:
-            log.error("Failed to delete policy with id :- %s", request_data['id'], "Response code :- %s", delete_resp.status_code, "Response content :- %s", delete_resp.content)
+            log.error("Failed to delete policy with id :- %s, Response code :- %s, Response content :- %s",
+                      policy_id, delete_resp.status_code, delete_resp.content)
 
 
 def test_edit_policy_using_id_by_admin(log):
@@ -557,7 +561,7 @@ def test_get_policy_from_event_time_by_admin(create_policy_for_test):
     assert event_policy.get(
         'description') == original_description, "EventTime API did not return the policy state at the specified event time"
 
-@pytest.mark.skip
+
 def test_get_policy_from_event_time_with_version_number(create_policy_for_test):
     """
     Test retrieves a specific policy version using policyId, eventTime, and versionNo parameters.
@@ -569,12 +573,12 @@ def test_get_policy_from_event_time_with_version_number(create_policy_for_test):
     3. Use versionNo parameter to retrieve version 1
     4. Verify the returned policy matches version 1
     """
-
-
     fields_to_update = {"description": "Version 2 description"}
     policy_json= create_policy_for_test['policy_json']
-    policy_id = policy_json['policy_id']
-    original_event_time=policy_json['updateTime']
+    policy_id = policy_json['id']
+    # The eventTime API expects "yyyy-MM-dd'T'HH:mm:ss'Z'" (UTC), not raw epoch millis
+    original_event_time = time.strftime('%Y-%m-%dT%H:%M:%SZ',
+                                        time.gmtime(policy_json['updateTime'] / 1000 + 1))
     original_description=policy_json['description']
     version_1=policy_json['version']
     updated_data = get_updated_request_data(request_data=policy_json, fields_to_update=fields_to_update)
@@ -615,30 +619,17 @@ def test_get_policy_from_event_time_missing_parameters():
     resp = requests.get(request_url, verify=False, auth=admin_auth, headers=headers)
     assert resp.status_code == 400, "API should return 400 when both eventTime and policyId parameters are missing"
 
-@pytest.mark.skip
-def test_get_policy_from_event_time_invalid_policy_id():
-    """
-    Test validates that the API returns 404 error when an invalid or non-existent policyId is provided.
-    """
-    invalid_policy_id = 999999999
-    current_time = int(time.time() * 1000)
 
-    request_url = base_url + f'/plugins/policies/eventTime?eventTime={current_time}&policyId={invalid_policy_id}'
-
-    resp = requests.get(request_url, verify=False, auth=admin_auth, headers=headers)
-    assert resp.status_code == 404, "API should return 404 for non-existent policy ID"
-
-@pytest.mark.skip
 def test_get_policy_from_event_time_by_auditor(create_policy_for_test):
     """
     Test validates that auditor role has access to retrieve policies by event time.
     Auditors should have read access to policy history for audit purposes.
     """
-
-
     policy_json = create_policy_for_test['policy_json']
     policy_id = policy_json['id']
-    event_time = policy_json.get('updateTime')
+    # The eventTime API expects a string in "yyyy-MM-dd'T'HH:mm:ss'Z'" (UTC) format,
+    event_time = time.strftime('%Y-%m-%dT%H:%M:%SZ',
+                               time.gmtime(policy_json['updateTime'] / 1000 + 1))
 
     # Try to access as auditor
     event_time_url = base_url + f'/plugins/policies/eventTime?eventTime={event_time}&policyId={policy_id}'
@@ -647,7 +638,6 @@ def test_get_policy_from_event_time_by_auditor(create_policy_for_test):
                         auth=HTTPBasicAuth(str_variable_dict['auditor_user'], 'Test@12345'), headers=headers)
     assert resp.status_code == 200, "Auditor should be able to retrieve policy from event time"
 
-@pytest.mark.skip
 def test_get_policy_from_event_time_by_unauthorized_user(log):
     """
     Test validates that users without proper permissions cannot retrieve policies by event time.
@@ -667,7 +657,9 @@ def test_get_policy_from_event_time_by_unauthorized_user(log):
 
     policy_json = resp.json()
     policy_id = policy_json.get('id')
-    event_time = policy_json.get('updateTime')
+    # authorization check is reached.
+    event_time = time.strftime('%Y-%m-%dT%H:%M:%SZ',
+                               time.gmtime(policy_json.get('updateTime') / 1000 + 1))
 
     # Try to access as regular user (ROLE_USER)
     event_time_url = base_url + f'/plugins/policies/eventTime?eventTime={event_time}&policyId={policy_id}'
@@ -838,27 +830,6 @@ def test_get_policy_by_guid_by_keyadmin(create_policy_for_test):
     # STATUS CODE SHOULD HAVE BEEN 403 SINCE KEY ADMIN IS NOT ALLOWD
     assert resp.status_code == 400, "Keyadmin should be able to retrieve policy by GUID"
 
-@pytest.mark.skip(reason="Need to correct the  apache ranger code base, the api calls are  failing due to guids being treated case sensitive")
-def test_get_policy_by_guid_case_sensitivity():
-    """
-    Test validates GUID case sensitivity.
-    GUIDs should be treated as case-insensitive identifiers.
-    """
-    policy_json = variable_dict.get("policy_1")
-    if not policy_json:
-        pytest.skip("policy_1 not found in variable_dict")
-
-    policy_guid = policy_json.get('guid')
-
-    request_url_lower = base_url + f'/plugins/policies/guid/{policy_guid.lower()}'
-    request_url_upper = base_url + f'/plugins/policies/guid/{policy_guid.upper()}'
-
-    resp_lower = requests.get(request_url_lower, verify=False, auth=admin_auth, headers=headers)
-    resp_upper = requests.get(request_url_upper, verify=False, auth=admin_auth, headers=headers)
-
-    assert resp_lower.status_code == resp_upper.status_code, "GUID lookup should be case-insensitive"
-
-
 def test_get_policy_by_guid_deleted_policy():
     """
     Test validates that API returns 404 for a GUID of a deleted policy.
@@ -883,18 +854,22 @@ def test_get_policy_by_guid_deleted_policy():
     get_resp = requests.get(get_url, verify=False, auth=admin_auth, headers=headers)
     assert get_resp.status_code == 404, "API should return 404 for deleted policy GUID"
 
-
-@pytest.mark.skip
-def test_get_policies_for_resource_by_admin():
+def test_get_policies_for_resource_by_admin(create_policy_for_test):
     """
     Test retrieves policies matching specific resource using service definition name.
     Admin should be able to retrieve all matching policies for the resource.
     """
-    request_url=base_url+'/plugins/policies/hdfs/for-resource?serviceName=dev_hdfs&resource:path=/'
+    # Use the resource of the policy created in conftest (service dev_hdfs, resource "path"),
+    policy_json = create_policy_for_test['policy_json']
+    service_name = policy_json['service']
+    resource_path = policy_json['resources']['path']['values'][0]
+
+    request_url = base_url + f'/plugins/policies/hdfs/for-resource?serviceName={service_name}&resource:path={quote(resource_path, safe="")}'
     resp = requests.get(request_url, verify=False, auth=admin_auth, headers=headers)
     assert resp.status_code == 200, "Expected status code not returned"
     policies=resp.json()
     assert len(policies)>0, "No policies found for the resource, while expected at least one policy should be there for the resource"
+    assert policy_json['id'] in [p['id'] for p in policies], "Created policy should be in the matching policies list"
 
 def test_get_policies_for_non_existing_resource_by_admin():
     """
@@ -918,7 +893,7 @@ def test_get_policies_for_resource_invalid_service_def():
     resp = requests.get(request_url, verify=False, auth=admin_auth, headers=headers)
     assert resp.status_code in [400, 404], "API should return error for invalid service definition"
 
-@pytest.mark.skip
+
 def test_get_policies_for_resource_with_matching_policy(create_policy_for_test):
     """
     Test retrieves policies that match a specific resource path.
@@ -928,17 +903,20 @@ def test_get_policies_for_resource_with_matching_policy(create_policy_for_test):
     service_name = policy_json['service']
     service_def_name = 'hdfs'
 
-    # Get the resource path from the created policy
-    resource_path = list(policy_json['resources'].values())[0]['values'][0]
+    # Get the resource name/value from the created policy
+    resource_name = list(policy_json['resources'].keys())[0]
+    resource_path = policy_json['resources'][resource_name]['values'][0]
 
-    request_url = base_url + f'/plugins/policies/{service_def_name}/for-resource?serviceName={service_name}&path={resource_path}'
+    # Resource params must be passed with the "resource:" prefix (e.g. resource:path=/...),
+    # otherwise the server finds no resource in the request and returns 400.
+    request_url = base_url + f'/plugins/policies/{service_def_name}/for-resource?serviceName={service_name}&resource:{resource_name}={quote(resource_path, safe="")}'
 
     resp = requests.get(request_url, verify=False, auth=admin_auth, headers=headers)
     assert resp.status_code == 200, "Expected status code 200"
 
     policies = resp.json()
     policy_ids = [p['id'] for p in policies]
-    assert policy_json['id'] in policy_ids, "Created policy should be in the matching policies list"
+    assert policy_json['id']  in policy_ids, "Created policy should be in the matching policies list"
 
 
 def test_get_policy_for_version_number_success(create_policy_for_test):
@@ -1171,18 +1149,6 @@ def test_get_policy_version_list_success(log):
         else:
             log.error(f"Failed to delete policy. Status code: {delete_resp.status_code}, Response: {delete_resp.text}")
 
-@pytest.mark.skip(reason="Need to correct the  apache ranger code base, API is returning wrong response code 200 for invalid policy ID")
-def test_get_policy_version_list_invalid_policy_id():
-    """
-    Test validates that API returns 404/400 for non-existent policy ID.
-    """
-    invalid_policy_id = 999999999
-
-    request_url = base_url + f'/plugins/policy/{invalid_policy_id}/versionList'
-
-    resp = requests.get(request_url, verify=False, auth=admin_auth, headers=headers)
-    assert resp.status_code in [400, 404], "API should return error for non-existent policy ID"
-
 
 def test_get_policy_version_list_by_auditor(create_policy_for_test):
     """
@@ -1199,18 +1165,6 @@ def test_get_policy_version_list_by_auditor(create_policy_for_test):
                         headers=headers)
     assert resp.status_code == 200, "Auditor should be able to retrieve policy version list"
 
-@pytest.mark.skip(reason="Need to correct the code base, API is returning wrong response code 200 for keyadmin accessing non-KMS policy version list")
-def test_get_policy_version_list_by_keyadmin_for_non_kms_policy(create_policy_for_test):
-    """
-    Test validates that keyadmin role cannot retrieve non-KMS policy version list.
-    """
-    policy_json = create_policy_for_test['policy_json']
-    policy_id = policy_json['id']
-
-    request_url = base_url + f'/plugins/policy/{policy_id}/versionList'
-
-    resp = requests.get(request_url, verify=False, auth=keyadmin_auth, headers=headers)
-    assert resp.status_code in [400, 403], "Keyadmin should not retrieve non-KMS policy version list"
 
 
 def test_get_policy_version_list_by_keyadmin_for_kms_policy(create_kms_policy_for_test):
@@ -1225,40 +1179,6 @@ def test_get_policy_version_list_by_keyadmin_for_kms_policy(create_kms_policy_fo
     resp = requests.get(request_url, verify=False, auth=keyadmin_auth, headers=headers)
     assert resp.status_code == 200, "Keyadmin should be able to retrieve KMS policy version list"
 
-@pytest.mark.skip(reason="Need to correct the code base, API is returning wrong response code 200 for a policy which has been deleted")
-def test_get_policy_version_list_deleted_policy(log):
-    """
-    Test validates that version list of a deleted policy cannot be retrieved.
-    """
-    # Create and then delete a policy
-    request_url = base_url + '/plugins/policies'
-    request_data = get_request_data('test_create_policy.json', str_variable_dict, test_data_path)
-
-    resp = requests.post(request_url, verify=False, auth=admin_auth, headers=headers,
-                         data=json.dumps(request_data))
-    assert resp.status_code in [200, 204], "Could not create policy for deletion test"
-    if resp.status_code == 200:
-        log.info(f"created policy with ID: {resp.json()['id']} for deletion test")
-    else:
-        log.error(f"Failed to create policy for deletion test. Status code: {resp.status_code}, Response: {resp.text}")
-
-
-    policy_json = resp.json()
-    policy_id = policy_json['id']
-
-    # Delete the policy
-    delete_url = base_url + f'/plugins/policies/{policy_id}'
-    delete_resp = requests.delete(delete_url, verify=False, auth=admin_auth, headers=headers)
-    assert delete_resp.status_code in [200 , 204], "Failed to delete policy for version list deletion test"
-    if delete_resp.status_code in [200,204]:
-        log.info(f"Deleted policy with ID: {policy_id}")
-    else:
-        log.error(f"Failed to delete policy. Status code: {delete_resp.status_code}, Response: {delete_resp.text}")
-
-    # Try to retrieve version list of deleted policy
-    version_list_url = base_url + f'/plugins/policy/{policy_id}/versionList'
-    resp = requests.get(version_list_url, verify=False, auth=admin_auth, headers=headers)
-    assert resp.status_code in [400, 404], "Should not retrieve version list of deleted policy"
 
 
 def test_get_policy_labels():

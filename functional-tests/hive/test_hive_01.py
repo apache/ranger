@@ -14,15 +14,10 @@
 # limitations under the License.
 
 """
-Authorization is asserted via beeline output only. Access-audit asserts are deferred until
-Hive plugin audits are reliably indexed in Docker — use ranger_test_utils.access_audit_utils
-when ready.
+Hive plugin enforcement via beeline and optional access-audit validation.
 
-AUDIT_FILTERS (future):
-  test_01_01: accessType=CREATE, accessResult=0, aclEnforcer=ranger-acl,
-              resourcePath=<db>/<table>, repoName=dev_hive, requestUser=hrt_21
-  test_01_02: accessType=USE, accessResult=0, aclEnforcer=ranger-acl,
-              resourcePath=<db>, repoName=dev_hive, requestUser=hrt_21
+Set ``AUDIT_INDEX_STORE`` to ``opensearch`` or ``solr`` when starting Docker
+(see functional-tests readme) so access audits are indexed and asserted.
 """
 
 import pytest
@@ -30,37 +25,28 @@ import pytest
 from ranger_test_utils.hive_utils import (
     HIVE_AUTHZ_DENIED_SUBSTR,
     HIVE_SERVICE_NAME,
-    HIVE_TEST_USER,
-    cleanup_hive_test_namespace,
+    HivePluginTest,
+    HivePluginTestContext,
     create_audit_only_policy,
     delete_policies_by_id,
-    ensure_kerberos_user,
     preflight_hive_stack,
-    prepare_hive_test_namespace,
     run_beeline,
     set_all_policies_enabled,
     wait_for_policy_propagation,
 )
-from ranger_test_utils.utils import (
-    DOCKER_PLUGIN_TEST_USER_PASSWORD,
+from ranger_test_utils.plugin_enforcement_utils import (
     configure_test_logging,
     create_ranger_admin_session,
-    ensure_user_exists,
-    get_test_logger,
-    log_testcase_begin_for_pytest,
-    unique_suffix,
+    logger,
 )
 
 pytestmark = pytest.mark.hive
 
-logger = get_test_logger(__name__)
+TEST_CASE = None
 
 _admin_session = None
 _audit_policy_id = None
 _audit_suffix = None
-_run_suffix = None
-_test_database = None
-_test_table = None
 
 
 def setup_module():
@@ -68,34 +54,18 @@ def setup_module():
     logger.info("=== setup_module: start ===")
     preflight_hive_stack()
 
-    global _admin_session, _audit_policy_id, _audit_suffix
-    global _run_suffix, _test_database, _test_table
+    global TEST_CASE, _admin_session, _audit_policy_id, _audit_suffix
+    TEST_CASE = HivePluginTestContext()
     _admin_session = create_ranger_admin_session()
-    _run_suffix = unique_suffix(4)
-    _test_database = "db_" + _run_suffix
-    _test_table = "employee_" + _run_suffix
-    logger.info(
-        "Test resources: database=%s table=%s",
-        _test_database,
-        _test_table,
-    )
-
-    logger.info("Ensuring Ranger user and Kerberos principal for %s", HIVE_TEST_USER)
-    ensure_user_exists(
-        _admin_session,
-        HIVE_TEST_USER,
-        password=DOCKER_PLUGIN_TEST_USER_PASSWORD,
-        last_name="hive_test",
-    )
-    ensure_kerberos_user(HIVE_TEST_USER)
+    TEST_CASE.admin_session = _admin_session
 
     logger.info(
-        "Hive service setup: create database %s and drop table %s.%s if present",
-        _test_database,
-        _test_database,
-        _test_table,
+        "Plugin user %s (Ranger + Kerberos) ensured by functional-tests/conftest.py",
+        HivePluginTestContext.USER_USER1,
     )
-    prepare_hive_test_namespace(_test_database, _test_table)
+
+    logger.info("Hive service setup: drop default.employee if present")
+    run_beeline(None, "drop table if exists default.employee;", service_user=True)
 
     logger.info("Disabling all policies on %s and creating audit-only policy", HIVE_SERVICE_NAME)
     set_all_policies_enabled(_admin_session, False, HIVE_SERVICE_NAME)
@@ -110,15 +80,6 @@ def teardown_module():
         return
 
     logger.info("=== teardown_module: start ===")
-    if _test_database is not None and _test_table is not None:
-        logger.info(
-            "Hive service cleanup: drop %s.%s and database %s",
-            _test_database,
-            _test_table,
-            _test_database,
-        )
-        cleanup_hive_test_namespace(_test_database, _test_table)
-
     if _audit_policy_id is not None:
         logger.info("Deleting audit policy id=%s", _audit_policy_id)
         delete_policies_by_id(_admin_session, [_audit_policy_id])
@@ -129,49 +90,44 @@ def teardown_module():
     logger.info("=== teardown_module: done ===")
 
 
-def test_01_01_table_create_employee_no_policy_as_user1_deny(request):
-    log_testcase_begin_for_pytest(logger, request.node.name)
-    sql = (
-        "create table "
-        + _test_database
-        + "."
-        + _test_table
-        + "(name String);"
-    )
-    logger.info(
-        "Running beeline CREATE TABLE as %s (expect deny): %s",
-        HIVE_TEST_USER,
-        sql,
-    )
-    exit_code, output = run_beeline(
-        HIVE_TEST_USER,
-        sql,
-        expect_substring=HIVE_AUTHZ_DENIED_SUBSTR,
-    )
-    assert HIVE_AUTHZ_DENIED_SUBSTR in output, (
-        "Expected authorization denial in beeline output; exit_code="
-        + str(exit_code)
-        + " output="
-        + output
-    )
+@pytest.mark.parametrize(
+    ("validateImpala", "verifyStr"),
+    [(False, HIVE_AUTHZ_DENIED_SUBSTR)],
+)
+def test_01_01_TableCreateEmployeeNoPolicyAsUser1Deny(validateImpala, verifyStr):
+    HivePluginTest(
+        "HIVE.test_01_01_TableCreateEmployeeNoPolicyAsUser1Deny",
+        TEST_CASE,
+        "create table default.employee(name String);",
+        HivePluginTestContext.USER_USER1,
+        HivePluginTestContext.PASS_USER1,
+        verifyCriteria=HivePluginTest.STDERR_CONTAINS,
+        verifyStr=verifyStr,
+        newAuditLogMustExist=True,
+        validateImpala=validateImpala,
+        auditLogFilter={
+            "accessType": TEST_CASE.access_type["CREATE"],
+            "accessResult": TEST_CASE.result_denied,
+            "accessEnforcer": "ranger-acl",
+            "resourceName": "default/employee",
+        },
+    ).execute()
 
 
-def test_01_02_database_use_default_no_policy_as_user1_deny(request):
-    log_testcase_begin_for_pytest(logger, request.node.name)
-    sql = "use " + _test_database + ";"
-    logger.info(
-        "Running beeline USE database as %s (expect deny): %s",
-        HIVE_TEST_USER,
-        sql,
-    )
-    exit_code, output = run_beeline(
-        HIVE_TEST_USER,
-        sql,
-        expect_substring=HIVE_AUTHZ_DENIED_SUBSTR,
-    )
-    assert HIVE_AUTHZ_DENIED_SUBSTR in output, (
-        "Expected authorization denial in beeline output; exit_code="
-        + str(exit_code)
-        + " output="
-        + output
-    )
+def test_01_02_DatabaseUseDefaultNoPolicyAsUser1Deny():
+    HivePluginTest(
+        "HIVE.test_01_02_DatabaseUseDefaultNoPolicyAsUser1Deny",
+        TEST_CASE,
+        "use default;",
+        HivePluginTestContext.USER_USER1,
+        HivePluginTestContext.PASS_USER1,
+        verifyCriteria=HivePluginTest.STDERR_CONTAINS,
+        verifyStr=HIVE_AUTHZ_DENIED_SUBSTR,
+        newAuditLogMustExist=True,
+        auditLogFilter={
+            "accessType": TEST_CASE.access_type["USE"],
+            "accessResult": TEST_CASE.result_denied,
+            "accessEnforcer": "ranger-acl",
+            "resourceName": "default",
+        },
+    ).execute()

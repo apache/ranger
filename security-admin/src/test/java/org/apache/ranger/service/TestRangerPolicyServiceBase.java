@@ -22,6 +22,7 @@ import org.apache.ranger.common.MessageEnums;
 import org.apache.ranger.common.RESTErrorUtil;
 import org.apache.ranger.common.RangerSearchUtil;
 import org.apache.ranger.common.UserSessionBase;
+import org.apache.ranger.common.view.VTrxLogAttr;
 import org.apache.ranger.db.RangerDaoManager;
 import org.apache.ranger.db.XXServiceDao;
 import org.apache.ranger.db.XXServiceDefDao;
@@ -195,6 +196,21 @@ public class TestRangerPolicyServiceBase {
         policy.setZoneName("");
 
         return policy;
+    }
+
+    @Test
+    public void testSkipTrxLogForConstraintPolicyItems() {
+        VTrxLogAttr  constraintItems  = new VTrxLogAttr("constraintPolicyItems", "Constraint Policy Items");
+        VTrxLogAttr  policyItems      = new VTrxLogAttr("policyItems", "Policy Items");
+        RangerPolicy accessPolicy     = new RangerPolicy();
+        RangerPolicy constraintPolicy = new RangerPolicy();
+
+        accessPolicy.setPolicyType(RangerPolicy.POLICY_TYPE_ACCESS);
+        constraintPolicy.setPolicyType(RangerPolicy.POLICY_TYPE_CONSTRAINTS);
+
+        Assertions.assertFalse(policyService.skipTrxLogForAttribute(constraintPolicy, null, constraintItems));
+        Assertions.assertTrue(policyService.skipTrxLogForAttribute(accessPolicy, null, constraintItems));
+        Assertions.assertTrue(policyService.skipTrxLogForAttribute(constraintPolicy, null, policyItems));
     }
 
     private XXPolicy policy() {

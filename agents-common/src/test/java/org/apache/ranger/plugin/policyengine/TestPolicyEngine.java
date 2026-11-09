@@ -679,6 +679,20 @@ public class TestPolicyEngine {
     }
 
     @Test
+    public void testPolicyEngine_constraints() {
+        String[] resourceFiles = {"/policyengine/test_policyengine_constraints.json"};
+
+        runTestsFromResourceFiles(resourceFiles);
+    }
+
+    @Test
+    public void testPolicyEngine_constraints_without_constraint_defs() {
+        String[] resourceFiles = {"/policyengine/test_policyengine_constraints_no_defs.json"};
+
+        runTestsFromResourceFiles(resourceFiles);
+    }
+
+    @Test
     public void testValiditySchedulerInvalid() {
         String resourceName = "/policyengine/validityscheduler/test-validity-schedules-invalid.json";
 
@@ -914,6 +928,7 @@ public class TestPolicyEngine {
                 assertNotNull(result, "result was null! - " + test.name);
                 assertEquals(expected.getIsAllowed(), result.getIsAllowed(), "isAllowed mismatched! - " + test.name);
                 assertEquals(expected.getIsAudited(), result.getIsAudited(), "isAudited mismatched! - " + test.name);
+                assertEquals(expected.getConstraints(), result.getConstraints(), "constraints mismatched! - " + test.name); // order matters: by policy priority
             }
 
             if (test.dataMaskResult != null) {

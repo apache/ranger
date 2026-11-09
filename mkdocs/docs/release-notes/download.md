@@ -36,7 +36,7 @@ The current stable release is **Apache Ranger 2.9.0** (August 8, 2026); see the
 
 | Artifact | Link |
 | --- | --- |
-| Source | [apache-ranger-2.9.0.tar.gz](https://downloads.apache.org/ranger/2.9.0/apache-ranger-2.9.0.tar.gz) ([asc](https://downloads.apache.org/ranger/2.9.0/apache-ranger-2.9.0.tar.gz.asc), [sha512](https://downloads.apache.org/ranger/2.9.0/apache-ranger-2.9.0.tar.gz.sha512), [sha256](https://downloads.apache.org/ranger/2.9.0/apache-ranger-2.9.0.tar.gz.sha256)) |
+| Source | [apache-ranger-2.9.0.tar.gz](https://www.apache.org/dyn/closer.lua/ranger/2.9.0/apache-ranger-2.9.0.tar.gz) ([asc](https://downloads.apache.org/ranger/2.9.0/apache-ranger-2.9.0.tar.gz.asc), [sha512](https://downloads.apache.org/ranger/2.9.0/apache-ranger-2.9.0.tar.gz.sha512), [sha256](https://downloads.apache.org/ranger/2.9.0/apache-ranger-2.9.0.tar.gz.sha256)) |
 | Services | [services/](https://downloads.apache.org/ranger/2.9.0/services/) — `admin`, `usersync`, `tagsync`, `kms`, `pdp` |
 | Plugins | [plugins/](https://downloads.apache.org/ranger/2.9.0/plugins/) — `atlas`, `elasticsearch`, `hbase`, `hdfs`, `hive`, `kafka`, `knox`, `kylin`, `ozone`, `presto`, `schema-registry`, `solr`, `sqoop`, `storm`, `trino`, `yarn` |
 | Tools | [tools/](https://downloads.apache.org/ranger/2.9.0/tools/) — `migration-util`, `ranger-tools`, `sample-client`, `solr_audit_conf` |

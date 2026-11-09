@@ -102,6 +102,7 @@ import org.apache.ranger.entity.XXUser;
 import org.apache.ranger.plugin.model.AuditFilter;
 import org.apache.ranger.plugin.model.RangerBaseModelObject;
 import org.apache.ranger.plugin.model.RangerPolicy;
+import org.apache.ranger.plugin.model.RangerPolicy.RangerConstraintPolicyItem;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerDataMaskPolicyItem;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItem;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemAccess;
@@ -115,6 +116,7 @@ import org.apache.ranger.plugin.model.RangerSecurityZone.RangerSecurityZoneServi
 import org.apache.ranger.plugin.model.RangerService;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerAccessTypeDef;
+import org.apache.ranger.plugin.model.RangerServiceDef.RangerConstraintDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerContextEnricherDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerDataMaskDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerDataMaskTypeDef;
@@ -213,6 +215,7 @@ import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Set;
 import java.util.StringTokenizer;
+import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -224,6 +227,8 @@ import static org.apache.ranger.service.RangerBaseModelService.OPERATION_CREATE_
 public class ServiceDBStore extends AbstractServiceStore {
     public static final     String                        SERVICE_ADMIN_USERS               = "service.admin.users";
     public static final     String                        SERVICE_ADMIN_GROUPS              = "service.admin.groups";
+    public static final     String                        SERVICE_ACCOUNT_USERS             = "service.account.users";
+    public static final     String                        SERVICE_ACCOUNT_GROUPS            = "service.account.groups";
     public static final     String                        GDS_SERVICE_NAME                  = "_gds";
     public static final     String                        CRYPT_ALGO                        = PropertiesUtil.getProperty("ranger.password.encryption.algorithm", PasswordUtils.DEFAULT_CRYPT_ALGO.getAlgoName());
     public static final     String                        ENCRYPT_KEY                       = PropertiesUtil.getProperty("ranger.password.encryption.key", PasswordUtils.DEFAULT_ENCRYPT_KEY);
@@ -245,6 +250,7 @@ public class ServiceDBStore extends AbstractServiceStore {
     private static final    String                        POLICY_TYPE_ACCESS                = "Access";
     private static final    String                        POLICY_TYPE_DATAMASK              = "Masking";
     private static final    String                        POLICY_TYPE_ROWFILTER             = "Row Level Filter";
+    private static final    String                        POLICY_TYPE_CONSTRAINTS           = "Constraints";
     private static final    String                        HOSTNAME                          = "Host name";
     private static final    String                        USER_NAME                         = "Exported by";
     private static final    String                        RANGER_VERSION                    = "Ranger apache version";
@@ -254,7 +260,7 @@ public class ServiceDBStore extends AbstractServiceStore {
     private static final    String                        AMBARI_SERVICE_CHECK_USER         = "ambari.service.check.user";
     private static final    String                        RANGER_PLUGIN_CONFIG_PREFIX       = "ranger.plugin.";
     private static final    String                        LINE_SEPARATOR                    = "\n";
-    private static final    String                        FILE_HEADER                       = "ID|Name|Resources|Roles|Groups|Users|Accesses|Service Type|Status|Policy Type|Delegate Admin|isRecursive|isExcludes|Service Name|Description|isAuditEnabled|Policy Conditions|Policy Condition Type|Masking Options|Row Filter Expr|Policy Label Name";
+    private static final    String                        FILE_HEADER                       = "ID|Name|Resources|Roles|Groups|Users|Accesses|Service Type|Status|Policy Type|Delegate Admin|isRecursive|isExcludes|Service Name|Description|isAuditEnabled|Policy Conditions|Policy Condition Type|Masking Options|Row Filter Expr|Policy Label Name|Constraint";
     private static final    String                        COMMA_DELIMITER                   = "|";
     private static final    String                        DEFAULT_CSV_SANITIZATION_PATTERN  = "^[=+\\-@\\t\\r]";
     private static final    Pattern                       CSV_SANITIZATION_PATTERN          = Pattern.compile(PropertiesUtil.getProperty("ranger.admin.csv.sanitization.pattern", DEFAULT_CSV_SANITIZATION_PATTERN));
@@ -467,6 +473,7 @@ public class ServiceDBStore extends AbstractServiceStore {
         List<RangerEnumDef>            enums                = serviceDef.getEnums();
         RangerDataMaskDef              dataMaskDef          = serviceDef.getDataMaskDef();
         RangerRowFilterDef             rowFilterDef         = serviceDef.getRowFilterDef();
+        List<RangerConstraintDef>      constraintDefs       = serviceDef.getConstraintDefs();
         List<RangerDataMaskTypeDef>    dataMaskTypes        = dataMaskDef == null || dataMaskDef.getMaskTypes() == null ? new ArrayList<>() : dataMaskDef.getMaskTypes();
         List<RangerAccessTypeDef>      dataMaskAccessTypes  = dataMaskDef == null || dataMaskDef.getAccessTypes() == null ? new ArrayList<>() : dataMaskDef.getAccessTypes();
         List<RangerResourceDef>        dataMaskResources    = dataMaskDef == null || dataMaskDef.getResources() == null ? new ArrayList<>() : dataMaskDef.getResources();
@@ -698,6 +705,8 @@ public class ServiceDBStore extends AbstractServiceStore {
             }
         }
 
+        updateServiceDefText(createdSvcDef, constraintDefs);
+
         RangerServiceDef createdServiceDef = serviceDefService.getPopulatedViewObject(createdSvcDef);
 
         dataHistService.createObjectDataHistory(createdServiceDef, RangerDataHistService.ACTION_CREATE);
@@ -731,6 +740,8 @@ public class ServiceDBStore extends AbstractServiceStore {
             }
         }
 
+        validateConstraintDefsNotInUse(serviceDefId, serviceDef.getConstraintDefs());
+
         List<RangerServiceConfigDef>   configs          = serviceDef.getConfigs() != null ? serviceDef.getConfigs() : new ArrayList<>();
         List<RangerResourceDef>        resources        = serviceDef.getResources() != null ? serviceDef.getResources() : new ArrayList<>();
         List<RangerAccessTypeDef>      accessTypes      = serviceDef.getAccessTypes() != null ? serviceDef.getAccessTypes() : new ArrayList<>();
@@ -739,6 +750,7 @@ public class ServiceDBStore extends AbstractServiceStore {
         List<RangerEnumDef>            enums            = serviceDef.getEnums() != null ? serviceDef.getEnums() : new ArrayList<>();
         RangerDataMaskDef              dataMaskDef      = serviceDef.getDataMaskDef();
         RangerRowFilterDef             rowFilterDef     = serviceDef.getRowFilterDef();
+        List<RangerConstraintDef>      constraintDefs   = serviceDef.getConstraintDefs();
         RangerServiceDefHelper         defHelper        = new RangerServiceDefHelper(serviceDef, false);
 
         defHelper.patchServiceDefWithDefaultValues();
@@ -752,6 +764,8 @@ public class ServiceDBStore extends AbstractServiceStore {
         XXServiceDef createdSvcDef = daoMgr.getXXServiceDef().getById(serviceDefId);
 
         updateChildObjectsOfServiceDef(createdSvcDef, configs, resources, accessTypes, policyConditions, contextEnrichers, enums, dataMaskDef, rowFilterDef);
+
+        updateServiceDefText(createdSvcDef, constraintDefs);
 
         RangerServiceDef updatedSvcDef = getServiceDef(serviceDefId);
 
@@ -1066,6 +1080,13 @@ public class ServiceDBStore extends AbstractServiceStore {
         }
 
         RangerService existing = svcService.getPopulatedViewObject(xExisting);
+
+        if (StringUtils.isNotBlank(service.getType()) && !StringUtils.equals(existing.getType(), service.getType())) {
+            throw restErrorUtil.createRESTException(
+                    "Service type cannot be changed on update. Existing type=[" + existing.getType() + "], requested type=[" + service.getType() + "]",
+                    MessageEnums.DATA_NOT_UPDATABLE);
+        }
+        service.setType(existing.getType());
 
         String existingName = existing.getName();
 
@@ -2881,14 +2902,21 @@ public class ServiceDBStore extends AbstractServiceStore {
     List<RangerPolicyResourceMatcher> getMatchers(RangerServiceDef serviceDef, Map<String, String> filterResources, SearchFilter filter) {
         LOG.debug("==> ServiceDBStore.getMatchers(filterResources={})", filterResources);
 
-        List<RangerPolicyResourceMatcher> ret              = new ArrayList<>();
-        RangerServiceDefHelper            serviceDefHelper = new RangerServiceDefHelper(serviceDef);
-        String                            policyTypeStr    = filter.getParam(SearchFilter.POLICY_TYPE);
-        int[]                             policyTypes      = RangerPolicy.POLICY_TYPES;
+        List<RangerPolicyResourceMatcher> ret                = new ArrayList<>();
+        RangerServiceDefHelper            serviceDefHelper   = new RangerServiceDefHelper(serviceDef);
+        String                            policyTypeStr      = filter.getParam(SearchFilter.POLICY_TYPE);
+        int[]                             policyTypes        = RangerPolicy.POLICY_TYPES;
+        boolean                           includeConstraints = true; // constraint policies are not in POLICY_TYPES
 
         if (StringUtils.isNotBlank(policyTypeStr)) {
-            policyTypes    = new int[1];
-            policyTypes[0] = Integer.parseInt(policyTypeStr);
+            int policyType = Integer.parseInt(policyTypeStr);
+
+            if (policyType == RangerPolicy.POLICY_TYPE_CONSTRAINTS) {
+                policyTypes = new int[0];
+            } else {
+                policyTypes        = new int[] {policyType};
+                includeConstraints = false;
+            }
         }
 
         for (Integer policyType : policyTypes) {
@@ -2896,32 +2924,58 @@ public class ServiceDBStore extends AbstractServiceStore {
 
             LOG.debug("Found {} valid resource hierarchies for key-set {}", validResourceHierarchies.size(), filterResources.keySet());
 
-            List<List<RangerResourceDef>> resourceHierarchies = new ArrayList<>(validResourceHierarchies);
+            for (List<RangerResourceDef> validResourceHierarchy : validResourceHierarchies) {
+                ret.add(createMatcher(serviceDef, validResourceHierarchy, filterResources, policyType, null));
+            }
+        }
 
-            for (List<RangerResourceDef> validResourceHierarchy : resourceHierarchies) {
-                LOG.debug("validResourceHierarchy:[{}]", validResourceHierarchy);
+        if (includeConstraints && CollectionUtils.isNotEmpty(serviceDef.getConstraintDefs())) {
+            // hierarchies of a constraint policy come from the constraints it uses, so the matcher needs the constraint names
+            Set<String>                  constraintNames          = new HashSet<>();
+            Set<List<RangerResourceDef>> validResourceHierarchies = new HashSet<>();
 
-                Map<String, RangerPolicyResource> policyResources = new HashMap<>();
-
-                for (RangerResourceDef resourceDef : validResourceHierarchy) {
-                    policyResources.put(resourceDef.getName(), new RangerPolicyResource(filterResources.get(resourceDef.getName()), false, resourceDef.getRecursiveSupported()));
+            for (RangerConstraintDef constraintDef : serviceDef.getConstraintDefs()) {
+                if (constraintDef != null && StringUtils.isNotEmpty(constraintDef.getName())) {
+                    constraintNames.add(constraintDef.getName());
+                    validResourceHierarchies.addAll(serviceDefHelper.getResourceHierarchiesForConstraint(constraintDef.getName(), filterResources.keySet()));
                 }
+            }
 
-                RangerDefaultPolicyResourceMatcher matcher = new RangerDefaultPolicyResourceMatcher();
+            LOG.debug("Found {} valid constraint resource hierarchies for key-set {}", validResourceHierarchies.size(), filterResources.keySet());
 
-                matcher.setServiceDef(serviceDef);
-                matcher.setPolicyResources(policyResources, policyType);
-                matcher.init();
-
-                ret.add(matcher);
-
-                LOG.debug("Added matcher:[{}]", matcher);
+            for (List<RangerResourceDef> validResourceHierarchy : validResourceHierarchies) {
+                ret.add(createMatcher(serviceDef, validResourceHierarchy, filterResources, RangerPolicy.POLICY_TYPE_CONSTRAINTS, constraintNames));
             }
         }
 
         LOG.debug("<== ServiceDBStore.getMatchers(filterResources={}, , count={})", filterResources, ret.size());
 
         return ret;
+    }
+
+    private RangerPolicyResourceMatcher createMatcher(RangerServiceDef serviceDef, List<RangerResourceDef> resourceHierarchy, Map<String, String> filterResources, int policyType, Set<String> constraintNames) {
+        LOG.debug("validResourceHierarchy:[{}]", resourceHierarchy);
+
+        Map<String, RangerPolicyResource> policyResources = new HashMap<>();
+
+        for (RangerResourceDef resourceDef : resourceHierarchy) {
+            policyResources.put(resourceDef.getName(), new RangerPolicyResource(filterResources.get(resourceDef.getName()), false, resourceDef.getRecursiveSupported()));
+        }
+
+        RangerDefaultPolicyResourceMatcher matcher = new RangerDefaultPolicyResourceMatcher();
+
+        matcher.setServiceDef(serviceDef);
+        matcher.setPolicyResources(policyResources, policyType);
+
+        if (constraintNames != null) {
+            matcher.setConstraintNames(constraintNames); // must be set before init()
+        }
+
+        matcher.init();
+
+        LOG.debug("Added matcher:[{}]", matcher);
+
+        return matcher;
     }
 
     ServicePolicies getServicePoliciesWithDeltas(RangerServiceDef serviceDef, XXService service, RangerServiceDef tagServiceDef, XXService tagService, Long lastKnownVersion, Long maxNeededVersion) {
@@ -3246,6 +3300,50 @@ public class ServiceDBStore extends AbstractServiceStore {
         }
 
         return ret;
+    }
+
+    // A constraintDef used by policies can't be removed or renamed: policies refer to constraints by name
+    private void validateConstraintDefsNotInUse(Long serviceDefId, List<RangerConstraintDef> constraintDefs) throws Exception {
+        RangerServiceDef existingDef = getServiceDef(serviceDefId);
+
+        if (existingDef == null || CollectionUtils.isEmpty(existingDef.getConstraintDefs())) {
+            return;
+        }
+
+        Set<String> constraintNames = new HashSet<>();
+
+        if (constraintDefs != null) {
+            for (RangerConstraintDef constraintDef : constraintDefs) {
+                if (constraintDef != null && constraintDef.getName() != null) {
+                    constraintNames.add(constraintDef.getName());
+                }
+            }
+        }
+
+        for (RangerConstraintDef existingConstraintDef : existingDef.getConstraintDefs()) {
+            String constraintName = existingConstraintDef != null ? existingConstraintDef.getName() : null;
+
+            if (constraintName == null || constraintNames.contains(constraintName)) {
+                continue;
+            }
+
+            List<Long> policyIds = daoMgr.getXXPolicyRefConstraint().findPolicyIdsByServiceDefIdAndConstraintName(serviceDefId, constraintName);
+
+            if (CollectionUtils.isNotEmpty(policyIds)) {
+                throw restErrorUtil.createRESTException("Policy/Policies are referring to this constraint: " + constraintName + ". Please remove such references from policy before updating service-def. policy IDs=" + policyIds, MessageEnums.DATA_NOT_UPDATABLE);
+            }
+        }
+    }
+
+    // Writes x_service_def.def_text after the child rows. constraintDefs are stored only in this JSON.
+    private void updateServiceDefText(XXServiceDef xServiceDef, List<RangerConstraintDef> constraintDefs) {
+        if (xServiceDef == null) {
+            return;
+        }
+
+        xServiceDef.setDefText(serviceDefService.buildDefText(xServiceDef, constraintDefs));
+
+        daoMgr.getXXServiceDef().update(xServiceDef);
     }
 
     private void updateChildObjectsOfServiceDef(XXServiceDef createdSvcDef, List<RangerServiceConfigDef> configs,
@@ -4455,6 +4553,12 @@ public class ServiceDBStore extends AbstractServiceStore {
             collectRolesFromPolicyItems(policyItems, ret);
         }
 
+        policyItems = policy.getConstraintPolicyItems();
+
+        if (CollectionUtils.isNotEmpty(policyItems)) {
+            collectRolesFromPolicyItems(policyItems, ret);
+        }
+
         return ret;
     }
 
@@ -4629,6 +4733,12 @@ public class ServiceDBStore extends AbstractServiceStore {
 
                             writeBookForPolicyItems(svcNameToSvcType, policy, null, null, rowFilterPolicyItem, row, null);
                         }
+                    } else if (CollectionUtils.isNotEmpty(policy.getConstraintPolicyItems())) {
+                        for (RangerConstraintPolicyItem constraintPolicyItem : policy.getConstraintPolicyItems()) {
+                            Row row = sheet.createRow(++rowCount);
+
+                            writeBookForPolicyItems(svcNameToSvcType, policy, constraintPolicyItem, null, null, row, null);
+                        }
                     } else if (serviceType.equalsIgnoreCase(EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_TAG_NAME)) {
                         if (CollectionUtils.isEmpty(policyItems)) {
                             Row              row        = sheet.createRow(++rowCount);
@@ -4739,6 +4849,10 @@ public class ServiceDBStore extends AbstractServiceStore {
                 } else if (CollectionUtils.isNotEmpty(rowFilterPolicyItems)) {
                     for (RangerRowFilterPolicyItem rowFilterPolicyItem : rowFilterPolicyItems) {
                         writeCSVForPolicyItems(svcNameToSvcType, policy, null, null, rowFilterPolicyItem, csvBuffer, null);
+                    }
+                } else if (CollectionUtils.isNotEmpty(policy.getConstraintPolicyItems())) {
+                    for (RangerConstraintPolicyItem constraintPolicyItem : policy.getConstraintPolicyItems()) {
+                        writeCSVForPolicyItems(svcNameToSvcType, policy, constraintPolicyItem, null, null, csvBuffer, null);
                     }
                 } else if (serviceType.equalsIgnoreCase(EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_TAG_NAME)) {
                     if (CollectionUtils.isEmpty(policyItems)) {
@@ -5009,6 +5123,8 @@ public class ServiceDBStore extends AbstractServiceStore {
         csvBuffer.append(COMMA_DELIMITER);
         csvBuffer.append(sanitizeCell(policyLabelName));
         csvBuffer.append(COMMA_DELIMITER);
+        csvBuffer.append(sanitizeCell(getConstraintInfo(policyItem)));
+        csvBuffer.append(COMMA_DELIMITER);
         csvBuffer.append(LINE_SEPARATOR);
     }
 
@@ -5270,6 +5386,7 @@ public class ServiceDBStore extends AbstractServiceStore {
         }
 
         row.createCell(20).setCellValue(sanitizeCell(policyLabelNames));
+        row.createCell(21).setCellValue(sanitizeCell(getConstraintInfo(policyItem)));
     }
 
     private String getPolicyTypeString(int policyType) {
@@ -5280,6 +5397,8 @@ public class ServiceDBStore extends AbstractServiceStore {
                 return POLICY_TYPE_DATAMASK;
             case RangerPolicy.POLICY_TYPE_ROWFILTER:
                 return POLICY_TYPE_ROWFILTER;
+            case RangerPolicy.POLICY_TYPE_CONSTRAINTS:
+                return POLICY_TYPE_CONSTRAINTS;
             default:
                 return "";
         }
@@ -5378,6 +5497,29 @@ public class ServiceDBStore extends AbstractServiceStore {
         Cell cellPolicyLabelName = row.createCell(20);
         cellPolicyLabelName.setCellStyle(cellStyle);
         cellPolicyLabelName.setCellValue("Policy Labels Name");
+
+        Cell cellConstraint = row.createCell(21);
+        cellConstraint.setCellStyle(cellStyle);
+        cellConstraint.setCellValue("Constraint");
+    }
+
+    // constraint name and parameters of a constraint policy item, for export; empty for other policy items
+    static String getConstraintInfo(RangerPolicyItem policyItem) {
+        String ret = "";
+
+        if (policyItem instanceof RangerConstraintPolicyItem) {
+            RangerPolicy.RangerPolicyItemConstraintInfo constraintInfo = ((RangerConstraintPolicyItem) policyItem).getConstraintInfo();
+
+            if (constraintInfo != null && StringUtils.isNotEmpty(constraintInfo.getConstraintName())) {
+                ret = "constraint=[" + constraintInfo.getConstraintName() + "]";
+
+                if (MapUtils.isNotEmpty(constraintInfo.getParameters())) {
+                    ret = ret + "; parameters=" + new TreeMap<>(constraintInfo.getParameters());
+                }
+            }
+        }
+
+        return ret;
     }
 
     private RangerPolicyList searchRangerPolicies(SearchFilter searchFilter) {

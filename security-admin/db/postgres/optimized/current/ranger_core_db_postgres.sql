@@ -27,6 +27,7 @@ DROP TABLE IF EXISTS x_policy_change_log;
 DROP TABLE IF EXISTS x_security_zone_ref_resource CASCADE;
 DROP TABLE IF EXISTS x_policy_ref_group CASCADE;
 DROP TABLE IF EXISTS x_policy_ref_user CASCADE;
+DROP TABLE IF EXISTS x_policy_ref_constraint CASCADE;
 DROP TABLE IF EXISTS x_policy_ref_datamask_type CASCADE;
 DROP TABLE IF EXISTS x_policy_ref_condition CASCADE;
 DROP TABLE IF EXISTS x_policy_ref_access_type CASCADE;
@@ -113,6 +114,7 @@ DROP SEQUENCE IF EXISTS x_policy_change_log_seq;
 DROP SEQUENCE IF EXISTS x_tag_change_log_seq;
 DROP SEQUENCE IF EXISTS x_policy_ref_group_seq;
 DROP SEQUENCE IF EXISTS x_policy_ref_user_seq;
+DROP SEQUENCE IF EXISTS x_policy_ref_constraint_seq;
 DROP SEQUENCE IF EXISTS x_policy_ref_datamask_type_seq;
 DROP SEQUENCE IF EXISTS x_policy_ref_access_type_seq;
 DROP SEQUENCE IF EXISTS x_policy_ref_resource_seq;
@@ -549,6 +551,7 @@ rb_key_label VARCHAR(1024) DEFAULT NULL NULL,
 rb_key_description VARCHAR(1024) DEFAULT NULL NULL,
 is_enabled BOOLEAN DEFAULT '1' NULL,
 def_options VARCHAR(1024) DEFAULT NULL NULL,
+def_text TEXT DEFAULT NULL NULL,
 PRIMARY KEY(id),
 CONSTRAINT x_service_def_FK_added_by_id FOREIGN KEY(added_by_id) REFERENCES x_portal_user(id),
 CONSTRAINT x_service_def_FK_upd_by_id FOREIGN KEY(upd_by_id) REFERENCES x_portal_user(id)
@@ -1332,6 +1335,19 @@ CONSTRAINT x_p_ref_dmk_FK_dmk_def_id FOREIGN KEY(datamask_def_id) REFERENCES x_d
 );
 commit;
 
+CREATE SEQUENCE x_policy_ref_constraint_seq;
+CREATE TABLE x_policy_ref_constraint(
+id BIGINT DEFAULT nextval('x_policy_ref_constraint_seq'::regclass),
+policy_id BIGINT NOT NULL,
+service_def_id BIGINT NOT NULL,
+constraint_name varchar(255) NOT NULL,
+primary key(id),
+CONSTRAINT x_p_ref_cnst_UK_polId_cName UNIQUE(policy_id, constraint_name),
+CONSTRAINT x_p_ref_cnst_FK_policy_id FOREIGN KEY(policy_id) REFERENCES x_policy(id),
+CONSTRAINT x_p_ref_cnst_FK_sdef_id FOREIGN KEY(service_def_id) REFERENCES x_service_def(id)
+);
+commit;
+
 CREATE SEQUENCE x_policy_ref_user_seq;
 CREATE TABLE x_policy_ref_user(
 id BIGINT DEFAULT nextval('x_policy_ref_user_seq'::regclass),
@@ -2078,6 +2094,9 @@ INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('076',current_timestamp,'Ranger 3.0.0',current_timestamp,'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('077',current_timestamp,'Ranger 3.0.0',current_timestamp,'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('078',current_timestamp,'Ranger 3.0.0',current_timestamp,'localhost','Y');
+INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('079',current_timestamp,'Ranger 3.0.0',current_timestamp,'localhost','Y');
+INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('080',current_timestamp,'Ranger 1.0.0',current_timestamp,'localhost','Y');
+INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('081',current_timestamp,'Ranger 3.0.0',current_timestamp,'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('DB_PATCHES',current_timestamp,'Ranger 1.0.0',current_timestamp,'localhost','Y');
 
 INSERT INTO x_user_module_perm (user_id,module_id,create_time,update_time,added_by_id,upd_by_id,is_allowed) VALUES
@@ -2186,7 +2205,12 @@ INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('J10064',current_timestamp,'Ranger 3.0.0',current_timestamp,'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('J10065',current_timestamp,'Ranger 3.0.0',current_timestamp,'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('J10066',current_timestamp,'Ranger 3.0.0',current_timestamp,'localhost','Y');
+INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('J10067',current_timestamp,'Ranger 3.0.0',current_timestamp,'localhost','Y');
+INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('J10071',current_timestamp,'Ranger 3.0.0',current_timestamp,'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('JAVA_PATCHES',current_timestamp,'Ranger 1.0.0',current_timestamp,'localhost','Y');
 
 DROP VIEW IF EXISTS vx_principal;
 CREATE VIEW vx_principal as (SELECT u.user_name AS principal_name, 0 AS principal_type, u.status status, u.is_visible is_visible, u.other_attributes other_attributes, u.create_time create_time, u.update_time update_time, u.added_by_id added_by_id, u.upd_by_id upd_by_id FROM x_user u) UNION (SELECT g.group_name principal_name, 1 AS principal_type, g.status status, g.is_visible is_visible, g.other_attributes other_attributes, g.create_time create_time, g.update_time update_time, g.added_by_id added_by_id, g.upd_by_id upd_by_id FROM x_group g) UNION (SELECT r.name principal_name, 2 AS principal_name, 1 status, 1 is_visible, null other_attributes, r.create_time create_time, r.update_time update_time, r.added_by_id added_by_id, r.upd_by_id upd_by_id FROM x_role r);
+
+CREATE INDEX x_trx_log_v2_IDX_metrics ON x_trx_log_v2 (create_time, class_type, action);
+commit;

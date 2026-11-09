@@ -45,6 +45,8 @@ fi
 # Configure KAFKA_OPTS based on KERBEROS_ENABLED
 if [ "${KERBEROS_ENABLED}" == "true" ]; then
   echo "Starting Kafka with Kerberos authentication (SASL_PLAINTEXT)"
+  # dev token issuer for the SASL/OAUTHBEARER clients (audit ingestor, dispatchers, tagsync)
+  "${RANGER_SCRIPTS}"/kafka-oauth-token-minter.sh &
   KAFKA_OPTS='-Djava.security.krb5.conf=/etc/krb5.conf -Djava.security.auth.login.config=/opt/kafka/config/kafka-server-jaas.conf'
 else
   echo "Starting Kafka with PLAINTEXT (no Kerberos authentication)"

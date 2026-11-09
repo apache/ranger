@@ -18,6 +18,7 @@
  */
 
 import React, { useState } from "react";
+import Select from "react-select";
 import { FieldArray } from "react-final-form-arrays";
 import {
   Row,
@@ -32,10 +33,19 @@ import { RangerPolicyType } from "Utils/XAEnums";
 import { find, isEmpty, isArray, toUpper, map } from "lodash";
 import PolicyConditionsComp from "../../PolicyConditionsComp";
 import UsersGroupsAndRolesSelectionComponent from "./UsersGroupsAndRolesSelectionComponent";
+import ConstraintPolicyParameterFields, {
+  buildDefaultConstraintParameters
+} from "./ConstraintPolicyParameterFields";
 import TagBasePermissionItem from "../../TagBasePermissionItem";
 import {
   getAccessTypesByResource,
-  getPolicyConditionDisplayLbl
+  getPolicyConditionDisplayLbl,
+  getMatchedConstraintDefs,
+  getConstraintNameFromField,
+  getConstraintDefByName,
+  getAccessTypesForConstraintDef,
+  getLeafAccessTypeRestrictions,
+  mapAccessTypesToSelectOptions
 } from "Utils/XAUtils";
 import { CustomTooltip } from "Components/CommonComponents";
 import { getSelectedAccessTypesForRow } from "Utils/policyConditionUtils";
@@ -52,6 +62,7 @@ export default function PolicyPermissionItemVertical({
   const [showTagPermissionModalIndex, setShowTagPermissionModalIndex] =
     useState(null);
   const form = useForm(); // Get form instance
+  let getMatchedConstraintItems = [];
 
   const { conditionDefVal, actionReqsMap, leafResourceTypes } =
     usePolicyPermissionConditionContext({
@@ -61,10 +72,33 @@ export default function PolicyPermissionItemVertical({
       form,
       enableResourcePruneDefer
     });
-
+  if (
+    RangerPolicyType.RANGER_CONSTRAINT_POLICY_TYPE.value ==
+    formValues.policyType
+  ) {
+    getMatchedConstraintItems = getMatchedConstraintDefs(
+      serviceCompDetails,
+      formValues
+    );
+  }
   const accessTypeOptions = getAccessTypesByResource(
     formValues,
-    serviceCompDetails
+    serviceCompDetails,
+    getMatchedConstraintItems
+  );
+
+  // For constraint policy: leaf resource accessTypeRestrictions (computed once, reused per row)
+  const leafRestrictions =
+    RangerPolicyType.RANGER_CONSTRAINT_POLICY_TYPE.value ==
+    formValues.policyType
+      ? getLeafAccessTypeRestrictions(formValues, serviceCompDetails)
+      : null;
+
+  const constraintSelectOptions = getMatchedConstraintItems?.map(
+    (constraint) => ({
+      label: constraint.label || constraint.name,
+      value: constraint.name
+    })
   );
 
   const getMaskingAccessTypeOptions = (index) => {
@@ -121,6 +155,29 @@ export default function PolicyPermissionItemVertical({
   // Required field validation
   const required = (value) => (value ? undefined : "Required");
 
+  // Same definition of "has a constraint name" and same message as
+  // validateConstraintPolicyItem, so field-level and rule-level errors match.
+  const requiredConstraintName = (value) =>
+    getConstraintNameFromField(value)
+      ? undefined
+      : "Please select a constraint name for this policy";
+
+  const constraintSelectFirstMsg = "Please select constraint name first";
+
+  const handleConstraintNameChange = (input, fieldName, option) => {
+    input.onChange(option || null);
+    form.change(`${fieldName}.accesses`, undefined);
+    if (!option?.value) {
+      form.change(`${fieldName}.constraintInfo.parameters`, undefined);
+      return;
+    }
+    const def = getConstraintDefByName(serviceCompDetails, option.value);
+    form.change(
+      `${fieldName}.constraintInfo.parameters`,
+      buildDefaultConstraintParameters(def?.parameters, serviceCompDetails)
+    );
+  };
+
   // Helper function to clear all data from a permission item
   const clearPermissionItem = (index) => {
     // Reset the entire permission item to an empty object
@@ -171,118 +228,331 @@ export default function PolicyPermissionItemVertical({
               </Row>
             )}
 
-            {fields.map((name, index) => (
-              <React.Fragment key={name}>
-                <Row key={name} className="py-3">
-                  {/* Rule Header */}
-                  <Col sm={11}>
-                    {/* Permissions Section */}
-                    <Col xs={12} className="mb-4">
-                      <Row>
-                        <Col className="column-1-fixed text-end">
-                          <FormB.Label>Permissions</FormB.Label>
+            {fields.map((name, index) => {
+              const isConstraintPolicy =
+                formValues?.policyType ===
+                RangerPolicyType.RANGER_CONSTRAINT_POLICY_TYPE.value;
+              const rowConstraintName = getConstraintNameFromField(
+                fields.value[index]?.constraintInfo?.constraintName
+              );
+              const rowConstraintDef = getConstraintDefByName(
+                serviceCompDetails,
+                rowConstraintName
+              );
+              const rowAccessTypeOptions = rowConstraintDef
+                ? mapAccessTypesToSelectOptions(
+                    getAccessTypesForConstraintDef(
+                      serviceCompDetails,
+                      rowConstraintDef,
+                      leafRestrictions
+                    )
+                  )
+                : [];
+              const permissionAccessOptions = isConstraintPolicy
+                ? rowAccessTypeOptions
+                : accessTypeOptions;
+              return (
+                <React.Fragment key={name}>
+                  <Row key={name} className="py-3">
+                    {/* Rule Header */}
+                    <Col sm={11}>
+                      {RangerPolicyType.RANGER_CONSTRAINT_POLICY_TYPE.value ==
+                        formValues?.policyType && (
+                        <Col xs={12} className="mb-4">
+                          <Row>
+                            <Col className="column-1-fixed text-end">
+                              <FormB.Label>Constraint Name</FormB.Label>
+                            </Col>
+                            <>
+                              <Col>
+                                <Field
+                                  name={`${name}.constraintInfo.constraintName`}
+                                  validate={requiredConstraintName}
+                                >
+                                  {({ input, meta }) => (
+                                    <>
+                                      <Select
+                                        inputId={`${name}-constraint-name`}
+                                        options={constraintSelectOptions}
+                                        value={input.value}
+                                        onChange={(option) =>
+                                          handleConstraintNameChange(
+                                            input,
+                                            name,
+                                            option
+                                          )
+                                        }
+                                        onBlur={input.onBlur}
+                                        placeholder="Select constraint"
+                                        tabSelectsValue={false}
+                                        isClearable
+                                        isDisabled={
+                                          constraintSelectOptions.length === 0
+                                        }
+                                      />
+                                      {meta.touched && meta.error && (
+                                        <span className="text-danger small mt-1">
+                                          <i className="fa fa-exclamation-circle me-1" />
+                                          {meta.error}
+                                        </span>
+                                      )}
+                                    </>
+                                  )}
+                                </Field>
+                              </Col>
+                              <Col className="column-3-fixed"></Col>
+                            </>
+                          </Row>
                         </Col>
-                        <Col>
-                          {/* Tag-based policy - use modal with table layout */}
-                          {serviceCompDetails?.name === "tag" ? (
-                            <Field name={`${name}.accesses`}>
+                      )}
+                      {/* Permissions Section */}
+                      <Col xs={12} className="mb-4">
+                        <Row>
+                          <Col className="column-1-fixed text-end">
+                            <FormB.Label>Permissions</FormB.Label>
+                          </Col>
+                          <Col>
+                            {isConstraintPolicy && !rowConstraintName ? (
+                              <p className="text-muted mb-0">
+                                {constraintSelectFirstMsg}
+                              </p>
+                            ) : serviceCompDetails?.name === "tag" ? (
+                              /* Tag-based policy - use modal with table layout */
+                              <Field name={`${name}.accesses`}>
+                                {({ input, meta }) => (
+                                  <>
+                                    {/* Container with flex layout for table + button side by side */}
+                                    {input.value?.tableList?.length > 0 ? (
+                                      <Container fluid className="p-0">
+                                        <Row>
+                                          <Col>
+                                            <div style={{ flex: 1 }}>
+                                              <Table
+                                                bordered
+                                                size="sm"
+                                                className="condition-group-table"
+                                              >
+                                                <thead>
+                                                  <tr>
+                                                    <th className="text-center">
+                                                      Service
+                                                    </th>
+                                                    <th className="text-center">
+                                                      Permissions
+                                                    </th>
+                                                  </tr>
+                                                </thead>
+                                                <tbody>
+                                                  {input.value.tableList.map(
+                                                    (tableItem, idx) => (
+                                                      <tr
+                                                        key={`${tableItem.serviceName}-${idx}`}
+                                                      >
+                                                        <td className="white-space-nowrap">
+                                                          {toUpper(
+                                                            tableItem.serviceName
+                                                          )}
+                                                        </td>
+                                                        <td className="text-word-break">
+                                                          {displayTagPermissionItem(
+                                                            tableItem.permission
+                                                          ).join(", ")}
+                                                        </td>
+                                                      </tr>
+                                                    )
+                                                  )}
+                                                </tbody>
+                                              </Table>
+                                            </div>
+                                          </Col>
+                                          <Col className="column-3-fixed">
+                                            <Button
+                                              variant="link"
+                                              onClick={() =>
+                                                setShowTagPermissionModalIndex(
+                                                  index
+                                                )
+                                              }
+                                              className="text-primary"
+                                              style={{ whiteSpace: "nowrap" }}
+                                            >
+                                              Edit Permissions
+                                            </Button>
+                                          </Col>
+                                        </Row>
+                                      </Container>
+                                    ) : (
+                                      <Col>
+                                        <Button
+                                          variant="link"
+                                          onClick={() =>
+                                            setShowTagPermissionModalIndex(
+                                              index
+                                            )
+                                          }
+                                          className="text-primary"
+                                          style={{ whiteSpace: "nowrap" }}
+                                        >
+                                          Add Permissions
+                                        </Button>
+                                      </Col>
+                                    )}
+                                    {/* Tag Permission Modal */}
+                                    {showTagPermissionModalIndex === index && (
+                                      <TagBasePermissionItem
+                                        options={permissionAccessOptions}
+                                        inputVal={{
+                                          ...input,
+                                          onChange: (value) => {
+                                            input.onChange(value);
+                                            // Don't close here, let the modal handle it via onClose
+                                          }
+                                        }}
+                                        formValues={formValues}
+                                        dataMaskIndex={index}
+                                        serviceCompDetails={serviceCompDetails}
+                                        attrName={attrName}
+                                        showModal={true}
+                                        handleCloseModal={() =>
+                                          setShowTagPermissionModalIndex(null)
+                                        }
+                                      />
+                                    )}
+                                    {meta.error && (
+                                      <div className="text-danger small mt-1">
+                                        <i className="fa fa-exclamation-circle me-1" />
+                                        {meta.error}
+                                      </div>
+                                    )}
+                                  </>
+                                )}
+                              </Field>
+                            ) : (
+                              /* Non-tag policy - use checkboxes */
+                              <Field name={`${name}.accesses`}>
+                                {({ input, meta }) => {
+                                  const currentValue = input.value || [];
+                                  const allSelected =
+                                    permissionAccessOptions.length > 0 &&
+                                    permissionAccessOptions.every((access) =>
+                                      currentValue.some(
+                                        (a) => a.type === access.value
+                                      )
+                                    );
+
+                                  const handleSelectAll = () => {
+                                    if (allSelected) {
+                                      // Deselect all
+                                      input.onChange([]);
+                                    } else {
+                                      // Select all
+                                      const allAccesses =
+                                        permissionAccessOptions.map((a) => ({
+                                          type: a.value,
+                                          isAllowed: true,
+                                          label: a.label
+                                        }));
+                                      input.onChange(allAccesses);
+                                    }
+                                  };
+
+                                  return (
+                                    <div>
+                                      <Container fluid className="p-0">
+                                        <div className="gx-3 gy-1 permissions-checkboxes">
+                                          {/* Select All Link - Only show if more than 1 option */}
+                                          {permissionAccessOptions.length >
+                                            1 && (
+                                            <div className="mb-1">
+                                              <FormB.Check
+                                                type="checkbox"
+                                                id={`${name}-selectAll`}
+                                                label="Select All"
+                                                checked={allSelected}
+                                                onChange={handleSelectAll}
+                                                className="text-nowrap text-primary"
+                                              />
+                                            </div>
+                                          )}
+                                          {permissionAccessOptions.map(
+                                            (access) => {
+                                              const isChecked =
+                                                Array.isArray(input.value) &&
+                                                input.value.some(
+                                                  (a) => a.type === access.value
+                                                );
+
+                                              return (
+                                                <div
+                                                  className="mb-1"
+                                                  key={access.value}
+                                                >
+                                                  <FormB.Check
+                                                    type="checkbox"
+                                                    id={`${name}-${access.value}`}
+                                                    label={access.label}
+                                                    checked={isChecked}
+                                                    onChange={(e) => {
+                                                      const currentValue =
+                                                        input.value || [];
+                                                      if (e.target.checked) {
+                                                        input.onChange([
+                                                          ...currentValue,
+                                                          {
+                                                            type: access.value,
+                                                            isAllowed: true,
+                                                            label: access.label
+                                                          }
+                                                        ]);
+                                                      } else {
+                                                        input.onChange(
+                                                          currentValue.filter(
+                                                            (a) =>
+                                                              a.type !==
+                                                              access.value
+                                                          )
+                                                        );
+                                                      }
+                                                    }}
+                                                    className="text-nowrap"
+                                                  />
+                                                </div>
+                                              );
+                                            }
+                                          )}
+                                        </div>
+                                      </Container>
+                                      {meta.error && (
+                                        <div className="text-danger small mt-1">
+                                          <i className="fa fa-exclamation-circle me-1" />
+                                          {meta.error}
+                                        </div>
+                                      )}
+                                    </div>
+                                  );
+                                }}
+                              </Field>
+                            )}
+                          </Col>
+                        </Row>
+                      </Col>
+
+                      {/* Users, Groups, Roles Selection */}
+                      <Col xl={12} className="mb-4">
+                        <Row>
+                          <Col className="column-1-fixed text-end">
+                            <FormB.Label>Users, Groups, Roles</FormB.Label>
+                          </Col>
+                          <Col>
+                            <Field name={`${name}.users`}>
                               {({ input, meta }) => (
                                 <>
-                                  {/* Container with flex layout for table + button side by side */}
-                                  {input.value?.tableList?.length > 0 ? (
-                                    <Container fluid className="p-0">
-                                      <Row>
-                                        <Col>
-                                          <div style={{ flex: 1 }}>
-                                            <Table
-                                              bordered
-                                              size="sm"
-                                              className="condition-group-table"
-                                            >
-                                              <thead>
-                                                <tr>
-                                                  <th className="text-center">
-                                                    Service
-                                                  </th>
-                                                  <th className="text-center">
-                                                    Permissions
-                                                  </th>
-                                                </tr>
-                                              </thead>
-                                              <tbody>
-                                                {input.value.tableList.map(
-                                                  (tableItem, idx) => (
-                                                    <tr
-                                                      key={`${tableItem.serviceName}-${idx}`}
-                                                    >
-                                                      <td className="white-space-nowrap">
-                                                        {toUpper(
-                                                          tableItem.serviceName
-                                                        )}
-                                                      </td>
-                                                      <td className="text-word-break">
-                                                        {displayTagPermissionItem(
-                                                          tableItem.permission
-                                                        ).join(", ")}
-                                                      </td>
-                                                    </tr>
-                                                  )
-                                                )}
-                                              </tbody>
-                                            </Table>
-                                          </div>
-                                        </Col>
-                                        <Col className="column-3-fixed">
-                                          <Button
-                                            variant="link"
-                                            onClick={() =>
-                                              setShowTagPermissionModalIndex(
-                                                index
-                                              )
-                                            }
-                                            className="text-primary"
-                                            style={{ whiteSpace: "nowrap" }}
-                                          >
-                                            Edit Permissions
-                                          </Button>
-                                        </Col>
-                                      </Row>
-                                    </Container>
-                                  ) : (
-                                    <Col>
-                                      <Button
-                                        variant="link"
-                                        onClick={() =>
-                                          setShowTagPermissionModalIndex(index)
-                                        }
-                                        className="text-primary"
-                                        style={{ whiteSpace: "nowrap" }}
-                                      >
-                                        Add Permissions
-                                      </Button>
-                                    </Col>
-                                  )}
-                                  {/* Tag Permission Modal */}
-                                  {showTagPermissionModalIndex === index && (
-                                    <TagBasePermissionItem
-                                      options={accessTypeOptions}
-                                      inputVal={{
-                                        ...input,
-                                        onChange: (value) => {
-                                          input.onChange(value);
-                                          // Don't close here, let the modal handle it via onClose
-                                        }
-                                      }}
-                                      formValues={formValues}
-                                      dataMaskIndex={index}
-                                      serviceCompDetails={serviceCompDetails}
-                                      attrName={attrName}
-                                      showModal={true}
-                                      handleCloseModal={() =>
-                                        setShowTagPermissionModalIndex(null)
-                                      }
-                                    />
-                                  )}
+                                  <UsersGroupsAndRolesSelectionComponent
+                                    value={input.value}
+                                    onChange={input.onChange}
+                                    name={`${name}.users`}
+                                    placeholder="Select users, groups, roles..."
+                                  />
                                   {meta.error && (
                                     <div className="text-danger small mt-1">
                                       <i className="fa fa-exclamation-circle me-1" />
@@ -292,217 +562,100 @@ export default function PolicyPermissionItemVertical({
                                 </>
                               )}
                             </Field>
-                          ) : (
-                            /* Non-tag policy - use checkboxes */
-                            <Field name={`${name}.accesses`}>
-                              {({ input, meta }) => {
-                                const currentValue = input.value || [];
-                                const allSelected =
-                                  accessTypeOptions.length > 0 &&
-                                  accessTypeOptions.every((access) =>
-                                    currentValue.some(
-                                      (a) => a.type === access.value
-                                    )
-                                  );
+                          </Col>
+                        </Row>
+                      </Col>
 
-                                const handleSelectAll = () => {
-                                  if (allSelected) {
-                                    // Deselect all
-                                    input.onChange([]);
-                                  } else {
-                                    // Select all
-                                    const allAccesses = accessTypeOptions.map(
-                                      (a) => ({
-                                        type: a.value,
-                                        isAllowed: true,
-                                        label: a.label
-                                      })
-                                    );
-                                    input.onChange(allAccesses);
-                                  }
-                                };
+                      {/* Rule Conditions */}
+                      {serviceCompDetails?.policyConditions?.length > 0 && (
+                        <Col xs={12} className="mb-4">
+                          <Row>
+                            <Col className="column-1-fixed text-end">
+                              <FormB.Label>Rule Conditions</FormB.Label>
+                            </Col>
+                            {fields.value[index]?.conditions &&
+                            !isEmpty(fields.value[index].conditions) ? (
+                              <>
+                                <Col>
+                                  <div style={{ flex: 1 }}>
+                                    <Table
+                                      bordered
+                                      size="sm"
+                                      className="condition-group-table"
+                                    >
+                                      <thead>
+                                        <tr>
+                                          <th className="text-center">
+                                            Condition
+                                          </th>
+                                          <th className="text-center">Value</th>
+                                        </tr>
+                                      </thead>
+                                      <tbody>
+                                        {Object.keys(
+                                          fields.value[index].conditions
+                                        ).map((keyName) => {
+                                          const conditionValue =
+                                            fields.value[index].conditions[
+                                              keyName
+                                            ];
 
-                                return (
-                                  <div>
-                                    <Container fluid className="p-0">
-                                      <div className="gx-3 gy-1 permissions-checkboxes">
-                                        {/* Select All Link - Only show if more than 1 option */}
-                                        {accessTypeOptions.length > 1 && (
-                                          <div className="mb-1">
-                                            <FormB.Check
-                                              type="checkbox"
-                                              id={`${name}-selectAll`}
-                                              label="Select All"
-                                              checked={allSelected}
-                                              onChange={handleSelectAll}
-                                              className="text-nowrap text-primary"
-                                            />
-                                          </div>
-                                        )}
-                                        {accessTypeOptions.map((access) => {
-                                          const isChecked =
-                                            Array.isArray(input.value) &&
-                                            input.value.some(
-                                              (a) => a.type === access.value
+                                          if (
+                                            conditionValue != "" &&
+                                            conditionValue != null
+                                          ) {
+                                            let conditionObj = find(
+                                              serviceCompDetails?.policyConditions,
+                                              function (m) {
+                                                return m.name == keyName;
+                                              }
                                             );
 
-                                          return (
-                                            <div
-                                              className="mb-1"
-                                              key={access.value}
-                                            >
-                                              <FormB.Check
-                                                type="checkbox"
-                                                id={`${name}-${access.value}`}
-                                                label={access.label}
-                                                checked={isChecked}
-                                                onChange={(e) => {
-                                                  const currentValue =
-                                                    input.value || [];
-                                                  if (e.target.checked) {
-                                                    input.onChange([
-                                                      ...currentValue,
-                                                      {
-                                                        type: access.value,
-                                                        isAllowed: true,
-                                                        label: access.label
-                                                      }
-                                                    ]);
-                                                  } else {
-                                                    input.onChange(
-                                                      currentValue.filter(
-                                                        (a) =>
-                                                          a.type !==
-                                                          access.value
-                                                      )
-                                                    );
-                                                  }
-                                                }}
-                                                className="text-nowrap"
-                                              />
-                                            </div>
-                                          );
+                                            return (
+                                              <tr key={keyName}>
+                                                <td className="white-space-nowrap">
+                                                  {getPolicyConditionDisplayLbl(
+                                                    conditionObj?.label
+                                                  )}
+                                                </td>
+                                                <td className="text-word-break">
+                                                  {isArray(conditionValue)
+                                                    ? conditionValue
+                                                        .map((m) =>
+                                                          typeof m ===
+                                                            "object" &&
+                                                          m?.value != null
+                                                            ? m.value
+                                                            : m
+                                                        )
+                                                        .join(", ")
+                                                    : conditionValue}
+                                                </td>
+                                              </tr>
+                                            );
+                                          }
+                                          return null;
                                         })}
-                                      </div>
-                                    </Container>
-                                    {meta.error && (
-                                      <div className="text-danger small mt-1">
-                                        <i className="fa fa-exclamation-circle me-1" />
-                                        {meta.error}
-                                      </div>
-                                    )}
+                                      </tbody>
+                                    </Table>
                                   </div>
-                                );
-                              }}
-                            </Field>
-                          )}
-                        </Col>
-                      </Row>
-                    </Col>
-
-                    {/* Users, Groups, Roles Selection */}
-                    <Col xl={12} className="mb-4">
-                      <Row>
-                        <Col className="column-1-fixed text-end">
-                          <FormB.Label>Users, Groups, Roles</FormB.Label>
-                        </Col>
-                        <Col>
-                          <Field name={`${name}.users`}>
-                            {({ input, meta }) => (
-                              <>
-                                <UsersGroupsAndRolesSelectionComponent
-                                  value={input.value}
-                                  onChange={input.onChange}
-                                  name={`${name}.users`}
-                                  placeholder="Select users, groups, roles..."
-                                />
-                                {meta.error && (
-                                  <div className="text-danger small mt-1">
-                                    <i className="fa fa-exclamation-circle me-1" />
-                                    {meta.error}
-                                  </div>
-                                )}
-                              </>
-                            )}
-                          </Field>
-                        </Col>
-                      </Row>
-                    </Col>
-
-                    {/* Rule Conditions */}
-                    {serviceCompDetails?.policyConditions?.length > 0 && (
-                      <Col xs={12} className="mb-4">
-                        <Row>
-                          <Col className="column-1-fixed text-end">
-                            <FormB.Label>Rule Conditions</FormB.Label>
-                          </Col>
-                          {fields.value[index]?.conditions &&
-                          !isEmpty(fields.value[index].conditions) ? (
-                            <>
-                              <Col>
-                                <div style={{ flex: 1 }}>
-                                  <Table
-                                    bordered
-                                    size="sm"
-                                    className="condition-group-table"
+                                </Col>
+                                <Col className="column-3-fixed">
+                                  {/* Edit/Add Button - Always visible on the right */}
+                                  <Button
+                                    variant="link"
+                                    onClick={() =>
+                                      setShowConditionsModalIndex(index)
+                                    }
+                                    className="text-primary"
+                                    style={{ whiteSpace: "nowrap" }}
                                   >
-                                    <thead>
-                                      <tr>
-                                        <th className="text-center">
-                                          Condition
-                                        </th>
-                                        <th className="text-center">Value</th>
-                                      </tr>
-                                    </thead>
-                                    <tbody>
-                                      {Object.keys(
-                                        fields.value[index].conditions
-                                      ).map((keyName) => {
-                                        const conditionValue =
-                                          fields.value[index].conditions[
-                                            keyName
-                                          ];
-
-                                        if (
-                                          conditionValue != "" &&
-                                          conditionValue != null
-                                        ) {
-                                          let conditionObj = find(
-                                            serviceCompDetails?.policyConditions,
-                                            function (m) {
-                                              return m.name == keyName;
-                                            }
-                                          );
-
-                                          return (
-                                            <tr key={keyName}>
-                                              <td className="white-space-nowrap">
-                                                {getPolicyConditionDisplayLbl(
-                                                  conditionObj?.label
-                                                )}
-                                              </td>
-                                              <td className="text-word-break">
-                                                {isArray(conditionValue)
-                                                  ? conditionValue
-                                                      .map((m) =>
-                                                        typeof m === "object" &&
-                                                        m?.value != null
-                                                          ? m.value
-                                                          : m
-                                                      )
-                                                      .join(", ")
-                                                  : conditionValue}
-                                              </td>
-                                            </tr>
-                                          );
-                                        }
-                                        return null;
-                                      })}
-                                    </tbody>
-                                  </Table>
-                                </div>
-                              </Col>
-                              <Col className="column-3-fixed">
+                                    Edit Conditions
+                                  </Button>
+                                </Col>
+                              </>
+                            ) : (
+                              <Col>
                                 {/* Edit/Add Button - Always visible on the right */}
                                 <Button
                                   variant="link"
@@ -512,340 +665,298 @@ export default function PolicyPermissionItemVertical({
                                   className="text-primary"
                                   style={{ whiteSpace: "nowrap" }}
                                 >
-                                  Edit Conditions
+                                  Add Conditions
                                 </Button>
                               </Col>
-                            </>
+                            )}
+                            {showConditionsModalIndex === index && (
+                              <PolicyConditionsComp
+                                // Visibility & Control
+                                showModal={true}
+                                modalHeader="Rule Conditions"
+                                handleCloseModal={() =>
+                                  setShowConditionsModalIndex(null)
+                                }
+                                // Data & Value Binding
+                                scope="policyItem"
+                                policyConditionDetails={conditionDefVal}
+                                inputVal={{
+                                  value: fields.value[index]?.conditions || {},
+                                  onChange: (newValue) => {
+                                    form.change(`${name}.conditions`, newValue);
+                                  }
+                                }}
+                                // Service & Actions Metadata
+                                servicedefName={serviceCompDetails?.name}
+                                serviceDefOptions={serviceCompDetails?.options}
+                                actionReqsMap={actionReqsMap}
+                                // Filter Context Evaluation
+                                actionFilterContext={{
+                                  leafResourceTypes,
+                                  accessTypeDefs:
+                                    serviceCompDetails?.accessTypes,
+                                  selectedAccessTypes:
+                                    getSelectedAccessTypesForRow(
+                                      formValues,
+                                      attrName,
+                                      index
+                                    )
+                                }}
+                              />
+                            )}
+                          </Row>
+                        </Col>
+                      )}
+
+                      {isConstraintPolicy && (
+                        <Col xs={12} className="mb-4">
+                          {!rowConstraintName ? (
+                            <Row>
+                              <Col className="column-1-fixed text-end">
+                                <FormB.Label>Parameters</FormB.Label>
+                              </Col>
+                              <>
+                                <Col>
+                                  <p className="text-muted mb-0">
+                                    {constraintSelectFirstMsg}
+                                  </p>
+                                </Col>
+                                <Col className="column-3-fixed"></Col>
+                              </>
+                            </Row>
                           ) : (
-                            <Col>
-                              {/* Edit/Add Button - Always visible on the right */}
-                              <Button
-                                variant="link"
-                                onClick={() =>
-                                  setShowConditionsModalIndex(index)
-                                }
-                                className="text-primary"
-                                style={{ whiteSpace: "nowrap" }}
-                              >
-                                Add Conditions
-                              </Button>
-                            </Col>
-                          )}
-                          {showConditionsModalIndex === index && (
-                            <PolicyConditionsComp
-                              // Visibility & Control
-                              showModal={true}
-                              modalHeader="Rule Conditions"
-                              handleCloseModal={() =>
-                                setShowConditionsModalIndex(null)
-                              }
-                              // Data & Value Binding
-                              scope="policyItem"
-                              policyConditionDetails={conditionDefVal}
-                              inputVal={{
-                                value: fields.value[index]?.conditions || {},
-                                onChange: (newValue) => {
-                                  form.change(`${name}.conditions`, newValue);
-                                }
-                              }}
-                              // Service & Actions Metadata
-                              servicedefName={serviceCompDetails?.name}
-                              serviceDefOptions={serviceCompDetails?.options}
-                              actionReqsMap={actionReqsMap}
-                              // Filter Context Evaluation
-                              actionFilterContext={{
-                                leafResourceTypes,
-                                accessTypeDefs: serviceCompDetails?.accessTypes,
-                                selectedAccessTypes:
-                                  getSelectedAccessTypesForRow(
-                                    formValues,
-                                    attrName,
-                                    index
-                                  )
-                              }}
+                            <ConstraintPolicyParameterFields
+                              parameters={rowConstraintDef?.parameters || []}
+                              fieldNamePrefix={`${name}.constraintInfo.parameters`}
+                              serviceCompDetails={serviceCompDetails}
                             />
                           )}
-                        </Row>
-                      </Col>
-                    )}
+                        </Col>
+                      )}
 
-                    {/* Data Masking Option (for Masking policies) */}
-                    {RangerPolicyType.RANGER_MASKING_POLICY_TYPE.value ==
-                      formValues?.policyType && (
-                      <Col xs={12} className="mb-4">
-                        <Row>
-                          <Col className="column-1-fixed text-end">
-                            <FormB.Label>Select Masking Option</FormB.Label>
-                          </Col>
-                          <Col>
-                            {serviceCompDetails?.name !== "tag" ? (
-                              <>
-                                {" "}
-                                <Field name={`${name}.dataMaskInfo`}>
-                                  {({ input, meta }) => {
-                                    const maskingOptions =
-                                      getMaskingAccessTypeOptions(index);
-                                    return (
-                                      <>
-                                        <Container fluid className="p-0">
-                                          <Row>
-                                            {/* Masking Type Radio Buttons */}
-                                            {maskingOptions.map((maskType) => (
-                                              <Col
-                                                xxl={3}
-                                                xl={4}
-                                                md={6}
-                                                sm={12}
-                                                className="mb-3"
-                                                key={maskType.value}
-                                              >
-                                                <FormB.Check
-                                                  type="radio"
-                                                  id={`${name}-mask-${maskType.value}`}
-                                                  name={`${name}.dataMaskInfo`}
-                                                  label={maskType.label}
-                                                  checked={
-                                                    input.value?.value ===
-                                                    maskType.value
-                                                  }
-                                                  onChange={() =>
-                                                    input.onChange({
-                                                      label: maskType.label,
-                                                      value: maskType.value
-                                                    })
-                                                  }
-                                                  className="mb-2"
-                                                />
-                                              </Col>
-                                            ))}
-                                          </Row>
-                                        </Container>
-                                        {/* Custom Value Expression (shown when "Custom" is selected) */}
-                                        {input.value?.label === "Custom" && (
-                                          <div className="mt-2">
-                                            <Field
-                                              name={`${name}.dataMaskInfo.valueExpr`}
-                                              validate={required}
-                                            >
-                                              {({
-                                                input: exprInput,
-                                                meta: exprMeta
-                                              }) => (
-                                                <div>
-                                                  <FormB.Control
-                                                    {...exprInput}
-                                                    type="text"
-                                                    placeholder="Enter masked value or expression..."
-                                                    isInvalid={
-                                                      exprMeta.touched &&
-                                                      exprMeta.error
-                                                    }
-                                                  />
-                                                  {exprMeta.touched &&
-                                                    exprMeta.error && (
-                                                      <FormB.Control.Feedback type="invalid">
-                                                        {exprMeta.error}
-                                                      </FormB.Control.Feedback>
-                                                    )}
-                                                </div>
-                                              )}
-                                            </Field>
-                                          </div>
-                                        )}
-                                        {/* Form-level validation error - only render if string (nested field errors bubble up as objects) */}
-                                        {typeof meta.error === "string" && (
-                                          <div className="text-danger small mt-1">
-                                            <i className="fa fa-exclamation-circle me-1" />
-                                            {meta.error}
-                                          </div>
-                                        )}
-                                      </>
-                                    );
-                                  }}
-                                </Field>
-                              </>
-                            ) : formValues?.dataMaskPolicyItems?.[index]
-                                ?.accesses?.tableList?.length > 0 ? (
-                              <>
-                                {" "}
-                                <Field name={`${name}.dataMaskInfo`}>
-                                  {({ input, meta }) => {
-                                    const maskingOptions =
-                                      getMaskingAccessTypeOptions(index);
-                                    return (
-                                      <>
-                                        <Container fluid className="p-0">
-                                          <Row>
-                                            {/* Masking Type Radio Buttons */}
-                                            {maskingOptions.map((maskType) => (
-                                              <Col
-                                                xxl={3}
-                                                xl={4}
-                                                md={6}
-                                                sm={12}
-                                                className="mb-3"
-                                                key={maskType.value}
-                                              >
-                                                <FormB.Check
-                                                  type="radio"
-                                                  id={`${name}-mask-${maskType.value}`}
-                                                  name={`${name}.dataMaskInfo`}
-                                                  label={maskType.label}
-                                                  checked={
-                                                    input.value?.value ===
-                                                    maskType.value
-                                                  }
-                                                  onChange={() =>
-                                                    input.onChange({
-                                                      label: maskType.label,
-                                                      value: maskType.value
-                                                    })
-                                                  }
-                                                  className="mb-2"
-                                                />
-                                              </Col>
-                                            ))}
-                                          </Row>
-                                        </Container>
-                                        {/* Custom Value Expression (shown when "Custom" is selected) */}
-                                        {input.value?.label === "Custom" && (
-                                          <div className="mt-2">
-                                            <Field
-                                              name={`${name}.dataMaskInfo.valueExpr`}
-                                              validate={required}
-                                            >
-                                              {({
-                                                input: exprInput,
-                                                meta: exprMeta
-                                              }) => (
-                                                <div>
-                                                  <FormB.Control
-                                                    {...exprInput}
-                                                    type="text"
-                                                    placeholder="Enter masked value or expression..."
-                                                    isInvalid={
-                                                      exprMeta.touched &&
-                                                      exprMeta.error
-                                                    }
-                                                  />
-                                                  {exprMeta.touched &&
-                                                    exprMeta.error && (
-                                                      <FormB.Control.Feedback type="invalid">
-                                                        {exprMeta.error}
-                                                      </FormB.Control.Feedback>
-                                                    )}
-                                                </div>
-                                              )}
-                                            </Field>
-                                          </div>
-                                        )}
-                                        {/* Form-level validation error - only render if string (nested field errors bubble up as objects) */}
-                                        {typeof meta.error === "string" && (
-                                          <div className="text-danger small mt-1">
-                                            <i className="fa fa-exclamation-circle me-1" />
-                                            {meta.error}
-                                          </div>
-                                        )}
-                                      </>
-                                    );
-                                  }}
-                                </Field>
-                              </>
-                            ) : (
-                              <Col>
-                                <div className="text-muted fst-italic">
-                                  Please add permissions to select masking
-                                  option.
-                                </div>
-                              </Col>
-                            )}
-                          </Col>
-                        </Row>
-                      </Col>
-                    )}
-
-                    {/* Row Level Filter (for Row Filter policies) */}
-                    {RangerPolicyType.RANGER_ROW_FILTER_POLICY_TYPE.value ==
-                      formValues?.policyType && (
-                      <Col xs={12} className="mb-4">
-                        <Row>
-                          <Col className="column-1-fixed text-end">
-                            <FormB.Label>Row Level Filter</FormB.Label>
-                          </Col>
-                          <Col>
-                            <Field name={`${name}.rowFilterInfo`}>
-                              {({ input, meta }) => (
-                                <div>
-                                  <FormB.Control
-                                    {...input}
-                                    as="textarea"
-                                    rows={3}
-                                    placeholder="Enter filter expression (e.g., country = 'US')"
-                                    isInvalid={!!meta.error}
-                                  />
-                                  {meta.error && (
-                                    <FormB.Control.Feedback type="invalid">
-                                      {meta.error}
-                                    </FormB.Control.Feedback>
-                                  )}
-                                </div>
-                              )}
-                            </Field>
-                          </Col>
-                        </Row>
-                      </Col>
-                    )}
-
-                    {/* Delegate Admin (for Access policies only, non-tag) */}
-                    {RangerPolicyType.RANGER_ACCESS_POLICY_TYPE.value ==
-                      formValues?.policyType &&
-                      serviceCompDetails?.name !== "tag" && (
-                        <Col xs={12} className="mb-0">
+                      {/* Data Masking Option (for Masking policies) */}
+                      {RangerPolicyType.RANGER_MASKING_POLICY_TYPE.value ==
+                        formValues?.policyType && (
+                        <Col xs={12} className="mb-4">
                           <Row>
                             <Col className="column-1-fixed text-end">
-                              <FormB.Label htmlFor={`${name}.delegateAdmin`}>
-                                Delegate Admin
-                                <span className="ps-2">
-                                  <CustomTooltip
-                                    placement="right"
-                                    content={
-                                      <p
-                                        className="pd-5"
-                                        style={{ fontSize: "small" }}
-                                      >
-                                        Delegate Admin grants users or groups or
-                                        roles the authority to create and manage
-                                        policies, but strictly within the
-                                        specific resource boundaries defined by
-                                        the original policy.
-                                      </p>
-                                    }
-                                    icon="fa-fw fa fa-info-circle"
-                                  />
-                                </span>
-                              </FormB.Label>
+                              <FormB.Label>Select Masking Option</FormB.Label>
                             </Col>
                             <Col>
-                              <Field
-                                className="form-control"
-                                name={`${name}.delegateAdmin`}
-                                data-js="delegatedAdmin"
-                                data-cy="delegatedAdmin"
-                                type="checkbox"
-                              >
-                                {({ input }) => (
-                                  <div
-                                    className="d-flex align-items-center"
-                                    style={{ height: "21px" }}
-                                  >
-                                    <input
+                              {serviceCompDetails?.name !== "tag" ? (
+                                <>
+                                  {" "}
+                                  <Field name={`${name}.dataMaskInfo`}>
+                                    {({ input, meta }) => {
+                                      const maskingOptions =
+                                        getMaskingAccessTypeOptions(index);
+                                      return (
+                                        <>
+                                          <Container fluid className="p-0">
+                                            <Row>
+                                              {/* Masking Type Radio Buttons */}
+                                              {maskingOptions.map(
+                                                (maskType) => (
+                                                  <Col
+                                                    xxl={3}
+                                                    xl={4}
+                                                    md={6}
+                                                    sm={12}
+                                                    className="mb-3"
+                                                    key={maskType.value}
+                                                  >
+                                                    <FormB.Check
+                                                      type="radio"
+                                                      id={`${name}-mask-${maskType.value}`}
+                                                      name={`${name}.dataMaskInfo`}
+                                                      label={maskType.label}
+                                                      checked={
+                                                        input.value?.value ===
+                                                        maskType.value
+                                                      }
+                                                      onChange={() =>
+                                                        input.onChange({
+                                                          label: maskType.label,
+                                                          value: maskType.value
+                                                        })
+                                                      }
+                                                      className="mb-2"
+                                                    />
+                                                  </Col>
+                                                )
+                                              )}
+                                            </Row>
+                                          </Container>
+                                          {/* Custom Value Expression (shown when "Custom" is selected) */}
+                                          {input.value?.label === "Custom" && (
+                                            <div className="mt-2">
+                                              <Field
+                                                name={`${name}.dataMaskInfo.valueExpr`}
+                                                validate={required}
+                                              >
+                                                {({
+                                                  input: exprInput,
+                                                  meta: exprMeta
+                                                }) => (
+                                                  <div>
+                                                    <FormB.Control
+                                                      {...exprInput}
+                                                      type="text"
+                                                      placeholder="Enter masked value or expression..."
+                                                      isInvalid={
+                                                        exprMeta.touched &&
+                                                        exprMeta.error
+                                                      }
+                                                    />
+                                                    {exprMeta.touched &&
+                                                      exprMeta.error && (
+                                                        <FormB.Control.Feedback type="invalid">
+                                                          {exprMeta.error}
+                                                        </FormB.Control.Feedback>
+                                                      )}
+                                                  </div>
+                                                )}
+                                              </Field>
+                                            </div>
+                                          )}
+                                          {/* Form-level validation error - only render if string (nested field errors bubble up as objects) */}
+                                          {typeof meta.error === "string" && (
+                                            <div className="text-danger small mt-1">
+                                              <i className="fa fa-exclamation-circle me-1" />
+                                              {meta.error}
+                                            </div>
+                                          )}
+                                        </>
+                                      );
+                                    }}
+                                  </Field>
+                                </>
+                              ) : formValues?.dataMaskPolicyItems?.[index]
+                                  ?.accesses?.tableList?.length > 0 ? (
+                                <>
+                                  {" "}
+                                  <Field name={`${name}.dataMaskInfo`}>
+                                    {({ input, meta }) => {
+                                      const maskingOptions =
+                                        getMaskingAccessTypeOptions(index);
+                                      return (
+                                        <>
+                                          <Container fluid className="p-0">
+                                            <Row>
+                                              {/* Masking Type Radio Buttons */}
+                                              {maskingOptions.map(
+                                                (maskType) => (
+                                                  <Col
+                                                    xxl={3}
+                                                    xl={4}
+                                                    md={6}
+                                                    sm={12}
+                                                    className="mb-3"
+                                                    key={maskType.value}
+                                                  >
+                                                    <FormB.Check
+                                                      type="radio"
+                                                      id={`${name}-mask-${maskType.value}`}
+                                                      name={`${name}.dataMaskInfo`}
+                                                      label={maskType.label}
+                                                      checked={
+                                                        input.value?.value ===
+                                                        maskType.value
+                                                      }
+                                                      onChange={() =>
+                                                        input.onChange({
+                                                          label: maskType.label,
+                                                          value: maskType.value
+                                                        })
+                                                      }
+                                                      className="mb-2"
+                                                    />
+                                                  </Col>
+                                                )
+                                              )}
+                                            </Row>
+                                          </Container>
+                                          {/* Custom Value Expression (shown when "Custom" is selected) */}
+                                          {input.value?.label === "Custom" && (
+                                            <div className="mt-2">
+                                              <Field
+                                                name={`${name}.dataMaskInfo.valueExpr`}
+                                                validate={required}
+                                              >
+                                                {({
+                                                  input: exprInput,
+                                                  meta: exprMeta
+                                                }) => (
+                                                  <div>
+                                                    <FormB.Control
+                                                      {...exprInput}
+                                                      type="text"
+                                                      placeholder="Enter masked value or expression..."
+                                                      isInvalid={
+                                                        exprMeta.touched &&
+                                                        exprMeta.error
+                                                      }
+                                                    />
+                                                    {exprMeta.touched &&
+                                                      exprMeta.error && (
+                                                        <FormB.Control.Feedback type="invalid">
+                                                          {exprMeta.error}
+                                                        </FormB.Control.Feedback>
+                                                      )}
+                                                  </div>
+                                                )}
+                                              </Field>
+                                            </div>
+                                          )}
+                                          {/* Form-level validation error - only render if string (nested field errors bubble up as objects) */}
+                                          {typeof meta.error === "string" && (
+                                            <div className="text-danger small mt-1">
+                                              <i className="fa fa-exclamation-circle me-1" />
+                                              {meta.error}
+                                            </div>
+                                          )}
+                                        </>
+                                      );
+                                    }}
+                                  </Field>
+                                </>
+                              ) : (
+                                <Col>
+                                  <div className="text-muted fst-italic">
+                                    Please add permissions to select masking
+                                    option.
+                                  </div>
+                                </Col>
+                              )}
+                            </Col>
+                          </Row>
+                        </Col>
+                      )}
+
+                      {/* Row Level Filter (for Row Filter policies) */}
+                      {RangerPolicyType.RANGER_ROW_FILTER_POLICY_TYPE.value ==
+                        formValues?.policyType && (
+                        <Col xs={12} className="mb-4">
+                          <Row>
+                            <Col className="column-1-fixed text-end">
+                              <FormB.Label>Row Level Filter</FormB.Label>
+                            </Col>
+                            <Col>
+                              <Field name={`${name}.rowFilterInfo`}>
+                                {({ input, meta }) => (
+                                  <div>
+                                    <FormB.Control
                                       {...input}
-                                      type="checkbox"
-                                      onChange={handleDelegateAdminChange(
-                                        input,
-                                        index
-                                      )}
-                                    />{" "}
+                                      as="textarea"
+                                      rows={3}
+                                      placeholder="Enter filter expression (e.g., country = 'US')"
+                                      isInvalid={!!meta.error}
+                                    />
+                                    {meta.error && (
+                                      <FormB.Control.Feedback type="invalid">
+                                        {meta.error}
+                                      </FormB.Control.Feedback>
+                                    )}
                                   </div>
                                 )}
                               </Field>
@@ -853,40 +964,99 @@ export default function PolicyPermissionItemVertical({
                           </Row>
                         </Col>
                       )}
-                  </Col>
-                  <Col
-                    sm={1}
-                    className="mb-4 justify-content-end d-flex align-items-start"
-                  >
-                    {fields.length > 1 ? (
-                      <Button
-                        variant="danger"
-                        size="sm"
-                        title="Remove"
-                        onClick={() => fields.remove(index)}
-                        data-action="delete"
-                        data-cy="delete"
-                      >
-                        <i className="fa-fw fa fa-remove"></i>
-                      </Button>
-                    ) : (
-                      // Show clear button only when there's one item and it has data
-                      <Button
-                        variant="danger"
-                        size="sm"
-                        title="Clear item data"
-                        onClick={() => clearPermissionItem(index)}
-                        data-action="clear"
-                        data-cy="clear"
-                      >
-                        <i className="fa-fw fa fa-remove"></i>
-                      </Button>
-                    )}
-                  </Col>
-                </Row>
-                <hr />
-              </React.Fragment>
-            ))}
+
+                      {/* Delegate Admin (for Access policies only, non-tag) */}
+                      {RangerPolicyType.RANGER_ACCESS_POLICY_TYPE.value ==
+                        formValues?.policyType &&
+                        serviceCompDetails?.name !== "tag" && (
+                          <Col xs={12} className="mb-0">
+                            <Row>
+                              <Col className="column-1-fixed text-end">
+                                <FormB.Label htmlFor={`${name}.delegateAdmin`}>
+                                  Delegate Admin
+                                  <span className="ps-2">
+                                    <CustomTooltip
+                                      placement="right"
+                                      content={
+                                        <p
+                                          className="pd-5"
+                                          style={{ fontSize: "small" }}
+                                        >
+                                          Delegate Admin grants users or groups
+                                          or roles the authority to create and
+                                          manage policies, but strictly within
+                                          the specific resource boundaries
+                                          defined by the original policy.
+                                        </p>
+                                      }
+                                      icon="fa-fw fa fa-info-circle"
+                                    />
+                                  </span>
+                                </FormB.Label>
+                              </Col>
+                              <Col>
+                                <Field
+                                  className="form-control"
+                                  name={`${name}.delegateAdmin`}
+                                  data-js="delegatedAdmin"
+                                  data-cy="delegatedAdmin"
+                                  type="checkbox"
+                                >
+                                  {({ input }) => (
+                                    <div
+                                      className="d-flex align-items-center"
+                                      style={{ height: "21px" }}
+                                    >
+                                      <input
+                                        {...input}
+                                        type="checkbox"
+                                        onChange={handleDelegateAdminChange(
+                                          input,
+                                          index
+                                        )}
+                                      />{" "}
+                                    </div>
+                                  )}
+                                </Field>
+                              </Col>
+                            </Row>
+                          </Col>
+                        )}
+                    </Col>
+                    <Col
+                      sm={1}
+                      className="mb-4 justify-content-end d-flex align-items-start"
+                    >
+                      {fields.length > 1 ? (
+                        <Button
+                          variant="danger"
+                          size="sm"
+                          title="Remove"
+                          onClick={() => fields.remove(index)}
+                          data-action="delete"
+                          data-cy="delete"
+                        >
+                          <i className="fa-fw fa fa-remove"></i>
+                        </Button>
+                      ) : (
+                        // Show clear button only when there's one item and it has data
+                        <Button
+                          variant="danger"
+                          size="sm"
+                          title="Clear item data"
+                          onClick={() => clearPermissionItem(index)}
+                          data-action="clear"
+                          data-cy="clear"
+                        >
+                          <i className="fa-fw fa fa-remove"></i>
+                        </Button>
+                      )}
+                    </Col>
+                  </Row>
+                  <hr />
+                </React.Fragment>
+              );
+            })}
 
             {/* Add More Rules Button */}
             <Row className="my-3">

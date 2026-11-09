@@ -65,10 +65,6 @@ services:
       - ./dist/keytabs:/etc/keytabs
     networks:
       - ranger
-    ports:
-      - "88:88"
-      - "88:88/udp"
-      - "749:749"
 
   ranger-db:
     extends:
@@ -98,8 +94,6 @@ services:
     entrypoint: [ "/bin/bash", "/zookeeper-with-kerberos.sh" ]
     networks:
       - ranger
-    ports:
-      - "2181:2181"
     environment:
       - KERBEROS_ENABLED
 
