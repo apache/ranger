@@ -73,10 +73,16 @@ plugins:
 nav:
   - Home: index.md
   - Getting started:
+      - Introduction: getting-started/introduction.md
       - Installation: getting-started/install.md
+      - Run Ranger with Docker: getting-started/docker.md
+      - Your first policy: getting-started/first-policy.md
       - Trino with Ranger: getting-started/trino-with-ranger.md
+      - FAQ: getting-started/faq.md
   - Architecture:
-    - Overview: arch/architecture.md
+      - Overview: arch/architecture.md
+      - Policy model: arch/policy-model.md
+      - Plugin architecture: arch/plugin-architecture.md
   - Plugins:
     - Trino: plugins/trino.md
   - Services:
