@@ -28,12 +28,6 @@ keyadmin_password = getEnv('XA_KEYADMIN_PASSWORD', 'rangerR0cks!')
 admin_password = getEnv('XA_ADMIN_PASSWORD', 'rangerR0cks!')
 str_variable_dict = {}
 variable_dict = {}
-
-
-
-
-is_version_7_3_2 = Version.current_cdh_parcel_version() >= Version.of("7.3.2.0")
-
 headers = {
         'Accept': 'application/json',
         'Content-Type': 'application/json',
@@ -97,14 +91,10 @@ def get_updated_request_data(request_data, fields_to_update=None, field_to_del=N
     fields_to_update = json.loads(fields_to_update)
 
     if fields_to_update:
-        # logger.info('The fields to update are :- %s', fields_to_update)
-
         for key in fields_to_update:
             request_payload[key] = fields_to_update[key]
 
     if field_to_del:
-        # logger.info("The field to del is :- %s", field_to_del)
-
         del request_payload[field_to_del]
 
     return request_payload
@@ -142,9 +132,6 @@ def get_variable(variable_specification, variable_dict, data_folder_path, is_key
         resp = requests.post(request_url, data=request_payload, verify=False, auth=auth, headers=headers)
     elif request_method == "GET":
         resp = requests.get(request_url, verify=False, auth=auth, headers=headers)
-
-    # XALogger.logInfo(f"response status: {resp.status_code}, response body: {str(resp.content)}")
-
     if response_to_be_saved == "same":
         variable = resp.json()
     else:
@@ -155,9 +142,6 @@ def get_variable(variable_specification, variable_dict, data_folder_path, is_key
             if isinstance(variable, type([])):
                 key = int(key)
             variable = variable[key]
-
-    # logger.info("The variable %s is %s :- ", variable_name, variable")
-
     return variable
 
 
@@ -193,18 +177,11 @@ def compare_dict(a, b):
     return True
 
 def get_ignore_fields_for_comparison():
-    if is_version_7_3_2:
-        base_fields = ["id", "guid", "createdBy", "updatedBy", "createTime",
-                            "updateTime", "version", "resourceSignature","lastLoginTime"]
-    else:
-        base_fields = ["id", "guid", "createdBy", "updatedBy", "createTime",
+    base_fields = ["id", "guid", "createdBy", "updatedBy", "createTime",
                             "updateTime", "version", "resourceSignature"]
     return base_fields
 
 def compare_response_data(response_data, expected_response_data, complete_comparison=False):
-    # logger.info("The response data is :- %s", response_data)
-    # logger.info("The expected response data is :- %s", expected_response_data)
-    # logger.info("Complete comparison = %s", complete_comparison)
 
     if complete_comparison:
         json_obj_1 = copy.deepcopy(response_data)
