@@ -16,10 +16,29 @@
 """Suite-wide pytest hooks (logging directory, per-module log files)."""
 
 import logging
+import sys
 from pathlib import Path
 
 import pytest
 
+
+def _pytest_targets_include_hdfs_suite() -> bool:
+    """``pytest hdfs/`` does not load ``kms/conftest.py`` automatically; plugin it from here."""
+    for arg in sys.argv[1:]:
+        if arg.startswith("-"):
+            continue
+        norm = arg.replace("\\", "/").rstrip("/")
+        if norm == "hdfs" or norm.startswith("hdfs/"):
+            return True
+        if norm.endswith("/hdfs") or "/hdfs/" in f"/{norm}/":
+            return True
+    return False
+
+
+if _pytest_targets_include_hdfs_suite():
+    pytest_plugins = ("kms.conftest",)
+
+from ranger_test_utils.kms_test_utils import ensure_kms_kerberos_users_for_session
 from ranger_test_utils.plugin_conftest import ensure_plugin_test_users_for_session
 from ranger_test_utils.utils import LOGS_DIR, ensure_logs_directory
 
@@ -42,13 +61,15 @@ def pytest_configure(config):
 @pytest.fixture(scope="session", autouse=True)
 def _ensure_plugin_test_users_for_enforcement_suites(request):
     """
-    Before plugin enforcement tests (markers: hive, hbase, kafka, hdfs_policy),
-    create shared Ranger xusers and Kerberos keytabs via plugin_conftest.
-    REST-only suites (api_test, kms, …) are unchanged.
+    Session provisioning before tests run:
+
+    - ``kms/`` — Kerberos principals + keytabs (``ensure_kms_kerberos_users_for_session``)
+    - plugin markers — Ranger xusers + Kerberos via ``plugin_conftest``
     """
     if not request.session.items:
         yield
         return
+    ensure_kms_kerberos_users_for_session(request.session)
     ensure_plugin_test_users_for_session(request.session)
     yield
 

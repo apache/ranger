@@ -13,126 +13,211 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import pytest
+"""KMS dbks-site.xml user blacklisting for CREATE / ROLLOVER / DELETE (keyadmin)."""
+
 import time
 
-from kms.utils import (
-    krb_requests, ensure_ticket, container,
-    blacklist_op_users, unblacklist_op_users,
-    BASE_URL, PARAMS
+from ranger_test_utils.kms_test_utils import init_kms_test_module, logger
+from ranger_test_utils.kms_utils import (
+    KmsXaTestCase,
+    blacklist_op_users,
+    container,
+    ensure_keyadmin_can_list_kms_keys,
+    ensure_ticket,
+    execute_kms_rest_test,
+    fetch_kms_key_names,
+    teardown_kms_keys_created_since,
+    unblacklist_op_users,
 )
 
+TEST_CASE = None
+list_of_keys_before_test = None
 
-# ****** ******************** Test Case 01 ********************************************
-# ***** check creation, rollover, deletion of key before applying blacklist
-# ***** user1 has permission for above operation so will pass
-# ***********************************************************************************
-
-def test_user_keyOperation_before_blacklist(headers):
-    key_name = "blacklist-key1"
-    key_data = {"name": key_name}
-
-    create_response = krb_requests.post(f"{BASE_URL}/keys", headers=headers, json=key_data, params=PARAMS)
-    assert create_response.status_code == 201, f"key creation failed"
-
-    rollover_response = krb_requests.post(f"{BASE_URL}/key/{key_name}", json={}, headers=headers, params=PARAMS)
-    assert rollover_response.status_code == 200, f"roll over failed"
-
-    delete_response = krb_requests.delete(f"{BASE_URL}/key/{key_name}", params=PARAMS)
-    assert delete_response.status_code == 200, f"deletion of key got failed"
+BLACKLIST_USER = "keyadmin"
+_BLACKLIST_OPS = ("CREATE", "ROLLOVER", "DELETE")
 
 
-# ****** ******************** Test Case 02 ********************************************
-# ***** Test to blacklist a user for CREATE operation
-# ***** user1 will be blacklisted from CREATE so cant create keys
-# ***** Then Unblacklist that operation and now should succeed
-# ***********************************************************************************
+def setup_module():
+    global TEST_CASE, list_of_keys_before_test
+    init_kms_test_module(module_name=__name__)
 
-def test_blacklist_create(headers,user1):
-    # blacklist the user for CREATE operation
-    blacklist_op_users('CREATE', [user1])
+    ensure_keyadmin_can_list_kms_keys()
+    list_of_keys_before_test = fetch_kms_key_names()
+    logger.info("The list of keys before the test : %s", list_of_keys_before_test)
+
+    TEST_CASE = KmsXaTestCase()
+    TEST_CASE.setUpModule()
+
+    for op in _BLACKLIST_OPS:
+        unblacklist_op_users(op, [BLACKLIST_USER])
+    _restart_kms_after_blacklist()
+
+
+def teardown_module():
+    global TEST_CASE
+    logger.info("The list of keys before the test : %s", list_of_keys_before_test)
+    for op in _BLACKLIST_OPS:
+        unblacklist_op_users(op, [BLACKLIST_USER])
+    _restart_kms_after_blacklist()
+
+    if TEST_CASE is not None:
+        TEST_CASE.deleteKeysForThisTest()
+        TEST_CASE.tearDownModule()
+        TEST_CASE = None
+    teardown_kms_keys_created_since(list_of_keys_before_test)
+
+
+def _restart_kms_after_blacklist():
     container.restart()
     time.sleep(5)
     ensure_ticket()
+
+
+def _delete_key_quiet(key_name):
+    execute_kms_rest_test(
+        "DELETE",
+        f"/key/{key_name}",
+        expected_status=None,
+        step=f"KMS.test_blacklisting.delete_quiet.{key_name}",
+    )
+
+
+def _rollover_empty(key_name, expected_status, step):
+    execute_kms_rest_test(
+        "POST",
+        f"/key/{key_name}",
+        json_body={},
+        expected_status=expected_status,
+        step=step,
+    )
+
+
+def test_user_keyOperation_before_blacklist():
+    admin = TEST_CASE.hadoopAdminUser
+    key_name = "blacklist-key1"
+
+    TEST_CASE.createEncryptionZoneKey(
+        "test_user_keyOperation_before_blacklist",
+        admin,
+        key_name,
+        expected_status=201,
+        test_desc="test_user_keyOperation_before_blacklist_create",
+    )
+    _rollover_empty(
+        key_name,
+        200,
+        step="test_user_keyOperation_before_blacklist_rollover",
+    )
+    TEST_CASE.deleteEncryptionZoneKey(
+        "test_user_keyOperation_before_blacklist",
+        admin,
+        key_name,
+        expected_status=200,
+        test_desc="test_user_keyOperation_before_blacklist_delete",
+    )
+
+
+def test_blacklist_create():
+    blacklist_op_users("CREATE", [BLACKLIST_USER])
+    _restart_kms_after_blacklist()
 
     key_name = "blacklist-key2"
     key_data = {"name": key_name}
 
-    response = krb_requests.post(f"{BASE_URL}/keys", headers=headers, json=key_data, params=PARAMS)
-    assert response.status_code == 403, f"User {user1} should be blocked from creating the key but got succeeded"
+    execute_kms_rest_test(
+        "POST",
+        "/keys",
+        json_body=key_data,
+        expected_status=403,
+        step="test_blacklist_create.blocked",
+    )
 
-    unblacklist_op_users('CREATE', [user1])
-    container.restart()
-    time.sleep(5)
-    ensure_ticket()
+    unblacklist_op_users("CREATE", [BLACKLIST_USER])
+    _restart_kms_after_blacklist()
 
-    # delete before retry — KMS may have written the key even on a 403
-    krb_requests.delete(f"{BASE_URL}/key/{key_name}", params=PARAMS)
+    _delete_key_quiet(key_name)
 
-    response = krb_requests.post(f"{BASE_URL}/keys", headers=headers, json=key_data, params=PARAMS)
-    assert response.status_code == 201, f"User {user1} should be able to create the key after unblacklisting"
+    execute_kms_rest_test(
+        "POST",
+        "/keys",
+        json_body=key_data,
+        expected_status=201,
+        step="test_blacklist_create.allowed",
+    )
 
-    krb_requests.delete(f"{BASE_URL}/key/{key_name}", params=PARAMS)
+    _delete_key_quiet(key_name)
+    if key_name in TEST_CASE.createdKeys:
+        TEST_CASE.createdKeys.remove(key_name)
 
 
-# ****** ******************** Test Case 03 ********************************************
-# ***** Test to blacklist a user for ROLLOVER operation
-# ***** user1 will be blacklisted from ROLLOVER so cant roll over keys
-# ***** Then Unblacklist that operation and now should succeed
-# ***********************************************************************************
+def test_blacklist_rollOver():
+    blacklist_op_users("ROLLOVER", [BLACKLIST_USER])
+    _restart_kms_after_blacklist()
 
-def test_blacklist_rollOver(headers,user1):
-    # blacklist the user for rollover operation
-    blacklist_op_users('ROLLOVER', [user1])
-    container.restart()
-    time.sleep(5)
-    ensure_ticket()
-
+    admin = TEST_CASE.hadoopAdminUser
     key_name = "blacklist-key3"
-    key_data = {"name": key_name}
 
-    krb_requests.post(f"{BASE_URL}/keys", headers=headers, json=key_data, params=PARAMS)
+    TEST_CASE.createEncryptionZoneKey(
+        "test_blacklist_rollOver",
+        admin,
+        key_name,
+        expected_status=201,
+        test_desc="test_blacklist_rollOver_create",
+    )
 
-    response_after_blacklist = krb_requests.post(f"{BASE_URL}/key/{key_name}", json={}, headers=headers, params=PARAMS)
-    assert response_after_blacklist.status_code == 403, f"User {user1} should be blocked from rolling over the key but got succeeded"
+    _rollover_empty(
+        key_name,
+        403,
+        step="test_blacklist_rollOver.blocked",
+    )
 
-    unblacklist_op_users('ROLLOVER', [user1])
-    container.restart()
-    time.sleep(5)
-    ensure_ticket()
+    unblacklist_op_users("ROLLOVER", [BLACKLIST_USER])
+    _restart_kms_after_blacklist()
 
-    response_after_unblacklist = krb_requests.post(f"{BASE_URL}/key/{key_name}", headers=headers, json={}, params=PARAMS)
-    assert response_after_unblacklist.status_code == 200, f"User {user1} should be able to roll over the key but failed"
+    _rollover_empty(
+        key_name,
+        200,
+        step="test_blacklist_rollOver.allowed",
+    )
 
-    krb_requests.delete(f"{BASE_URL}/key/{key_name}", params=PARAMS)
+    TEST_CASE.deleteEncryptionZoneKey(
+        "test_blacklist_rollOver",
+        admin,
+        key_name,
+        expected_status=200,
+        test_desc="test_blacklist_rollOver_cleanup",
+    )
 
 
-# ****** ******************** Test Case 04 ********************************************
-# ***** Test to blacklist a user for DELETE operation
-# ***** user1 will be blacklisted from DELETE so cant delete keys
-# ***** Then Unblacklist that operation and now should succeed
-# ***********************************************************************************
+def test_blacklist_delete():
+    blacklist_op_users("DELETE", [BLACKLIST_USER])
+    _restart_kms_after_blacklist()
 
-def test_blacklist_delete(headers,user1):
-    # blacklist the user for rollover operation
-    blacklist_op_users('DELETE', [user1])
-    container.restart()
-    time.sleep(5)
-    ensure_ticket()
-
+    admin = TEST_CASE.hadoopAdminUser
     key_name = "blacklist-key4"
-    key_data = {"name": key_name}
 
-    krb_requests.post(f"{BASE_URL}/keys", headers=headers, json=key_data, params=PARAMS)
+    TEST_CASE.createEncryptionZoneKey(
+        "test_blacklist_delete",
+        admin,
+        key_name,
+        expected_status=201,
+        test_desc="test_blacklist_delete_create",
+    )
 
-    delete_response_before = krb_requests.delete(f"{BASE_URL}/key/{key_name}", params=PARAMS)
-    assert delete_response_before.status_code == 403, f"User {user1} should be blocked from deleting the key but got succeeded"
+    execute_kms_rest_test(
+        "DELETE",
+        f"/key/{key_name}",
+        expected_status=403,
+        step="test_blacklist_delete.blocked",
+    )
 
-    unblacklist_op_users('DELETE', [user1])
-    container.restart()
-    time.sleep(5)
-    ensure_ticket()
+    unblacklist_op_users("DELETE", [BLACKLIST_USER])
+    _restart_kms_after_blacklist()
 
-    delete_response_after = krb_requests.delete(f"{BASE_URL}/key/{key_name}", params=PARAMS)
-    assert delete_response_after.status_code == 200, f"Deletion of key got failed"
-
+    TEST_CASE.deleteEncryptionZoneKey(
+        "test_blacklist_delete",
+        admin,
+        key_name,
+        expected_status=200,
+        test_desc="test_blacklist_delete.allowed",
+    )

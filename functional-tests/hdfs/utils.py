@@ -17,15 +17,19 @@ import time
 import pytest
 import docker
 import requests
-from hdfs.test_config import (KMS_CONTAINER, HADOOP_NAMENODE_LOG_PATH, KMS_LOG_PATH)
-from kms.utils import (
+from ranger_test_utils.kms_hdfs_test_config import (
+    KMS_CONTAINER,
+    HADOOP_NAMENODE_LOG_PATH,
+    KMS_LOG_PATH,
+)
+from ranger_test_utils.kms_utils import (
     BASE_URL,
     PARAMS,
     ensure_ticket,
     get_kms_container,
     krb_requests,
 )
-from hdfs.test_config import HDFS_USER
+from ranger_test_utils.kms_hdfs_test_config import HDFS_USER
 import subprocess
 import tempfile
 import os

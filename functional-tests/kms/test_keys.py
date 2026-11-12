@@ -13,78 +13,132 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import requests
+"""KMS REST key creation and name validation (keyadmin, seed ``dev_kms`` policy)."""
+
 import pytest
-from kms.utils import (
-    krb_requests, fetch_logs,
-    BASE_URL, PARAMS
+
+from ranger_test_utils.kms_test_utils import init_kms_test_module, logger
+from ranger_test_utils.kms_utils import (
+    KmsXaTestCase,
+    ensure_keyadmin_can_list_kms_keys,
+    fetch_kms_key_names,
+    teardown_kms_keys_created_since,
 )
 
-class TestKeyManagement:
+TEST_CASE = None
+list_of_keys_before_test = None
 
-    @pytest.fixture(autouse=True)
-    def setup_class(self, create_test_key):
-        self.test_key = create_test_key
+DEFAULT_KEY_BODY = {
+    "cipher": "AES/CTR/NoPadding",
+    "length": 128,
+}
 
-    def test_create_key(self,headers):
-        key_data = {
-            "name": "key2",
-            "cipher": "AES/CTR/NoPadding",
-            "length": 128,
-            "description": "New key for checking key creation functionality"
-        }
-        response = krb_requests.post(f"{BASE_URL}/keys",headers=headers, json=key_data,params=PARAMS)
 
-        if response.status_code != 201:
-            error_logs = fetch_logs()  # Fetch logs on failure
-            pytest.fail(f"Key creation failed. API Response: {response.text}\nLogs:\n{error_logs}")
+def setup_module():
+    global TEST_CASE, list_of_keys_before_test
+    init_kms_test_module(module_name=__name__)
 
-        krb_requests.delete(f"{BASE_URL}/key/key2",params=PARAMS)               #cleanup key2
+    ensure_keyadmin_can_list_kms_keys()
+    list_of_keys_before_test = fetch_kms_key_names()
+    logger.info("The list of keys before the test : %s", list_of_keys_before_test)
 
-    #---------------------------------creation key validation------------------------------
-    @pytest.mark.parametrize("name, expected_status", [
+    TEST_CASE = KmsXaTestCase()
+    TEST_CASE.setUpModule()
+
+
+def teardown_module():
+    global TEST_CASE
+    logger.info("The list of keys before the test : %s", list_of_keys_before_test)
+    if TEST_CASE is not None:
+        TEST_CASE.deleteKeysForThisTest()
+        TEST_CASE.tearDownModule()
+        TEST_CASE = None
+    teardown_kms_keys_created_since(list_of_keys_before_test)
+
+
+def test_create_key():
+    key_data = {
+        **DEFAULT_KEY_BODY,
+        "name": "key2",
+        "description": "New key for checking key creation functionality",
+    }
+    TEST_CASE.createKmsKey(
+        "test_create_key",
+        TEST_CASE.hadoopAdminUser,
+        key_data,
+        expected_status=201,
+        test_desc="test_create_key",
+    )
+    TEST_CASE.deleteEncryptionZoneKey(
+        "test_create_key",
+        TEST_CASE.hadoopAdminUser,
+        "key2",
+        expected_status=200,
+        test_desc="test_create_key_cleanup",
+    )
+
+
+@pytest.mark.parametrize(
+    "name, expected_status",
+    [
         ("valid-key", 201),
-        ("", 400),                                     # Invalid case: Empty name
-        ("@invalid!", 400),                            # Invalid case: Special characters
-        ("invalid--key",400)                           #-- or __ or _- -_ not allowed
-    ])
-    def test_key_name_validation(self, headers, name, expected_status):
-        key_data = {
-            "name": name,
-            "cipher": "AES/CTR/NoPadding",
-            "length": 128,
-            "description": "Validation test"
-        }
-        response = krb_requests.post(f"{BASE_URL}/keys", json=key_data, headers=headers,params=PARAMS)
+        ("", 400),
+        ("@invalid!", 400),
+        ("invalid--key", 400),
+    ],
+)
+def test_key_name_validation(name, expected_status):
+    key_data = {
+        **DEFAULT_KEY_BODY,
+        "name": name,
+        "description": "Validation test",
+    }
+    TEST_CASE.createKmsKey(
+        "test_key_name_validation",
+        TEST_CASE.hadoopAdminUser,
+        key_data,
+        expected_status=expected_status,
+        test_desc=f"test_key_name_validation_{name!r}",
+    )
 
-        if response.status_code != expected_status:
-            error_logs = fetch_logs()  # Fetch logs on failure
-            pytest.fail(f"Key validation failed. API Response: {response.text}\nLogs:\n{error_logs}")
-
-        if expected_status == 201:
-            krb_requests.delete(f"{BASE_URL}/key/{name}", params=PARAMS)
-
-    # Negative test----duplicate key creation test ----------------------------------------------
-    def test_duplicate_key_creation(self, headers):
-        key_name = "duplicate-key"
-        key_data = {
-            "name": key_name,
-            "cipher": "AES/CTR/NoPadding",
-            "length": 128,
-            "description": "Testing duplicate key creation"
-        }
-
-        response1 = krb_requests.post(f"{BASE_URL}/keys", headers=headers, json=key_data, params=PARAMS)
-        assert response1.status_code == 201, f"Initial key creation failed: {response1.text}"
-
-        # creating the same key again
-        response2 = krb_requests.post(f"{BASE_URL}/keys", headers=headers, json=key_data, params=PARAMS)
-
-        assert response2.status_code == 500, f"Duplicate key got created, expected to fail"
-
-        # Cleanup
-        krb_requests.delete(f"{BASE_URL}/key/{key_name}", params=PARAMS)
+    if expected_status == 201:
+        TEST_CASE.deleteEncryptionZoneKey(
+            "test_key_name_validation",
+            TEST_CASE.hadoopAdminUser,
+            name,
+            expected_status=200,
+            test_desc=f"test_key_name_validation_cleanup_{name!r}",
+        )
 
 
+def test_duplicate_key_creation():
+    key_name = "duplicate-key"
+    key_data = {
+        **DEFAULT_KEY_BODY,
+        "name": key_name,
+        "description": "Testing duplicate key creation",
+    }
 
+    TEST_CASE.createKmsKey(
+        "test_duplicate_key_creation",
+        TEST_CASE.hadoopAdminUser,
+        key_data,
+        expected_status=201,
+        test_desc="test_duplicate_key_creation_first",
+    )
 
+    TEST_CASE.createKmsKey(
+        "test_duplicate_key_creation",
+        TEST_CASE.hadoopAdminUser,
+        key_data,
+        expected_status=500,
+        test_desc="test_duplicate_key_creation_duplicate",
+    )
+
+    TEST_CASE.deleteEncryptionZoneKey(
+        "test_duplicate_key_creation",
+        TEST_CASE.hadoopAdminUser,
+        key_name,
+        expected_status=200,
+        test_desc="test_duplicate_key_creation_cleanup",
+    )

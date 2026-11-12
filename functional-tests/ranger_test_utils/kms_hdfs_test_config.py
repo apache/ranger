@@ -13,63 +13,68 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-##Contains all constant values regarding USER, PATH, HDFS Commands----------------------
+"""Docker HDFS encryption zone constants and shell command templates (KMS-backed EZs)."""
 
-from kms.utils import BASE_URL, PARAMS
+from ranger_test_utils.kms_utils import BASE_URL, PARAMS
 
 HDFS_USER = "hdfs"
 HIVE_USER = "hive"
-HBASE_USER= "hbase"
-KEY_ADMIN="keyadmin"
-HEADERS={"Content-Type": "application/json","Accept":"application/json"}
+HBASE_USER = "hbase"
+KEY_ADMIN = "keyadmin"
+HEADERS = {"Content-Type": "application/json", "Accept": "application/json"}
 
 HADOOP_CONTAINER = "ranger-hadoop"
 KMS_CONTAINER = "ranger-kms"
 
-#KMS configs that needs to be added in XML file------------add more if needed
 KMS_PROPERTY = """<property><name>hadoop.security.key.provider.path</name><value>kms://http@ranger-kms.rangernw:9292/kms</value></property>"""
 
 CORE_SITE_XML_PATH = "/opt/hadoop/etc/hadoop/core-site.xml"
-HADOOP_NAMENODE_LOG_PATH="/opt/hadoop/logs/hadoop-hdfs-namenode-ranger-hadoop.rangernw.log"
-KMS_LOG_PATH="/var/log/ranger/kms/ranger-kms-ranger-kms.rangernw-root.log"
+HADOOP_NAMENODE_LOG_PATH = (
+    "/opt/hadoop/logs/hadoop-hdfs-namenode-ranger-hadoop.rangernw.log"
+)
+KMS_LOG_PATH = "/var/log/ranger/kms/ranger-kms-ranger-kms.rangernw-root.log"
 
+CREATE_KEY_COMMAND = (
+    "hadoop key create {key_name} -size 128 -provider kms://http@ranger-kms.rangernw:9292/kms"
+)
 
-# HDFS Commands----------------------------------------------------
-CREATE_KEY_COMMAND = "hadoop key create {key_name} -size 128 -provider kms://http@ranger-kms.rangernw:9292/kms"
-
-VALIDATE_KEY_COMMAND = "hadoop key list -provider kms://http@ranger-kms.rangernw:9292/kms"
+VALIDATE_KEY_COMMAND = (
+    "hadoop key list -provider kms://http@ranger-kms.rangernw:9292/kms"
+)
 
 CREATE_EZ_COMMANDS = [
     "hdfs dfs -mkdir -p /{ez_name}",
     "hdfs crypto -createZone -keyName {key_name} -path /{ez_name}",
-    "hdfs crypto -listZones"
+    "hdfs crypto -listZones",
 ]
 
 GRANT_PERMISSIONS_COMMANDS = [
     "hdfs dfs -chmod -R 700 /{ez_name}",
-    "hdfs dfs -chown -R {user}:{user} /{ez_name}"
+    "hdfs dfs -chown -R {user}:{user} /{ez_name}",
 ]
 
-CREATE_FILE_COMMAND = [ 'echo "{filecontent}" > /home/{user}/{filename}.txt && ls -l /home/{user}/{filename}.txt' ]
+CREATE_FILE_COMMAND = [
+    'echo "{filecontent}" > /home/{user}/{filename}.txt && ls -l /home/{user}/{filename}.txt'
+]
 
 ACTIONS_COMMANDS = [
     "hdfs dfs -put /home/{user}/{filename}.txt /{ez_name}/",
     "hdfs dfs -ls /{ez_name}/",
-    "hdfs dfs -cat /{ez_name}/{filename}.txt"
+    "hdfs dfs -cat /{ez_name}/{filename}.txt",
 ]
 
 CROSS_EZ_ACTION_COMMANDS = [
     "hdfs dfs -put /home/{user}/{filename}.txt /{ez_name}/{dirname}/",
     "hdfs dfs -ls /{ez_name}/",
-    "hdfs dfs -cat /{ez_name}/{dirname}/{filename}.txt"
+    "hdfs dfs -cat /{ez_name}/{dirname}/{filename}.txt",
 ]
 
-READ_EZ_FILE=[
-    "hdfs dfs -cat /{ez_name}/{filename}.txt"
+READ_EZ_FILE = [
+    "hdfs dfs -cat /{ez_name}/{filename}.txt",
 ]
 
 READ_EZ = [
-    "hdfs dfs -cat /{ez_name}/"
+    "hdfs dfs -cat /{ez_name}/",
 ]
 
 UNAUTHORIZED_WRITE_COMMAND = 'hdfs dfs -put /home/{user}/{filename}.txt /{ez_name}/'
@@ -81,24 +86,29 @@ CLEANUP_COMMANDS = [
     "hdfs dfs -rm -R -f /{ez_name}",
 ]
 CLEANUP_EZ = [
-    "hdfs dfs -rm -R /{ez_name}"
+    "hdfs dfs -rm -R /{ez_name}",
 ]
 CLEANUP_EZ_FILE = [
-    "hdfs dfs -rm /{ez_name}/{filename}.txt"
+    "hdfs dfs -rm /{ez_name}/{filename}.txt",
 ]
-KEY_DELETION_CMD = "bash -c \"echo 'Y' | hadoop key delete {key_name} -provider kms://http@ranger-kms.rangernw:9292/kms\""
+KEY_DELETION_CMD = (
+    'bash -c "echo \'Y\' | hadoop key delete {key_name} '
+    '-provider kms://http@ranger-kms.rangernw:9292/kms"'
+)
 
-# All KMS keys used across hdfs tests
 TEST_KMS_KEYS = [
     "hdfs-key",
-    "test-key1", "test-key2", "test-key3",
-    "cross-key", "cross-key2",
-    "decrypt-eek-key",          # test_encryption04
+    "test-key1",
+    "test-key2",
+    "test-key3",
+    "cross-key",
+    "cross-key2",
+    "decrypt-eek-key",
 ]
-# All HDFS encryption zone paths
+
 TEST_EZ_PATHS = [
     "/secure_zone",
     "/secure_zone1",
     "/secure_zone2",
-    "/decrypt_eek_zone",        # test_encryption04
+    "/decrypt_eek_zone",
 ]

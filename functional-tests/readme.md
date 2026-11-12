@@ -24,8 +24,8 @@ A Docker-based test execution framework that validates Apache Ranger service int
 
 | Suite | Description |
 |---|---|
-| **hdfs** | HDFS encryption lifecycle (KMS) and Ranger HDFS plugin path policies (`hdfs_policy` marker) |
-| **kms** | Test cases for KMS REST API functionality |
+| **hdfs** | HDFS encryption rollover/cross-zone tests and Ranger HDFS plugin path policies (`hdfs_policy` marker) |
+| **kms** | KMS REST API tests and **`test_encryption.py`** (HDFS encryption zone lifecycle; needs `ranger-hadoop`) |
 | **xuserrest** | Test cases for Ranger Admin User/Group REST APIs |
 | **rolerest** | Test cases for Ranger Admin Role REST APIs |
 | **servicerest** | Test cases for Ranger Admin Service REST APIs |
