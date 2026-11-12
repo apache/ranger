@@ -16,7 +16,7 @@
 import os
 import re
 
-from kms.utils import _ensure_kdc_principal_keytab
+from ranger_test_utils.kms_utils import ensure_kdc_principal_keytab as _ensure_kdc_principal_keytab
 from ranger_test_utils.hive_utils import KDC_CONTAINER, get_docker_client
 
 

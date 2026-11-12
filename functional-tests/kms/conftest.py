@@ -13,87 +13,126 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import requests
-import pytest
+"""Session fixtures for KMS REST tests and HDFS encryption zone tests (``ranger-hadoop``)."""
+
 import time
 
-from kms.utils import (
-    fetch_logs, krb_requests,
-    ensure_keyadmin_keytab, ensure_ticket,
-    BASE_URL, PARAMS, ensure_test_user_exists, ensure_keyadmin_ticket, ensure_testuser_ticket, delete_test_user, ensure_testuser_keytab
+import docker
+import pytest
+
+from ranger_test_utils.kms_hdfs_test_config import (
+    CORE_SITE_XML_PATH,
+    HADOOP_CONTAINER,
+    HDFS_USER,
+    KMS_CONTAINER,
+    KMS_PROPERTY,
+    TEST_EZ_PATHS,
+    TEST_KMS_KEYS,
 )
 
-RANGER_AUTH = ('keyadmin', 'rangerR0cks!')
-BASE_URL_RANGER = "http://localhost:6080/service/public/v2/api/policy"
-KMS_SERVICE_NAME = "dev_kms"
-TEST_USER = "keyadmin"
-HEADERS = {"Content-Type": "application/json"}
+client = docker.from_env()
 
-@pytest.fixture(scope="session", autouse=True)
-def setup_kerberos_ticket():
-    """Ensure keyadmin has a valid Kerberos ticket before any test runs."""
-    ensure_keyadmin_ticket()
+
+def _session_needs_encryption_setup(session):
+    """Encryption/KMS session setup — skip for hdfs_policy-only runs."""
+    if not session.items:
+        return False
+    for item in session.items:
+        if item.get_closest_marker("hdfs_policy") is None:
+            return True
+    return False
+
 
 @pytest.fixture(scope="session")
-def headers():
-    return HEADERS
+def hadoop_container():
+    container = client.containers.get(HADOOP_CONTAINER)
+    return container
 
-@pytest.fixture(scope="class")
-def create_test_key(headers):
-    data = {
-        "name": "key1",
-        "cipher": "AES/CTR/NoPadding",
-        "length": 128,
-        "description": "Test key"
-    }
 
-    key_creation_response = krb_requests.post(
-        f"{BASE_URL}/keys", headers=headers, json=data, params=PARAMS
+def ensure_user_exists(container, username: str) -> None:
+    exit_code, _ = container.exec_run(f"id -u {username}", user="root")
+    if exit_code == 0:
+        return
+
+    container.exec_run(f"useradd -m -s /bin/bash {username}", user="root")
+    container.exec_run(f"usermod -aG hadoop {username}", user="root")
+
+
+def ensure_kms_provider_configured(container) -> bool:
+    """
+    Ensures KMS provider property exists in core-site.xml.
+    Returns True if the file was modified (restart needed).
+    """
+    changed = False
+
+    exit_code, _ = container.exec_run(
+        f"grep -q 'hadoop.security.key.provider.path' {CORE_SITE_XML_PATH}",
+        user="root",
+    )
+    if exit_code != 0:
+        container.exec_run(
+            f"sed -i '/<\\/configuration>/i {KMS_PROPERTY}' {CORE_SITE_XML_PATH}",
+            user="root",
+        )
+        changed = True
+
+    exit_code, _ = container.exec_run(
+        f"grep -q 'host.docker.internal' {CORE_SITE_XML_PATH}",
+        user="root",
+    )
+    if exit_code == 0:
+        container.exec_run(
+            f"sed -i 's|host.docker.internal|ranger-kms.rangernw|g' {CORE_SITE_XML_PATH}",
+            user="root",
+        )
+        changed = True
+
+    return changed
+
+
+@pytest.fixture(scope="session", autouse=True)
+def setup_encryption_environment(request):
+    if not _session_needs_encryption_setup(request.session):
+        yield
+        return
+
+    hadoop_container = client.containers.get(HADOOP_CONTAINER)
+
+    from hdfs.utils import (
+        cleanup_test_artifacts,
+        ensure_hadoop_user_keytab,
+        ensure_kms_hdfs_policy,
+        ensure_kms_kerberos_rules,
+    )
+    from ranger_test_utils.kms_utils import ensure_keyadmin_keytab, ensure_ticket
+
+    changed = ensure_kms_provider_configured(hadoop_container)
+    if changed:
+        hadoop_container.restart()
+        time.sleep(30)
+
+    ensure_user_exists(hadoop_container, "hive")
+    ensure_user_exists(hadoop_container, "hbase")
+    ensure_hadoop_user_keytab("hive")
+    ensure_hadoop_user_keytab("hbase")
+
+    hadoop_container.exec_run(
+        [
+            "bash",
+            "-c",
+            "kinit -kt /etc/keytabs/hdfs.keytab hdfs/ranger-hadoop.rangernw@EXAMPLE.COM 2>/dev/null;"
+            "hdfs dfsadmin -safemode leave",
+        ],
+        user=HDFS_USER,
     )
 
-    if key_creation_response.status_code != 201:
-        error_logs = fetch_logs()
-        pytest.fail(
-            f"Key creation failed. API Response: {key_creation_response.text}\nLogs:\n{error_logs}"
-        )
+    kms_container = client.containers.get(KMS_CONTAINER)
+    ensure_kms_kerberos_rules(kms_container)
 
-    yield data
+    ensure_keyadmin_keytab()
+    ensure_ticket()
+    ensure_kms_hdfs_policy()
 
-    krb_requests.delete(f"{BASE_URL}/key/key1", params=PARAMS)
-
-@pytest.fixture(scope="module")
-def user1():
-    return TEST_USER
-
-@pytest.fixture(scope="module")
-def kms_policy(user1):
-    policy_data = {
-        "policyName": "blacklist-policy",
-        "service": KMS_SERVICE_NAME,
-        "resources": {
-            "keyname": {
-                "values": ["blacklist-*"],
-                "isExcludes": False,
-                "isRecursive": False
-            }
-        },
-        "policyItems": [{
-            "accesses": [
-                {"type": "CREATE",   "isAllowed": True},
-                {"type": "ROLLOVER", "isAllowed": True},
-                {"type": "DELETE",   "isAllowed": True}
-            ],
-            "users": [user1]
-        }]
-    }
-
-    response = requests.post(BASE_URL_RANGER, auth=RANGER_AUTH, json=policy_data)
-    #time.sleep(30)
-    time.sleep(5)  # Wait for Ranger to process the policy creation
-    if response.status_code not in [200, 201]:
-        raise Exception(f"Failed to create policy: {response.text}")
-
-    policy_id = response.json()["id"]
-    yield policy_id
-
-    requests.delete(f"{BASE_URL_RANGER}/{policy_id}", auth=RANGER_AUTH)
+    cleanup_test_artifacts(hadoop_container, TEST_KMS_KEYS, TEST_EZ_PATHS)
+    yield
+    cleanup_test_artifacts(hadoop_container, TEST_KMS_KEYS, TEST_EZ_PATHS)

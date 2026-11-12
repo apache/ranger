@@ -13,231 +13,323 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import requests
-import pytest
+"""KMS key operations: rollover, DEK/EDEK, re-encrypt batch, cache invalidation."""
+
 import time
-from kms.utils import (
-    krb_requests, fetch_logs,
-    BASE_URL, PARAMS
+
+import pytest
+
+from ranger_test_utils.kms_test_utils import init_kms_test_module, logger
+from ranger_test_utils.kms_utils import (
+    KmsXaTestCase,
+    ensure_keyadmin_can_list_kms_keys,
+    execute_kms_rest_test,
+    fetch_kms_key_names,
+    teardown_kms_keys_created_since,
 )
 
+TEST_CASE = None
+list_of_keys_before_test = None
 
-@pytest.mark.usefixtures("create_test_key")
-class TestKeyOperations:
+KEY1_BODY = {
+    "name": "key1",
+    "cipher": "AES/CTR/NoPadding",
+    "length": 128,
+    "description": "Test key",
+}
 
-    # Temporary key for testing roll over
-    def test_temp_key(self, headers):
-        data = {
-            "name": "rollover-key",
-            "cipher": "AES/CTR/NoPadding",
-            "length": 128,
-            "description": "Key to check roll over functionality"
-        }
-
-        krb_requests.delete(f"{BASE_URL}/key/rollover-key", params=PARAMS)
-
-        key_creation_response = krb_requests.post(f"{BASE_URL}/keys", headers=headers, json=data, params=PARAMS)
-
-
-        if key_creation_response.status_code != 201:        #log check
-            logs = fetch_logs()
-            pytest.fail(f"Create key operation failed. API Response: {key_creation_response.text}\nLogs:\n{logs}")
-
-        # cleanup after test
-        krb_requests.delete(f"{BASE_URL}/key/rollover-key", params=PARAMS)
+ROLLOVER_KEY_BODY = {
+    "name": "rollover-key",
+    "cipher": "AES/CTR/NoPadding",
+    "length": 128,
+    "description": "Key to check roll over functionality",
+}
 
 
-    # ***********************************************************************************
-    #  Parametrized Roll over of key
-    # ***********************************************************************************
-    @pytest.mark.parametrize("key_name, expected_status", [
-        ("rollover-key", 200),             # Valid key rollover
-        ("non-existent-key", 500)          # Rollover on a non-existent key
-    ])
+def setup_module():
+    global TEST_CASE, list_of_keys_before_test
+    init_kms_test_module(module_name=__name__)
 
-    def test_roll_over_key(self, headers, key_name, expected_status):
+    ensure_keyadmin_can_list_kms_keys()
+    list_of_keys_before_test = fetch_kms_key_names()
+    logger.info("The list of keys before the test : %s", list_of_keys_before_test)
 
-        if key_name == "rollover-key":
-            data = {
-                "name": "rollover-key",
-                "cipher": "AES/CTR/NoPadding",
-                "length": 128,
-                "description": "Key to check roll over functionality"
-            }
+    TEST_CASE = KmsXaTestCase()
+    TEST_CASE.setUpModule()
 
-            krb_requests.delete(f"{BASE_URL}/key/rollover-key", params=PARAMS)
-            krb_requests.post(f"{BASE_URL}/keys", headers=headers, json=data, params=PARAMS)
+    _delete_key_quiet("key1")
+    TEST_CASE.createKmsKey(
+        "setup_module",
+        TEST_CASE.hadoopAdminUser,
+        KEY1_BODY,
+        expected_status=201,
+        test_desc="setup_module_key1",
+    )
 
-        response = krb_requests.post(
-            f"{BASE_URL}/key/{key_name}",
-            json={},
-            headers=headers,
-            params=PARAMS
+
+def teardown_module():
+    global TEST_CASE
+    logger.info("The list of keys before the test : %s", list_of_keys_before_test)
+    if TEST_CASE is not None:
+        TEST_CASE.deleteKeysForThisTest()
+        TEST_CASE.tearDownModule()
+        TEST_CASE = None
+    teardown_kms_keys_created_since(list_of_keys_before_test)
+
+
+def _delete_key_quiet(key_name):
+    execute_kms_rest_test(
+        "DELETE",
+        f"/key/{key_name}",
+        expected_status=None,
+        step=f"KMS.test_keyOps.delete_quiet.{key_name}",
+    )
+
+
+def _rollover_empty_body(key_name, expected_status, step):
+    """POST ``/key/{name}`` with empty JSON (legacy ``test_keyOps`` rollover shape)."""
+    return execute_kms_rest_test(
+        "POST",
+        f"/key/{key_name}",
+        json_body={},
+        expected_status=expected_status,
+        step=step,
+    )
+
+
+def _get_key_metadata(key_name, step):
+    response = execute_kms_rest_test(
+        "GET",
+        f"/key/{key_name}/_metadata",
+        expected_status=200,
+        step=step,
+    )
+    return response.json()
+
+
+def test_temp_key():
+    admin = TEST_CASE.hadoopAdminUser
+    _delete_key_quiet("rollover-key")
+    TEST_CASE.createKmsKey(
+        "test_temp_key",
+        admin,
+        ROLLOVER_KEY_BODY,
+        expected_status=201,
+        test_desc="test_temp_key_create",
+    )
+    TEST_CASE.deleteEncryptionZoneKey(
+        "test_temp_key",
+        admin,
+        "rollover-key",
+        expected_status=200,
+        test_desc="test_temp_key_cleanup",
+    )
+
+
+@pytest.mark.parametrize(
+    "key_name, expected_status",
+    [
+        ("rollover-key", 200),
+        ("non-existent-key", 500),
+    ],
+)
+def test_roll_over_key(key_name, expected_status):
+    admin = TEST_CASE.hadoopAdminUser
+    if key_name == "rollover-key":
+        _delete_key_quiet("rollover-key")
+        TEST_CASE.createKmsKey(
+            "test_roll_over_key",
+            admin,
+            ROLLOVER_KEY_BODY,
+            expected_status=201,
+            test_desc="test_roll_over_key_create",
         )
 
-        if response.status_code != expected_status:      #log check
-            logs = fetch_logs()
-            pytest.fail(f"Rollover key operation failed. API Response: {response.status_code} {response.text}\nLogs:\n{logs}")
+    _rollover_empty_body(
+        key_name,
+        expected_status,
+        step=f"test_roll_over_key.rollover.{key_name}",
+    )
 
-        krb_requests.delete(f"{BASE_URL}/key/rollover-key", params=PARAMS)
-
-
-    # ***********************************************************************************
-    # Test for checking roll overed key has new material
-    # ***********************************************************************************
-    def test_roll_over_new_material(self, headers):
-        old_metadata = krb_requests.get(f"{BASE_URL}/key/key1/_metadata", headers=headers, params=PARAMS)
-        print("Old Metadata:", old_metadata.json())
-
-        krb_requests.post(f"{BASE_URL}/key/key1", json={}, headers=headers, params=PARAMS)      #roll-over here
-
-        new_metadata = krb_requests.get(f"{BASE_URL}/key/key1/_metadata", headers=headers, params=PARAMS)
-        print("New Metadata:", new_metadata.json())
-
-        assert old_metadata.json() != new_metadata.json(), "Key rollover should create new key material."
+    if key_name == "rollover-key":
+        _delete_key_quiet("rollover-key")
+        if "rollover-key" in TEST_CASE.createdKeys:
+            TEST_CASE.createdKeys.remove("rollover-key")
 
 
-    # ***********************************************************************************
-    #  Data key generation and decrypting EDEK to get DEK
-    # ***********************************************************************************
-    def test_generate_data_key_and_decrypt(self, headers, create_test_key):
-        # Generate Data Key
-        key_name=create_test_key["name"]
-        response = krb_requests.get(f"{BASE_URL}/key/{key_name}/_dek", headers=headers, params=PARAMS)
+def test_roll_over_new_material():
+    old_metadata = _get_key_metadata("key1", "test_roll_over_new_material.before")
+    logger.info("Old metadata: %s", old_metadata)
 
-        if response.status_code != 200:         #log check
-            logs=fetch_logs()
-            pytest.fail(f"generation of data key operation failed. API Response: {response.text}\nLogs:\n{logs}")
+    _rollover_empty_body(
+        "key1",
+        200,
+        step="test_roll_over_new_material.rollover",
+    )
 
+    new_metadata = _get_key_metadata("key1", "test_roll_over_new_material.after")
+    logger.info("New metadata: %s", new_metadata)
 
-        data_key_response = response.json()
-        dek = data_key_response.get("dek")
-        edek = data_key_response.get("edek")
-
-        print(dek)
-        print(edek)
-
-        assert dek is not None, "Generated DEK should not be None"
-        assert edek is not None, "Generated EDEK should not be None"
-
-        # Extracting details for decryption from EDEK
-        encrypted_key_version = edek.get("encryptedKeyVersion")
-        encrypted_material = encrypted_key_version.get("material")
-        name = encrypted_key_version.get("name")
-        version_name = edek.get("versionName")
-        iv = edek.get("iv")
-
-        decrypt_payload = {
-
-            "name":name,
-            "iv": iv,
-            "material": encrypted_material,
-        }
-
-        DECRYPT_PARAMS = {"user.name": "keyadmin","eek_op":"decrypt"}
-        decrypt_response = krb_requests.post(f"{BASE_URL}/keyversion/{version_name}/_eek", json=decrypt_payload, headers=headers, params=DECRYPT_PARAMS)
-
-        if decrypt_response.status_code != 200:       #log check
-            logs=fetch_logs()
-            pytest.fail(f"Decryption of key operation failed. API Response: {response.text}\nLogs:\n{logs}")
-
-        decrypted_data = decrypt_response.json()
-        print("Decrypted Data:", decrypted_data)  # check decrypted data
-
-        # checking the decrypted key matches the original DEK
-        assert decrypted_data == dek, "Decrypted DEK should match the original DEK"
-
-    # ***********************************************************************************
-    #   re encryption of encrypted keys---------------------------------
-    #   verifies: that the EDEK is updated (i.e., versionName changes) after key rotation
-    # ***********************************************************************************
-    def test_reencrypt_encrypted_keys(self, headers):
-        # Step 1: Create the key
-        key_name = "reencrypt-key"
-        data = {"name": key_name}
-        create_response = krb_requests.post(f"{BASE_URL}/keys", headers=headers, json=data, params=PARAMS)
-        logs=fetch_logs()
-        assert create_response.status_code == 201, f"Key creation failed: {create_response.text}\nLogs:\n{logs}"
-
-        try:
-            # Step 2: Generate an Encrypted DEK (EDEK) using the key
-            generate_response = krb_requests.get(f"{BASE_URL}/key/{key_name}/_dek", headers=headers, params=PARAMS)
-            logs=fetch_logs()
-            assert generate_response.status_code == 200, f"EEK generation failed: {generate_response.text}\nLogs:\n{logs}"
-
-            print(generate_response.json())
-
-            edek = generate_response.json()["edek"]
-            encrypted_key_version = edek["encryptedKeyVersion"]
-
-            edek_payload = [
-                {
-                    "versionName": edek["versionName"],
-                    "iv": edek["iv"],
-                    "encryptedKeyVersion": {
-                        "versionName": "EEK",
-                        "material": encrypted_key_version["material"]
-                    }
-                }
-            ]
-
-            # Step 3: Rotate the key (to create a new version)
-            rollover_response = krb_requests.post(f"{BASE_URL}/key/{key_name}", json={}, headers=headers, params=PARAMS)
-            assert rollover_response.status_code == 200, f"Key rollover failed: {rollover_response.text}"
-
-            # Step 4: Call the reencryptEncryptedKeys API
-            reencrypt_url = f"{BASE_URL}/key/{key_name}/_reencryptbatch"
-            reencrypt_response = krb_requests.post(reencrypt_url, headers=headers, json=edek_payload, params=PARAMS)
-            assert reencrypt_response.status_code == 200, f"Re-encrypt call failed: {reencrypt_response.text}"
-
-            # Step 5: Validate the response EDEKs
-            reencrypted_edeks = reencrypt_response.json()
-            print(reencrypted_edeks)
-
-            assert isinstance(reencrypted_edeks, list), "Expected list of re-encrypted EDEKs"
-            assert len(reencrypted_edeks) == 1, "Expected exactly one re-encrypted EDEK"
-            assert reencrypted_edeks[0]["versionName"] != edek["versionName"], \
-                "Expected EDEK version to change after re-encryption"
-
-        finally:
-            # Cleanup key
-            krb_requests.delete(f"{BASE_URL}/key/{key_name}", params=PARAMS)
+    assert old_metadata != new_metadata, "Key rollover should create new key material."
 
 
+def test_generate_data_key_and_decrypt():
+    key_name = KEY1_BODY["name"]
+    generate_body = TEST_CASE.generateDekWithEdek(
+        "test_generate_data_key_and_decrypt",
+        TEST_CASE.hadoopAdminUser,
+        key_name,
+        test_desc="test_generate_data_key_and_decrypt_generate",
+    )
 
-    # ***********************************************************************************
-    # invalidate cache use
-    # ***********************************************************************************
-    def test_generate_data_key_after_invalidate_cache(self, headers):
-        key_name = "cache_key"
+    dek = generate_body.get("dek")
+    edek = generate_body.get("edek")
+    assert dek is not None, "Generated DEK should not be None"
+    assert edek is not None, "Generated EDEK should not be None"
 
-        data = {"name": key_name}
+    encrypted_key_version = edek.get("encryptedKeyVersion")
+    decrypt_payload = {
+        "name": encrypted_key_version.get("name"),
+        "iv": edek.get("iv"),
+        "material": encrypted_key_version.get("material"),
+    }
+    version_name = edek.get("versionName")
 
-        # Step 1: Create a key
-        create_response = krb_requests.post(f"{BASE_URL}/keys", headers=headers, json=data, params=PARAMS)
-        assert create_response.status_code == 201, "Key creation failed"
+    decrypt_response = execute_kms_rest_test(
+        "POST",
+        f"/keyversion/{version_name}/_eek",
+        json_body=decrypt_payload,
+        params={"user.name": "keyadmin", "eek_op": "decrypt"},
+        expected_status=200,
+        step="test_generate_data_key_and_decrypt_decrypt",
+    )
+    decrypted_data = decrypt_response.json()
+    logger.info("Decrypted data: %s", decrypted_data)
 
-        # Step 2: Roll over (creates @1, cached)
-        roll_response = krb_requests.post(f"{BASE_URL}/key/{key_name}", json={}, headers=headers, params=PARAMS)
-        assert roll_response.status_code == 200, "Rollover failed"
+    assert decrypted_data == dek, "Decrypted DEK should match the original DEK"
 
-        # Step 3: Delete the key (DB is clean, cache still references @1)
-        delete_response = krb_requests.delete(f"{BASE_URL}/key/{key_name}", headers=headers, params=PARAMS)
-        assert delete_response.status_code == 200, "Key deletion failed"
 
-        time.sleep(5)
+def test_reencrypt_encrypted_keys():
+    admin = TEST_CASE.hadoopAdminUser
+    key_name = "reencrypt-key"
 
-        # Step 4: Recreate the key (creates only @0 in DB, cache still stale @1)
-        recreate_response = krb_requests.post(f"{BASE_URL}/keys", headers=headers, json=data, params=PARAMS)
-        assert recreate_response.status_code == 201, "Key recreation failed"
+    TEST_CASE.createEncryptionZoneKey(
+        "test_reencrypt_encrypted_keys",
+        admin,
+        key_name,
+        expected_status=201,
+        test_desc="test_reencrypt_encrypted_keys_create",
+    )
 
-        # Step 5: Invalidate cache – forces KMS to reload latest version from DB
-        invalidate_params = {"user.name": "keyadmin", "action": "invalidateCache"}
-        invalidate_response = krb_requests.post(f"{BASE_URL}/key/{key_name}", json={}, headers=headers, params=invalidate_params)
-        assert invalidate_response.status_code == 200, "Invalidate cache failed"
+    try:
+        generate_body = TEST_CASE.generateDekWithEdek(
+            "test_reencrypt_encrypted_keys",
+            admin,
+            key_name,
+            test_desc="test_reencrypt_encrypted_keys_generate_dek",
+        )
+        logger.info("Generate DEK response: %s", generate_body)
 
-        # Step 6: try DEK – should succeed (correct version @0 loaded)
-        dek_response = krb_requests.get(f"{BASE_URL}/key/{key_name}/_dek", headers=headers, params=PARAMS)
-        assert dek_response.status_code == 200, "DEK generation should succeed after cache invalidation"
+        edek = generate_body["edek"]
+        encrypted_key_version = edek["encryptedKeyVersion"]
+        edek_payload = [
+            {
+                "versionName": edek["versionName"],
+                "iv": edek["iv"],
+                "encryptedKeyVersion": {
+                    "versionName": "EEK",
+                    "material": encrypted_key_version["material"],
+                },
+            }
+        ]
 
-        krb_requests.delete(f"{BASE_URL}/key/{key_name}", headers=headers, params=PARAMS)
+        _rollover_empty_body(
+            key_name,
+            200,
+            step="test_reencrypt_encrypted_keys.rollover",
+        )
+
+        reencrypt_response = execute_kms_rest_test(
+            "POST",
+            f"/key/{key_name}/_reencryptbatch",
+            json_body=edek_payload,
+            expected_status=200,
+            step="test_reencrypt_encrypted_keys.reencrypt",
+        )
+        reencrypted_edeks = reencrypt_response.json()
+        logger.info("Re-encrypted EDEKs: %s", reencrypted_edeks)
+
+        assert isinstance(reencrypted_edeks, list), "Expected list of re-encrypted EDEKs"
+        assert len(reencrypted_edeks) == 1, "Expected exactly one re-encrypted EDEK"
+        assert reencrypted_edeks[0]["versionName"] != edek["versionName"], (
+            "Expected EDEK version to change after re-encryption"
+        )
+    finally:
+        TEST_CASE.deleteEncryptionZoneKey(
+            "test_reencrypt_encrypted_keys",
+            admin,
+            key_name,
+            expected_status=200,
+            test_desc="test_reencrypt_encrypted_keys_cleanup",
+        )
+
+
+def test_generate_data_key_after_invalidate_cache():
+    admin = TEST_CASE.hadoopAdminUser
+    key_name = "cache_key"
+
+    TEST_CASE.createEncryptionZoneKey(
+        "test_generate_data_key_after_invalidate_cache",
+        admin,
+        key_name,
+        expected_status=201,
+        test_desc="test_generate_data_key_after_invalidate_cache_create",
+    )
+
+    _rollover_empty_body(
+        key_name,
+        200,
+        step="test_generate_data_key_after_invalidate_cache.rollover",
+    )
+
+    TEST_CASE.deleteEncryptionZoneKey(
+        "test_generate_data_key_after_invalidate_cache",
+        admin,
+        key_name,
+        expected_status=200,
+        test_desc="test_generate_data_key_after_invalidate_cache_delete",
+    )
+
+    time.sleep(5)
+
+    TEST_CASE.createEncryptionZoneKey(
+        "test_generate_data_key_after_invalidate_cache",
+        admin,
+        key_name,
+        expected_status=201,
+        test_desc="test_generate_data_key_after_invalidate_cache_recreate",
+    )
+
+    execute_kms_rest_test(
+        "POST",
+        f"/key/{key_name}",
+        json_body={},
+        params={"user.name": "keyadmin", "action": "invalidateCache"},
+        expected_status=200,
+        step="test_generate_data_key_after_invalidate_cache.invalidate",
+    )
+
+    TEST_CASE.generateDekWithEdek(
+        "test_generate_data_key_after_invalidate_cache",
+        admin,
+        key_name,
+        test_desc="test_generate_data_key_after_invalidate_cache_dek",
+    )
+
+    TEST_CASE.deleteEncryptionZoneKey(
+        "test_generate_data_key_after_invalidate_cache",
+        admin,
+        key_name,
+        expected_status=200,
+        test_desc="test_generate_data_key_after_invalidate_cache_final_cleanup",
+    )

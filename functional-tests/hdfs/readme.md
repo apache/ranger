@@ -20,14 +20,11 @@ limitations under the License.
 ## Structure
 ```
 hdfs/
-├── test_encryption.py
-├── test_encryption02.py  
-├── test_encryption03.py
-├── test_config.py        #stores all constants and HDFS commands
-├── conftest.py           #sets up the environment
 ├── utils.py              #utility methods
-
 ```
+
+HDFS encryption zone constants and command templates:
+**`ranger_test_utils/kms_hdfs_test_config.py`**. Session fixtures (``hadoop_container``, encryption setup) live in **`kms/conftest.py`**; the root **`functional-tests/conftest.py`** loads that plugin when you run ``pytest hdfs/``.
 
 ---
 
@@ -40,7 +37,8 @@ hdfs/
 
 ### `setup_environment`
 
-Handled in `conftest.py` file
+Handled in **`kms/conftest.py`** (loaded for ``pytest hdfs/`` via root **`functional-tests/conftest.py`**).
+
 Before running the test cases, some environment configurations are needed:
 - HDFS must communicate with KMS to fetch key details.
 - Specific KMS properties are added to the `core-site.xml` file.
@@ -58,28 +56,9 @@ Before running the test cases, some environment configurations are needed:
 
 ---
 
-## `test_encryption.py`
-
-Handles the **full HDFS encryption cycle**, including setup, positive and negative test scenarios, and cleanup.
-
-### Main Highlights:
-- Encryption Zone (EZ) creation in HDFS.
-- Granting permissions to specific users for read/write operations within the EZ.
-- Validating read/write attempts by unauthorized users inside the EZ.
-
-
-## `test_encryption02.py`
-
-Handles the **Check if after key roll over old files can be read or not**
-**Check if after key roll over new files can be written and read too**
-**Check read operation on file after key deletion**
-         
----
-
-## `test_encryption03.py`
-
-Handles the **Test case on cross Encryption zone operations**
-
+HDFS encryption zone lifecycle tests live under **`kms/test_encryption.py`**,
+**`kms/test_encryption02.py`**, **`kms/test_encryption03.py`**, and **`kms/test_encryption04.py`**
+(DECRYPT_EEK policy; require ``ranger-hadoop``).
 
 ## Summary
 

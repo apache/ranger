@@ -13,141 +13,197 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""KMS key metadata, versions, bulk metadata, and keyversion REST checks."""
+
 import pytest
-from kms.utils import (
-    krb_requests, fetch_logs,
-    BASE_URL, PARAMS
+
+from ranger_test_utils.kms_test_utils import init_kms_test_module, logger
+from ranger_test_utils.kms_utils import (
+    KmsXaTestCase,
+    ensure_keyadmin_can_list_kms_keys,
+    execute_kms_rest_test,
+    fetch_kms_key_names,
+    teardown_kms_keys_created_since,
 )
 
-class TestKeyDetails:
+TEST_CASE = None
+list_of_keys_before_test = None
 
-    @pytest.fixture(autouse=True)
-    def setup_class(self, create_test_key):
-        self.test_key = create_test_key
+KEY1_BODY = {
+    "name": "key1",
+    "cipher": "AES/CTR/NoPadding",
+    "length": 128,
+    "description": "Test key",
+}
 
-    # ***********************************************************************************
-    #  Get key names
-    # ***********************************************************************************
-    def test_get_key_names(self):
-        response = krb_requests.get(f"{BASE_URL}/keys/names", params=PARAMS)
-
-        if response.status_code != 200:                      # log check
-            logs = fetch_logs()
-            pytest.fail(f"Get key operation failed. API Response: {response.text}\nLogs:\n{logs}")
-
-        print(response.json())
-        assert self.test_key["name"] in response.json()
+_BLANK_RESPONSES = {"", "{}", "{ }", "[]", "[ ]"}
 
 
-    # ***********************************************************************************
-    #  Parametrized Get key metadata check for existent and non existent key
-    #  Note: key1 is coming from create_test_key fixture in conftest.py
-    # ***********************************************************************************
+def setup_module():
+    global TEST_CASE, list_of_keys_before_test
+    init_kms_test_module(module_name=__name__)
 
-    @pytest.mark.parametrize("key_name, expected_status, expected_response", [
-        ("key1", 200, "valid"),                   # Key exists, should return valid metadata
-        ("non-existent-key", 200, "invalid"),     # Key does not exist but returns 200 with [] should give 404
-    ])
-    def test_get_key_metadata(self, headers, key_name, expected_status, expected_response):
-        response = krb_requests.get(f"{BASE_URL}/key/{key_name}/_metadata", headers=headers, params=PARAMS)
+    ensure_keyadmin_can_list_kms_keys()
+    list_of_keys_before_test = fetch_kms_key_names()
+    logger.info("The list of keys before the test : %s", list_of_keys_before_test)
 
-        if response.status_code != expected_status:
-            logs = fetch_logs()
-            pytest.fail(f"Get key metadata operation failed. API Response: {response.text}\nLogs:\n{logs}")
+    TEST_CASE = KmsXaTestCase()
+    TEST_CASE.setUpModule()
 
-        if expected_response == "invalid":
-            assert response.text.strip() in ["", "{}", "{ }", "[]", "[ ]"], f"Expected blank response for non-existent key, got: {response.text}"
-
-
-    # ***********************************************************************************
-    #  Parametrized Get Key version for existent and non existent key
-    #  Note: key1 is coming from create_test_key fixture in conftest.py
-    # ***********************************************************************************
-
-    @pytest.mark.parametrize("key_name, expected_status, expected_response", [
-        ("key1", 200, "valid"),               # Key exists
-        ("non-existent-key", 200,"invalid"),  # Key does not exist but returns 200 with [] should give 404
-    ])
-    def test_get_key_versions(self, headers, key_name, expected_status,expected_response):
-        response = krb_requests.get(f"{BASE_URL}/key/{key_name}/_versions", headers=headers, params=PARAMS)
-
-        if response.status_code != expected_status:
-            logs = fetch_logs()
-            pytest.fail(f"Get key version operation failed. API Response: {response.text}\nLogs:\n{logs}")
-
-        if expected_response == "invalid":
-            assert response.text.strip() in ["", "{}", "{ }", "[]", "[ ]"], f"Expected blank response for non-existent key, got: {response.text}"
+    _delete_key_quiet("key1")
+    TEST_CASE.createKmsKey(
+        "setup_module",
+        TEST_CASE.hadoopAdminUser,
+        KEY1_BODY,
+        expected_status=201,
+        test_desc="setup_module_key1",
+    )
 
 
-    # ***********************************************************************************
-    #  Get Key metadata for multiple keys at once
-    #  Note: key1 is coming from create_test_key fixture in conftest.py
-    # ***********************************************************************************
-
-    def test_get_keys_metadata(self, headers):
-        #Create second key (key2)
-        key_name="key2"
-        data = {
-            "name":key_name
-        }
-        create_response = krb_requests.post(f"{BASE_URL}/keys", headers=headers, json=data, params=PARAMS)
-        assert create_response.status_code == 201, f"Key2 creation failed: {create_response.text}"
-
-        try:
-            # Check metadata for existing keys (key1 and key2)
-            existing_keys = ["key1", "key2"]
-            params = [("key", k) for k in existing_keys]
-            params.append(("user.name", "keyadmin"))
-
-            response = krb_requests.get(f"{BASE_URL}/keys/metadata", headers=headers, params=params)
-            assert response.status_code == 200, f"Metadata fetch failed: {response.status_code}"
-
-            metadata = response.json()
-            returned_keys = [entry["name"] for entry in metadata]
-            for key in existing_keys:
-                assert key in returned_keys, f"Expected key '{key}' not found in metadata response"
-
-            # Check metadata for non-existent keys
-            fake_keys = ["nonExistent_key_1", "nonExistent_key_2"]
-            params = [("key", k) for k in fake_keys]
-            params.append(("user.name", "keyadmin"))
-
-            response = krb_requests.get(f"{BASE_URL}/keys/metadata", headers=headers, params=params)
-            assert response.status_code == 200, f"Metadata fetch failed for non-existent keys: {response.status_code}"
-
-            assert response.json() == [{}, {}], f"Expected blank response for non-existent key, got: {response.text}"
-
-        finally:
-            # Cleanup key2
-            krb_requests.delete(f"{BASE_URL}/key/{key_name}", params=PARAMS)
+def teardown_module():
+    global TEST_CASE
+    logger.info("The list of keys before the test : %s", list_of_keys_before_test)
+    if TEST_CASE is not None:
+        TEST_CASE.deleteKeysForThisTest()
+        TEST_CASE.tearDownModule()
+        TEST_CASE = None
+    teardown_kms_keys_created_since(list_of_keys_before_test)
 
 
-    # ***********************************************************************************
-    #  Test for endpoint 'get key version'
-    #  Note: key1 is coming from create_test_key fixture in conftest.py
-    # ***********************************************************************************
-
-    @pytest.mark.parametrize("version_name, expected_status, expected_valid", [
-        ("key1@0", 200, True),                      # Valid version
-        ("non-existent-key@0", 200, False),         # Key does not exist but returns 200 with [] should give 404
-    ])
-
-    def test_get_key_version(self, headers, version_name, expected_status, expected_valid):
-        response = krb_requests.get(f"{BASE_URL}/keyversion/{version_name}", headers=headers, params=PARAMS)
-
-        if response.status_code != expected_status:
-            logs = fetch_logs()
-            pytest.fail(f"Get key version failed. Response: {response.text}\nLogs:\n{logs}")
-
-        if expected_valid:
-            try:
-                version_data = response.json()
-                assert "versionName" in version_data, "versionName missing in response"
-                assert version_data["versionName"] == version_name, f"Mismatch in version name: expected {version_name}"
-            except ValueError:
-                pytest.fail(f"Expected valid JSON response, got: {response.text}")
-        else:
-            assert response.text.strip() in ["", "{}", "{ }", "[]", "[ ]"], f"Expected blank response for non-existent key, got: {response.text}"
+def _delete_key_quiet(key_name):
+    execute_kms_rest_test(
+        "DELETE",
+        f"/key/{key_name}",
+        expected_status=None,
+        step=f"KMS.test_keyDetails.delete_quiet.{key_name}",
+    )
 
 
+def test_get_key_names():
+    key_names = fetch_kms_key_names()
+    logger.info("Key names: %s", key_names)
+    assert KEY1_BODY["name"] in key_names
 
+
+@pytest.mark.parametrize(
+    "key_name, expected_status, expected_response",
+    [
+        ("key1", 200, "valid"),
+        ("non-existent-key", 200, "invalid"),
+    ],
+)
+def test_get_key_metadata(key_name, expected_status, expected_response):
+    response = execute_kms_rest_test(
+        "GET",
+        f"/key/{key_name}/_metadata",
+        expected_status=expected_status,
+        step=f"test_get_key_metadata.{key_name}",
+    )
+
+    if expected_response == "invalid":
+        assert response.text.strip() in _BLANK_RESPONSES, (
+            f"Expected blank response for non-existent key, got: {response.text}"
+        )
+
+
+@pytest.mark.parametrize(
+    "key_name, expected_status, expected_response",
+    [
+        ("key1", 200, "valid"),
+        ("non-existent-key", 200, "invalid"),
+    ],
+)
+def test_get_key_versions(key_name, expected_status, expected_response):
+    response = execute_kms_rest_test(
+        "GET",
+        f"/key/{key_name}/_versions",
+        expected_status=expected_status,
+        step=f"test_get_key_versions.{key_name}",
+    )
+
+    if expected_response == "invalid":
+        assert response.text.strip() in _BLANK_RESPONSES, (
+            f"Expected blank response for non-existent key, got: {response.text}"
+        )
+
+
+def test_get_keys_metadata():
+    admin = TEST_CASE.hadoopAdminUser
+    key_name = "key2"
+
+    TEST_CASE.createEncryptionZoneKey(
+        "test_get_keys_metadata",
+        admin,
+        key_name,
+        expected_status=201,
+        test_desc="test_get_keys_metadata_create_key2",
+    )
+
+    try:
+        existing_keys = ["key1", "key2"]
+        params = [("key", k) for k in existing_keys]
+        params.append(("user.name", "keyadmin"))
+
+        response = execute_kms_rest_test(
+            "GET",
+            "/keys/metadata",
+            params=params,
+            expected_status=200,
+            step="test_get_keys_metadata.existing",
+        )
+        metadata = response.json()
+        returned_keys = [entry["name"] for entry in metadata]
+        for key in existing_keys:
+            assert key in returned_keys, (
+                f"Expected key '{key}' not found in metadata response"
+            )
+
+        fake_keys = ["nonExistent_key_1", "nonExistent_key_2"]
+        params = [("key", k) for k in fake_keys]
+        params.append(("user.name", "keyadmin"))
+
+        response = execute_kms_rest_test(
+            "GET",
+            "/keys/metadata",
+            params=params,
+            expected_status=200,
+            step="test_get_keys_metadata.nonexistent",
+        )
+        assert response.json() == [{}, {}], (
+            f"Expected blank response for non-existent keys, got: {response.text}"
+        )
+    finally:
+        TEST_CASE.deleteEncryptionZoneKey(
+            "test_get_keys_metadata",
+            admin,
+            key_name,
+            expected_status=200,
+            test_desc="test_get_keys_metadata_cleanup_key2",
+        )
+
+
+@pytest.mark.parametrize(
+    "version_name, expected_status, expected_valid",
+    [
+        ("key1@0", 200, True),
+        ("non-existent-key@0", 200, False),
+    ],
+)
+def test_get_key_version(version_name, expected_status, expected_valid):
+    response = execute_kms_rest_test(
+        "GET",
+        f"/keyversion/{version_name}",
+        expected_status=expected_status,
+        step=f"test_get_key_version.{version_name}",
+    )
+
+    if expected_valid:
+        version_data = response.json()
+        assert "versionName" in version_data, "versionName missing in response"
+        assert version_data["versionName"] == version_name, (
+            f"Mismatch in version name: expected {version_name}"
+        )
+    else:
+        assert response.text.strip() in _BLANK_RESPONSES, (
+            f"Expected blank response for non-existent key, got: {response.text}"
+        )
