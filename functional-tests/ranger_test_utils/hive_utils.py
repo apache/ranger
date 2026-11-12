@@ -28,6 +28,7 @@ from ranger_test_utils.plugin_enforcement_utils import (
 from ranger_test_utils.utils import (
     DOCKER_PLUGIN_TEST_USER_PASSWORD,
     POLICY_URL,
+    PUBLIC_V2_BASE,
     RANGER_ADMIN_BASE_URL,
     assert_http_ok,
     get_test_logger,
@@ -72,6 +73,11 @@ HIVE_AUDIT_POLICY_ACCESS_TYPES = [
 
 POLICY_PROPAGATION_SLEEP_SEC = 15
 
+# HiveServer2 binds port 10000 only at the very end of a long startup
+# (~60s in the docker stack), so a just-restarted container needs retries.
+HS2_READY_TIMEOUT_SEC = 120
+HS2_READY_POLL_SEC = 10
+
 _docker_client = None
 
 
@@ -102,6 +108,60 @@ def _hs2_port_open(host="127.0.0.1", port=10000, timeout=2.0):
         return False
 
 
+# Beeline/HS2 transport failures. These are infrastructure problems, not
+# authorization decisions: when HS2 is down the output carries no
+# "Permission denied", so a STDERR_NOT_CONTAINS assertion would pass falsely.
+HIVE_INFRA_ERROR_SUBSTRINGS = (
+    "Could not open client transport",
+    "Could not open connection to the HS2 server",
+    "Connection refused",
+    "SocketTimeoutException",
+    "GSS initiate failed",
+    "Client cannot authenticate via",
+)
+
+
+def find_hive_infra_error(output):
+    """Return the first infra-failure marker present in ``output``, else None."""
+    text = output or ""
+    for marker in HIVE_INFRA_ERROR_SUBSTRINGS:
+        if marker in text:
+            return marker
+    return None
+
+
+def _hs2_session_usable(timeout_sec=HS2_READY_TIMEOUT_SEC):
+    """
+    Open a real beeline session and run ``SHOW DATABASES;``.
+
+    An open TCP port is not proof of readiness - HiveServer2 binds 10000 only
+    after a long startup, and can also accept the socket while HDFS/Kerberos
+    are still broken. Retries until ``timeout_sec`` so a just-restarted
+    container is not reported as dead.
+
+    A Ranger *authorization denial* counts as success: it proves the client
+    connected, authenticated and reached policy evaluation. The service user
+    legitimately has no policy before ``setup_module`` recreates it.
+    """
+    deadline = time.time() + timeout_sec
+    last_error = "no attempt made"
+    while True:
+        exit_code, output = run_beeline(None, "SHOW DATABASES;", service_user=True)
+        infra_error = find_hive_infra_error(output)
+        reached_authorizer = HIVE_AUTHZ_DENIED_SUBSTR in (output or "")
+        if infra_error is None and (exit_code == 0 or reached_authorizer):
+            return True, ""
+        last_error = infra_error or ("exit_code=" + str(exit_code))
+        if time.time() >= deadline:
+            return False, last_error
+        logger.info(
+            "HiveServer2 not ready yet (%s); retrying for %ss",
+            last_error,
+            int(max(0, deadline - time.time())),
+        )
+        time.sleep(HS2_READY_POLL_SEC)
+
+
 def preflight_hive_stack():
     """Skip tests when required Docker services or HS2 are unavailable."""
     required = [ADMIN_CONTAINER, KDC_CONTAINER, HADOOP_CONTAINER, HIVE_CONTAINER]
@@ -118,6 +178,15 @@ def preflight_hive_stack():
             "HiveServer2 is not accepting connections on localhost:10000 "
             "(is ranger-hive healthy?)"
         )
+
+    usable, reason = _hs2_session_usable()
+    if not usable:
+        pytest.skip(
+            "HiveServer2 port 10000 is open but no beeline session could be "
+            "established (" + reason + "). Check `docker logs ranger-hive` and "
+            "that ranger-hadoop is healthy."
+        )
+    logger.info("HiveServer2 preflight OK: beeline session established")
 
 
 def _user_principal(username):
@@ -434,6 +503,190 @@ def wait_for_policy_propagation(seconds=POLICY_PROPAGATION_SLEEP_SEC):
     time.sleep(seconds)
 
 
+# --------------------------------------------------------------------------- #
+# Generic policy helpers (used by the security-zone suites)
+# --------------------------------------------------------------------------- #
+
+ZONE_URL = PUBLIC_V2_BASE + "/zones"
+
+
+def build_resource(values, is_excludes=False, is_recursive=False):
+    """Build one Ranger policy resource entry."""
+    return {
+        "values": list(values),
+        "isExcludes": is_excludes,
+        "isRecursive": is_recursive,
+    }
+
+
+def build_policy_item(users=None, groups=None, accesses=None, delegate_admin=False):
+    """Build one Ranger policy item (``accesses`` are access-type names)."""
+    return {
+        "accesses": [
+            {"type": access, "isAllowed": True} for access in (accesses or ["select"])
+        ],
+        "users": list(users or []),
+        "groups": list(groups or []),
+        "conditions": [],
+        "delegateAdmin": delegate_admin,
+    }
+
+
+def build_hive_policy_payload(
+    service_name,
+    policy_name,
+    resources,
+    policy_items,
+    zone_name="",
+    description=None,
+):
+    """Build a Ranger Hive access-policy payload (optionally scoped to a zone)."""
+    return {
+        "isEnabled": True,
+        "service": service_name,
+        "name": policy_name,
+        "policyType": 0,
+        "policyPriority": 0,
+        "description": description or policy_name,
+        "isAuditEnabled": True,
+        "resources": resources,
+        "policyItems": policy_items,
+        "denyPolicyItems": [],
+        "allowExceptions": [],
+        "denyExceptions": [],
+        "dataMaskPolicyItems": [],
+        "rowFilterPolicyItems": [],
+        "serviceType": "hive",
+        "options": {},
+        "validitySchedules": [],
+        "policyLabels": [""],
+        "zoneName": zone_name,
+    }
+
+
+def build_hive_table_policy_payload(
+    service_name,
+    policy_name,
+    database,
+    tables,
+    users,
+    columns=("*",),
+    accesses=("select",),
+    zone_name="",
+    tables_excluded=False,
+):
+    """Shorthand for a db/table/column access policy granted to ``users``."""
+    resources = {
+        "database": build_resource([database]),
+        "table": build_resource(tables, is_excludes=tables_excluded),
+        "column": build_resource(columns),
+    }
+    return build_hive_policy_payload(
+        service_name,
+        policy_name,
+        resources,
+        [build_policy_item(users=users, accesses=list(accesses))],
+        zone_name=zone_name,
+    )
+
+
+def create_policy(session, payload):
+    """POST a policy payload; returns the created policy id."""
+    response = session.post(POLICY_URL, json=payload)
+    assert_http_ok(
+        response, (200, 201), "Create policy " + str(payload.get("name")), POLICY_URL
+    )
+    policy_id = response.json().get("id")
+    assert policy_id is not None, "Create policy response missing id: " + response.text
+    logger.info("Created policy id=%s name=%s zone=%s",
+                policy_id, payload.get("name"), payload.get("zoneName") or "-")
+    return policy_id
+
+
+def delete_all_policies_for_service(session, service_name=HIVE_SERVICE_NAME, zone_name=None):
+    """Delete every policy of a service, optionally only those inside a zone."""
+    url = RANGER_ADMIN_BASE_URL + "/public/v2/api/service/" + service_name + "/policy"
+    params = {"zoneName": zone_name} if zone_name else None
+    response = session.get(url, params=params)
+    assert_http_ok(response, 200, "List policies of " + service_name, url)
+    policies = response.json() or []
+    policy_ids = [policy["id"] for policy in policies if policy.get("id") is not None]
+    logger.info(
+        "Deleting %s policies of %s (zone=%s)",
+        len(policy_ids),
+        service_name,
+        zone_name or "-",
+    )
+    delete_policies_by_id(session, policy_ids)
+    return policy_ids
+
+
+# --------------------------------------------------------------------------- #
+# Security zone helpers
+# --------------------------------------------------------------------------- #
+
+def build_zone_payload(zone_name, services, admin_users=("admin",), audit_users=("admin",),
+                       description=None):
+    """
+    Build a security-zone payload.
+
+    ``services`` maps a Ranger service name to its zone resources, e.g.::
+
+        {"dev_hive": {"resources": [{"database": ["finance"],
+                                     "table": ["*"], "column": ["*"]}]}}
+    """
+    return {
+        "name": zone_name,
+        "description": description or zone_name,
+        "adminUsers": list(admin_users),
+        "adminUserGroups": [],
+        "auditUsers": list(audit_users),
+        "auditUserGroups": [],
+        "services": services,
+    }
+
+
+def get_security_zone_by_name(session, zone_name):
+    """Return the zone dict, or None when the zone does not exist."""
+    url = ZONE_URL + "/name/" + zone_name
+    response = session.get(url)
+    if response.status_code in (400, 404):
+        return None
+    assert_http_ok(response, 200, "Get zone " + zone_name, url)
+    return response.json()
+
+
+def delete_security_zone(session, zone_id):
+    url = ZONE_URL + "/" + str(zone_id)
+    response = session.delete(url)
+    assert_http_ok(response, (200, 204), "Delete zone " + str(zone_id), url)
+    logger.info("Deleted security zone id=%s", zone_id)
+
+
+def create_security_zone(session, payload):
+    """POST a zone payload; returns the created zone dict."""
+    response = session.post(ZONE_URL, json=payload)
+    assert_http_ok(response, (200, 201), "Create zone " + payload["name"], ZONE_URL)
+    zone = response.json()
+    logger.info("Created security zone id=%s name=%s", zone.get("id"), zone.get("name"))
+    return zone
+
+
+def recreate_security_zone(session, payload):
+    """
+    Create a zone, dropping a leftover zone of the same name first.
+
+    Ranger rejects duplicates with "Another security zone already exists for
+    this name", so a failed previous run would otherwise block the suite.
+    """
+    existing = get_security_zone_by_name(session, payload["name"])
+    if existing and existing.get("id") is not None:
+        logger.info("Zone %s already exists (id=%s) - recreating",
+                    payload["name"], existing["id"])
+        delete_security_zone(session, existing["id"])
+    return create_security_zone(session, payload)
+
+
 def execute_hive_test(
     sql,
     username=HIVE_TEST_USER,
@@ -465,6 +718,24 @@ def execute_hive_test(
         username,
         sql,
         expect_substring=verify_output_contains,
+    )
+
+    # A transport failure produces output with no "Permission denied" in it, so
+    # a STDERR_NOT_CONTAINS check would pass without the query ever running.
+    # Report it as an infrastructure failure instead of a bogus authz result.
+    infra_error = find_hive_infra_error(output)
+    assert infra_error is None, (
+        "HiveServer2 is unreachable ("
+        + infra_error
+        + ") - this is an infrastructure failure, not an authorization result. "
+        + "sql="
+        + str(sql)
+        + " user="
+        + str(username)
+        + " exit_code="
+        + str(exit_code)
+        + " output="
+        + output
     )
 
     if verify_output_contains is not None:
@@ -578,11 +849,22 @@ class HivePluginTest:
             validateImpala if validateImpala is not None else validate_impala
         )
 
-    def execute(self):
+    def execute(self, zone_name=None):
+        """
+        Run the scenario.
+
+        ``zone_name`` names the security zone whose policy is expected to
+        decide this request; it is logged (and added to the audit filter as
+        ``zoneName``) so a zone scenario can be told apart from a non-zone one.
+        """
         if self.validate_impala:
             pytest.skip("Impala validation is not enabled in Docker functional-tests")
 
         log_testcase_begin(plugin_enforcement_logger, self.test_id)
+        if zone_name:
+            plugin_enforcement_logger.info(
+                "Security zone under test: %s", zone_name
+            )
 
         verify_contains = None
         verify_not_contains = None
