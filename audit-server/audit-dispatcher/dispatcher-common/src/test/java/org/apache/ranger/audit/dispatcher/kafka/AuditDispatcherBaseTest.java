@@ -21,23 +21,34 @@ package org.apache.ranger.audit.dispatcher.kafka;
 
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
+import org.apache.kafka.clients.consumer.OffsetAndMetadata;
+import org.apache.kafka.common.TopicPartition;
 import org.apache.kafka.common.errors.AuthorizationException;
 import org.apache.kafka.common.errors.InterruptException;
 import org.apache.ranger.audit.server.AuditServerConstants;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.MockedConstruction;
 
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyMap;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.mockConstruction;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 
 public class AuditDispatcherBaseTest {
     private TestAuditDispatcher           dispatcher;
@@ -60,6 +71,9 @@ public class AuditDispatcherBaseTest {
 
     @AfterEach
     public void teardown() {
+        // Kafka's InterruptException sets the interrupt flag on the test thread; clear it so it doesn't leak into other tests
+        Thread.interrupted();
+
         if (dispatcher != null) {
             dispatcher.shutdown();
         }
@@ -74,13 +88,15 @@ public class AuditDispatcherBaseTest {
         // Throw AuthorizationException on the first poll, then return empty records, then throw InterruptException to exit
         doThrow(new AuthorizationException("Not authorized"))
             .doReturn(ConsumerRecords.empty())
-            .doThrow(new InterruptException("Interrupted"))
+            .doAnswer(invocation -> {
+                throw new InterruptException("Interrupted");
+            })
             .when(mockConsumer).poll(any(Duration.class));
 
         worker.run();
 
-        // The worker should have caught the AuthorizationException, retried, and then exited on WakeupException
-        assertTrue(true, "Worker should have handled AuthorizationException");
+        // The worker should have caught the AuthorizationException, retried, polled again, and then exited on InterruptException
+        verify(mockConsumer, times(3)).poll(any(Duration.class));
         assertEquals(0, worker.getProcessCount()); // 0 records processed
     }
 
@@ -90,13 +106,51 @@ public class AuditDispatcherBaseTest {
         worker.setWorkerDispatcher(mockConsumer);
         dispatcher.running.set(true);
 
-        doThrow(new InterruptException("Interrupted"))
-            .when(mockConsumer).poll(any(Duration.class));
+        // Construct the exception at throw time, as KafkaConsumer does, since the InterruptException constructor sets the interrupt flag
+        doAnswer(invocation -> {
+            throw new InterruptException("Interrupted");
+        }).when(mockConsumer).poll(any(Duration.class));
 
         worker.run();
 
-        // The worker should exit on InterruptException
-        assertTrue(true, "Worker should have handled InterruptException");
+        // The worker should exit on the first InterruptException and leave the interrupt flag set
+        verify(mockConsumer, times(1)).poll(any(Duration.class));
+        assertTrue(Thread.currentThread().isInterrupted(), "Interrupt flag should remain set after InterruptException");
+    }
+
+    @Test
+    public void testPendingOffsetsCommittedOnShutdownAfterInterrupt() {
+        AtomicBoolean interruptedDuringCommit = new AtomicBoolean(true);
+
+        try (MockedConstruction<KafkaConsumer> mocked = mockConstruction(KafkaConsumer.class, (consumer, context) -> {
+            doAnswer(invocation -> {
+                throw new InterruptException(new InterruptedException("Interrupted"));
+            }).when(consumer).poll(any(Duration.class));
+
+            // Mimic KafkaConsumer: commitSync fails immediately if the calling thread is interrupted
+            doAnswer(invocation -> {
+                interruptedDuringCommit.set(Thread.currentThread().isInterrupted());
+                if (Thread.interrupted()) {
+                    throw new InterruptException(new InterruptedException());
+                }
+                return null;
+            }).when(consumer).commitSync(anyMap());
+        })) {
+            RealRunDispatcherWorker worker = new RealRunDispatcherWorker("worker-1", dispatcher);
+            worker.pendingOffsets.put(new TopicPartition("ranger_audits", 0), new OffsetAndMetadata(42L));
+            dispatcher.running.set(true);
+
+            worker.run();
+
+            KafkaConsumer<String, String> consumer = mocked.constructed().get(0);
+
+            verify(consumer, times(1)).commitSync(anyMap());
+            assertFalse(interruptedDuringCommit.get(), "Interrupt flag should be cleared while committing offsets on shutdown");
+            assertTrue(worker.pendingOffsets.isEmpty(), "Pending offsets should be committed and cleared");
+            verify(consumer).unsubscribe();
+            verify(consumer).close();
+            assertTrue(Thread.currentThread().isInterrupted(), "Interrupt flag should be restored after cleanup");
+        }
     }
 
     private static class TestAuditDispatcher extends AuditDispatcherBase {
@@ -117,6 +171,16 @@ public class AuditDispatcherBaseTest {
         @Override
         protected TestDispatcherWorker createDispatcherWorker(String workerId, List<Integer> assignedPartitions) {
             return new TestDispatcherWorker(workerId, assignedPartitions, this);
+        }
+    }
+
+    private static class RealRunDispatcherWorker extends AuditDispatcherBase.DispatcherWorker {
+        public RealRunDispatcherWorker(String workerId, AuditDispatcherBase dispatcher) {
+            dispatcher.super(workerId, new ArrayList<>());
+        }
+
+        @Override
+        protected void processRecordBatch(ConsumerRecords<String, String> records) {
         }
     }
 

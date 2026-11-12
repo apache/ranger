@@ -333,22 +333,31 @@ public abstract class AuditDispatcherBase implements AuditDispatcher {
             } catch (Throwable e) {
                 LOG.error("Error in {} dispatcher worker '{}'", getDispatcherName(), workerId, e);
             } finally {
-                // Final offset commit before shutdown
-                commitPendingOffsets(true);
+                // Kafka consumer calls fail immediately while the interrupt flag is set, so clear it for cleanup and restore afterwards
+                boolean wasInterrupted = Thread.interrupted();
 
-                if (workerDispatcher != null) {
-                    try {
-                        LOG.info("{} Worker '{}': Unsubscribing from topic", getDispatcherName(), workerId);
-                        workerDispatcher.unsubscribe();
-                    } catch (Exception e) {
-                        LOG.warn("{} Worker '{}': Error during unsubscribe", getDispatcherName(), workerId, e);
+                try {
+                    // Final offset commit before shutdown
+                    commitPendingOffsets(true);
+
+                    if (workerDispatcher != null) {
+                        try {
+                            LOG.info("{} Worker '{}': Unsubscribing from topic", getDispatcherName(), workerId);
+                            workerDispatcher.unsubscribe();
+                        } catch (Exception e) {
+                            LOG.warn("{} Worker '{}': Error during unsubscribe", getDispatcherName(), workerId, e);
+                        }
+
+                        try {
+                            LOG.info("{} Worker '{}': Closing dispatcher", getDispatcherName(), workerId);
+                            workerDispatcher.close();
+                        } catch (Exception e) {
+                            LOG.error("Error closing dispatcher for {} worker '{}'", getDispatcherName(), workerId, e);
+                        }
                     }
-
-                    try {
-                        LOG.info("{} Worker '{}': Closing dispatcher", getDispatcherName(), workerId);
-                        workerDispatcher.close();
-                    } catch (Exception e) {
-                        LOG.error("Error closing dispatcher for {} worker '{}'", getDispatcherName(), workerId, e);
+                } finally {
+                    if (wasInterrupted) {
+                        Thread.currentThread().interrupt();
                     }
                 }
                 LOG.info("{} dispatcher worker '{}' stopped", getDispatcherName(), workerId);
@@ -369,7 +378,6 @@ public abstract class AuditDispatcherBase implements AuditDispatcher {
                     return false;
                 }
                 LOG.error("InterruptException in {} dispatcher worker '{}'", getDispatcherName(), workerId, e);
-                Thread.currentThread().interrupt();
                 return false;
             } else if (e instanceof AuthorizationException) {
                 LOG.warn("Authorization error in {} dispatcher worker '{}'. Retrying in {} ms...", getDispatcherName(), workerId, authzRetryDelayMs, e);
