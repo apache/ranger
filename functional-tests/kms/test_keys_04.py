@@ -27,7 +27,7 @@ import time
 
 from kms.utils import (
     krb_requests, BASE_URL, find_conflicting_policies,
-    ensure_keyadmin_ticket,
+    ensure_keyadmin_ticket, ensure_testuser_ticket,
     BASE_URL_RANGER, RANGER_KMS_AUTH, KMS_SERVICE_NAME, TEST_USER,
 )
 
@@ -162,3 +162,25 @@ def test_uppercase_create_normalizes_to_lowercase():
     )
 
     krb_requests.delete(f"{BASE_URL}/key/{lower_name}")
+
+def test_uppercase_keyversion_endpoint_access_denied():
+    """
+    Verifies that an uppercase version name supplied to the /keyversion/
+    endpoint is normalized before policy evaluation.
+    """
+    # get the current version name as keyadmin
+    ensure_keyadmin_ticket()
+    ver_resp = krb_requests.get(f"{BASE_URL}/key/{KEY_NAME}/_currentversion")
+    assert ver_resp.status_code == 200, f"Could not get version name: {ver_resp.text}"
+    version_name = ver_resp.json().get("versionName", "")
+    assert version_name, "versionName not found in current version response"
+
+    # switch back to testuser for the actual access check
+    ensure_testuser_ticket()
+
+    upper_version = version_name.upper()   # e.g. "TESTKEY04@0"
+    resp = krb_requests.get(f"{BASE_URL}/keyversion/{upper_version}")
+    assert resp.status_code == 403, (
+        f"Uppercase version name produced unexpected result: "
+        f"got {resp.status_code}: {resp.text}"
+    )

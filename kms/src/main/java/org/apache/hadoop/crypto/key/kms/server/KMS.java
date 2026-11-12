@@ -460,18 +460,20 @@ public class KMS {
     @Path(KMSRESTConstants.KEY_VERSION_RESOURCE + "/{versionName:.*}")
     @Produces(MediaType.APPLICATION_JSON)
     public Response getKeyVersion(@PathParam("versionName") final String versionName, @Context HttpServletRequest request) throws Exception {
-        LOG.debug("==> getKeyVersion({})", versionName);
+        final  String keyVersionName = versionName.toLowerCase();
+
+        LOG.debug("==> getKeyVersion({})", keyVersionName);
 
         try (APIMetric apiMetric = kmsMetricsCollector.createAPIMetric(KMSMetrics.KMSMetric.GET_KEY_VERSION_COUNT, KMSMetrics.KMSMetric.GET_KEY_VERSION_ELAPSED_TIME)) {
             KMSWebApp.getKeyCallsMeter().mark();
 
             UserGroupInformation user = HttpUserGroupInformation.get();
 
-            checkNotEmpty(versionName, "versionName");
+            checkNotEmpty(keyVersionName, "versionName");
 
-            assertAccess(Type.GET, user, KMSOp.GET_KEY_VERSION, KeyProvider.getBaseName(versionName), getClientIp(request));
+            assertAccess(Type.GET, user, KMSOp.GET_KEY_VERSION, KeyProvider.getBaseName(keyVersionName), getClientIp(request));
 
-            KeyVersion keyVersion = user.doAs((PrivilegedExceptionAction<KeyVersion>) () -> provider.getKeyVersion(versionName));
+            KeyVersion keyVersion = user.doAs((PrivilegedExceptionAction<KeyVersion>) () -> provider.getKeyVersion(keyVersionName));
 
             if (keyVersion != null) {
                 kmsAudit.ok(user, KMSOp.GET_KEY_VERSION, keyVersion.getName(), "");
@@ -485,7 +487,7 @@ public class KMS {
 
             throw e;
         } finally {
-            LOG.debug("<== getKeyVersion({})", versionName);
+            LOG.debug("<== getKeyVersion({})", keyVersionName);
         }
     }
 

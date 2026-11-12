@@ -927,12 +927,12 @@ public class TestKMS {
                 eq(Type.DECRYPT_EEK), eq(user), eq(KMSOp.DECRYPT_EEK), eq(lowerCaseKey), eq(CLIENT_IP));
 
         // ── getKeyVersion
-        // versionName (with "@") must NOT be lowercased
-        String mixedVersionName = mixedCaseKey + "@0";   // "TeStKeY@0"
-        when(mockProvider.getKeyVersion(mixedVersionName))
-                .thenReturn(createKeyVersion(lowerCaseKey, mixedVersionName, new byte[] {6}));
-        kms.getKeyVersion(mixedVersionName, request);
-        verify(mockProvider).getKeyVersion(mixedVersionName);  // NOT "testkey@0"
+        String mixedVersionName  = mixedCaseKey + "@0";              // "LowerCaseKey@0" ← input
+        String lowerVersionName  = lowerCaseKey + "@0";              // "lowercasekey@0" ← after toLowerCase
+        when(mockProvider.getKeyVersion(lowerVersionName))           // ← stub with lowercase
+                .thenReturn(createKeyVersion(lowerCaseKey, lowerVersionName, new byte[] {6}));
+        kms.getKeyVersion(mixedVersionName, request);                // ← send mixed case
+        verify(mockProvider).getKeyVersion(lowerVersionName);
     }
 
     // Helpers
