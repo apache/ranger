@@ -20,6 +20,7 @@ from pathlib import Path
 
 import pytest
 
+from ranger_test_utils.os_env import setup_os_environment, teardown_os_environment
 from ranger_test_utils.plugin_conftest import ensure_plugin_test_users_for_session
 from ranger_test_utils.utils import LOGS_DIR, ensure_logs_directory
 
@@ -37,6 +38,22 @@ def pytest_configure(config):
     ensure_logs_directory()
     if getattr(config.option, "log_file", None):
         config.option.log_file = None
+
+
+@pytest.fixture(scope="session", autouse=True)
+def os_environment():
+    """
+    Prepare the ranger container OS ONCE for the whole session, before any
+    other fixture runs.
+    Ranger admin runs with ``ranger.authentication.method=PAM``, so every
+     Basic-auth request is validated by pam_unix against ``/etc/shadow``. When an
+     account does not exist at the OS level PAM fails first and pays a multi-second
+     penalty before Ranger falls back to DB auth. To keep the REST suites fast we
+     mirror every test user into the container's OS.
+    """
+    setup_os_environment()
+    yield
+    teardown_os_environment()
 
 
 @pytest.fixture(scope="session", autouse=True)

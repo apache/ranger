@@ -21,16 +21,30 @@ Pytest loads this file for any test collected under ``api_tests/`` and subfolder
 
 import pytest
 
-from ranger_test_utils.api_test_utils import create_kmsauditor_test_user, create_required_test_users
+from ranger_test_utils.api_test_utils import (
+    auditor_role_test_user,
+    create_kmsauditor_test_user,
+    create_required_test_users,
+    kmsauditor_role_test_user,
+    user_role_user,
+)
+from ranger_test_utils.os_env import delete_os_user
 
 
 @pytest.fixture(scope="session", autouse=True)
 def api_test_standard_role_users():
     """Users for ``*_for_user_role_user`` and ``*_for_auditor_user`` modules."""
     create_required_test_users()
+    yield
+    # remove the mirrored OS users from the ranger container
+    for os_user in (user_role_user, auditor_role_test_user):
+        delete_os_user(os_user)
 
 
 @pytest.fixture(scope="session")
 def api_test_kms_auditor_user():
     """User for ``*_for_kmsauditor_user`` public API v2 modules."""
     create_kmsauditor_test_user()
+    yield
+    # remove the mirrored OS user from the ranger container
+    delete_os_user(kmsauditor_role_test_user)
