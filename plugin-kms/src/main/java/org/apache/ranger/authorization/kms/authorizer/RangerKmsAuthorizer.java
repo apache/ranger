@@ -69,15 +69,15 @@ public class RangerKmsAuthorizer implements Runnable, KeyACLs {
 	      "User:%s not allowed to do '%s'";
 
 	  public static final int RELOADER_SLEEP_MILLIS = 1000;
-	
+
 	  private static final Map<KMSACLsType.Type, String> ACCESS_TYPE_MAP = new HashMap<>();
-	
+
 	  private volatile Map<Type, AccessControlList> blacklistedAcls;
-	
+
 	  private long lastReload;
 
 	  private ScheduledExecutorService executorService;
-	
+
 	  public static final String ACCESS_TYPE_DECRYPT_EEK   	= "decrypteek";
 	  public static final String ACCESS_TYPE_GENERATE_EEK   = "generateeek";
 	  public static final String ACCESS_TYPE_GET_METADATA  	= "getmetadata";
@@ -86,7 +86,7 @@ public class RangerKmsAuthorizer implements Runnable, KeyACLs {
 	  public static final String ACCESS_TYPE_SET_KEY_MATERIAL= "setkeymaterial";
 	  public static final String ACCESS_TYPE_ROLLOVER       = "rollover";
 	  public static final String ACCESS_TYPE_CREATE       	= "create";
-	  public static final String ACCESS_TYPE_DELETE       	= "delete";	
+	  public static final String ACCESS_TYPE_DELETE       	= "delete";
 
 	  private static volatile RangerKMSPlugin kmsPlugin = null;
 
@@ -104,7 +104,7 @@ public class RangerKmsAuthorizer implements Runnable, KeyACLs {
 	   * Constant for the configuration property that indicates the keytab file path.
 	   */
 	  public static final String KEYTAB = TYPE + ".keytab";
-	
+
 	  static {
 		  ACCESS_TYPE_MAP.put(KMSACLsType.Type.CREATE, RangerKmsAuthorizer.ACCESS_TYPE_CREATE);
 		  ACCESS_TYPE_MAP.put(KMSACLsType.Type.DELETE, RangerKmsAuthorizer.ACCESS_TYPE_DELETE);
@@ -120,10 +120,10 @@ public class RangerKmsAuthorizer implements Runnable, KeyACLs {
 	  RangerKmsAuthorizer(Configuration conf) {
 		  LOG.info("RangerKmsAuthorizer(conf)...");
 		  if (conf == null) {
-		      conf = loadACLs();		
+		      conf = loadACLs();
 		  }
 		  authWithKerberos(conf);
-		  setKMSACLs(conf);	
+		  setKMSACLs(conf);
 		  init(conf);
 	  }
 
@@ -152,7 +152,7 @@ public class RangerKmsAuthorizer implements Runnable, KeyACLs {
 	  public RangerKmsAuthorizer() {
 	    this(null);
 	  }
-	
+
 	  @Override
 	  public void run() {
 		  try {
@@ -164,7 +164,7 @@ public class RangerKmsAuthorizer implements Runnable, KeyACLs {
 		          String.format("Could not reload ACLs file: '%s'", ex.toString()), ex);
 		  }
 	  }
-	
+
 	  private Configuration loadACLs() {
 		  LOG.debug("Loading ACLs file");
 		  lastReload = System.currentTimeMillis();
@@ -216,8 +216,8 @@ public class RangerKmsAuthorizer implements Runnable, KeyACLs {
 		    if(!ret){
 		    	LOG.debug("Operation "+rangerAccessType+" blocked in the blacklist for user "+ugi.getUserName());
 		    }
-		
-			if(plugin != null && ret) {				
+
+			if(plugin != null && ret) {
 				RangerKMSAccessRequest request = new RangerKMSAccessRequest("", rangerAccessType, ugi, clientIp);
 				RangerAccessResult result = plugin.isAccessAllowed(request);
 				ret = result != null && result.getIsAllowed();
@@ -229,7 +229,8 @@ public class RangerKmsAuthorizer implements Runnable, KeyACLs {
 
 			return ret;
 	  }
-	
+
+      @Override
 	  public boolean hasAccess(Type type, UserGroupInformation ugi, String keyName, String clientIp) {
 		  if(LOG.isDebugEnabled()) {
 				LOG.debug("==> RangerKmsAuthorizer.hasAccess(" + type + ", " + ugi + " , "+keyName+")");
@@ -242,13 +243,13 @@ public class RangerKmsAuthorizer implements Runnable, KeyACLs {
 		    if(!ret){
 		    	LOG.debug("Operation "+rangerAccessType+" blocked in the blacklist for user "+ugi.getUserName());
 		    }
-		
-			if(plugin != null && ret) {				
+
+			if(plugin != null && ret) {
 				RangerKMSAccessRequest request = new RangerKMSAccessRequest(keyName, rangerAccessType, ugi, clientIp);
 				RangerAccessResult result = plugin.isAccessAllowed(request);
 				ret = result != null && result.getIsAllowed();
 			}
-			
+
 			if(LOG.isDebugEnabled()) {
 				LOG.debug("<== RangerkmsAuthorizer.hasAccess(" + type + ", " + ugi +  " , "+keyName+ "): " + ret);
 			}
@@ -278,7 +279,7 @@ public class RangerKmsAuthorizer implements Runnable, KeyACLs {
 			if(LOG.isDebugEnabled()) {
 				LOG.debug("<== RangerKmsAuthorizer.hasAccessToKey(" + keyName + ", " + ugi +", " + opType + ")");
 			}
-			
+
 			return true;
 	 }
 
@@ -301,9 +302,9 @@ public class RangerKmsAuthorizer implements Runnable, KeyACLs {
 					if(plugin == null) {
 						plugin = new RangerKMSPlugin();
 						plugin.init();
-						
+
 						kmsPlugin = plugin;
-						
+
 					}
 				}
 			}
@@ -311,7 +312,7 @@ public class RangerKmsAuthorizer implements Runnable, KeyACLs {
 				LOG.debug("<== RangerkmsAuthorizer.init()");
 			}
 		}
-		
+
 		private void setKMSACLs(Configuration conf) {
 		    Map<Type, AccessControlList> tempBlacklist = new HashMap<Type, AccessControlList>();
 		    for (Type aclType : Type.values()) {
@@ -329,13 +330,13 @@ public class RangerKmsAuthorizer implements Runnable, KeyACLs {
 			if (ACCESS_TYPE_MAP.containsKey(accessType)) {
 				return ACCESS_TYPE_MAP.get(accessType);
 			}
-			
+
 			return null;
 		}
 	}
 
 
-	
+
 	class RangerKMSPlugin extends RangerBasePlugin {
 		public RangerKMSPlugin() {
 			super("kms", "kms");
@@ -354,7 +355,7 @@ public class RangerKmsAuthorizer implements Runnable, KeyACLs {
 	class RangerKMSResource extends RangerAccessResourceImpl {
 		private static final String KEY_NAME = "keyname";
 
-		public RangerKMSResource(String keyname) {			
+		public RangerKMSResource(String keyname) {
 			setValue(KEY_NAME, keyname != null ? keyname : null);
 		}
 	}
@@ -366,7 +367,7 @@ public class RangerKmsAuthorizer implements Runnable, KeyACLs {
 			super.setUser(ugi.getShortUserName());
 			super.setUserGroups(Sets.newHashSet(ugi.getGroupNames()));
 			super.setAccessTime(new Date());
-			super.setClientIPAddress(clientIp);			
+			super.setClientIPAddress(clientIp);
 			super.setAction(accessType);
 		}
 	}

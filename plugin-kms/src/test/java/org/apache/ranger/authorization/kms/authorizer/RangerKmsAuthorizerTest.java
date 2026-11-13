@@ -26,21 +26,31 @@ import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 import javax.servlet.ServletContextEvent;
 
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.crypto.key.kms.server.KMS.KMSOp;
 import org.apache.hadoop.crypto.key.kms.server.KMSACLsType.Type;
 import org.apache.hadoop.crypto.key.kms.server.KMSConfiguration;
 import org.apache.hadoop.crypto.key.kms.server.KMSWebApp;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.security.authorize.AuthorizationException;
-import org.junit.jupiter.api.Assertions;
+import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
+import org.apache.ranger.plugin.policyengine.RangerAccessResult;
 import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Policies available from admin via:
@@ -55,6 +65,7 @@ public class RangerKmsAuthorizerTest {
     private static final Logger LOG = LoggerFactory.getLogger(RangerKmsAuthorizerTest.class);
 
     private static KMSWebApp kmsWebapp;
+    private              RangerKMSPlugin savedPlugin;
     private static final boolean UNRESTRICTED_POLICIES_INSTALLED;
     static {
         boolean ok = false;
@@ -103,12 +114,26 @@ public class RangerKmsAuthorizerTest {
         DerbyTestUtils.stopDerby();
     }
 
+    @BeforeEach
+    void savePlugin() throws Exception {
+        java.lang.reflect.Field f = RangerKmsAuthorizer.class.getDeclaredField("kmsPlugin");
+        f.setAccessible(true);
+        savedPlugin = (RangerKMSPlugin) f.get(null);
+    }
+
+    @AfterEach
+    void restorePlugin() throws Exception {
+        java.lang.reflect.Field f = RangerKmsAuthorizer.class.getDeclaredField("kmsPlugin");
+        f.setAccessible(true);
+        f.set(null, savedPlugin);
+    }
+
     @Test
     public void testCreateKeys() throws Throwable {
     	if (!UNRESTRICTED_POLICIES_INSTALLED) {
     		return;
     	}
-    	
+
         // bob should have permission to create
         final UserGroupInformation ugi = UserGroupInformation.createRemoteUser("bob");
         ugi.doAs(new PrivilegedExceptionAction<Void>() {
@@ -155,7 +180,7 @@ public class RangerKmsAuthorizerTest {
     	if (!UNRESTRICTED_POLICIES_INSTALLED) {
     		return;
     	}
-    	
+
         // bob should have permission to delete
         final UserGroupInformation ugi = UserGroupInformation.createRemoteUser("bob");
         ugi.doAs(new PrivilegedExceptionAction<Void>() {
@@ -203,7 +228,7 @@ public class RangerKmsAuthorizerTest {
     	if (!UNRESTRICTED_POLICIES_INSTALLED) {
     		return;
     	}
-    	
+
         // bob should have permission to rollover
         final UserGroupInformation ugi = UserGroupInformation.createRemoteUser("bob");
         ugi.doAs(new PrivilegedExceptionAction<Void>() {
@@ -251,7 +276,7 @@ public class RangerKmsAuthorizerTest {
     	if (!UNRESTRICTED_POLICIES_INSTALLED) {
     		return;
     	}
-    	
+
         // bob should have permission to get keys
         final UserGroupInformation ugi = UserGroupInformation.createRemoteUser("bob");
         ugi.doAs(new PrivilegedExceptionAction<Void>() {
@@ -293,7 +318,7 @@ public class RangerKmsAuthorizerTest {
     	if (!UNRESTRICTED_POLICIES_INSTALLED) {
     		return;
     	}
-    	
+
         // bob should have permission to get the metadata
         final UserGroupInformation ugi = UserGroupInformation.createRemoteUser("bob");
         ugi.doAs(new PrivilegedExceptionAction<Void>() {
@@ -336,7 +361,7 @@ public class RangerKmsAuthorizerTest {
     	if (!UNRESTRICTED_POLICIES_INSTALLED) {
     		return;
     	}
-    	
+
         // bob should have permission to generate EEK
         final UserGroupInformation ugi = UserGroupInformation.createRemoteUser("bob");
         ugi.doAs(new PrivilegedExceptionAction<Void>() {
@@ -384,7 +409,7 @@ public class RangerKmsAuthorizerTest {
     	if (!UNRESTRICTED_POLICIES_INSTALLED) {
     		return;
     	}
-    	
+
         // bob should have permission to generate EEK
         final UserGroupInformation ugi = UserGroupInformation.createRemoteUser("bob");
         ugi.doAs(new PrivilegedExceptionAction<Void>() {
@@ -427,4 +452,74 @@ public class RangerKmsAuthorizerTest {
 
     }
 
+    @Test
+    void testHasAccessWithKeyName_passesKeyNameToRangerPlugin() throws Exception {
+        RangerKmsAuthorizer authorizer = new RangerKmsAuthorizer((Configuration) null);
+
+        RangerKMSPlugin    plugin  = Mockito.mock(RangerKMSPlugin.class);
+        RangerAccessResult allowed = Mockito.mock(RangerAccessResult.class);
+        Mockito.when(allowed.getIsAllowed()).thenReturn(true);
+        Mockito.when(plugin.isAccessAllowed(Mockito.any(RangerAccessRequest.class)))
+                .thenReturn(allowed);
+
+        java.lang.reflect.Field f = RangerKmsAuthorizer.class.getDeclaredField("kmsPlugin");
+        f.setAccessible(true);
+        f.set(null, plugin);
+
+        UserGroupInformation ugi = UserGroupInformation.createRemoteUser("alice");
+        assertTrue(authorizer.hasAccess(Type.GET, ugi, "mykey", "127.0.0.1"));
+
+        // Capture and inspect what was actually handed to the Ranger policy engine.
+        ArgumentCaptor<RangerKMSAccessRequest> captor =
+                ArgumentCaptor.forClass(RangerKMSAccessRequest.class);
+        // RangerKMSAccessRequest extends RangerAccessRequest → unambiguously picks the single-request overload
+        Mockito.verify(plugin).isAccessAllowed(captor.capture());
+
+        // RangerKMSResource stores the key under the field name "keyname"
+        assertEquals("mykey", captor.getValue().getResource().getValue("keyname"),
+                "The actual key name must be forwarded to Ranger's policy engine, not empty/null");
+    }
+
+    @Test
+    void testHasAccessWithKeyName_userInBlacklistDeniedBeforeRangerCall() throws Exception {
+        RangerKmsAuthorizer authorizer = new RangerKmsAuthorizer((Configuration) null);
+
+        // Set a blacklist for GET
+        java.lang.reflect.Field bf = RangerKmsAuthorizer.class.getDeclaredField("blacklistedAcls");
+        bf.setAccessible(true);
+        java.util.Map<Type, org.apache.hadoop.security.authorize.AccessControlList> blacklist =
+                new java.util.HashMap<>();
+        blacklist.put(Type.GET, new org.apache.hadoop.security.authorize.AccessControlList("alice"));
+        bf.set(authorizer, blacklist);
+
+        // Mount a permissive plugin — it must NEVER be consulted when blacklist already denies
+        RangerKMSPlugin plugin = Mockito.mock(RangerKMSPlugin.class);
+        java.lang.reflect.Field pf = RangerKmsAuthorizer.class.getDeclaredField("kmsPlugin");
+        pf.setAccessible(true);
+        pf.set(null, plugin);
+
+        UserGroupInformation ugi = UserGroupInformation.createRemoteUser("alice");
+        assertFalse(authorizer.hasAccess(Type.GET, ugi, "mykey", "127.0.0.1"),
+                "Blacklisted user must be denied even on the 4-arg key-aware path");
+        Mockito.verify(plugin, Mockito.never()).isAccessAllowed(Mockito.any(RangerAccessRequest.class));
+    }
+
+    @Test
+    void testHasAccessWithKeyName_pluginDeniesSpecificKey() throws Exception {
+        RangerKmsAuthorizer authorizer = new RangerKmsAuthorizer((Configuration) null);
+
+        RangerKMSPlugin    plugin  = Mockito.mock(RangerKMSPlugin.class);
+        RangerAccessResult denied  = Mockito.mock(RangerAccessResult.class);
+        Mockito.when(denied.getIsAllowed()).thenReturn(false);
+        Mockito.when(plugin.isAccessAllowed(Mockito.any(RangerAccessRequest.class)))
+                .thenReturn(denied);
+
+        java.lang.reflect.Field f = RangerKmsAuthorizer.class.getDeclaredField("kmsPlugin");
+        f.setAccessible(true);
+        f.set(null, plugin);
+
+        UserGroupInformation ugi = UserGroupInformation.createRemoteUser("alice");
+        assertFalse(authorizer.hasAccess(Type.GET, ugi, "restricted_key", "127.0.0.1"),
+                "Key-specific Ranger denial must be honoured on the 4-arg path");
+    }
 }
