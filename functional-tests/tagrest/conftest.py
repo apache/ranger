@@ -18,10 +18,13 @@ import os
 import requests
 import json
 import logging
+import subprocess
+import time
 from datetime import datetime
 import inspect
 from requests.auth import HTTPBasicAuth
-from Utility.main import base_url ,admin_auth ,headers ,get_request_data ,str_variable_dict ,global_dict ,get_updated_request_data
+from ranger_test_utils.os_env import create_os_user, delete_os_user
+from tagrest.Utility.main import base_url ,admin_auth ,headers ,get_request_data ,str_variable_dict ,global_dict ,get_updated_request_data
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 LOG_FILE_PATH = os.path.join(BASE_DIR, "automation.log")
@@ -53,7 +56,7 @@ def clear_log():
         pass
 
 
-# --- 3. The Fixture you use in tests ---
+
 @pytest.fixture(scope="function")
 def log(request):
     # Captures: test_file.py::test_function_name
@@ -68,12 +71,19 @@ def session_log():
     """Session-level logger """
     return custlogger("GlobalSessionSetup")
 
+
+
+
 def create_test_user(roles=None):
     """Helper function to create a test user with specified roles"""
     if roles is None:
         roles = ["ROLE_SYS_ADMIN"]
 
     request_data = get_request_data('create_user_for_test.json', global_dict, variables_data_path)
+
+    # extract the username and password from the request data
+    user_name = request_data['name']
+    password = request_data['password']
 
     # Update with roles
     fields_to_update = {
@@ -82,6 +92,9 @@ def create_test_user(roles=None):
 
     updated_data = get_updated_request_data(request_data, fields_to_update)
 
+    # add the same user to the ranger OS before creating it in the ranger db
+    create_os_user(user_name, password)
+
     request_url = base_url + "/xusers/secure/users"
     resp = requests.post(request_url, verify=False, auth=admin_auth, headers=headers, data=json.dumps(updated_data))
     return resp.json()
@@ -89,9 +102,10 @@ def create_test_user(roles=None):
 
 # Create user objects with different roles
 @pytest.fixture(scope="session", autouse=True)
-def setup_test_users(session_log):
+def setup_test_users(os_environment, session_log):
     """Create test users with different roles and cleanup after tests"""
     created_user_ids = []
+    created_os_users = []
 
     try:
         session_log.info("Creating test users with different roles...")
@@ -125,6 +139,10 @@ def setup_test_users(session_log):
         session_log.info(
             f"Created auditor_user (ROLE_ADMIN_AUDITOR) with ID: {auditor_user.get('id')}, name: {auditor_user.get('name')}")
 
+        # remember the OS accounts so they can be removed once testing is done
+        created_os_users = [u.get('name') for u in
+                            (user1, user2, user3, user4, auditor_user) if u.get('name')]
+
         # Add to string variable dictionary
         str_variable_dict['user1'] = user1.get('name')
         print(str_variable_dict['user1'])
@@ -157,6 +175,13 @@ def setup_test_users(session_log):
                                       extra={"status_code": resp.status_code, "response_text": resp.text})
             except Exception as e:
                 session_log.error(f"Exception while deleting user {user_id}: {str(e)}")
+
+        # the db users are gone, now remove the matching OS accounts
+        for os_user_name in created_os_users:
+            try:
+                delete_os_user(os_user_name)
+            except Exception as e:
+                session_log.error(f"Exception while deleting OS user {os_user_name}: {str(e)}")
 
         session_log.info("Cleanup for test users completed")
 
