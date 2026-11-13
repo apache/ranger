@@ -186,19 +186,19 @@ public class KMS {
   public Response deleteKey(@PathParam("name") final String name, @Context HttpServletRequest request) throws Exception {
     final String keyName = name.toLowerCase();
 
-    LOG.debug("==> deleteKey({})", name);
+    LOG.debug("==> deleteKey({})", keyName);
 
     try (APIMetric apiMetric = kmsMetricsCollector.createAPIMetric(KMSMetrics.KMSMetric.DELETE_KEY_COUNT, KMSMetrics.KMSMetric.DELETE_KEY_ELAPSED_TIME)) {
       KMSWebApp.getAdminCallsMeter().mark();
 
       UserGroupInformation user = HttpUserGroupInformation.get();
 
-            assertAccess(Type.DELETE, user, KMSOp.DELETE_KEY, keyName, getClientIp(request));
+      assertAccess(Type.DELETE, user, KMSOp.DELETE_KEY, keyName, getClientIp(request));
 
-            checkNotEmpty(keyName, "name");
+      checkNotEmpty(keyName, "name");
 
-            user.doAs((PrivilegedExceptionAction<Void>) () -> {
-                provider.deleteKey(keyName);
+      user.doAs((PrivilegedExceptionAction<Void>) () -> {
+        provider.deleteKey(keyName);
 
         provider.flush();
 
@@ -444,17 +444,19 @@ public class KMS {
   @Path(KMSRESTConstants.KEY_VERSION_RESOURCE + "/{versionName:.*}")
   @Produces(MediaType.APPLICATION_JSON)
   public Response getKeyVersion(@PathParam("versionName") final String versionName, @Context HttpServletRequest request) throws Exception {
-    LOG.debug("==> getKeyVersion({})", versionName);
+    final  String keyVersionName = versionName.toLowerCase();
+
+    LOG.debug("==> getKeyVersion({})", keyVersionName);
 
     try (APIMetric apiMetric = kmsMetricsCollector.createAPIMetric(KMSMetrics.KMSMetric.GET_KEY_VERSION_COUNT, KMSMetrics.KMSMetric.GET_KEY_VERSION_ELAPSED_TIME)) {
       KMSWebApp.getKeyCallsMeter().mark();
       UserGroupInformation user = HttpUserGroupInformation.get();
 
-      checkNotEmpty(versionName, "versionName");
+      checkNotEmpty(keyVersionName, "versionName");
 
-      assertAccess(Type.GET, user, KMSOp.GET_KEY_VERSION, KeyProvider.getBaseName(versionName), getClientIp(request));
+      assertAccess(Type.GET, user, KMSOp.GET_KEY_VERSION, KeyProvider.getBaseName(keyVersionName), getClientIp(request));
 
-      KeyVersion keyVersion = user.doAs((PrivilegedExceptionAction<KeyVersion>) () -> provider.getKeyVersion(versionName));
+      KeyVersion keyVersion = user.doAs((PrivilegedExceptionAction<KeyVersion>) () -> provider.getKeyVersion(keyVersionName));
 
       if (keyVersion != null) {
         kmsAudit.ok(user, KMSOp.GET_KEY_VERSION, keyVersion.getName(), "");
@@ -467,7 +469,7 @@ public class KMS {
       LOG.error("Exception in getKeyVersion.", e);
       throw e;
     } finally {
-      LOG.debug("<== getKeyVersion({})", versionName);
+      LOG.debug("<== getKeyVersion({})", keyVersionName);
     }
   }
   @GET
@@ -526,7 +528,8 @@ public class KMS {
                                         @DefaultValue("1") @QueryParam(KMSRESTConstants.EEK_NUM_KEYS) final int numKeys,
                                         @Context HttpServletRequest request) throws Exception {
     final String keyName = name.toLowerCase();
-    LOG.debug("==> generateEncryptedKeys(name={}, eekOp={}, numKeys={})", name, edekOp, numKeys);
+
+    LOG.debug("==> generateEncryptedKeys(name={}, eekOp={}, numKeys={})", keyName, edekOp, numKeys);
 
     try (APIMetric apiElapsedMetric = kmsMetricsCollector.createAPIMetric(KMSMetrics.KMSMetric.EEK_GENERATE_COUNT, KMSMetrics.KMSMetric.EEK_GENERATE_ELAPSED_TIME)) {
       UserGroupInformation user = HttpUserGroupInformation.get();
@@ -593,7 +596,7 @@ public class KMS {
   public Response reencryptEncryptedKeys(@PathParam("name") final String name, final List<Map> jsonPayload, @Context HttpServletRequest request) throws Exception {
     final String keyName = name.toLowerCase();
 
-    LOG.debug("==> reencryptEncryptedKeys(name={}, count={})", name, (jsonPayload != null ? jsonPayload.size() : 0));
+    LOG.debug("==> reencryptEncryptedKeys(name={}, count={})", keyName, (jsonPayload != null ? jsonPayload.size() : 0));
 
     final Stopwatch sw = Stopwatch.createStarted();
 
@@ -732,7 +735,7 @@ public class KMS {
   public Response getKeyVersions(@PathParam("name") final String name, @Context HttpServletRequest request) throws Exception {
     final String keyName = name.toLowerCase();
 
-    LOG.debug("==> getKeyVersions({})", name);
+    LOG.debug("==> getKeyVersions({})", keyName);
 
     try (APIMetric apiMetric = kmsMetricsCollector.createAPIMetric(KMSMetrics.KMSMetric.GET_KEY_VERSIONS_COUNT, KMSMetrics.KMSMetric.GET_KEY_VERSIONS_ELAPSED_TIME)) {
       KMSWebApp.getKeyCallsMeter().mark();

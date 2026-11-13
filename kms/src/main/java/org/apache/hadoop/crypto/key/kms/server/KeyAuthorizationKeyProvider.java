@@ -347,9 +347,9 @@ public class KeyAuthorizationKeyProvider extends KeyProviderCryptoExtension {
     if (metadata != null) {
       String aclName = metadata.getAttributes().get(KEY_ACL_NAME);
 
-            checkAccess((aclName == null) ? keyName.toLowerCase() : aclName, getUser(), opType);
-        }
+      checkAccess((aclName == null) ? keyName.toLowerCase() : aclName, getUser(), opType);
     }
+  }
 
   private UserGroupInformation getUser() throws IOException {
     return UserGroupInformation.getCurrentUser();
