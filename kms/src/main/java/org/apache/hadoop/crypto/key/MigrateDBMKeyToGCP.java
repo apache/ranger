@@ -27,6 +27,8 @@ import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
 
+import static org.apache.hadoop.crypto.key.RangerKeyStoreProvider.DBKS_SITE_XML;
+
 public class MigrateDBMKeyToGCP {
     private static final String ENCRYPTION_KEY = "ranger.db.encrypt.key.password";
 
@@ -92,10 +94,11 @@ public class MigrateDBMKeyToGCP {
             if (gcpMKSuccess) {
                 System.out.println("Masterkey with the name '" + masterKeyName + "' created successfully on Google Cloud KMS.");
 
-                dbStore = new RangerKeyStore(daoManager, false, rangerGcpProvider);
+                RangerKMSCryptoConfigManager kmsCryptoConfigApi = new RangerKMSCryptoConfigManager(DBKS_SITE_XML);
+                dbStore = new RangerKeyStore(daoManager, kmsCryptoConfigApi);
 
                 // Get Master Key from Ranger DB
-                RangerMasterKey        rangerMasterKey    = new RangerMasterKey(daoManager);
+                RangerMasterKey        rangerMasterKey    = new RangerMasterKey(daoManager, kmsCryptoConfigApi);
                 char[]                 mkey               = rangerMasterKey.getMasterKey(mKeyPass).toCharArray();
                 List<XXRangerKeyStore> rangerKeyStoreList = new ArrayList<>();
 

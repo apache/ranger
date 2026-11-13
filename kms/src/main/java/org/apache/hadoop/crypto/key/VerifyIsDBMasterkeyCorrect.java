@@ -32,7 +32,9 @@ public class VerifyIsDBMasterkeyCorrect {
         RangerKMSDB   rangerKMSDB = new RangerKMSDB(conf);
 
         daoManager = rangerKMSDB.getDaoManager();
-        dbStore    = new RangerKeyStore(daoManager);
+        RangerKMSCryptoConfigManager kmsCryptoConfigApi = new RangerKMSCryptoConfigManager(RangerKeyStoreProvider.DBKS_SITE_XML);
+        dbStore    = new RangerKeyStore(daoManager, kmsCryptoConfigApi);
+        rangerMasterKey = new RangerMasterKey(daoManager, kmsCryptoConfigApi);
     }
 
     public static void main(String[] args) throws Throwable {
@@ -58,8 +60,6 @@ public class VerifyIsDBMasterkeyCorrect {
     public void verifyMasterkey(String pass) {
         try {
             // Get Master Key from DB
-            rangerMasterKey = new RangerMasterKey(daoManager);
-
             String masterKey = rangerMasterKey.getMasterKey(pass);
 
             if (masterKey == null) {
