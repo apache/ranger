@@ -1,0 +1,33 @@
+{
+  "@odata.context": "https://graph.microsoft.com/v1.0/$metadata#users",
+  "value": [
+    {
+      "id": "11111111-aaaa-bbbb-cccc-000000000001",
+      "userPrincipalName": "alice@contoso.onmicrosoft.com",
+      "mail": "alice@contoso.com",
+      "displayName": "Alice Anderson",
+      "accountEnabled": true
+    },
+    {
+      "id": "11111111-aaaa-bbbb-cccc-000000000002",
+      "userPrincipalName": "bob@contoso.onmicrosoft.com",
+      "mail": "bob@contoso.com",
+      "displayName": "Bob Brown",
+      "accountEnabled": true
+    },
+    {
+      "id": "11111111-aaaa-bbbb-cccc-000000000003",
+      "userPrincipalName": "carol@contoso.onmicrosoft.com",
+      "mail": null,
+      "displayName": "Carol Clark",
+      "accountEnabled": false
+    },
+    {
+      "id": "11111111-aaaa-bbbb-cccc-000000000099",
+      "@removed": {
+        "reason": "changed"
+      }
+    }
+  ],
+  "@odata.deltaLink": "https://graph.microsoft.com/v1.0/users/delta?$deltatoken=SAMPLE_USER_DELTA_TOKEN"
+}

@@ -1,0 +1,22 @@
+{
+  "@odata.context": "https://graph.microsoft.com/v1.0/$metadata#groups",
+  "value": [
+    {
+      "id": "G1",
+      "displayName": "Engineering",
+      "members@delta": [
+        { "@odata.type": "#microsoft.graph.user", "id": "u1" },
+        { "@odata.type": "#microsoft.graph.user", "id": "u2" },
+        { "@odata.type": "#microsoft.graph.group", "id": "nestedGroup1" }
+      ]
+    },
+    {
+      "id": "G2",
+      "displayName": "Data Platform",
+      "members@delta": [
+        { "@odata.type": "#microsoft.graph.user", "id": "u3" }
+      ]
+    }
+  ],
+  "@odata.nextLink": "__BASE_URL__/v1.0/groups/delta/page2"
+}
