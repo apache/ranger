@@ -225,7 +225,7 @@ public class TestKmsProviderHostCheck {
         Client client = okClient();
 
         try (MockedStatic<ContextUtil> context = Mockito.mockStatic(ContextUtil.class);
-             MockedStatic<RangerJersey2ClientBuilder> clients = Mockito.mockStatic(RangerJersey2ClientBuilder.class)) {
+                MockedStatic<RangerJersey2ClientBuilder> clients = Mockito.mockStatic(RangerJersey2ClientBuilder.class)) {
             context.when(ContextUtil::getCurrentUserLoginId).thenReturn("keyadmin");
             clients.when(RangerJersey2ClientBuilder::newClient).thenReturn(client);
 
@@ -245,7 +245,7 @@ public class TestKmsProviderHostCheck {
         Client client = okClient();
 
         try (MockedStatic<ContextUtil> context = Mockito.mockStatic(ContextUtil.class);
-             MockedStatic<RangerJersey2ClientBuilder> clients = Mockito.mockStatic(RangerJersey2ClientBuilder.class)) {
+                MockedStatic<RangerJersey2ClientBuilder> clients = Mockito.mockStatic(RangerJersey2ClientBuilder.class)) {
             context.when(ContextUtil::getCurrentUserLoginId).thenReturn("keyadmin");
             clients.when(RangerJersey2ClientBuilder::newClient).thenReturn(client);
 
