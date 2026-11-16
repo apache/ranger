@@ -52,6 +52,8 @@ public class RangerPdpConfig {
 
     private static final String DEFAULT_CONFIG_FILE = "ranger-pdp-default.xml";
     private static final String SITE_CONFIG_FILE    = "ranger-pdp-site.xml";
+    private static final String DEFAULT_POLICY_REST_PREFIX = "ranger.authz.default.policy.rest.";
+    private static final String SERVICE_ACCOUNT_POLICY_REST_PREFIX = RangerPdpConstants.PROP_SERVICE_ACCOUNT_REFRESHER_PREFIX + "policy.rest.";
 
     private final Properties props = new Properties();
 
@@ -192,6 +194,26 @@ public class RangerPdpConfig {
         return new Properties(props);
     }
 
+    public Properties getServiceAccountRefresherProperties() {
+        Properties ret = getAuthzProperties();
+
+        for (String name : props.stringPropertyNames()) {
+            if (name.startsWith(DEFAULT_POLICY_REST_PREFIX)) {
+                String targetName = SERVICE_ACCOUNT_POLICY_REST_PREFIX + name.substring(DEFAULT_POLICY_REST_PREFIX.length());
+
+                if (ret.getProperty(targetName) == null) {
+                    ret.setProperty(targetName, props.getProperty(name));
+                }
+            }
+        }
+
+        return ret;
+    }
+
+    public boolean isServiceAccountRefresherEnabled() {
+        return getBoolean(RangerPdpConstants.PROP_SERVICE_ACCOUNT_REFRESHER_ENABLED, true);
+    }
+
     public String get(String key, String defaultValue) {
         String val = props.getProperty(key);
 
@@ -273,7 +295,8 @@ public class RangerPdpConfig {
      */
     private void applySystemPropertyOverrides() {
         for (String key : System.getProperties().stringPropertyNames()) {
-            if (key.startsWith(RangerPdpConstants.PROP_PDP_PREFIX) || key.startsWith(RangerPdpConstants.PROP_AUTHZ_PREFIX)) {
+            if (key.startsWith(RangerPdpConstants.PROP_PDP_PREFIX) ||
+                    key.startsWith(RangerPdpConstants.PROP_AUTHZ_PREFIX)) {
                 props.setProperty(key, System.getProperty(key));
             }
         }

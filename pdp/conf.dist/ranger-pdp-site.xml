@@ -272,6 +272,18 @@
   </property>
 
   <property>
+    <name>ranger.serviceaccount.refresher.enabled</name>
+    <value>true</value>
+    <description>Enable periodic retrieval of service-account users from Ranger Admin.</description>
+  </property>
+
+  <property>
+    <name>ranger.serviceaccount.refresher.pollIntervalMs</name>
+    <value>30000</value>
+    <description>How often (ms) to refresh service-account users from Ranger Admin.</description>
+  </property>
+
+  <property>
     <name>ranger.authz.default.policy.cache.dir</name>
     <value>/var/ranger/cache/pdp</value>
     <description>

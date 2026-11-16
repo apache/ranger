@@ -25,6 +25,7 @@ import org.apache.ranger.authz.api.RangerAuthzException;
 import org.apache.ranger.authz.model.RangerAccessContext;
 import org.apache.ranger.authz.model.RangerAuthzRequest;
 import org.apache.ranger.authz.model.RangerAuthzResult;
+import org.apache.ranger.authz.model.RangerFilterResourcesRequest;
 import org.apache.ranger.authz.model.RangerMultiAuthzRequest;
 import org.apache.ranger.authz.model.RangerMultiAuthzResult;
 import org.apache.ranger.authz.model.RangerResourcePermissions;
@@ -33,6 +34,7 @@ import org.apache.ranger.authz.model.RangerUserInfo;
 import org.apache.ranger.pdp.RangerPdpStats;
 import org.apache.ranger.pdp.config.RangerPdpConfig;
 import org.apache.ranger.pdp.config.RangerPdpConstants;
+import org.apache.ranger.plugin.util.ServiceAccountUsersProvider;
 import org.junit.jupiter.api.Test;
 
 import javax.servlet.ServletContext;
@@ -41,9 +43,12 @@ import javax.ws.rs.core.Response;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Proxy;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
 
 import static org.apache.ranger.pdp.config.RangerPdpConstants.PROP_PDP_SERVICE_PREFIX;
 import static org.apache.ranger.pdp.config.RangerPdpConstants.PROP_SUFFIX_DELEGATION_USERS;
@@ -202,15 +207,52 @@ public class RangerPdpRESTTest {
         assertEquals(1L, stats.getTotalAuthzBadRequest());
     }
 
+    @Test
+    public void testServiceAccountUserCanCallAllPdpApis() throws Exception {
+        RangerPdpStats stats = new RangerPdpStats();
+        TestAuthorizer authorizer = new TestAuthorizer(
+                new RangerAuthzResult("req-1", RangerAuthzResult.AccessDecision.ALLOW),
+                new RangerMultiAuthzResult("req-1", RangerAuthzResult.AccessDecision.ALLOW),
+                new RangerResourcePermissions(), null);
+        RangerPdpREST rest = createRest(authorizer, stats, serviceAccountProvider(CALLER_DELEGATION_NOT_ALLOWED));
+
+        assertEquals(Response.Status.OK.getStatusCode(), rest.authorize(
+                new RangerAuthzRequest("req-1", USER_USER1, null, CONTEXT_SERVICE_SVC1),
+                httpRequest(CALLER_DELEGATION_NOT_ALLOWED, stats)).getStatus());
+        assertEquals(Response.Status.OK.getStatusCode(), rest.authorizeMulti(
+                new RangerMultiAuthzRequest("req-1", USER_USER1, null, CONTEXT_SERVICE_SVC1),
+                httpRequest(CALLER_DELEGATION_NOT_ALLOWED, stats)).getStatus());
+        assertEquals(Response.Status.OK.getStatusCode(), rest.getResourcePermissions(
+                new RangerResourcePermissionsRequest("req-1", null, CONTEXT_SERVICE_SVC1),
+                httpRequest(CALLER_DELEGATION_NOT_ALLOWED, stats)).getStatus());
+        assertEquals(Response.Status.OK.getStatusCode(), rest.filterResources(
+                new RangerFilterResourcesRequest("user1", Arrays.asList("table:default/t1"), "_any", "hive", "svc1"),
+                httpRequest(CALLER_DELEGATION_NOT_ALLOWED, stats)).getStatus());
+    }
+
     private static RangerPdpREST createRest(TestAuthorizer authorizer, RangerPdpStats stats) throws Exception {
+        return createRest(authorizer, stats, null);
+    }
+
+    private static RangerPdpREST createRest(TestAuthorizer authorizer, RangerPdpStats stats, ServiceAccountUsersProvider provider) throws Exception {
         RangerPdpREST rest = new RangerPdpREST();
 
         setField(rest, "authorizer", authorizer);
         setField(rest, "config", new TestConfig(defaultConfig()));
+        setField(rest, "serviceAccountUsersProvider", provider);
         setField(rest, "servletContext", servletContextWithStats(stats));
         rest.initialize();
 
         return rest;
+    }
+
+    private static ServiceAccountUsersProvider serviceAccountProvider(String user) throws Exception {
+        ServiceAccountUsersProvider provider = new ServiceAccountUsersProvider(false, new Properties());
+        Map<String, Set<String>>     users    = Collections.singletonMap("svc1", Collections.singleton(user));
+
+        setField(provider, "serviceAccountUsers", users);
+
+        return provider;
     }
 
     private static HttpServletRequest httpRequest(String user, RangerPdpStats stats) {

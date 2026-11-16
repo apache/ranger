@@ -87,6 +87,8 @@ public final class RangerPdpConstants {
     public static final String PROP_AUTHZ_PREFIX           = "ranger.authz.";
     public static final String PROP_PDP_PREFIX             = "ranger.pdp.";
     public static final String PROP_PDP_SERVICE_PREFIX     = PROP_PDP_PREFIX + "service.";
+    public static final String PROP_SERVICE_ACCOUNT_REFRESHER_PREFIX  = "ranger.serviceaccount.refresher.";
+    public static final String PROP_SERVICE_ACCOUNT_REFRESHER_ENABLED = PROP_SERVICE_ACCOUNT_REFRESHER_PREFIX + "enabled";
 
     // delegation users
     public static final String PROP_SUFFIX_DELEGATION_USERS = ".delegation.users";

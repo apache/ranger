@@ -21,6 +21,7 @@ package org.apache.ranger.pdp.rest;
 
 import org.apache.ranger.authz.api.RangerAuthorizer;
 import org.apache.ranger.pdp.config.RangerPdpConfig;
+import org.apache.ranger.plugin.util.ServiceAccountUsersProvider;
 import org.glassfish.hk2.utilities.binding.AbstractBinder;
 import org.glassfish.jersey.jackson.JacksonFeature;
 import org.glassfish.jersey.server.ResourceConfig;
@@ -38,25 +39,28 @@ import org.glassfish.jersey.server.ResourceConfig;
  * </ul>
  */
 public class RangerPdpApplication extends ResourceConfig {
-    public RangerPdpApplication(RangerAuthorizer authorizer, RangerPdpConfig config) {
+    public RangerPdpApplication(RangerAuthorizer authorizer, RangerPdpConfig config, ServiceAccountUsersProvider serviceAccountUsersProvider) {
         register(JacksonFeature.class);
-        register(new AuthorizerBinder(authorizer, config));
+        register(new AuthorizerBinder(authorizer, config, serviceAccountUsersProvider));
         register(RangerPdpREST.class);
     }
 
     private static class AuthorizerBinder extends AbstractBinder {
-        private final RangerAuthorizer authorizer;
-        private final RangerPdpConfig  config;
+        private final RangerAuthorizer            authorizer;
+        private final RangerPdpConfig             config;
+        private final ServiceAccountUsersProvider serviceAccountUsersProvider;
 
-        AuthorizerBinder(RangerAuthorizer authorizer, RangerPdpConfig config) {
-            this.authorizer = authorizer;
-            this.config     = config;
+        AuthorizerBinder(RangerAuthorizer authorizer, RangerPdpConfig config, ServiceAccountUsersProvider serviceAccountUsersProvider) {
+            this.authorizer                 = authorizer;
+            this.config                     = config;
+            this.serviceAccountUsersProvider = serviceAccountUsersProvider;
         }
 
         @Override
         protected void configure() {
             bind(authorizer).to(RangerAuthorizer.class);
             bind(config).to(RangerPdpConfig.class);
+            bind(serviceAccountUsersProvider).to(ServiceAccountUsersProvider.class);
         }
     }
 }

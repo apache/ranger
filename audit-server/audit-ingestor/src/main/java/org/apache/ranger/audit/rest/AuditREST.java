@@ -26,6 +26,7 @@ import org.apache.ranger.audit.producer.AuditDestinationMgr;
 import org.apache.ranger.audit.provider.MiscUtil;
 import org.apache.ranger.audit.server.AuditServerConfig;
 import org.apache.ranger.audit.server.AuditServerConstants;
+import org.apache.ranger.plugin.util.ServiceAccountUsersProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -67,6 +68,9 @@ public class AuditREST {
 
     @Autowired
     AuditDestinationMgr auditDestinationMgr;
+
+    @Autowired
+    ServiceAccountUsersProvider serviceAccountUsersProvider;
 
     /**
      * Health check endpoint
@@ -333,6 +337,10 @@ public class AuditREST {
             Set<String> allowedUsers = allowedServiceUsers.get(serviceName);
 
             ret = allowedUsers != null && allowedUsers.contains(userName);
+
+            if (!ret && serviceAccountUsersProvider != null) {
+                ret = serviceAccountUsersProvider.isServiceAccountUser(serviceName, userName);
+            }
         } else {
             ret = false;
         }

@@ -51,6 +51,24 @@
     </property>
 
     <property>
+        <name>ranger.serviceaccount.refresher.enabled</name>
+        <value>true</value>
+        <description>Enable periodic retrieval of service-account users from Ranger Admin.</description>
+    </property>
+
+    <property>
+        <name>ranger.serviceaccount.refresher.policy.rest.url</name>
+        <value>http://localhost:6080</value>
+        <description>Ranger Admin base URL used to retrieve service-account users.</description>
+    </property>
+
+    <property>
+        <name>ranger.serviceaccount.refresher.pollIntervalMs</name>
+        <value>30000</value>
+        <description>How often (ms) to refresh service-account users from Ranger Admin.</description>
+    </property>
+
+    <property>
         <name>ranger.audit.ingestor.https.attrib.ssl.enabled</name>
         <value>false</value>
     </property>

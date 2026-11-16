@@ -1030,7 +1030,8 @@ public class RangerBizUtil {
         }
 
         if (baseModel instanceof RangerServiceHeaderInfo) {
-            return hasAccessToRangerServiceHeaderInfo((RangerServiceHeaderInfo) baseModel, isKeyAdmin, isSysAdmin, isAuditor, isAuditorKeyAdmin, isUser);
+            return hasServiceAccountInfoAccess() ||
+                    hasAccessToRangerServiceHeaderInfo((RangerServiceHeaderInfo) baseModel, isKeyAdmin, isSysAdmin, isAuditor, isAuditorKeyAdmin, isUser);
         }
 
         return false;

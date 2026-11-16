@@ -28,6 +28,7 @@ import org.apache.ranger.audit.provider.MiscUtil;
 import org.apache.ranger.authorization.hadoop.config.RangerPluginConfig;
 import org.apache.ranger.authorization.utils.StringUtil;
 import org.apache.ranger.plugin.model.RangerRole;
+import org.apache.ranger.plugin.model.RangerServiceHeaderInfo;
 import org.apache.ranger.plugin.util.GrantRevokeRequest;
 import org.apache.ranger.plugin.util.GrantRevokeRoleRequest;
 import org.apache.ranger.plugin.util.JsonUtilsV2;
@@ -51,15 +52,18 @@ import javax.ws.rs.core.Response;
 
 import java.io.UnsupportedEncodingException;
 import java.security.PrivilegedExceptionAction;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Supplier;
 
 public class RangerAdminRESTClient extends AbstractRangerAdminClient {
     private static final Logger LOG = LoggerFactory.getLogger(RangerAdminRESTClient.class);
 
-    private static final TypeReference<List<String>> TYPE_LIST_STRING = new TypeReference<List<String>>() {};
+    private static final TypeReference<List<String>>                  TYPE_LIST_STRING         = new TypeReference<List<String>>() {};
+    private static final TypeReference<List<RangerServiceHeaderInfo>> TYPE_LIST_SERVICE_HEADER = new TypeReference<List<RangerServiceHeaderInfo>>() {};
 
     private final String           pluginCapabilities = Long.toHexString(new RangerPluginCapability().getPluginCapabilities());
     private final RangerRESTUtils  restUtils          = new RangerRESTUtils();
@@ -116,7 +120,7 @@ public class RangerAdminRESTClient extends AbstractRangerAdminClient {
             url = url.substring(0, url.length() - 1);
         }
 
-        init(url, sslConfigFileName, restClientConnTimeOutMs, restClientReadTimeOutMs, restClientMaxRetryAttempts, restClientRetryIntervalMs, config);
+        init(url, sslConfigFileName, restClientConnTimeOutMs, restClientReadTimeOutMs, restClientMaxRetryAttempts, restClientRetryIntervalMs, config, propertyPrefix);
 
         try {
             this.serviceNameUrlParam = URLEncoderUtil.encodeURIParam(serviceName);
@@ -124,6 +128,59 @@ public class RangerAdminRESTClient extends AbstractRangerAdminClient {
             LOG.warn("Unsupported encoding, serviceName={}", serviceName);
             this.serviceNameUrlParam = serviceName;
         }
+    }
+
+    public Map<String, Set<String>> getServiceAccountUsers() throws Exception {
+        LOG.debug("==> RangerAdminRESTClient.getServiceAccountUsers()");
+
+        final boolean             isSecureMode = isAuthenticationEnabled();
+        final Cookie              sessionId    = this.sessionId;
+        final Map<String, String> queryParams  = Collections.emptyMap();
+        final Response            response;
+
+        if (isSecureMode) {
+            response = MiscUtil.executePrivilegedAction((PrivilegedExceptionAction<Response>) () ->
+                    restClient.get(RangerRESTUtils.REST_URL_SERVICE_HEADERS, queryParams, sessionId));
+        } else {
+            response = restClient.get(RangerRESTUtils.REST_URL_SERVICE_HEADERS, queryParams, sessionId);
+        }
+
+        checkAndResetSessionCookie(response);
+
+        Map<String, Set<String>> ret = Collections.emptyMap();
+
+        if (response == null) {
+            throw new Exception("Unknown error while retrieving service-account users");
+        } else if (response.getStatus() == HttpStatus.SC_OK) {
+            List<RangerServiceHeaderInfo> serviceHeaders = JsonUtilsV2.jsonToObj(response.readEntity(String.class),
+                    TYPE_LIST_SERVICE_HEADER);
+
+            if (serviceHeaders != null && !serviceHeaders.isEmpty()) {
+                Map<String, Set<String>> serviceAccountUsers = new HashMap<>();
+
+                for (RangerServiceHeaderInfo serviceHeader : serviceHeaders) {
+                    if (serviceHeader != null && Boolean.TRUE.equals(serviceHeader.getIsEnabled()) &&
+                            !StringUtil.isEmpty(serviceHeader.getName()) && serviceHeader.getServiceAccountUsers() != null &&
+                            !serviceHeader.getServiceAccountUsers().isEmpty()) {
+                        serviceAccountUsers.put(serviceHeader.getName(), serviceHeader.getServiceAccountUsers());
+                    }
+                }
+
+                ret = serviceAccountUsers;
+            }
+        } else {
+            LOG.error("getServiceAccountUsers() failed: HTTP status={}, isSecure={}", response.getStatus(), isSecureMode);
+
+            if (response.getStatus() == HttpStatus.SC_UNAUTHORIZED || response.getStatus() == HttpStatus.SC_FORBIDDEN) {
+                throw new AccessControlException();
+            }
+
+            throw new Exception("HTTP " + response.getStatus() + " while retrieving service-account users");
+        }
+
+        LOG.debug("<== RangerAdminRESTClient.getServiceAccountUsers(): serviceCount={}", ret.size());
+
+        return ret;
     }
 
     @Override
@@ -1029,10 +1086,10 @@ public class RangerAdminRESTClient extends AbstractRangerAdminClient {
         }
     }
 
-    private void init(String url, String sslConfigFileName, int restClientConnTimeOutMs, int restClientReadTimeOutMs, int restClientMaxRetryAttempts, int restClientRetryIntervalMs, Configuration config) {
+    private void init(String url, String sslConfigFileName, int restClientConnTimeOutMs, int restClientReadTimeOutMs, int restClientMaxRetryAttempts, int restClientRetryIntervalMs, Configuration config, String propertyPrefix) {
         LOG.debug("==> RangerAdminRESTClient.init({}, {})", url, sslConfigFileName);
 
-        restClient = new RangerRESTClient(url, sslConfigFileName, config);
+        restClient = new RangerRESTClient(url, sslConfigFileName, config, propertyPrefix);
         if (tokenSupplier != null) {
             restClient.setTokenSupplier(tokenSupplier);
         }

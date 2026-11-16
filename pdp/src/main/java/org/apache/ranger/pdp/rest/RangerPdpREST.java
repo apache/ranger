@@ -39,6 +39,7 @@ import org.apache.ranger.pdp.RangerPdpStats;
 import org.apache.ranger.pdp.config.RangerPdpConfig;
 import org.apache.ranger.pdp.config.RangerPdpConstants;
 import org.apache.ranger.pdp.model.ErrorResponse;
+import org.apache.ranger.plugin.util.ServiceAccountUsersProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -108,6 +109,9 @@ public class RangerPdpREST {
 
     @Inject
     private RangerPdpConfig config;
+
+    @Inject
+    private ServiceAccountUsersProvider serviceAccountUsersProvider;
 
     @Context
     private ServletContext servletContext;
@@ -465,14 +469,9 @@ public class RangerPdpREST {
     }
 
     private boolean isDelegationUserForService(String serviceName, String userName) {
-        final boolean            ret;
-        Map<String, Set<String>> delegationUsersByService = this.delegationUsersByService;
+        boolean ret = false;
 
-        if (delegationUsersByService.isEmpty()) {
-            ret = false;
-        } else if (StringUtils.isBlank(serviceName) || StringUtils.isBlank(userName)) {
-            ret = false;
-        } else {
+        if (StringUtils.isNotBlank(serviceName) && StringUtils.isNotBlank(userName)) {
             Set<String> delegationUsers = delegationUsersByService.get(serviceName);
 
             if (delegationUsers == null) {
@@ -480,9 +479,13 @@ public class RangerPdpREST {
             }
 
             ret = delegationUsers != null && delegationUsers.contains(userName);
+
+            if (!ret && serviceAccountUsersProvider != null) {
+                ret = serviceAccountUsersProvider.isServiceAccountUser(serviceName, userName);
+            }
         }
 
-        LOG.debug("isDelegationUserForService(serviceName={}, userName={}): ret={}", serviceName, userName, ret);
+        LOG.debug("isDelegationUserForService(serviceName={}): ret={}", serviceName, ret);
 
         return ret;
     }
@@ -506,7 +509,7 @@ public class RangerPdpREST {
                 if (!delegationUsers.isEmpty()) {
                     delegationUsersByService.put(serviceName, delegationUsers);
 
-                    LOG.info("Delegation users for service '{}': {}", serviceName, delegationUsers);
+                    LOG.info("Configured {} delegation users for service '{}'", delegationUsers.size(), serviceName);
                 }
             }
         }
