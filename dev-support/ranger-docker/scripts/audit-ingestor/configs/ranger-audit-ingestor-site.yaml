@@ -29,6 +29,7 @@ ranger.audit.ingestor.contextName: /
 ranger.audit.ingestor.host: ranger-audit-ingestor.rangernw
 ranger.audit.ingestor.http.port: '7081'
 ranger.audit.ingestor.https.port: '7182'
+ranger.serviceaccount.refresher.policy.rest.url: 'http://ranger:6080'
 ranger.audit.ingestor.https.attrib.ssl.enabled: 'false'
 
 # HTTPS/SSL Configuration
