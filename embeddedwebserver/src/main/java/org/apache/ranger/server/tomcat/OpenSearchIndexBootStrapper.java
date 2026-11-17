@@ -55,6 +55,7 @@ public class OpenSearchIndexBootStrapper extends Thread {
     private static final String CONFIG_REPLICAS   = CONFIG_PREFIX + ".no.replica";
     private static final String CONFIG_MAX_RETRY  = CONFIG_PREFIX + ".max.retry";
     private static final String SCHEMA_FILE_NAME  = "ranger_opensearch_schema.json";
+    private static final String KEY_LOWER_CASE_NORMALIZER = "key_lower_case";
 
     private volatile RestClient client;
     private String  index;
@@ -176,8 +177,12 @@ public class OpenSearchIndexBootStrapper extends Thread {
     }
 
     private String buildCreateIndexBody(String mappingsJson) {
+        // Same role as Solr key_lower_case: one token, lowercased.
+        String normalizer = "\"" + KEY_LOWER_CASE_NORMALIZER + "\":{\"type\":\"custom\",\"filter\":[\"lowercase\"]}";
+
         return "{\"settings\":{\"number_of_shards\":" + noOfShards
                 + ",\"number_of_replicas\":" + noOfReplicas
+                + ",\"analysis\":{\"normalizer\":{" + normalizer + "}}"
                 + "},\"mappings\":" + mappingsJson + "}";
     }
 
