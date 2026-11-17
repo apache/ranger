@@ -3926,9 +3926,10 @@ public class XUserMgr extends XUserMgrBase {
                 boolean         isSelfProvisioning = auth instanceof RangerAuthenticationToken && ((RangerAuthenticationToken) auth).getAuthType() == XXAuthSession.AUTH_TYPE_TRUSTED_PROXY && StringUtils.equalsIgnoreCase(auth.getName(), userName);
                 List<String>    headerRoles        = getHeaderAuthRoles();
                 boolean         trustedHeaderRoles = CollectionUtils.isNotEmpty(headerRoles);
+                boolean         useHeaderRoles     = isSelfProvisioning && trustedHeaderRoles;
                 ArrayList<String> roleList         = new ArrayList<>();
 
-                if (isSelfProvisioning && trustedHeaderRoles) {
+                if (useHeaderRoles) {
                     roleList.addAll(headerRoles);
                 } else {
                     roleList.add(RangerConstants.ROLE_USER);
@@ -3939,7 +3940,7 @@ public class XUserMgr extends XUserMgrBase {
                 xXPortalUser = userMgr.mapVXPortalUserToXXPortalUser(vXPortalUser);
 
                 try {
-                    xXPortalUser = createExternalPortalUser(xXPortalUser, roleList, trustedHeaderRoles);
+                    xXPortalUser = createExternalPortalUser(xXPortalUser, roleList, useHeaderRoles);
 
                     logger.debug("createExternalUser(): Successfully created user {} in x_portal_user table with roles {}", xXPortalUser.getLoginId(), roleList);
                 } catch (Exception ex) {
