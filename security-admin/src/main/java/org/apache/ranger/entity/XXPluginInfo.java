@@ -70,6 +70,39 @@ public class XXPluginInfo implements java.io.Serializable {
     @Column(name = "info")
     protected String info;
 
+    @Column(name = "policy_download_time")
+    protected Long policyDownloadTime;
+
+    @Column(name = "policy_activation_time")
+    protected Long policyActivationTime;
+
+    @Column(name = "tag_download_time")
+    protected Long tagDownloadTime;
+
+    @Column(name = "tag_activation_time")
+    protected Long tagActivationTime;
+
+    @Column(name = "gds_download_time")
+    protected Long gdsDownloadTime;
+
+    @Column(name = "gds_activation_time")
+    protected Long gdsActivationTime;
+
+    @Column(name = "role_download_time")
+    protected Long roleDownloadTime;
+
+    @Column(name = "role_activation_time")
+    protected Long roleActivationTime;
+
+    @Column(name = "userstore_download_time")
+    protected Long userstoreDownloadTime;
+
+    @Column(name = "userstore_activation_time")
+    protected Long userstoreActivationTime;
+
+    @Column(name = "cluster_name")
+    protected String clusterName;
+
     /**
      * Default constructor. This will set all the attributes to default value.
      */
@@ -208,5 +241,93 @@ public class XXPluginInfo implements java.io.Serializable {
 
     public void setInfo(String info) {
         this.info = info;
+    }
+
+    public Long getPolicyDownloadTime() {
+        return policyDownloadTime;
+    }
+
+    public void setPolicyDownloadTime(Long policyDownloadTime) {
+        this.policyDownloadTime = policyDownloadTime;
+    }
+
+    public Long getPolicyActivationTime() {
+        return policyActivationTime;
+    }
+
+    public void setPolicyActivationTime(Long policyActivationTime) {
+        this.policyActivationTime = policyActivationTime;
+    }
+
+    public Long getTagDownloadTime() {
+        return tagDownloadTime;
+    }
+
+    public void setTagDownloadTime(Long tagDownloadTime) {
+        this.tagDownloadTime = tagDownloadTime;
+    }
+
+    public Long getTagActivationTime() {
+        return tagActivationTime;
+    }
+
+    public void setTagActivationTime(Long tagActivationTime) {
+        this.tagActivationTime = tagActivationTime;
+    }
+
+    public Long getGdsDownloadTime() {
+        return gdsDownloadTime;
+    }
+
+    public void setGdsDownloadTime(Long gdsDownloadTime) {
+        this.gdsDownloadTime = gdsDownloadTime;
+    }
+
+    public Long getGdsActivationTime() {
+        return gdsActivationTime;
+    }
+
+    public void setGdsActivationTime(Long gdsActivationTime) {
+        this.gdsActivationTime = gdsActivationTime;
+    }
+
+    public Long getRoleDownloadTime() {
+        return roleDownloadTime;
+    }
+
+    public void setRoleDownloadTime(Long roleDownloadTime) {
+        this.roleDownloadTime = roleDownloadTime;
+    }
+
+    public Long getRoleActivationTime() {
+        return roleActivationTime;
+    }
+
+    public void setRoleActivationTime(Long roleActivationTime) {
+        this.roleActivationTime = roleActivationTime;
+    }
+
+    public Long getUserstoreDownloadTime() {
+        return userstoreDownloadTime;
+    }
+
+    public void setUserstoreDownloadTime(Long userstoreDownloadTime) {
+        this.userstoreDownloadTime = userstoreDownloadTime;
+    }
+
+    public Long getUserstoreActivationTime() {
+        return userstoreActivationTime;
+    }
+
+    public void setUserstoreActivationTime(Long userstoreActivationTime) {
+        this.userstoreActivationTime = userstoreActivationTime;
+    }
+
+    public String getClusterName() {
+        return clusterName;
+    }
+
+    public void setClusterName(String clusterName) {
+        this.clusterName = clusterName;
     }
 }
