@@ -3834,19 +3834,16 @@ public class XUserMgr extends XUserMgrBase {
     /**
      * Resolves the roles to assign to a freshly auto-provisioned external user. When header-based
      * authentication is enabled and the current request was authenticated through the trusted proxy,
-     * the (validated) roles carried in the {@link RangerAuthenticationToken} authorities are used,
-     * but only when the authenticated principal is the user being provisioned. Users provisioned on
-     * behalf of another principal (e.g. users referenced in a new service's default policies) must
-     * not inherit the caller's roles. Returns {@code null} otherwise, in which case the caller falls
-     * back to the default ROLE_USER.
+     * the (validated) roles carried in the {@link RangerAuthenticationToken} authorities are used.
+     * Returns {@code null} otherwise, in which case the caller falls back to the default ROLE_USER.
      */
-    private List<String> getHeaderAuthRoles(String username) {
+    private List<String> getHeaderAuthRoles() {
         List<String> ret = null;
 
         if (PropertiesUtil.getBooleanProperty(RangerHeaderPreAuthFilter.PROP_HEADER_AUTH_ENABLED, false)) {
             Authentication auth = SecurityContextHolder.getContext().getAuthentication();
 
-            if (auth instanceof RangerAuthenticationToken && ((RangerAuthenticationToken) auth).getAuthType() == XXAuthSession.AUTH_TYPE_TRUSTED_PROXY && StringUtils.equalsIgnoreCase(auth.getName(), username)) {
+            if (auth instanceof RangerAuthenticationToken && ((RangerAuthenticationToken) auth).getAuthType() == XXAuthSession.AUTH_TYPE_TRUSTED_PROXY) {
                 List<String> roles = new ArrayList<>();
 
                 for (GrantedAuthority authority : auth.getAuthorities()) {
@@ -3925,11 +3922,13 @@ public class XUserMgr extends XUserMgrBase {
                 vXPortalUser.setLoginId(userName);
                 vXPortalUser.setUserSource(RangerCommonEnums.USER_EXTERNAL);
 
-                List<String>      headerRoles       = getHeaderAuthRoles(userName);
-                boolean           trustedHeaderRoles = CollectionUtils.isNotEmpty(headerRoles);
-                ArrayList<String> roleList          = new ArrayList<>();
+                Authentication  auth               = SecurityContextHolder.getContext().getAuthentication();
+                boolean         isSelfProvisioning = auth instanceof RangerAuthenticationToken && ((RangerAuthenticationToken) auth).getAuthType() == XXAuthSession.AUTH_TYPE_TRUSTED_PROXY && StringUtils.equalsIgnoreCase(auth.getName(), userName);
+                List<String>    headerRoles        = getHeaderAuthRoles();
+                boolean         trustedHeaderRoles = CollectionUtils.isNotEmpty(headerRoles);
+                ArrayList<String> roleList         = new ArrayList<>();
 
-                if (trustedHeaderRoles) {
+                if (isSelfProvisioning && trustedHeaderRoles) {
                     roleList.addAll(headerRoles);
                 } else {
                     roleList.add(RangerConstants.ROLE_USER);
