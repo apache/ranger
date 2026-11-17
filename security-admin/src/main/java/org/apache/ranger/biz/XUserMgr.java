@@ -3922,15 +3922,21 @@ public class XUserMgr extends XUserMgrBase {
                 vXPortalUser.setLoginId(userName);
                 vXPortalUser.setUserSource(RangerCommonEnums.USER_EXTERNAL);
 
-                Authentication  auth               = SecurityContextHolder.getContext().getAuthentication();
-                boolean         isSelfProvisioning = auth instanceof RangerAuthenticationToken && ((RangerAuthenticationToken) auth).getAuthType() == XXAuthSession.AUTH_TYPE_TRUSTED_PROXY && StringUtils.equalsIgnoreCase(auth.getName(), userName);
-                List<String>    headerRoles        = getHeaderAuthRoles();
-                boolean         trustedHeaderRoles = CollectionUtils.isNotEmpty(headerRoles);
-                boolean         useHeaderRoles     = isSelfProvisioning && trustedHeaderRoles;
-                ArrayList<String> roleList         = new ArrayList<>();
+                Authentication    auth               = SecurityContextHolder.getContext().getAuthentication();
+                boolean           isSelfProvisioning = auth instanceof RangerAuthenticationToken && ((RangerAuthenticationToken) auth).getAuthType() == XXAuthSession.AUTH_TYPE_TRUSTED_PROXY && StringUtils.equalsIgnoreCase(auth.getName(), userName);
+                ArrayList<String> roleList           = new ArrayList<>();
+                boolean           useHeaderRoles     = false;
 
-                if (useHeaderRoles) {
-                    roleList.addAll(headerRoles);
+                if (isSelfProvisioning) {
+                    List<String> headerRoles = getHeaderAuthRoles();
+    
+                    if (CollectionUtils.isNotEmpty(headerRoles)) {
+                        useHeaderRoles = true;
+
+                        roleList.addAll(headerRoles);
+                    } else {
+                        roleList.add(RangerConstants.ROLE_USER);
+                    }
                 } else {
                     roleList.add(RangerConstants.ROLE_USER);
                 }
