@@ -3929,7 +3929,7 @@ public class XUserMgr extends XUserMgrBase {
 
                 if (isSelfProvisioning) {
                     List<String> headerRoles = getHeaderAuthRoles();
-    
+
                     if (CollectionUtils.isNotEmpty(headerRoles)) {
                         useHeaderRoles = true;
 
