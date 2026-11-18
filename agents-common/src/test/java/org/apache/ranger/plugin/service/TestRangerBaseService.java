@@ -34,16 +34,19 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
@@ -261,5 +264,219 @@ public class TestRangerBaseService {
         DummyService svc = new DummyService();
         String user = svc.getLookupUser("simple", null, null);
         assertEquals(null, user);
+    }
+
+    @Test
+    public void test9_DefaultPolicyFromJson() throws Exception {
+        DummyService svc = new DummyService();
+        RangerServiceDef def = buildServiceDef();
+        Map<String, String> cfg = new LinkedHashMap<>();
+        cfg.put("create.default.policy.per.hierarchy", "false");
+        cfg.put("setup.additional.default.policies", "true");
+        cfg.put("default.policy.1", "{\"id\": 42, \"service\": \"other\", \"name\": \"p-json\", \"isDenyAllElse\": true,"
+                + " \"resources\": {\"database\": {\"values\": [\"db1\", \"db2\"], \"isExcludes\": true}, \"table\": {\"values\": [\"t1\"]}},"
+                + " \"policyItems\": [{\"users\": [\"u1\"], \"groups\": [\"g1\"], \"roles\": [\"r1\"], \"accesses\": [{\"type\": \"select\"}], \"delegateAdmin\": true}],"
+                + " \"denyPolicyItems\": [{\"users\": [\"u2\"], \"accesses\": [{\"type\": \"update\"}]}]}");
+        RangerService service = buildService(cfg);
+        svc.init(def, service);
+
+        List<RangerPolicy> policies = svc.getDefaultRangerPolicies();
+        assertEquals(1, policies.size());
+        RangerPolicy p = policies.get(0);
+        assertEquals("p-json", p.getName());
+        assertEquals("svc1", p.getService());
+        assertNull(p.getId());
+        assertEquals(1L, p.getVersion());
+        assertEquals("Policy for p-json", p.getDescription());
+        assertTrue(p.getIsEnabled());
+        assertTrue(p.getIsAuditEnabled());
+        assertTrue(p.getIsDenyAllElse());
+        assertEquals(Arrays.asList("db1", "db2"), p.getResources().get("database").getValues());
+        assertTrue(p.getResources().get("database").getIsExcludes());
+        assertEquals(Collections.singletonList("t1"), p.getResources().get("table").getValues());
+        assertEquals(1, p.getPolicyItems().size());
+        RangerPolicy.RangerPolicyItem item = p.getPolicyItems().get(0);
+        assertEquals(Collections.singletonList("u1"), item.getUsers());
+        assertEquals(Collections.singletonList("g1"), item.getGroups());
+        assertEquals(Collections.singletonList("r1"), item.getRoles());
+        assertTrue(item.getDelegateAdmin());
+        assertEquals("select", item.getAccesses().get(0).getType());
+        assertTrue(item.getAccesses().get(0).getIsAllowed());
+        assertEquals(Collections.singletonList("u2"), p.getDenyPolicyItems().get(0).getUsers());
+    }
+
+    @Test
+    public void test10_DefaultPolicyFromJson_CombinedWithDefaultPolicyConfigs() throws Exception {
+        DummyService svc = new DummyService();
+        RangerServiceDef def = buildServiceDef();
+        Map<String, String> cfg = new LinkedHashMap<>();
+        cfg.put("create.default.policy.per.hierarchy", "false");
+        cfg.put("setup.additional.default.policies", "true");
+        cfg.put("default-policy.1.name", "p-props");
+        cfg.put("default-policy.1.resource.database", "db1");
+        cfg.put("default-policy.1.policyItem.1.users", "u1");
+        cfg.put("default-policy.1.policyItem.1.accessTypes", "select");
+        cfg.put("default.policy.1", "{\"name\": \"p-json-1\", \"resources\": {\"database\": {\"values\": [\"db1\"]}}}");
+        cfg.put("default.policy.2", "{\"name\": \"p-json-2\", \"resources\": {\"database\": {\"values\": [\"db2\"]}}}");
+        RangerService service = buildService(cfg);
+        svc.init(def, service);
+
+        List<RangerPolicy> policies = svc.getDefaultRangerPolicies();
+        assertEquals(3, policies.size());
+        assertTrue(policies.stream().anyMatch(p -> "p-props".equals(p.getName())));
+        assertTrue(policies.stream().anyMatch(p -> "p-json-1".equals(p.getName())));
+        assertTrue(policies.stream().anyMatch(p -> "p-json-2".equals(p.getName())));
+    }
+
+    @Test
+    public void test11_DefaultPolicyFromJson_InvalidJsonIgnored() throws Exception {
+        DummyService svc = new DummyService();
+        RangerServiceDef def = buildServiceDef();
+        Map<String, String> cfg = new LinkedHashMap<>();
+        cfg.put("create.default.policy.per.hierarchy", "false");
+        cfg.put("setup.additional.default.policies", "true");
+        cfg.put("default.policy.1", "{not-a-json");
+        cfg.put("default.policy.2", "{\"name\": \"valid\", \"resources\": {\"database\": {\"values\": [\"db1\"]}}}");
+        RangerService service = buildService(cfg);
+        svc.init(def, service);
+
+        List<RangerPolicy> policies = svc.getDefaultRangerPolicies();
+        assertEquals(1, policies.size());
+        assertEquals("valid", policies.get(0).getName());
+    }
+
+    @Test
+    public void test12_DefaultPolicyFromJson_SkipsPoliciesWithoutResources() throws Exception {
+        DummyService svc = new DummyService();
+        RangerServiceDef def = buildServiceDef();
+        Map<String, String> cfg = new LinkedHashMap<>();
+        cfg.put("create.default.policy.per.hierarchy", "false");
+        cfg.put("setup.additional.default.policies", "true");
+        cfg.put("default.policy.1", "{\"resources\": {}}");
+        cfg.put("default.policy.2", "{\"name\": \"no-resources\"}");
+        cfg.put("default.policy.3", "{\"name\": \"valid\", \"description\": \"my desc\", \"resources\": {\"database\": {\"values\": [\"db1\"]}}}");
+        RangerService service = buildService(cfg);
+        svc.init(def, service);
+
+        List<RangerPolicy> policies = svc.getDefaultRangerPolicies();
+        assertEquals(1, policies.size());
+        assertEquals("valid", policies.get(0).getName());
+        assertEquals("my desc", policies.get(0).getDescription());
+    }
+
+    @Test
+    public void test18_DefaultPolicyFromJson_NameGeneratedWhenNotGiven() throws Exception {
+        DummyService svc = new DummyService();
+        RangerServiceDef def = buildServiceDef();
+        Map<String, String> cfg = new LinkedHashMap<>();
+        cfg.put("create.default.policy.per.hierarchy", "false");
+        cfg.put("setup.additional.default.policies", "true");
+        cfg.put("default.policy.1", "{\"resources\": {\"database\": {\"values\": [\"db1\"]}}}");
+        cfg.put("default.policy.7", "{\"name\": \" \", \"resources\": {\"database\": {\"values\": [\"db7\"]}}}");
+        cfg.put("default.policy.2", "{\"name\": \"named\", \"resources\": {\"database\": {\"values\": [\"db2\"]}}}");
+        cfg.put("default.policy.3", "{\"description\": \"my desc\", \"resources\": {\"database\": {\"values\": [\"db3\"]}}}");
+        RangerService service = buildService(cfg);
+        svc.init(def, service);
+
+        Map<String, String> nameToDescription = svc.getDefaultRangerPolicies().stream().collect(Collectors.toMap(RangerPolicy::getName, RangerPolicy::getDescription));
+        Map<String, String> expected = new HashMap<>();
+        expected.put("default policy 1", "Policy for default policy 1");
+        expected.put("default policy 7", "Policy for default policy 7");
+        expected.put("named", "Policy for named");
+        expected.put("default policy 3", "my desc");
+        assertEquals(expected, nameToDescription);
+    }
+
+    @Test
+    public void test13_DefaultPolicyFromJson_IgnoredWhenAdditionalPoliciesSetupDisabled() throws Exception {
+        DummyService svc = new DummyService();
+        RangerServiceDef def = buildServiceDef();
+        Map<String, String> cfg = new LinkedHashMap<>();
+        cfg.put("create.default.policy.per.hierarchy", "false");
+        cfg.put("default.policy.1", "{\"name\": \"p-json\", \"resources\": {\"database\": {\"values\": [\"db1\"]}}}");
+        RangerService service = buildService(cfg);
+        svc.init(def, service);
+
+        assertTrue(svc.getDefaultRangerPolicies().isEmpty());
+    }
+
+    @Test
+    public void test14_DefaultPolicyUsersAndGroupsNotTreatedAsPolicies() throws Exception {
+        DummyService svc = new DummyService();
+        RangerServiceDef def = buildServiceDef();
+        Map<String, String> cfg = new LinkedHashMap<>();
+        cfg.put("create.default.policy.per.hierarchy", "false");
+        cfg.put("setup.additional.default.policies", "true");
+        cfg.put("default.policy.users", "u1,u2");
+        cfg.put("default.policy.groups", "g1");
+        cfg.put("default.policy.", "{\"name\": \"no-index\", \"resources\": {\"database\": {\"values\": [\"db1\"]}}}");
+        RangerService service = buildService(cfg);
+        svc.init(def, service);
+
+        assertTrue(svc.getDefaultRangerPolicies().isEmpty());
+    }
+
+    @Test
+    public void test15_DefaultPolicyFromJson_WithPerHierarchyPoliciesAndDefaultPolicyUsers() throws Exception {
+        DummyService svc = new DummyService();
+        RangerServiceDef def = buildServiceDef();
+        Map<String, String> cfg = new LinkedHashMap<>();
+        cfg.put("default.policy.users", "svcuser1");
+        RangerService service = buildService(cfg);
+        svc.init(def, service);
+        int hierarchyPolicyCount = svc.getDefaultRangerPolicies().size();
+
+        cfg.put("setup.additional.default.policies", "true");
+        cfg.put("default.policy.1", "{\"name\": \"p1\", \"resources\": {\"database\": {\"values\": [\"db1\"]}}, \"policyItems\": [{\"users\": [\"u1\"], \"accesses\": [{\"type\": \"select\"}]}]}");
+        cfg.put("default.policy.2", "{\"name\": \"p2\", \"resources\": {\"database\": {\"values\": [\"db2\"]}}, \"denyPolicyItems\": [{\"users\": [\"u2\"], \"accesses\": [{\"type\": \"update\"}]}]}");
+        cfg.put("default.policy.3", "{\"name\": \"p3\", \"isAuditEnabled\": false, \"resources\": {\"database\": {\"values\": [\"db3\"]}}}");
+        svc.init(def, buildService(cfg));
+
+        List<RangerPolicy> policies = svc.getDefaultRangerPolicies();
+        assertEquals(hierarchyPolicyCount + 3, policies.size());
+        Map<String, RangerPolicy> byName = new HashMap<>();
+        policies.forEach(p -> byName.put(p.getName(), p));
+        assertTrue(byName.keySet().containsAll(Arrays.asList("p1", "p2", "p3")));
+        assertEquals(Collections.singletonList("u1"), byName.get("p1").getPolicyItems().get(0).getUsers());
+        assertEquals(Collections.singletonList("u2"), byName.get("p2").getDenyPolicyItems().get(0).getUsers());
+        assertFalse(byName.get("p3").getIsAuditEnabled());
+        assertTrue(byName.get("all - database, table").getPolicyItems().get(0).getUsers().contains("svcuser1"));
+    }
+
+    @Test
+    public void test16_DefaultPolicyFromJson_NonContiguousIndexes() throws Exception {
+        DummyService svc = new DummyService();
+        RangerServiceDef def = buildServiceDef();
+        Map<String, String> cfg = new LinkedHashMap<>();
+        cfg.put("create.default.policy.per.hierarchy", "false");
+        cfg.put("setup.additional.default.policies", "true");
+        cfg.put("default.policy.1", "{\"name\": \"p1\", \"resources\": {\"database\": {\"values\": [\"db1\"]}}}");
+        cfg.put("default.policy.5", "{\"name\": \"p5\", \"resources\": {\"database\": {\"values\": [\"db5\"]}}}");
+        cfg.put("default.policy.10", "{\"name\": \"p10\", \"resources\": {\"database\": {\"values\": [\"db10\"]}}}");
+        RangerService service = buildService(cfg);
+        svc.init(def, service);
+
+        List<RangerPolicy> policies = svc.getDefaultRangerPolicies();
+        assertEquals(3, policies.size());
+        assertTrue(policies.stream().map(RangerPolicy::getName).collect(Collectors.toSet()).containsAll(Arrays.asList("p1", "p5", "p10")));
+    }
+
+    @Test
+    public void test17_DefaultPolicyFromJson_BlankValueAndNonNumericIndexIgnored() throws Exception {
+        DummyService svc = new DummyService();
+        RangerServiceDef def = buildServiceDef();
+        Map<String, String> cfg = new LinkedHashMap<>();
+        cfg.put("create.default.policy.per.hierarchy", "false");
+        cfg.put("setup.additional.default.policies", "true");
+        cfg.put("default.policy.1", "");
+        cfg.put("default.policy.2", "   ");
+        cfg.put("default.policy.1a", "{\"name\": \"non-numeric\", \"resources\": {\"database\": {\"values\": [\"db1\"]}}}");
+        cfg.put("default.policy.3", "{\"name\": \"valid\", \"resources\": {\"database\": {\"values\": [\"db3\"]}}}");
+        RangerService service = buildService(cfg);
+        svc.init(def, service);
+
+        List<RangerPolicy> policies = svc.getDefaultRangerPolicies();
+        assertEquals(1, policies.size());
+        assertEquals("valid", policies.get(0).getName());
     }
 }
