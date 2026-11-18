@@ -146,19 +146,6 @@
 
     </moduleSets>
 
-    <dependencySets>
-        <!-- Reactor moduleSet can omit audit modules when distro is built without agents-audit; pull from distro deps -->
-        <dependencySet>
-            <outputDirectory>lib</outputDirectory>
-            <useProjectArtifact>false</useProjectArtifact>
-            <useTransitiveDependencies>false</useTransitiveDependencies>
-            <includes>
-                <include>org.apache.ranger:ranger-audit-core:jar:${project.version}</include>
-                <include>org.apache.ranger:ranger-audit-dest-auditserver:jar:${project.version}</include>
-            </includes>
-        </dependencySet>
-    </dependencySets>
-
     <fileSets>
         <!-- Default config template (copy to conf/ and customise) -->
         <fileSet>
