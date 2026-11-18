@@ -3922,12 +3922,21 @@ public class XUserMgr extends XUserMgrBase {
                 vXPortalUser.setLoginId(userName);
                 vXPortalUser.setUserSource(RangerCommonEnums.USER_EXTERNAL);
 
-                List<String>      headerRoles       = getHeaderAuthRoles();
-                boolean           trustedHeaderRoles = CollectionUtils.isNotEmpty(headerRoles);
-                ArrayList<String> roleList          = new ArrayList<>();
+                Authentication    auth               = SecurityContextHolder.getContext().getAuthentication();
+                boolean           isSelfProvisioning = auth instanceof RangerAuthenticationToken && ((RangerAuthenticationToken) auth).getAuthType() == XXAuthSession.AUTH_TYPE_TRUSTED_PROXY && StringUtils.equalsIgnoreCase(auth.getName(), userName);
+                ArrayList<String> roleList           = new ArrayList<>();
+                boolean           useHeaderRoles     = false;
 
-                if (trustedHeaderRoles) {
-                    roleList.addAll(headerRoles);
+                if (isSelfProvisioning) {
+                    List<String> headerRoles = getHeaderAuthRoles();
+
+                    if (CollectionUtils.isNotEmpty(headerRoles)) {
+                        useHeaderRoles = true;
+
+                        roleList.addAll(headerRoles);
+                    } else {
+                        roleList.add(RangerConstants.ROLE_USER);
+                    }
                 } else {
                     roleList.add(RangerConstants.ROLE_USER);
                 }
@@ -3937,7 +3946,7 @@ public class XUserMgr extends XUserMgrBase {
                 xXPortalUser = userMgr.mapVXPortalUserToXXPortalUser(vXPortalUser);
 
                 try {
-                    xXPortalUser = createExternalPortalUser(xXPortalUser, roleList, trustedHeaderRoles);
+                    xXPortalUser = createExternalPortalUser(xXPortalUser, roleList, useHeaderRoles);
 
                     logger.debug("createExternalUser(): Successfully created user {} in x_portal_user table with roles {}", xXPortalUser.getLoginId(), roleList);
                 } catch (Exception ex) {
