@@ -243,6 +243,17 @@ public class OpenSearchUtil {
             String value = paramValue.toString().trim();
 
             if (!value.isEmpty()) {
+                // Exact string matches on keyword fields use a case-insensitive term query of the original value.
+                // reason stays a match phrase because that field is mapped as text.
+                if (dataType == SearchField.DATA_TYPE.STRING && !"reason".equals(fieldName)) {
+                    Map<String, Object> termBody = new LinkedHashMap<>();
+
+                    termBody.put("value", value);
+                    termBody.put("case_insensitive", true);
+
+                    return Map.of("term", Map.of(fieldName, termBody));
+                }
+
                 return Map.of("match_phrase", Map.of(fieldName, escapeLucene(value.toLowerCase())));
             }
         }

@@ -15,31 +15,40 @@
       "index": false
     },
     "access": {
-      "type": "keyword"
+      "type": "keyword",
+      "normalizer": "key_lower_case"
     },
     "action": {
-      "type": "keyword"
+      "type": "keyword",
+      "normalizer": "key_lower_case"
     },
     "agent": {
-      "type": "keyword"
+      "type": "keyword",
+      "normalizer": "key_lower_case"
     },
     "agentHost": {
-      "type": "keyword"
+      "type": "keyword",
+      "normalizer": "key_lower_case"
     },
     "cliIP": {
-      "type": "keyword"
+      "type": "keyword",
+      "normalizer": "key_lower_case"
     },
     "cliType": {
-      "type": "keyword"
+      "type": "keyword",
+      "normalizer": "key_lower_case"
     },
     "cluster": {
-      "type": "keyword"
+      "type": "keyword",
+      "normalizer": "key_lower_case"
     },
     "reqContext": {
-      "type": "keyword"
+      "type": "keyword",
+      "normalizer": "key_lower_case"
     },
     "enforcer": {
-      "type": "keyword"
+      "type": "keyword",
+      "normalizer": "key_lower_case"
     },
     "event_count": {
       "type": "long",
@@ -58,42 +67,50 @@
       "store": true
     },
     "logType": {
-      "type": "keyword"
+      "type": "keyword",
+      "normalizer": "key_lower_case"
     },
     "policy": {
       "type": "long",
       "doc_values": true
     },
     "proxyUsers": {
-      "type": "keyword"
+      "type": "keyword",
+      "normalizer": "key_lower_case"
     },
     "reason": {
       "type": "text"
     },
     "repo": {
-      "type": "keyword"
+      "type": "keyword",
+      "normalizer": "key_lower_case"
     },
     "repoType": {
       "type": "integer",
       "doc_values": true
     },
     "req_caller_id": {
-      "type": "keyword"
+      "type": "keyword",
+      "normalizer": "key_lower_case"
     },
     "req_self_id": {
-      "type": "keyword"
+      "type": "keyword",
+      "normalizer": "key_lower_case"
     },
     "reqData": {
       "type": "text"
     },
     "reqUser": {
-      "type": "keyword"
+      "type": "keyword",
+      "normalizer": "key_lower_case"
     },
     "resType": {
-      "type": "keyword"
+      "type": "keyword",
+      "normalizer": "key_lower_case"
     },
     "resource": {
-      "type": "keyword"
+      "type": "keyword",
+      "normalizer": "key_lower_case"
     },
     "result": {
       "type": "integer"
@@ -103,19 +120,23 @@
       "doc_values": true
     },
     "sess": {
-      "type": "keyword"
+      "type": "keyword",
+      "normalizer": "key_lower_case"
     },
     "tags": {
-      "type": "keyword"
+      "type": "keyword",
+      "normalizer": "key_lower_case"
     },
     "tags_str": {
       "type": "text"
     },
     "datasets": {
-      "type": "keyword"
+      "type": "keyword",
+      "normalizer": "key_lower_case"
     },
     "projects": {
-      "type": "keyword"
+      "type": "keyword",
+      "normalizer": "key_lower_case"
     },
     "datasetIds": {
       "type": "long"
@@ -124,7 +145,8 @@
       "type": "text"
     },
     "zoneName": {
-      "type": "keyword"
+      "type": "keyword",
+      "normalizer": "key_lower_case"
     },
     "policyVersion": {
       "type": "long"
