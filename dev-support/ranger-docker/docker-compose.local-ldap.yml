@@ -1,0 +1,32 @@
+services:
+  local-ldap:
+    image: osixia/openldap:1.5.0
+    container_name: local-ldap
+    hostname: local-ldap.rangernw
+    ports:
+      - "389:389"
+      - "636:636"
+    environment:
+      - LDAP_ORGANISATION=RangerNW
+      - LDAP_DOMAIN=example.com
+      - LDAP_ADMIN_PASSWORD=p@ssw0rd
+      - LDAP_TLS=false
+    networks:
+      - ranger
+
+  local-ldap-admin:
+    image: osixia/phpldapadmin:0.9.0
+    container_name: local-ldap-admin
+    ports:
+      - "8080:80"
+    environment:
+      - PHPLDAPADMIN_HTTPS=false
+      - PHPLDAPADMIN_LDAP_HOSTS=local-ldap
+    networks:
+      - ranger
+    depends_on:
+      - local-ldap
+
+networks:
+  ranger:
+    name: rangernw
