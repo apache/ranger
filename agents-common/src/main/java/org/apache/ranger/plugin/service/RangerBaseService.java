@@ -66,7 +66,8 @@ public abstract class RangerBaseService {
     private   static final String PROP_RESOURCE_FLAG_SUFFIX_IS_EXCLUDES      = ".is-excludes";
     private   static final String PROP_RESOURCE_FLAG_SUFFIX_IS_RECURSIVE     = ".is-recursive";
     private   static final String PROP_DEFAULT_FULL_POLICY                   = "default.policy.";
-    private   static final String DEFAULT_FULL_POLICY_NAME_PREFIX            = "default policy ";
+    private   static final String PROP_DEFAULT_POLICY_USERS                  = "default.policy.users";
+    private   static final String PROP_DEFAULT_POLICY_GROUPS                 = "default.policy.groups";
 
     protected final RangerAdminConfig   config;
     protected       RangerServiceDef    serviceDef;
@@ -173,12 +174,12 @@ public abstract class RangerBaseService {
             for (String configName : configs.keySet()) {
                 if (configName.startsWith(PROP_DEFAULT_POLICY_PREFIX) && configName.endsWith(PROP_DEFAULT_POLICY_NAME_SUFFIX)) {
                     policyIndexes.add(configName.substring(PROP_DEFAULT_POLICY_PREFIX.length(), configName.length() - PROP_DEFAULT_POLICY_NAME_SUFFIX.length() - 1));
-                } else if (configName.startsWith(PROP_DEFAULT_FULL_POLICY) && StringUtils.isNumeric(configName.substring(PROP_DEFAULT_FULL_POLICY.length()))) { // skip other configs like default.policy.users
+                } else if (isDefaultFullPolicyConfig(configName)) {
                     fullPolicyConfigNames.add(configName);
                 }
             }
 
-            LOG.info("{}: found {} additional default policies in service-config: {} in '{}<index>.*' format, {} in '{}<index>' JSON format", getServiceName(), policyIndexes.size() + fullPolicyConfigNames.size(), policyIndexes.size(), PROP_DEFAULT_POLICY_PREFIX, fullPolicyConfigNames.size(), PROP_DEFAULT_FULL_POLICY);
+            LOG.info("{}: found {} additional default policies in service-config: {} in '{}<index>.*' format, {} in '{}<key>' JSON format", getServiceName(), policyIndexes.size() + fullPolicyConfigNames.size(), policyIndexes.size(), PROP_DEFAULT_POLICY_PREFIX, fullPolicyConfigNames.size(), PROP_DEFAULT_FULL_POLICY);
 
             for (String configName : fullPolicyConfigNames) {
                 addDefaultPolicyFromJson(ret, configName, configs.get(configName));
@@ -378,6 +379,10 @@ public abstract class RangerBaseService {
         ret.add(policy);
     }
 
+    private boolean isDefaultFullPolicyConfig(String configName) {
+        return configName.startsWith(PROP_DEFAULT_FULL_POLICY) && configName.length() > PROP_DEFAULT_FULL_POLICY.length() && !configName.equals(PROP_DEFAULT_POLICY_USERS) && !configName.equals(PROP_DEFAULT_POLICY_GROUPS);
+    }
+
     private void addDefaultPolicyFromJson(List<RangerPolicy> ret, String configName, String policyJson) {
         RangerPolicy policy = null;
 
@@ -395,7 +400,7 @@ public abstract class RangerBaseService {
             LOG.warn("{}: no resources specified for default policy '{}' in '{}'. Ignored", getServiceName(), policy.getName(), configName);
         } else {
             if (StringUtils.isBlank(policy.getName())) {
-                policy.setName(DEFAULT_FULL_POLICY_NAME_PREFIX + configName.substring(PROP_DEFAULT_FULL_POLICY.length()));
+                policy.setName(configName);
             }
 
             policy.setId(null);
@@ -404,7 +409,7 @@ public abstract class RangerBaseService {
             policy.setService(serviceName);
 
             if (StringUtils.isEmpty(policy.getDescription())) {
-                policy.setDescription("Policy for " + policy.getName());
+                policy.setDescription(configName);
             }
 
             LOG.info("{}: adding default policy from '{}': name={}", getServiceName(), configName, policy.getName());
@@ -494,7 +499,7 @@ public abstract class RangerBaseService {
                 uniqueUsers.add(serviceConfig.get("username"));
             }
 
-            String defaultUsers = serviceConfig.get("default.policy.users");
+            String defaultUsers = serviceConfig.get(PROP_DEFAULT_POLICY_USERS);
 
             if (!StringUtils.isEmpty(defaultUsers)) {
                 String[] defaultUserList = StringUtils.split(defaultUsers, ",");
@@ -519,7 +524,7 @@ public abstract class RangerBaseService {
         Map<String, String> serviceConfig = service.getConfigs();
 
         if (serviceConfig != null) {
-            String defaultGroups = serviceConfig.get("default.policy.groups");
+            String defaultGroups = serviceConfig.get(PROP_DEFAULT_POLICY_GROUPS);
 
             if (!StringUtils.isEmpty(defaultGroups)) {
                 List<String> defaultGroupList = new ArrayList<>(Arrays.asList(StringUtils.split(defaultGroups, ",")));

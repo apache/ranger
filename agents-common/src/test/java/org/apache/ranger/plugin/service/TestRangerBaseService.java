@@ -287,7 +287,7 @@ public class TestRangerBaseService {
         assertEquals("svc1", p.getService());
         assertNull(p.getId());
         assertEquals(1L, p.getVersion());
-        assertEquals("Policy for p-json", p.getDescription());
+        assertEquals("default.policy.1", p.getDescription());
         assertTrue(p.getIsEnabled());
         assertTrue(p.getIsAuditEnabled());
         assertTrue(p.getIsDenyAllElse());
@@ -365,7 +365,7 @@ public class TestRangerBaseService {
     }
 
     @Test
-    public void test18_DefaultPolicyFromJson_NameGeneratedWhenNotGiven() throws Exception {
+    public void test18_DefaultPolicyFromJson_NameAndDescriptionFromConfigNameWhenNotGiven() throws Exception {
         DummyService svc = new DummyService();
         RangerServiceDef def = buildServiceDef();
         Map<String, String> cfg = new LinkedHashMap<>();
@@ -375,15 +375,17 @@ public class TestRangerBaseService {
         cfg.put("default.policy.7", "{\"name\": \" \", \"resources\": {\"database\": {\"values\": [\"db7\"]}}}");
         cfg.put("default.policy.2", "{\"name\": \"named\", \"resources\": {\"database\": {\"values\": [\"db2\"]}}}");
         cfg.put("default.policy.3", "{\"description\": \"my desc\", \"resources\": {\"database\": {\"values\": [\"db3\"]}}}");
+        cfg.put("default.policy.audit-db", "{\"resources\": {\"database\": {\"values\": [\"audit\"]}}}");
         RangerService service = buildService(cfg);
         svc.init(def, service);
 
         Map<String, String> nameToDescription = svc.getDefaultRangerPolicies().stream().collect(Collectors.toMap(RangerPolicy::getName, RangerPolicy::getDescription));
         Map<String, String> expected = new HashMap<>();
-        expected.put("default policy 1", "Policy for default policy 1");
-        expected.put("default policy 7", "Policy for default policy 7");
-        expected.put("named", "Policy for named");
-        expected.put("default policy 3", "my desc");
+        expected.put("default.policy.1", "default.policy.1");
+        expected.put("default.policy.7", "default.policy.7");
+        expected.put("named", "default.policy.2");
+        expected.put("default.policy.3", "my desc");
+        expected.put("default.policy.audit-db", "default.policy.audit-db");
         assertEquals(expected, nameToDescription);
     }
 
@@ -462,7 +464,7 @@ public class TestRangerBaseService {
     }
 
     @Test
-    public void test17_DefaultPolicyFromJson_BlankValueAndNonNumericIndexIgnored() throws Exception {
+    public void test17_DefaultPolicyFromJson_BlankValueIgnoredAndNonNumericKeyAccepted() throws Exception {
         DummyService svc = new DummyService();
         RangerServiceDef def = buildServiceDef();
         Map<String, String> cfg = new LinkedHashMap<>();
@@ -476,7 +478,7 @@ public class TestRangerBaseService {
         svc.init(def, service);
 
         List<RangerPolicy> policies = svc.getDefaultRangerPolicies();
-        assertEquals(1, policies.size());
-        assertEquals("valid", policies.get(0).getName());
+        assertEquals(2, policies.size());
+        assertTrue(policies.stream().map(RangerPolicy::getName).collect(Collectors.toSet()).containsAll(Arrays.asList("non-numeric", "valid")));
     }
 }
