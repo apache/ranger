@@ -33,7 +33,6 @@ import org.apache.ranger.pdp.config.RangerPdpConstants;
 import org.apache.ranger.pdp.rest.RangerPdpApplication;
 import org.apache.ranger.pdp.security.RangerPdpAuthNFilter;
 import org.apache.ranger.pdp.security.RangerPdpRequestContextFilter;
-import org.apache.ranger.plugin.util.ServiceAccountUsersProvider;
 import org.apache.tomcat.util.descriptor.web.FilterDef;
 import org.apache.tomcat.util.descriptor.web.FilterMap;
 import org.glassfish.jersey.servlet.ServletContainer;
@@ -66,7 +65,6 @@ public class RangerPdpServer {
     private final RangerPdpStats   runtimeStats = new RangerPdpStats();
     private       Tomcat           tomcat;
     private       RangerAuthorizer authorizer;
-    private       ServiceAccountUsersProvider serviceAccountUsersProvider;
 
     public RangerPdpServer() {
         this.config = new RangerPdpConfig();
@@ -80,7 +78,6 @@ public class RangerPdpServer {
         LOG.info("Starting Ranger PDP server");
 
         initAuthorizer();
-        initServiceAccountUsersProvider();
         startTomcat();
     }
 
@@ -110,10 +107,6 @@ public class RangerPdpServer {
                 LOG.warn("Error closing authorizer", e);
             }
         }
-
-        if (serviceAccountUsersProvider != null) {
-            serviceAccountUsersProvider.stop();
-        }
     }
 
     private void initAuthorizer() throws RangerAuthzException {
@@ -126,24 +119,6 @@ public class RangerPdpServer {
         runtimeStats.setAuthorizerInitialized(true);
 
         LOG.info("RangerEmbeddedAuthorizer initialised");
-    }
-
-    private void initServiceAccountUsersProvider() {
-        boolean                     enabled = config.isServiceAccountRefresherEnabled();
-        ServiceAccountUsersProvider provider;
-
-        try {
-            provider = new ServiceAccountUsersProvider(enabled, config.getServiceAccountRefresherProperties());
-            provider.start();
-
-            LOG.info("Service-account user refresher is {}", enabled ? "enabled" : "disabled");
-        } catch (RuntimeException excp) {
-            LOG.error("Failed to initialize service-account user refresher; continuing with configured delegation users", excp);
-
-            provider = new ServiceAccountUsersProvider(false, config.getAuthzProperties());
-        }
-
-        serviceAccountUsersProvider = provider;
     }
 
     private void startTomcat() throws Exception {
@@ -280,7 +255,7 @@ public class RangerPdpServer {
      * that it can be injected into {@link org.apache.ranger.pdp.rest.RangerPdpREST}.
      */
     private void addJerseyServlet(Context ctx) {
-        RangerPdpApplication jerseyApp     = new RangerPdpApplication(authorizer, config, serviceAccountUsersProvider);
+        RangerPdpApplication jerseyApp     = new RangerPdpApplication(authorizer, config);
         Servlet              jerseyServlet = new ServletContainer(jerseyApp);
 
         Tomcat.addServlet(ctx, "jerseyServlet", jerseyServlet).setLoadOnStartup(1);

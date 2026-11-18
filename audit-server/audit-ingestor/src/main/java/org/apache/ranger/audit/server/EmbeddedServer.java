@@ -38,6 +38,7 @@ import org.apache.hadoop.security.alias.CredentialProviderFactory;
 import org.apache.hadoop.security.alias.JavaKeyStoreProvider;
 import org.apache.hadoop.security.alias.LocalBouncyCastleFipsKeyStoreProvider;
 import org.apache.ranger.audit.provider.MiscUtil;
+import org.apache.ranger.audit.rest.AuditREST;
 import org.apache.ranger.audit.utils.AuditServerLogFormatter;
 import org.apache.ranger.authorization.hadoop.utils.RangerCredentialProvider;
 import org.apache.tomcat.util.net.SSLHostConfig;
@@ -472,6 +473,8 @@ public class EmbeddedServer {
 
     private void gracefulShutdown() {
         LOG.info("==> EmbeddedServer.gracefulShutdown()");
+
+        AuditREST.stopServiceAccountUsersRefresh();
 
         // Instead of trying to manually shutdown Spring context, let's rely on Tomcat's
         // normal webapp lifecycle which will trigger ContextLoaderListener.contextDestroyed()

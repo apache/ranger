@@ -20,13 +20,14 @@
 package org.apache.ranger.audit.rest;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.security.authentication.util.KerberosName;
+import org.apache.ranger.admin.client.RangerAdminRESTClient;
 import org.apache.ranger.audit.model.AuthzAuditEvent;
 import org.apache.ranger.audit.producer.AuditDestinationMgr;
 import org.apache.ranger.audit.provider.MiscUtil;
 import org.apache.ranger.audit.server.AuditServerConfig;
 import org.apache.ranger.audit.server.AuditServerConstants;
-import org.apache.ranger.plugin.util.ServiceAccountUsersProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -44,10 +45,14 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.stream.Collectors;
 
 import static org.apache.ranger.audit.server.AuditServerConstants.PROP_PREFIX_AUDIT_SERVER_SERVICE;
@@ -59,18 +64,111 @@ import static org.apache.ranger.audit.server.AuditServerConstants.PROP_SUFFIX_AL
 public class AuditREST {
     private static final Logger LOG = LoggerFactory.getLogger(AuditREST.class);
 
-    private static final Map<String, Set<String>> allowedServiceUsers;
+    private static final String RANGER_ADMIN_CONFIG_PREFIX  = "ranger.audit.ingestor";
+    private static final String PROP_POLICY_REST_URL         = RANGER_ADMIN_CONFIG_PREFIX + ".policy.rest.url";
+    private static final String PROP_POLICY_POLL_INTERVAL_MS = RANGER_ADMIN_CONFIG_PREFIX + ".policy.pollIntervalMs";
+    private static final long   DEFAULT_POLL_INTERVAL_MS     = 30 * 1000L;
+
+    private static final Map<String, Set<String>> configuredAllowedUsers;
+
+    private static volatile Map<String, Set<String>> allowedServiceUsers;
+    private static          RangerAdminRESTClient    rangerAdminClient;
+    private static          Timer                    serviceAccountUsersRefreshTimer;
 
     static {
-        allowedServiceUsers = initializeAllowedUsers();
+        configuredAllowedUsers = initializeAllowedUsers();
+        allowedServiceUsers    = mergeAllowedUsers(configuredAllowedUsers, Collections.emptyMap());
         initializeAuthToLocal();
+    }
+
+    public static synchronized void startServiceAccountUsersRefresh(Configuration configuration) {
+        if (!configuration.getBoolean(AuditServerConstants.PROP_SERVICE_ACCOUNT_REFRESHER_ENABLED, false)) {
+            return;
+        }
+
+        String rangerAdminUrl = configuration.get(PROP_POLICY_REST_URL);
+
+        if (serviceAccountUsersRefreshTimer == null && StringUtils.isNotBlank(rangerAdminUrl)) {
+            try {
+                RangerAdminRESTClient client = new RangerAdminRESTClient();
+
+                client.init("audit-ingestor", "ranger-audit", RANGER_ADMIN_CONFIG_PREFIX, configuration);
+
+                rangerAdminClient = client;
+
+                long  pollIntervalMs = configuration.getLong(PROP_POLICY_POLL_INTERVAL_MS, DEFAULT_POLL_INTERVAL_MS);
+                Timer timer          = new Timer("auditServiceAccountUsersRefresh", true);
+
+                timer.schedule(new TimerTask() {
+                    @Override
+                    public void run() {
+                        refreshAllowedUsers(rangerAdminClient);
+                    }
+                }, pollIntervalMs, pollIntervalMs);
+
+                serviceAccountUsersRefreshTimer = timer;
+
+                LOG.info("Scheduled service account user refresh every {} ms from {}", pollIntervalMs, rangerAdminUrl);
+                refreshAllowedUsers(client);
+            } catch (Exception e) {
+                LOG.warn("Failed to start service account user refresh", e);
+            }
+        }
+    }
+
+    public static synchronized void stopServiceAccountUsersRefresh() {
+        Timer timer = serviceAccountUsersRefreshTimer;
+
+        serviceAccountUsersRefreshTimer = null;
+
+        if (timer != null) {
+            timer.cancel();
+        }
+    }
+
+    static void refreshAllowedUsers(RangerAdminRESTClient client) {
+        if (client != null) {
+            try {
+                Map<String, Set<String>> serviceAccountUsers = client.getServiceAccountUsers();
+                allowedServiceUsers = mergeAllowedUsers(configuredAllowedUsers, serviceAccountUsers);
+                if (!serviceAccountUsers.isEmpty()) {
+                    LOG.info("Merged service.account.users for {} service(s) from Ranger Admin", serviceAccountUsers.size());
+                }
+            } catch (Exception e) {
+                LOG.warn("Failed to refresh service account users from Ranger Admin", e);
+            }
+        }
+    }
+
+    static Map<String, Set<String>> mergeAllowedUsers(Map<String, Set<String>> configuredAllowedUsers, Map<String, Set<String>> serviceAccountUsersByServiceName) {
+        Map<String, Set<String>> ret = new HashMap<>();
+
+        for (Map.Entry<String, Set<String>> entry : configuredAllowedUsers.entrySet()) {
+            ret.put(entry.getKey(), new HashSet<>(entry.getValue()));
+        }
+
+        for (Map.Entry<String, Set<String>> entry : serviceAccountUsersByServiceName.entrySet()) {
+            String      serviceName         = entry.getKey();
+            Set<String> serviceAccountUsers = entry.getValue();
+
+            if (StringUtils.isNotBlank(serviceName) && serviceAccountUsers != null && !serviceAccountUsers.isEmpty()) {
+                Set<String> allowedUsers = ret.get(serviceName);
+
+                if (allowedUsers == null) {
+                    allowedUsers = new HashSet<>();
+
+                    ret.put(serviceName, allowedUsers);
+                }
+
+                allowedUsers.addAll(serviceAccountUsers);
+            }
+        }
+
+        return ret;
     }
 
     @Autowired
     AuditDestinationMgr auditDestinationMgr;
-
-    @Autowired
-    ServiceAccountUsersProvider serviceAccountUsersProvider;
 
     /**
      * Health check endpoint
@@ -289,6 +387,10 @@ public class AuditREST {
             return principal;
         }
 
+        if (principal.startsWith("spiffe://")) {
+            return principal;
+        }
+
         // Check if this looks like a Kerberos principal (has @ or /)
         if (!principal.contains("@") && !principal.contains("/")) {
             LOG.debug("Username '{}' is already a short name (JWT/basic auth), no auth_to_local mapping needed", principal);
@@ -337,10 +439,6 @@ public class AuditREST {
             Set<String> allowedUsers = allowedServiceUsers.get(serviceName);
 
             ret = allowedUsers != null && allowedUsers.contains(userName);
-
-            if (!ret && serviceAccountUsersProvider != null) {
-                ret = serviceAccountUsersProvider.isServiceAccountUser(serviceName, userName);
-            }
         } else {
             ret = false;
         }
@@ -350,10 +448,6 @@ public class AuditREST {
         return ret;
     }
 
-    /**
-     * Initialize the set of allowed service users from configuration
-     * @return Map of allowed usernames per service
-     */
     private static Map<String, Set<String>> initializeAllowedUsers() {
         Map<String, Set<String>> ret    = new HashMap<>();
         AuditServerConfig        config = AuditServerConfig.getInstance();

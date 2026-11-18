@@ -231,11 +231,19 @@
   </property>
 
   <property>
+    <name>ranger.pdp.serviceaccount.refresher.enabled</name>
+    <value>false</value>
+    <description>When true and ranger.authz.default.policy.rest.url is set, periodically merge service.account.users from Ranger Admin into PDP delegation users. Override via Cloudera Manager safety valve. Poll credentials use ranger.authz.default.policy.rest.* (same as policy download).</description>
+  </property>
+
+  <property>
     <name>ranger.authz.default.policy.rest.url</name>
     <value>http://localhost:6080</value>
     <description>
       URL of the Ranger Admin server. Comma-separated for HA.
       Example: http://ranger-admin-1:6080,http://ranger-admin-2:6080
+      Also used for service-account user refresh when ranger.pdp.serviceaccount.refresher.enabled is true (rest client auth via ranger.authz.default.policy.rest.ssl.config.file and .client.username/.password).
+      The REST client identity must be listed in ranger.admin.service.account.info.viewers on Admin.
     </description>
   </property>
 
@@ -268,19 +276,7 @@
   <property>
     <name>ranger.authz.default.policy.pollIntervalMs</name>
     <value>30000</value>
-    <description>How often (ms) to poll Ranger Admin for updated policies and roles.</description>
-  </property>
-
-  <property>
-    <name>ranger.serviceaccount.refresher.enabled</name>
-    <value>true</value>
-    <description>Enable periodic retrieval of service-account users from Ranger Admin.</description>
-  </property>
-
-  <property>
-    <name>ranger.serviceaccount.refresher.pollIntervalMs</name>
-    <value>30000</value>
-    <description>How often (ms) to refresh service-account users from Ranger Admin.</description>
+    <description>How often (ms) to poll Ranger Admin for updated policies and roles and to refresh service-account users when ranger.pdp.serviceaccount.refresher.enabled is true.</description>
   </property>
 
   <property>

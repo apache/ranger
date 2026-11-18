@@ -7,10 +7,10 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
@@ -18,96 +18,84 @@
 
 package org.apache.ranger.audit.rest;
 
-import org.apache.ranger.audit.model.AuditEventBase;
-import org.apache.ranger.audit.model.AuthzAuditEvent;
-import org.apache.ranger.audit.producer.AuditDestinationMgr;
-import org.apache.ranger.plugin.util.ServiceAccountUsersProvider;
+import org.apache.ranger.admin.client.RangerAdminRESTClient;
 import org.junit.jupiter.api.Test;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.core.Response;
-
 import java.lang.reflect.Field;
-import java.lang.reflect.Proxy;
-import java.security.Principal;
-import java.util.Collection;
+import java.util.Arrays;
 import java.util.Collections;
-import java.util.List;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
-import java.util.Properties;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class AuditRESTTest {
-    private static final String SERVICE = "dynamic-service";
-    private static final String USER    = "dynamic-user";
+    @Test
+    void testMergeAllowedUsersUnionsServiceAccountUsers() {
+        Map<String, Set<String>> configuredAllowedUsers = new HashMap<>();
+
+        configuredAllowedUsers.put("dev_hive", new HashSet<>(Collections.singleton("hive")));
+
+        Map<String, Set<String>> serviceAccountUsersByServiceName = new HashMap<>();
+
+        serviceAccountUsersByServiceName.put("dev_hive", Collections.singleton("hive2"));
+        serviceAccountUsersByServiceName.put("dev_kafka", Collections.singleton("kafka"));
+
+        Map<String, Set<String>> mergedAllowedUsers = AuditREST.mergeAllowedUsers(configuredAllowedUsers, serviceAccountUsersByServiceName);
+
+        assertEquals(new HashSet<>(Arrays.asList("hive", "hive2")), mergedAllowedUsers.get("dev_hive"));
+        assertEquals(Collections.singleton("kafka"), mergedAllowedUsers.get("dev_kafka"));
+    }
 
     @Test
-    void testServiceAccountUserCanPostAudits() throws Exception {
-        TestDestination      destination = new TestDestination();
-        List<AuthzAuditEvent> audits     = Collections.singletonList(new AuthzAuditEvent());
-        AuditREST             rest       = createRest(destination, provider(true));
+    void testRefreshKeepsAllowedUsersWhenAdminCallFails() throws Exception {
+        Map<String, Set<String>> before = allowedUsers();
 
-        Response response = rest.logAccessAudit(SERVICE, "app", audits, request(USER));
+        AuditREST.refreshAllowedUsers(new RangerAdminRESTClient() {
+            @Override
+            public Map<String, Set<String>> getServiceAccountUsers() throws Exception {
+                throw new Exception("admin down");
+            }
+        });
 
-        assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
-        assertTrue(destination.called);
+        assertSame(before, allowedUsers());
     }
 
     @Test
-    void testUnknownUserCannotPostAudits() throws Exception {
-        TestDestination       destination = new TestDestination();
-        List<AuthzAuditEvent> audits      = Collections.singletonList(new AuthzAuditEvent());
-        AuditREST             rest        = createRest(destination, provider(false));
+    void testRefreshAddsServiceAccountUsers() throws Exception {
+        Map<String, Set<String>> before = allowedUsers();
 
-        Response response = rest.logAccessAudit(SERVICE, "app", audits, request(USER));
+        try {
+            AuditREST.refreshAllowedUsers(new RangerAdminRESTClient() {
+                @Override
+                public Map<String, Set<String>> getServiceAccountUsers() {
+                    return Collections.singletonMap("dev_new", Collections.singleton("new-user"));
+                }
+            });
 
-        assertEquals(Response.Status.FORBIDDEN.getStatusCode(), response.getStatus());
-        assertFalse(destination.called);
+            assertTrue(allowedUsers().get("dev_new").contains("new-user"));
+        } finally {
+            AuditREST.refreshAllowedUsers(new RangerAdminRESTClient() {
+                @Override
+                public Map<String, Set<String>> getServiceAccountUsers() {
+                    return Collections.emptyMap();
+                }
+            });
+
+            assertEquals(before.keySet(), allowedUsers().keySet());
+        }
     }
 
-    private static AuditREST createRest(AuditDestinationMgr destination, ServiceAccountUsersProvider provider) {
-        AuditREST ret = new AuditREST();
-
-        ret.auditDestinationMgr        = destination;
-        ret.serviceAccountUsersProvider = provider;
-
-        return ret;
-    }
-
-    private static HttpServletRequest request(String user) {
-        Principal principal = () -> user;
-
-        return (HttpServletRequest) Proxy.newProxyInstance(
-                HttpServletRequest.class.getClassLoader(),
-                new Class<?>[] {HttpServletRequest.class},
-                (proxy, method, args) -> "getUserPrincipal".equals(method.getName()) ? principal : null);
-    }
-
-    private static ServiceAccountUsersProvider provider(boolean allowed) throws Exception {
-        ServiceAccountUsersProvider provider = new ServiceAccountUsersProvider(false, new Properties());
-        Map<String, Set<String>>     users    = allowed
-                ? Collections.singletonMap(SERVICE, Collections.singleton(USER))
-                : Collections.emptyMap();
-        Field field = ServiceAccountUsersProvider.class.getDeclaredField("serviceAccountUsers");
+    @SuppressWarnings("unchecked")
+    private static Map<String, Set<String>> allowedUsers() throws Exception {
+        Field field = AuditREST.class.getDeclaredField("allowedServiceUsers");
 
         field.setAccessible(true);
-        field.set(provider, users);
 
-        return provider;
-    }
-
-    private static class TestDestination extends AuditDestinationMgr {
-        private boolean called;
-
-        @Override
-        public boolean logBatch(Collection<? extends AuditEventBase> events, String appId) {
-            called = true;
-
-            return true;
-        }
+        return (Map<String, Set<String>>) field.get(null);
     }
 }

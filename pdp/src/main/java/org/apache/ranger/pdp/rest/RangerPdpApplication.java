@@ -21,7 +21,6 @@ package org.apache.ranger.pdp.rest;
 
 import org.apache.ranger.authz.api.RangerAuthorizer;
 import org.apache.ranger.pdp.config.RangerPdpConfig;
-import org.apache.ranger.plugin.util.ServiceAccountUsersProvider;
 import org.glassfish.hk2.utilities.binding.AbstractBinder;
 import org.glassfish.jersey.jackson.JacksonFeature;
 import org.glassfish.jersey.server.ResourceConfig;
@@ -36,31 +35,30 @@ import org.glassfish.jersey.server.ResourceConfig;
  *   <li>{@link AuthorizerBinder} – HK2 binder that makes the {@link RangerAuthorizer}
  *       instance injectable into {@link RangerPdpREST} via {@code @Inject}
  *   <li>{@link RangerPdpREST} – the JAX-RS resource class
+ *   <li>{@link PdpServiceAccountRefreshBootstrap} – service-account refresh lifecycle
  * </ul>
  */
 public class RangerPdpApplication extends ResourceConfig {
-    public RangerPdpApplication(RangerAuthorizer authorizer, RangerPdpConfig config, ServiceAccountUsersProvider serviceAccountUsersProvider) {
+    public RangerPdpApplication(RangerAuthorizer authorizer, RangerPdpConfig config) {
         register(JacksonFeature.class);
-        register(new AuthorizerBinder(authorizer, config, serviceAccountUsersProvider));
+        register(new AuthorizerBinder(authorizer, config));
         register(RangerPdpREST.class);
+        register(PdpServiceAccountRefreshBootstrap.class);
     }
 
     private static class AuthorizerBinder extends AbstractBinder {
-        private final RangerAuthorizer            authorizer;
-        private final RangerPdpConfig             config;
-        private final ServiceAccountUsersProvider serviceAccountUsersProvider;
+        private final RangerAuthorizer authorizer;
+        private final RangerPdpConfig  config;
 
-        AuthorizerBinder(RangerAuthorizer authorizer, RangerPdpConfig config, ServiceAccountUsersProvider serviceAccountUsersProvider) {
-            this.authorizer                 = authorizer;
-            this.config                     = config;
-            this.serviceAccountUsersProvider = serviceAccountUsersProvider;
+        AuthorizerBinder(RangerAuthorizer authorizer, RangerPdpConfig config) {
+            this.authorizer = authorizer;
+            this.config     = config;
         }
 
         @Override
         protected void configure() {
             bind(authorizer).to(RangerAuthorizer.class);
             bind(config).to(RangerPdpConfig.class);
-            bind(serviceAccountUsersProvider).to(ServiceAccountUsersProvider.class);
         }
     }
 }
