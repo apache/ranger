@@ -22,8 +22,11 @@ package org.apache.ranger.pdp.rest;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.ranger.admin.client.RangerAdminRESTClient;
 import org.apache.ranger.authz.api.RangerAuthorizer;
 import org.apache.ranger.authz.api.RangerAuthzException;
+import org.apache.ranger.authz.embedded.RangerAuthzConfig;
 import org.apache.ranger.authz.model.RangerAccessInfo;
 import org.apache.ranger.authz.model.RangerAuthzRequest;
 import org.apache.ranger.authz.model.RangerAuthzResult;
@@ -56,11 +59,15 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.stream.Collectors;
 
 import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
@@ -70,6 +77,7 @@ import static javax.ws.rs.core.Response.Status.OK;
 import static javax.ws.rs.core.Response.Status.UNAUTHORIZED;
 import static org.apache.ranger.authz.api.RangerAuthzApiErrorCode.INVALID_REQUEST_USER_INFO_MISSING;
 import static org.apache.ranger.pdp.config.RangerPdpConstants.PROP_PDP_SERVICE_PREFIX;
+import static org.apache.ranger.pdp.config.RangerPdpConstants.PROP_SERVICE_ACCOUNT_REFRESHER_ENABLED;
 import static org.apache.ranger.pdp.config.RangerPdpConstants.PROP_SUFFIX_DELEGATION_USERS;
 import static org.apache.ranger.pdp.config.RangerPdpConstants.WILDCARD_SERVICE_NAME;
 
@@ -101,7 +109,15 @@ public class RangerPdpREST {
 
     private static final Response RESPONSE_OK = Response.ok().build();
 
-    private final Map<String, Set<String>> delegationUsersByService = new HashMap<>();
+    private static final String PROP_POLICY_REST_URL         = RangerAuthzConfig.PROP_PREFIX_DEFAULT + "policy.rest.url";
+    private static final String PROP_POLICY_POLL_INTERVAL_MS = RangerAuthzConfig.PROP_PREFIX_DEFAULT + "policy.pollIntervalMs";
+    private static final long   DEFAULT_POLL_INTERVAL_MS     = 30 * 1000L;
+
+    private final Map<String, Set<String>> configuredDelegationUsers = new HashMap<>();
+
+    private volatile Map<String, Set<String>> delegationUsersByService = Collections.emptyMap();
+    private          RangerAdminRESTClient    rangerAdminClient;
+    private          Timer                    serviceAccountUsersRefreshTimer;
 
     @Inject
     private RangerAuthorizer authorizer;
@@ -114,7 +130,24 @@ public class RangerPdpREST {
 
     @PostConstruct
     public void initialize() {
-        initializeDelegationUsers();
+        initializeDelegationUsersOnly();
+    }
+
+    /**
+     * Starts Admin {@code service.account.users} polling. Invoked from {@link PdpServiceAccountRefreshBootstrap}
+     * after {@link #initialize()} has loaded static delegation config.
+     */
+    public synchronized void startServiceAccountUsersRefresh() {
+        Properties properties = config != null ? config.getAuthzProperties() : new Properties();
+        startServiceAccountUsersRefresh(properties);
+    }
+
+    public synchronized void stopServiceAccountUsersRefresh() {
+        Timer timer = serviceAccountUsersRefreshTimer;
+        serviceAccountUsersRefreshTimer = null;
+        if (timer != null) {
+            timer.cancel();
+        }
     }
 
     /**
@@ -466,17 +499,17 @@ public class RangerPdpREST {
 
     private boolean isDelegationUserForService(String serviceName, String userName) {
         final boolean            ret;
-        Map<String, Set<String>> delegationUsersByService = this.delegationUsersByService;
+        Map<String, Set<String>> currentDelegationUsersByService = delegationUsersByService;
 
-        if (delegationUsersByService.isEmpty()) {
+        if (currentDelegationUsersByService.isEmpty()) {
             ret = false;
         } else if (StringUtils.isBlank(serviceName) || StringUtils.isBlank(userName)) {
             ret = false;
         } else {
-            Set<String> delegationUsers = delegationUsersByService.get(serviceName);
+            Set<String> delegationUsers = currentDelegationUsersByService.get(serviceName);
 
             if (delegationUsers == null) {
-                delegationUsers = delegationUsersByService.get(RangerPdpConstants.WILDCARD_SERVICE_NAME);
+                delegationUsers = currentDelegationUsersByService.get(RangerPdpConstants.WILDCARD_SERVICE_NAME);
             }
 
             ret = delegationUsers != null && delegationUsers.contains(userName);
@@ -487,7 +520,7 @@ public class RangerPdpREST {
         return ret;
     }
 
-    private void initializeDelegationUsers() {
+    private void initializeDelegationUsersOnly() {
         Properties properties = config != null ? config.getAuthzProperties() : new Properties();
 
         for (String key : properties.stringPropertyNames()) {
@@ -504,21 +537,118 @@ public class RangerPdpREST {
                                                  .collect(Collectors.toSet());
 
                 if (!delegationUsers.isEmpty()) {
-                    delegationUsersByService.put(serviceName, delegationUsers);
+                    configuredDelegationUsers.put(serviceName, delegationUsers);
 
                     LOG.info("Delegation users for service '{}': {}", serviceName, delegationUsers);
                 }
             }
         }
 
-        if (delegationUsersByService.isEmpty()) {
-            LOG.warn("No delegation users configured");
-        } else {
-            Set<String> wildcardDelegationUsers = delegationUsersByService.get(WILDCARD_SERVICE_NAME);
+        delegationUsersByService = mergeDelegationUsers(configuredDelegationUsers, Collections.emptyMap());
 
-            // delegation users for WILDCARD_SERVICE_NAME are delegates for all services
-            if (wildcardDelegationUsers != null && !wildcardDelegationUsers.isEmpty()) {
-                delegationUsersByService.forEach((k, v) -> v.addAll(wildcardDelegationUsers));
+        if (configuredDelegationUsers.isEmpty()) {
+            LOG.warn("No delegation users configured");
+        }
+    }
+
+    void refreshDelegationUsers() {
+        RangerAdminRESTClient currentRangerAdminClient = rangerAdminClient;
+
+        if (currentRangerAdminClient != null) {
+            try {
+                delegationUsersByService = mergeDelegationUsers(configuredDelegationUsers, currentRangerAdminClient.getServiceAccountUsers());
+            } catch (Exception e) {
+                LOG.warn("Failed to refresh service account users from Ranger Admin", e);
+            }
+        } else {
+            LOG.warn("Failed to refresh service account users from Ranger admin: admin client not initialized");
+        }
+    }
+
+    static Map<String, Set<String>> mergeDelegationUsers(Map<String, Set<String>> configuredDelegationUsers, Map<String, Set<String>> serviceAccountUsersByServiceName) {
+        Map<String, Set<String>> ret                       = new HashMap<>();
+        Set<String>              wildcardDelegationUsers = configuredDelegationUsers.get(WILDCARD_SERVICE_NAME);
+
+        if (wildcardDelegationUsers == null) {
+            wildcardDelegationUsers = Collections.emptySet();
+        }
+
+        for (Map.Entry<String, Set<String>> entry : configuredDelegationUsers.entrySet()) {
+            Set<String> delegationUsers = new HashSet<>(entry.getValue());
+
+            if (!WILDCARD_SERVICE_NAME.equals(entry.getKey())) {
+                delegationUsers.addAll(wildcardDelegationUsers);
+            }
+
+            ret.put(entry.getKey(), delegationUsers);
+        }
+
+        for (Map.Entry<String, Set<String>> entry : serviceAccountUsersByServiceName.entrySet()) {
+            String      serviceName         = entry.getKey();
+            Set<String> serviceAccountUsers = entry.getValue();
+
+            if (StringUtils.isNotBlank(serviceName) && serviceAccountUsers != null && !serviceAccountUsers.isEmpty()) {
+                Set<String> delegationUsersForService = ret.get(serviceName);
+                Set<String> delegationUsers           = new HashSet<>();
+
+                if (delegationUsersForService != null) {
+                    delegationUsers.addAll(delegationUsersForService);
+                } else if (!WILDCARD_SERVICE_NAME.equals(serviceName)) {
+                    delegationUsers.addAll(wildcardDelegationUsers);
+                }
+
+                delegationUsers.addAll(serviceAccountUsers);
+                ret.put(serviceName, delegationUsers);
+            }
+        }
+
+        return ret;
+    }
+
+    private void startServiceAccountUsersRefresh(Properties properties) {
+        if (!Boolean.parseBoolean(StringUtils.defaultString(properties.getProperty(PROP_SERVICE_ACCOUNT_REFRESHER_ENABLED), "false"))) {
+            LOG.info("service account user refresh is not enabled. Property: {}", PROP_SERVICE_ACCOUNT_REFRESHER_ENABLED);
+            return;
+        }
+
+        LOG.info("Starting service account user refresher");
+
+        String rangerAdminUrl = properties.getProperty(PROP_POLICY_REST_URL);
+
+        if (serviceAccountUsersRefreshTimer == null && StringUtils.isNotBlank(rangerAdminUrl)) {
+            try {
+                Configuration         rangerAdminConfig = new Configuration(false);
+                RangerAdminRESTClient client            = new RangerAdminRESTClient();
+
+                for (String key : properties.stringPropertyNames()) {
+                    String value = properties.getProperty(key);
+
+                    if (value != null) {
+                        rangerAdminConfig.set(key, value);
+                    }
+                }
+
+                client.init("ranger-pdp", "ranger-pdp", StringUtils.removeEnd(RangerAuthzConfig.PROP_PREFIX_DEFAULT, "."), rangerAdminConfig);
+
+                rangerAdminClient = client;
+
+                long  pollIntervalMs = rangerAdminConfig.getLong(PROP_POLICY_POLL_INTERVAL_MS, DEFAULT_POLL_INTERVAL_MS);
+                Timer timer          = new Timer("pdpServiceAccountUsersRefresh", true);
+
+                refreshDelegationUsers();
+
+                timer.schedule(new TimerTask() {
+                    @Override
+                    public void run() {
+                        refreshDelegationUsers();
+                    }
+                }, pollIntervalMs, pollIntervalMs);
+
+                serviceAccountUsersRefreshTimer = timer;
+
+                LOG.info("Scheduled service account user refresh every {} ms from {}", pollIntervalMs, rangerAdminUrl);
+            } catch (Exception e) {
+                LOG.warn("Failed to start service account user refresh", e);
             }
         }
     }

@@ -27,6 +27,7 @@ public class AuditServerConstants {
     public static final String PROP_PREFIX_AUDIT_SERVER_SERVICE              = PROP_PREFIX_AUDIT_SERVER + "service.";
     public static final String PROP_AUTH_TO_LOCAL                            = PROP_PREFIX_AUDIT_SERVER + "auth.to.local";
     public static final String PROP_SUFFIX_ALLOWED_USERS                     = ".allowed.users";
+    public static final String PROP_SERVICE_ACCOUNT_REFRESHER_ENABLED        = PROP_PREFIX_AUDIT_SERVER + "serviceaccount.refresher.enabled";
     public static final String PROP_AUDIT_SERVICE_PRINCIPAL                  = "service.kerberos.principal";
     public static final String PROP_AUDIT_SERVICE_KEYTAB                     = "service.kerberos.keytab";
 

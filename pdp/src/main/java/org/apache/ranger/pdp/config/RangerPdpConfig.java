@@ -52,7 +52,6 @@ public class RangerPdpConfig {
 
     private static final String DEFAULT_CONFIG_FILE = "ranger-pdp-default.xml";
     private static final String SITE_CONFIG_FILE    = "ranger-pdp-site.xml";
-
     private final Properties props = new Properties();
 
     public RangerPdpConfig() {
@@ -273,7 +272,8 @@ public class RangerPdpConfig {
      */
     private void applySystemPropertyOverrides() {
         for (String key : System.getProperties().stringPropertyNames()) {
-            if (key.startsWith(RangerPdpConstants.PROP_PDP_PREFIX) || key.startsWith(RangerPdpConstants.PROP_AUTHZ_PREFIX)) {
+            if (key.startsWith(RangerPdpConstants.PROP_PDP_PREFIX) ||
+                    key.startsWith(RangerPdpConstants.PROP_AUTHZ_PREFIX)) {
                 props.setProperty(key, System.getProperty(key));
             }
         }

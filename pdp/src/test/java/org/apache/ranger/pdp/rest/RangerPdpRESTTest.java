@@ -19,12 +19,14 @@
 
 package org.apache.ranger.pdp.rest;
 
+import org.apache.ranger.admin.client.RangerAdminRESTClient;
 import org.apache.ranger.authz.api.RangerAuthorizer;
 import org.apache.ranger.authz.api.RangerAuthzApiErrorCode;
 import org.apache.ranger.authz.api.RangerAuthzException;
 import org.apache.ranger.authz.model.RangerAccessContext;
 import org.apache.ranger.authz.model.RangerAuthzRequest;
 import org.apache.ranger.authz.model.RangerAuthzResult;
+import org.apache.ranger.authz.model.RangerFilterResourcesRequest;
 import org.apache.ranger.authz.model.RangerMultiAuthzRequest;
 import org.apache.ranger.authz.model.RangerMultiAuthzResult;
 import org.apache.ranger.authz.model.RangerResourcePermissions;
@@ -41,13 +43,18 @@ import javax.ws.rs.core.Response;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Proxy;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
 
 import static org.apache.ranger.pdp.config.RangerPdpConstants.PROP_PDP_SERVICE_PREFIX;
 import static org.apache.ranger.pdp.config.RangerPdpConstants.PROP_SUFFIX_DELEGATION_USERS;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertSame;
 
 public class RangerPdpRESTTest {
     private static final String              CALLER_DELEGATION_ALLOWED     = "alice";
@@ -202,6 +209,94 @@ public class RangerPdpRESTTest {
         assertEquals(1L, stats.getTotalAuthzBadRequest());
     }
 
+    @Test
+    public void testMergeDelegationUsersUnionsServiceAccountUsersAndWildcard() {
+        Map<String, Set<String>> configuredDelegationUsers = new HashMap<>();
+
+        configuredDelegationUsers.put("*", new HashSet<>(Collections.singleton("wild")));
+        configuredDelegationUsers.put("svc1", new HashSet<>(Collections.singleton(CALLER_DELEGATION_ALLOWED)));
+
+        Map<String, Set<String>> serviceAccountUsersByServiceName = new HashMap<>();
+
+        serviceAccountUsersByServiceName.put("svc1", Collections.singleton("svc-user"));
+        serviceAccountUsersByServiceName.put("svc2", Collections.singleton("only-dynamic"));
+
+        Map<String, Set<String>> mergedDelegationUsers = RangerPdpREST.mergeDelegationUsers(configuredDelegationUsers, serviceAccountUsersByServiceName);
+
+        assertEquals(new HashSet<>(Arrays.asList(CALLER_DELEGATION_ALLOWED, "wild", "svc-user")), mergedDelegationUsers.get("svc1"));
+        assertEquals(new HashSet<>(Arrays.asList("wild", "only-dynamic")), mergedDelegationUsers.get("svc2"));
+        assertEquals(Collections.singleton("wild"), mergedDelegationUsers.get("*"));
+    }
+
+    @Test
+    public void testRefreshKeepsDelegationUsersWhenAdminCallFails() throws Exception {
+        RangerPdpREST            rest   = createRest(new TestAuthorizer(), new RangerPdpStats());
+        Map<String, Set<String>> before = delegationUsers(rest);
+
+        setField(rest, "rangerAdminClient", new RangerAdminRESTClient() {
+            @Override
+            public Map<String, Set<String>> getServiceAccountUsers() throws Exception {
+                throw new Exception("admin down");
+            }
+        });
+
+        rest.refreshDelegationUsers();
+
+        assertSame(before, delegationUsers(rest));
+    }
+
+    @Test
+    public void testRefreshAddsServiceAccountUsers() throws Exception {
+        RangerPdpStats     stats = new RangerPdpStats();
+        RangerPdpREST      rest  = createRest(new TestAuthorizer(new RangerAuthzResult("req-1", RangerAuthzResult.AccessDecision.ALLOW)), stats);
+        RangerAuthzRequest request = new RangerAuthzRequest("req-1", USER_USER1, null, CONTEXT_SERVICE_SVC1);
+
+        setField(rest, "rangerAdminClient", new RangerAdminRESTClient() {
+            @Override
+            public Map<String, Set<String>> getServiceAccountUsers() {
+                return Collections.singletonMap("svc1", Collections.singleton("svc-user"));
+            }
+        });
+
+        rest.refreshDelegationUsers();
+
+        Response response = rest.authorize(request, httpRequest("svc-user", stats));
+
+        assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
+    }
+
+    @Test
+    public void testServiceAccountUserCanCallAllPdpApis() throws Exception {
+        RangerPdpStats stats = new RangerPdpStats();
+        TestAuthorizer authorizer = new TestAuthorizer(
+                new RangerAuthzResult("req-1", RangerAuthzResult.AccessDecision.ALLOW),
+                new RangerMultiAuthzResult("req-1", RangerAuthzResult.AccessDecision.ALLOW),
+                new RangerResourcePermissions(), null);
+        RangerPdpREST rest = createRest(authorizer, stats);
+        String dynamicCaller = "svc-user";
+
+        setField(rest, "rangerAdminClient", new RangerAdminRESTClient() {
+            @Override
+            public Map<String, Set<String>> getServiceAccountUsers() {
+                return Collections.singletonMap("svc1", Collections.singleton(dynamicCaller));
+            }
+        });
+        rest.refreshDelegationUsers();
+
+        assertEquals(Response.Status.OK.getStatusCode(), rest.authorize(
+                new RangerAuthzRequest("req-1", USER_USER1, null, CONTEXT_SERVICE_SVC1),
+                httpRequest(dynamicCaller, stats)).getStatus());
+        assertEquals(Response.Status.OK.getStatusCode(), rest.authorizeMulti(
+                new RangerMultiAuthzRequest("req-1", USER_USER1, null, CONTEXT_SERVICE_SVC1),
+                httpRequest(dynamicCaller, stats)).getStatus());
+        assertEquals(Response.Status.OK.getStatusCode(), rest.getResourcePermissions(
+                new RangerResourcePermissionsRequest("req-1", null, CONTEXT_SERVICE_SVC1),
+                httpRequest(dynamicCaller, stats)).getStatus());
+        assertEquals(Response.Status.OK.getStatusCode(), rest.filterResources(
+                new RangerFilterResourcesRequest("user1", Arrays.asList("table:default/t1"), "_any", "hive", "svc1"),
+                httpRequest(dynamicCaller, stats)).getStatus());
+    }
+
     private static RangerPdpREST createRest(TestAuthorizer authorizer, RangerPdpStats stats) throws Exception {
         RangerPdpREST rest = new RangerPdpREST();
 
@@ -211,6 +306,15 @@ public class RangerPdpRESTTest {
         rest.initialize();
 
         return rest;
+    }
+
+    @SuppressWarnings("unchecked")
+    private static Map<String, Set<String>> delegationUsers(RangerPdpREST rest) throws Exception {
+        Field field = RangerPdpREST.class.getDeclaredField("delegationUsersByService");
+
+        field.setAccessible(true);
+
+        return (Map<String, Set<String>>) field.get(rest);
     }
 
     private static HttpServletRequest httpRequest(String user, RangerPdpStats stats) {

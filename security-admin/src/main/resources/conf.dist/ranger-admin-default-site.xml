@@ -212,6 +212,14 @@
 			roles. In many cases, this kind of downloading behavior does not need to be protected.
 		</description>
 	</property>
+	<property>
+		<name>ranger.admin.service.account.info.viewers</name>
+		<value>ranger-pdp,ranger-audit-ingestor,admin,rangerauditserver</value>
+		<description>
+			Comma-separated logins (and Kerberos short names) allowed to receive service.account.users and service.account.groups on GET /public/v2/api/service-headers.
+			Must include identities used by ranger.pdp.serviceaccount.refresher.enabled / ranger.audit.ingestor.serviceaccount.refresher.enabled (ranger.authz.default.policy.rest.* and ranger.audit.ingestor.policy.rest.* clients). Safety-valve append on this list.
+		</description>
+	</property>
 
 <!-- #hacks -->
 	<property>

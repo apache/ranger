@@ -36,6 +36,8 @@ A Docker-based test execution framework that validates Apache Ranger service int
 | **hbase** | HBase Ranger plugin enforcement via HBase shell (requires `ranger-hadoop` + `ranger-hbase`) |
 | **jvm_locale_test** | Ranger Admin JVM locale tests. Run with `run-jvm-locale-tests.sh`. |
 | **kafka** | Kafka Ranger plugin enforcement via console producer (requires `ranger-kafka`) |
+| **pdp** | Live PDP REST authorization using dynamically refreshed service-account users |
+| **audit_ingestor** | Live Audit Ingestor REST authorization using dynamically refreshed service-account users |
 
 ### Directory Structure
 
