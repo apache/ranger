@@ -35,7 +35,6 @@ import org.glassfish.jersey.server.ResourceConfig;
  *   <li>{@link AuthorizerBinder} – HK2 binder that makes the {@link RangerAuthorizer}
  *       instance injectable into {@link RangerPdpREST} via {@code @Inject}
  *   <li>{@link RangerPdpREST} – the JAX-RS resource class
- *   <li>{@link PdpServiceAccountRefreshBootstrap} – service-account refresh lifecycle
  * </ul>
  */
 public class RangerPdpApplication extends ResourceConfig {
@@ -43,7 +42,6 @@ public class RangerPdpApplication extends ResourceConfig {
         register(JacksonFeature.class);
         register(new AuthorizerBinder(authorizer, config));
         register(RangerPdpREST.class);
-        register(PdpServiceAccountRefreshBootstrap.class);
     }
 
     private static class AuthorizerBinder extends AbstractBinder {
