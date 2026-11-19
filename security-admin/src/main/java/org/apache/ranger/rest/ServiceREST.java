@@ -4165,7 +4165,7 @@ public class ServiceREST {
 
                     if (policyAdmin != null) {
                         if (userGroups == null) {
-                            userGroups = daoManager.getXXGroupUser().findGroupNamesByUserName(userName);
+                            userGroups = userMgr.getGroupsForUser(userName);
                         }
 
                         Set<String> roles = policyAdmin.getRolesFromUserAndGroups(userName, userGroups);
