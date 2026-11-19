@@ -167,7 +167,7 @@ def getPropertiesConfigMap(configFileName):
     config.write('[dummysection]\n')
     config.write(open(configFileName).read())
     config.seek(0, os.SEEK_SET)
-    fcp = ConfigParser()
+    fcp = ConfigParser(interpolation=None)  # RANGER-5631: read '%' literally
     fcp.optionxform = str
     fcp.read_file(config)
     for k, v in fcp.items('dummysection'):
@@ -181,7 +181,7 @@ def getPropertiesKeyList(configFileName):
     config.write('[dummysection]\n')
     config.write(open(configFileName).read())
     config.seek(0, os.SEEK_SET)
-    fcp = ConfigParser()
+    fcp = ConfigParser(interpolation=None)  # RANGER-5631: read '%' literally
     fcp.optionxform = str
     fcp.read_file(config)
     for k, v in fcp.items('dummysection'):
@@ -222,12 +222,9 @@ def updatePropertyInJCKSFile(jcksFileName, propName, value):
 
 
 def password_validation(password, userType):
+    # RANGER-5631: Unix uses shlex.quote() at call sites; no denylist needed.
     if password:
-        if re.search("[\\`'\"]", password):
-            print("[E] " + userType + " property contains one of the unsupported special characters like \" ' \\ `")
-            sys.exit(1)
-        else:
-            print("[I] " + userType + " property is verified.")
+        print("[I] " + userType + " property is verified.")
     else:
         print("[E] Blank password is not allowed for property " + userType + ",please enter valid password.")
         sys.exit(1)
