@@ -34,7 +34,7 @@ public interface RangerKMSMKI {
 
     default void onInitialization() throws Exception {}
 
-    default boolean reencryptMKWithFipsAlgo(String mkPassword) throws Exception {
+    default boolean reencryptOrUpdateMK(String mkPassword) throws Exception {
         return  false;
     }
 
