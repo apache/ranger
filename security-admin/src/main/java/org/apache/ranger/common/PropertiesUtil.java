@@ -201,12 +201,16 @@ public class PropertiesUtil extends PropertyPlaceholderConfigurer {
         }
 
         String storeType = propertiesMap.get("ranger.keystore.file.type");
+        String defaultSslStoreType = KeyStore.getDefaultType();
 
         // update system trust store path with custom trust store.
         if (propertiesMap.containsKey("ranger.truststore.file")) {
             if (!StringUtils.isEmpty(propertiesMap.get("ranger.truststore.file"))) {
                 System.setProperty("javax.net.ssl.trustStore", propertiesMap.get("ranger.truststore.file"));
-                System.setProperty("javax.net.ssl.trustStoreType", KeyStore.getDefaultType());
+                String trustStoreType = StringUtils.isEmpty(propertiesMap.get("ranger.truststore.file.type"))
+                        ? defaultSslStoreType
+                        : propertiesMap.get("ranger.truststore.file.type");
+                System.setProperty("javax.net.ssl.trustStoreType", trustStoreType);
 
                 Path trustStoreFile = Paths.get(propertiesMap.get("ranger.truststore.file"));
 
@@ -238,7 +242,10 @@ public class PropertiesUtil extends PropertyPlaceholderConfigurer {
         if (propertiesMap.containsKey("ranger.keystore.file")) {
             if (!StringUtils.isEmpty(propertiesMap.get("ranger.keystore.file"))) {
                 System.setProperty("javax.net.ssl.keyStore", propertiesMap.get("ranger.keystore.file"));
-                System.setProperty("javax.net.ssl.keyStoreType", KeyStore.getDefaultType());
+                String keyStoreType = StringUtils.isEmpty(propertiesMap.get("ranger.keystore.file.type"))
+                        ? defaultSslStoreType
+                        : propertiesMap.get("ranger.keystore.file.type");
+                System.setProperty("javax.net.ssl.keyStoreType", keyStoreType);
 
                 Path keyStoreFile = Paths.get(propertiesMap.get("ranger.keystore.file"));
 
