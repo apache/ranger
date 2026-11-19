@@ -16,7 +16,7 @@
 import requests
 import json
 import pytest
-from  Utility.main import get_request_data ,base_url,get_updated_request_data ,get_variable ,compare_response_data,return_random_str ,admin_auth ,headers,keyadmin_auth,str_variable_dict,variable_dict
+from servicerest.Utility.main import get_request_data ,base_url,get_updated_request_data ,get_variable ,compare_response_data,return_random_str ,admin_auth ,headers,keyadmin_auth,str_variable_dict,variable_dict
 from requests.auth import HTTPBasicAuth
 from urllib.parse import quote
 import time
