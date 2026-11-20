@@ -52,6 +52,7 @@ public class RangerAuthzAuditHandler extends RangerDefaultAuditHandler implement
                 }
 
                 auditEvents.add(auditEvent);
+                auditEvents.addAll(getConstraintAuditEvents(result, auditEvent));
             }
         }
     }

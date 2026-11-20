@@ -30,6 +30,7 @@ import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequestImpl;
 import org.apache.ranger.plugin.policyengine.RangerAccessResourceImpl;
 import org.apache.ranger.plugin.policyengine.RangerAccessResult;
+import org.apache.ranger.plugin.policyengine.RangerConstraintResult;
 import org.apache.ranger.plugin.policyengine.gds.GdsAccessResult;
 import org.apache.ranger.plugin.policyresourcematcher.RangerPolicyResourceMatcher;
 import org.apache.ranger.plugin.service.RangerBasePlugin;
@@ -40,6 +41,7 @@ import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -49,6 +51,7 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -372,6 +375,131 @@ public class TestRangerDefaultAuditHandler {
 
             Mockito.verify(ok, Mockito.atLeast(2)).log(Mockito.any(AuthzAuditEvent.class));
         }
+    }
+
+    @Test
+    public void test12_getConstraintAuditEvents() {
+        RangerDefaultAuditHandler handler = new RangerDefaultAuditHandler();
+        RangerAccessResult result = constraintResult("svcC", true);
+        AuthzAuditEvent accessEvent = handler.getAuthzEvents(result);
+
+        List<AuthzAuditEvent> events = handler.getConstraintAuditEvents(result, accessEvent);
+
+        Assertions.assertEquals(2, events.size());
+
+        AuthzAuditEvent maxRows = events.get(0);
+        AuthzAuditEvent approval = events.get(1);
+
+        Assertions.assertEquals("CONSTRAINT:maxRows", maxRows.getAccessType());
+        Assertions.assertEquals(20L, maxRows.getPolicyId());
+        Assertions.assertEquals(Long.valueOf(3L), maxRows.getPolicyVersion());
+        Assertions.assertEquals("CONSTRAINT:requireApproval", approval.getAccessType());
+        Assertions.assertEquals(21L, approval.getPolicyId());
+        Assertions.assertEquals(Long.valueOf(1L), approval.getPolicyVersion());
+
+        for (AuthzAuditEvent event : events) {
+            // other fields come from the access audit event
+            Assertions.assertEquals("alice", event.getUser());
+            Assertions.assertEquals("svcC", event.getRepositoryName());
+            Assertions.assertEquals(accessEvent.getAction(), event.getAction());
+            Assertions.assertEquals(accessEvent.getAccessResult(), event.getAccessResult());
+            Assertions.assertEquals(accessEvent.getEventTime(), event.getEventTime());
+            Assertions.assertEquals(accessEvent.getClientIP(), event.getClientIP());
+            Assertions.assertEquals(accessEvent.getSessionId(), event.getSessionId());
+            // each constraint event gets its own id when logged
+            Assertions.assertNull(event.getEventId());
+        }
+
+        // the access audit event is unchanged
+        Assertions.assertEquals(10L, accessEvent.getPolicyId());
+        Assertions.assertEquals("select", accessEvent.getAction());
+    }
+
+    @Test
+    public void test13_getConstraintAuditEvents_none() {
+        RangerDefaultAuditHandler handler = new RangerDefaultAuditHandler();
+        RangerAccessResult allowed = constraintResult("svcC", true);
+        RangerAccessResult denied = constraintResult("svcC", false);
+        RangerAccessResult noConstraints = new RangerAccessResult(0, "svcC", null, accessRequest());
+
+        noConstraints.setIsAudited(true);
+        noConstraints.setIsAllowed(true);
+
+        // not audited
+        Assertions.assertTrue(handler.getConstraintAuditEvents(allowed, null).isEmpty());
+        // denied: constraints are cleared, no constraint audit
+        Assertions.assertTrue(handler.getConstraintAuditEvents(denied, handler.getAuthzEvents(denied)).isEmpty());
+        // allowed without constraints
+        Assertions.assertTrue(handler.getConstraintAuditEvents(noConstraints, handler.getAuthzEvents(noConstraints)).isEmpty());
+        Assertions.assertTrue(handler.getConstraintAuditEvents(null, new AuthzAuditEvent()).isEmpty());
+    }
+
+    @Test
+    public void test14_processResult_logsConstraintAuditEvents() {
+        RangerAccessResult result = constraintResult("svcL", true);
+
+        try (MockedStatic<RangerBasePlugin> mocked = Mockito.mockStatic(RangerBasePlugin.class)) {
+            AuditHandler auditProvider = Mockito.mock(AuditHandler.class);
+
+            Mockito.when(auditProvider.log(Mockito.any(AuthzAuditEvent.class))).thenReturn(true);
+            mocked.when(() -> RangerBasePlugin.getAuditProvider("svcL")).thenReturn(auditProvider);
+
+            RangerDefaultAuditHandler handler = new RangerDefaultAuditHandler();
+
+            handler.processResult(result);
+
+            ArgumentCaptor<AuthzAuditEvent> captor = ArgumentCaptor.forClass(AuthzAuditEvent.class);
+
+            Mockito.verify(auditProvider, Mockito.times(3)).log(captor.capture());
+
+            List<AuthzAuditEvent> logged = captor.getAllValues();
+
+            Assertions.assertEquals("select", logged.get(0).getAction());
+            Assertions.assertEquals("CONSTRAINT:maxRows", logged.get(1).getAccessType());
+            Assertions.assertEquals("CONSTRAINT:requireApproval", logged.get(2).getAccessType());
+
+            Set<String> eventIds = new HashSet<>();
+
+            for (AuthzAuditEvent event : logged) {
+                eventIds.add(event.getEventId());
+            }
+
+            Assertions.assertEquals(3, eventIds.size()); // unique event ids
+        }
+
+        // processResults() includes the constraint audit events too
+        Collection<AuthzAuditEvent> events = new RangerDefaultAuditHandler().getAuthzEvents(Collections.singletonList(result));
+
+        Assertions.assertEquals(3, events.size());
+    }
+
+    private static RangerAccessRequestImpl accessRequest() {
+        RangerAccessRequestImpl ret = new RangerAccessRequestImpl();
+
+        ret.setUser("alice");
+        ret.setAccessType("select");
+        ret.setAction("select");
+        ret.setClientIPAddress("10.1.1.1");
+        ret.setSessionId("sess-c");
+        ret.setAccessTime(new Date(1720000000000L));
+
+        return ret;
+    }
+
+    private static RangerAccessResult constraintResult(String serviceName, boolean isAllowed) {
+        RangerAccessResult ret = new RangerAccessResult(0, serviceName, null, accessRequest());
+
+        ret.setIsAudited(true);
+        ret.setIsAllowed(true);
+        ret.setPolicyId(10L);
+        ret.addConstraint(new RangerConstraintResult("maxRows", Collections.singletonMap("rowCount", 100), 20L, 3L, 0, RangerPolicyResourceMatcher.MatchType.SELF));
+        ret.addConstraint(new RangerConstraintResult("requireApproval", Collections.singletonMap("approver", "finance"), 21L, 1L, 0, RangerPolicyResourceMatcher.MatchType.SELF));
+
+        if (!isAllowed) {
+            ret.setIsAllowed(false); // clears the constraints
+        }
+
+        return ret;
     }
 
     private Set<String> invokeGetTags(RangerDefaultAuditHandler handler, RangerAccessRequest request) {
