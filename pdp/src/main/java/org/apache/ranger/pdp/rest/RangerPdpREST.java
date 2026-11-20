@@ -46,6 +46,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 import javax.servlet.ServletContext;
@@ -131,12 +132,14 @@ public class RangerPdpREST {
     @PostConstruct
     public void initialize() {
         initializeDelegationUsersOnly();
+        startServiceAccountUsersRefresh();
     }
 
-    /**
-     * Starts Admin {@code service.account.users} polling. Invoked from {@link PdpServiceAccountRefreshBootstrap}
-     * after {@link #initialize()} has loaded static delegation config.
-     */
+    @PreDestroy
+    public void destroy() {
+        stopServiceAccountUsersRefresh();
+    }
+
     public synchronized void startServiceAccountUsersRefresh() {
         Properties properties = config != null ? config.getAuthzProperties() : new Properties();
         startServiceAccountUsersRefresh(properties);
