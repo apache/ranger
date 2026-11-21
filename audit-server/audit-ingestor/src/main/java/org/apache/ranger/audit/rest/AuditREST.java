@@ -68,9 +68,11 @@ public class AuditREST {
     private static final String PROP_POLICY_REST_URL         = RANGER_ADMIN_CONFIG_PREFIX + ".policy.rest.url";
     private static final String PROP_POLICY_POLL_INTERVAL_MS = RANGER_ADMIN_CONFIG_PREFIX + ".policy.pollIntervalMs";
     private static final long   DEFAULT_POLL_INTERVAL_MS     = 30 * 1000L;
+    private static final String WILDCARD_SERVICE_NAME        = "*";
 
     private static final Map<String, Set<String>> configuredAllowedUsers;
 
+    private static volatile Set<String>              wildcardServiceUsers = Collections.emptySet();
     private static volatile Map<String, Set<String>> allowedServiceUsers;
     private static          RangerAdminRESTClient    rangerAdminClient;
     private static          Timer                    serviceAccountUsersRefreshTimer;
@@ -152,17 +154,15 @@ public class AuditREST {
             Set<String> serviceAccountUsers = entry.getValue();
 
             if (StringUtils.isNotBlank(serviceName) && serviceAccountUsers != null && !serviceAccountUsers.isEmpty()) {
-                Set<String> allowedUsers = ret.get(serviceName);
-
-                if (allowedUsers == null) {
-                    allowedUsers = new HashSet<>();
-
-                    ret.put(serviceName, allowedUsers);
-                }
+                Set<String> allowedUsers = ret.computeIfAbsent(serviceName, k -> new HashSet<>());
 
                 allowedUsers.addAll(serviceAccountUsers);
             }
         }
+
+        Set<String> wildcardServiceUsers = ret.get(WILDCARD_SERVICE_NAME);
+
+        AuditREST.wildcardServiceUsers = wildcardServiceUsers != null ? wildcardServiceUsers : Collections.emptySet();
 
         return ret;
     }
@@ -433,14 +433,16 @@ public class AuditREST {
      * @return true if user is allowed, false otherwise
      */
     private boolean isAllowedServiceUser(String serviceName, String userName) {
-        boolean ret;
+        final boolean ret;
 
-        if (StringUtils.isNotBlank(serviceName) && StringUtils.isNotBlank(userName)) {
+        if (StringUtils.isBlank(serviceName) || StringUtils.isBlank(userName)) {
+            ret = false;
+        } else if (wildcardServiceUsers.contains(userName)) {
+            ret = true;
+        } else {
             Set<String> allowedUsers = allowedServiceUsers.get(serviceName);
 
             ret = allowedUsers != null && allowedUsers.contains(userName);
-        } else {
-            ret = false;
         }
 
         LOG.debug("isAllowedServiceUser(serviceName={}, userName={}): ret={}", serviceName, userName, ret);

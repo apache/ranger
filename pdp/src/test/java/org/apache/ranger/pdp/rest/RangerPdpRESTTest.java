@@ -221,10 +221,12 @@ public class RangerPdpRESTTest {
         serviceAccountUsersByServiceName.put("svc1", Collections.singleton("svc-user"));
         serviceAccountUsersByServiceName.put("svc2", Collections.singleton("only-dynamic"));
 
-        Map<String, Set<String>> mergedDelegationUsers = RangerPdpREST.mergeDelegationUsers(configuredDelegationUsers, serviceAccountUsersByServiceName);
+        RangerPdpREST pdpREST = new RangerPdpREST();
 
-        assertEquals(new HashSet<>(Arrays.asList(CALLER_DELEGATION_ALLOWED, "wild", "svc-user")), mergedDelegationUsers.get("svc1"));
-        assertEquals(new HashSet<>(Arrays.asList("wild", "only-dynamic")), mergedDelegationUsers.get("svc2"));
+        Map<String, Set<String>> mergedDelegationUsers = pdpREST.mergeDelegationUsers(configuredDelegationUsers, serviceAccountUsersByServiceName);
+
+        assertEquals(new HashSet<>(Arrays.asList(CALLER_DELEGATION_ALLOWED, "svc-user")), mergedDelegationUsers.get("svc1"));
+        assertEquals(new HashSet<>(Arrays.asList("only-dynamic")), mergedDelegationUsers.get("svc2"));
         assertEquals(Collections.singleton("wild"), mergedDelegationUsers.get("*"));
     }
 

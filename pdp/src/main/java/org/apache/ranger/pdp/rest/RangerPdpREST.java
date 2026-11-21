@@ -116,6 +116,7 @@ public class RangerPdpREST {
 
     private final Map<String, Set<String>> configuredDelegationUsers = new HashMap<>();
 
+    private volatile Set<String>              wildcardServiceUsers     = Collections.emptySet();
     private volatile Map<String, Set<String>> delegationUsersByService = Collections.emptyMap();
     private          RangerAdminRESTClient    rangerAdminClient;
     private          Timer                    serviceAccountUsersRefreshTimer;
@@ -501,19 +502,14 @@ public class RangerPdpREST {
     }
 
     private boolean isDelegationUserForService(String serviceName, String userName) {
-        final boolean            ret;
-        Map<String, Set<String>> currentDelegationUsersByService = delegationUsersByService;
+        final boolean ret;
 
-        if (currentDelegationUsersByService.isEmpty()) {
+        if (StringUtils.isBlank(serviceName) || StringUtils.isBlank(userName)) {
             ret = false;
-        } else if (StringUtils.isBlank(serviceName) || StringUtils.isBlank(userName)) {
-            ret = false;
+        } else if (wildcardServiceUsers.contains(userName)) {
+            ret = true;
         } else {
-            Set<String> delegationUsers = currentDelegationUsersByService.get(serviceName);
-
-            if (delegationUsers == null) {
-                delegationUsers = currentDelegationUsersByService.get(RangerPdpConstants.WILDCARD_SERVICE_NAME);
-            }
+            Set<String> delegationUsers = delegationUsersByService.get(serviceName);
 
             ret = delegationUsers != null && delegationUsers.contains(userName);
         }
@@ -568,22 +564,11 @@ public class RangerPdpREST {
         }
     }
 
-    static Map<String, Set<String>> mergeDelegationUsers(Map<String, Set<String>> configuredDelegationUsers, Map<String, Set<String>> serviceAccountUsersByServiceName) {
-        Map<String, Set<String>> ret                       = new HashMap<>();
-        Set<String>              wildcardDelegationUsers = configuredDelegationUsers.get(WILDCARD_SERVICE_NAME);
-
-        if (wildcardDelegationUsers == null) {
-            wildcardDelegationUsers = Collections.emptySet();
-        }
+    Map<String, Set<String>> mergeDelegationUsers(Map<String, Set<String>> configuredDelegationUsers, Map<String, Set<String>> serviceAccountUsersByServiceName) {
+        Map<String, Set<String>> ret = new HashMap<>();
 
         for (Map.Entry<String, Set<String>> entry : configuredDelegationUsers.entrySet()) {
-            Set<String> delegationUsers = new HashSet<>(entry.getValue());
-
-            if (!WILDCARD_SERVICE_NAME.equals(entry.getKey())) {
-                delegationUsers.addAll(wildcardDelegationUsers);
-            }
-
-            ret.put(entry.getKey(), delegationUsers);
+            ret.put(entry.getKey(), new HashSet<>(entry.getValue()));
         }
 
         for (Map.Entry<String, Set<String>> entry : serviceAccountUsersByServiceName.entrySet()) {
@@ -591,19 +576,15 @@ public class RangerPdpREST {
             Set<String> serviceAccountUsers = entry.getValue();
 
             if (StringUtils.isNotBlank(serviceName) && serviceAccountUsers != null && !serviceAccountUsers.isEmpty()) {
-                Set<String> delegationUsersForService = ret.get(serviceName);
-                Set<String> delegationUsers           = new HashSet<>();
-
-                if (delegationUsersForService != null) {
-                    delegationUsers.addAll(delegationUsersForService);
-                } else if (!WILDCARD_SERVICE_NAME.equals(serviceName)) {
-                    delegationUsers.addAll(wildcardDelegationUsers);
-                }
+                Set<String> delegationUsers = ret.computeIfAbsent(serviceName, k -> new HashSet<>());
 
                 delegationUsers.addAll(serviceAccountUsers);
-                ret.put(serviceName, delegationUsers);
             }
         }
+
+        Set<String> wildcardServiceUsers = ret.get(WILDCARD_SERVICE_NAME);
+
+        this.wildcardServiceUsers = (wildcardServiceUsers != null) ? wildcardServiceUsers : Collections.emptySet();
 
         return ret;
     }
