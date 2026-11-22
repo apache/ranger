@@ -367,9 +367,11 @@ public class AtlasTagSource extends AbstractTagSource {
             long lastCommitted       = lastCommittedOffset != null ? lastCommittedOffset : -1L;
 
             if (lastCommitted < messageOffset) {
+                long nextOffset = messageOffset + 1;
+
                 try {
-                    LOG.debug("Committing message with offset:[{}] on partition:[{}] to Kafka", messageOffset, partition);
-                    consumer.commit(partition, messageOffset);
+                    LOG.debug("Committing next offset:[{}] for message offset:[{}] on partition:[{}] to Kafka", nextOffset, messageOffset, partition);
+                    consumer.commit(partition, nextOffset);
                     offsetOfLastMessageCommittedToKafkaByPartition.put(partition, messageOffset);
                 } catch (Exception commitException) {
                     LOG.warn("Ranger tagsync already processed message at offset {} on partition {}. Ignoring failure in committing offset",
