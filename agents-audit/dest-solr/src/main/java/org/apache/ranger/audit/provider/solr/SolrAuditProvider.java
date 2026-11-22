@@ -284,6 +284,7 @@ public class SolrAuditProvider extends AuditDestination {
         doc.addField("reqData", auditEvent.getRequestData());
         doc.addField("resource", auditEvent.getResourcePath());
         doc.addField("cliIP", auditEvent.getClientIP());
+        doc.addField("cliType", auditEvent.getClientType());
         doc.addField("logType", auditEvent.getLogType());
         doc.addField("result", auditEvent.getAccessResult());
         doc.addField("policy", auditEvent.getPolicyId());

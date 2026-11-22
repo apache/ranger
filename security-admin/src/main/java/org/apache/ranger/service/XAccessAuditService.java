@@ -55,6 +55,7 @@ public class XAccessAuditService extends XAccessAuditServiceBase<XXAccessAudit, 
         searchFields.add(new SearchField("requestData", "obj.requestData", SearchField.DATA_TYPE.STRING, SearchField.SEARCH_TYPE.PARTIAL));
         searchFields.add(new SearchField("resourcePath", "obj.resourcePath", SearchField.DATA_TYPE.STRING, SearchField.SEARCH_TYPE.PARTIAL));
         searchFields.add(new SearchField("clientIP", "obj.clientIP", SearchField.DATA_TYPE.STRING, SearchField.SEARCH_TYPE.PARTIAL));
+        searchFields.add(new SearchField("clientType", "obj.clientType", SearchField.DATA_TYPE.STRING, SearchField.SEARCH_TYPE.PARTIAL));
 
         searchFields.add(new SearchField("auditType", "obj.auditType", SearchField.DATA_TYPE.INTEGER, SearchField.SEARCH_TYPE.FULL));
         searchFields.add(new SearchField("accessResult", "obj.accessResult", SearchField.DATA_TYPE.INTEGER, SearchField.SEARCH_TYPE.FULL));

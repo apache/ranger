@@ -272,6 +272,11 @@ public class OpenSearchAccessAuditsService extends AccessAuditsService implement
             accessAudit.setAccessResult(MiscUtil.toInt(value));
         }
 
+        value = source.get("cliType");
+        if (value != null) {
+            accessAudit.setClientType(value.toString());
+        }
+
         value = source.get("policy");
         if (value != null) {
             accessAudit.setPolicyId(MiscUtil.toLong(value));
