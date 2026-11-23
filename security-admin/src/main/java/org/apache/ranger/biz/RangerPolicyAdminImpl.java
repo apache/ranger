@@ -19,9 +19,11 @@
 
 package org.apache.ranger.biz;
 
+import com.fasterxml.jackson.databind.SerializationFeature;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.ranger.authorization.utils.JsonUtils;
 import org.apache.ranger.plugin.contextenricher.RangerTagForEval;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
@@ -63,10 +65,18 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.UUID;
 
 public class RangerPolicyAdminImpl implements RangerPolicyAdmin {
     private static final Logger LOG                           = LoggerFactory.getLogger(RangerPolicyAdminImpl.class);
     private static final Logger PERF_POLICYENGINE_REQUEST_LOG = RangerPerfTracer.getPerfLogger("policyengine.request");
+
+    private static final char   ITEM_KEY_SEPARATOR        = '\u0000';
+    private static final char   ITEM_KEY_COND_SEPARATOR   = '\u0001';
+    private static final String ITEM_TYPE_ALLOW           = "allow";
+    private static final String ITEM_TYPE_DENY            = "deny";
+    private static final String ITEM_TYPE_ALLOW_EXCEPTION = "allowException";
+    private static final String ITEM_TYPE_DENY_EXCEPTION  = "denyException";
 
     private static final Map<String, Object> wildcardEvalContext = new HashMap<String, Object>() {
         @Override
@@ -843,10 +853,11 @@ public class RangerPolicyAdminImpl implements RangerPolicyAdmin {
             int policyType = policy.getPolicyType() == null ? RangerPolicy.POLICY_TYPE_ACCESS : policy.getPolicyType();
 
             if (policyType == RangerPolicy.POLICY_TYPE_ACCESS) {
-                collectAccessTypes(expandedAccesses, policy.getPolicyItems(), userAccesses, groupAccesses, roleAccesses);
-                collectAccessTypes(expandedAccesses, policy.getDenyPolicyItems(), userAccesses, groupAccesses, roleAccesses);
-                collectAccessTypes(expandedAccesses, policy.getAllowExceptions(), userAccesses, groupAccesses, roleAccesses);
-                collectAccessTypes(expandedAccesses, policy.getDenyExceptions(), userAccesses, groupAccesses, roleAccesses);
+                // keep allow/deny/exception items apart, so that moving an access-type between them is seen as a change
+                collectAccessTypes(expandedAccesses, ITEM_TYPE_ALLOW, policy.getPolicyItems(), userAccesses, groupAccesses, roleAccesses);
+                collectAccessTypes(expandedAccesses, ITEM_TYPE_DENY, policy.getDenyPolicyItems(), userAccesses, groupAccesses, roleAccesses);
+                collectAccessTypes(expandedAccesses, ITEM_TYPE_ALLOW_EXCEPTION, policy.getAllowExceptions(), userAccesses, groupAccesses, roleAccesses);
+                collectAccessTypes(expandedAccesses, ITEM_TYPE_DENY_EXCEPTION, policy.getDenyExceptions(), userAccesses, groupAccesses, roleAccesses);
             } else if (policyType == RangerPolicy.POLICY_TYPE_DATAMASK) {
                 collectAccessTypes(expandedAccesses, policy.getDataMaskPolicyItems(), userAccesses, groupAccesses, roleAccesses);
             } else if (policyType == RangerPolicy.POLICY_TYPE_ROWFILTER) {
@@ -860,26 +871,96 @@ public class RangerPolicyAdminImpl implements RangerPolicyAdmin {
     }
 
     private void collectAccessTypes(Map<String, Collection<String>> expandedAccesses, List<? extends RangerPolicy.RangerPolicyItem> policyItems, Map<String, Set<String>> userAccesses, Map<String, Set<String>> groupAccesses, Map<String, Set<String>> roleAccesses) {
+        collectAccessTypes(expandedAccesses, null, policyItems, userAccesses, groupAccesses, roleAccesses);
+    }
+
+    private void collectAccessTypes(Map<String, Collection<String>> expandedAccesses, String itemType, List<? extends RangerPolicy.RangerPolicyItem> policyItems, Map<String, Set<String>> userAccesses, Map<String, Set<String>> groupAccesses, Map<String, Set<String>> roleAccesses) {
         for (RangerPolicy.RangerPolicyItem item : policyItems) {
             Set<String> accessTypes = new HashSet<>();
 
             for (RangerPolicy.RangerPolicyItemAccess access : item.getAccesses()) {
+                // policy-engine ignores accesses with isAllowed=false; so should the diff
+                if (Boolean.FALSE.equals(access.getIsAllowed())) {
+                    continue;
+                }
+
                 accessTypes.addAll(expandedAccesses.get(access.getType()));
             }
+
+            // principals are keyed together with the item-type, item-conditions and item-info (mask/row-filter/constraint),
+            // so that a change to any of these is reported as a change to the access-types of the item
+            String keySuffix = getItemKeySuffix(itemType, item);
 
             // each principal must get its own copy: a shared instance would let a later addAll() for one principal
             // leak access-types into every other principal of this item and make the diff miss real changes
             for (String user : item.getUsers()) {
-                userAccesses.computeIfAbsent(user, k -> new HashSet<>()).addAll(accessTypes);
+                userAccesses.computeIfAbsent(user + keySuffix, k -> new HashSet<>()).addAll(accessTypes);
             }
 
             for (String group : item.getGroups()) {
-                groupAccesses.computeIfAbsent(group, k -> new HashSet<>()).addAll(accessTypes);
+                groupAccesses.computeIfAbsent(group + keySuffix, k -> new HashSet<>()).addAll(accessTypes);
             }
 
             for (String role : item.getRoles()) {
-                roleAccesses.computeIfAbsent(role, k -> new HashSet<>()).addAll(accessTypes);
+                roleAccesses.computeIfAbsent(role + keySuffix, k -> new HashSet<>()).addAll(accessTypes);
             }
+        }
+    }
+
+    private static String getItemKeySuffix(String itemType, RangerPolicy.RangerPolicyItem item) {
+        StringBuilder sb = new StringBuilder();
+        if (itemType != null) {
+            sb.append(ITEM_KEY_SEPARATOR).append(itemType);
+        }
+        List<RangerPolicy.RangerPolicyItemCondition> conditions = item.getConditions();
+        if (CollectionUtils.isNotEmpty(conditions)) {
+            List<String> normalized = new ArrayList<>(conditions.size());
+            for (RangerPolicy.RangerPolicyItemCondition condition : conditions) {
+                List<String> values = condition.getValues() == null ? new ArrayList<>() : new ArrayList<>(condition.getValues());
+                Collections.sort(values);
+                StringBuilder condKey = new StringBuilder(String.valueOf(condition.getType()));
+                for (String value : values) {
+                    condKey.append(ITEM_KEY_SEPARATOR).append(value);
+                }
+                normalized.add(condKey.toString());
+            }
+            Collections.sort(normalized);
+            for (String condKey : normalized) {
+                sb.append(ITEM_KEY_COND_SEPARATOR).append(condKey);
+            }
+        }
+
+        Object itemInfo = null;
+
+        if (item instanceof RangerPolicy.RangerDataMaskPolicyItem) {
+            itemInfo = ((RangerPolicy.RangerDataMaskPolicyItem) item).getDataMaskInfo();
+        } else if (item instanceof RangerPolicy.RangerRowFilterPolicyItem) {
+            itemInfo = ((RangerPolicy.RangerRowFilterPolicyItem) item).getRowFilterInfo();
+        } else if (item instanceof RangerPolicy.RangerConstraintPolicyItem) {
+            RangerPolicy.RangerPolicyItemConstraintInfo constraintInfo = ((RangerPolicy.RangerConstraintPolicyItem) item).getConstraintInfo();
+
+            if (constraintInfo != null) {
+                itemInfo = constraintInfo.getConstraintName() + ITEM_KEY_SEPARATOR + toCanonicalJson(constraintInfo.getParameters());
+            }
+        }
+
+        if (itemInfo != null) {
+            sb.append(ITEM_KEY_SEPARATOR).append(itemInfo);
+        }
+
+        return sb.toString();
+    }
+
+    private static String toCanonicalJson(Map<String, Object> parameters) {
+        if (MapUtils.isEmpty(parameters)) {
+            return "";
+        }
+        try {
+            return JsonUtils.getMapper().writer().with(SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS).writeValueAsString(parameters);
+        } catch (Exception exp) {
+            LOG.warn("toCanonicalJson(): failed to serialize constraint parameters; treating them as changed", exp);
+            // fail closed: a value that matches nothing else, so that the item's access-types end up in the delta
+            return UUID.randomUUID().toString();
         }
     }
 
@@ -916,11 +997,12 @@ public class RangerPolicyAdminImpl implements RangerPolicyAdmin {
         boolean ret = !Objects.equals(oldPolicy.getIsEnabled() == null || oldPolicy.getIsEnabled(), policy.getIsEnabled() == null || policy.getIsEnabled())
                 || !Objects.equals(oldPolicy.getPolicyPriority() == null ? RangerPolicy.POLICY_PRIORITY_NORMAL : oldPolicy.getPolicyPriority(), policy.getPolicyPriority() == null ? RangerPolicy.POLICY_PRIORITY_NORMAL : policy.getPolicyPriority())
                 || !Objects.equals(Boolean.TRUE.equals(oldPolicy.getIsDenyAllElse()), Boolean.TRUE.equals(policy.getIsDenyAllElse()))
+                || !Objects.equals(oldPolicy.getIsAuditEnabled() == null || oldPolicy.getIsAuditEnabled(), policy.getIsAuditEnabled() == null || policy.getIsAuditEnabled())
                 || !Objects.equals(nullToEmpty(oldPolicy.getConditions()), nullToEmpty(policy.getConditions()))
                 || !Objects.equals(toStrings(oldPolicy.getValiditySchedules()), toStrings(policy.getValiditySchedules()))
                 || !Objects.equals(getDelegateAdminPrincipals(oldPolicy), getDelegateAdminPrincipals(policy));
         if (ret) {
-            LOG.debug("isPolicyScopeChanged(policy-id:[{}]): isEnabled/policyPriority/isDenyAllElse/conditions/validitySchedules/delegateAdmin changed", policy.getId());
+            LOG.debug("isPolicyScopeChanged(policy-id:[{}]): isEnabled/policyPriority/isDenyAllElse/isAuditEnabled/conditions/validitySchedules/delegateAdmin changed", policy.getId());
         }
         return ret;
     }
