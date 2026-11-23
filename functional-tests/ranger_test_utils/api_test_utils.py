@@ -44,6 +44,7 @@ import string
 import requests
 from requests.auth import HTTPBasicAuth
 
+from ranger_test_utils.os_env import create_os_user
 from ranger_test_utils.test_env import get_env, hdfs_repo_name, ranger_service_base_url
 from ranger_test_utils.utils import get_test_logger
 base_url = ranger_service_base_url()
@@ -221,6 +222,9 @@ def create_required_test_users():
             "userRoleList": [role],
         }
 
+        # mirror the user into the ranger container OS so PAM auth does not fail/delay
+        create_os_user(username, test_user_password)
+
         request_url = base_url + "/xusers/secure/users"
         resp = requests.post(
             request_url,
@@ -255,6 +259,9 @@ def create_kmsauditor_test_user():
         "userSource": 0,
         "userRoleList": ["ROLE_USER"],
     }
+
+    # mirror the user into the ranger container OS so PAM auth does not fail/delay
+    create_os_user(username, test_user_password)
 
     request_url = base_url + "/xusers/secure/users"
     resp = requests.post(
@@ -457,6 +464,9 @@ def create_custom_user(
         "isVisible": 1,
         "userSource": 0,
     }
+
+    # mirror the user into the ranger container OS so PAM auth does not fail/delay
+    create_os_user(user_name, password)
 
     response = requests.post(
         "{}/xusers/secure/users".format(base_url),

@@ -17,8 +17,8 @@
 import requests
 import json
 import pytest
-from  Utility.main import get_request_data ,base_url,get_updated_request_data ,get_variable ,compare_response_data,return_random_str ,admin_auth ,headers,keyadmin_auth,str_variable_dict,variable_dict
-from Utility.main import grant_db_name ,grant_table_name ,grant_policy_name ,  grant_policy_name2,grant_table_name2,grant_db_name2,grant_db_name3,grant_table_name3,grant_policy_name3,grant_db_name4,grant_table_name4
+from servicerest.Utility.main import get_request_data ,base_url,get_updated_request_data ,get_variable ,compare_response_data,return_random_str ,admin_auth ,headers,keyadmin_auth,str_variable_dict,variable_dict
+from servicerest.Utility.main import grant_db_name ,grant_table_name ,grant_policy_name ,  grant_policy_name2,grant_table_name2,grant_db_name2,grant_db_name3,grant_table_name3,grant_policy_name3,grant_db_name4,grant_table_name4
 from requests.auth import HTTPBasicAuth
 import logging
 logger = logging.getLogger(__name__)

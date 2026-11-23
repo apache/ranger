@@ -18,7 +18,7 @@ import os
 import requests
 import json
 from requests.auth import HTTPBasicAuth
-from Utility.main import base_url, admin_auth, headers, get_request_data, str_variable_dict ,keyadmin_auth
+from tagrest.Utility.main import base_url, admin_auth, headers, get_request_data, str_variable_dict ,keyadmin_auth
 
 # Use absolute path relative to this file
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
