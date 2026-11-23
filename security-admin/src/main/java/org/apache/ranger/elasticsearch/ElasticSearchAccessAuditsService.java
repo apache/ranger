@@ -241,6 +241,11 @@ public class ElasticSearchAccessAuditsService extends org.apache.ranger.AccessAu
             accessAudit.setClientIP(value.toString());
         }
 
+        value = source.get("cliType");
+        if (value != null) {
+            accessAudit.setClientType(value.toString());
+        }
+
         // TODO: Need to see what logType maps to in UI
         //value = source.get("logType");
         //if (value != null) {

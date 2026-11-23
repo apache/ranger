@@ -144,6 +144,7 @@ class SolrAuditDestinationTest {
         when(event.getRequestData()).thenReturn("reqData");
         when(event.getResourcePath()).thenReturn("resource");
         when(event.getClientIP()).thenReturn("cliIP");
+        when(event.getClientType()).thenReturn("cliType");
         when(event.getLogType()).thenReturn("logType");
         when(event.getAccessResult()).thenReturn((short) 1);
         when(event.getPolicyId()).thenReturn(2L);
@@ -175,6 +176,7 @@ class SolrAuditDestinationTest {
         assertEquals("reqData", doc.getFieldValue("reqData"));
         assertEquals("resource", doc.getFieldValue("resource"));
         assertEquals("cliIP", doc.getFieldValue("cliIP"));
+        assertEquals("cliType", doc.getFieldValue("cliType"));
         assertEquals("logType", doc.getFieldValue("logType"));
         assertEquals(1, ((Number) doc.getFieldValue("result")).intValue());
         assertEquals(2L, doc.getFieldValue("policy"));

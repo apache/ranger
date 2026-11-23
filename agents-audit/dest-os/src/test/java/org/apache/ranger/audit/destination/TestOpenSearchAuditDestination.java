@@ -53,6 +53,7 @@ class TestOpenSearchAuditDestination {
         event.setRequestData("/tmp/testfile");
         event.setResourcePath("/data/warehouse");
         event.setClientIP("192.168.1.10");
+        event.setClientType("hdfs-client");
         event.setLogType("RangerAudit");
         event.setAccessResult((short) 1);
         event.setPolicyId(42L);
@@ -81,6 +82,7 @@ class TestOpenSearchAuditDestination {
         assertEquals("/tmp/testfile", doc.get("reqData"));
         assertEquals("/data/warehouse", doc.get("resource"));
         assertEquals("192.168.1.10", doc.get("cliIP"));
+        assertEquals("hdfs-client", doc.get("cliType"));
         assertEquals("RangerAudit", doc.get("logType"));
         assertEquals((short) 1, doc.get("result"));
         assertEquals(42L, doc.get("policy"));

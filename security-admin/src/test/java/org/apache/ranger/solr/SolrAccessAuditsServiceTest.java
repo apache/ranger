@@ -100,6 +100,7 @@ public class SolrAccessAuditsServiceTest {
         doc.setField("reqData", "data");
         doc.setField("resource", "/p");
         doc.setField("cliIP", "1.1.1.1");
+        doc.setField("cliType", "hive-cli");
         doc.setField("result", 1);
         doc.setField("policy", 9);
         doc.setField("repoType", 1);
@@ -142,6 +143,8 @@ public class SolrAccessAuditsServiceTest {
         assertEquals(0, out.getStartIndex());
         assertEquals(25, out.getPageSize());
         assertEquals("cl", out.getVXAccessAudits().get(0).getClusterName());
+        assertEquals("1.1.1.1", out.getVXAccessAudits().get(0).getClientIP());
+        assertEquals("hive-cli", out.getVXAccessAudits().get(0).getClientType());
         assertEquals("Repo 1", out.getVXAccessAudits().get(0).getRepoDisplayName());
     }
 
