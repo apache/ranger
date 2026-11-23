@@ -41,15 +41,12 @@ import org.apache.ranger.security.context.RangerAPIList;
 import org.apache.ranger.service.RangerTrxLogV2Service;
 import org.apache.ranger.service.XAccessAuditService;
 import org.apache.ranger.service.XAssetService;
-import org.apache.ranger.service.XCredentialStoreService;
 import org.apache.ranger.service.XPolicyExportAuditService;
 import org.apache.ranger.service.XResourceService;
 import org.apache.ranger.util.RestUtil;
 import org.apache.ranger.view.VXAccessAuditList;
 import org.apache.ranger.view.VXAsset;
 import org.apache.ranger.view.VXAssetList;
-import org.apache.ranger.view.VXCredentialStore;
-import org.apache.ranger.view.VXCredentialStoreList;
 import org.apache.ranger.view.VXLong;
 import org.apache.ranger.view.VXPolicy;
 import org.apache.ranger.view.VXPolicyExportAuditList;
@@ -110,9 +107,6 @@ public class AssetREST {
 
     @Autowired
     XResourceService xResourceService;
-
-    @Autowired
-    XCredentialStoreService xCredentialStoreService;
 
     @Autowired
     RESTErrorUtil restErrorUtil;
@@ -424,57 +418,6 @@ public class AssetREST {
         logger.debug("<== AssetREST.countXResources(): {}", ret);
 
         return ret;
-    }
-
-    @GET
-    @Path("/credstores/{id}")
-    @Produces("application/json")
-    public VXCredentialStore getXCredentialStore(@PathParam("id") Long id) {
-        return assetMgr.getXCredentialStore(id);
-    }
-
-    @POST
-    @Path("/credstores")
-    @Consumes("application/json")
-    @Produces("application/json")
-    public VXCredentialStore createXCredentialStore(VXCredentialStore vXCredentialStore) {
-        return assetMgr.createXCredentialStore(vXCredentialStore);
-    }
-
-    @PUT
-    @Path("/credstores")
-    @Consumes("application/json")
-    @Produces("application/json")
-    public VXCredentialStore updateXCredentialStore(VXCredentialStore vXCredentialStore) {
-        return assetMgr.updateXCredentialStore(vXCredentialStore);
-    }
-
-    @DELETE
-    @Path("/credstores/{id}")
-    @PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
-    @RangerAnnotationClassName(class_name = VXCredentialStore.class)
-    public void deleteXCredentialStore(@PathParam("id") Long id, @Context HttpServletRequest request) {
-        boolean force = false;
-
-        assetMgr.deleteXCredentialStore(id, force);
-    }
-
-    @GET
-    @Path("/credstores")
-    @Produces("application/json")
-    public VXCredentialStoreList searchXCredentialStores(@Context HttpServletRequest request) {
-        SearchCriteria searchCriteria = searchUtil.extractCommonCriterias(request, xCredentialStoreService.sortFields);
-
-        return assetMgr.searchXCredentialStores(searchCriteria);
-    }
-
-    @GET
-    @Path("/credstores/count")
-    @Produces("application/json")
-    public VXLong countXCredentialStores(@Context HttpServletRequest request) {
-        SearchCriteria searchCriteria = searchUtil.extractCommonCriterias(request, xCredentialStoreService.sortFields);
-
-        return assetMgr.getXCredentialStoreSearchCount(searchCriteria);
     }
 
     @GET
