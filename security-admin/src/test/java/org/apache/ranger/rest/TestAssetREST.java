@@ -41,15 +41,12 @@ import org.apache.ranger.plugin.util.SearchFilter;
 import org.apache.ranger.service.RangerTrxLogV2Service;
 import org.apache.ranger.service.XAccessAuditService;
 import org.apache.ranger.service.XAssetService;
-import org.apache.ranger.service.XCredentialStoreService;
 import org.apache.ranger.service.XPolicyExportAuditService;
 import org.apache.ranger.service.XResourceService;
 import org.apache.ranger.view.VXAccessAudit;
 import org.apache.ranger.view.VXAccessAuditList;
 import org.apache.ranger.view.VXAsset;
 import org.apache.ranger.view.VXAssetList;
-import org.apache.ranger.view.VXCredentialStore;
-import org.apache.ranger.view.VXCredentialStoreList;
 import org.apache.ranger.view.VXLong;
 import org.apache.ranger.view.VXPolicy;
 import org.apache.ranger.view.VXPolicyExportAudit;
@@ -76,7 +73,6 @@ import javax.ws.rs.WebApplicationException;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -101,8 +97,6 @@ public class TestAssetREST {
     XAssetService xAssetService;
     @Mock
     XResourceService xResourceService;
-    @Mock
-    XCredentialStoreService xCredentialStoreService;
     @Mock
     AssetMgr assetMgr;
     @Mock
@@ -384,70 +378,6 @@ public class TestAssetREST {
         Mockito.when(serviceREST.getPolicies(searchFilter)).thenReturn(rangerPolicyList);
         VXLong actualXResource = assetREST.countXResources(request);
         Assertions.assertEquals(expectedXResouce.getValue(), actualXResource.getValue());
-    }
-
-    @Test
-    public void testGetXCredentialStore() {
-        VXCredentialStore vXCredentialStore = vXCredentialStore();
-        Mockito.when(assetMgr.getXCredentialStore(Id)).thenReturn(vXCredentialStore);
-        VXCredentialStore actualvXCredentialStore = assetREST.getXCredentialStore(Id);
-        Assertions.assertNotNull(actualvXCredentialStore);
-        Assertions.assertEquals(vXCredentialStore, actualvXCredentialStore);
-        Mockito.verify(assetMgr).getXCredentialStore(Id);
-    }
-
-    @Test
-    public void testCreateXCredentialStore() {
-        VXCredentialStore vXCredentialStore = vXCredentialStore();
-        Mockito.when(assetMgr.createXCredentialStore(vXCredentialStore)).thenReturn(vXCredentialStore);
-        VXCredentialStore actualvXCredentialStore = assetREST.createXCredentialStore(vXCredentialStore);
-        Assertions.assertNotNull(actualvXCredentialStore);
-        Assertions.assertEquals(vXCredentialStore, actualvXCredentialStore);
-        Mockito.verify(assetMgr).createXCredentialStore(vXCredentialStore);
-    }
-
-    @Test
-    public void testUpdateXCredentialStoree() {
-        VXCredentialStore vXCredentialStore = vXCredentialStore();
-        Mockito.when(assetMgr.updateXCredentialStore(vXCredentialStore)).thenReturn(vXCredentialStore);
-        VXCredentialStore actualvXCredentialStore = assetREST.updateXCredentialStore(vXCredentialStore);
-        Assertions.assertNotNull(actualvXCredentialStore);
-        Assertions.assertEquals(vXCredentialStore, actualvXCredentialStore);
-        Mockito.verify(assetMgr).updateXCredentialStore(vXCredentialStore);
-    }
-
-    @Test
-    public void testDeleteXCredentialStore() {
-        Mockito.doNothing().when(assetMgr).deleteXCredentialStore(Id, false);
-        assetREST.deleteXCredentialStore(Id, request);
-        Mockito.verify(assetMgr).deleteXCredentialStore(Id, false);
-    }
-
-    @Test
-    public void testSearchXCredentialStores() {
-        VXCredentialStore       vXCredentialStore     = vXCredentialStore();
-        List<VXCredentialStore> vXCredentialStores    = Collections.singletonList(vXCredentialStore);
-        VXCredentialStoreList   vXCredentialStoreList = new VXCredentialStoreList();
-        vXCredentialStoreList.setVXCredentialStores(vXCredentialStores);
-        SearchCriteria  searchCriteria = new SearchCriteria();
-        List<SortField> sortFields     = null;
-        Mockito.when(searchUtil.extractCommonCriterias(request, sortFields)).thenReturn(searchCriteria);
-        Mockito.when(assetMgr.searchXCredentialStores(searchCriteria)).thenReturn(vXCredentialStoreList);
-        VXCredentialStoreList actualvxCredentialStoreList = assetREST.searchXCredentialStores(request);
-        Assertions.assertEquals(vXCredentialStoreList.getVXCredentialStores(), actualvxCredentialStoreList.getVXCredentialStores());
-        Mockito.verify(assetMgr).searchXCredentialStores(searchCriteria);
-    }
-
-    @Test
-    public void testCountXCredentialStores() {
-        VXLong          expectedvXLong = new VXLong();
-        SearchCriteria  searchCriteria = new SearchCriteria();
-        List<SortField> sortFields     = null;
-        Mockito.when(searchUtil.extractCommonCriterias(request, sortFields)).thenReturn(searchCriteria);
-        Mockito.when(assetMgr.getXCredentialStoreSearchCount(searchCriteria)).thenReturn(expectedvXLong);
-        VXLong actualvXLong = assetREST.countXCredentialStores(request);
-        Assertions.assertEquals(expectedvXLong, actualvXLong);
-        Mockito.verify(assetMgr).getXCredentialStoreSearchCount(searchCriteria);
     }
 
     @Test
@@ -813,15 +743,6 @@ public class TestAssetREST {
         configs.put("hadoop.rpc.protection", "Privacy");
         configs.put("commonNameForCertificate", "");
         return configs;
-    }
-
-    private VXCredentialStore vXCredentialStore() {
-        VXCredentialStore vXCredentialStore = new VXCredentialStore();
-        vXCredentialStore.setId(Id);
-        vXCredentialStore.setName("TestAssetRest");
-        vXCredentialStore.setDescription("TestAssetRest");
-        vXCredentialStore.setOwner("owner");
-        return vXCredentialStore;
     }
 
     private RangerService rangerService(Long id) {
