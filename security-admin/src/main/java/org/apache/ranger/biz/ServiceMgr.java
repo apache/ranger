@@ -833,7 +833,11 @@ public class ServiceMgr {
         String value = configValue.trim();
 
         for (int depth = 0; depth <= MAX_PERCENT_DECODE_DEPTH && value != null; depth++) {
-            collectDialHosts(value, ret);
+            if (looksLikeEndpointList(value)) {
+                collectDialHosts(value, ret);
+            } else {
+                collectHostLikeListEntries(value, ret);
+            }
 
             if (value.indexOf('%') < 0) {
                 break;
@@ -887,20 +891,65 @@ public class ServiceMgr {
             return;
         }
 
-        String hostPart = authority;
-        int    atIdx    = hostPart.lastIndexOf('@');
+        // Split the host list first, then drop userinfo per entry, matching how the KMS clients build per-host URLs
+        for (String token : authority.split("[;,]")) {
+            String entry = token.trim();
+            int    atIdx = entry.lastIndexOf('@');
 
-        if (atIdx >= 0) {
-            hostPart = hostPart.substring(atIdx + 1);
-        }
+            if (atIdx >= 0) {
+                entry = entry.substring(atIdx + 1);
+            }
 
-        for (String token : hostPart.split("[;,]")) {
-            String host = stripPort(token.trim());
+            String host = stripPort(entry);
 
             if (StringUtils.isNotBlank(host)) {
                 hosts.add(host);
             }
         }
+    }
+
+    // Lists that are not endpoint-shaped (e.g. a ZooKeeper quorum "zk1.example,zk2.example"): check only entries
+    // that look like a host name or IP literal, so values such as "hive,0" are not read as hosts
+    private static void collectHostLikeListEntries(String value, Set<String> hosts) {
+        if (value.indexOf(',') < 0 && value.indexOf(';') < 0) {
+            return; // a single value is covered by extractHost()
+        }
+        for (String token : value.split("[;,]")) {
+            String entry = token.trim();
+            int atIdx = entry.lastIndexOf('@');
+            if (atIdx >= 0) {
+                entry = entry.substring(atIdx + 1);
+            }
+            String host = stripPort(entry);
+            if (looksLikeHostName(host)) {
+                hosts.add(stripBrackets(host));
+            }
+        }
+    }
+
+    private static boolean looksLikeHostName(String host) {
+        if (StringUtils.isBlank(host) || host.indexOf(' ') >= 0) {
+            return false;
+        }
+        String lower = host.toLowerCase(Locale.ROOT);
+        return lower.indexOf('.') >= 0 || lower.indexOf(':') >= 0 || lower.startsWith("[")
+                || lower.startsWith("localhost") || lower.startsWith("ip6-");
+    }
+
+    private static boolean looksLikeEndpointList(String value) {
+        if (isConnectionEndpoint(value)) {
+            return true;
+        }
+        // One host:port entry is enough to treat the whole list as endpoints
+        for (String token : value.split("[;,]")) {
+            String entry = token.trim();
+            int    atIdx = entry.lastIndexOf('@');
+
+            if (looksLikeHostPortSegment(atIdx >= 0 ? entry.substring(atIdx + 1) : entry)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private static String stripPort(String hostAndPort) {

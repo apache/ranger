@@ -99,7 +99,10 @@ public class TestKmsProviderHostCheck {
             "kms://http@kms.example;2130706433:9/kms",
             "kms://http@kms.example;169.254.169.254:9/kms",
             "kms://http@kms.example;[::1]:9/kms",
-            "kms://http@localhost.:9/kms"
+            "kms://http@localhost.:9/kms",
+            "kms://http@127.0.0.1;x@kms.example.com:9/kms",
+            "kms://http@kms.example;127.0.0.1;a@b@kms.example:9/kms",
+            "kms://https@localhost;x@kms.example.com:9/kms"
     };
 
     /**
@@ -163,6 +166,11 @@ public class TestKmsProviderHostCheck {
             "jdbc:hive2://hs2.example.com:10000/default",
             "https://ranger.example.com:6182/path?a=1,2",
             "p%40ss%word",                         // values with '%' that are not URLs
+            "1,0",
+            "hive,0",
+            "3;0",
+            "a,b,c",
+            "zk1.example,zk2.example",
             "simple"
     })
     public void validateOutboundServiceConfigs_allowsOrdinaryValues(String value) {
@@ -172,7 +180,13 @@ public class TestKmsProviderHostCheck {
     @ParameterizedTest
     @ValueSource(strings = {
             "thrift://zk1.example:2181,127.0.0.1:2181",
-            "zk1.example:2181,localhost:2181"
+            "zk1.example:2181,localhost:2181",
+            "zk1.example:2181,localhost",          // an entry without a port is still checked
+            "zk1.example:2181;x@127.0.0.1:2181",
+            "zk1.example,localhost",
+            "zk1.example,127.0.0.1",
+            "zk1.example,169.254.169.254",
+            "zk1.example,[::1]"
     })
     public void validateOutboundServiceConfigs_checksEveryHostInAList(String value) {
         Assertions.assertThrows(Exception.class, () -> ServiceMgr.validateOutboundServiceConfigs(Map.of("config", value)));
