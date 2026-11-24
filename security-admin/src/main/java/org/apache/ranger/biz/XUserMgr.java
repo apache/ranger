@@ -71,6 +71,7 @@ import org.apache.ranger.entity.XXUser;
 import org.apache.ranger.entity.XXUserPermission;
 import org.apache.ranger.plugin.model.GroupInfo;
 import org.apache.ranger.plugin.model.RangerPolicy;
+import org.apache.ranger.plugin.model.RangerPolicy.RangerConstraintPolicyItem;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerDataMaskPolicyItem;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItem;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
@@ -692,6 +693,10 @@ public class XUserMgr extends XUserMgrBase {
                 List<RangerRowFilterPolicyItem> rowFilterItems = rangerPolicy.getRowFilterPolicyItems();
                 removeUserGroupReferences(rowFilterItems, null, vXGroup.getName());
                 rangerPolicy.setRowFilterPolicyItems(rowFilterItems);
+
+                List<RangerConstraintPolicyItem> constraintItems = rangerPolicy.getConstraintPolicyItems();
+                removeUserGroupReferences(constraintItems, null, vXGroup.getName());
+                rangerPolicy.setConstraintPolicyItems(constraintItems);
 
                 try {
                     if (StringUtils.equals(rangerPolicy.getServiceType(), EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_GDS_NAME)) {
@@ -1377,6 +1382,11 @@ public class XUserMgr extends XUserMgrBase {
 
                 removeUserGroupReferences(rowFilterItems, vXUser.getName(), null);
                 rangerPolicy.setRowFilterPolicyItems(rowFilterItems);
+
+                List<RangerConstraintPolicyItem> constraintItems = rangerPolicy.getConstraintPolicyItems();
+
+                removeUserGroupReferences(constraintItems, vXUser.getName(), null);
+                rangerPolicy.setConstraintPolicyItems(constraintItems);
 
                 try {
                     if (StringUtils.equals(rangerPolicy.getServiceType(), EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_GDS_NAME)) {
@@ -3322,7 +3332,17 @@ public class XUserMgr extends XUserMgrBase {
         UserSessionBase userSession = ContextUtil.getCurrentUserSession();
 
         if (userSession != null && userSession.isSuperUser()) {
-            return true;
+            if (requestedVXUser == null || CollectionUtils.isEmpty(requestedVXUser.getUserRoleList())) {
+                return false;
+            }
+
+            /* rangerusersync must see all users; a super user can always see self,
+             * even when its DB role is a KMS role. */
+            if ("rangerusersync".equalsIgnoreCase(userSession.getLoginId()) || StringUtils.equals(requestedVXUser.getName(), userSession.getLoginId())) {
+                return true;
+            }
+
+            return StringUtil.containsIgnoreCase(requestedVXUser.getUserRoleList(), RangerConstants.ROLE_SYS_ADMIN) || StringUtil.containsIgnoreCase(requestedVXUser.getUserRoleList(), RangerConstants.ROLE_ADMIN_AUDITOR) || StringUtil.containsIgnoreCase(requestedVXUser.getUserRoleList(), RangerConstants.ROLE_USER);
         }
 
         if (userSession != null && userSession.getLoginId() != null) {
@@ -3902,12 +3922,21 @@ public class XUserMgr extends XUserMgrBase {
                 vXPortalUser.setLoginId(userName);
                 vXPortalUser.setUserSource(RangerCommonEnums.USER_EXTERNAL);
 
-                List<String>      headerRoles       = getHeaderAuthRoles();
-                boolean           trustedHeaderRoles = CollectionUtils.isNotEmpty(headerRoles);
-                ArrayList<String> roleList          = new ArrayList<>();
+                Authentication    auth               = SecurityContextHolder.getContext().getAuthentication();
+                boolean           isSelfProvisioning = auth instanceof RangerAuthenticationToken && ((RangerAuthenticationToken) auth).getAuthType() == XXAuthSession.AUTH_TYPE_TRUSTED_PROXY && StringUtils.equalsIgnoreCase(auth.getName(), userName);
+                ArrayList<String> roleList           = new ArrayList<>();
+                boolean           useHeaderRoles     = false;
 
-                if (trustedHeaderRoles) {
-                    roleList.addAll(headerRoles);
+                if (isSelfProvisioning) {
+                    List<String> headerRoles = getHeaderAuthRoles();
+
+                    if (CollectionUtils.isNotEmpty(headerRoles)) {
+                        useHeaderRoles = true;
+
+                        roleList.addAll(headerRoles);
+                    } else {
+                        roleList.add(RangerConstants.ROLE_USER);
+                    }
                 } else {
                     roleList.add(RangerConstants.ROLE_USER);
                 }
@@ -3917,7 +3946,7 @@ public class XUserMgr extends XUserMgrBase {
                 xXPortalUser = userMgr.mapVXPortalUserToXXPortalUser(vXPortalUser);
 
                 try {
-                    xXPortalUser = createExternalPortalUser(xXPortalUser, roleList, trustedHeaderRoles);
+                    xXPortalUser = createExternalPortalUser(xXPortalUser, roleList, useHeaderRoles);
 
                     logger.debug("createExternalUser(): Successfully created user {} in x_portal_user table with roles {}", xXPortalUser.getLoginId(), roleList);
                 } catch (Exception ex) {

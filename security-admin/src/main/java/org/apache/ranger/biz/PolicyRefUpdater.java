@@ -32,6 +32,7 @@ import org.apache.ranger.entity.XXGroup;
 import org.apache.ranger.entity.XXPolicy;
 import org.apache.ranger.entity.XXPolicyRefAccessType;
 import org.apache.ranger.entity.XXPolicyRefCondition;
+import org.apache.ranger.entity.XXPolicyRefConstraint;
 import org.apache.ranger.entity.XXPolicyRefDataMaskType;
 import org.apache.ranger.entity.XXPolicyRefGroup;
 import org.apache.ranger.entity.XXPolicyRefResource;
@@ -41,6 +42,7 @@ import org.apache.ranger.entity.XXRole;
 import org.apache.ranger.entity.XXServiceDef;
 import org.apache.ranger.entity.XXUser;
 import org.apache.ranger.plugin.model.RangerPolicy;
+import org.apache.ranger.plugin.model.RangerPolicy.RangerConstraintPolicyItem;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerDataMaskPolicyItem;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItem;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemAccess;
@@ -121,6 +123,10 @@ public class PolicyRefUpdater {
             ret.add(policy.getRowFilterPolicyItems());
         }
 
+        if (CollectionUtils.isNotEmpty(policy.getConstraintPolicyItems())) {
+            ret.add(policy.getConstraintPolicyItems());
+        }
+
         return ret;
     }
 
@@ -136,6 +142,7 @@ public class PolicyRefUpdater {
         final Set<String> accessTypes    = new HashSet<>();
         final Set<String> conditionTypes = new HashSet<>();
         final Set<String> dataMaskTypes  = new HashSet<>();
+        final Set<String> constraintNames = new HashSet<>();
         boolean           oldBulkMode    = RangerBizUtil.isBulkMode();
         final Long policyId = policy.getId();
 
@@ -173,6 +180,14 @@ public class PolicyRefUpdater {
                     RangerPolicyItemDataMaskInfo dataMaskInfo = ((RangerDataMaskPolicyItem) policyItem).getDataMaskInfo();
 
                     dataMaskTypes.add(dataMaskInfo.getDataMaskType());
+                }
+
+                if (policyItem instanceof RangerConstraintPolicyItem) {
+                    RangerConstraintPolicyItem constraintItem = (RangerConstraintPolicyItem) policyItem;
+
+                    if (constraintItem.getConstraintInfo() != null && StringUtils.isNotBlank(constraintItem.getConstraintInfo().getConstraintName())) {
+                        constraintNames.add(constraintItem.getConstraintInfo().getConstraintName());
+                    }
                 }
             }
         }
@@ -393,6 +408,23 @@ public class PolicyRefUpdater {
 
             batchInsert(xxDataMaskInfos, daoMgr.getXXPolicyRefDataMaskType(), oldBulkMode);
         }
+
+        // constraint names are validated against the service-def's constraintDefs by RangerPolicyValidator
+        if (CollectionUtils.isNotEmpty(constraintNames)) {
+            List<XXPolicyRefConstraint> xPolConstraints = new ArrayList<>();
+
+            for (String constraintName : constraintNames) {
+                XXPolicyRefConstraint xPolConstraint = new XXPolicyRefConstraint();
+
+                xPolConstraint.setPolicyId(policy.getId());
+                xPolConstraint.setServiceDefId(xServiceDef.getId());
+                xPolConstraint.setConstraintName(constraintName);
+
+                xPolConstraints.add(xPolConstraint);
+            }
+
+            batchInsert(xPolConstraints, daoMgr.getXXPolicyRefConstraint(), oldBulkMode);
+        }
     }
 
     public Boolean cleanupRefTables(RangerPolicy policy) {
@@ -409,6 +441,7 @@ public class PolicyRefUpdater {
         daoMgr.getXXPolicyRefAccessType().deleteByPolicyId(policyId);
         daoMgr.getXXPolicyRefCondition().deleteByPolicyId(policyId);
         daoMgr.getXXPolicyRefDataMaskType().deleteByPolicyId(policyId);
+        daoMgr.getXXPolicyRefConstraint().deleteByPolicyId(policyId);
 
         return true;
     }
@@ -434,6 +467,7 @@ public class PolicyRefUpdater {
         daoMgr.getXXPolicyRefAccessType().deleteByPolicyId(policyId);
         daoMgr.getXXPolicyRefCondition().deleteByPolicyId(policyId);
         daoMgr.getXXPolicyRefDataMaskType().deleteByPolicyId(policyId);
+        daoMgr.getXXPolicyRefConstraint().deleteByPolicyId(policyId);
 
         return true;
     }

@@ -32,6 +32,7 @@ import org.apache.ranger.plugin.util.RangerAccessRequestUtil;
 import org.apache.ranger.plugin.util.RangerPerfTracer;
 import org.apache.ranger.plugin.util.RangerTimeRangeChecker;
 import org.apache.ranger.plugin.util.RangerUserStore;
+import org.apache.ranger.plugin.util.ScriptEngineUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -59,6 +60,7 @@ import java.util.stream.Collectors;
 import static org.apache.ranger.plugin.util.RangerCommonConstants.SCRIPT_FIELD_ACCESS_TIME;
 import static org.apache.ranger.plugin.util.RangerCommonConstants.SCRIPT_FIELD_ACCESS_TYPE;
 import static org.apache.ranger.plugin.util.RangerCommonConstants.SCRIPT_FIELD_ACTION;
+import static org.apache.ranger.plugin.util.RangerCommonConstants.SCRIPT_FIELD_ATTR;
 import static org.apache.ranger.plugin.util.RangerCommonConstants.SCRIPT_FIELD_CLIENT_IP_ADDRESS;
 import static org.apache.ranger.plugin.util.RangerCommonConstants.SCRIPT_FIELD_CLIENT_TYPE;
 import static org.apache.ranger.plugin.util.RangerCommonConstants.SCRIPT_FIELD_CLUSTER_NAME;
@@ -133,6 +135,7 @@ import static org.apache.ranger.plugin.util.RangerCommonConstants.SCRIPT_MACRO_U
 import static org.apache.ranger.plugin.util.RangerCommonConstants.SCRIPT_MACRO_USER_ATTR_NAMES_Q_CSV;
 import static org.apache.ranger.plugin.util.RangerCommonConstants.SCRIPT_POLYFILL_INCLUDES;
 import static org.apache.ranger.plugin.util.RangerCommonConstants.SCRIPT_POLYFILL_INTERSECTS;
+import static org.apache.ranger.plugin.util.RangerCommonConstants.SCRIPT_VAR_ATTR;
 import static org.apache.ranger.plugin.util.RangerCommonConstants.SCRIPT_VAR_REQ;
 import static org.apache.ranger.plugin.util.RangerCommonConstants.SCRIPT_VAR_RES;
 import static org.apache.ranger.plugin.util.RangerCommonConstants.SCRIPT_VAR_TAG;
@@ -149,7 +152,7 @@ import static org.apache.ranger.plugin.util.RangerCommonConstants.SCRIPT_VAR_ctx
 import static org.apache.ranger.plugin.util.RangerCommonConstants.SCRIPT_VAR_tag;
 import static org.apache.ranger.plugin.util.RangerCommonConstants.SCRIPT_VAR_tagAttr;
 
-public final class RangerRequestScriptEvaluator {
+public final class RangerRequestScriptEvaluator implements AutoCloseable {
     private static final Logger LOG = LoggerFactory.getLogger(RangerRequestScriptEvaluator.class);
 
     private static final Logger  PERF_POLICY_CONDITION_SCRIPT_TOJSON          = RangerPerfTracer.getPerfLogger("policy.condition.script.tojson");
@@ -160,12 +163,13 @@ public final class RangerRequestScriptEvaluator {
     private static final String  DEFAULT_RANGER_TAG_ATTRIBUTE_DATE_FORMAT     = "yyyy/MM/dd";
     private static final String  DEFAULT_ATLAS_TAG_ATTRIBUTE_DATE_FORMAT_NAME = "ATLAS_DATE_FORMAT";
     private static final String  DEFAULT_ATLAS_TAG_ATTRIBUTE_DATE_FORMAT      = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'";
-    private static final String  SCRIPT_SAFE_PREEXEC                          = "Object.defineProperty(this,'engine',{value:null,writable:false});Object.defineProperty(this,'context',{value:null,writable:false});Object.defineProperty(this,'__noSuchProperty__',{value:null,writable:false});Object.defineProperty(this,'loadWithNewGlobal',{value:null,writable:false});exit=null;quit=null;";
+    private static final String  SCRIPT_SAFE_PREEXEC                          = ScriptEngineUtil.SCRIPT_SAFE_PREEXEC;
     private static final String  SCRIPT_PREEXEC                               = SCRIPT_VAR__CTX + "=JSON.parse(" + SCRIPT_VAR__CTX_JSON + "); J=JSON.stringify;" +
             SCRIPT_VAR_REQ + "=" + SCRIPT_VAR__CTX + "." + SCRIPT_FIELD_REQUEST + ";" +
             SCRIPT_VAR_RES + "=" + SCRIPT_VAR_REQ + "." + SCRIPT_FIELD_RESOURCE + ";" +
             SCRIPT_VAR_USER + "=" + SCRIPT_VAR_REQ + "." + SCRIPT_FIELD_USER_ATTRIBUTES + ";" +
             SCRIPT_VAR_UGNAMES + "=" + SCRIPT_VAR_REQ + "." + SCRIPT_FIELD_USER_GROUPS + ";" +
+            SCRIPT_VAR_ATTR + "=" + SCRIPT_VAR_REQ + "." + SCRIPT_FIELD_ATTR + ";" +
             SCRIPT_VAR_UG + "=" + SCRIPT_VAR_REQ + "." + SCRIPT_FIELD_USER_GROUP_ATTRIBUTES + ";" +
             SCRIPT_VAR_UGA + "=" + SCRIPT_VAR_REQ + "." + SCRIPT_FIELD_UGA + ";" +
             SCRIPT_VAR_URNAMES + "=" + SCRIPT_VAR_REQ + "." + SCRIPT_FIELD_USER_ROLES + ";" +
@@ -224,26 +228,42 @@ public final class RangerRequestScriptEvaluator {
         this.scriptEngine  = scriptEngine;
         this.bindings      = scriptEngine.createBindings();
 
-        RangerTagForEval    currentTag = this.getCurrentTag();
-        Map<String, String> tagAttribs = currentTag != null ? currentTag.getAttributes() : Collections.emptyMap();
+        try {
+            RangerTagForEval    currentTag = this.getCurrentTag();
+            Map<String, String> tagAttribs = currentTag != null ? currentTag.getAttributes() : Collections.emptyMap();
 
-        bindings.put(SCRIPT_VAR_ctx, this);
-        bindings.put(SCRIPT_VAR_tag, currentTag);
-        bindings.put(SCRIPT_VAR_tagAttr, tagAttribs);
+            bindings.put(SCRIPT_VAR_ctx, this);
+            bindings.put(SCRIPT_VAR_tag, currentTag);
+            bindings.put(SCRIPT_VAR_tagAttr, tagAttribs);
 
-        String preExecScript = "";
+            String preExecScript = "";
 
-        if (enableJsonCtx) {
-            bindings.put(SCRIPT_VAR__CTX_JSON, this.toJson());
+            if (enableJsonCtx) {
+                bindings.put(SCRIPT_VAR__CTX_JSON, this.toJson());
 
-            preExecScript += SCRIPT_PREEXEC;
+                preExecScript += SCRIPT_PREEXEC;
+            }
+
+            if (StringUtils.isNotBlank(preExecScript)) {
+                try {
+                    scriptEngine.eval(preExecScript, bindings);
+                } catch (ScriptException excp) {
+                    LOG.error("RangerRequestScriptEvaluator(): initialization failed", excp);
+                }
+            }
+        } catch (RuntimeException | Error excp) {
+            close();
+            throw excp;
         }
+    }
 
-        if (StringUtils.isNotBlank(preExecScript)) {
+    @Override
+    public void close() {
+        if (bindings instanceof AutoCloseable) {
             try {
-                scriptEngine.eval(preExecScript, bindings);
-            } catch (ScriptException excp) {
-                LOG.error("RangerRequestScriptEvaluator(): initialization failed", excp);
+                ((AutoCloseable) bindings).close();
+            } catch (Exception excp) {
+                LOG.warn("RangerRequestScriptEvaluator.close(): failed to close script bindings", excp);
             }
         }
     }
@@ -915,6 +935,10 @@ public final class RangerRequestScriptEvaluator {
         request.put(SCRIPT_FIELD_USER_GROUP_ATTRIBUTES, groupAttrs);
         request.put(SCRIPT_FIELD_UGA, new UserGroupsAttributes(userGroups, groupAttrs).getAttributes());
 
+        String attrJson = RangerAccessRequestUtil.getContextAttrJson(getRequestContext());
+
+        request.put(SCRIPT_FIELD_ATTR, JsonUtils.jsonToMapStringObject(attrJson));
+
         ret.put(SCRIPT_FIELD_REQUEST, request);
 
         ret.put(SCRIPT_FIELD_TAGS, tags);
@@ -1155,6 +1179,7 @@ public final class RangerRequestScriptEvaluator {
          *
          */
         varNames.add(SCRIPT_VAR__CTX);
+        varNames.add(SCRIPT_VAR_ATTR);
         varNames.add(SCRIPT_VAR_REQ);
         varNames.add(SCRIPT_VAR_RES);
         varNames.add(SCRIPT_VAR_TAG);

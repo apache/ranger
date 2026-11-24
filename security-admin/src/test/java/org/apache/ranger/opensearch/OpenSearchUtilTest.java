@@ -101,20 +101,44 @@ class OpenSearchUtilTest {
     }
 
     @Test
-    void buildSearchBody_fullStringMatch() throws Exception {
+    void buildSearchBody_fullStringMatchKeepsOriginalValueAndIgnoresCase() throws Exception {
         SearchCriteria criteria = new SearchCriteria();
 
         criteria.setMaxRows(10);
         criteria.setStartIndex(0);
-        criteria.addParam("accessType", "read");
+        criteria.addParam("accessType", "SELECT");
+        criteria.addParam("action", "METADATA OPERATION");
 
-        List<SearchField> searchFields = List.of(new SearchField("accessType", "access", SearchField.DATA_TYPE.STRING, SearchField.SEARCH_TYPE.FULL));
+        List<SearchField> searchFields = List.of(
+                new SearchField("accessType", "access", SearchField.DATA_TYPE.STRING, SearchField.SEARCH_TYPE.FULL),
+                new SearchField("action", "action", SearchField.DATA_TYPE.STRING, SearchField.SEARCH_TYPE.FULL));
+        List<SortField> sortFields   = List.of(new SortField("eventTime", "evtTime", true, SortField.SORT_ORDER.DESC));
+        String          body         = openSearchUtil.buildSearchBody(criteria, searchFields, sortFields);
+        JsonNode        must         = MAPPER.readTree(body).at("/query/bool/must");
+        JsonNode        accessTerm   = mustClause(must, "term", "access");
+        JsonNode        actionTerm   = mustClause(must, "term", "action");
+
+        assertEquals("SELECT", accessTerm.get("value").asText());
+        assertTrue(accessTerm.get("case_insensitive").asBoolean());
+        assertEquals("METADATA OPERATION", actionTerm.get("value").asText());
+        assertTrue(actionTerm.get("case_insensitive").asBoolean());
+    }
+
+    @Test
+    void buildSearchBody_reasonStaysMatchPhrase() throws Exception {
+        SearchCriteria criteria = new SearchCriteria();
+
+        criteria.setMaxRows(10);
+        criteria.setStartIndex(0);
+        criteria.addParam("reason", "Denied");
+
+        List<SearchField> searchFields = List.of(new SearchField("reason", "reason", SearchField.DATA_TYPE.STRING, SearchField.SEARCH_TYPE.FULL));
         List<SortField>   sortFields   = List.of(new SortField("eventTime", "evtTime", true, SortField.SORT_ORDER.DESC));
         String            body         = openSearchUtil.buildSearchBody(criteria, searchFields, sortFields);
+        JsonNode          must         = MAPPER.readTree(body).at("/query/bool/must");
+        JsonNode          reason       = mustClause(must, "match_phrase", "reason");
 
-        assertTrue(body.contains("match_phrase"));
-        assertTrue(body.contains("access"));
-        assertTrue(body.contains("read"));
+        assertEquals("denied", reason.asText());
     }
 
     @Test
@@ -215,5 +239,22 @@ class OpenSearchUtilTest {
         String escaped = OpenSearchUtil.escapeLucene(input);
 
         assertEquals("simplevalue", escaped);
+    }
+
+    private static JsonNode mustClause(JsonNode must, String queryType, String fieldName) {
+        JsonNode result = null;
+
+        for (JsonNode clause : must) {
+            JsonNode typed = clause.get(queryType);
+
+            if (typed != null && typed.has(fieldName)) {
+                result = typed.get(fieldName);
+                break;
+            }
+        }
+
+        assertNotNull(result);
+
+        return result;
     }
 }

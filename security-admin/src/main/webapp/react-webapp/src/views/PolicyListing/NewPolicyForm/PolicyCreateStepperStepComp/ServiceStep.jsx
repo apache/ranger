@@ -30,7 +30,8 @@ import {
   isRenderRowFilter,
   getSelectBoxErrorStyles,
   isKeyAdmin,
-  isKMSAuditor
+  isKMSAuditor,
+  isRenderConstraint
 } from "Utils/XAUtils";
 
 const required = (value) => (value ? undefined : "Required");
@@ -287,8 +288,9 @@ const ServiceStep = ({
             {/* Policy Type */}
             {selectedServiceComponentDef &&
               (isRenderMasking(selectedServiceComponentDef.dataMaskDef) ||
-                isRenderRowFilter(
-                  selectedServiceComponentDef.rowFilterDef
+                isRenderRowFilter(selectedServiceComponentDef.rowFilterDef) ||
+                isRenderConstraint(
+                  selectedServiceComponentDef?.constraintDefs
                 )) && (
                 <FormB.Group as={Row} className="mb-4">
                   <FormB.Label column className="column-1-fixed text-end">
@@ -412,6 +414,46 @@ const ServiceStep = ({
                               </div>
                               <small className="text-muted mt-2">
                                 Shows only allowed rows
+                              </small>
+                            </div>
+                          )}
+
+                          {/* Constraint Policy - Value: 4 */}
+                          {isRenderConstraint(
+                            selectedServiceComponentDef?.constraintDefs
+                          ) && (
+                            <div
+                              className="card p-3 w-33"
+                              style={{
+                                cursor: "pointer",
+                                border:
+                                  input.value === 4
+                                    ? "2px solid #0b7fad"
+                                    : "1px solid #dee2e6"
+                              }}
+                              onClick={() => handlePolicyTypeChange(input, 4)}
+                            >
+                              <div className="form-check">
+                                <input
+                                  className="form-check-input"
+                                  type="radio"
+                                  name="policyType"
+                                  id="constraint"
+                                  value={4}
+                                  checked={input.value === 4}
+                                  onChange={() =>
+                                    handlePolicyTypeChange(input, 4)
+                                  }
+                                />
+                                <label
+                                  className="form-check-label"
+                                  htmlFor="constraint"
+                                >
+                                  <strong>Constraint</strong>
+                                </label>
+                              </div>
+                              <small className="text-muted mt-2">
+                                Applies constraints to the resource
                               </small>
                             </div>
                           )}

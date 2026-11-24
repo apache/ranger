@@ -81,6 +81,7 @@ public abstract class RangerAbstractPolicyEvaluator implements RangerPolicyEvalu
     private   boolean                             needsDynamicEval;
     private   int                                 evalOrder;
     private   List<RangerPolicyResourceEvaluator> resourceEvaluators = Collections.emptyList();
+    private   Set<String>                         constraintNames    = Collections.emptySet();
 
     public RangerPluginContext getPluginContext() {
         return pluginContext;
@@ -97,6 +98,7 @@ public abstract class RangerAbstractPolicyEvaluator implements RangerPolicyEvalu
         this.policy           = getPrunedPolicy(policy);
         this.serviceDef       = serviceDef;
         this.needsDynamicEval = false;
+        this.constraintNames  = getPolicyType() == RangerPolicy.POLICY_TYPE_CONSTRAINTS ? computeConstraintNames(this.policy) : Collections.emptySet();
 
         List<RangerPolicyResourceEvaluator>  resourceEvaluators = new ArrayList<>();
         RangerDefaultPolicyResourceEvaluator resourceEvaluator  = new RangerDefaultPolicyResourceEvaluator(NEXT_RESOURCE_EVALUATOR_ID.getAndIncrement(), policy.getResources(), getPolicyType(), serviceDef, options.getServiceDefHelper());
@@ -525,6 +527,21 @@ public abstract class RangerAbstractPolicyEvaluator implements RangerPolicyEvalu
         return ret;
     }
 
+    // computed once in init(), and shared by resource matchers of all resource specs in the policy
+    private static Set<String> computeConstraintNames(RangerPolicy policy) {
+        Set<String> ret = new HashSet<>();
+
+        if (policy != null && CollectionUtils.isNotEmpty(policy.getConstraintPolicyItems())) {
+            for (RangerPolicy.RangerConstraintPolicyItem item : policy.getConstraintPolicyItems()) {
+                if (item != null && item.getConstraintInfo() != null && StringUtils.isNotEmpty(item.getConstraintInfo().getConstraintName())) {
+                    ret.add(item.getConstraintInfo().getConstraintName());
+                }
+            }
+        }
+
+        return Collections.unmodifiableSet(ret);
+    }
+
     public class RangerDefaultPolicyResourceEvaluator implements RangerPolicyResourceEvaluator {
         private final    long                               id;
         private final    Map<String, RangerPolicyResource>  resource;
@@ -539,6 +556,11 @@ public abstract class RangerAbstractPolicyEvaluator implements RangerPolicyEvalu
             this.resourceMatcher = new RangerDefaultPolicyResourceMatcher();
 
             this.resourceMatcher.setPolicyResources(resource, policyType);
+
+            if (policyType == RangerPolicy.POLICY_TYPE_CONSTRAINTS) {
+                this.resourceMatcher.setConstraintNames(constraintNames);
+            }
+
             this.resourceMatcher.setServiceDef(serviceDef);
             this.resourceMatcher.setServiceDefHelper(serviceDefHelper);
             this.resourceMatcher.setPluginContext(pluginContext);
@@ -565,6 +587,7 @@ public abstract class RangerAbstractPolicyEvaluator implements RangerPolicyEvalu
                             ret = new RangerDefaultPolicyResourceMatcher(true);
 
                             ret.setPolicyResources(updatedResource, resourceMatcher.getPolicyType());
+                            ret.setConstraintNames(resourceMatcher.getConstraintNames());
                             ret.setServiceDef(serviceDef);
                             ret.setServiceDefHelper(resourceMatcher.getServiceDefHelper());
                             ret.init();

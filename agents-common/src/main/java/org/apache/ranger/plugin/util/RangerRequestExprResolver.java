@@ -212,24 +212,26 @@ public class RangerRequestExprResolver {
         String ret = str;
 
         if (hasTokens) {
-            ScriptEngine                 scriptEngine    = ScriptEngineUtil.createScriptEngine(serviceType);
-            RangerRequestScriptEvaluator scriptEvaluator = new RangerRequestScriptEvaluator(request, scriptEngine, RangerRequestScriptEvaluator.needsJsonCtxEnabled(str));
-            StringBuffer                 sb              = new StringBuffer();
-            Matcher                      matcher         = PATTERN.matcher(str);
+            ScriptEngine scriptEngine = ScriptEngineUtil.createScriptEngine(serviceType);
 
-            while (matcher.find()) {
-                String expr = matcher.group(REGEX_GROUP_EXPR);
-                Object oVal = scriptEvaluator.evaluateScript(expr);
-                String val  = oVal == null ? "" : Objects.toString(oVal);
+            try (RangerRequestScriptEvaluator scriptEvaluator = new RangerRequestScriptEvaluator(request, scriptEngine, RangerRequestScriptEvaluator.needsJsonCtxEnabled(str))) {
+                StringBuffer                 sb              = new StringBuffer();
+                Matcher                      matcher         = PATTERN.matcher(str);
 
-                matcher.appendReplacement(sb, val);
+                while (matcher.find()) {
+                    String expr = matcher.group(REGEX_GROUP_EXPR);
+                    Object oVal = scriptEvaluator.evaluateScript(expr);
+                    String val  = oVal == null ? "" : Objects.toString(oVal);
+
+                    matcher.appendReplacement(sb, val);
+                }
+
+                matcher.appendTail(sb);
+
+                ret = sb.toString();
+
+                LOG.debug("RangerRequestExprResolver.processExpressions({}): ret={}", str, ret);
             }
-
-            matcher.appendTail(sb);
-
-            ret = sb.toString();
-
-            LOG.debug("RangerRequestExprResolver.processExpressions({}): ret={}", str, ret);
         }
 
         return ret;

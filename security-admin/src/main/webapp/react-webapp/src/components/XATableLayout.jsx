@@ -151,7 +151,12 @@ function XATableLayout({
                 <IndeterminateCheckbox {...row.getToggleRowSelectedProps()} />
               </div>
             ),
-            width: 40
+            width: 40,
+
+            // disableResizing (not hideResizer) is required here: it sets
+            // canResize = false, so useFlexLayout excludes this column from
+            // flex sizing and it stays exactly 40px wide.
+            disableResizing: true
           };
           if (rowSelectOp && rowSelectOp.position === "first") {
             cols.push(selectionCol, ...columns);
@@ -345,23 +350,39 @@ function XATableLayout({
                             column.toggleSortBy(!column.isSortedDesc)
                           }
                         >
-                          {columnResizable && !column.disableResizing && (
-                            <>
-                              <div
-                                className="fa fa-expand"
-                                aria-hidden="true"
-                                {...column.getResizerProps([
-                                  { className: "resizer" }
-                                ])}
-                                onClick={(event) => event.stopPropagation()}
-                              />
-                              <i
-                                className="fa fa-expand resizeable-icon"
-                                aria-hidden="true"
-                                {...column.getResizerProps()}
-                              />
-                            </>
-                          )}
+                          {/*
+                            Show the resize handle on a column only if:
+                            - the table has columnResizable turned on, and
+                            - the column does not have disableResizing or hideResizer.
+
+                            Use disableResizing when the column must keep a fixed
+                            width (example: the checkbox column).
+
+                            Use hideResizer when you just want to hide the handle on
+                            a column, but still let it share the table space like
+                            normal. Without this, the one column we want to resize
+                            would take all the extra space and dragging would
+                            seem to do nothing.
+                          */}
+                          {columnResizable &&
+                            !column.disableResizing &&
+                            !column.hideResizer && (
+                              <>
+                                <div
+                                  className="fa fa-expand"
+                                  aria-hidden="true"
+                                  {...column.getResizerProps([
+                                    { className: "resizer" }
+                                  ])}
+                                  onClick={(event) => event.stopPropagation()}
+                                />
+                                <i
+                                  className="fa fa-expand resizeable-icon"
+                                  aria-hidden="true"
+                                  {...column.getResizerProps()}
+                                />
+                              </>
+                            )}
 
                           {column.render("Header")}
                           {columnSort && column.isSorted && (

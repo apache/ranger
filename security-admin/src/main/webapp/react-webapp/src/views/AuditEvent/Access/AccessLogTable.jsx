@@ -34,6 +34,7 @@ export const AccessLogTable = ({ data = {} }) => {
     eventId,
     accessResult,
     clientIP,
+    clientType,
     clusterName,
     action,
     policyId,
@@ -193,6 +194,10 @@ export const AccessLogTable = ({ data = {} }) => {
         <tr>
           <td>Client IP </td>
           <td>{!isEmpty(clientIP) ? clientIP : "--"}</td>
+        </tr>
+        <tr>
+          <td>Client Type</td>
+          <td>{!isEmpty(clientType) ? clientType : "--"}</td>
         </tr>
         <tr>
           <td>Cluster Name</td>

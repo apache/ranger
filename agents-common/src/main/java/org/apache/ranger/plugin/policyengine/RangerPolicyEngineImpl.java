@@ -621,9 +621,39 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 
         evaluateInlinePolicy(request, ret);
 
+        if (policyType == RangerPolicy.POLICY_TYPE_ACCESS && ret != null && ret.getIsAllowed()) {
+            evaluateConstraintPolicies(request, ret);
+        }
+
         LOG.debug("<== RangerPolicyEngineImpl.zoneAwareAccessEvaluationWithNoAudit({}, policyType ={}): {}", request, policyType, ret);
 
         return ret;
+    }
+
+    private void evaluateConstraintPolicies(RangerAccessRequest request, RangerAccessResult result) {
+        LOG.debug("==> RangerPolicyEngineImpl.evaluateConstraintPolicies({}, {})", request, result);
+
+        RangerPolicyRepository repository = policyEngine.getRepositoryForZone(result.getZoneName());
+
+        if (repository == null || repository.getConstraintPolicyEvaluatorCount() == 0) {
+            LOG.debug("<== RangerPolicyEngineImpl.evaluateConstraintPolicies({}, {}): no constraint policies", request, result);
+
+            return;
+        }
+
+        List<RangerPolicyEvaluator> evaluators = repository.getLikelyMatchPolicyEvaluators(request, RangerPolicy.POLICY_TYPE_CONSTRAINTS);
+
+        if (CollectionUtils.isNotEmpty(evaluators)) {
+            Date accessTime = request.getAccessTime() != null ? request.getAccessTime() : new Date();
+
+            for (RangerPolicyEvaluator evaluator : evaluators) {
+                if (evaluator.isApplicable(accessTime)) {
+                    evaluator.evaluateConstraints(request, result);
+                }
+            }
+        }
+
+        LOG.debug("<== RangerPolicyEngineImpl.evaluateConstraintPolicies({}, {}): constraints={}", request, result, result.getConstraints());
     }
 
     private RangerAccessResult evaluatePoliciesNoAudit(RangerAccessRequest request, int policyType, String zoneName, RangerPolicyRepository policyRepository, RangerPolicyRepository tagPolicyRepository) {

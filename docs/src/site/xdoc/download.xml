@@ -32,7 +32,7 @@
 Current Stable release - Apache Ranger 2.9.0:
 </p>
 <p>
-<a href="https://downloads.apache.org/ranger/2.9.0/apache-ranger-2.9.0.tar.gz">apache-ranger-2.9.0.tar.gz</a>
+<a href="https://www.apache.org/dyn/closer.lua/ranger/2.9.0/apache-ranger-2.9.0.tar.gz">apache-ranger-2.9.0.tar.gz</a>
 (<a href="https://downloads.apache.org/ranger/2.9.0/apache-ranger-2.9.0.tar.gz.asc">PGP</a>)
 (<a href="https://downloads.apache.org/ranger/2.9.0/apache-ranger-2.9.0.tar.gz.sha512">Digest</a>)
 </p>
@@ -42,7 +42,7 @@ Current Stable release - Apache Ranger 2.9.0:
 Apache Ranger 2.8.0:
 </p>
 <p>
-<a href="https://downloads.apache.org/ranger/2.8.0/apache-ranger-2.8.0.tar.gz">apache-ranger-2.8.0.tar.gz</a>
+<a href="https://www.apache.org/dyn/closer.lua/ranger/2.8.0/apache-ranger-2.8.0.tar.gz">apache-ranger-2.8.0.tar.gz</a>
 (<a href="https://downloads.apache.org/ranger/2.8.0/apache-ranger-2.8.0.tar.gz.asc">PGP</a>)
 (<a href="https://downloads.apache.org/ranger/2.8.0/apache-ranger-2.8.0.tar.gz.sha512">Digest</a>)
 </p>
@@ -52,7 +52,7 @@ Apache Ranger 2.8.0:
 Apache Ranger 2.7.0:
 </p>
 <p>
-<a href="https://downloads.apache.org/ranger/2.7.0/apache-ranger-2.7.0.tar.gz">apache-ranger-2.7.0.tar.gz</a>
+<a href="https://www.apache.org/dyn/closer.lua/ranger/2.7.0/apache-ranger-2.7.0.tar.gz">apache-ranger-2.7.0.tar.gz</a>
 (<a href="https://downloads.apache.org/ranger/2.7.0/apache-ranger-2.7.0.tar.gz.asc">PGP</a>)
 (<a href="https://downloads.apache.org/ranger/2.7.0/apache-ranger-2.7.0.tar.gz.sha512">Digest</a>)
 </p>
@@ -62,7 +62,7 @@ Apache Ranger 2.7.0:
 Apache Ranger 2.6.0:
 </p>
 <p>
-<a href="https://downloads.apache.org/ranger/2.6.0/apache-ranger-2.6.0.tar.gz">apache-ranger-2.6.0.tar.gz</a>
+<a href="https://www.apache.org/dyn/closer.lua/ranger/2.6.0/apache-ranger-2.6.0.tar.gz">apache-ranger-2.6.0.tar.gz</a>
 (<a href="https://downloads.apache.org/ranger/2.6.0/apache-ranger-2.6.0.tar.gz.asc">PGP</a>)
 (<a href="https://downloads.apache.org/ranger/2.6.0/apache-ranger-2.6.0.tar.gz.sha512">Digest</a>)
 </p>
@@ -72,7 +72,7 @@ Apache Ranger 2.6.0:
 Apache Ranger 2.5.0:
 </p>
 <p>
-<a href="https://archive.apache.org/dist/ranger/2.5.0/apache-ranger-2.5.0.tar.gz">apache-ranger-2.5.0.tar.gz</a>
+<a href="https://www.apache.org/dyn/closer.lua/ranger/2.5.0/apache-ranger-2.5.0.tar.gz">apache-ranger-2.5.0.tar.gz</a>
 (<a href="https://archive.apache.org/dist/ranger/2.5.0/apache-ranger-2.5.0.tar.gz.asc">PGP</a>)
 (<a href="https://archive.apache.org/dist/ranger/2.5.0/apache-ranger-2.5.0.tar.gz.sha512">Digest</a>)
 </p>
@@ -82,7 +82,7 @@ Apache Ranger 2.5.0:
 Apache Ranger 2.4.0:
 </p>
 <p>
-<a href="https://archive.apache.org/dist/ranger/2.4.0/apache-ranger-2.4.0.tar.gz">apache-ranger-2.4.0.tar.gz</a>
+<a href="https://www.apache.org/dyn/closer.lua/ranger/2.4.0/apache-ranger-2.4.0.tar.gz">apache-ranger-2.4.0.tar.gz</a>
 (<a href="https://archive.apache.org/dist/ranger/2.4.0/apache-ranger-2.4.0.tar.gz.asc">PGP</a>)
 (<a href="https://archive.apache.org/dist/ranger/2.4.0/apache-ranger-2.4.0.tar.gz.sha512">Digest</a>)
 </p>
@@ -92,7 +92,7 @@ Apache Ranger 2.4.0:
 Apache Ranger 2.3.0:
 </p>
 <p>
-<a href="https://archive.apache.org/dist/ranger/2.3.0/apache-ranger-2.3.0.tar.gz">apache-ranger-2.3.0.tar.gz</a>
+<a href="https://www.apache.org/dyn/closer.lua/ranger/2.3.0/apache-ranger-2.3.0.tar.gz">apache-ranger-2.3.0.tar.gz</a>
 (<a href="https://archive.apache.org/dist/ranger/2.3.0/apache-ranger-2.3.0.tar.gz.asc">PGP</a>)
 (<a href="https://archive.apache.org/dist/ranger/2.3.0/apache-ranger-2.3.0.tar.gz.sha512">Digest</a>)
 </p>
@@ -102,7 +102,7 @@ Apache Ranger 2.3.0:
 Apache Ranger 2.2.0:
 </p>
 <p>
-<a href="https://archive.apache.org/dist/ranger/2.2.0/apache-ranger-2.2.0.tar.gz">apache-ranger-2.2.0.tar.gz</a>
+<a href="https://www.apache.org/dyn/closer.lua/ranger/2.2.0/apache-ranger-2.2.0.tar.gz">apache-ranger-2.2.0.tar.gz</a>
 (<a href="https://archive.apache.org/dist/ranger/2.2.0/apache-ranger-2.2.0.tar.gz.asc">PGP</a>)
 (<a href="https://archive.apache.org/dist/ranger/2.2.0/apache-ranger-2.2.0.tar.gz.SHA512">Digest</a>)
 </p>
@@ -112,7 +112,7 @@ Apache Ranger 2.2.0:
 Apache Ranger 2.1.0:
 </p>
 <p>
-<a href="https://archive.apache.org/dist/ranger/2.1.0/apache-ranger-2.1.0.tar.gz">apache-ranger-2.1.0.tar.gz</a>
+<a href="https://www.apache.org/dyn/closer.lua/ranger/2.1.0/apache-ranger-2.1.0.tar.gz">apache-ranger-2.1.0.tar.gz</a>
 (<a href="https://archive.apache.org/dist/ranger/2.1.0/apache-ranger-2.1.0.tar.gz.asc">PGP</a>)
 (<a href="https://archive.apache.org/dist/ranger/2.1.0/apache-ranger-2.1.0.tar.gz.sha512">Digest</a>)
 </p>
@@ -122,7 +122,7 @@ Apache Ranger 2.1.0:
 Apache Ranger 2.0.0:
 </p>
 <p>
-<a href="https://archive.apache.org/dist/ranger/2.0.0/apache-ranger-2.0.0.tar.gz">apache-ranger-2.0.0.tar.gz</a>
+<a href="https://www.apache.org/dyn/closer.lua/ranger/2.0.0/apache-ranger-2.0.0.tar.gz">apache-ranger-2.0.0.tar.gz</a>
 (<a href="https://archive.apache.org/dist/ranger/2.0.0/apache-ranger-2.0.0.tar.gz.asc">PGP</a>)
 (<a href="https://archive.apache.org/dist/ranger/2.0.0/apache-ranger-2.0.0.tar.gz.sha512">Digest</a>)
 </p>
@@ -132,7 +132,7 @@ Apache Ranger 2.0.0:
 Apache Ranger 1.2.0:
 </p>
 <p>
-<a href="https://archive.apache.org/dist/ranger/1.2.0/apache-ranger-1.2.0.tar.gz">apache-ranger-1.2.0.tar.gz</a>
+<a href="https://www.apache.org/dyn/closer.lua/ranger/1.2.0/apache-ranger-1.2.0.tar.gz">apache-ranger-1.2.0.tar.gz</a>
 (<a href="https://archive.apache.org/dist/ranger/1.2.0/apache-ranger-1.2.0.tar.gz.asc">PGP</a>)
 (<a href="https://archive.apache.org/dist/ranger/1.2.0/apache-ranger-1.2.0.tar.gz.mds">Digests</a>)
 </p>
@@ -142,7 +142,7 @@ Apache Ranger 1.2.0:
 Apache Ranger 1.1.0:
 </p>
 <p>
-<a href="https://archive.apache.org/dist/ranger/1.1.0/apache-ranger-1.1.0.tar.gz">apache-ranger-1.1.0.tar.gz</a>
+<a href="https://www.apache.org/dyn/closer.lua/ranger/1.1.0/apache-ranger-1.1.0.tar.gz">apache-ranger-1.1.0.tar.gz</a>
 (<a href="https://archive.apache.org/dist/ranger/1.1.0/apache-ranger-1.1.0.tar.gz.asc">PGP</a>)
 (<a href="https://archive.apache.org/dist/ranger/1.1.0/apache-ranger-1.1.0.tar.gz.mds">Digests</a>)
 </p>
@@ -152,7 +152,7 @@ Apache Ranger 1.1.0:
 Apache Ranger 1.0.0:
 </p>
 <p>
-<a href="https://archive.apache.org/dist/ranger/1.0.0/apache-ranger-1.0.0.tar.gz">apache-ranger-1.0.0.tar.gz</a>
+<a href="https://www.apache.org/dyn/closer.lua/ranger/1.0.0/apache-ranger-1.0.0.tar.gz">apache-ranger-1.0.0.tar.gz</a>
 (<a href="https://archive.apache.org/dist/ranger/1.0.0/apache-ranger-1.0.0.tar.gz.asc">PGP</a>)
 (<a href="https://archive.apache.org/dist/ranger/1.0.0/apache-ranger-1.0.0.tar.gz.mds">Digests</a>)
 </p>
@@ -162,7 +162,7 @@ Apache Ranger 1.0.0:
 Apache Ranger 0.7.1:
 </p>
 <p>
-<a href="https://archive.apache.org/dist/ranger/0.7.1/apache-ranger-0.7.1.tar.gz">apache-ranger-0.7.1.tar.gz</a>
+<a href="https://www.apache.org/dyn/closer.lua/ranger/0.7.1/apache-ranger-0.7.1.tar.gz">apache-ranger-0.7.1.tar.gz</a>
 (<a href="https://archive.apache.org/dist/ranger/0.7.1/apache-ranger-0.7.1.tar.gz.asc">PGP</a>)
 (<a href="https://archive.apache.org/dist/ranger/0.7.1/apache-ranger-0.7.1.tar.gz.mds">Digests</a>)
 </p>
@@ -172,7 +172,7 @@ Apache Ranger 0.7.1:
 Apache Ranger 0.6.3:
 </p>
 <p>
-<a href="https://archive.apache.org/dist/ranger/0.6.3/apache-ranger-0.6.3.tar.gz">apache-ranger-0.6.3.tar.gz</a>
+<a href="https://www.apache.org/dyn/closer.lua/ranger/0.6.3/apache-ranger-0.6.3.tar.gz">apache-ranger-0.6.3.tar.gz</a>
 (<a href="https://archive.apache.org/dist/ranger/0.6.3/apache-ranger-0.6.3.tar.gz.asc">PGP</a>)
 (<a href="https://archive.apache.org/dist/ranger/0.6.3/apache-ranger-0.6.3.tar.gz.mds">Digests</a>)
 </p>
@@ -182,7 +182,7 @@ Apache Ranger 0.6.3:
 Apache Ranger 0.5.3:
 </p>
 <p>
-<a href="https://archive.apache.org/dist/incubator/ranger/0.5.3-incubating/apache-ranger-incubating-0.5.3.tar.gz">apache-ranger-incubating-0.5.3.tar.gz</a>
+<a href="https://www.apache.org/dyn/closer.lua/incubator/ranger/0.5.3-incubating/apache-ranger-incubating-0.5.3.tar.gz">apache-ranger-incubating-0.5.3.tar.gz</a>
 (<a href="https://archive.apache.org/dist/incubator/ranger/0.5.3-incubating/apache-ranger-incubating-0.5.3.tar.gz.asc">PGP</a>)
 (<a href="https://archive.apache.org/dist/incubator/ranger/0.5.3-incubating/apache-ranger-incubating-0.5.3.tar.gz.mds">Digests</a>)
 </p>

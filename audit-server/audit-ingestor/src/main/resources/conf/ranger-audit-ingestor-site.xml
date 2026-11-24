@@ -182,6 +182,65 @@
         <description>Expected audiences for JWT validation (comma-separated)</description>
     </property>
 
+    <!-- Trusted Header Auth Configs -->
+    <property>
+        <name>ranger.audit.ingestor.authn.header.enabled</name>
+        <value>false</value>
+        <description>
+            Enable authentication using identity headers set by a trusted proxy (e.g. service mesh or ingress gateway).
+            Enable only when all requests reach the audit ingestor through that proxy, and the proxy strips these headers from client requests.
+            The authenticated user must be listed in ranger.audit.ingestor.service.&lt;serviceName&gt;.allowed.users to post audits.
+        </description>
+    </property>
+
+    <property>
+        <name>ranger.audit.ingestor.authn.header.username</name>
+        <value></value>
+        <description>Name of the HTTP header (e.g. X-Forwarded-User) carrying the authenticated username. Takes precedence over the SPIFFE header(s).</description>
+    </property>
+
+    <property>
+        <name>ranger.audit.ingestor.authn.header.spiffe</name>
+        <value></value>
+        <description>Comma-separated list of HTTP header name(s) carrying a SPIFFE ID (e.g. spiffe://cluster/ns/&lt;ns&gt;/sa/&lt;service-account&gt;). A single header name is also valid. The full SPIFFE ID is used as the authenticated principal. When multiple headers are configured, the first one carrying a well-formed SPIFFE ID is used. Consulted only when the username header is absent.</description>
+    </property>
+
+    <property>
+        <name>ranger.audit.ingestor.serviceaccount.refresher.enabled</name>
+        <value>false</value>
+        <description>When true and ranger.audit.ingestor.policy.rest.url is set, periodically merge service.account.users from Ranger Admin into allowed audit callers. Override via Cloudera Manager safety valve.</description>
+    </property>
+
+    <property>
+        <name>ranger.audit.ingestor.policy.rest.url</name>
+        <value></value>
+        <description>Ranger Admin base URL for service-account refresh. Uses ranger.audit.ingestor.policy.rest.ssl.config.file and .client.username/.password for authentication (safety-valve overrides). Leave empty to use only ranger.audit.ingestor.service.&lt;serviceName&gt;.allowed.users. Poll identity must be in ranger.admin.service.account.info.viewers.</description>
+    </property>
+
+    <property>
+        <name>ranger.audit.ingestor.policy.pollIntervalMs</name>
+        <value>30000</value>
+        <description>How often (ms) to refresh service.account.users when ranger.audit.ingestor.serviceaccount.refresher.enabled is true.</description>
+    </property>
+
+    <property>
+        <name>ranger.audit.ingestor.policy.rest.ssl.config.file</name>
+        <value></value>
+        <description>SSL config file for the Ranger Admin connection. Required when ranger.audit.ingestor.policy.rest.url uses https.</description>
+    </property>
+
+    <property>
+        <name>ranger.audit.ingestor.policy.rest.client.username</name>
+        <value></value>
+        <description>Username for the Ranger Admin connection (basic auth).</description>
+    </property>
+
+    <property>
+        <name>ranger.audit.ingestor.policy.rest.client.password</name>
+        <value></value>
+        <description>Password for the Ranger Admin connection (basic auth).</description>
+    </property>
+
     <property>
         <name>ranger.audit.ingestor.service.dev_hdfs.allowed.users</name>
         <value>hdfs</value>
@@ -412,7 +471,30 @@
 
     <property>
         <name>ranger.audit.ingestor.kafka.sasl.mechanism</name>
-        <value>GSSAPI</value>
+        <value></value>
+        <description>SASL mechanism for SASL_PLAINTEXT/SASL_SSL: empty = GSSAPI (default; service.kerberos.principal/keytab with the Krb5LoginModule options below) or OAUTHBEARER</description>
+    </property>
+
+    <property>
+        <name>ranger.audit.ingestor.kafka.sasl.jaas.option.useKeyTab</name>
+        <value>true</value>
+        <description>GSSAPI Krb5LoginModule option; any option can be set as ranger.audit.ingestor.kafka.sasl.jaas.option.&lt;name&gt;</description>
+    </property>
+
+    <property>
+        <name>ranger.audit.ingestor.kafka.sasl.jaas.option.storeKey</name>
+        <value>true</value>
+    </property>
+
+    <property>
+        <name>ranger.audit.ingestor.kafka.sasl.jaas.option.useTicketCache</name>
+        <value>false</value>
+    </property>
+
+    <property>
+        <name>ranger.audit.ingestor.kafka.sasl.oauthbearer.token.endpoint.url</name>
+        <value>file:///var/run/secrets/kafka/token</value>
+        <description>OAUTHBEARER token: a file:// JWT (e.g. Kubernetes projected service-account token) re-read on every login, or an http(s):// token endpoint for Kafka's client-credentials handler</description>
     </property>
 
     <property>

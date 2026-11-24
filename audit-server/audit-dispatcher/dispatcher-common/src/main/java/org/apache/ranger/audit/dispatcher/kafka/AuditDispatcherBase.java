@@ -18,7 +18,6 @@
  */
 package org.apache.ranger.audit.dispatcher.kafka;
 
-import org.apache.kafka.clients.admin.AdminClientConfig;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
@@ -26,7 +25,7 @@ import org.apache.kafka.clients.consumer.OffsetAndMetadata;
 import org.apache.kafka.common.TopicPartition;
 import org.apache.ranger.audit.provider.MiscUtil;
 import org.apache.ranger.audit.server.AuditServerConstants;
-import org.apache.ranger.audit.utils.AuditMessageQueueUtils;
+import org.apache.ranger.kafka.auth.RangerKafkaClientSecurityConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -67,15 +66,7 @@ public abstract class AuditDispatcherBase implements AuditDispatcher {
         dispatcherProps.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, Class.forName("org.apache.kafka.common.serialization.StringDeserializer"));
         dispatcherProps.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, Class.forName("org.apache.kafka.common.serialization.StringDeserializer"));
 
-        String securityProtocol = MiscUtil.getStringProperty(props, propPrefix + "." + AuditServerConstants.PROP_SECURITY_PROTOCOL, AuditServerConstants.DEFAULT_SECURITY_PROTOCOL);
-        dispatcherProps.put(AdminClientConfig.SECURITY_PROTOCOL_CONFIG, securityProtocol);
-
-        dispatcherProps.put("sasl.mechanism", MiscUtil.getStringProperty(props, propPrefix + "." + AuditServerConstants.PROP_SASL_MECHANISM, AuditServerConstants.DEFAULT_SASL_MECHANISM));
-        dispatcherProps.put(AuditServerConstants.PROP_SASL_KERBEROS_SERVICE_NAME, AuditServerConstants.DEFAULT_SERVICE_NAME);
-
-        if (securityProtocol.toUpperCase().contains(AuditServerConstants.PROP_SECURITY_PROTOCOL_VALUE)) {
-            dispatcherProps.put(AuditServerConstants.PROP_SASL_JAAS_CONFIG, AuditMessageQueueUtils.getJAASConfig(props, propPrefix));
-        }
+        RangerKafkaClientSecurityConfig.apply(props, propPrefix, dispatcherProps);
 
         dispatcherProps.put(ConsumerConfig.MAX_POLL_RECORDS_CONFIG, MiscUtil.getIntProperty(props, propPrefix + "." + AuditServerConstants.PROP_DISPATCHER_MAX_POLL_RECORDS, AuditServerConstants.DEFAULT_MAX_POLL_RECORDS));
         dispatcherProps.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");

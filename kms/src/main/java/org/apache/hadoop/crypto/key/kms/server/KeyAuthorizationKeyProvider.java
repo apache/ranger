@@ -312,7 +312,7 @@ public class KeyAuthorizationKeyProvider extends KeyProviderCryptoExtension {
         if (metadata != null) {
             String aclName = metadata.getAttributes().get(KEY_ACL_NAME);
 
-            checkAccess((aclName == null) ? keyName : aclName, getUser(), opType);
+            checkAccess((aclName == null) ? keyName.toLowerCase() : aclName, getUser(), opType);
         }
     }
 
@@ -352,6 +352,8 @@ public class KeyAuthorizationKeyProvider extends KeyProviderCryptoExtension {
         void stopReloader();
 
         boolean hasAccess(KMSACLsType.Type aclType, UserGroupInformation ugi, String clientIp);
+
+        boolean hasAccess(KMSACLsType.Type aclType, UserGroupInformation ugi, String key, String clientIp);
 
         void assertAccess(KMSACLsType.Type aclType, UserGroupInformation ugi, KMSOp operation, String key, String clientIp) throws AccessControlException;
     }

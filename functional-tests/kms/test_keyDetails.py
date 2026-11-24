@@ -51,8 +51,9 @@ class TestKeyDetails:
     def test_get_key_metadata(self, headers, key_name, expected_status, expected_response):
         response = krb_requests.get(f"{BASE_URL}/key/{key_name}/_metadata", headers=headers, params=PARAMS)
 
-        logs = fetch_logs()                       # log check
-        assert response.status_code == expected_status, f"Get key metadata operation failed. API Response: {response.text}\nLogs:\n{logs}"
+        if response.status_code != expected_status:
+            logs = fetch_logs()
+            pytest.fail(f"Get key metadata operation failed. API Response: {response.text}\nLogs:\n{logs}")
 
         if expected_response == "invalid":
             assert response.text.strip() in ["", "{}", "{ }", "[]", "[ ]"], f"Expected blank response for non-existent key, got: {response.text}"
@@ -70,8 +71,9 @@ class TestKeyDetails:
     def test_get_key_versions(self, headers, key_name, expected_status,expected_response):
         response = krb_requests.get(f"{BASE_URL}/key/{key_name}/_versions", headers=headers, params=PARAMS)
 
-        logs = fetch_logs()                   # log check
-        assert response.status_code == expected_status, f"Get key version operation failed. API Response: {response.text}\nLogs:\n{logs}"
+        if response.status_code != expected_status:
+            logs = fetch_logs()
+            pytest.fail(f"Get key version operation failed. API Response: {response.text}\nLogs:\n{logs}")
 
         if expected_response == "invalid":
             assert response.text.strip() in ["", "{}", "{ }", "[]", "[ ]"], f"Expected blank response for non-existent key, got: {response.text}"
@@ -133,8 +135,9 @@ class TestKeyDetails:
     def test_get_key_version(self, headers, version_name, expected_status, expected_valid):
         response = krb_requests.get(f"{BASE_URL}/keyversion/{version_name}", headers=headers, params=PARAMS)
 
-        logs = fetch_logs()
-        assert response.status_code == expected_status, f"Get key version failed. Response: {response.text}\nLogs:\n{logs}"
+        if response.status_code != expected_status:
+            logs = fetch_logs()
+            pytest.fail(f"Get key version failed. Response: {response.text}\nLogs:\n{logs}")
 
         if expected_valid:
             try:

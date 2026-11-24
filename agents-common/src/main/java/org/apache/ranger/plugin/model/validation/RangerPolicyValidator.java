@@ -23,9 +23,11 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.ranger.plugin.errors.ValidationErrorCode;
 import org.apache.ranger.plugin.model.RangerPolicy;
+import org.apache.ranger.plugin.model.RangerPolicy.RangerConstraintPolicyItem;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerDataMaskPolicyItem;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItem;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemAccess;
+import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemConstraintInfo;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemDataMaskInfo;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerRowFilterPolicyItem;
@@ -34,6 +36,10 @@ import org.apache.ranger.plugin.model.RangerSecurityZone;
 import org.apache.ranger.plugin.model.RangerService;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerAccessTypeDef;
+import org.apache.ranger.plugin.model.RangerServiceDef.RangerConstraintDef;
+import org.apache.ranger.plugin.model.RangerServiceDef.RangerConstraintParamDef;
+import org.apache.ranger.plugin.model.RangerServiceDef.RangerEnumDef;
+import org.apache.ranger.plugin.model.RangerServiceDef.RangerEnumElementDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerResourceDef;
 import org.apache.ranger.plugin.model.RangerValiditySchedule;
 import org.apache.ranger.plugin.store.ServiceStore;
@@ -42,8 +48,10 @@ import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -376,6 +384,11 @@ public class RangerPolicyValidator extends RangerValidator {
                         policyItemsCount += policy.getRowFilterPolicyItems().size();
                     }
                     break;
+                case RangerPolicy.POLICY_TYPE_CONSTRAINTS:
+                    if (CollectionUtils.isNotEmpty(policy.getConstraintPolicyItems())) {
+                        policyItemsCount += policy.getConstraintPolicyItems().size();
+                    }
+                    break;
                 default:
                     if (CollectionUtils.isNotEmpty(policy.getPolicyItems())) {
                         policyItemsCount += policy.getPolicyItems().size();
@@ -439,6 +452,12 @@ public class RangerPolicyValidator extends RangerValidator {
                     @SuppressWarnings("unchecked")
                     List<RangerPolicyItem> rowFilterPolicyItems = (List<RangerPolicyItem>) (List<?>) policy.getRowFilterPolicyItems();
                     valid = isValidPolicyItems(rowFilterPolicyItems, failures, serviceDef) && valid;
+
+                    @SuppressWarnings("unchecked")
+                    List<RangerPolicyItem> constraintPolicyItems = (List<RangerPolicyItem>) (List<?>) policy.getConstraintPolicyItems();
+                    valid = isValidPolicyItems(constraintPolicyItems, failures, serviceDef) && valid;
+
+                    valid = isValidConstraintPolicy(policy, failures, serviceDef) && valid;
                 }
             }
 
@@ -653,13 +672,24 @@ public class RangerPolicyValidator extends RangerValidator {
         Map<String, RangerPolicyResource> resources = policy.getResources();
 
         if (resources != null) {
-            valid = isValidResourceNames(resources, failures, serviceDef, policy.getPolicyType()) && valid;
+            boolean     isConstraintPolicy = Integer.valueOf(RangerPolicy.POLICY_TYPE_CONSTRAINTS).equals(policy.getPolicyType());
+            Set<String> constraintNames    = isConstraintPolicy ? getDefinedConstraintNames(policy, serviceDef) : null;
+
+            if (isConstraintPolicy) {
+                valid = isValidConstraintResourceNames(resources, constraintNames, failures, serviceDef) && valid;
+            } else {
+                valid = isValidResourceNames(resources, failures, serviceDef, policy.getPolicyType()) && valid;
+            }
 
             List<Map<String, RangerPolicyResource>> additionalResources = policy.getAdditionalResources();
 
             if (additionalResources != null) {
                 for (Map<String, RangerPolicyResource> additionalResource : additionalResources) {
-                    valid = isValidResourceNames(additionalResource, failures, serviceDef, policy.getPolicyType()) && valid;
+                    if (isConstraintPolicy) {
+                        valid = isValidConstraintResourceNames(additionalResource, constraintNames, failures, serviceDef) && valid;
+                    } else {
+                        valid = isValidResourceNames(additionalResource, failures, serviceDef, policy.getPolicyType()) && valid;
+                    }
                 }
             }
         }
@@ -764,6 +794,348 @@ public class RangerPolicyValidator extends RangerValidator {
         LOG.debug("<== RangerPolicyValidator.isValidResourceNames({}, {}, {}): {}", resources, failures, serviceDef, valid);
 
         return valid;
+    }
+
+    /**
+     * Policy resources of a constraint policy must be valid for every constraint used by its items: for each constraint,
+     * the resources must be in one of the hierarchies returned by RangerServiceDefHelper.getResourceHierarchiesForConstraint(),
+     * with all mandatory resources of that hierarchy specified.
+     */
+    boolean isValidConstraintResourceNames(Map<String, RangerPolicyResource> resources, Set<String> constraintNames, List<ValidationFailureDetails> failures, RangerServiceDef serviceDef) {
+        LOG.debug("==> RangerPolicyValidator.isValidConstraintResourceNames({}, {}, {}, {})", resources, constraintNames, failures, serviceDef);
+
+        boolean valid = true;
+
+        if (CollectionUtils.isNotEmpty(constraintNames)) { // unknown/missing constraints are reported by isValidConstraintPolicy()
+            convertPolicyResourceNamesToLower(resources);
+
+            Set<String>            policyResources = resources.keySet();
+            RangerServiceDefHelper defHelper       = new RangerServiceDefHelper(serviceDef);
+
+            for (String constraintName : constraintNames) {
+                Set<List<RangerResourceDef>> hierarchies      = defHelper.getResourceHierarchiesForConstraint(constraintName, policyResources);
+                Set<List<RangerResourceDef>> validHierarchies = filterHierarchies_mandatoryResourcesSpecifiedInPolicy(policyResources, hierarchies, defHelper);
+
+                if (validHierarchies.isEmpty()) {
+                    ValidationErrorCode error = ValidationErrorCode.POLICY_VALIDATION_ERR_CONSTRAINT_RESOURCES_INVALID;
+
+                    failures.add(new ValidationFailureDetailsBuilder()
+                            .field("policy resources")
+                            .subField(constraintName)
+                            .isSemanticallyIncorrect()
+                            .becauseOf(error.getMessage(policyResources, constraintName, toStringHierarchies_all(defHelper.getResourceHierarchiesForConstraint(constraintName, new HashSet<>()), defHelper)))
+                            .errorCode(error.getErrorCode())
+                            .build());
+
+                    valid = false;
+                }
+            }
+        }
+
+        LOG.debug("<== RangerPolicyValidator.isValidConstraintResourceNames({}, {}, {}, {}): {}", resources, constraintNames, failures, serviceDef, valid);
+
+        return valid;
+    }
+
+    /**
+     * Validates constraint policy items:
+     * - constraint policy items are allowed only in constraint policies, and constraint policies can have only constraint policy items
+     * - the service-def must have constraintDefs
+     * - each item's constraint must be defined in the service-def
+     * - each item's access types must be among the accessTypes of its constraintDef (when the constraintDef lists any)
+     * - mandatory parameters must be present; parameters must be defined in the constraintDef; values must match the parameter type
+     */
+    boolean isValidConstraintPolicy(RangerPolicy policy, List<ValidationFailureDetails> failures, RangerServiceDef serviceDef) {
+        LOG.debug("==> RangerPolicyValidator.isValidConstraintPolicy({}, {}, {})", policy, failures, serviceDef);
+
+        boolean valid      = true;
+        int     policyType = policy.getPolicyType() == null ? RangerPolicy.POLICY_TYPE_ACCESS : policy.getPolicyType();
+
+        if (policyType != RangerPolicy.POLICY_TYPE_CONSTRAINTS) {
+            if (CollectionUtils.isNotEmpty(policy.getConstraintPolicyItems())) {
+                ValidationErrorCode error = ValidationErrorCode.POLICY_VALIDATION_ERR_CONSTRAINT_ITEMS_NOT_ALLOWED;
+
+                failures.add(new ValidationFailureDetailsBuilder()
+                        .field("constraint policy items")
+                        .isSemanticallyIncorrect()
+                        .becauseOf(error.getMessage(RangerPolicy.POLICY_TYPE_CONSTRAINTS))
+                        .errorCode(error.getErrorCode())
+                        .build());
+
+                valid = false;
+            }
+        } else {
+            List<String> otherItems = new ArrayList<>();
+
+            if (CollectionUtils.isNotEmpty(policy.getPolicyItems())) {
+                otherItems.add("policyItems");
+            }
+
+            if (CollectionUtils.isNotEmpty(policy.getDenyPolicyItems())) {
+                otherItems.add("denyPolicyItems");
+            }
+
+            if (CollectionUtils.isNotEmpty(policy.getAllowExceptions())) {
+                otherItems.add("allowExceptions");
+            }
+
+            if (CollectionUtils.isNotEmpty(policy.getDenyExceptions())) {
+                otherItems.add("denyExceptions");
+            }
+
+            if (CollectionUtils.isNotEmpty(policy.getDataMaskPolicyItems())) {
+                otherItems.add("dataMaskPolicyItems");
+            }
+
+            if (CollectionUtils.isNotEmpty(policy.getRowFilterPolicyItems())) {
+                otherItems.add("rowFilterPolicyItems");
+            }
+
+            if (!otherItems.isEmpty()) {
+                ValidationErrorCode error = ValidationErrorCode.POLICY_VALIDATION_ERR_CONSTRAINT_POLICY_HAS_OTHER_ITEMS;
+
+                failures.add(new ValidationFailureDetailsBuilder()
+                        .field("policy items")
+                        .isSemanticallyIncorrect()
+                        .becauseOf(error.getMessage(otherItems))
+                        .errorCode(error.getErrorCode())
+                        .build());
+
+                valid = false;
+            }
+
+            Map<String, RangerConstraintDef> constraintDefs = getConstraintDefs(serviceDef);
+
+            if (constraintDefs.isEmpty()) {
+                ValidationErrorCode error = ValidationErrorCode.POLICY_VALIDATION_ERR_CONSTRAINTS_NOT_SUPPORTED;
+
+                failures.add(new ValidationFailureDetailsBuilder()
+                        .field("policy type")
+                        .isSemanticallyIncorrect()
+                        .becauseOf(error.getMessage(serviceDef.getName()))
+                        .errorCode(error.getErrorCode())
+                        .build());
+
+                valid = false;
+            } else if (CollectionUtils.isNotEmpty(policy.getConstraintPolicyItems())) {
+                for (RangerConstraintPolicyItem item : policy.getConstraintPolicyItems()) {
+                    if (item != null) { // null items are reported by isValidPolicyItems()
+                        valid = isValidConstraintPolicyItem(item, constraintDefs, failures, serviceDef) && valid;
+                    }
+                }
+            }
+        }
+
+        LOG.debug("<== RangerPolicyValidator.isValidConstraintPolicy({}, {}, {}): {}", policy, failures, serviceDef, valid);
+
+        return valid;
+    }
+
+    boolean isValidConstraintPolicyItem(RangerConstraintPolicyItem item, Map<String, RangerConstraintDef> constraintDefs, List<ValidationFailureDetails> failures, RangerServiceDef serviceDef) {
+        boolean                        valid          = true;
+        RangerPolicyItemConstraintInfo constraintInfo = item.getConstraintInfo();
+        String                         constraintName = constraintInfo != null ? constraintInfo.getConstraintName() : null;
+
+        if (StringUtils.isBlank(constraintName)) {
+            ValidationErrorCode error = ValidationErrorCode.POLICY_VALIDATION_ERR_CONSTRAINT_MISSING;
+
+            failures.add(new ValidationFailureDetailsBuilder()
+                    .field("constraint policy item constraint")
+                    .isMissing()
+                    .becauseOf(error.getMessage())
+                    .errorCode(error.getErrorCode())
+                    .build());
+
+            return false;
+        }
+
+        RangerConstraintDef constraintDef = constraintDefs.get(constraintName);
+
+        if (constraintDef == null) {
+            ValidationErrorCode error = ValidationErrorCode.POLICY_VALIDATION_ERR_CONSTRAINT_UNKNOWN;
+
+            failures.add(new ValidationFailureDetailsBuilder()
+                    .field("constraint policy item constraint")
+                    .subField(constraintName)
+                    .isSemanticallyIncorrect()
+                    .becauseOf(error.getMessage(constraintName, serviceDef.getName()))
+                    .errorCode(error.getErrorCode())
+                    .build());
+
+            return false;
+        }
+
+        // access types
+        if (CollectionUtils.isNotEmpty(constraintDef.getAccessTypes()) && CollectionUtils.isNotEmpty(item.getAccesses())) {
+            for (RangerPolicyItemAccess access : item.getAccesses()) {
+                if (access != null && StringUtils.isNotBlank(access.getType()) && !constraintDef.getAccessTypes().contains(access.getType())) {
+                    ValidationErrorCode error = ValidationErrorCode.POLICY_VALIDATION_ERR_CONSTRAINT_ACCESS_TYPE_INVALID;
+
+                    failures.add(new ValidationFailureDetailsBuilder()
+                            .field("constraint policy item access type")
+                            .subField(access.getType())
+                            .isSemanticallyIncorrect()
+                            .becauseOf(error.getMessage(access.getType(), constraintName, constraintDef.getAccessTypes()))
+                            .errorCode(error.getErrorCode())
+                            .build());
+
+                    valid = false;
+                }
+            }
+        }
+
+        // parameters
+        Map<String, Object>                   parameters = constraintInfo.getParameters();
+        Map<String, RangerConstraintParamDef> paramDefs  = new HashMap<>();
+
+        if (constraintDef.getParameters() != null) {
+            for (RangerConstraintParamDef paramDef : constraintDef.getParameters()) {
+                if (paramDef != null && paramDef.getName() != null) {
+                    paramDefs.put(paramDef.getName(), paramDef);
+                }
+            }
+        }
+
+        for (RangerConstraintParamDef paramDef : paramDefs.values()) {
+            Object value = parameters != null ? parameters.get(paramDef.getName()) : null;
+
+            if (Boolean.TRUE.equals(paramDef.getMandatory()) && (value == null || (value instanceof String && StringUtils.isBlank((String) value)))) {
+                ValidationErrorCode error = ValidationErrorCode.POLICY_VALIDATION_ERR_CONSTRAINT_PARAM_MISSING;
+
+                failures.add(new ValidationFailureDetailsBuilder()
+                        .field("constraint policy item parameter")
+                        .subField(paramDef.getName())
+                        .isMissing()
+                        .becauseOf(error.getMessage(paramDef.getName(), constraintName))
+                        .errorCode(error.getErrorCode())
+                        .build());
+
+                valid = false;
+            }
+        }
+
+        if (parameters != null) {
+            for (Map.Entry<String, Object> entry : parameters.entrySet()) {
+                RangerConstraintParamDef paramDef = paramDefs.get(entry.getKey());
+
+                if (paramDef == null) {
+                    ValidationErrorCode error = ValidationErrorCode.POLICY_VALIDATION_ERR_CONSTRAINT_PARAM_UNKNOWN;
+
+                    failures.add(new ValidationFailureDetailsBuilder()
+                            .field("constraint policy item parameter")
+                            .subField(entry.getKey())
+                            .isSemanticallyIncorrect()
+                            .becauseOf(error.getMessage(entry.getKey(), constraintName))
+                            .errorCode(error.getErrorCode())
+                            .build());
+
+                    valid = false;
+                } else if (entry.getValue() != null && !isValidConstraintParamValue(entry.getValue(), paramDef, serviceDef)) {
+                    ValidationErrorCode error = ValidationErrorCode.POLICY_VALIDATION_ERR_CONSTRAINT_PARAM_INVALID_VALUE;
+
+                    failures.add(new ValidationFailureDetailsBuilder()
+                            .field("constraint policy item parameter")
+                            .subField(entry.getKey())
+                            .isSemanticallyIncorrect()
+                            .becauseOf(error.getMessage(entry.getValue(), entry.getKey(), constraintName, paramDef.getType()))
+                            .errorCode(error.getErrorCode())
+                            .build());
+
+                    valid = false;
+                }
+            }
+        }
+
+        return valid;
+    }
+
+    boolean isValidConstraintParamValue(Object value, RangerConstraintParamDef paramDef, RangerServiceDef serviceDef) {
+        final boolean ret;
+        final String  type = paramDef.getType();
+
+        if ("int".equals(type)) {
+            if (value instanceof Integer || value instanceof Long || value instanceof Short || value instanceof Byte) {
+                ret = true;
+            } else if (value instanceof Number) {
+                double d = ((Number) value).doubleValue();
+
+                ret = d == Math.rint(d) && !Double.isInfinite(d);
+            } else if (value instanceof String) {
+                ret = isLong((String) value);
+            } else {
+                ret = false;
+            }
+        } else if ("bool".equals(type)) {
+            ret = value instanceof Boolean || (value instanceof String && ("true".equalsIgnoreCase((String) value) || "false".equalsIgnoreCase((String) value)));
+        } else if ("string".equals(type)) {
+            ret = value instanceof String;
+        } else if ("enum".equals(type)) {
+            ret = value instanceof String && getEnumElementNames(serviceDef, paramDef.getSubType()).contains(value);
+        } else { // types are validated in the service-def; don't reject values of a type this version doesn't know
+            ret = true;
+        }
+
+        return ret;
+    }
+
+    private static boolean isLong(String value) {
+        try {
+            Long.parseLong(value.trim());
+
+            return true;
+        } catch (NumberFormatException excp) {
+            return false;
+        }
+    }
+
+    private static Set<String> getEnumElementNames(RangerServiceDef serviceDef, String enumName) {
+        Set<String> ret = new HashSet<>();
+
+        if (serviceDef.getEnums() != null && enumName != null) {
+            for (RangerEnumDef enumDef : serviceDef.getEnums()) {
+                if (enumDef != null && enumName.equals(enumDef.getName()) && enumDef.getElements() != null) {
+                    for (RangerEnumElementDef element : enumDef.getElements()) {
+                        if (element != null && element.getName() != null) {
+                            ret.add(element.getName());
+                        }
+                    }
+                }
+            }
+        }
+
+        return ret;
+    }
+
+    private static Map<String, RangerConstraintDef> getConstraintDefs(RangerServiceDef serviceDef) {
+        Map<String, RangerConstraintDef> ret = new HashMap<>();
+
+        if (serviceDef != null && serviceDef.getConstraintDefs() != null) {
+            for (RangerConstraintDef constraintDef : serviceDef.getConstraintDefs()) {
+                if (constraintDef != null && constraintDef.getName() != null) {
+                    ret.put(constraintDef.getName(), constraintDef);
+                }
+            }
+        }
+
+        return ret;
+    }
+
+    // names of constraints used by the policy's items that are defined in the service-def
+    private static Set<String> getDefinedConstraintNames(RangerPolicy policy, RangerServiceDef serviceDef) {
+        Set<String>                      ret            = new LinkedHashSet<>();
+        Map<String, RangerConstraintDef> constraintDefs = getConstraintDefs(serviceDef);
+
+        if (policy.getConstraintPolicyItems() != null) {
+            for (RangerConstraintPolicyItem item : policy.getConstraintPolicyItems()) {
+                String constraintName = item != null && item.getConstraintInfo() != null ? item.getConstraintInfo().getConstraintName() : null;
+
+                if (constraintName != null && constraintDefs.containsKey(constraintName)) {
+                    ret.add(constraintName);
+                }
+            }
+        }
+
+        return ret;
     }
 
     /**

@@ -77,7 +77,9 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Component
 public class RangerBizUtil {
@@ -128,6 +130,7 @@ public class RangerBizUtil {
     private final Class<?>[]   groupEditableClassesList = {};
     private final int          maxFirstNameLength;
     private final SecureRandom random;
+    private final Set<String>  serviceAccountInfoViewers;
 
     Set<Class<?>> groupEditableClasses;
     int           maxDisplayNameLength = 150;
@@ -152,6 +155,17 @@ public class RangerBizUtil {
         logger.info("Audit datasource is {}", auditDBType);
 
         random = new SecureRandom();
+
+        String svcAccountInfoViewers = PropertiesUtil.getProperty("ranger.admin.service.account.info.viewers");
+
+        if (StringUtils.isNotBlank(svcAccountInfoViewers)) {
+            serviceAccountInfoViewers = Arrays.stream(svcAccountInfoViewers.split(","))
+                    .map(StringUtils::trimToNull)
+                    .filter(Objects::nonNull)
+                    .collect(Collectors.toSet());
+        } else {
+            serviceAccountInfoViewers = Collections.emptySet();
+        }
     }
 
     /**
@@ -1016,7 +1030,8 @@ public class RangerBizUtil {
         }
 
         if (baseModel instanceof RangerServiceHeaderInfo) {
-            return hasAccessToRangerServiceHeaderInfo((RangerServiceHeaderInfo) baseModel, isKeyAdmin, isSysAdmin, isAuditor, isAuditorKeyAdmin, isUser);
+            return hasServiceAccountInfoAccess() ||
+                    hasAccessToRangerServiceHeaderInfo((RangerServiceHeaderInfo) baseModel, isKeyAdmin, isSysAdmin, isAuditor, isAuditorKeyAdmin, isUser);
         }
 
         return false;
@@ -1041,28 +1056,26 @@ public class RangerBizUtil {
             throw restErrorUtil.createRESTException("UserSession cannot be null, only KeyAdmin can create/update/delete " + objType, MessageEnums.OPER_NO_PERMISSION);
         }
 
-        if (!session.isSuperUser()) {
-            boolean isKmsServiceType = EmbeddedServiceDefsUtil.KMS_IMPL_CLASS_NAME.equals(implClassName);
+        boolean isKmsServiceType = EmbeddedServiceDefsUtil.KMS_IMPL_CLASS_NAME.equals(implClassName);
 
-            if (session.isKeyAdmin() && !isKmsServiceType) {
-                throw restErrorUtil.createRESTException("KeyAdmin can create/update/delete only KMS " + objType, MessageEnums.OPER_NO_PERMISSION);
-            }
+        if (session.isKeyAdmin() && !isKmsServiceType) {
+            throw restErrorUtil.createRESTException("KeyAdmin can create/update/delete only KMS " + objType, MessageEnums.OPER_NO_PERMISSION);
+        }
 
-            if (session.isUserAdmin() && isKmsServiceType && "Service-Def".equalsIgnoreCase(objType)) {
-                throw restErrorUtil.createRESTException("System Admin cannot create/update/delete KMS " + objType, MessageEnums.OPER_NO_PERMISSION);
-            }
+        if (session.isUserAdmin() && isKmsServiceType && "Service-Def".equalsIgnoreCase(objType)) {
+            throw restErrorUtil.createRESTException("System Admin cannot create/update/delete KMS " + objType, MessageEnums.OPER_NO_PERMISSION);
         }
     }
 
-    public boolean checkUserAccessible(VXUser vXUser) {
-        // Config super-user (ranger.admin.super.users/groups) bypasses the
-        // mutual admin/key-admin visibility restrictions below.
-        if (isSuperUser()) {
-            return true;
-        }
+    public boolean hasServiceAccountInfoAccess() {
+        UserSessionBase session = ContextUtil.getCurrentUserSession();
 
+        return session != null && serviceAccountInfoViewers.contains(session.getLoginId());
+    }
+
+    public boolean checkUserAccessible(VXUser vXUser) {
         boolean            isAccessible = true;
-        Collection<String> roleList     = userMgr.getRolesByLoginId(vXUser.getName());
+        Collection<String> roleList     = userMgr.getDBRolesByLoginId(vXUser.getName());
         Collection<String> payloadRoles = vXUser.getUserRoleList();
 
         if (isKeyAdmin()) {
@@ -1144,17 +1157,7 @@ public class RangerBizUtil {
         }
 
         // Config super-user when no session context (e.g. grantor checks).
-        final boolean configSuperUser;
-
-        if (RangerSuperUserConfig.isSuperUser(username)) {
-            configSuperUser = true;
-        } else if (RangerSuperUserConfig.isSuperGroupsConfigured() && xUserMgr != null) {
-            configSuperUser = RangerSuperUserConfig.isSuperUser(username, xUserMgr.getGroupsForUser(username));
-        } else {
-            configSuperUser = false;
-        }
-
-        if (configSuperUser) {
+        if (isConfigSuperUser(username)) {
             return true;
         }
 
@@ -1171,6 +1174,20 @@ public class RangerBizUtil {
         }
 
         return isAdmin;
+    }
+
+    /* True when username matches ranger.admin.super.users/groups, regardless of
+     * the current session and of the user's DB portal roles. */
+    public boolean isConfigSuperUser(String username) {
+        if (StringUtils.isBlank(username)) {
+            return false;
+        } else if (RangerSuperUserConfig.isSuperUser(username)) {
+            return true;
+        } else if (RangerSuperUserConfig.isSuperGroupsConfigured() && xUserMgr != null) {
+            return RangerSuperUserConfig.isSuperUser(username, xUserMgr.getGroupsForUser(username));
+        }
+
+        return false;
     }
 
     public boolean isHealthCheckUser(String user) {
@@ -1192,6 +1209,21 @@ public class RangerBizUtil {
 
         if (!ret && userMgr != null && userMgr.xUserMgr != null) {
             ret = isAnyGroupInConfigParameter(rangerService, ServiceDBStore.SERVICE_ADMIN_GROUPS, userMgr.xUserMgr.getGroupsForUser(userName));
+        }
+
+        return ret;
+    }
+
+    public boolean isServiceAccountUser(RangerService rangerService) {
+        boolean ret      = false;
+        String  userName = getCurrentUserLoginId();
+
+        if (userName != null) {
+            ret = isUserInConfigParameter(rangerService, ServiceDBStore.SERVICE_ACCOUNT_USERS, userName);
+
+            if (!ret && userMgr != null && userMgr.xUserMgr != null) {
+                ret = isAnyGroupInConfigParameter(rangerService, ServiceDBStore.SERVICE_ACCOUNT_GROUPS, userMgr.xUserMgr.getGroupsForUser(userName));
+            }
         }
 
         return ret;
@@ -1238,13 +1270,15 @@ public class RangerBizUtil {
         UserSessionBase session = ContextUtil.getCurrentUserSession();
 
         if (session != null) {
-            if (session.isAuditKeyAdmin() || session.isAuditUserAdmin()) {
-                VXResponse vXResponse = new VXResponse();
+            if (!session.isSuperUser()) {
+                if (session.isAuditKeyAdmin() || session.isAuditUserAdmin()) {
+                    VXResponse vXResponse = new VXResponse();
 
-                vXResponse.setStatusCode(HttpServletResponse.SC_FORBIDDEN);
-                vXResponse.setMsgDesc("Operation denied. LoggedInUser=" + session.getXXPortalUser().getId() + " ,isn't permitted to perform the action.");
+                    vXResponse.setStatusCode(HttpServletResponse.SC_FORBIDDEN);
+                    vXResponse.setMsgDesc("Operation denied. LoggedInUser=" + session.getXXPortalUser().getId() + " ,isn't permitted to perform the action.");
 
-                throw restErrorUtil.generateRESTException(vXResponse);
+                    throw restErrorUtil.generateRESTException(vXResponse);
+                }
             }
         } else {
             VXResponse vXResponse = new VXResponse();

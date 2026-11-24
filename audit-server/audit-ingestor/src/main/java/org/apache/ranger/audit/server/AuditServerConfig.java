@@ -31,6 +31,10 @@ public class AuditServerConfig extends AuditConfig {
 
     private static final String CONFIG_FILE_PATH = "conf/ranger-audit-ingestor-site.xml";
 
+    /* optional explicit site XML (e.g. -Daudit.config=/opt/ranger/audit-ingestor/conf/ranger-audit-ingestor-site.xml);
+     * loaded after the packaged default so its values win */
+    public static final String PROP_AUDIT_CONFIG_FILE = "audit.config";
+
     private static volatile AuditServerConfig sInstance;
 
     private AuditServerConfig() {
@@ -63,6 +67,13 @@ public class AuditServerConfig extends AuditConfig {
         // Load ranger-audit-ingestor-site.xml
         if (!addAuditResource(CONFIG_FILE_PATH, true)) {
             LOG.error("Could not load required configuration: {}", CONFIG_FILE_PATH);
+            ret = false;
+        }
+
+        String configFile = System.getProperty(PROP_AUDIT_CONFIG_FILE);
+
+        if (configFile != null && !configFile.trim().isEmpty() && !addAuditResource(configFile.trim(), true)) {
+            LOG.error("Could not load configuration from -D{}={}", PROP_AUDIT_CONFIG_FILE, configFile);
             ret = false;
         }
 

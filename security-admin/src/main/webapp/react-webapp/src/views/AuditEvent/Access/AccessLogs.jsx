@@ -407,8 +407,7 @@ function AccessLogs() {
           );
         },
         width: 90,
-        disableResizing: true,
-        getResizerProps: () => {}
+        hideResizer: true
       },
       {
         Header: "Policy Version",
@@ -421,9 +420,8 @@ function AccessLogs() {
           );
         },
         width: 110,
-        disableResizing: true,
-        disableSortBy: true,
-        getResizerProps: () => {}
+        hideResizer: true,
+        disableSortBy: true
       },
       {
         Header: "Event Time",
@@ -432,8 +430,7 @@ function AccessLogs() {
           return dateFormat(rawValue.value, "mm/dd/yyyy h:MM:ss TT");
         },
         width: 170,
-        disableResizing: true,
-        getResizerProps: () => {}
+        hideResizer: true
       },
       {
         Header: "Application",
@@ -448,9 +445,8 @@ function AccessLogs() {
           } else return "--";
         },
         width: 100,
-        disableResizing: true,
-        disableSortBy: true,
-        getResizerProps: () => {}
+        hideResizer: true,
+        disableSortBy: true
       },
       {
         Header: "User",
@@ -464,9 +460,7 @@ function AccessLogs() {
             );
           } else return "--";
         },
-        width: 120,
-        disableResizing: true,
-        getResizerProps: () => {}
+        minWidth: 120
       },
       {
         Header: "Service (Name / Type)",
@@ -486,9 +480,8 @@ function AccessLogs() {
             </div>
           </div>
         ),
-        disableResizing: true,
-        disableSortBy: true,
-        getResizerProps: () => {}
+        hideResizer: true,
+        disableSortBy: true
       },
       {
         Header: "Resource (Name / Type)",
@@ -542,8 +535,7 @@ function AccessLogs() {
           } else return "--";
         },
         width: 130,
-        disableResizing: true,
-        getResizerProps: () => {}
+        hideResizer: true
       },
       {
         Header: "Permission",
@@ -558,8 +550,7 @@ function AccessLogs() {
           );
         },
         width: 100,
-        disableResizing: true,
-        getResizerProps: () => {}
+        hideResizer: true
       },
       {
         Header: "Result",
@@ -579,9 +570,8 @@ function AccessLogs() {
             );
         },
         width: 100,
-        disableResizing: true,
-        disableSortBy: true,
-        getResizerProps: () => {}
+        hideResizer: true,
+        disableSortBy: true
       },
       {
         Header: "Access Enforcer",
@@ -596,8 +586,7 @@ function AccessLogs() {
           } else return "--";
         },
         width: 120,
-        disableResizing: true,
-        getResizerProps: () => {}
+        hideResizer: true
       },
       {
         Header: "Agent Host Name",
@@ -612,9 +601,8 @@ function AccessLogs() {
           } else return <div className="text-center">--</div>;
         },
         width: 150,
-        disableResizing: true,
-        disableSortBy: true,
-        getResizerProps: () => {}
+        hideResizer: true,
+        disableSortBy: true
       },
       {
         Header: "Client IP",
@@ -629,14 +617,29 @@ function AccessLogs() {
           } else return "--";
         },
         width: 110,
-        disableResizing: true,
-        getResizerProps: () => {}
+        hideResizer: true
+      },
+      {
+        Header: "Client Type",
+        accessor: "clientType",
+        Cell: (rawValue) => {
+          if (!isEmpty(rawValue?.value)) {
+            return (
+              <div className="text-truncate" title={rawValue.value}>
+                {rawValue.value}
+              </div>
+            );
+          } else return <div className="text-center">--</div>;
+        },
+        width: 110,
+        hideResizer: true,
+        disableSortBy: true
       },
       {
         Header: "Cluster Name",
         accessor: "clusterName",
         width: 100,
-        disableResizing: true,
+        hideResizer: true,
         disableSortBy: true,
         Cell: (rawValue) => {
           if (!isEmpty(rawValue?.value)) {
@@ -648,8 +651,7 @@ function AccessLogs() {
           } else {
             return <div className="text-center">--</div>;
           }
-        },
-        getResizerProps: () => {}
+        }
       },
       {
         Header: "Zone Name",
@@ -670,16 +672,14 @@ function AccessLogs() {
           } else return <div className="text-center">--</div>;
         },
         width: 100,
-        disableResizing: true,
-        getResizerProps: () => {}
+        hideResizer: true
       },
       {
         Header: "Event Count",
         accessor: "eventCount",
         width: 100,
-        disableResizing: true,
-        disableSortBy: true,
-        getResizerProps: () => {}
+        hideResizer: true,
+        disableSortBy: true
       },
       {
         Header: "Tags",
@@ -709,9 +709,8 @@ function AccessLogs() {
           return <AccessMoreLess Data={tags} />;
         },
         width: 140,
-        disableResizing: true,
-        disableSortBy: true,
-        getResizerProps: () => {}
+        hideResizer: true,
+        disableSortBy: true
       },
       {
         Header: "Datasets",
@@ -726,9 +725,8 @@ function AccessLogs() {
           return <AccessMoreLess Data={Datasets} />;
         },
         width: 140,
-        disableResizing: true,
-        disableSortBy: true,
-        getResizerProps: () => {}
+        hideResizer: true,
+        disableSortBy: true
       },
       {
         Header: "Projects",
@@ -743,9 +741,8 @@ function AccessLogs() {
           return <AccessMoreLess Data={Projects} />;
         },
         width: 140,
-        disableResizing: true,
-        disableSortBy: true,
-        getResizerProps: () => {}
+        hideResizer: true,
+        disableSortBy: true
       }
     ],
     []
@@ -852,6 +849,12 @@ function AccessLogs() {
       category: "clientIP",
       label: "Client IP",
       urlLabel: "clientIP",
+      type: "text"
+    },
+    {
+      category: "clientType",
+      label: "Client Type",
+      urlLabel: "clientType",
       type: "text"
     },
     {
@@ -995,6 +998,9 @@ function AccessLogs() {
                       <br />
                       <b>Client IP :</b> Search by IP address from where
                       resource was accessed.
+                      <br />
+                      <b>Client Type :</b> Search by type of client that made
+                      the access request.
                       <br />
                       <b>Cluster Name : </b> Name of cluster <br />
                       <b>Zone Name :</b> Name of Zone. <br />

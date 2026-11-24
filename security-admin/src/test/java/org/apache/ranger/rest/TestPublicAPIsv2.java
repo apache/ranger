@@ -273,13 +273,13 @@ public class TestPublicAPIsv2 {
     public void test13updateService() throws Exception {
         RangerService      rangerService = rangerService();
         HttpServletRequest request       = null;
-        Mockito.when(serviceREST.updateService(rangerService, request)).thenReturn(rangerService);
+        Mockito.when(serviceREST.updateService(rangerService, Id, request)).thenReturn(rangerService);
         RangerService dbRangerService = publicAPIsv2.updateService(rangerService, Id, request);
         Assertions.assertNotNull(dbRangerService);
         Assertions.assertEquals(dbRangerService, rangerService);
         Assertions.assertEquals(dbRangerService.getId(), rangerService.getId());
         Assertions.assertEquals(dbRangerService.getName(), rangerService.getName());
-        Mockito.verify(serviceREST).updateService(rangerService, request);
+        Mockito.verify(serviceREST).updateService(rangerService, Id, request);
     }
 
     @Test

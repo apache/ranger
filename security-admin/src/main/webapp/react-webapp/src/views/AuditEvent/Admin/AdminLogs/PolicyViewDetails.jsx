@@ -37,10 +37,54 @@ import {
   getResourcesDefVal,
   serverError,
   getPolicyConditionDisplayLbl,
-  getPolicyPermissionItemDisplayLbl
+  getPolicyPermissionItemDisplayLbl,
+  getConstraintDefByName,
+  getAccessTypesForConstraintDef
 } from "Utils/XAUtils";
 import { ModalLoader } from "Components/CommonComponents";
 import { getServiceDef } from "Utils/appState";
+import { ConstraintParameterBadges } from "./ConstraintPolicyItemsAuditLog";
+
+const CONSTRAINT_POLICY_TYPE =
+  RangerPolicyType.RANGER_CONSTRAINT_POLICY_TYPE.value;
+
+/** Permission / access-type chips in policy view (matches Editable checkbox display). */
+const PermissionBadge = ({ label }) => (
+  <h6 className="d-inline me-1">
+    <Badge bg="info" className="text-capitalize d-inline me-1">
+      {label}
+    </Badge>
+  </h6>
+);
+
+const PrincipalBadgesCell = ({ names }) => {
+  if (isEmpty(names)) {
+    return "--";
+  }
+  return names.map((name) => (
+    <Badge bg="info" className="text-truncate me-1 more-less-width" key={name}>
+      {name}
+    </Badge>
+  ));
+};
+
+/** Resolve display labels for accesses on a constraint policy item. */
+const getConstraintItemPermissionLabels = (serviceDef, item) => {
+  const constraintName = item?.constraintInfo?.constraintName;
+  const constraintDef = getConstraintDefByName(serviceDef, constraintName);
+  const accessTypeDefs = getAccessTypesForConstraintDef(
+    serviceDef,
+    constraintDef
+  );
+  const selectedTypeNames = (item?.accesses || [])
+    .filter((access) => access?.isAllowed !== false)
+    .map((access) => access.type);
+
+  return sortBy(
+    filter(accessTypeDefs, (def) => selectedTypeNames.includes(def.name)),
+    "label"
+  );
+};
 
 export function PolicyViewDetails(props) {
   const isMultiResources = true;
@@ -148,6 +192,7 @@ export function PolicyViewDetails(props) {
     conditions,
     dataMaskPolicyItems,
     rowFilterPolicyItems,
+    constraintPolicyItems,
     policyItems,
     isEnabled,
     allowExceptions,
@@ -197,8 +242,8 @@ export function PolicyViewDetails(props) {
       <>
         {sortBy(filterResources, "level").map((obj) => (
           <tr key={obj.level}>
-            <td>{obj.label}</td>
-            <td>
+            <td style={{ width: "30%" }}>{obj.label}</td>
+            <td style={{ width: "70%" }}>
               <Row>
                 <Col md={9} className="d-flex flex-wrap">
                   {obj.values.map((val, index) => (
@@ -260,6 +305,15 @@ export function PolicyViewDetails(props) {
             </Badge>
           </h6>
         ));
+      }
+      if (policyTypeVal == CONSTRAINT_POLICY_TYPE) {
+        return (
+          <h6>
+            <Badge bg="secondary">
+              {RangerPolicyType.RANGER_CONSTRAINT_POLICY_TYPE.label}
+            </Badge>
+          </h6>
+        );
       }
       return (
         <h6>
@@ -398,6 +452,123 @@ export function PolicyViewDetails(props) {
     });
   };
 
+  /** Read-only table for constraint policy rules (policy type 4). */
+  const getConstraintPolicyRulesTable = (
+    items,
+    filterServiceDef,
+    noTblDataMsg
+  ) => {
+    const showRuleConditions = !isEmpty(filterServiceDef?.policyConditions);
+    const columnCount = 6 + (showRuleConditions ? 1 : 0);
+
+    if (isEmpty(items)) {
+      return (
+        <>
+          <thead>
+            <tr>
+              <th className="text-center text-nowrap">Select Role</th>
+              <th className="text-center text-nowrap">Select Group</th>
+              <th className="text-center text-nowrap">Select User</th>
+              {showRuleConditions && (
+                <th className="text-center text-nowrap">Rule Conditions</th>
+              )}
+              <th className="text-center text-nowrap">Constraint Name</th>
+              <th className="text-center text-nowrap">Permissions</th>
+              <th className="text-center text-nowrap">Parameters</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td className="text-center text-muted" colSpan={columnCount}>
+                {noTblDataMsg}
+              </td>
+            </tr>
+          </tbody>
+        </>
+      );
+    }
+
+    return (
+      <>
+        <thead>
+          <tr>
+            <th className="text-center text-nowrap">Select Role</th>
+            <th className="text-center text-nowrap">Select Group</th>
+            <th className="text-center text-nowrap">Select User</th>
+            {showRuleConditions && (
+              <th className="text-center text-nowrap">Rule Conditions</th>
+            )}
+            <th className="text-center text-nowrap">Constraint Name</th>
+            <th className="text-center text-nowrap">Permissions</th>
+            <th className="text-center text-nowrap">Parameters</th>
+          </tr>
+        </thead>
+        {items.map((item, index) => {
+          const constraintName = item?.constraintInfo?.constraintName;
+          const constraintDef = getConstraintDefByName(
+            filterServiceDef,
+            constraintName
+          );
+          const constraintLabel = constraintDef?.label || constraintName;
+          const permissionLabels = getConstraintItemPermissionLabels(
+            filterServiceDef,
+            item
+          );
+
+          return (
+            <tbody key={index}>
+              <tr>
+                <td className="text-center">
+                  <PrincipalBadgesCell names={item.roles} />
+                </td>
+                <td className="text-center">
+                  <PrincipalBadgesCell names={item.groups} />
+                </td>
+                <td className="text-center">
+                  <PrincipalBadgesCell names={item.users} />
+                </td>
+                {showRuleConditions && (
+                  <td>{getPolicyItemConditions(item, filterServiceDef)}</td>
+                )}
+                <td className="text-center">
+                  {!isEmpty(constraintName) ? (
+                    <h6 className="d-inline me-1">
+                      <Badge bg="info">{constraintLabel}</Badge>
+                    </h6>
+                  ) : (
+                    "--"
+                  )}
+                </td>
+                <td className="text-center d-flex flex-wrap policyview-permission-wrap">
+                  {!isEmpty(permissionLabels)
+                    ? permissionLabels.map((accessDef) => (
+                        <PermissionBadge
+                          key={accessDef.name}
+                          label={accessDef.label}
+                        />
+                      ))
+                    : "--"}
+                </td>
+                <td className="text-center text-break">
+                  {!isEmpty(item?.constraintInfo?.parameters) ? (
+                    <ConstraintParameterBadges
+                      serviceDef={filterServiceDef}
+                      constraintName={constraintName}
+                      parameters={item.constraintInfo.parameters}
+                      emptyText="--"
+                    />
+                  ) : (
+                    "--"
+                  )}
+                </td>
+              </tr>
+            </tbody>
+          );
+        })}
+      </>
+    );
+  };
+
   const getFilterPolicy = (
     policyItemsVal,
     serviceDef,
@@ -512,15 +683,7 @@ export function PolicyViewDetails(props) {
                           policyType,
                           items.accesses
                         ).map((obj, index) => (
-                          <h6 className="d-inline me-1" key={index}>
-                            <Badge
-                              bg="info"
-                              className="d-inline me-1"
-                              key={obj.label}
-                            >
-                              {obj.label}
-                            </Badge>
-                          </h6>
+                          <PermissionBadge key={index} label={obj.label} />
                         ))}
                       </td>
                     ) : (
@@ -847,6 +1010,20 @@ export function PolicyViewDetails(props) {
                 serviceDef,
                 serviceType,
                 ` No policy items of "Masking Conditions" are present`
+              )}
+            </Table>
+          </div>
+        </>
+      )}
+      {policyType == CONSTRAINT_POLICY_TYPE && (
+        <>
+          <p className="form-header">Constraint Rules :</p>
+          <div className="overflow-auto">
+            <Table bordered size="sm" className="table-audit-filter-ready-only">
+              {getConstraintPolicyRulesTable(
+                constraintPolicyItems,
+                serviceDef,
+                `No policy items of "Constraint Rules" are present`
               )}
             </Table>
           </div>

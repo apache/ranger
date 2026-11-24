@@ -1662,11 +1662,12 @@ header {
 
 .resizeable-icon {
   position: absolute;
-  bottom: 0;
+  bottom: 3px;
   font-size: 10px;
   cursor: se-resize;
-  right: 0;
+  right: 3px;
   transform: rotate(90deg);
+  z-index: 1;
 }
 
 .show-more {

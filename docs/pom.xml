@@ -438,6 +438,7 @@
             <email>pradeep@apache.org</email>
             <timezone>Asia/Kolkata</timezone>
             <roles>
+                <role>PMC</role>
                 <role>Committer</role>
             </roles>
             <organization>
@@ -476,6 +477,7 @@
             <email>spolavarapu@apache.org</email>
             <timezone>-8</timezone>
             <roles>
+                <role>PMC</role>
                 <role>Committer</role>
             </roles>
             <organization>

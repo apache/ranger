@@ -34,7 +34,6 @@
         <json.path.version>2.9.0</json.path.version>
         <maven.compiler.source>8</maven.compiler.source>
         <maven.compiler.target>8</maven.compiler.target>
-        <nashhorn.core.version>15.4</nashhorn.core.version>
     </properties>
 
     <dependencies>
@@ -78,11 +77,6 @@
                     <artifactId>*</artifactId>
                 </exclusion>
             </exclusions>
-        </dependency>
-        <dependency>
-            <groupId>org.openjdk.nashorn</groupId>
-            <artifactId>nashorn-core</artifactId>
-            <version>${nashhorn.core.version}</version>
         </dependency>
         <dependency>
             <groupId>jakarta.ws.rs</groupId>

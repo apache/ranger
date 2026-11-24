@@ -1500,7 +1500,7 @@ public class TestRoleREST {
 
         Mockito.when(searchUtil.getSearchFilter(request, roleService.sortFields)).thenReturn(filter);
         Mockito.when(roleStore.getRoleNames(Mockito.any(SearchFilter.class))).thenReturn(roleList);
-        Mockito.when(roleStore.createRole(Mockito.any(RangerRole.class), eq(false), eq(createNonExistUserGroupRole), eq(isRefTableCleanupRequired))).thenReturn(rangerRole);
+        Mockito.when(roleStore.createRole(Mockito.any(RangerRole.class), eq(createNonExistUserGroupRole), eq(isRefTableCleanupRequired))).thenReturn(rangerRole);
 
         RESTResponse resp = roleRest.importRolesFromFile(request, uploadedInputStream, fileDetail, updateIfExists, createNonExistUserGroupRole);
         Assertions.assertNotNull(resp);
@@ -1528,14 +1528,12 @@ public class TestRoleREST {
 
         Mockito.when(searchUtil.getSearchFilter(request, roleService.sortFields)).thenReturn(filter);
         Mockito.when(roleStore.getRoleNames(Mockito.any(SearchFilter.class))).thenReturn(roleList);
-        Mockito.when(roleStore.createRole(Mockito.any(RangerRole.class), eq(false), eq(createNonExistUserGroupRole), eq(isRefTableCleanupRequired))).thenReturn(rangerRole);
+        Mockito.when(roleStore.createRole(Mockito.any(RangerRole.class), eq(createNonExistUserGroupRole), eq(isRefTableCleanupRequired))).thenReturn(rangerRole);
 
         RESTResponse resp = roleRest.importRolesFromFile(request, uploadedInputStream, fileDetail, updateIfExists, createNonExistUserGroupRole);
         Assertions.assertNotNull(resp);
         Assertions.assertEquals(resp.getStatusCode(), RESTResponse.STATUS_SUCCESS);
         Assertions.assertEquals(resp.getMsgDesc(), "Total Role Created = 6 , Total Role Unchanged = 1");
-        // Import with flag=true must request role creation only (not users/groups)
-        Mockito.verify(roleStore, Mockito.atLeastOnce()).createRole(Mockito.any(RangerRole.class), eq(false), eq(true), eq(false));
     }
 
     // import role with updateIfExists=true and createNonExistUserGroupRole=true
@@ -1558,15 +1556,13 @@ public class TestRoleREST {
         Mockito.when(searchUtil.getSearchFilter(request, roleService.sortFields)).thenReturn(filter);
         Mockito.when(roleStore.getRoleNames(Mockito.any(SearchFilter.class))).thenReturn(roleList);
         Mockito.when(roleStore.getRole(Mockito.anyString())).thenReturn(rangerRole);
-        Mockito.when(roleStore.createRole(Mockito.any(RangerRole.class), eq(false), eq(createNonExistUserGroupRole), eq(false))).thenReturn(rangerRole);
-        Mockito.when(roleStore.updateRole(Mockito.any(RangerRole.class), eq(false), eq(createNonExistUserGroupRole), eq(true))).thenReturn(rangerRole);
+        Mockito.when(roleStore.createRole(Mockito.any(RangerRole.class), eq(createNonExistUserGroupRole), eq(false))).thenReturn(rangerRole);
+        Mockito.when(roleStore.updateRole(Mockito.any(RangerRole.class), eq(createNonExistUserGroupRole), eq(true))).thenReturn(rangerRole);
 
         RESTResponse resp = roleRest.importRolesFromFile(request, uploadedInputStream, fileDetail, updateIfExists, createNonExistUserGroupRole);
         Assertions.assertNotNull(resp);
         Assertions.assertEquals(resp.getStatusCode(), RESTResponse.STATUS_SUCCESS);
         Assertions.assertEquals(resp.getMsgDesc(), "Total Role Created = 6 , Total Role Updated = 1 , Total Role Unchanged = 0");
-        Mockito.verify(roleStore, Mockito.atLeastOnce()).createRole(Mockito.any(RangerRole.class), eq(false), eq(true), eq(false));
-        Mockito.verify(roleStore, Mockito.atLeastOnce()).updateRole(Mockito.any(RangerRole.class), eq(false), eq(true), eq(true));
     }
 
     // import role throws exceptions
@@ -1625,6 +1621,67 @@ public class TestRoleREST {
                 throw new RuntimeException(e);
             }
         });
+    }
+
+    @Test
+    public void test36GetRoleByIdCyclicRoleDeniedWithoutRecursion() throws Exception {
+        // roleA <-> roleB cycle; a non-member, non-admin caller must get a clean denial, not a StackOverflowError
+        RangerRole roleA = createNestingRole("roleA", "roleB", false);
+        RangerRole roleB = createNestingRole("roleB", "roleA", false);
+
+        roleA.setId(roleId);
+
+        Mockito.when(bizUtil.isUserRangerAdmin(Mockito.anyString())).thenReturn(false);
+        Mockito.when(roleStore.getRole(roleId)).thenReturn(roleA);
+        Mockito.when(roleStore.getRole("roleA")).thenReturn(roleA);
+        Mockito.when(roleStore.getRole("roleB")).thenReturn(roleB);
+        Mockito.when(restErrorUtil.createRESTException(Mockito.anyString())).thenReturn(new WebApplicationException());
+
+        Assertions.assertThrows(WebApplicationException.class, () -> roleRest.getRole(roleId));
+
+        // each nested role is loaded at most once
+        Mockito.verify(roleStore, Mockito.atMost(1)).getRole("roleA");
+        Mockito.verify(roleStore, Mockito.atMost(1)).getRole("roleB");
+    }
+
+    @Test
+    public void test37GetUserRolesCyclicRoleTerminates() throws Exception {
+        RangerRole roleA = createNestingRole("roleA", "roleB", false);
+        RangerRole roleB = createNestingRole("roleB", "roleA", false);
+
+        Mockito.when(xUserService.getXUserByUserName(Mockito.anyString())).thenReturn(createVXUser());
+        Mockito.when(roleStore.getRoleNames(Mockito.anyString(), Mockito.any())).thenReturn(new HashSet<>(Collections.singletonList(roleA)));
+        Mockito.when(roleStore.getRole("roleA")).thenReturn(roleA);
+        Mockito.when(roleStore.getRole("roleB")).thenReturn(roleB);
+
+        List<String> returnedRoles = roleRest.getUserRoles(adminLoginID, Mockito.mock(HttpServletRequest.class));
+
+        Assertions.assertEquals(new HashSet<>(Arrays.asList("roleA", "roleB")), new HashSet<>(returnedRoles));
+        Mockito.verify(roleStore, Mockito.times(1)).getRole("roleA");
+        Mockito.verify(roleStore, Mockito.times(1)).getRole("roleB");
+    }
+
+    @Test
+    public void test38MissingNestedRoleSkippedOnRead() throws Exception {
+        // roleA lists "pending" (not created yet) with admin option and roleB; reads must skip it, not fail
+        List<RangerRole.RoleMember> members = new ArrayList<>(Arrays.asList(new RangerRole.RoleMember("pending", true), new RangerRole.RoleMember("roleB", true)));
+        RangerRole                  roleA   = new RangerRole("roleA", "roleA", null, new ArrayList<>(), new ArrayList<>(), members);
+        RangerRole                  roleB   = createRangerRole(adminLoginID, false);
+
+        roleA.setId(roleId);
+
+        Mockito.when(bizUtil.isUserRangerAdmin(Mockito.anyString())).thenReturn(false);
+        Mockito.when(roleStore.getRole(roleId)).thenReturn(roleA);
+        Mockito.when(roleStore.getRole("pending")).thenThrow(new WebApplicationException());
+        Mockito.when(roleStore.getRole("roleB")).thenReturn(roleB);
+
+        Assertions.assertEquals(roleA, roleRest.getRole(roleId));
+    }
+
+    private RangerRole createNestingRole(String name, String nestedRoleName, boolean isAdmin) {
+        List<RangerRole.RoleMember> roles = new ArrayList<>(Collections.singletonList(new RangerRole.RoleMember(nestedRoleName, isAdmin)));
+
+        return new RangerRole(name, name, null, new ArrayList<>(), new ArrayList<>(), roles);
     }
 
     private RangerRole createRole() {

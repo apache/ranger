@@ -84,6 +84,13 @@ public class RangerKmsAuthorizer implements Runnable, KeyACLs {
     }
 
     @Override
+    public boolean hasAccess(Type aclType, UserGroupInformation ugi, String key, String clientIp) {
+        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator(pluginClassLoader, "hasAccess")) {
+            return implKeyACLs.hasAccess(aclType, ugi, key, clientIp);
+        }
+    }
+
+    @Override
     public void assertAccess(Type aclType, UserGroupInformation ugi, KMSOp operation, String key, String clientIp) throws AccessControlException {
         try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator(pluginClassLoader, "assertAccess")) {
             implKeyACLs.assertAccess(aclType, ugi, operation, key, clientIp);

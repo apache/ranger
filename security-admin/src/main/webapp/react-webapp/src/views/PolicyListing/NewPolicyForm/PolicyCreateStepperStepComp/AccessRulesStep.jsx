@@ -23,6 +23,7 @@ import { Field } from "react-final-form";
 import BootstrapSwitchButton from "bootstrap-switch-button-react";
 import PolicyPermissionItemVertical from "./PolicyPermissionItemVertical";
 import { isEmpty } from "lodash";
+import { RangerPolicyType } from "Utils/XAEnums";
 
 const hasItems = (arr) =>
   Array.isArray(arr) && arr.some((item) => !isItemEmpty(item));
@@ -94,45 +95,64 @@ const AccessRulesStep = ({
     "true";
   const policyPermissionItems = [];
   const policyType = values.policyType;
+  const isAccessPolicy =
+    policyType == RangerPolicyType.RANGER_ACCESS_POLICY_TYPE.value;
 
-  // Count items in each category
-  const allowRulesCount = hasItems(values?.policyItems)
-    ? values.policyItems.filter((item) => !isEmpty(item)).length
-    : 0;
+  // Tab badge counts — only meaningful for access policies (type 0).
+  let allowTabTotal = 0;
+  let denyTabTotal = 0;
+  let allowAccordionDefault = ["0"];
 
-  const allowExceptionsCount = hasItems(values?.allowExceptions)
-    ? values.allowExceptions.filter((item) => !isEmpty(item)).length
-    : 0;
+  if (isAccessPolicy) {
+    const allowRulesCount = hasItems(values?.policyItems)
+      ? values.policyItems.filter((item) => !isEmpty(item)).length
+      : 0;
 
-  const denyRulesCount = hasItems(values?.denyPolicyItems)
-    ? values.denyPolicyItems.filter((item) => !isEmpty(item)).length
-    : 0;
+    const allowExceptionsCount = hasItems(values?.allowExceptions)
+      ? values.allowExceptions.filter((item) => !isEmpty(item)).length
+      : 0;
 
-  const denyExceptionsCount = hasItems(values?.denyExceptions)
-    ? values.denyExceptions.filter((item) => !isEmpty(item)).length
-    : 0;
+    const denyRulesCount = hasItems(values?.denyPolicyItems)
+      ? values.denyPolicyItems.filter((item) => !isEmpty(item)).length
+      : 0;
 
-  // Total counts for tab display
-  const allowTabTotal = allowRulesCount + allowExceptionsCount;
-  const denyTabTotal = denyRulesCount + denyExceptionsCount;
+    const denyExceptionsCount = hasItems(values?.denyExceptions)
+      ? values.denyExceptions.filter((item) => !isEmpty(item)).length
+      : 0;
 
-  // Auto-open "Exclude from Allow Rules" accordion item if it has saved values
-  const hasAllowExceptions = hasItems(values?.allowExceptions);
-  const allowAccordionDefault = hasAllowExceptions ? ["0", "1"] : ["0"];
+    allowTabTotal = allowRulesCount + allowExceptionsCount;
+    denyTabTotal = denyRulesCount + denyExceptionsCount;
 
-  if (policyType == 1) {
+    const hasAllowExceptions = hasItems(values?.allowExceptions);
+    allowAccordionDefault = hasAllowExceptions ? ["0", "1"] : ["0"];
+  }
+
+  if (policyType == RangerPolicyType.RANGER_MASKING_POLICY_TYPE.value) {
     policyPermissionItems.push({
       attrName: "dataMaskPolicyItems",
       title: "Mask Rules",
       msg: "Mask rules grants access to resources when the specific criteria are met."
     });
-  } else if (policyType == 2) {
+  } else if (
+    policyType == RangerPolicyType.RANGER_ROW_FILTER_POLICY_TYPE.value
+  ) {
     policyPermissionItems.push({
       attrName: "rowFilterPolicyItems",
       title: "Row Filter Rules",
       msg: "Row filter rules grants access to resources when the specific criteria are met."
     });
-  } else if (policyType == 0 && !enableDenyAndExceptions) {
+  } else if (
+    policyType == RangerPolicyType.RANGER_CONSTRAINT_POLICY_TYPE.value
+  ) {
+    policyPermissionItems.push({
+      attrName: "constraintPolicyItems",
+      title: "Constraint Rules",
+      msg: "Constraint rules grants access to resources when the specific criteria are met."
+    });
+  } else if (
+    policyType == RangerPolicyType.RANGER_ACCESS_POLICY_TYPE.value &&
+    !enableDenyAndExceptions
+  ) {
     policyPermissionItems.push({
       attrName: "policyItems",
       title: "Allow Rules",
@@ -148,174 +168,181 @@ const AccessRulesStep = ({
           access to specific users/groups/roles and deny conditions to
           explicitly block access
         </p>
-        {policyType == 0 && isEmpty(policyPermissionItems) && (
-          <>
-            <Tabs defaultActiveKey="allow" transition={false} className="mb-3">
-              <Tab
-                eventKey="allow"
-                title={
-                  <span className="d-flex align-items-center gap-2">
-                    Allow
-                    {allowTabTotal > 0 && (
-                      <span
-                        className="badge bg-primary text-light"
-                        style={{
-                          fontSize: "0.75rem",
-                          padding: "0.25rem 0.5rem",
-                          borderRadius: "12px",
-                          margin: "0px"
-                        }}
-                      >
-                        {allowTabTotal}
-                      </span>
-                    )}
-                  </span>
-                }
+        {policyType == RangerPolicyType.RANGER_ACCESS_POLICY_TYPE.value &&
+          isEmpty(policyPermissionItems) && (
+            <>
+              <Tabs
+                defaultActiveKey="allow"
+                transition={false}
+                className="mb-3"
               >
-                <Accordion
-                  defaultActiveKey={allowAccordionDefault}
-                  alwaysOpen
-                  className="policy-permission-items-accordion"
+                <Tab
+                  eventKey="allow"
+                  title={
+                    <span className="d-flex align-items-center gap-2">
+                      Allow
+                      {allowTabTotal > 0 && (
+                        <span
+                          className="badge bg-primary text-light"
+                          style={{
+                            fontSize: "0.75rem",
+                            padding: "0.25rem 0.5rem",
+                            borderRadius: "12px",
+                            margin: "0px"
+                          }}
+                        >
+                          {allowTabTotal}
+                        </span>
+                      )}
+                    </span>
+                  }
                 >
-                  <Accordion.Item eventKey="0">
-                    <Accordion.Header>
-                      <span className="d-flex align-items-center justify-content-between w-100">
-                        <span>Allow Rules</span>
-                      </span>
-                    </Accordion.Header>
-                    <Accordion.Body>
-                      <PolicyPermissionItemVertical
-                        serviceCompDetails={selectedServiceComponentDef}
-                        formValues={values}
-                        attrName="policyItems"
-                        msg="Allow rules grants access to resources when the specific criteria are met."
-                        enableResourcePruneDefer={enableResourcePruneDefer}
-                      />
-                    </Accordion.Body>
-                  </Accordion.Item>
+                  <Accordion
+                    defaultActiveKey={allowAccordionDefault}
+                    alwaysOpen
+                    className="policy-permission-items-accordion"
+                  >
+                    <Accordion.Item eventKey="0">
+                      <Accordion.Header>
+                        <span className="d-flex align-items-center justify-content-between w-100">
+                          <span>Allow Rules</span>
+                        </span>
+                      </Accordion.Header>
+                      <Accordion.Body>
+                        <PolicyPermissionItemVertical
+                          serviceCompDetails={selectedServiceComponentDef}
+                          formValues={values}
+                          attrName="policyItems"
+                          msg="Allow rules grants access to resources when the specific criteria are met."
+                          enableResourcePruneDefer={enableResourcePruneDefer}
+                        />
+                      </Accordion.Body>
+                    </Accordion.Item>
 
-                  <Accordion.Item eventKey="1">
-                    <Accordion.Header>
-                      <span className="d-flex align-items-center justify-content-between w-100">
-                        <span>Exclude from Allow Rules</span>
-                      </span>
-                    </Accordion.Header>
-                    <Accordion.Body>
-                      <PolicyPermissionItemVertical
-                        serviceCompDetails={selectedServiceComponentDef}
-                        formValues={values}
-                        attrName="allowExceptions"
-                        msg="Exclude from Allow Rules grants access to resources when the specific criteria are met."
-                        enableResourcePruneDefer={enableResourcePruneDefer}
-                      />
-                    </Accordion.Body>
-                  </Accordion.Item>
+                    <Accordion.Item eventKey="1">
+                      <Accordion.Header>
+                        <span className="d-flex align-items-center justify-content-between w-100">
+                          <span>Exclude from Allow Rules</span>
+                        </span>
+                      </Accordion.Header>
+                      <Accordion.Body>
+                        <PolicyPermissionItemVertical
+                          serviceCompDetails={selectedServiceComponentDef}
+                          formValues={values}
+                          attrName="allowExceptions"
+                          msg="Exclude from Allow Rules grants access to resources when the specific criteria are met."
+                          enableResourcePruneDefer={enableResourcePruneDefer}
+                        />
+                      </Accordion.Body>
+                    </Accordion.Item>
 
-                  <Accordion.Item eventKey="2">
-                    <Accordion.Header>Deny All Other Accesses</Accordion.Header>
-                    <Accordion.Body>
-                      <p className="stepper-instruction-text mb-3">
-                        When enabled, this option denies all access types (read,
-                        write, execute, etc.) to every user, group and role
-                        except those explicitly allowed in this policy. Any
-                        user/group/role not listed in the &apos;Allow&apos;
-                        section will automatically be blocked from accessing the
-                        resource.
-                      </p>
+                    <Accordion.Item eventKey="2">
+                      <Accordion.Header>
+                        Deny All Other Accesses
+                      </Accordion.Header>
+                      <Accordion.Body>
+                        <p className="stepper-instruction-text mb-3">
+                          When enabled, this option denies all access types
+                          (read, write, execute, etc.) to every user, group and
+                          role except those explicitly allowed in this policy.
+                          Any user/group/role not listed in the
+                          &apos;Allow&apos; section will automatically be
+                          blocked from accessing the resource.
+                        </p>
 
-                      <Field name="isDenyAllElse">
-                        {({ input }) => (
-                          <Row>
-                            <Col className="column-1-fixed">
-                              <span>Deny all other accesses</span>
-                            </Col>
-                            <Col className="resource-toggle-switch">
-                              <BootstrapSwitchButton
-                                {...input}
-                                checked={input.value || false}
-                                onlabel="True"
-                                onstyle="primary"
-                                offlabel="False"
-                                offstyle="outline-secondary"
-                                size="xs"
-                                width={100}
-                              />
-                            </Col>
-                          </Row>
-                        )}
-                      </Field>
-                    </Accordion.Body>
-                  </Accordion.Item>
-                </Accordion>
-              </Tab>
+                        <Field name="isDenyAllElse">
+                          {({ input }) => (
+                            <Row>
+                              <Col className="column-1-fixed">
+                                <span>Deny all other accesses</span>
+                              </Col>
+                              <Col className="resource-toggle-switch">
+                                <BootstrapSwitchButton
+                                  {...input}
+                                  checked={input.value || false}
+                                  onlabel="True"
+                                  onstyle="primary"
+                                  offlabel="False"
+                                  offstyle="outline-secondary"
+                                  size="xs"
+                                  width={100}
+                                />
+                              </Col>
+                            </Row>
+                          )}
+                        </Field>
+                      </Accordion.Body>
+                    </Accordion.Item>
+                  </Accordion>
+                </Tab>
 
-              <Tab
-                eventKey="deny"
-                disabled={isDenyAllElseEnabled}
-                title={
-                  <span className="d-flex align-items-center gap-2">
-                    Deny
-                    {!isDenyAllElseEnabled && denyTabTotal > 0 && (
-                      <span
-                        className="badge bg-primary text-light"
-                        style={{
-                          fontSize: "0.75rem",
-                          padding: "0.25rem 0.5rem",
-                          borderRadius: "12px",
-                          margin: "0px"
-                        }}
-                      >
-                        {denyTabTotal}
-                      </span>
-                    )}
-                  </span>
-                }
-              >
-                <Accordion
-                  defaultActiveKey={["0"]}
-                  alwaysOpen
-                  className="policy-permission-items-accordion"
+                <Tab
+                  eventKey="deny"
+                  disabled={isDenyAllElseEnabled}
+                  title={
+                    <span className="d-flex align-items-center gap-2">
+                      Deny
+                      {!isDenyAllElseEnabled && denyTabTotal > 0 && (
+                        <span
+                          className="badge bg-primary text-light"
+                          style={{
+                            fontSize: "0.75rem",
+                            padding: "0.25rem 0.5rem",
+                            borderRadius: "12px",
+                            margin: "0px"
+                          }}
+                        >
+                          {denyTabTotal}
+                        </span>
+                      )}
+                    </span>
+                  }
                 >
-                  <Accordion.Item eventKey="0">
-                    <Accordion.Header>
-                      <span className="d-flex align-items-center justify-content-between w-100">
-                        <span>Deny Rules</span>
-                      </span>
-                    </Accordion.Header>
-                    <Accordion.Body>
-                      <PolicyPermissionItemVertical
-                        serviceCompDetails={selectedServiceComponentDef}
-                        formValues={values}
-                        attrName="denyPolicyItems"
-                        msg="Deny rules explicitly block access to resources when the specific
+                  <Accordion
+                    defaultActiveKey={["0"]}
+                    alwaysOpen
+                    className="policy-permission-items-accordion"
+                  >
+                    <Accordion.Item eventKey="0">
+                      <Accordion.Header>
+                        <span className="d-flex align-items-center justify-content-between w-100">
+                          <span>Deny Rules</span>
+                        </span>
+                      </Accordion.Header>
+                      <Accordion.Body>
+                        <PolicyPermissionItemVertical
+                          serviceCompDetails={selectedServiceComponentDef}
+                          formValues={values}
+                          attrName="denyPolicyItems"
+                          msg="Deny rules explicitly block access to resources when the specific
             criteria are met."
-                        enableResourcePruneDefer={enableResourcePruneDefer}
-                      />
-                    </Accordion.Body>
-                  </Accordion.Item>
+                          enableResourcePruneDefer={enableResourcePruneDefer}
+                        />
+                      </Accordion.Body>
+                    </Accordion.Item>
 
-                  <Accordion.Item eventKey="1">
-                    <Accordion.Header>
-                      <span className="d-flex align-items-center justify-content-between w-100">
-                        <span>Exclude from Deny Rules</span>
-                      </span>
-                    </Accordion.Header>
-                    <Accordion.Body>
-                      <PolicyPermissionItemVertical
-                        serviceCompDetails={selectedServiceComponentDef}
-                        formValues={values}
-                        attrName="denyExceptions"
-                        msg="Exclude from Deny Rules explicitly block access to resources when the specific
+                    <Accordion.Item eventKey="1">
+                      <Accordion.Header>
+                        <span className="d-flex align-items-center justify-content-between w-100">
+                          <span>Exclude from Deny Rules</span>
+                        </span>
+                      </Accordion.Header>
+                      <Accordion.Body>
+                        <PolicyPermissionItemVertical
+                          serviceCompDetails={selectedServiceComponentDef}
+                          formValues={values}
+                          attrName="denyExceptions"
+                          msg="Exclude from Deny Rules explicitly block access to resources when the specific
             criteria are met."
-                        enableResourcePruneDefer={enableResourcePruneDefer}
-                      />
-                    </Accordion.Body>
-                  </Accordion.Item>
-                </Accordion>
-              </Tab>
-            </Tabs>
-          </>
-        )}
+                          enableResourcePruneDefer={enableResourcePruneDefer}
+                        />
+                      </Accordion.Body>
+                    </Accordion.Item>
+                  </Accordion>
+                </Tab>
+              </Tabs>
+            </>
+          )}
         {!isEmpty(policyPermissionItems) && (
           <>
             {policyPermissionItems.map((item) => (

@@ -23,10 +23,8 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -34,8 +32,7 @@ import java.util.Set;
  * Configuration-based Ranger Admin superusers and super groups.
  * When {@code ranger.admin.super.users} or
  * {@code ranger.admin.super.groups} are set, matching authenticated users
- * receive full Ranger administrative privileges (system admin and key admin
- * capabilities) without requiring corresponding roles in the Ranger database.
+ * receive full Ranger administrative privileges (system admin) without requiring corresponding roles in the Ranger database.
  */
 public final class RangerSuperUserConfig {
     private static volatile RangerSuperUserConfig instance;
@@ -117,35 +114,14 @@ public final class RangerSuperUserConfig {
     }
 
     /**
-     * Merges config super-user admin roles with existing portal roles.
-     * Used for Spring Security authentication and session role lists.
+     * Portal roles of a config super-user: {@code ROLE_SYS_ADMIN} only, whatever
+     * its roles in the Ranger DB. Used for Spring Security authorities, the
+     * session role list and {@code GET /users/profile}.
      *
-     * @param existingRoles DB portal roles (may be null)
-     * @param includeRoleUser when true, adds {@code ROLE_USER} (session lists)
-     * @return merged role list with stable ordering
+     * @return a new, modifiable list
      */
-    public static List<String> mergeConfigSuperUserRoles(final Collection<String> existingRoles, final boolean includeRoleUser) {
-        LinkedHashSet<String> merged = new LinkedHashSet<>();
-
-        merged.add(RangerConstants.ROLE_SYS_ADMIN);
-        merged.add(RangerConstants.ROLE_KEY_ADMIN);
-
-        if (includeRoleUser) {
-            merged.add(RangerConstants.ROLE_USER);
-        }
-
-        if (existingRoles != null) {
-            merged.addAll(existingRoles);
-        }
-
-        return new ArrayList<>(merged);
-    }
-
-    /**
-     * Admin roles exposed on {@code GET /user/profile} for config super-users.
-     */
-    public static List<String> getConfigSuperUserProfileRoles() {
-        return mergeConfigSuperUserRoles(Collections.emptyList(), false);
+    public static List<String> getSuperUserRoles() {
+        return new ArrayList<>(Collections.singletonList(RangerConstants.ROLE_SYS_ADMIN));
     }
 
     private static Set<String> parsePropertyValues(final String[] values) {

@@ -1340,7 +1340,7 @@ public class TagREST {
                 if (isKeyAdmin) {
                     isAllowed = true;
                 } else if (rangerService != null) {
-                    isAllowed = bizUtil.isUserAllowed(rangerService, Allowed_User_List_For_Tag_Download);
+                    isAllowed = bizUtil.isUserAllowed(rangerService, Allowed_User_List_For_Tag_Download) || bizUtil.isServiceAccountUser(rangerService);
                 }
             } else {
                 rangerService = svcStore.getServiceByName(serviceName);
@@ -1348,7 +1348,7 @@ public class TagREST {
                 if (isAdmin) {
                     isAllowed = true;
                 } else if (rangerService != null) {
-                    isAllowed = bizUtil.isUserAllowed(rangerService, Allowed_User_List_For_Tag_Download);
+                    isAllowed = bizUtil.isUserAllowed(rangerService, Allowed_User_List_For_Tag_Download) || bizUtil.isServiceAccountUser(rangerService);
                 }
             }
             if (isAllowed) {

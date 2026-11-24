@@ -46,6 +46,7 @@ http://www.springframework.org/schema/util/spring-util-4.3.xsd">
 		<intercept-url pattern="/api/audit/status" access="permitAll()"/>
 		<intercept-url pattern="/api/audit/**" access="isAuthenticated()"/>
 		<security:access-denied-handler error-page="/index.jsp"/>
+        <custom-filter ref="auditHeaderPreAuthFilter" position="PRE_AUTH_FILTER" />
 		<custom-filter ref="auditJwtAuthFilter" after="SERVLET_API_SUPPORT_FILTER" />
 		<custom-filter ref="auditDelegationTokenFilter" before="ANONYMOUS_FILTER" />
 	</security:http>
@@ -53,6 +54,8 @@ http://www.springframework.org/schema/util/spring-util-4.3.xsd">
 	<beans:bean id="auditAuthEntryPoint" class="org.apache.ranger.audit.security.AuditAuthEntryPoint">
 		<beans:constructor-arg value="/index.jsp"/>
 	</beans:bean>
+
+    <beans:bean id="auditHeaderPreAuthFilter" class="org.apache.ranger.audit.security.AuditHeaderPreAuthFilter"/>
 
 	<beans:bean id="auditJwtAuthFilter" class="org.apache.ranger.audit.security.AuditJwtAuthFilter"/>
 

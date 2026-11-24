@@ -1,0 +1,37 @@
+{
+    "name": "test_search_{random_str}",
+    "policyName": "test_search_{random_str}",
+    "description": "Test resource for search functionality validation",
+    "resourceType": 1,
+    "assetId": 2,
+    "isEncrypt": 2,
+    "permMapList": [
+        {
+            "createDate": null,
+            "updateDate": null,
+            "permGroup": "0",
+            "userId": 81,
+            "permFor": 1,
+            "permType": 2,
+            "grantOrRevoke": true,
+            "userName": "hdfs",
+            "isRecursive": 0,
+            "isWildCard": true
+        }
+    ],
+    "auditList": [
+        {
+            "createDate": null,
+            "updateDate": null,
+            "resourceId": 1,
+            "auditType": 1
+        }
+    ],
+    "isRecursive": 1,
+    "assetName": "dev_hdfs",
+    "assetType": 1,
+    "resourceStatus": 1,
+    "tableType": 0,
+    "columnType": 0,
+    "checkParentPermission": 0
+}

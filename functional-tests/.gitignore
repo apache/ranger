@@ -1,0 +1,17 @@
+# Local Python / pytest (do not commit)
+__pycache__/
+
+# Virtualenv created by run-tests.sh
+myenv/
+
+# Pytest cache
+.pytest_cache/
+
+# Pytest file logs (logs/<test_module_stem>.log via conftest.py)
+logs/
+
+# HTML reports from run-tests.sh (pytest --html=report_<suite>.html)
+report_*.html
+
+# pytest-html stylesheet directory (created alongside report_*.html)
+assets/

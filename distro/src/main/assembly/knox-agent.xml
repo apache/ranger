@@ -73,27 +73,19 @@
           <include>commons-io:commons-io</include>
           <include>commons-logging:commons-logging</include>
           <include>io.airlift:aircompressor:jar:${aircompressor.version}</include>
-          <include>javax.inject:javax.inject</include>
           <include>javax.ws.rs:javax.ws.rs-api</include>
           <include>joda-time:joda-time</include>
           <include>org.apache.commons:commons-configuration2</include>
           <include>org.apache.hadoop.thirdparty:hadoop-shaded-guava:jar:${hadoop-shaded-guava.version}</include>
           <include>org.apache.hadoop:hadoop-client-api:jar:${hadoop.version}</include>
           <include>org.apache.hadoop:hadoop-client-runtime:jar:${hadoop.version}</include>
-          <include>org.apache.httpcomponents:httpasyncclient:jar:${httpcomponents.httpasyncclient.version}</include>
           <include>org.apache.httpcomponents:httpclient:jar:${httpcomponents.httpclient.version}</include>
-          <include>org.apache.httpcomponents:httpcore-nio:jar:${httpcomponents.httpcore.version}</include>
           <include>org.apache.httpcomponents:httpcore:jar:${httpcomponents.httpcore.version}</include>
-          <include>org.apache.httpcomponents:httpmime:jar:${httpcomponents.httpmime.version}</include>
-          <include>org.apache.solr:solr-solrj:jar:${solr.version}</include>
           <include>org.codehaus.woodstox:stax2-api</include>
-          <include>org.eclipse.jetty:jetty-client:jar:${jetty-client.version}</include>
           <include>org.glassfish.hk2:hk2-api</include>
           <include>org.glassfish.hk2:hk2-locator</include>
           <include>org.glassfish.hk2:hk2-utils</include>
           <include>org.glassfish.hk2.external:aopalliance-repackaged</include>
-          <include>org.glassfish.hk2.external:javax.inject</include>
-          <include>org.glassfish:osgi-resource-locator</include>
           <include>org.glassfish.jersey.core:jersey-client</include>
           <include>org.glassfish.jersey.core:jersey-common</include>
           <include>org.glassfish.jersey.ext:jersey-entity-filtering:jar:${jersey-client.version}</include>

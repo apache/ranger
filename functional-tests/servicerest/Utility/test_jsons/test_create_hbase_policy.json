@@ -1,0 +1,36 @@
+{
+  "name": "hbase_test_policy_{random_str}",
+  "service": "",
+  "policyType": 0,
+  "policyPriority": 0,
+  "description": "",
+  "isAuditEnabled": true,
+  "isDenyAllElse": false,
+  "isEnabled": true,
+  "resources": {
+    "table": {
+      "values": ["table_{random_str}"],
+      "isExcludes": false,
+      "isRecursive": false
+    },
+    "column-family": {
+      "values": ["table_{random_str}"],
+      "isExcludes": false,
+      "isRecursive": false
+    },
+    "column": {
+      "values": ["table_{random_str}"],
+      "isExcludes": false,
+      "isRecursive": false
+    }
+  },
+  "policyItems": [],
+  "allowExceptions": [],
+  "denyPolicyItems": [],
+  "denyExceptions": [],
+  "dataMaskPolicyItems": [],
+  "rowFilterPolicyItems": [],
+  "conditions": [],
+  "policyLabels": ["label_{random_str}"],
+  "additionalResources": []
+}

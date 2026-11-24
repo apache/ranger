@@ -83,6 +83,7 @@ public abstract class RangerPolicyServiceBase<T extends XXPolicyBase, V extends 
         trxLogAttrs.put("denyExceptions", new VTrxLogAttr("denyExceptions", "Deny Exceptions"));
         trxLogAttrs.put("dataMaskPolicyItems", new VTrxLogAttr("dataMaskPolicyItems", "Masked Policy Items"));
         trxLogAttrs.put("rowFilterPolicyItems", new VTrxLogAttr("rowFilterPolicyItems", "Row level filter Policy Items"));
+        trxLogAttrs.put("constraintPolicyItems", new VTrxLogAttr("constraintPolicyItems", "Constraint Policy Items"));
         trxLogAttrs.put("isAuditEnabled", new VTrxLogAttr("isAuditEnabled", "Audit Status"));
         trxLogAttrs.put("policyLabels", new VTrxLogAttr("policyLabels", "Policy Labels"));
         trxLogAttrs.put("validitySchedules", new VTrxLogAttr("validitySchedules", "Validity Schedules"));
@@ -117,6 +118,10 @@ public abstract class RangerPolicyServiceBase<T extends XXPolicyBase, V extends 
 
             case "rowFilterPolicyItems":
                 ret = policyType != RangerPolicy.POLICY_TYPE_ROWFILTER;
+                break;
+
+            case "constraintPolicyItems":
+                ret = policyType != RangerPolicy.POLICY_TYPE_CONSTRAINTS;
                 break;
 
             case "policyItems":

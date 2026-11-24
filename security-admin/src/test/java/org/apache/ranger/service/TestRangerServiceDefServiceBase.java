@@ -38,6 +38,8 @@ import org.apache.ranger.entity.XXServiceConfigDef;
 import org.apache.ranger.entity.XXServiceDef;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerAccessTypeDef;
+import org.apache.ranger.plugin.model.RangerServiceDef.RangerConstraintDef;
+import org.apache.ranger.plugin.model.RangerServiceDef.RangerConstraintParamDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerContextEnricherDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerEnumDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerEnumElementDef;
@@ -62,9 +64,12 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import javax.ws.rs.WebApplicationException;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
@@ -587,6 +592,94 @@ public class TestRangerServiceDefServiceBase {
         RangerServiceDefList dbRangerServiceDefList = rangerServiceDefService
                 .searchRangerServiceDefs(searchFilter);
         Assertions.assertNotNull(dbRangerServiceDefList);
+    }
+
+    @Test
+    public void test22mapViewToEntityBeanLeavesDefTextUnset() {
+        RangerServiceDef view = rangerServiceDef();
+        view.setGuid("column-guid");
+        view.setName("hdfs");
+        view.getConstraintDefs().add(constraintDef());
+
+        XXServiceDef stored = rangerServiceDefService.mapViewToEntityBean(view, serviceDef(), 1);
+
+        Assertions.assertNull(stored.getDefText());
+    }
+
+    @Test
+    public void test23populateViewBeanReadsDefTextWithoutOverwritingColumns() throws Exception {
+        JSONUtil jsonUtil = new JSONUtil();
+        rangerServiceDefService.jsonUtil = jsonUtil;
+
+        RangerServiceDef jsonBody = new RangerServiceDef();
+        jsonBody.setName("json-name");
+        jsonBody.setGuid("json-guid");
+        jsonBody.setLabel("json-label");
+        jsonBody.setDescription("json-description");
+        Map<String, String> jsonOptions = new HashMap<>();
+        jsonOptions.put("fromJson", "yes");
+        jsonBody.setOptions(jsonOptions);
+        jsonBody.getConstraintDefs().add(constraintDef());
+
+        XXServiceDef row = serviceDef();
+        row.setAddedByUserId(null);
+        row.setUpdatedByUserId(null);
+        row.setName("hdfs");
+        row.setGuid("column-guid");
+        row.setLabel("column-label");
+        row.setDescription("column-description");
+        row.setDefOptions("{\"stored\":\"yes\"}");
+        row.setDefText(jsonUtil.writeObjectAsString(jsonBody));
+
+        RangerServiceDef loaded = rangerServiceDefService.populateViewBean(row);
+
+        Assertions.assertEquals("hdfs", loaded.getName());
+        Assertions.assertEquals("column-guid", loaded.getGuid());
+        Assertions.assertEquals("column-label", loaded.getLabel());
+        Assertions.assertEquals("column-description", loaded.getDescription());
+        Assertions.assertEquals("yes", loaded.getOptions().get("stored"));
+        Assertions.assertNull(loaded.getOptions().get("fromJson"));
+        Assertions.assertEquals(1, loaded.getConstraintDefs().size());
+        Assertions.assertEquals("requireApproval", loaded.getConstraintDefs().get(0).getName());
+        Assertions.assertEquals(Arrays.asList("database", "udf"), loaded.getConstraintDefs().get(0).getResources());
+        Assertions.assertEquals(Collections.singletonList("select"), loaded.getConstraintDefs().get(0).getAccessTypes());
+        Assertions.assertEquals("approver", loaded.getConstraintDefs().get(0).getParameters().get(0).getName());
+        Assertions.assertEquals("string", loaded.getConstraintDefs().get(0).getParameters().get(0).getType());
+        Assertions.assertEquals("authType", loaded.getConstraintDefs().get(0).getParameters().get(1).getSubType());
+    }
+
+    private RangerConstraintDef constraintDef() {
+        RangerConstraintParamDef approver = new RangerConstraintParamDef();
+        approver.setItemId(1L);
+        approver.setName("approver");
+        approver.setType("string");
+        approver.setMandatory(true);
+
+        RangerConstraintParamDef mode = new RangerConstraintParamDef();
+        mode.setItemId(2L);
+        mode.setName("mode");
+        mode.setType("enum");
+        mode.setSubType("authType");
+        mode.setMandatory(false);
+        mode.setDefaultValue("simple");
+
+        List<String> resources = new ArrayList<>();
+        resources.add("database");
+        resources.add("udf");
+        List<String> accessTypes = new ArrayList<>();
+        accessTypes.add("select");
+        List<RangerConstraintParamDef> parameters = new ArrayList<>();
+        parameters.add(approver);
+        parameters.add(mode);
+
+        RangerConstraintDef constraintDef = new RangerConstraintDef();
+        constraintDef.setItemId(4L);
+        constraintDef.setName("requireApproval");
+        constraintDef.setResources(resources);
+        constraintDef.setAccessTypes(accessTypes);
+        constraintDef.setParameters(parameters);
+
+        return constraintDef;
     }
 
     private RangerServiceDef rangerServiceDef() {

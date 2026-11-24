@@ -17,6 +17,7 @@ import subprocess
 import json
 import io
 import tarfile
+import time
 import docker
 import tempfile, os
 import xml.etree.ElementTree as ET
@@ -36,8 +37,31 @@ TEST_USER = "testuser"
 TESTUSER_PARAMS = {}
 BASE_URL = "http://ranger-kms.rangernw:9292/kms/v1"
 PARAMS = {"user.name": "keyadmin"}
-client = docker.from_env()
-container = client.containers.get(KMS_CONTAINER_NAME)
+
+_docker_client = None
+
+
+def get_docker_client():
+    global _docker_client
+    if _docker_client is None:
+        _docker_client = docker.from_env()
+    return _docker_client
+
+
+def get_kms_container():
+    """Return ranger-kms container (lazy — no Docker call at import time)."""
+    return get_docker_client().containers.get(KMS_CONTAINER_NAME)
+
+
+class _LazyKmsContainer:
+    """Backward-compatible alias; resolves ranger-kms on first use."""
+
+    def __getattr__(self, name):
+        return getattr(get_kms_container(), name)
+
+
+container = _LazyKmsContainer()
+
 KEYADMIN_PRINCIPAL = "keyadmin@EXAMPLE.COM"
 KEYADMIN_KEYTAB = "/etc/keytabs/keyadmin.keytab"
 KDC_CONTAINER = "ranger-kdc"
@@ -88,21 +112,43 @@ class KerberosRequests:
                 items = params   # list of tuples — allows duplicate keys e.g. [("key","k1"),("key","k2")]
             qs = "&".join(f"{k}={v}" for k, v in items)
             full_url = f"{url}?{qs}"
-        cmd = [
+
+        # Build curl args as a shell-safe string so we can append the body read
+        # in the same exec_run call — avoids a second docker exec for "cat".
+        curl_args = [
             "curl", "-s", "-o", "/tmp/curl_body.txt", "-w", "%{http_code}",
             "--negotiate", "-u", ":",
             "-X", method.upper(),
             "-H", "Content-Type: application/json",
         ]
         if json_body is not None:
-            cmd += ["-d", json.dumps(json_body)]
-        cmd.append(full_url)
+            curl_args += ["-d", json.dumps(json_body)]
+        curl_args.append(full_url)
 
-        exit_code, output = container.exec_run(cmd, user="root")
-        status_code = int(output.decode().strip()) if output else 0
+        # Escape each argument for a POSIX shell one-liner
+        def _sh_quote(s):
+            return "'" + s.replace("'", "'\\''") + "'"
 
-        _, body_out = container.exec_run("cat /tmp/curl_body.txt", user="root")
-        body = body_out.decode() if body_out else ""
+        curl_cmd = " ".join(_sh_quote(a) for a in curl_args)
+        # Single exec: run curl then print a fixed separator then the body.
+        # Output format:  <status_code>\n---BODY---\n<body text>
+        shell_cmd = f'{curl_cmd}; echo "\\n---BODY---"; cat /tmp/curl_body.txt'
+
+        exit_code, output = get_kms_container().exec_run(
+            ["sh", "-c", shell_cmd], user="root"
+        )
+        raw = output.decode() if output else ""
+
+        separator = "\n---BODY---\n"
+        if separator in raw:
+            status_part, body = raw.split(separator, 1)
+        else:
+            status_part, body = raw.strip(), ""
+
+        try:
+            status_code = int(status_part.strip())
+        except ValueError:
+            status_code = 0
 
         return _FakeResponse(status_code, body)
 
@@ -136,12 +182,14 @@ krb_requests = KerberosRequests()
 
 def _ensure_kdc_principal_keytab(principal: str, dest_container_name: str, dest_keytab_path: str, kdc_tmp_path: str, ) -> None:
     # create principal in KDC, export keytab, copy to target container
-    kdc = client.containers.get(KDC_CONTAINER)
-    dest = client.containers.get(dest_container_name)
+    kdc = get_docker_client().containers.get(KDC_CONTAINER)
+    dest = get_docker_client().containers.get(dest_container_name)
 
     exit_code, output = kdc.exec_run(f'kadmin.local -q "getprinc {principal}"', user="root")
     if exit_code != 0 or b"does not exist" in output:
-        kdc.exec_run(f'kadmin.local -q "addprinc -randkey {principal}"', user="root")
+        ec, out = kdc.exec_run(f'kadmin.local -q "addprinc -randkey {principal}"', user="root")
+        if ec != 0:
+            raise RuntimeError(f"addprinc failed for {principal}: {out.decode()}")
 
     exit_code, output = kdc.exec_run(
         f'kadmin.local -q "xst -k {kdc_tmp_path} {principal}"', user="root"
@@ -159,20 +207,46 @@ def ensure_keyadmin_keytab():
     # creation of keyadmin@example.com  & install keytab in ranger-kms
     _ensure_kdc_principal_keytab(KEYADMIN_PRINCIPAL, KMS_CONTAINER_NAME, KEYADMIN_KEYTAB,"/tmp/keyadmin.keytab",)
 
+def _kinit_with_retry(principal: str, keytab: str, ensure_keytab_fn, max_attempts: int = 5, wait: int = 10) -> None:
+    """Ensure the keytab exists then kinit, retrying to absorb KDC warm-up delays."""
+    kms = get_kms_container()
+    exit_code, _ = kms.exec_run(f"test -f {keytab}", user="root")
+    if exit_code != 0:
+        ensure_keytab_fn()
+
+    kms.exec_run("kdestroy -A 2>/dev/null || true", user="root")
+    for attempt in range(max_attempts):
+        exit_code, output = kms.exec_run(
+            f"kinit -kt {keytab} {principal}", user="root"
+        )
+        if exit_code == 0:
+            return
+        if attempt == 0:
+            # kinit failed even though keytab file exists — keytab may be stale
+            # (e.g. KDC container was restarted). Recreate the keytab and retry.
+            ensure_keytab_fn()
+        time.sleep(wait)
+    raise RuntimeError(f"kinit failed for {principal} after {max_attempts} attempts: {output.decode()}")
+
 def ensure_ticket():
-    # Always kinit as keyadmin — do not reuse a stale rangerkms ticket from cache.
-    exit_code, _ = container.exec_run(f"test -f {KEYADMIN_KEYTAB}", user="root")
-    if exit_code != 0:
-        ensure_keyadmin_keytab()
+    """Obtain a keyadmin Kerberos ticket (backward-compat alias for ensure_keyadmin_ticket)."""
+    _kinit_with_retry(KEYADMIN_PRINCIPAL, KEYADMIN_KEYTAB, ensure_keyadmin_keytab)
 
-    container.exec_run("kdestroy -A 2>/dev/null || true", user="root")
-    exit_code, output = container.exec_run(
-        f"kinit -kt {KEYADMIN_KEYTAB} {KEYADMIN_PRINCIPAL}", user="root"
+def ensure_keyadmin_ticket():
+    """Obtain a keyadmin Kerberos ticket."""
+    _kinit_with_retry(KEYADMIN_PRINCIPAL, KEYADMIN_KEYTAB, ensure_keyadmin_keytab)
+
+def ensure_testuser_keytab():
+    _ensure_kdc_principal_keytab(
+        TESTUSER_PRINCIPAL,
+        KMS_CONTAINER_NAME,
+        TESTUSER_KEYTAB,
+        f"/tmp/{TESTUSER}.keytab",
     )
-    if exit_code != 0:
-        raise RuntimeError(f"kinit failed: {output.decode()}")
 
-# Blacklist helpers
+def ensure_testuser_ticket():
+    """Obtain a testuser Kerberos ticket."""
+    _kinit_with_retry(TESTUSER_PRINCIPAL, TESTUSER_KEYTAB, ensure_testuser_keytab)
 
 def modify_blacklist_property(operation, users, action="add"):
     dbks_site_path = (
@@ -182,7 +256,7 @@ def modify_blacklist_property(operation, users, action="add"):
 
     ensure_ticket()
 
-    result = container.exec_run(f"cat {dbks_site_path}", user="root")
+    result = get_kms_container().exec_run(f"cat {dbks_site_path}", user="root")
     if result.exit_code != 0:
         raise RuntimeError(f"Cannot read dbks-site.xml: {result.output.decode()}")
 
@@ -222,7 +296,10 @@ def modify_blacklist_property(operation, users, action="add"):
         tar.addfile(info, io.BytesIO(data))
     tarstream.seek(0)
 
-    container.put_archive(path="/opt/ranger/ranger-3.0.0-SNAPSHOT-kms/ews/webapp/WEB-INF/classes/conf/", data=tarstream)
+    get_kms_container().put_archive(
+        path="/opt/ranger/ranger-3.0.0-SNAPSHOT-kms/ews/webapp/WEB-INF/classes/conf/",
+        data=tarstream,
+    )
     print(f"Successfully {'added' if action == 'add' else 'removed'} {users} in {prop_name}")
 
 
@@ -232,32 +309,6 @@ def blacklist_op_users(operation, users=[]):
 
 def unblacklist_op_users(operation, users=[]):
     modify_blacklist_property(operation, users, action="remove")
-
-def ensure_testuser_keytab():
-    _ensure_kdc_principal_keytab(
-        TESTUSER_PRINCIPAL,
-        KMS_CONTAINER_NAME,
-        TESTUSER_KEYTAB,
-        f"/tmp/{TESTUSER}.keytab",
-    )
-
-def ensure_testuser_ticket():
-    ensure_testuser_keytab()
-    container.exec_run("kdestroy -A 2>/dev/null || true", user="root")
-    exit_code, output = container.exec_run(
-        f"kinit -kt {TESTUSER_KEYTAB} {TESTUSER_PRINCIPAL}", user="root"
-    )
-    if exit_code != 0:
-        raise RuntimeError(f"testuser kinit failed: {output.decode()}")
-
-def ensure_keyadmin_ticket():
-    ensure_keyadmin_keytab()
-    container.exec_run("kdestroy -A 2>/dev/null || true", user="root")
-    exit_code, output = container.exec_run(
-        f"kinit -kt {KEYADMIN_KEYTAB} {KEYADMIN_PRINCIPAL}", user="root"
-    )
-    if exit_code != 0:
-        raise RuntimeError(f"keyadmin kinit failed: {output.decode()}")
 
 def ensure_test_user_exists(username: str) -> None:
     payload = {
@@ -286,3 +337,21 @@ def delete_test_user(username: str) -> None:
     if r.status_code in (200, 204, 404):
         return
     raise RuntimeError(f"Failed to delete Ranger user {username}: {r.status_code} {r.text}")
+
+def update_kms_policy(policy_id, username, accesses):
+    update_url = f"{BASE_URL_RANGER}/{policy_id}"
+    response = requests.get(update_url, auth=RANGER_KMS_AUTH)
+    if response.status_code != 200:
+        raise RuntimeError(f"Failed to fetch policy: {response.text}")
+    policy_data = response.json()
+    policy_data["policyItems"] = []
+    if accesses:
+        policy_data["policyItems"].append({
+            "accesses": [{"type": a.lower(), "isAllowed": True} for a in accesses],
+            "users": [username],
+            "delegateAdmin": False,
+        })
+    response = requests.put(update_url, auth=RANGER_KMS_AUTH, json=policy_data)
+    time.sleep(5)
+    if response.status_code != 200:
+        raise RuntimeError(f"Failed to update policy: {response.text}")

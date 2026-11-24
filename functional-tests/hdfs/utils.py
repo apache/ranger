@@ -18,7 +18,13 @@ import pytest
 import docker
 import requests
 from hdfs.test_config import (KMS_CONTAINER, HADOOP_NAMENODE_LOG_PATH, KMS_LOG_PATH)
-from kms.utils import krb_requests, ensure_ticket, BASE_URL, PARAMS
+from kms.utils import (
+    BASE_URL,
+    PARAMS,
+    ensure_ticket,
+    get_kms_container,
+    krb_requests,
+)
 from hdfs.test_config import HDFS_USER
 import subprocess
 import tempfile
@@ -39,7 +45,8 @@ HDFS_KMS_ACCESSES = [
     "CREATE", "DELETE", "ROLLOVER", "GET", "GETKEYS", "GETMETADATA",
     "GENERATEEEK", "DECRYPTEEK", "SETKEYMATERIAL",
 ]
-KMS_SITE_PATH = "/opt/ranger/ranger-kms/ews/webapp/WEB-INF/classes/conf/kms-site.xml"
+KMS_HOME = "/opt/ranger/kms"
+KMS_SITE_PATH = f"{KMS_HOME}/ews/webapp/WEB-INF/classes/conf/kms-site.xml"
 
 
 HADOOP_CONTAINER = "ranger-hadoop"
@@ -51,19 +58,40 @@ KDC_CONTAINER = "ranger-kdc"
 HDFS_PRINCIPAL = "hdfs/ranger-hadoop.rangernw@EXAMPLE.COM"
 HDFS_KEYTAB = "/etc/keytabs/hdfs.keytab"
 
+HBASE_PRINCIPAL = "hbase/ranger-hadoop.rangernw@EXAMPLE.COM"
+HBASE_KEYTAB = "/etc/keytabs/hbase.keytab"
+
+# Map each OS user to their Kerberos principal and keytab.
+# Defined here (near the constants) so run_command can reference it clearly.
+_KERBEROS_CREDENTIALS = {
+    "hdfs":  (HDFS_PRINCIPAL,  HDFS_KEYTAB),
+    "hive":  (HIVE_PRINCIPAL,  HIVE_KEYTAB),
+    "hbase": (HBASE_PRINCIPAL, HBASE_KEYTAB),
+}
+
 #to run all HDFS commands
-def run_command(container, cmd, user, fail_on_error=True,return_exit_code=False):
+def run_command(container, cmd, user, fail_on_error=True, return_exit_code=False):
     # For string commands on kerberos-capable users, wrap with kinit automatically.
+    # klist -s checks for an existing valid ticket first — skips kinit when one is present,
+    # avoiding redundant re-authentication on every command call.
     # List commands (e.g. from run_kerberos_command) are passed through unchanged.
     if isinstance(cmd, str) and user in _KERBEROS_CREDENTIALS:
         principal, keytab = _KERBEROS_CREDENTIALS[user]
         actual_cmd = ["bash", "-c",
-                      f"kinit -kt {keytab} {principal} 2>/dev/null; {cmd}"]
+                      f"klist -s 2>/dev/null || kinit -kt {keytab} {principal} 2>/dev/null; {cmd}"]
     else:
         actual_cmd = cmd
 
-    exit_code, output = container.exec_run(actual_cmd, user=user)
-    output_response = output.decode()
+    # demux=True separates stdout and stderr — prevents hadoop usage text (stderr)
+    # from leaking into the captured output returned to callers and printed in tests.
+    exit_code, (stdout, stderr) = container.exec_run(actual_cmd, user=user, demux=True)
+    stdout_text = (stdout or b"").decode()
+    stderr_text = (stderr or b"").decode()
+
+    # Negative/failure-detection tests (return_exit_code=True) need stderr to validate
+    # the error type (e.g. Permission denied vs auth failure). Positive tests get stdout
+    # only, which keeps hadoop usage dumps from polluting the console.
+    output_response = stdout_text if not return_exit_code else stdout_text + stderr_text
 
     if exit_code != 0 and fail_on_error:
         kms_container = client.containers.get(KMS_CONTAINER)
@@ -72,8 +100,11 @@ def run_command(container, cmd, user, fail_on_error=True,return_exit_code=False)
             Command failed: {cmd}
             Exit Code: {exit_code}
 
-            Output:
-            {output_response}
+            Stdout:
+            {stdout_text}
+
+            Stderr:
+            {stderr_text}
 
             Hadoop Container Logs:
             {hadoop_logs}
@@ -117,7 +148,9 @@ def _ensure_kdc_service_principal(username: str, service: str = "ranger-hadoop")
 
     exit_code, output = kdc.exec_run(f'kadmin.local -q "getprinc {principal}"', user="root")
     if exit_code != 0 or b"does not exist" in output:
-        kdc.exec_run(f'kadmin.local -q "addprinc -randkey {principal}"', user="root")
+        ec, out = kdc.exec_run(f'kadmin.local -q "addprinc -randkey {principal}"', user="root")
+        if ec != 0:
+            raise RuntimeError(f"addprinc failed for {principal}: {out.decode()}")
 
     exit_code, output = kdc.exec_run(
         f'kadmin.local -q "xst -k {kdc_tmp} {principal}"', user="root"
@@ -138,8 +171,9 @@ def ensure_hadoop_user_keytab(username: str) -> None:
     _ensure_kdc_service_principal(username)
 
 def run_kerberos_command(container, cmd, user, principal, keytab, **kwargs):
+    # Use klist -s to skip kinit when a valid ticket already exists for this user.
     shell = (
-        f"kinit -kt {keytab} {principal} && "
+        f"klist -s 2>/dev/null || kinit -kt {keytab} {principal} 2>/dev/null; "
         f'HADOOP_OPTS="-Dhadoop.security.authentication=kerberos" {cmd}'
     )
     return run_command(container, ["bash", "-c", shell], user, **kwargs)
@@ -176,8 +210,28 @@ def ensure_ranger_user(username: str) -> None:
         print(f"WARN: create Ranger user {username}: {resp.status_code} {resp.text}")
 
 
+def _wait_for_kms_up(kms_container, timeout=180) -> None:
+    # Block until the KMS port accepts connections inside the container.
+    deadline = time.time() + timeout
+    while time.time() < deadline:
+        kms_container.reload()
+        if kms_container.status == "running":
+            ec, _ = kms_container.exec_run(
+                ["bash", "-c", "exec 3<>/dev/tcp/localhost/9292"], user="root"
+            )
+            if ec == 0:
+                return
+        time.sleep(3)
+    pytest.fail(f"ranger-kms did not come up within {timeout}s")
+
+
 def ensure_kms_kerberos_rules(kms_container) -> bool:
     # Patch KMS kerberos name rules at runtime. Returns True if KMS was restarted.
+    kms_container.reload()
+    if kms_container.status != "running":
+        kms_container.start()
+        _wait_for_kms_up(kms_container)
+
     exit_code, _ = kms_container.exec_run(
         f"grep -q 'hive/ranger-hadoop' {KMS_SITE_PATH}", user="root"
     )
@@ -185,23 +239,26 @@ def ensure_kms_kerberos_rules(kms_container) -> bool:
         return False
 
     rules = [
+        # [ndj]n already covers nn, dn, jn — no separate dn rule needed
         "RULE:[2:$1/$2@$0]([ndj]n/ranger-hadoop\\.rangernw@EXAMPLE\\.COM)s/.*/keyadmin/",
-        "RULE:[2:$1/$2@$0](dn/ranger-hadoop\\.rangernw@EXAMPLE\\.COM)s/.*/keyadmin/",
         "RULE:[2:$1/$2@$0](hive/ranger-hadoop\\.rangernw@EXAMPLE\\.COM)s/.*/hive/",
     ]
     for rule in rules:
         kms_container.exec_run(f"sed -i '/DEFAULT/i {rule}' {KMS_SITE_PATH}", user="root")
 
-    kms_container.exec_run(
-        "/opt/ranger/ranger-kms/ranger-kms-services.sh restart", user="root"
-    )
-    print("Patched KMS kerberos rules, restarted ranger-kms.")
-    time.sleep(30)
+    kms_container.restart()
+    _wait_for_kms_up(kms_container)
+    print("Patched KMS kerberos rules, restarted ranger-kms container.")
     return True
 
 
 def ensure_kms_hdfs_policy() -> None:
-    # Grant HDFS principals KMS access by updating the default wildcard policy
+    # Grant HDFS principals KMS access by updating the default wildcard policy.
+    # Ensure every user in HDFS_KMS_USERS exists in Ranger first — service accounts
+    # like 'nn' (NameNode) and 'dn' (DataNode) are not auto-created in Ranger admin
+    # and will cause a 400 if added to a policy without being registered first.
+    for username in HDFS_KMS_USERS:
+        ensure_ranger_user(username)
 
     resp = requests.get(RANGER_SERVICE_POLICY_URL, auth=RANGER_AUTH, timeout=30)
 
@@ -228,17 +285,19 @@ def ensure_kms_hdfs_policy() -> None:
 
     existing_users = set(policy_items[0].get("users") or [])
     needed_users = set(HDFS_KMS_USERS)
-    existing_access = {a["type"] for a in policy_items[0].get("accesses", [])}
+    # Ranger returns access types in lowercase; compare case-insensitively
+    existing_access = {a["type"].lower() for a in policy_items[0].get("accesses", [])}
+    needed_access = {a.lower() for a in HDFS_KMS_ACCESSES}
 
-    if needed_users.issubset(existing_users) and set(HDFS_KMS_ACCESSES).issubset(existing_access):
+    if needed_users.issubset(existing_users) and needed_access.issubset(existing_access):
         print("KMS policy already grants required HDFS users and accesses.")
         return
 
     policy_items[0]["users"] = sorted(existing_users | needed_users)
     for access_type in HDFS_KMS_ACCESSES:
-        if access_type not in existing_access:
+        if access_type.lower() not in existing_access:
             policy_items[0].setdefault("accesses", []).append(
-                {"type": access_type, "isAllowed": True}
+                {"type": access_type.lower(), "isAllowed": True}
             )
 
     target["policyItems"] = policy_items
@@ -263,7 +322,11 @@ def _kms_key_missing(resp) -> bool:
 
 def delete_kms_key(key_name: str) -> None:
     # Delete KMS key if present. Ignores missing-key responses.
-    ensure_ticket()
+    # Only refresh the keyadmin ticket when no valid ticket exists — avoids a full
+    # kdestroy+kinit on every key deletion (e.g. 6 calls in cleanup_test_artifacts).
+    ec, _ = get_kms_container().exec_run("klist -s 2>/dev/null", user="root")
+    if ec != 0:
+        ensure_ticket()
     resp = krb_requests.delete(f"{BASE_URL}/key/{key_name}", params=PARAMS)
     if resp.status_code in (200, 404):
         return
@@ -285,12 +348,19 @@ def ensure_kms_key(key_name: str, cipher="AES/CTR/NoPadding", length=128) -> Non
     assert resp.status_code == 201, f"Key creation failed: {resp.text}"
 
 def delete_hdfs_path(container, path: str) -> None:
-    # Remove HDFS path if present. Kinit as hdfs first (kerberos mode)
-    container.exec_run(
-        ["bash", "-c",
-         f"kinit -kt {HDFS_KEYTAB} {HDFS_PRINCIPAL} 2>/dev/null; hdfs dfs -rm -R -f {path}"],
-        user=HDFS_USER,
+    # Remove HDFS path if present. Uses klist -s check before kinit.
+    # demux=True so errors appear in stderr (not mixed into stdout).
+    shell = (
+        f"klist -s 2>/dev/null || kinit -kt {HDFS_KEYTAB} {HDFS_PRINCIPAL} 2>/dev/null; "
+        f"hdfs dfs -rm -R -f {path}"
     )
+    exit_code, (stdout, stderr) = container.exec_run(
+        ["bash", "-c", shell], user=HDFS_USER, demux=True
+    )
+    if exit_code != 0:
+        stderr_text = (stderr or b"").decode()
+        stdout_text = (stdout or b"").decode()
+        print(f"WARN: delete_hdfs_path {path} failed (exit {exit_code}): {stderr_text or stdout_text}")
 
 def cleanup_encryption_zone(container, ez_path: str) -> None:
     # Remove EZ directory (Must run before deleting bound KMS key)
@@ -310,10 +380,3 @@ def create_encryption_zone(container, ez_name: str, key_name: str) -> None:
 
     run_command(container, f"hdfs dfs -mkdir {ez_path}", HDFS_USER)
     run_command(container, f"hdfs crypto -createZone -keyName {key_name} -path {ez_path}", HDFS_USER)
-
-#to run all HDFS commands
-# Map each OS user to their kerberos principal and keytab (pre-existing in container)
-_KERBEROS_CREDENTIALS = {
-    "hdfs": ("hdfs/ranger-hadoop.rangernw@EXAMPLE.COM", "/etc/keytabs/hdfs.keytab"),
-    "hive": ("hive/ranger-hadoop.rangernw@EXAMPLE.COM", "/etc/keytabs/hive.keytab"),
-}

@@ -237,6 +237,11 @@ public class CloudWatchAccessAuditsService extends org.apache.ranger.AccessAudit
             accessAudit.setClientIP(value.toString());
         }
 
+        value = auditEvent.getClientType();
+        if (value != null) {
+            accessAudit.setClientType(value.toString());
+        }
+
         accessAudit.setAccessResult(auditEvent.getAccessResult());
         accessAudit.setPolicyId(auditEvent.getPolicyId());
         accessAudit.setRepoType(auditEvent.getRepositoryType());

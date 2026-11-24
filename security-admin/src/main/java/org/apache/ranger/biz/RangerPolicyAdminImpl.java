@@ -789,6 +789,12 @@ public class RangerPolicyAdminImpl implements RangerPolicyAdmin {
                         ret.addAll(expandedAccesses.get(access.getType()));
                     }
                 }
+            } else if (policyType == RangerPolicy.POLICY_TYPE_CONSTRAINTS) {
+                for (RangerPolicy.RangerPolicyItem item : policy.getConstraintPolicyItems()) {
+                    for (RangerPolicy.RangerPolicyItemAccess access : item.getAccesses()) {
+                        ret.addAll(expandedAccesses.get(access.getType()));
+                    }
+                }
             } else {
                 LOG.error("Unknown policy-type :[{}], returning empty access-type set", policyType);
 
@@ -845,6 +851,8 @@ public class RangerPolicyAdminImpl implements RangerPolicyAdmin {
                 collectAccessTypes(expandedAccesses, policy.getDataMaskPolicyItems(), userAccesses, groupAccesses, roleAccesses);
             } else if (policyType == RangerPolicy.POLICY_TYPE_ROWFILTER) {
                 collectAccessTypes(expandedAccesses, policy.getRowFilterPolicyItems(), userAccesses, groupAccesses, roleAccesses);
+            } else if (policyType == RangerPolicy.POLICY_TYPE_CONSTRAINTS) {
+                collectAccessTypes(expandedAccesses, policy.getConstraintPolicyItems(), userAccesses, groupAccesses, roleAccesses);
             } else {
                 LOG.error("Unknown policy-type :[{}], returning empty access-type set", policyType);
             }
@@ -939,6 +947,7 @@ public class RangerPolicyAdminImpl implements RangerPolicyAdmin {
         collectDelegateAdminPrincipals(policy.getDenyExceptions(), ret);
         collectDelegateAdminPrincipals(policy.getDataMaskPolicyItems(), ret);
         collectDelegateAdminPrincipals(policy.getRowFilterPolicyItems(), ret);
+        collectDelegateAdminPrincipals(policy.getConstraintPolicyItems(), ret);
         return ret;
     }
 

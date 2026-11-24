@@ -1,0 +1,181 @@
+{
+    "name": "{random_str}",
+    "policyName": "all - path - {random_str}",
+    "description": "Policy for all - path",
+    "resourceType": 1,
+    "assetId": 2,
+    "isEncrypt": 2,
+    "permMapList": [
+        {
+            "createDate": null,
+            "updateDate": null,
+            "permGroup": "0",
+            "userId": 81,
+            "permFor": 1,
+            "permType": 2,
+            "grantOrRevoke": true,
+            "userName": "hdfs",
+            "isRecursive": 0,
+            "isWildCard": true
+        },
+        {
+            "createDate": null,
+            "updateDate": null,
+            "permGroup": "0",
+            "userId": 81,
+            "permFor": 1,
+            "permType": 3,
+            "grantOrRevoke": true,
+            "userName": "hdfs",
+            "isRecursive": 0,
+            "isWildCard": true
+        },
+        {
+            "createDate": null,
+            "updateDate": null,
+            "permGroup": "0",
+            "userId": 81,
+            "permFor": 1,
+            "permType": 9,
+            "grantOrRevoke": true,
+            "userName": "hdfs",
+            "isRecursive": 0,
+            "isWildCard": true
+        },
+        {
+            "createDate": null,
+            "updateDate": null,
+            "permGroup": "0",
+            "userId": 81,
+            "permFor": 1,
+            "permType": 6,
+            "grantOrRevoke": true,
+            "userName": "hdfs",
+            "isRecursive": 0,
+            "isWildCard": true
+        },
+        {
+            "createDate": null,
+            "updateDate": null,
+            "permGroup": "0",
+            "userId": 43,
+            "permFor": 1,
+            "permType": 2,
+            "grantOrRevoke": true,
+            "userName": "mapred",
+            "isRecursive": 0,
+            "isWildCard": true
+        },
+        {
+            "createDate": null,
+            "updateDate": null,
+            "permGroup": "0",
+            "userId": 43,
+            "permFor": 1,
+            "permType": 3,
+            "grantOrRevoke": true,
+            "userName": "mapred",
+            "isRecursive": 0,
+            "isWildCard": true
+        },
+        {
+            "createDate": null,
+            "updateDate": null,
+            "permGroup": "0",
+            "userId": 43,
+            "permFor": 1,
+            "permType": 9,
+            "grantOrRevoke": true,
+            "userName": "mapred",
+            "isRecursive": 0,
+            "isWildCard": true
+        },
+        {
+            "createDate": null,
+            "updateDate": null,
+            "permGroup": "0",
+            "userId": 43,
+            "permFor": 1,
+            "permType": 6,
+            "grantOrRevoke": true,
+            "userName": "mapred",
+            "isRecursive": 0,
+            "isWildCard": true
+        },
+        {
+            "createDate": null,
+            "updateDate": null,
+            "permGroup": "0",
+            "userId": 7,
+            "permFor": 1,
+            "permType": 2,
+            "grantOrRevoke": true,
+            "userName": "hdfsfoo0",
+            "isRecursive": 0,
+            "isWildCard": true
+        },
+        {
+            "createDate": null,
+            "updateDate": null,
+            "permGroup": "0",
+            "userId": 7,
+            "permFor": 1,
+            "permType": 3,
+            "grantOrRevoke": true,
+            "userName": "hdfsfoo0",
+            "isRecursive": 0,
+            "isWildCard": true
+        },
+        {
+            "createDate": null,
+            "updateDate": null,
+            "permGroup": "0",
+            "userId": 7,
+            "permFor": 1,
+            "permType": 9,
+            "grantOrRevoke": true,
+            "userName": "hdfsfoo0",
+            "isRecursive": 0,
+            "isWildCard": true
+        },
+        {
+            "createDate": null,
+            "updateDate": null,
+            "permGroup": "0",
+            "userId": 7,
+            "permFor": 1,
+            "permType": 6,
+            "grantOrRevoke": true,
+            "userName": "hdfsfoo0",
+            "isRecursive": 0,
+            "isWildCard": true
+        },
+        {
+            "createDate": null,
+            "updateDate": null,
+            "permGroup": "2",
+            "userId": 87,
+            "permFor": 1,
+            "permType": 2,
+            "grantOrRevoke": true,
+            "userName": "rangerlookup",
+            "isRecursive": 0,
+            "isWildCard": true
+        }
+    ],
+    "auditList": [
+        {
+            "createDate": null,
+            "updateDate": null,
+            "resourceId": 1,
+            "auditType": 1
+        }
+    ],
+    "isRecursive": 1,
+    "assetName": "dev_hdfs",
+    "assetType": 1,
+    "resourceStatus": 1,
+    "tableType": 0,
+    "columnType": 0,
+    "checkParentPermission": 0
+}

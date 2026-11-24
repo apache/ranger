@@ -1,0 +1,83 @@
+{
+  "serviceName": "hdfsdev",
+  "serviceDef": {
+    "name": "hdfs",
+    "resources": [
+      {
+        "name": "path",
+        "type": "path",
+        "level": 1,
+        "mandatory": true,
+        "lookupSupported": true,
+        "matcher": "org.apache.ranger.plugin.resourcematcher.RangerPathResourceMatcher",
+        "matcherOptions": {"wildCard": true, "ignoreCase": true},
+        "label": "Resource Path",
+        "description": "HDFS file or directory path"
+      }
+    ],
+    "accessTypes": [
+      {"name": "read", "label": "Read"},
+      {"name": "write", "label": "Write"},
+      {"name": "execute", "label": "Execute"}
+    ]
+  },
+  "policies": [
+    {
+      "id": 1,
+      "name": "allow-read-public",
+      "isEnabled": true,
+      "isAuditEnabled": true,
+      "isDenyAllElse": false,
+      "resources": {"path": {"values": ["/data"], "isRecursive": true}},
+      "policyItems": [
+        {
+          "accesses": [{"type": "read", "isAllowed": true}],
+          "users": [],
+          "groups": ["public"],
+          "delegateAdmin": false
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "name": "deny-read-user2",
+      "isEnabled": true,
+      "isAuditEnabled": true,
+      "isDenyAllElse": false,
+      "resources": {"path": {"values": ["/data"], "isRecursive": true}},
+      "policyItems": [],
+      "denyPolicyItems": [
+        {
+          "accesses": [{"type": "read", "isAllowed": true}],
+          "users": ["user2"],
+          "groups": [],
+          "delegateAdmin": false
+        }
+      ]
+    }
+  ],
+  "tests": [
+    {
+      "name": "allow unchanged when service has no constraintDefs",
+      "request": {
+        "resource": {"elements": {"path": "/data/file"}},
+        "accessType": "read",
+        "user": "user1",
+        "userGroups": [],
+        "requestData": "read /data/file"
+      },
+      "result": {"isAllowed": true, "isAudited": true, "constraints": []}
+    },
+    {
+      "name": "deny unchanged when service has no constraintDefs",
+      "request": {
+        "resource": {"elements": {"path": "/data/file"}},
+        "accessType": "read",
+        "user": "user2",
+        "userGroups": [],
+        "requestData": "read /data/file"
+      },
+      "result": {"isAllowed": false, "isAudited": true, "constraints": []}
+    }
+  ]
+}

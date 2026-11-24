@@ -68,7 +68,30 @@
 
     <property>
         <name>ranger.audit.dispatcher.kafka.sasl.mechanism</name>
-        <value>GSSAPI</value>
+        <value>OAUTHBEARER</value>
+        <description>OAUTHBEARER; GSSAPI is also supported and uses service.kerberos.principal/keytab</description>
+    </property>
+
+    <property>
+        <name>ranger.audit.dispatcher.kafka.sasl.jaas.option.useKeyTab</name>
+        <value>true</value>
+        <description>GSSAPI Krb5LoginModule option; any option can be set as ranger.audit.dispatcher.kafka.sasl.jaas.option.&lt;name&gt;</description>
+    </property>
+
+    <property>
+        <name>ranger.audit.dispatcher.kafka.sasl.jaas.option.storeKey</name>
+        <value>true</value>
+    </property>
+
+    <property>
+        <name>ranger.audit.dispatcher.kafka.sasl.jaas.option.useTicketCache</name>
+        <value>false</value>
+    </property>
+
+    <property>
+        <name>ranger.audit.dispatcher.kafka.sasl.oauthbearer.token.endpoint.url</name>
+        <value>file:///etc/kafka-oauth/rangerauditserver.token</value>
+        <description>Dev token minted by the ranger-kafka container; re-read on every login so rotation is picked up</description>
     </property>
 
     <!-- Solr Dispatcher Threading Configuration -->
@@ -110,7 +133,7 @@
         <description>
             Solr URLs for audits when SolrCloud is not enabled.
             Docker supports only standalone mode for now,
-            configure http://ranger-solr:8983/solr/ranger_audits
+            configure http://ranger-solr.rangernw:8983/solr/ranger_audits
         </description>
     </property>
 

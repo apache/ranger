@@ -121,6 +121,11 @@ public class TestRangerPolicyDeltaUtil {
         d5.setChangeType(RangerPolicyDelta.CHANGE_TYPE_POLICY_CREATE);
         d5.setPolicy(policy(7L, svc, RangerPolicy.POLICY_TYPE_ACCESS));
         assertTrue(RangerPolicyDeltaUtil.isValidDeltas(Collections.singletonList(d5), svc));
+
+        RangerPolicyDelta d6 = new RangerPolicyDelta();
+        d6.setChangeType(RangerPolicyDelta.CHANGE_TYPE_POLICY_CREATE);
+        d6.setPolicy(policy(8L, svc, RangerPolicy.POLICY_TYPE_CONSTRAINTS));
+        assertTrue(RangerPolicyDeltaUtil.isValidDeltas(Collections.singletonList(d6), svc));
     }
 
     @Test

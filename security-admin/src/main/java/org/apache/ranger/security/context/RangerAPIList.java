@@ -37,12 +37,6 @@ public class RangerAPIList {
     public static final String DELETE_X_RESOURCE               = "AssetREST.deleteXResource";
     public static final String SEARCH_X_RESOURCES              = "AssetREST.searchXResources";
     public static final String COUNT_X_RESOURCES               = "AssetREST.countXResources";
-    public static final String GET_X_CRED_STORE                = "AssetREST.getXCredentialStore";
-    public static final String CREATE_X_CRED_STORE             = "AssetREST.createXCredentialStore";
-    public static final String UPDATE_X_CRED_STORE             = "AssetREST.updateXCredentialStore";
-    public static final String DELETE_X_CRED_STORE             = "AssetREST.deleteXCredentialStore";
-    public static final String SEARCH_X_CRED_STORE             = "AssetREST.searchXCredentialStores";
-    public static final String COUNT_X_CRED_STORE              = "AssetREST.countXCredentialStores";
     public static final String GET_X_RESOURCE_FILE             = "AssetREST.getXResourceFile";
     public static final String GET_RESOURCE_JSON               = "AssetREST.getResourceJSON";
     public static final String SEARCH_X_POLICY_EXPORT_AUDITS   = "AssetREST.searchXPolicyExportAudits";
@@ -266,6 +260,9 @@ public class RangerAPIList {
     public static final String GET_ALL_LATEST_AUDIT_METRICS = "AuditMetricsREST.getAllLatestRangerAuditMetrics";
     public static final String GET_DAILY_AUDIT_METRICS      = "AuditMetricsREST.getDailyAuditMetrics";
     public static final String GET_DAYS_AUDIT_METRICS       = "AuditMetricsREST.getDaysAuditMetrics";
+    public static final String GET_DAYS_AUDIT_ADMIN_METRICS = "AuditMetricsREST.getDaysAuditAdminMetrics";
+    public static final String GET_DAYS_AUDIT_ACCESS_METRICS = "AuditMetricsREST.getDaysAuditAccessMetrics";
+    public static final String GET_DAYS_PLUGIN_POLICY_SYNC_METRICS = "AuditMetricsREST.getDaysPluginPolicySyncMetrics";
 
     /**
      * List of APIs for PublicAPIsv2

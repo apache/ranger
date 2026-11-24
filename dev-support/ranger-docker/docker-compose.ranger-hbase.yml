@@ -23,11 +23,6 @@ services:
     tty: true
     networks:
       - ranger
-    ports:
-      - "16000:16000"
-      - "16010:16010"
-      - "16020:16020"
-      - "16030:16030"
     depends_on:
       ranger-hadoop:
         condition: service_healthy

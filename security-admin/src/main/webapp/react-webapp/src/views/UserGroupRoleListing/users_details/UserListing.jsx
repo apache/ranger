@@ -340,6 +340,7 @@ function UserListing() {
       {
         Header: "User Name",
         accessor: "name",
+        minWidth: 180,
         Cell: (rawValue) => {
           if (rawValue.value) {
             return (
@@ -375,7 +376,8 @@ function UserListing() {
               </div>
             );
           } else return <div className="text-center">--</div>;
-        }
+        },
+        hideResizer: true
       },
       {
         Header: "Role",
@@ -391,7 +393,8 @@ function UserListing() {
           }
           return <div className="textt-center">--</div>;
         },
-        width: 70
+        width: 70,
+        hideResizer: true
       },
       {
         Header: "User Source",
@@ -406,7 +409,8 @@ function UserListing() {
             );
           } else return "--";
         },
-        width: 70
+        width: 70,
+        hideResizer: true
       },
       {
         Header: "Sync Source",
@@ -420,7 +424,8 @@ function UserListing() {
             <div className="text-center">--</div>
           );
         },
-        width: 100
+        width: 100,
+        hideResizer: true
       },
       {
         Header: "Groups",
@@ -444,7 +449,8 @@ function UserListing() {
           } else {
             return "--";
           }
-        }
+        },
+        hideResizer: true
       },
       {
         Header: "Visibility",
@@ -469,7 +475,8 @@ function UserListing() {
               );
           } else return <div className="text-center">--</div>;
         },
-        width: 70
+        width: 70,
+        hideResizer: true
       },
       {
         Header: "Sync Details",
@@ -496,7 +503,8 @@ function UserListing() {
             return <div className="text-center">--</div>;
           }
         },
-        width: 80
+        width: 80,
+        hideResizer: true
       }
     ],
     []
@@ -672,6 +680,7 @@ function UserListing() {
             currentpageSize={state.currentPageSize}
             pagination
             loading={state.loader}
+            columnResizable={true}
             rowSelectOp={
               (isSystemAdmin() || isKeyAdmin()) && {
                 position: "first",

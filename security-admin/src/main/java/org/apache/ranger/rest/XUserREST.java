@@ -438,8 +438,8 @@ public class XUserREST {
         if (userSession != null && userSession.getLoginId() != null) {
             VXUser loggedInVXUser = xUserService.getXUserByUserName(userSession.getLoginId());
 
-            if (loggedInVXUser != null && loggedInVXUser.getUserRoleList().size() == 1) {
-                if (loggedInVXUser.getUserRoleList().contains(RangerConstants.ROLE_SYS_ADMIN) || loggedInVXUser.getUserRoleList().contains(RangerConstants.ROLE_ADMIN_AUDITOR)) {
+            if (loggedInVXUser != null && (userSession.isSuperUser() || loggedInVXUser.getUserRoleList().size() == 1)) {
+                if (userSession.isSuperUser() || loggedInVXUser.getUserRoleList().contains(RangerConstants.ROLE_SYS_ADMIN) || loggedInVXUser.getUserRoleList().contains(RangerConstants.ROLE_ADMIN_AUDITOR)) {
                     boolean hasRole = false;
 
                     hasRole = !userRolesList.contains(RangerConstants.ROLE_SYS_ADMIN) ? userRolesList.add(RangerConstants.ROLE_SYS_ADMIN) : hasRole;
@@ -1473,7 +1473,7 @@ public class XUserREST {
                     if (isKeyAdmin) {
                         isAllowed = true;
                     } else if (rangerService != null) {
-                        isAllowed = bizUtil.isUserAllowed(rangerService, USERSTORE_DOWNLOAD_USERS);
+                        isAllowed = bizUtil.isUserAllowed(rangerService, USERSTORE_DOWNLOAD_USERS) || bizUtil.isServiceAccountUser(rangerService);
                     }
                 } else {
                     rangerService = svcStore.getServiceByName(serviceName);
@@ -1481,7 +1481,7 @@ public class XUserREST {
                     if (isAdmin) {
                         isAllowed = true;
                     } else if (rangerService != null) {
-                        isAllowed = bizUtil.isUserAllowed(rangerService, USERSTORE_DOWNLOAD_USERS);
+                        isAllowed = bizUtil.isUserAllowed(rangerService, USERSTORE_DOWNLOAD_USERS) || bizUtil.isServiceAccountUser(rangerService);
                     }
                 }
 

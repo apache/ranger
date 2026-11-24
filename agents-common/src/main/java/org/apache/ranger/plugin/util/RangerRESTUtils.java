@@ -43,6 +43,7 @@ public class RangerRESTUtils {
     public static final  String REST_URL_SERVICE_GET_ROLE_INFO                    = "/service/public/v2/api/roles/name/";
     public static final  String REST_URL_SERVICE_GRANT_ROLE                       = "/service/public/v2/api/roles/grant/";
     public static final  String REST_URL_SERVICE_REVOKE_ROLE                      = "/service/public/v2/api/roles/revoke/";
+    public static final  String REST_URL_SERVICE_HEADERS                          = "/service/public/v2/api/service-headers";
     public static final  String REST_URL_SERVICE_SERCURE_GET_USER_GROUP_ROLES     = "/service/roles/secure/download/";
     public static final  String REST_URL_SERVICE_GET_USER_GROUP_ROLES             = "/service/roles/download/";
     public static final  String REST_URL_GET_SERVICE_TAGS_IF_UPDATED              = "/service/tags/download/";

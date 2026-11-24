@@ -21,6 +21,8 @@ import requests
 import time
 import os
 
+from ranger_test_utils.os_env import create_os_user, delete_os_user
+
 # Module-level constants — always available globally, even with pytest -n auto
 CREDENTIALS = ("admin", "rangerR0cks!")
 DEFAULT_HEADERS = {
@@ -86,6 +88,7 @@ def ranger_key_admin_config(keyadmin_credentials, default_headers):
 def temp_secure_user(ranger_config):
 
     created_user_ids = []
+    created_os_users = []
 
     def _create_user(role_list = None):
 
@@ -121,7 +124,11 @@ def temp_secure_user(ranger_config):
             "groupIdList": [],
             "groupNameList": []
         }
- 
+
+        # mirror the user into the ranger container OS so PAM auth does not fail/delay
+        create_os_user(payload["name"], payload["password"])
+        created_os_users.append(username)
+
         response = create_user_with_retry(
             f"{ranger_config['base_url']}/xusers/secure/users",
             json=payload,
@@ -162,10 +169,15 @@ def temp_secure_user(ranger_config):
                 f"Unexpected error deleting user ID {user_id}: {response.text}"
             )
 
+    # remove the mirrored OS users from the ranger container
+    for os_user in created_os_users:
+        delete_os_user(os_user)
+
 @pytest.fixture(scope="class")
 def temp_keyadmin_user(ranger_config, role = "keyadmin"):
 
     created_user_ids = []
+    created_os_users = []
 
     def _create_keyadmin():
 
@@ -185,6 +197,10 @@ def temp_keyadmin_user(ranger_config, role = "keyadmin"):
             "groupIdList": [],
             "groupNameList": []
         }
+
+        # mirror the user into the ranger container OS so PAM auth does not fail/delay
+        create_os_user(payload["name"], payload["password"])
+        created_os_users.append(username)
 
         response = create_user_with_retry(
             f"{ranger_config['base_url']}/xusers/secure/users",
@@ -233,6 +249,10 @@ def temp_keyadmin_user(ranger_config, role = "keyadmin"):
             auth=ranger_config["auth"],
             headers={**ranger_config["headers"], "X-Requested-By": "ranger"}
         )
+
+    # remove the mirrored OS users from the ranger container
+    for os_user in created_os_users:
+        delete_os_user(os_user)
 
 @pytest.fixture(scope="class")
 def temp_group(ranger_config):

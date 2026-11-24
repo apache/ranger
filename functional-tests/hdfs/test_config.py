@@ -93,10 +93,12 @@ TEST_KMS_KEYS = [
     "hdfs-key",
     "test-key1", "test-key2", "test-key3",
     "cross-key", "cross-key2",
+    "decrypt-eek-key",          # test_encryption04
 ]
 # All HDFS encryption zone paths
 TEST_EZ_PATHS = [
     "/secure_zone",
     "/secure_zone1",
     "/secure_zone2",
+    "/decrypt_eek_zone",        # test_encryption04
 ]

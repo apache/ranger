@@ -18,136 +18,243 @@ limitations under the License.
 
 ## Pytest Functional Test Suite
 
-This test suite validates REST API endpoints for Apache Ranger services,Admin (rolerest, xuserrest, servicerest), KMS (Key Management Service), and tests HDFS encryption functionalities including key management and file operations within encryption zones.
+A Docker-based test execution framework that validates Apache Ranger service integrations through pytest. Spins up the required containers, runs the test suites, and tears down — all from a single script. New service modules can be added as pytest folders without changing the script.
 
 ### Available Test Suites
 
 | Suite | Description |
 |---|---|
-| **hdfs** | Test cases for HDFS encryption lifecycle using KMS |
+| **hdfs** | HDFS encryption lifecycle (KMS) and Ranger HDFS plugin path policies (`hdfs_policy` marker) |
 | **kms** | Test cases for KMS REST API functionality |
 | **xuserrest** | Test cases for Ranger Admin User/Group REST APIs |
 | **rolerest** | Test cases for Ranger Admin Role REST APIs |
 | **servicerest** | Test cases for Ranger Admin Service REST APIs |
-
----
+| **tagrest** | Test cases for Ranger Admin Tag REST APIs |
+| **api** | Public API v2 service and policy CRUD (admin Docker only) |
+| **api_tests** | Public API v2 user REST calls by role: admin, keyadmin, auditor, user role, and negative cases (admin Docker only) |
+| **hive** | Hive Ranger plugin enforcement via HS2/beeline (requires `ranger-hadoop` + `ranger-hive`) |
+| **hbase** | HBase Ranger plugin enforcement via HBase shell (requires `ranger-hadoop` + `ranger-hbase`) |
+| **jvm_locale_test** | Ranger Admin JVM locale tests. Run with `run-jvm-locale-tests.sh`. |
+| **kafka** | Kafka Ranger plugin enforcement via console producer (requires `ranger-kafka`) |
+| **pdp** | Live PDP REST authorization using dynamically refreshed service-account users |
+| **audit_ingestor** | Live Audit Ingestor REST authorization using dynamically refreshed service-account users |
 
 ### Directory Structure
 
 ```text
 functional-tests/
-├── hdfs/                        # Tests on HDFS encryption cycle
-├── kms/                         # Tests on KMS REST API
-├── xuserrest/                   # Tests on Ranger User/Group/Role REST APIs
-├── rolerest/                    # Tests on Ranger Role REST APIs
-├── servicerest/                 # Tests on Ranger Service REST APIs
-│
+├── <component> test modules     # i.e hive,hdfs,kms etc
+├── REST API modules             # xuserrest,servicerest,api,tagrest etc
+|
 ├── pytest.ini                   # Registers custom pytest markers
 ├── run-tests.sh                 # Script to automate setup and test execution
+├── run-jvm-locale-tests.sh      # Dedicated runner for Ranger Admin JVM locale tests
 ├── requirements.txt             # Python dependencies
 └── readme.md                    # This documentation
+├── ranger_test_utils/utils.py   # Shared logging, HTTP asserts, Public API v2 helpers
+├── ranger_test_utils/<service>_utils.py
+├── ranger_test_utils/access_audit_utils.py  # For future access-audit asserts
 
 ```
-> **Note:** A Python virtual environment folder named `myenv` will be automatically
-> generated upon running the tests for the first time.
 
+> **Note:** A Python virtual environment folder named `myenv` is created automatically
+> on the first run and **reused on all subsequent runs** — no reinstallation overhead.
+
+---
 
 ## Prerequisites
+
 1. Docker & Docker Compose installed and running
 2. Python 3.10 or higher
-3. Change the working directory to functional-tests
+3. Change the working directory to `functional-tests/`
 ```text
 cd functional-tests/
 ```
 4. Make the shell script executable
-
 ```text
 chmod +x run-tests.sh
 ```
 
-
-## Environment Variables
-
-Configure container behavior before running the script using the following environment variables:
-
-1. Fresh Setup & Cleanup:
-
-Force a clean environment & helps building binaries with local changes:
-```text
-export CLEAN_CONTAINERS=1
-./run-tests.sh
-```
-
-After initial setup, disable fresh container creation to speed up subsequent runs (default behavior):
-
-```text
-export CLEAN_CONTAINERS=0
-./run-tests.sh
-```
-
-2. Infrastructure Only (Skip Tests)
-
-Start Docker infrastructure without executing Pytest suites:
-
-```text
-export RUN_TESTS=0
-./run-tests.sh
-```
-This is useful when tests fail due to slow container startup. Once all containers are healthy, re-enable tests (default behavior):
-
-```text
-export RUN_TESTS=1
-./run-tests.sh
-```
-
+---
 
 ## Running Tests
-The run-tests.sh script manages Docker container setup, dependency installation, and test execution. It supports both interactive and argument-based modes.
 
-1. Interactive Mode:
+The `run-tests.sh` script manages Docker container setup, dependency installation, and test execution. It supports both interactive and argument-based modes.
 
-Run the script without arguments to be prompted for inputs:
+### 1. Interactive Mode (Preferred)
+
+Run the script without arguments to be prompted for each input:
 ```text
 ./run-tests.sh
 ```
-> DB Type: Enter one of postgres, mysql, oracle, mssql. Defaults to postgres.
 
-> Test Suites: Enter space-separated suite names. Defaults to ALL suites.
+You will be asked **four** questions in sequence:
 
-example:
 ```text
-
 Available DB types: postgres, mysql, oracle
 Enter DB type (press Enter to default to postgres): postgres
 
-Available test suites: xuserrest servicerest hdfs kms
-Enter test suites space-separated (press Enter to run ALL): kms hdfs
+Available audit stores: opensearch, solr, none
+Enter audit store (press Enter to default to opensearch): opensearch
+
+Available test suites: rolerest xuserrest servicerest tagrest hdfs kms api hive ...
+Enter test suites space-separated (press Enter to run ALL): hdfs kms
+
+Available containers : hadoop hive hbase knox trino ozone kafka
+  (base always starts: ranger, kdc, db, zk, kms, pdp, usersync, tagsync + audit pipeline)
+Enter containers space-separated (press Enter or 'all' for ALL): hadoop
 ```
 
-2. Command-Line Arguments Mode:
+> Press **Enter** at any prompt to accept the default. Type `all` at the containers prompt to bring up every optional container.
 
-Pass arguments directly to skip prompts:
+### 2. Command-Line Arguments Mode
+
+Pass `db-type` and `test-suites` as arguments to skip those prompts. Use env vars for the remaining options:
 
 ```text
 ./run-tests.sh [db-type] [test-suites...]
 ```
-db-type — Must be the first argument. Valid values: postgres, mysql, oracle.
 
-test-suites — Space-separated list: hdfs, kms, xuserrest, servicerest.
+- `db-type` — First positional argument. Valid values: `postgres`, `mysql`, `oracle`.
+- `test-suites` — Remaining arguments, space-separated.
 
-Examples:
+The containers prompt always appears unless `SELECTED_CONTAINERS` is exported.
+
+**Examples:**
 
 ```text
-./run-tests.sh postgres kms hdfs
- ```
+# Run hdfs suite (encryption + hdfs_policy tests) — requires ranger-hadoop
+export AUDIT_INDEX_STORE=none
+export SELECTED_CONTAINERS=hadoop
+./run-tests.sh postgres hdfs
+
+# Run hdfs and kms tests — postgres db, no audit pipeline, hadoop container only
+export AUDIT_INDEX_STORE=none
+export SELECTED_CONTAINERS=hadoop
+./run-tests.sh postgres hdfs kms
+
+# Run all test suites — mysql db, opensearch audit, all optional containers
+export SELECTED_CONTAINERS=all
+./run-tests.sh mysql
+
+# Full clean rebuild — all suites, all containers
+export CLEAN_CONTAINERS=1 
+export SELECTED_CONTAINERS=all 
+./run-tests.sh postgres
+```
+
+---
+
+## Environment Variables
+
+All variables have sensible defaults and can be exported before running or passed inline.
+
+| Variable | Default | Description |
+|---|---|---|
+| `CLEAN_CONTAINERS` | `0` | Set to `1` to wipe all containers and force a full rebuild from scratch |
+| `RUN_TESTS` | `1` | Set to `0` to bring up infrastructure only without running any tests |
+| `AUDIT_INDEX_STORE` | `opensearch` | Audit backend: `opensearch`, `solr`, or `none` to skip the audit pipeline entirely |
+| `SELECTED_CONTAINERS` | _(prompted)_ | Space-separated optional containers to bring up, e.g. `"hadoop hive"`. Set to `"all"` to bring up every optional container. **Required for the hdfs suite:** export `hadoop` or `all` (starts `ranger-hadoop`). |
+
+### `CLEAN_CONTAINERS`
+
+By default containers **persist between runs** for fast re-execution. Set to `1` only when you need a completely clean rebuild — e.g. after a Maven source change or to reset all data. On all subsequent re-runs, leave it unset to reuse existing containers.
+
+### `RUN_TESTS`
+
+Set to `0` to bring up the full infrastructure without executing any tests. Useful when containers are still initializing or you want to inspect the environment first before running tests.
+
+### `AUDIT_INDEX_STORE`
+
+Controls whether the audit pipeline (Kafka + ingestor + OpenSearch/Solr) is started. Defaults to `opensearch`. Set to `none` to skip the entire audit pipeline — no Kafka download, no audit containers.
+
+### `SELECTED_CONTAINERS`
+
+Pre-select which optional containers to bring up without being prompted interactively. Accepts a space-separated list of container names (e.g. `"hadoop hive"`) or `all` to bring up every optional container. When not set, the script prompts at runtime.
+
+---
+
+## Containers Brought Up
+
+### Always (Base Services)
+
+Regardless of which test suites or containers you choose, these always start. This matches the `ranger-core` command in `dev-support/ranger-docker/README.md`.
+
+| Container | Role |
+|---|---|
+| `ranger` | Ranger Admin (policies, users, REST APIs) |
+| `ranger-kdc` | Kerberos KDC |
+| `ranger-<db>` | Database (`ranger-postgres`, `ranger-mysql`, `ranger-oracle`) |
+| `ranger-zk` | ZooKeeper |
+| `ranger-kms` | Ranger KMS |
+| `ranger-pdp` | Ranger PDP (Policy Decision Point) |
+| `ranger-usersync` | User/group sync from LDAP or Unix |
+| `ranger-tagsync` | Tag-based policy sync |
+
+### Audit Pipeline (when `AUDIT_INDEX_STORE != none`)
+
+| Container | Role |
+|---|---|
+| `ranger-kafka` | Kafka broker |
+| `ranger-audit-ingestor` | Reads from Kafka, writes to audit store |
+| `ranger-opensearch` / `ranger-solr` | Audit index store |
+| `ranger-audit-dispatcher-<store>` | Dispatches audit events |
+
+### Optional Containers (selected at runtime)
+
+Brought up based on what you enter at the containers prompt (or `SELECTED_CONTAINERS` env var):
+
+| Container name entered | Containers started | Notes |
+|---|---|---|
+| `hadoop` | `ranger-hadoop` | HDFS + YARN |
+| `hive` | `ranger-hadoop`, `ranger-hive` | hadoop auto-included |
+| `hbase` | `ranger-hadoop`, `ranger-hbase` | hadoop auto-included |
+| `knox` | `ranger-knox` | |
+| `trino` | `ranger-trino` | |
+| `ozone` | `ozone-om`, `ozone-scm`, `ozone-datanode` | pre-setup script runs automatically |
+| `kafka` | `ranger-kafka` | |
+| `all` / _(Enter)_ | All of the above | |
+
+---
+
+### Note on hive, hbase, kafka suites
+- Each suite uses its own Docker service repo: `dev_hive`, `dev_hbase`, `dev_kafka`.
+- Tests assert on client output only (beeline, HBase shell, Kafka console producer). Access-audit checks are deferred; helpers are in `ranger_test_utils/access_audit_utils.py`.
+- `hive` and `hbase` start `ranger-hadoop` automatically. `kafka` starts `ranger-kafka`.
+- Example: `SELECTED_CONTAINERS="hive hbase kafka" ./run-tests.sh postgres hive hbase kafka`
+- **Shared plugin user/Kerberos setup** (session hook, markers, flow diagrams): [docs/plugin-enforcement-setup.md](docs/plugin-enforcement-setup.md)
+
+
+### HDFS suite notes
+- Service repo is `dev_hdfs`.
+- `./run-tests.sh postgres hdfs` does not start `ranger-hadoop`. Export `SELECTED_CONTAINERS=hadoop` (or `all`) first.
+- The whole `hdfs/` folder runs. For plugin tests only: `pytest hdfs/test_hdfs_group_policy_03.py -m hdfs_policy` (still needs `ranger-hadoop`and admin running).
+
+- Example:
+  ```text
+  export AUDIT_INDEX_STORE=none
+  export SELECTED_CONTAINERS=hadoop
+  ./run-tests.sh postgres hdfs
+  ```
+
+### JVM locale suite notes
+
+Use the dedicated runner for Ranger Admin JVM locale tests:
+
+```text
+./run-jvm-locale-tests.sh
+```
+
+The runner prompts for DB type and JVM locale. Defaults are `postgres` and `france`.
+
+To skip prompts:
+
+```text
+./run-jvm-locale-tests.sh postgres france
+```
+
+Supported JVM locale values are `us`, `uk`, `france`, and `china`. The runner starts the base Ranger stack, recreates only the `ranger` container with the selected JVM locale, runs `jvm_locale_test/`, and restores `ranger` with the original JVM options.
 
 ## Test Reports
-After execution, HTML reports are automatically generated for each suite. Open the corresponding file in any browser to view detailed results:
 
-| Suite       | Report File             |
-|:------------|:------------------------|
-| hdfs        | report_hdfs.html        |
-| kms         | report_kms.html         |
-| xuserrest   | report_xuserrest.html   |
-| rolerest    | report_rolerest.html    |
-| servicerest | report_servicerest.html |
+After execution, an HTML report is automatically generated for each suite in the `functional-tests/` directory:

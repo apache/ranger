@@ -10,8 +10,6 @@ services:
       - ./scripts/ozone/ozone-service-start.sh:/opt/ozone-service-start.sh:ro
     networks:
       - ranger
-    ports:
-      - 9864
     depends_on:
       ranger-kdc:
         condition: service_healthy
@@ -41,9 +39,6 @@ services:
       - ./scripts/ozone/ozone-service-start.sh:/opt/ozone-service-start.sh:ro
     networks:
       - ranger
-    ports:
-      - 9874:9874
-      - 9862:9862
     depends_on:
       ranger-kdc:
         condition: service_healthy
@@ -75,9 +70,6 @@ services:
       - ./scripts/ozone/ozone-service-start.sh:/opt/ozone-service-start.sh:ro
     networks:
       - ranger
-    ports:
-      - 9876:9876
-      - 9860:9860
     depends_on:
       ranger-kdc:
         condition: service_healthy

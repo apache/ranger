@@ -64,13 +64,8 @@
           <include>javax.inject:javax.inject</include>
           <include>joda-time:joda-time</include>
           <include>org.apache.hadoop.thirdparty:hadoop-shaded-guava:jar:${hadoop-shaded-guava.version}</include>
-          <include>org.apache.httpcomponents:httpasyncclient:jar:${httpcomponents.httpasyncclient.version}</include>
           <include>org.apache.httpcomponents:httpclient:jar:${httpcomponents.httpclient.version}</include>
-          <include>org.apache.httpcomponents:httpcore-nio:jar:${httpcomponents.httpcore.version}</include>
           <include>org.apache.httpcomponents:httpcore:jar:${httpcomponents.httpcore.version}</include>
-          <include>org.apache.httpcomponents:httpmime:jar:${httpcomponents.httpmime.version}</include>
-          <include>org.apache.solr:solr-solrj:jar:${solr.version}</include>
-          <include>org.eclipse.jetty:jetty-client:jar:${jetty-client.version}</include>
           <include>org.glassfish.hk2.external:jakarta.inject</include>
           <include>org.glassfish.hk2:class-model</include>
           <include>org.glassfish.hk2:hk2-api</include>

@@ -1,0 +1,8 @@
+{
+  "serviceName": "dev_hive",
+  "resourceElements": {
+    "database": { "values": ["DB_{random_str}"] },
+    "table": { "values": [" TB_{random_str}"] },
+    "column": { "values": ["COL_{random_str}"] }
+  }
+}

@@ -22,8 +22,6 @@ services:
     tty: true
     networks:
       - ranger
-    ports:
-      - "8280:8280"
     depends_on:
       ranger:
         condition: service_started

@@ -17,6 +17,7 @@
 package org.apache.ranger.solr;
 
 import org.apache.ranger.AccessAuditsService;
+import org.apache.ranger.audit.metrics.AuditMetricsHelper;
 import org.apache.ranger.common.PropertiesUtil;
 import org.apache.ranger.common.RESTErrorUtil;
 import org.apache.ranger.common.SearchCriteria;
@@ -99,6 +100,7 @@ public class SolrAccessAuditsServiceTest {
         doc.setField("reqData", "data");
         doc.setField("resource", "/p");
         doc.setField("cliIP", "1.1.1.1");
+        doc.setField("cliType", "hive-cli");
         doc.setField("result", 1);
         doc.setField("policy", 9);
         doc.setField("repoType", 1);
@@ -141,6 +143,8 @@ public class SolrAccessAuditsServiceTest {
         assertEquals(0, out.getStartIndex());
         assertEquals(25, out.getPageSize());
         assertEquals("cl", out.getVXAccessAudits().get(0).getClusterName());
+        assertEquals("1.1.1.1", out.getVXAccessAudits().get(0).getClientIP());
+        assertEquals("hive-cli", out.getVXAccessAudits().get(0).getClientType());
         assertEquals("Repo 1", out.getVXAccessAudits().get(0).getRepoDisplayName());
     }
 
@@ -241,7 +245,7 @@ public class SolrAccessAuditsServiceTest {
         when(sdDao.getById(1L)).thenReturn(sd);
         when(sd.getName()).thenReturn("hdfs");
         injectField(service, AccessAuditsService.class, "daoManager", daoManager);
-        service.auditMetricsHelper.daoManager = daoManager;
+        injectField(service.auditMetricsHelper.auditMetricsHelper, AuditMetricsHelper.class, "daoManager", daoManager);
 
         RangerAuditMetrics metrics = service.getAuditMetrics(5L, null);
 
@@ -253,6 +257,7 @@ public class SolrAccessAuditsServiceTest {
     private SolrAccessAuditsService createServiceWithHelper() {
         SolrAccessAuditsService service = new SolrAccessAuditsService();
         service.auditMetricsHelper = new SolrAuditMetricsHelper();
+        service.auditMetricsHelper.auditMetricsHelper = new AuditMetricsHelper();
         service.auditMetricsHelper.solrMgr = mock(SolrMgr.class);
         service.auditMetricsHelper.solrUtil = mock(SolrUtil.class);
         service.auditMetricsHelper.restErrorUtil = new RESTErrorUtil();

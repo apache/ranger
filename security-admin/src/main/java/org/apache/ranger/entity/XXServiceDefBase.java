@@ -94,6 +94,14 @@ public abstract class XXServiceDefBase extends XXDBBase implements Serializable 
     protected String defOptions;
 
     /**
+     * defText of the XXServiceDef
+     * <ul>
+     * </ul>
+     */
+    @Column(name = "def_text")
+    protected String defText;
+
+    /**
      * rbKeyLabel of the XXServiceDef
      * <ul>
      * </ul>
@@ -239,6 +247,24 @@ public abstract class XXServiceDefBase extends XXDBBase implements Serializable 
     }
 
     /**
+     * Returns the value for the member attribute <b>defText</b>
+     *
+     * @return String - value of member attribute <b>defText</b> .
+     */
+    public String getDefText() {
+        return this.defText;
+    }
+
+    /**
+     * This method sets the value to the member attribute <b> defText</b> .
+     *
+     * @param defText Value to set member attribute <b> defText</b>
+     */
+    public void setDefText(String defText) {
+        this.defText = defText;
+    }
+
+    /**
      * Returns the value for the member attribute <b>rbKeyLabel</b>
      *
      * @return Date - value of member attribute <b>rbKeyLabel</b> .
@@ -332,6 +358,7 @@ public abstract class XXServiceDefBase extends XXDBBase implements Serializable 
         XXServiceDefBase other = (XXServiceDefBase) obj;
 
         return Objects.equals(description, other.description) &&
+                Objects.equals(defText, other.defText) &&
                 Objects.equals(guid, other.guid) &&
                 Objects.equals(implClassName, other.implClassName) &&
                 Objects.equals(label, other.label) &&

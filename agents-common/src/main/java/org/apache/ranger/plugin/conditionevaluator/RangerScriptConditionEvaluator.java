@@ -95,11 +95,11 @@ public class RangerScriptConditionEvaluator extends RangerAbstractConditionEvalu
                     enableJsonCtx = RangerRequestScriptEvaluator.needsJsonCtxEnabled(script);
                 }
 
-                RangerRequestScriptEvaluator evaluator = new RangerRequestScriptEvaluator(request, scriptEngine, enableJsonCtx);
+                try (RangerRequestScriptEvaluator evaluator = new RangerRequestScriptEvaluator(request, scriptEngine, enableJsonCtx)) {
+                    evaluator.evaluateConditionScript(script);
 
-                evaluator.evaluateConditionScript(script);
-
-                result = evaluator.getResult();
+                    result = evaluator.getResult();
+                }
             } else {
                 String conditionType = condition != null ? condition.getType() : null;
 

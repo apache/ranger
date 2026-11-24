@@ -18,61 +18,27 @@
 
 package org.apache.ranger.authorization.nestedstructure.authorizer;
 
+import org.apache.ranger.plugin.util.GraalScriptEngineCreator;
+import org.apache.ranger.plugin.util.ScriptEngineUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.script.Bindings;
-import javax.script.ScriptContext;
 import javax.script.ScriptEngine;
-import javax.script.ScriptEngineManager;
 
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
- * Executes an injected javascript command to determine if the user has access to the selected record.
+ * Executes a row-filter expression to determine if the user has access to the selected record.
  * <p>
- * Prefers the {@code graal.js} engine when present; otherwise falls back to Nashorn or other {@code javax.script}
- * engines on the classpath. GraalJS is configured with {@code polyglot.js.allowHostAccess} <strong>disabled by
- * default</strong> so record-filter scripts cannot access Java classes or host services. To allow Java interop (not
- * recommended), set the system property {@value #RANGER_RECORDFILTER_JS_ALLOW_HOST_ACCESS} to {@code true} on the JVM
- * (Graal only).
+ * The engine comes from {@link GraalScriptEngineCreator#createNoHostAccessScriptEngine()}, which exposes no host
+ * classes and no host methods. Evaluation fails when that engine cannot be created.
  * </p>
  */
 public class RecordFilterJavaScript {
     private static final Logger logger = LoggerFactory.getLogger(RecordFilterJavaScript.class);
-
-    /**
-     * When set to {@code true}, enables {@code polyglot.js.allowHostAccess} for the GraalJS engine used by record
-     * filters. Default is off; this must be an explicit, reviewed decision.
-     */
-    public static final String RANGER_RECORDFILTER_JS_ALLOW_HOST_ACCESS = "ranger.nestedstructure.recordfilter.js.allowHostAccess";
-
-    private static final AtomicBoolean LOGGED_HOST_ACCESS_WARNING = new AtomicBoolean();
-
-    /**
-     * Supported JavaScript engine names, in order of preference.
-     * Graal.js is preferred for its security model and ECMAScript compliance.
-     * Nashorn is available as a fallback on older JVMs.
-     * js and JavaScript are generic names that may map to available engines.
-     */
-    private static final String ENGINE_GRAAL_JS = "graal.js";
-    private static final String ENGINE_NASHORN = "nashorn";
-    private static final String ENGINE_JS = "js";
-    private static final String ENGINE_JAVASCRIPT = "JavaScript";
-    private static final String ENGINE_JAVASCRIPT_LOWERCASE = "javascript";
-
-    private static final String[] SUPPORTED_ENGINES = {
-            ENGINE_GRAAL_JS,
-            ENGINE_NASHORN,
-            ENGINE_JS,
-            ENGINE_JAVASCRIPT,
-            ENGINE_JAVASCRIPT_LOWERCASE
-    };
 
     private RecordFilterJavaScript() {
     }
@@ -107,49 +73,27 @@ public class RecordFilterJavaScript {
             throw new MaskingException("cannot process filter expression: blocked by script safety checks: " + filterExpr);
         }
 
-        ClassLoader clsLoader = Thread.currentThread().getContextClassLoader();
-        ScriptEngineManager mgr = new ScriptEngineManager(clsLoader);
-        ScriptEngine        engine = resolveJavaScriptEngine(mgr);
-
-        if (isGraalJsEngine(engine)) {
-            try {
-                Map<String, Boolean> graalVmConfigs = new HashMap<>();
-
-                boolean allowHost = Boolean.parseBoolean(
-                        System.getProperty(RANGER_RECORDFILTER_JS_ALLOW_HOST_ACCESS, "false"));
-                graalVmConfigs.put("polyglot.js.allowHostAccess", allowHost);
-                if (allowHost && LOGGED_HOST_ACCESS_WARNING.compareAndSet(false, true)) {
-                    logger.warn(
-                            "{}=true: GraalJS host/Java interop is enabled for nested-structure record filter scripts. "
-                                    + "Use only in a tightly controlled environment.",
-                            RANGER_RECORDFILTER_JS_ALLOW_HOST_ACCESS);
-                }
-                graalVmConfigs.put("polyglot.js.nashorn-compat", Boolean.TRUE);
-
-                Bindings engBindings = engine.getBindings(ScriptContext.ENGINE_SCOPE);
-                engBindings.putAll(graalVmConfigs);
-                engine.setBindings(engBindings, ScriptContext.ENGINE_SCOPE);
-            } catch (Throwable t) {
-                logger.warn("RecordFilterJavaScript.filterRow(): failed to apply GraalJS options for engine graal.js", t);
-            }
-        }
+        ScriptEngine engine = GraalScriptEngineCreator.createNoHostAccessScriptEngine();
 
         if (engine == null) {
-            throw new MaskingException("No JavaScript engine (graal.js, nashorn, or js) is available on the classpath");
+            throw new MaskingException("unable to evaluate filter expression: script engine is not available");
         }
 
         logger.debug("filterExpr: {}", filterExpr);
 
         // convert the given JSON string to JavaScript object, which the filterExpr expects, and then exec the filterExpr
-        String script = " var jsonAttr = JSON.parse(jsonString); "
+        String script = ScriptEngineUtil.SCRIPT_SAFE_PREEXEC
+                + " var jsonAttr = JSON.parse(jsonString); "
                 + NASHORN_STYLE_STRING_EQUALS_SHIM
                 + " "
                 + NASHORN_POLYFILL_ARRAY_PROTOTYPE_INCLUDES
                 + " "
                 + filterExpr;
 
+        Bindings bindings = null;
+
         try {
-            Bindings bindings = engine.createBindings();
+            bindings = engine.createBindings();
 
             bindings.put("jsonString", jsonString);
             bindings.put("user", user);
@@ -162,30 +106,19 @@ public class RecordFilterJavaScript {
             return hasAccess;
         } catch (Exception e) {
             throw new MaskingException("unable to properly evaluate filter expression: " + filterExpr, e);
+        } finally {
+            closeQuietly(bindings);
+            GraalScriptEngineCreator.closeScriptEngine(engine);
         }
     }
 
-    private static ScriptEngine resolveJavaScriptEngine(ScriptEngineManager mgr) {
-        for (String engineName : SUPPORTED_ENGINES) {
-            ScriptEngine engine = mgr.getEngineByName(engineName);
-
-            if (engine != null) {
-                return engine;
+    private static void closeQuietly(Object resource) {
+        if (resource instanceof AutoCloseable) {
+            try {
+                ((AutoCloseable) resource).close();
+            } catch (Exception e) {
+                logger.debug("failed to close script engine resource", e);
             }
-        }
-
-        return null;
-    }
-
-    private static boolean isGraalJsEngine(ScriptEngine engine) {
-        if (engine == null) {
-            return false;
-        }
-
-        try {
-            return ENGINE_GRAAL_JS.equalsIgnoreCase(engine.getFactory().getEngineName());
-        } catch (Exception e) {
-            return false;
         }
     }
 

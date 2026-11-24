@@ -40,16 +40,16 @@ version `3.0.0-SNAPSHOT`.
 
 | Version | Release date | Release notes | Download |
 | --- | --- | --- | --- |
-| 2.9.0 | 2026-08-08 | [2.9.0](2.9.0.md) | [downloads.apache.org/ranger/2.9.0](https://downloads.apache.org/ranger/2.9.0/) |
-| 2.8.0 | 2026-03-01 | [2.8.0](2.8.0.md) | [downloads.apache.org/ranger/2.8.0](https://downloads.apache.org/ranger/2.8.0/) |
-| 2.7.0 | 2025-07-30 | [2.7.0](2.7.0.md) | [downloads.apache.org/ranger/2.7.0](https://downloads.apache.org/ranger/2.7.0/) |
-| 2.6.0 | 2025-02-15 | [2.6.0](2.6.0.md) | [downloads.apache.org/ranger/2.6.0](https://downloads.apache.org/ranger/2.6.0/) |
-| 2.5.0 | 2024-08-08 | [2.5.0](2.5.0.md) | [archive.apache.org/dist/ranger/2.5.0](https://archive.apache.org/dist/ranger/2.5.0/) |
-| 2.4.0 | 2023-03-30 | [2.4.0](2.4.0.md) | [archive.apache.org/dist/ranger/2.4.0](https://archive.apache.org/dist/ranger/2.4.0/) |
-| 2.3.0 | 2022-07-09 | [2.3.0](2.3.0.md) | [archive.apache.org/dist/ranger/2.3.0](https://archive.apache.org/dist/ranger/2.3.0/) |
-| 2.2.0 | 2021-11-01 | [2.2.0](2.2.0.md) | [archive.apache.org/dist/ranger/2.2.0](https://archive.apache.org/dist/ranger/2.2.0/) |
-| 2.1.0 | 2020-09-03 | [2.1.0](2.1.0.md) | [archive.apache.org/dist/ranger/2.1.0](https://archive.apache.org/dist/ranger/2.1.0/) |
-| 2.0.0 | 2019-08-07 | [2.0.0](2.0.0.md) | [archive.apache.org/dist/ranger/2.0.0](https://archive.apache.org/dist/ranger/2.0.0/) |
+| 2.9.0 | 2026-08-08 | [2.9.0](2.9.0.md) | [2.9.0](https://www.apache.org/dyn/closer.lua/ranger/2.9.0/) |
+| 2.8.0 | 2026-03-01 | [2.8.0](2.8.0.md) | [2.8.0](https://www.apache.org/dyn/closer.lua/ranger/2.8.0/) |
+| 2.7.0 | 2025-07-30 | [2.7.0](2.7.0.md) | [2.7.0](https://www.apache.org/dyn/closer.lua/ranger/2.7.0/) |
+| 2.6.0 | 2025-02-15 | [2.6.0](2.6.0.md) | [2.6.0](https://www.apache.org/dyn/closer.lua/ranger/2.6.0/) |
+| 2.5.0 | 2024-08-08 | [2.5.0](2.5.0.md) | [2.5.0](https://www.apache.org/dyn/closer.lua/ranger/2.5.0/) |
+| 2.4.0 | 2023-03-30 | [2.4.0](2.4.0.md) | [2.4.0](https://www.apache.org/dyn/closer.lua/ranger/2.4.0/) |
+| 2.3.0 | 2022-07-09 | [2.3.0](2.3.0.md) | [2.3.0](https://www.apache.org/dyn/closer.lua/ranger/2.3.0/) |
+| 2.2.0 | 2021-11-01 | [2.2.0](2.2.0.md) | [2.2.0](https://www.apache.org/dyn/closer.lua/ranger/2.2.0/) |
+| 2.1.0 | 2020-09-03 | [2.1.0](2.1.0.md) | [2.1.0](https://www.apache.org/dyn/closer.lua/ranger/2.1.0/) |
+| 2.0.0 | 2019-08-07 | [2.0.0](2.0.0.md) | [2.0.0](https://www.apache.org/dyn/closer.lua/ranger/2.0.0/) |
 
 Each 2.x line has had a single release so far; fixes ship in the next minor version rather than in patch releases.
 Every 2.x release is also published to Maven Central under the `org.apache.ranger` group, and releases from 2.4.0
@@ -62,20 +62,20 @@ highlights of each release.
 
 | Version | Release date | Release notes | Download |
 | --- | --- | --- | --- |
-| 1.2.0 | 2018-10-04 | [cwiki](https://cwiki.apache.org/confluence/pages/viewpage.action?pageId=93325735) | [archive.apache.org/dist/ranger/1.2.0](https://archive.apache.org/dist/ranger/1.2.0/) |
-| 1.1.0 | 2018-07-09 | [cwiki](https://cwiki.apache.org/confluence/pages/viewpage.action?pageId=87297827) | [archive.apache.org/dist/ranger/1.1.0](https://archive.apache.org/dist/ranger/1.1.0/) |
-| 1.0.0 | 2018-03-20 | [cwiki](https://cwiki.apache.org/confluence/pages/viewpage.action?pageId=75975356) | [archive.apache.org/dist/ranger/1.0.0](https://archive.apache.org/dist/ranger/1.0.0/) |
-| 0.7.1 | 2017-06-07 | [cwiki](https://cwiki.apache.org/confluence/pages/viewpage.action?pageId=70257650) | [archive.apache.org/dist/ranger/0.7.1](https://archive.apache.org/dist/ranger/0.7.1/) |
-| 0.7.0 | 2017-02-27 | [cwiki](https://cwiki.apache.org/confluence/pages/viewpage.action?pageId=68715504) | [archive.apache.org/dist/ranger/0.7.0](https://archive.apache.org/dist/ranger/0.7.0/) |
-| 0.6.3 | 2017-01-30 | [cwiki](https://cwiki.apache.org/confluence/pages/viewpage.action?pageId=67637684) | [archive.apache.org/dist/ranger/0.6.3](https://archive.apache.org/dist/ranger/0.6.3/) |
-| 0.6.2 | 2016-11-08 | [cwiki](https://cwiki.apache.org/confluence/pages/viewpage.action?pageId=65877405) | [archive.apache.org/dist/incubator/ranger/0.6.2-incubating](https://archive.apache.org/dist/incubator/ranger/0.6.2-incubating/) |
-| 0.6.1 | 2016-08-20 | [cwiki](https://cwiki.apache.org/confluence/pages/viewpage.action?pageId=65865300) | [archive.apache.org/dist/incubator/ranger/0.6.1-incubating](https://archive.apache.org/dist/incubator/ranger/0.6.1-incubating/) |
-| 0.6.0 | 2016-07-18 | [cwiki](https://cwiki.apache.org/confluence/pages/viewpage.action?pageId=65146308) | [archive.apache.org/dist/incubator/ranger/0.6.0-incubating](https://archive.apache.org/dist/incubator/ranger/0.6.0-incubating/) |
-| 0.5.3 | 2016-05-31 | [cwiki](https://cwiki.apache.org/confluence/pages/viewpage.action?pageId=62694969) | [archive.apache.org/dist/incubator/ranger/0.5.3-incubating](https://archive.apache.org/dist/incubator/ranger/0.5.3-incubating/) |
-| 0.5.2 | 2016-02-29 | [cwiki](https://cwiki.apache.org/confluence/pages/viewpage.action?pageId=61339642) | [archive.apache.org/dist/incubator/ranger/0.5.2-incubating](https://archive.apache.org/dist/incubator/ranger/0.5.2-incubating/) |
-| 0.5.1 | 2016-01-26 | [cwiki](https://cwiki.apache.org/confluence/pages/viewpage.action?pageId=61337303) | [archive.apache.org/dist/incubator/ranger/0.5.1-incubating](https://archive.apache.org/dist/incubator/ranger/0.5.1-incubating/) |
-| 0.5.0 | 2015-06-10 | [cwiki](https://cwiki.apache.org/confluence/pages/viewpage.action?pageId=57906100) | [archive.apache.org/dist/incubator/ranger/0.5.0-incubating](https://archive.apache.org/dist/incubator/ranger/0.5.0-incubating/) |
-| 0.4.0 | 2014-11-17 | [cwiki](https://cwiki.apache.org/confluence/pages/viewpage.action?pageId=59688883) | [archive.apache.org/dist/incubator/ranger/0.4.0-incubating](https://archive.apache.org/dist/incubator/ranger/0.4.0-incubating/) |
+| 1.2.0 | 2018-10-04 | [cwiki](https://cwiki.apache.org/confluence/pages/viewpage.action?pageId=93325735) | [1.2.0](https://www.apache.org/dyn/closer.lua/ranger/1.2.0/) |
+| 1.1.0 | 2018-07-09 | [cwiki](https://cwiki.apache.org/confluence/pages/viewpage.action?pageId=87297827) | [1.1.0](https://www.apache.org/dyn/closer.lua/ranger/1.1.0/) |
+| 1.0.0 | 2018-03-20 | [cwiki](https://cwiki.apache.org/confluence/pages/viewpage.action?pageId=75975356) | [1.0.0](https://www.apache.org/dyn/closer.lua/ranger/1.0.0/) |
+| 0.7.1 | 2017-06-07 | [cwiki](https://cwiki.apache.org/confluence/pages/viewpage.action?pageId=70257650) | [0.7.1](https://www.apache.org/dyn/closer.lua/ranger/0.7.1/) |
+| 0.7.0 | 2017-02-27 | [cwiki](https://cwiki.apache.org/confluence/pages/viewpage.action?pageId=68715504) | [0.7.0](https://www.apache.org/dyn/closer.lua/ranger/0.7.0/) |
+| 0.6.3 | 2017-01-30 | [cwiki](https://cwiki.apache.org/confluence/pages/viewpage.action?pageId=67637684) | [0.6.3](https://www.apache.org/dyn/closer.lua/ranger/0.6.3/) |
+| 0.6.2 | 2016-11-08 | [cwiki](https://cwiki.apache.org/confluence/pages/viewpage.action?pageId=65877405) | [0.6.2-incubating](https://www.apache.org/dyn/closer.lua/incubator/ranger/0.6.2-incubating/) |
+| 0.6.1 | 2016-08-20 | [cwiki](https://cwiki.apache.org/confluence/pages/viewpage.action?pageId=65865300) | [0.6.1-incubating](https://www.apache.org/dyn/closer.lua/incubator/ranger/0.6.1-incubating/) |
+| 0.6.0 | 2016-07-18 | [cwiki](https://cwiki.apache.org/confluence/pages/viewpage.action?pageId=65146308) | [0.6.0-incubating](https://www.apache.org/dyn/closer.lua/incubator/ranger/0.6.0-incubating/) |
+| 0.5.3 | 2016-05-31 | [cwiki](https://cwiki.apache.org/confluence/pages/viewpage.action?pageId=62694969) | [0.5.3-incubating](https://www.apache.org/dyn/closer.lua/incubator/ranger/0.5.3-incubating/) |
+| 0.5.2 | 2016-02-29 | [cwiki](https://cwiki.apache.org/confluence/pages/viewpage.action?pageId=61339642) | [0.5.2-incubating](https://www.apache.org/dyn/closer.lua/incubator/ranger/0.5.2-incubating/) |
+| 0.5.1 | 2016-01-26 | [cwiki](https://cwiki.apache.org/confluence/pages/viewpage.action?pageId=61337303) | [0.5.1-incubating](https://www.apache.org/dyn/closer.lua/incubator/ranger/0.5.1-incubating/) |
+| 0.5.0 | 2015-06-10 | [cwiki](https://cwiki.apache.org/confluence/pages/viewpage.action?pageId=57906100) | [0.5.0-incubating](https://www.apache.org/dyn/closer.lua/incubator/ranger/0.5.0-incubating/) |
+| 0.4.0 | 2014-11-17 | [cwiki](https://cwiki.apache.org/confluence/pages/viewpage.action?pageId=59688883) | [0.4.0-incubating](https://www.apache.org/dyn/closer.lua/incubator/ranger/0.4.0-incubating/) |
 
 Releases up to 0.6.2 were made while Ranger was in the Apache Incubator; their artifacts are named
 `apache-ranger-incubating-<version>.tar.gz` (`ranger-<version>-incubating.tar.gz` for 0.4.0 and 0.5.0) and live under the `incubator/ranger` path of the archive.

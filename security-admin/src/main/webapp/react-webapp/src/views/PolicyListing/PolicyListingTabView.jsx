@@ -27,7 +27,9 @@ import {
   isRenderRowFilter,
   isKeyAdmin,
   isKMSAuditor,
-  updateTagActive
+  updateTagActive,
+  getSupportedPolicyTypes,
+  isRenderConstraint
 } from "Utils/XAUtils";
 import { Loader } from "Components/CommonComponents";
 import TopNavBar from "../SideBar/TopNavBar";
@@ -128,17 +130,28 @@ export const PolicyListingTabView = () => {
 
     setZones(getZones?.data || []);
 
-    dispatch({
-      type: "SERVICES_DATA",
-      allServicesData: getAllServicesData?.data || [],
-      serviceData: getServiceData?.data,
-      serviceDefData: getServiceDefData
-    });
-    if (!isEmpty(getServiceData) && !isEmpty(getServiceDefData)) {
+    let isInvalidPolicyType = false;
+    if (!isEmpty(getServiceDefData)) {
+      isInvalidPolicyType = !getSupportedPolicyTypes(
+        getServiceDefData
+      ).includes(Number(params.policyType));
+    }
+
+    if (isInvalidPolicyType) {
+      navigate("/pageNotFound");
+    } else {
       dispatch({
-        type: "SET_LOADER",
-        loader: false
+        type: "SERVICES_DATA",
+        allServicesData: getAllServicesData?.data || [],
+        serviceData: getServiceData?.data,
+        serviceDefData: getServiceDefData
       });
+      if (!isEmpty(getServiceData) && !isEmpty(getServiceDefData)) {
+        dispatch({
+          type: "SET_LOADER",
+          loader: false
+        });
+      }
     }
     document
       .getElementById("resourceSelectedZone")
@@ -230,9 +243,9 @@ export const PolicyListingTabView = () => {
       />
       {loader ? (
         <Loader />
-      ) : (isRenderMasking(serviceDefData.dataMaskDef) ||
-          isRenderRowFilter(serviceDefData.rowFilterDef)) &&
-        params.policyType < 3 ? (
+      ) : isRenderMasking(serviceDefData.dataMaskDef) ||
+        isRenderRowFilter(serviceDefData.rowFilterDef) ||
+        isRenderConstraint(serviceDefData.constraintDefs) ? (
         <Tabs
           id="PolicyListing"
           activeKey={params.policyType}
@@ -261,6 +274,17 @@ export const PolicyListingTabView = () => {
           {isRenderRowFilter(serviceDefData.rowFilterDef) && (
             <Tab eventKey="2" title="Row Level Filter">
               {params.policyType == "2" && (
+                <PolicyListing
+                  serviceDef={serviceDefData}
+                  serviceData={serviceData}
+                  serviceZone={getServiceZone()}
+                />
+              )}
+            </Tab>
+          )}
+          {isRenderConstraint(serviceDefData.constraintDefs) && (
+            <Tab eventKey="4" title="Constraint">
+              {params.policyType == "4" && (
                 <PolicyListing
                   serviceDef={serviceDefData}
                   serviceData={serviceData}

@@ -199,13 +199,10 @@
       </includes>
       <binaries>
         <outputDirectory>ews/webapp/WEB-INF/classes/ranger-plugins/kms</outputDirectory>
-        <includeDependencies>true</includeDependencies>
+        <includeDependencies>false</includeDependencies>
         <unpack>false</unpack>
         <directoryMode>755</directoryMode>
         <fileMode>644</fileMode>
-        <includes>
-          <include>org.apache.ranger:ranger-kms-plugin</include>
-        </includes>
       </binaries>
     </moduleSet>
 
@@ -225,9 +222,7 @@
           <include>org.apache.tomcat:tomcat-annotations-api*</include>
           <include>org.apache.tomcat:tomcat-jasper-el</include>
           <include>org.apache.hadoop:hadoop-auth:jar:${hadoop.version}</include>
-          <include>org.apache.ranger:ranger-authz-api</include>
           <include>org.apache.ranger:ranger-common-utils</include>
-          <include>org.apache.ranger:ugsync-util</include>
           <include>org.slf4j:slf4j-api:jar:${slf4j.version}</include>
           <include>commons-logging:commons-logging</include>
           <include>commons-collections:commons-collections</include>
@@ -320,7 +315,6 @@
         <directoryMode>755</directoryMode>
         <fileMode>644</fileMode>
         <includes>
-          <include>org.apache.ranger:ranger-kafka-plugin</include>
           <include>org.apache.kafka:kafka-clients:jar:${kafka.version}</include>
         </includes>
       </binaries>
@@ -333,13 +327,10 @@
       </includes>
       <binaries>
         <outputDirectory>ews/webapp/WEB-INF/classes/ranger-plugins/solr</outputDirectory>
-        <includeDependencies>true</includeDependencies>
+        <includeDependencies>false</includeDependencies>
         <unpack>false</unpack>
         <directoryMode>755</directoryMode>
         <fileMode>644</fileMode>
-        <includes>
-          <include>org.apache.ranger:ranger-solr-plugin</include>
-        </includes>
       </binaries>
     </moduleSet>
 
@@ -350,13 +341,10 @@
       </includes>
       <binaries>
         <outputDirectory>ews/webapp/WEB-INF/classes/ranger-plugins/nifi</outputDirectory>
-        <includeDependencies>true</includeDependencies>
+        <includeDependencies>false</includeDependencies>
         <unpack>false</unpack>
         <directoryMode>755</directoryMode>
         <fileMode>644</fileMode>
-        <includes>
-          <include>org.apache.ranger:ranger-nifi-plugin</include>
-        </includes>
       </binaries>
     </moduleSet>
 
@@ -367,13 +355,10 @@
       </includes>
       <binaries>
         <outputDirectory>ews/webapp/WEB-INF/classes/ranger-plugins/nifi-registry</outputDirectory>
-        <includeDependencies>true</includeDependencies>
+        <includeDependencies>false</includeDependencies>
         <unpack>false</unpack>
         <directoryMode>755</directoryMode>
         <fileMode>644</fileMode>
-        <includes>
-          <include>org.apache.ranger:ranger-nifi-registry-plugin</include>
-        </includes>
       </binaries>
     </moduleSet>
 
@@ -389,7 +374,6 @@
         <directoryMode>755</directoryMode>
         <fileMode>644</fileMode>
         <includes>
-          <include>org.apache.ranger:ranger-nifi-registry-plugin</include>
           <include>org.apache.atlas:atlas-intg:jar:${atlas.version}</include>
         </includes>
       </binaries>
@@ -402,13 +386,10 @@
       </includes>
       <binaries>
         <outputDirectory>ews/webapp/WEB-INF/classes/ranger-plugins/sqoop</outputDirectory>
-        <includeDependencies>true</includeDependencies>
+        <includeDependencies>false</includeDependencies>
         <unpack>false</unpack>
         <directoryMode>755</directoryMode>
         <fileMode>644</fileMode>
-        <includes>
-          <include>org.apache.ranger:ranger-sqoop-plugin</include>
-        </includes>
       </binaries>
     </moduleSet>
 
@@ -419,13 +400,10 @@
       </includes>
       <binaries>
         <outputDirectory>ews/webapp/WEB-INF/classes/ranger-plugins/kylin</outputDirectory>
-        <includeDependencies>true</includeDependencies>
+        <includeDependencies>false</includeDependencies>
         <unpack>false</unpack>
         <directoryMode>755</directoryMode>
         <fileMode>644</fileMode>
-        <includes>
-          <include>org.apache.ranger:ranger-kylin-plugin</include>
-        </includes>
       </binaries>
     </moduleSet>
 
@@ -436,13 +414,10 @@
       </includes>
       <binaries>
         <outputDirectory>ews/webapp/WEB-INF/classes/ranger-plugins/elasticsearch</outputDirectory>
-        <includeDependencies>true</includeDependencies>
+        <includeDependencies>false</includeDependencies>
         <unpack>false</unpack>
         <directoryMode>755</directoryMode>
         <fileMode>644</fileMode>
-        <includes>
-          <include>org.apache.ranger:ranger-elasticsearch-plugin</include>
-        </includes>
       </binaries>
     </moduleSet>
 
@@ -458,7 +433,6 @@
         <directoryMode>755</directoryMode>
         <fileMode>644</fileMode>
         <includes>
-          <include>org.apache.ranger:ranger-presto-plugin</include>
           <include>io.prestosql:presto-spi:jar:${presto.version}</include>
           <include>io.prestosql:presto-jdbc:jar:${presto.version}</include>
         </includes>
@@ -477,7 +451,6 @@
         <directoryMode>755</directoryMode>
         <fileMode>644</fileMode>
         <includes>
-          <include>org.apache.ranger:ranger-trino-plugin</include>
           <include>io.trino:trino-spi:jar:${trino.version}</include>
           <include>io.trino:trino-jdbc:jar:${trino.version}</include>
         </includes>
@@ -490,14 +463,11 @@
         <include>org.apache.ranger:ranger-kudu-plugin</include>
       </includes>
       <binaries>
-        <outputDirectory>/ews/webapp/WEB-INF/classes/ranger-plugins/kudu</outputDirectory>
-        <includeDependencies>true</includeDependencies>
+        <outputDirectory>ews/webapp/WEB-INF/classes/ranger-plugins/kudu</outputDirectory>
+        <includeDependencies>false</includeDependencies>
         <unpack>false</unpack>
         <directoryMode>755</directoryMode>
         <fileMode>644</fileMode>
-        <includes>
-          <include>org.apache.ranger:ranger-kudu-plugin</include>
-        </includes>
       </binaries>
     </moduleSet>
     <moduleSet>
@@ -506,14 +476,11 @@
         <include>org.apache.ranger:ranger-schema-registry-plugin</include>
       </includes>
       <binaries>
-        <outputDirectory>/ews/webapp/WEB-INF/classes/ranger-plugins/schema-registry</outputDirectory>
-        <includeDependencies>true</includeDependencies>
+        <outputDirectory>ews/webapp/WEB-INF/classes/ranger-plugins/schema-registry</outputDirectory>
+        <includeDependencies>false</includeDependencies>
         <unpack>false</unpack>
         <directoryMode>755</directoryMode>
         <fileMode>644</fileMode>
-        <includes>
-          <include>org.apache.ranger:ranger-schema-registry-plugin</include>
-        </includes>
       </binaries>
     </moduleSet>
   </moduleSets>

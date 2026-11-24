@@ -268,6 +268,7 @@ public class OpenSearchAuditDestination extends AuditDestination {
         doc.put("reqData", event.getRequestData());
         doc.put("resource", event.getResourcePath());
         doc.put("cliIP", event.getClientIP());
+        doc.put("cliType", event.getClientType());
         doc.put("logType", event.getLogType());
         doc.put("result", event.getAccessResult());
         doc.put("policy", event.getPolicyId());

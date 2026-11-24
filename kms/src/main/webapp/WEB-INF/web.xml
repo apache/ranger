@@ -47,7 +47,7 @@
 
     <servlet-mapping>
         <servlet-name>jmx-servlet</servlet-name>
-        <url-pattern>/jmx</url-pattern>
+        <url-pattern>/kms/jmx</url-pattern>
     </servlet-mapping>
 
     <filter>

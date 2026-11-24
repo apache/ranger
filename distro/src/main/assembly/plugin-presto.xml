@@ -73,7 +73,6 @@
                     <include>com.fasterxml.jackson.core:jackson-core:jar:${fasterxml.jackson.version}</include>
                     <include>com.fasterxml.jackson.core:jackson-databind:jar:${fasterxml.jackson.version}</include>
                     <include>com.fasterxml.jackson.jaxrs:jackson-jaxrs-json-provider:jar:${fasterxml.jackson.version}</include>
-                    <include>com.fasterxml.woodstox:woodstox-core</include>
                     <include>com.google.code.gson:gson*</include>
                     <include>com.google.protobuf:protobuf-java:jar:${protobuf-java.version}</include>
                     <include>commons-codec:commons-codec</include>
@@ -87,15 +86,10 @@
                     <include>org.apache.hadoop:hadoop-auth:jar:${hadoop.version}</include>
                     <include>org.apache.hadoop:hadoop-client-api:jar:${hadoop.version}</include>
                     <include>org.apache.hadoop:hadoop-client-runtime:jar:${hadoop.version}</include>
-                    <include>org.apache.httpcomponents:httpasyncclient:jar:${httpcomponents.httpasyncclient.version}</include>
                     <include>org.apache.httpcomponents:httpclient:jar:${httpcomponents.httpclient.version}</include>
-                    <include>org.apache.httpcomponents:httpcore-nio:jar:${httpcomponents.httpcore.version}</include>
                     <include>org.apache.httpcomponents:httpcore:jar:${httpcomponents.httpcore.version}</include>
-                    <include>org.apache.httpcomponents:httpmime:jar:${httpcomponents.httpmime.version}</include>
                     <include>org.apache.ranger:ranger-plugins-cred</include>
-                    <include>org.apache.solr:solr-solrj:jar:${solr.version}</include>
                     <include>org.apache.zookeeper:zookeeper:jar:${zookeeper.version}</include>
-                    <include>org.eclipse.jetty:jetty-client:jar:${jetty-client.version}</include>
                     <!-- GraalJS 25.x runtime (js is now a POM, not a JAR) -->
                     <include>org.graalvm.js:js-language:jar:${graalvm.version}</include>
                     <include>org.graalvm.js:js-scriptengine:jar:${graalvm.version}</include>

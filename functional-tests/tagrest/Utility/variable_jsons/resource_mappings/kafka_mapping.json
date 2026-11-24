@@ -1,0 +1,6 @@
+{
+  "serviceName": "dev_kafka",
+  "resourceElements": {
+    "topic": { "values": ["topic_{random_str}"] }
+  }
+}

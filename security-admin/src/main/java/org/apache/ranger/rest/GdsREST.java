@@ -1798,7 +1798,7 @@ public class GdsREST {
                 } else {
                     RangerService rangerService = serviceDBStore.getServiceByName(serviceName);
                     if (rangerService != null) {
-                        isAllowed = bizUtil.isUserAllowed(rangerService, ServiceREST.Allowed_User_List_For_Download);
+                        isAllowed = bizUtil.isUserAllowed(rangerService, ServiceREST.Allowed_User_List_For_Download) || bizUtil.isServiceAccountUser(rangerService);
                         if (!isAllowed) {
                             isAllowed = bizUtil.isUserAllowed(rangerService, ServiceREST.Allowed_User_List_For_Grant_Revoke);
                         }

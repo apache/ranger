@@ -1,0 +1,17 @@
+{
+  "name": "tagdef_test_{random_str}",
+  "source": "ranger",
+  "isEnabled": true,
+  "attributeDefs": [
+    {
+      "name": "sensitivity",
+      "type": "string",
+      "isOptional": true
+    },
+    {
+      "name": "expiry_date",
+      "type": "string",
+      "isOptional": true
+    }
+  ]
+}

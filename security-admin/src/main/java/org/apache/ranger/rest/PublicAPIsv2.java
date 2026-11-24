@@ -437,7 +437,7 @@ public class PublicAPIsv2 {
     @GET
     @Path("/api/service-headers")
     @Produces("application/json")
-    @PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.GET_SERVICE_HEADERS + "\")")
+    @PreAuthorize("@rangerBizUtil.hasServiceAccountInfoAccess() || @rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.GET_SERVICE_HEADERS + "\")")
     public List<RangerServiceHeaderInfo> getServiceHeaders(@Context HttpServletRequest request) {
         return serviceREST.getServiceHeaders(request);
     }
@@ -464,7 +464,7 @@ public class PublicAPIsv2 {
             throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST, "service id mismatch", true);
         }
 
-        return serviceREST.updateService(service, request);
+        return serviceREST.updateService(service, id, request);
     }
 
     @PUT
