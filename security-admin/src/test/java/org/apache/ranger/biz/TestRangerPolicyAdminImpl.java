@@ -454,19 +454,19 @@ public class TestRangerPolicyAdminImpl {
         item2.addUser("u1");
         item2.addAccess(new RangerPolicyItemAccess("write"));
 
-        Map<String, Set<String>> userAcc = new HashMap<>();
-        Map<String, Set<String>> grpAcc = new HashMap<>();
-        Map<String, Set<String>> roleAcc = new HashMap<>();
+        Map<List<Object>, Set<String>> userAcc = new HashMap<>();
+        Map<List<Object>, Set<String>> grpAcc = new HashMap<>();
+        Map<List<Object>, Set<String>> roleAcc = new HashMap<>();
 
         Method m = RangerPolicyAdminImpl.class.getDeclaredMethod("collectAccessTypes", Map.class, List.class, Map.class, Map.class, Map.class);
         m.setAccessible(true);
         m.invoke(admin, expanded, Arrays.asList(item1, item2), userAcc, grpAcc, roleAcc);
 
-        assertEquals(new HashSet<>(Arrays.asList("read", "write")), userAcc.get("u1"));
-        assertEquals(Collections.singleton("read"), userAcc.get("u2"));
-        assertEquals(Collections.singleton("read"), grpAcc.get("g1"));
-        assertNotSame(userAcc.get("u1"), userAcc.get("u2"));
-        assertNotSame(userAcc.get("u2"), grpAcc.get("g1"));
+        assertEquals(new HashSet<>(Arrays.asList("read", "write")), accessesOf(userAcc, "u1"));
+        assertEquals(Collections.singleton("read"), accessesOf(userAcc, "u2"));
+        assertEquals(Collections.singleton("read"), accessesOf(grpAcc, "g1"));
+        assertNotSame(accessesOf(userAcc, "u1"), accessesOf(userAcc, "u2"));
+        assertNotSame(accessesOf(userAcc, "u2"), accessesOf(grpAcc, "g1"));
     }
 
     @Test
@@ -1187,7 +1187,7 @@ public class TestRangerPolicyAdminImpl {
 
         Method collect = RangerPolicyAdminImpl.class.getDeclaredMethod("collectAccessTypes", RangerPolicy.class, RangerServiceDef.class, Map.class, Map.class, Map.class);
         collect.setAccessible(true);
-        Map<String, Set<String>> userAccesses = new HashMap<>();
+        Map<List<Object>, Set<String>> userAccesses = new HashMap<>();
         collect.invoke(admin, p, sd, userAccesses, new HashMap<>(), new HashMap<>());
         // principal keys also carry the item's constraint-info, so look the single entry up by value
         assertEquals(1, userAccesses.size());
@@ -1349,17 +1349,33 @@ public class TestRangerPolicyAdminImpl {
         it.addAccess(new RangerPolicyItemAccess("read"));
         List<RangerPolicyItem> items = Collections.singletonList(it);
 
-        Map<String, Set<String>> userAcc = new HashMap<>();
-        Map<String, Set<String>> grpAcc = new HashMap<>();
-        Map<String, Set<String>> roleAcc = new HashMap<>();
+        Map<List<Object>, Set<String>> userAcc = new HashMap<>();
+        Map<List<Object>, Set<String>> grpAcc = new HashMap<>();
+        Map<List<Object>, Set<String>> roleAcc = new HashMap<>();
 
         Method m = RangerPolicyAdminImpl.class.getDeclaredMethod("collectAccessTypes", Map.class, List.class, Map.class, Map.class, Map.class);
         m.setAccessible(true);
         m.invoke(admin, expanded, items, userAcc, grpAcc, roleAcc);
 
-        assertTrue(userAcc.containsKey("user1"));
-        assertTrue(userAcc.get("user1").contains("read"));
-        assertTrue(userAcc.get("user1").contains("select"));
+        Set<String> user1Accesses = accessesOf(userAcc, "user1");
+        assertNotNull(user1Accesses);
+        assertTrue(user1Accesses.contains("read"));
+        assertTrue(user1Accesses.contains("select"));
+    }
+
+    // principal keys also carry item-type, conditions and item-info; return the access-types of the one key for the principal
+    private static Set<String> accessesOf(Map<List<Object>, Set<String>> accesses, String principal) {
+        Set<String> ret = null;
+
+        for (Map.Entry<List<Object>, Set<String>> entry : accesses.entrySet()) {
+            if (principal.equals(entry.getKey().get(0))) {
+                assertNull(ret, "more than one key for principal " + principal);
+
+                ret = entry.getValue();
+            }
+        }
+
+        return ret;
     }
 
     private RangerPolicyAdminImpl createAdminWithDefaultStubs() throws Exception {
@@ -1406,5 +1422,139 @@ public class TestRangerPolicyAdminImpl {
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
+    }
+
+    @Test
+    public void testGetAllModifiedAccessTypes_conditionValuesAreComparedAsList() throws Exception {
+        RangerPolicy oldP = policyWithItems(90L, Collections.singletonList(userItem("dave", "read")),
+                Collections.singletonList(denyItemWithConditions(new RangerPolicy.RangerPolicyItemCondition("ip-range", Arrays.asList("10.*", "192.168.*")))));
+        // two values replaced by a single value holding both, plus an unrelated 'read' grant: 'select' is in the delta too
+        RangerPolicy newP = policyWithItems(90L, Arrays.asList(userItem("dave", "read"), userItem("bob", "read")),
+                Collections.singletonList(denyItemWithConditions(new RangerPolicy.RangerPolicyItemCondition("ip-range", Collections.singletonList("10.*\u0000192.168.*")))));
+
+        assertEquals(new HashSet<>(Arrays.asList("select", "read")), getModifiedAccessTypes(oldP, newP));
+    }
+
+    @Test
+    public void testGetAllModifiedAccessTypes_conditionsAreComparedAsList() throws Exception {
+        RangerPolicy oldP = policyWithItems(91L, Collections.singletonList(userItem("dave", "read")),
+                Collections.singletonList(denyItemWithConditions(
+                        new RangerPolicy.RangerPolicyItemCondition("ip-range", Collections.singletonList("10.*")),
+                        new RangerPolicy.RangerPolicyItemCondition("hour", Collections.singletonList("9-17")))));
+        // two conditions replaced by a single condition holding both, plus an unrelated 'read' grant: 'select' is in the delta too
+        RangerPolicy newP = policyWithItems(91L, Arrays.asList(userItem("dave", "read"), userItem("bob", "read")),
+                Collections.singletonList(denyItemWithConditions(
+                        new RangerPolicy.RangerPolicyItemCondition("hour", Collections.singletonList("9-17\u0001ip-range\u000010.*")))));
+
+        assertEquals(new HashSet<>(Arrays.asList("select", "read")), getModifiedAccessTypes(oldP, newP));
+    }
+
+    @Test
+    public void testGetAllModifiedAccessTypes_nullConditionValueIsHandled() throws Exception {
+        RangerPolicy oldP = policyWithItems(92L, Collections.singletonList(userItem("dave", "read")),
+                Collections.singletonList(denyItemWithConditions(new RangerPolicy.RangerPolicyItemCondition("ip-range", Arrays.asList(null, "10.*")))));
+        // same condition values in a different order, plus an unrelated 'read' grant: delta is only 'read'
+        RangerPolicy newP = policyWithItems(92L, Arrays.asList(userItem("dave", "read"), userItem("bob", "read")),
+                Collections.singletonList(denyItemWithConditions(new RangerPolicy.RangerPolicyItemCondition("ip-range", Arrays.asList("10.*", null)))));
+
+        assertEquals(Collections.singleton("read"), getModifiedAccessTypes(oldP, newP));
+    }
+
+    @Test
+    public void testGetAllModifiedAccessTypes_dataMaskInfoIsComparedByField() throws Exception {
+        // both infos have the same toString(): "dataMaskType={CUSTOM} conditionExpr={a} valueExpr={b} valueExpr={c} "
+        RangerPolicy oldP = maskPolicy(93L, new RangerPolicy.RangerPolicyItemDataMaskInfo("CUSTOM", "a} valueExpr={b", "c"), false);
+        RangerPolicy newP = maskPolicy(93L, new RangerPolicy.RangerPolicyItemDataMaskInfo("CUSTOM", "a", "b} valueExpr={c"), true);
+
+        assertEquals(new HashSet<>(Arrays.asList("select", "read")), getModifiedAccessTypes(oldP, newP));
+
+        // equal infos in different instances, plus an unrelated 'read' grant: delta is only 'read'
+        RangerPolicy sameP = maskPolicy(93L, new RangerPolicy.RangerPolicyItemDataMaskInfo("CUSTOM", "a} valueExpr={b", "c"), true);
+
+        assertEquals(Collections.singleton("read"), getModifiedAccessTypes(oldP, sameP));
+    }
+
+    @Test
+    public void testGetAllModifiedAccessTypes_rowFilterInfoIsComparedByField() throws Exception {
+        RangerPolicy oldP = rowFilterPolicy(94L, "dept = 'hr'", false);
+
+        // a changed filter, plus an unrelated 'read' grant: 'select' is in the delta too
+        assertEquals(new HashSet<>(Arrays.asList("select", "read")), getModifiedAccessTypes(oldP, rowFilterPolicy(94L, "1 = 1", true)));
+
+        // the same filter in a different instance, plus an unrelated 'read' grant: delta is only 'read'
+        assertEquals(Collections.singleton("read"), getModifiedAccessTypes(oldP, rowFilterPolicy(94L, "dept = 'hr'", true)));
+    }
+
+    @Test
+    public void testGetAllModifiedAccessTypes_unknownAccessTypeIsKeptInDelta() throws Exception {
+        RangerPolicy oldP = policyWithItems(95L, Collections.singletonList(userItem("dave", "read")), Collections.emptyList());
+        RangerPolicy newP = policyWithItems(95L, Arrays.asList(userItem("dave", "read"), userItem("bob", "unknown")), Collections.emptyList());
+
+        assertEquals(Collections.singleton("unknown"), getModifiedAccessTypes(oldP, newP));
+    }
+
+    private Set<String> getModifiedAccessTypes(RangerPolicy oldP, RangerPolicy newP) throws Exception {
+        RangerPolicyAdminImpl admin = createAdminWithDefaultStubs();
+        Method m = RangerPolicyAdminImpl.class.getDeclaredMethod("getAllModifiedAccessTypes", RangerPolicy.class, RangerPolicy.class, RangerServiceDef.class);
+        m.setAccessible(true);
+        @SuppressWarnings("unchecked")
+        Set<String> ret = (Set<String>) m.invoke(admin, oldP, newP, serviceDefWithAccessTypes("select", "read"));
+        return ret;
+    }
+
+    private RangerPolicyItem denyItemWithConditions(RangerPolicy.RangerPolicyItemCondition... conditions) {
+        RangerPolicyItem item = userItem("u1", "select");
+        item.setConditions(new ArrayList<>(Arrays.asList(conditions)));
+        return item;
+    }
+
+    private RangerPolicy maskPolicy(long id, RangerPolicy.RangerPolicyItemDataMaskInfo u1MaskInfo, boolean withBobRead) {
+        RangerPolicy p = new RangerPolicy();
+        p.setId(id);
+        p.setPolicyType(RangerPolicy.POLICY_TYPE_DATAMASK);
+        p.setResources(Collections.singletonMap("db", new RangerPolicyResource("hr")));
+
+        RangerPolicy.RangerDataMaskPolicyItem u1 = new RangerPolicy.RangerDataMaskPolicyItem();
+        u1.addUser("u1");
+        u1.addAccess(new RangerPolicyItemAccess("select"));
+        u1.setDataMaskInfo(u1MaskInfo);
+
+        List<RangerPolicy.RangerDataMaskPolicyItem> items = new ArrayList<>(Collections.singletonList(u1));
+
+        if (withBobRead) {
+            RangerPolicy.RangerDataMaskPolicyItem bob = new RangerPolicy.RangerDataMaskPolicyItem();
+            bob.addUser("bob");
+            bob.addAccess(new RangerPolicyItemAccess("read"));
+            bob.setDataMaskInfo(new RangerPolicy.RangerPolicyItemDataMaskInfo("MASK", null, null));
+            items.add(bob);
+        }
+
+        p.setDataMaskPolicyItems(items);
+        return p;
+    }
+
+    private RangerPolicy rowFilterPolicy(long id, String u1FilterExpr, boolean withBobRead) {
+        RangerPolicy p = new RangerPolicy();
+        p.setId(id);
+        p.setPolicyType(RangerPolicy.POLICY_TYPE_ROWFILTER);
+        p.setResources(Collections.singletonMap("db", new RangerPolicyResource("hr")));
+
+        RangerPolicy.RangerRowFilterPolicyItem u1 = new RangerPolicy.RangerRowFilterPolicyItem();
+        u1.addUser("u1");
+        u1.addAccess(new RangerPolicyItemAccess("select"));
+        u1.setRowFilterInfo(new RangerPolicy.RangerPolicyItemRowFilterInfo(u1FilterExpr));
+
+        List<RangerPolicy.RangerRowFilterPolicyItem> items = new ArrayList<>(Collections.singletonList(u1));
+
+        if (withBobRead) {
+            RangerPolicy.RangerRowFilterPolicyItem bob = new RangerPolicy.RangerRowFilterPolicyItem();
+            bob.addUser("bob");
+            bob.addAccess(new RangerPolicyItemAccess("read"));
+            bob.setRowFilterInfo(new RangerPolicy.RangerPolicyItemRowFilterInfo("1 = 0"));
+            items.add(bob);
+        }
+
+        p.setRowFilterPolicyItems(items);
+        return p;
     }
 }

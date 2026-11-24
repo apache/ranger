@@ -57,8 +57,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -71,12 +73,21 @@ public class RangerPolicyAdminImpl implements RangerPolicyAdmin {
     private static final Logger LOG                           = LoggerFactory.getLogger(RangerPolicyAdminImpl.class);
     private static final Logger PERF_POLICYENGINE_REQUEST_LOG = RangerPerfTracer.getPerfLogger("policyengine.request");
 
-    private static final char   ITEM_KEY_SEPARATOR        = '\u0000';
-    private static final char   ITEM_KEY_COND_SEPARATOR   = '\u0001';
     private static final String ITEM_TYPE_ALLOW           = "allow";
     private static final String ITEM_TYPE_DENY            = "deny";
     private static final String ITEM_TYPE_ALLOW_EXCEPTION = "allowException";
     private static final String ITEM_TYPE_DENY_EXCEPTION  = "denyException";
+
+    private static final Comparator<String> NULLS_FIRST = Comparator.nullsFirst(Comparator.naturalOrder());
+    private static final Comparator<List<String>> STRING_LIST_COMPARATOR = (l1, l2) -> {
+        for (int i = 0; i < Math.min(l1.size(), l2.size()); i++) {
+            int ret = NULLS_FIRST.compare(l1.get(i), l2.get(i));
+            if (ret != 0) {
+                return ret;
+            }
+        }
+        return Integer.compare(l1.size(), l2.size());
+    };
 
     private static final Map<String, Object> wildcardEvalContext = new HashMap<String, Object>() {
         @Override
@@ -822,13 +833,13 @@ public class RangerPolicyAdminImpl implements RangerPolicyAdmin {
     private Set<String> getAllModifiedAccessTypes(RangerPolicy oldPolicy, RangerPolicy policy, RangerServiceDef serviceDef) {
         Set<String> ret = new HashSet<>();
 
-        Map<String, Set<String>> oldUserAccesses  = new HashMap<>();
-        Map<String, Set<String>> oldGroupAccesses = new HashMap<>();
-        Map<String, Set<String>> oldRoleAccesses  = new HashMap<>();
+        Map<List<Object>, Set<String>> oldUserAccesses  = new HashMap<>();
+        Map<List<Object>, Set<String>> oldGroupAccesses = new HashMap<>();
+        Map<List<Object>, Set<String>> oldRoleAccesses  = new HashMap<>();
 
-        Map<String, Set<String>> newUserAccesses  = new HashMap<>();
-        Map<String, Set<String>> newGroupAccesses = new HashMap<>();
-        Map<String, Set<String>> newRoleAccesses  = new HashMap<>();
+        Map<List<Object>, Set<String>> newUserAccesses  = new HashMap<>();
+        Map<List<Object>, Set<String>> newGroupAccesses = new HashMap<>();
+        Map<List<Object>, Set<String>> newRoleAccesses  = new HashMap<>();
 
         collectAccessTypes(oldPolicy, serviceDef, oldUserAccesses, oldGroupAccesses, oldRoleAccesses);
         collectAccessTypes(policy, serviceDef, newUserAccesses, newGroupAccesses, newRoleAccesses);
@@ -846,7 +857,7 @@ public class RangerPolicyAdminImpl implements RangerPolicyAdmin {
         return ret;
     }
 
-    private void collectAccessTypes(RangerPolicy policy, RangerServiceDef serviceDef, Map<String, Set<String>> userAccesses, Map<String, Set<String>> groupAccesses, Map<String, Set<String>> roleAccesses) {
+    private void collectAccessTypes(RangerPolicy policy, RangerServiceDef serviceDef, Map<List<Object>, Set<String>> userAccesses, Map<List<Object>, Set<String>> groupAccesses, Map<List<Object>, Set<String>> roleAccesses) {
         Map<String, Collection<String>> expandedAccesses = ServiceDefUtil.getExpandedImpliedGrants(serviceDef);
 
         if (MapUtils.isNotEmpty(expandedAccesses)) {
@@ -870,11 +881,11 @@ public class RangerPolicyAdminImpl implements RangerPolicyAdmin {
         }
     }
 
-    private void collectAccessTypes(Map<String, Collection<String>> expandedAccesses, List<? extends RangerPolicy.RangerPolicyItem> policyItems, Map<String, Set<String>> userAccesses, Map<String, Set<String>> groupAccesses, Map<String, Set<String>> roleAccesses) {
+    private void collectAccessTypes(Map<String, Collection<String>> expandedAccesses, List<? extends RangerPolicy.RangerPolicyItem> policyItems, Map<List<Object>, Set<String>> userAccesses, Map<List<Object>, Set<String>> groupAccesses, Map<List<Object>, Set<String>> roleAccesses) {
         collectAccessTypes(expandedAccesses, null, policyItems, userAccesses, groupAccesses, roleAccesses);
     }
 
-    private void collectAccessTypes(Map<String, Collection<String>> expandedAccesses, String itemType, List<? extends RangerPolicy.RangerPolicyItem> policyItems, Map<String, Set<String>> userAccesses, Map<String, Set<String>> groupAccesses, Map<String, Set<String>> roleAccesses) {
+    private void collectAccessTypes(Map<String, Collection<String>> expandedAccesses, String itemType, List<? extends RangerPolicy.RangerPolicyItem> policyItems, Map<List<Object>, Set<String>> userAccesses, Map<List<Object>, Set<String>> groupAccesses, Map<List<Object>, Set<String>> roleAccesses) {
         for (RangerPolicy.RangerPolicyItem item : policyItems) {
             Set<String> accessTypes = new HashSet<>();
 
@@ -884,71 +895,79 @@ public class RangerPolicyAdminImpl implements RangerPolicyAdmin {
                     continue;
                 }
 
-                accessTypes.addAll(expandedAccesses.get(access.getType()));
+                Collection<String> expanded = expandedAccesses.get(access.getType());
+
+                if (expanded != null) {
+                    accessTypes.addAll(expanded);
+                } else { // unknown access-type: keep it as is, so that it is not dropped from the delta
+                    accessTypes.add(access.getType());
+                }
             }
 
             // principals are keyed together with the item-type, item-conditions and item-info (mask/row-filter/constraint),
             // so that a change to any of these is reported as a change to the access-types of the item
-            String keySuffix = getItemKeySuffix(itemType, item);
+            List<Object> conditionsKey = getItemConditionsKey(item);
+            List<Object> itemInfoKey   = getItemInfoKey(item);
 
             // each principal must get its own copy: a shared instance would let a later addAll() for one principal
             // leak access-types into every other principal of this item and make the diff miss real changes
             for (String user : item.getUsers()) {
-                userAccesses.computeIfAbsent(user + keySuffix, k -> new HashSet<>()).addAll(accessTypes);
+                userAccesses.computeIfAbsent(getItemKey(user, itemType, conditionsKey, itemInfoKey), k -> new HashSet<>()).addAll(accessTypes);
             }
 
             for (String group : item.getGroups()) {
-                groupAccesses.computeIfAbsent(group + keySuffix, k -> new HashSet<>()).addAll(accessTypes);
+                groupAccesses.computeIfAbsent(getItemKey(group, itemType, conditionsKey, itemInfoKey), k -> new HashSet<>()).addAll(accessTypes);
             }
 
             for (String role : item.getRoles()) {
-                roleAccesses.computeIfAbsent(role + keySuffix, k -> new HashSet<>()).addAll(accessTypes);
+                roleAccesses.computeIfAbsent(getItemKey(role, itemType, conditionsKey, itemInfoKey), k -> new HashSet<>()).addAll(accessTypes);
             }
         }
     }
 
-    private static String getItemKeySuffix(String itemType, RangerPolicy.RangerPolicyItem item) {
-        StringBuilder sb = new StringBuilder();
-        if (itemType != null) {
-            sb.append(ITEM_KEY_SEPARATOR).append(itemType);
-        }
+    private static List<Object> getItemKey(String principal, String itemType, List<Object> conditionsKey, List<Object> itemInfoKey) {
+        return Arrays.<Object>asList(principal, itemType, conditionsKey, itemInfoKey);
+    }
+
+    private static List<Object> getItemConditionsKey(RangerPolicy.RangerPolicyItem item) {
         List<RangerPolicy.RangerPolicyItemCondition> conditions = item.getConditions();
-        if (CollectionUtils.isNotEmpty(conditions)) {
-            List<String> normalized = new ArrayList<>(conditions.size());
-            for (RangerPolicy.RangerPolicyItemCondition condition : conditions) {
-                List<String> values = condition.getValues() == null ? new ArrayList<>() : new ArrayList<>(condition.getValues());
-                Collections.sort(values);
-                StringBuilder condKey = new StringBuilder(String.valueOf(condition.getType()));
-                for (String value : values) {
-                    condKey.append(ITEM_KEY_SEPARATOR).append(value);
-                }
-                normalized.add(condKey.toString());
+
+        if (CollectionUtils.isEmpty(conditions)) {
+            return Collections.emptyList();
+        }
+        // order of conditions, and of values within a condition, is not significant
+        List<List<String>> ret = new ArrayList<>(conditions.size());
+        for (RangerPolicy.RangerPolicyItemCondition condition : conditions) {
+            List<String> condKey = new ArrayList<>();
+            if (condition.getValues() != null) {
+                condKey.addAll(condition.getValues());
             }
-            Collections.sort(normalized);
-            for (String condKey : normalized) {
-                sb.append(ITEM_KEY_COND_SEPARATOR).append(condKey);
-            }
+            condKey.sort(NULLS_FIRST);
+            condKey.add(0, condition.getType()); // type stays the first element, values follow in sorted order
+            ret.add(condKey);
         }
 
-        Object itemInfo = null;
+        ret.sort(STRING_LIST_COMPARATOR);
+        return new ArrayList<>(ret);
+    }
 
+    private static List<Object> getItemInfoKey(RangerPolicy.RangerPolicyItem item) {
+        // compare field by field: the info classes' toString() is ambiguous, and their hashCode() is identity based
         if (item instanceof RangerPolicy.RangerDataMaskPolicyItem) {
-            itemInfo = ((RangerPolicy.RangerDataMaskPolicyItem) item).getDataMaskInfo();
+            RangerPolicy.RangerPolicyItemDataMaskInfo info = ((RangerPolicy.RangerDataMaskPolicyItem) item).getDataMaskInfo();
+
+            return info == null ? null : Arrays.<Object>asList("dataMask", info.getDataMaskType(), info.getConditionExpr(), info.getValueExpr());
         } else if (item instanceof RangerPolicy.RangerRowFilterPolicyItem) {
-            itemInfo = ((RangerPolicy.RangerRowFilterPolicyItem) item).getRowFilterInfo();
+            RangerPolicy.RangerPolicyItemRowFilterInfo info = ((RangerPolicy.RangerRowFilterPolicyItem) item).getRowFilterInfo();
+
+            return info == null ? null : Arrays.<Object>asList("rowFilter", info.getFilterExpr());
         } else if (item instanceof RangerPolicy.RangerConstraintPolicyItem) {
-            RangerPolicy.RangerPolicyItemConstraintInfo constraintInfo = ((RangerPolicy.RangerConstraintPolicyItem) item).getConstraintInfo();
+            RangerPolicy.RangerPolicyItemConstraintInfo info = ((RangerPolicy.RangerConstraintPolicyItem) item).getConstraintInfo();
 
-            if (constraintInfo != null) {
-                itemInfo = constraintInfo.getConstraintName() + ITEM_KEY_SEPARATOR + toCanonicalJson(constraintInfo.getParameters());
-            }
+            return info == null ? null : Arrays.<Object>asList("constraint", info.getConstraintName(), toCanonicalJson(info.getParameters()));
         }
 
-        if (itemInfo != null) {
-            sb.append(ITEM_KEY_SEPARATOR).append(itemInfo);
-        }
-
-        return sb.toString();
+        return null;
     }
 
     private static String toCanonicalJson(Map<String, Object> parameters) {
@@ -964,10 +983,10 @@ public class RangerPolicyAdminImpl implements RangerPolicyAdmin {
         }
     }
 
-    private Set<String> getAccessTypesDiff(Map<String, Set<String>> newAccessesMap, Map<String, Set<String>> oldAccessesMap) {
+    private <K> Set<String> getAccessTypesDiff(Map<K, Set<String>> newAccessesMap, Map<K, Set<String>> oldAccessesMap) {
         Set<String> ret = new HashSet<>();
 
-        for (Map.Entry<String, Set<String>> entry : newAccessesMap.entrySet()) {
+        for (Map.Entry<K, Set<String>> entry : newAccessesMap.entrySet()) {
             Set<String> oldAccesses = oldAccessesMap.get(entry.getKey());
 
             if (oldAccesses != null) {
@@ -979,7 +998,7 @@ public class RangerPolicyAdminImpl implements RangerPolicyAdmin {
             }
         }
 
-        for (Map.Entry<String, Set<String>> entry : oldAccessesMap.entrySet()) {
+        for (Map.Entry<K, Set<String>> entry : oldAccessesMap.entrySet()) {
             Set<String> newAccesses = newAccessesMap.get(entry.getKey());
 
             if (newAccesses != null) {
