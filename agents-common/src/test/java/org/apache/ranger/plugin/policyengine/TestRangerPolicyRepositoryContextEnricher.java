@@ -31,6 +31,10 @@ import java.util.List;
 
 public class TestRangerPolicyRepositoryContextEnricher {
     private static RangerPolicyRepository buildRepository(String enricherClassName) {
+        return buildRepository(enricherClassName, new RangerPolicyEngineOptions());
+    }
+
+    private static RangerPolicyRepository buildRepository(String enricherClassName, RangerPolicyEngineOptions policyEngineOptions) {
         RangerServiceDef serviceDef = new RangerServiceDef();
 
         serviceDef.setName("test-enricher-svc");
@@ -43,7 +47,7 @@ public class TestRangerPolicyRepositoryContextEnricher {
         servicePolicies.setServiceDef(serviceDef);
         servicePolicies.setPolicies(Collections.emptyList());
 
-        RangerPluginContext pluginContext = new RangerPluginContext(new RangerPluginConfig("test-enricher-svc", "test-enricher-svc-instance", "test-enricher-svc", "cl1", "on-prem", null));
+        RangerPluginContext pluginContext = new RangerPluginContext(new RangerPluginConfig("test-enricher-svc", "test-enricher-svc-instance", "test-enricher-svc", "cl1", "on-prem", policyEngineOptions));
 
         return new RangerPolicyRepository(servicePolicies, pluginContext);
     }
@@ -69,5 +73,19 @@ public class TestRangerPolicyRepositoryContextEnricher {
         Assertions.assertNotNull(enrichers);
         Assertions.assertEquals(1, enrichers.size());
         Assertions.assertEquals(RangerTagEnricher.class, enrichers.get(0).getClass());
+    }
+
+    @Test
+    public void testTagEnricherIsSkippedWhenDisabled() {
+        RangerPolicyEngineOptions options = new RangerPolicyEngineOptions();
+
+        options.disableTagEnricher = true;
+
+        RangerPolicyRepository repository = buildRepository(RangerTagEnricher.class.getName(), options);
+
+        List<RangerContextEnricher> enrichers = repository.getContextEnrichers();
+
+        Assertions.assertTrue(enrichers == null || enrichers.isEmpty(),
+                "RangerTagEnricher must not be instantiated when disableTagEnricher is true");
     }
 }
