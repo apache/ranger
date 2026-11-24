@@ -38,12 +38,6 @@ public class RangerAPIList {
 	public static final String DELETE_X_RESOURCE = "AssetREST.deleteXResource";
 	public static final String SEARCH_X_RESOURCES = "AssetREST.searchXResources";
 	public static final String COUNT_X_RESOURCES = "AssetREST.countXResources";
-	public static final String GET_X_CRED_STORE = "AssetREST.getXCredentialStore";
-	public static final String CREATE_X_CRED_STORE = "AssetREST.createXCredentialStore";
-	public static final String UPDATE_X_CRED_STORE = "AssetREST.updateXCredentialStore";
-	public static final String DELETE_X_CRED_STORE = "AssetREST.deleteXCredentialStore";
-	public static final String SEARCH_X_CRED_STORE = "AssetREST.searchXCredentialStores";
-	public static final String COUNT_X_CRED_STORE = "AssetREST.countXCredentialStores";
 	public static final String GET_X_RESOURCE_FILE = "AssetREST.getXResourceFile";
 	public static final String GET_RESOURCE_JSON = "AssetREST.getResourceJSON";
 	public static final String SEARCH_X_POLICY_EXPORT_AUDITS = "AssetREST.searchXPolicyExportAudits";
