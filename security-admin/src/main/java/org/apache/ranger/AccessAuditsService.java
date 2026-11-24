@@ -58,6 +58,7 @@ public class AccessAuditsService {
         searchFields.add(new SearchField("requestData", "reqData", SearchField.DATA_TYPE.STRING, SearchField.SEARCH_TYPE.PARTIAL));
         searchFields.add(new SearchField("resourcePath", "resource", SearchField.DATA_TYPE.STRING, SearchField.SEARCH_TYPE.PARTIAL));
         searchFields.add(new SearchField("clientIP", "cliIP", SearchField.DATA_TYPE.STRING, SearchField.SEARCH_TYPE.FULL));
+        searchFields.add(new SearchField("clientType", "cliType", SearchField.DATA_TYPE.STRING, SearchField.SEARCH_TYPE.FULL));
 
         searchFields.add(new SearchField("auditType", "logType", SearchField.DATA_TYPE.INTEGER, SearchField.SEARCH_TYPE.FULL));
         searchFields.add(new SearchField("accessResult", "result", SearchField.DATA_TYPE.INTEGER, SearchField.SEARCH_TYPE.FULL));

@@ -620,6 +620,22 @@ function AccessLogs() {
         hideResizer: true
       },
       {
+        Header: "Client Type",
+        accessor: "clientType",
+        Cell: (rawValue) => {
+          if (!isEmpty(rawValue?.value)) {
+            return (
+              <div className="text-truncate" title={rawValue.value}>
+                {rawValue.value}
+              </div>
+            );
+          } else return <div className="text-center">--</div>;
+        },
+        width: 110,
+        hideResizer: true,
+        disableSortBy: true
+      },
+      {
         Header: "Cluster Name",
         accessor: "clusterName",
         width: 100,
@@ -836,6 +852,12 @@ function AccessLogs() {
       type: "text"
     },
     {
+      category: "clientType",
+      label: "Client Type",
+      urlLabel: "clientType",
+      type: "text"
+    },
+    {
       category: "cluster",
       label: "Cluster Name",
       urlLabel: "clusterName",
@@ -976,6 +998,9 @@ function AccessLogs() {
                       <br />
                       <b>Client IP :</b> Search by IP address from where
                       resource was accessed.
+                      <br />
+                      <b>Client Type :</b> Search by type of client that made
+                      the access request.
                       <br />
                       <b>Cluster Name : </b> Name of cluster <br />
                       <b>Zone Name :</b> Name of Zone. <br />

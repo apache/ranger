@@ -236,6 +236,7 @@ public class ElasticSearchAccessAuditsServiceTest {
         source.put("reqData", "select 1");
         source.put("resource", "/path");
         source.put("cliIP", "1.2.3.4");
+        source.put("cliType", "hive-cli");
         source.put("result", 1);
         source.put("policy", 99);
         source.put("repoType", 1);
@@ -262,6 +263,8 @@ public class ElasticSearchAccessAuditsServiceTest {
         assertEquals(1, list.getVXAccessAudits().size());
         assertEquals("cl1", list.getVXAccessAudits().get(0).getClusterName());
         assertEquals("alice", list.getVXAccessAudits().get(0).getRequestUser());
+        assertEquals("1.2.3.4", list.getVXAccessAudits().get(0).getClientIP());
+        assertEquals("hive-cli", list.getVXAccessAudits().get(0).getClientType());
     }
 
     private SearchCriteria getSearchCriteria() {

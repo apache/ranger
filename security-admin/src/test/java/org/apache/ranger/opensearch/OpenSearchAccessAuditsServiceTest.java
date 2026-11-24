@@ -122,6 +122,7 @@ class OpenSearchAccessAuditsServiceTest {
         doc1.put("id", "test-id-001");
         doc1.put("reqUser", "testuser1");
         doc1.put("resource", "/tmp/test");
+        doc1.put("cliType", "hdfs-client");
         doc1.put("access", "read");
         doc1.put("result", 1);
         doc1.put("repo", "dev_hdfs");
@@ -154,6 +155,7 @@ class OpenSearchAccessAuditsServiceTest {
         assertEquals("testuser1", result.getVXAccessAudits().get(0).getRequestUser());
         assertEquals("/tmp/test", result.getVXAccessAudits().get(0).getResourcePath());
         assertEquals("read", result.getVXAccessAudits().get(0).getAccessType());
+        assertEquals("hdfs-client", result.getVXAccessAudits().get(0).getClientType());
     }
 
     @Test

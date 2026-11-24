@@ -287,6 +287,11 @@ public class SolrAccessAuditsService extends AccessAuditsService implements Acce
             accessAudit.setClientIP(value.toString());
         }
 
+        value = doc.getFieldValue("cliType");
+        if (value != null) {
+            accessAudit.setClientType(value.toString());
+        }
+
         value = doc.getFieldValue("logType");
         //if (value != null) {
         //    TODO: Need to see what logType maps to in UI

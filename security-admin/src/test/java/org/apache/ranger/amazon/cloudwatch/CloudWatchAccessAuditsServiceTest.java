@@ -123,12 +123,14 @@ public class CloudWatchAccessAuditsServiceTest {
             hive.setRepositoryType(1);
             hive.setAccessType("grant");
             hive.setRequestData("select+*+from+x");
+            hive.setClientType("hive-cli");
 
             AuthzAuditEvent other = new AuthzAuditEvent();
             other.setRepositoryName("svc");
             other.setRepositoryType(1);
             other.setAccessType("read");
             other.setRequestData("abc");
+            other.setClientType("hdfs-client");
 
             FilteredLogEvent e1 = new FilteredLogEvent().withMessage(MiscUtil.stringify(hive));
             FilteredLogEvent e2 = new FilteredLogEvent().withMessage(MiscUtil.stringify(other));
@@ -166,6 +168,9 @@ public class CloudWatchAccessAuditsServiceTest {
             assertNull(out.getVXAccessAudits().get(1).getRequestData());
             // display names applied
             assertEquals("ServiceDisplay", out.getVXAccessAudits().get(0).getRepoDisplayName());
+            // clientType round-trips through the stored JSON event
+            assertEquals("hdfs-client", out.getVXAccessAudits().get(0).getClientType());
+            assertEquals("hive-cli", out.getVXAccessAudits().get(1).getClientType());
             assertEquals("hive", out.getVXAccessAudits().get(1).getServiceType());
             assertEquals("Hive", out.getVXAccessAudits().get(1).getServiceTypeDisplayName());
         } finally {
