@@ -14,7 +14,7 @@ pip==26.0
 pluggy==1.6.0
 Pygments==2.19.2
 pytest==9.0.2
-requests==2.32.5
+requests==2.33.0
 urllib3==2.6.3
 Werkzeug==3.1.5
 pytest-xdist
