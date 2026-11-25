@@ -161,6 +161,8 @@ public class TestNiFiClient {
         HashMap<String, Object> ret = niFiClient.connectionTest();
         Assert.assertNotNull(ret);
         Assert.assertEquals(NiFiClient.FAILURE_MSG, ret.get("message"));
+        Assert.assertEquals(NiFiClient.FAILURE_MSG, ret.get("description"));
+        Assert.assertFalse(String.valueOf(ret.get("description")).contains(errorMsg));
     }
 
 
