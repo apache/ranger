@@ -31,6 +31,7 @@ public class RangerPolicyEngineOptions {
     public boolean disableTrieLookupPrefilter;
     public boolean disablePolicyRefresher;
     public boolean disableTagRetriever;
+    public boolean disableTagEnricher;
     public boolean disableUserStoreRetriever;
     public boolean disableGdsInfoRetriever;
     public boolean cacheAuditResults                           = true;
@@ -58,6 +59,7 @@ public class RangerPolicyEngineOptions {
         this.disableTrieLookupPrefilter                = other.disableTrieLookupPrefilter;
         this.disablePolicyRefresher                    = other.disablePolicyRefresher;
         this.disableTagRetriever                       = other.disableTagRetriever;
+        this.disableTagEnricher                        = other.disableTagEnricher;
         this.disableUserStoreRetriever                 = other.disableUserStoreRetriever;
         this.disableGdsInfoRetriever                   = other.disableGdsInfoRetriever;
         this.cacheAuditResults                         = other.cacheAuditResults;
@@ -86,6 +88,7 @@ public class RangerPolicyEngineOptions {
         disableTrieLookupPrefilter = conf.getBoolean(propertyPrefix + ".policyengine.option.disable.trie.lookup.prefilter", false);
         disablePolicyRefresher     = conf.getBoolean(propertyPrefix + ".policyengine.option.disable.policy.refresher", false);
         disableTagRetriever        = conf.getBoolean(propertyPrefix + ".policyengine.option.disable.tag.retriever", false);
+        disableTagEnricher         = conf.getBoolean(propertyPrefix + ".policyengine.option.disable.tag.enricher", false);
         disableUserStoreRetriever  = conf.getBoolean(propertyPrefix + ".policyengine.option.disable.userstore.retriever", false);
         disableGdsInfoRetriever    = conf.getBoolean(propertyPrefix + ".policyengine.option.disable.gdsinfo.retriever", false);
 
@@ -112,6 +115,7 @@ public class RangerPolicyEngineOptions {
         disableTrieLookupPrefilter = conf.getBoolean(propertyPrefix + ".policyengine.option.disable.trie.lookup.prefilter", false);
         disablePolicyRefresher     = conf.getBoolean(propertyPrefix + ".policyengine.option.disable.policy.refresher", true);
         disableTagRetriever        = conf.getBoolean(propertyPrefix + ".policyengine.option.disable.tag.retriever", true);
+        disableTagEnricher         = conf.getBoolean(propertyPrefix + ".policyengine.option.disable.tag.enricher", false);
         disableUserStoreRetriever  = conf.getBoolean(propertyPrefix + ".policyengine.option.disable.userstore.retriever", true);
         disableGdsInfoRetriever    = conf.getBoolean(propertyPrefix + ".policyengine.option.disable.gdsinfo.retriever", true);
 
@@ -131,6 +135,7 @@ public class RangerPolicyEngineOptions {
         disableTrieLookupPrefilter = conf.getBoolean(propertyPrefix + ".policyengine.option.disable.trie.lookup.prefilter", false);
         disablePolicyRefresher     = conf.getBoolean(propertyPrefix + ".policyengine.option.disable.policy.refresher", true);
         disableTagRetriever        = conf.getBoolean(propertyPrefix + ".policyengine.option.disable.tag.retriever", true);
+        disableTagEnricher         = conf.getBoolean(propertyPrefix + ".policyengine.option.disable.tag.enricher", false);
         disableUserStoreRetriever  = conf.getBoolean(propertyPrefix + ".policyengine.option.disable.userstore.retriever", true);
         disableGdsInfoRetriever    = conf.getBoolean(propertyPrefix + ".policyengine.option.disable.gdsinfo.retriever", true);
         optimizeTrieForRetrieval   = conf.getBoolean(propertyPrefix + ".policyengine.option.optimize.trie.for.retrieval", false);
@@ -149,6 +154,7 @@ public class RangerPolicyEngineOptions {
         disableTrieLookupPrefilter = conf.getBoolean(propertyPrefix + ".policyengine.option.disable.trie.lookup.prefilter", false);
         disablePolicyRefresher     = conf.getBoolean(propertyPrefix + ".policyengine.option.disable.policy.refresher", true);
         disableTagRetriever        = conf.getBoolean(propertyPrefix + ".policyengine.option.disable.tag.retriever", false);
+        disableTagEnricher         = conf.getBoolean(propertyPrefix + ".policyengine.option.disable.tag.enricher", false);
         disableUserStoreRetriever  = conf.getBoolean(propertyPrefix + ".policyengine.option.disable.userstore.retriever", false);
         disableGdsInfoRetriever    = conf.getBoolean(propertyPrefix + ".policyengine.option.disable.gdsinfo.retriever", false);
         optimizeTrieForRetrieval   = conf.getBoolean(propertyPrefix + ".policyengine.option.optimize.trie.for.retrieval", false);
@@ -192,6 +198,8 @@ public class RangerPolicyEngineOptions {
         ret *= 2;
         ret += disableTagRetriever ? 1 : 0;
         ret *= 2;
+        ret += disableTagEnricher ? 1 : 0;
+        ret *= 2;
         ret += disableUserStoreRetriever ? 1 : 0;
         ret *= 2;
         ret += disableGdsInfoRetriever ? 1 : 0;
@@ -230,6 +238,7 @@ public class RangerPolicyEngineOptions {
                     && this.disableTrieLookupPrefilter == that.disableTrieLookupPrefilter
                     && this.disablePolicyRefresher == that.disablePolicyRefresher
                     && this.disableTagRetriever == that.disableTagRetriever
+                    && this.disableTagEnricher == that.disableTagEnricher
                     && this.disableUserStoreRetriever == that.disableUserStoreRetriever
                     && this.disableGdsInfoRetriever == that.disableGdsInfoRetriever
                     && this.cacheAuditResults == that.cacheAuditResults
@@ -256,6 +265,7 @@ public class RangerPolicyEngineOptions {
                 ", disableTagPolicyEvaluation: " + disableTagPolicyEvaluation +
                 ", disablePolicyRefresher: " + disablePolicyRefresher +
                 ", disableTagRetriever: " + disableTagRetriever +
+                ", disableTagEnricher: " + disableTagEnricher +
                 ", disableUserStoreRetriever: " + disableUserStoreRetriever +
                 ", disableGdsInfoRetriever: " + disableGdsInfoRetriever +
                 ", enableTagEnricherWithLocalRefresher: " + enableTagEnricherWithLocalRefresher +

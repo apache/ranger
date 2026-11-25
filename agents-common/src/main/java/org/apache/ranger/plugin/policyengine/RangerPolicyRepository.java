@@ -1074,6 +1074,10 @@ public class RangerPolicyRepository {
                     continue;
                 }
 
+                if (options.disableTagEnricher && StringUtils.equals(enricherDef.getEnricher(), RangerTagEnricher.class.getName())) {
+                    continue;
+                }
+
                 if (options.disableTagRetriever && StringUtils.equals(enricherDef.getEnricher(), RangerTagEnricher.class.getName())) {
                     if (MapUtils.isNotEmpty(enricherDef.getEnricherOptions())) {
                         Map<String, String> enricherOptions = new HashMap<>(enricherDef.getEnricherOptions());
