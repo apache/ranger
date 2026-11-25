@@ -343,6 +343,18 @@
 		<description>When enabled, ':' is accepted as a valid character in usernames so that SPIFFE IDs (e.g. spiffe://spiffe.example.com/ns/sales/sa/trino) can be used as service-account usernames. Disabled by default.</description>
 	</property>
 	<!-- Trusted header auth properties end -->
+	<!-- User-Group mapping resolution  Related Props starts-->
+	<property>
+		<name>ranger.ugi.group.resolution.enabled</name>
+		<value>false</value>
+		<description>Enables dynamic group resolution using Hadoop UserGroupInformation (UGI) instead of the Ranger DB (x_group_users)</description>
+	</property>
+	<property>
+		<name>ranger.ugi.group.resolution.include.hadoop.groups</name>
+		<value>false</value>
+		<description>Only relevant when ranger.ugi.group.resolution.enabled is 'true'. When set to 'true', groups are resolved from both org.apache.hadoop.security.UserGroupInformation and a fresh org.apache.hadoop.security.Groups lookup (which re-reads the current Hadoop configuration and may differ from UGI's cached mapping), and the results are merged. When 'false' (default), the Groups-based lookup is only used as a fallback when UserGroupInformation returns no groups for the user.</description>
+	</property>
+	<!-- User-Group mapping resolution  Related Props ends-->
 	<!-- Kerberos Properties starts-->	
 	<property>
 		<name>ranger.admin.kerberos.token.valid.seconds</name>
