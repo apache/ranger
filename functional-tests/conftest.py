@@ -70,6 +70,39 @@ def _ensure_plugin_test_users_for_enforcement_suites(request):
     yield
 
 
+@pytest.fixture(scope="session", autouse=True)
+def _kms_session_setup(request):
+    """
+    Before KMS tests (marker: kms), validate Docker stack.
+    Runs once per session if any test has the kms marker.
+    
+    Note: User/Kerberos setup is test-specific - each test module should call
+    ensure_keyadmin_ticket(), ensure_testuser_ticket(), etc. in its setup_module.
+    """
+    if not request.session.items:
+        yield
+        return
+    
+    # Check if any test has the kms marker
+    has_kms_tests = any(
+        item.get_closest_marker("kms") for item in request.session.items
+    )
+    
+    if has_kms_tests:
+        from ranger_test_utils.kms_utils import preflight_kms_stack
+        from ranger_test_utils.utils import get_test_logger
+        
+        logger = get_test_logger(__name__)
+        logger.info("=== KMS session setup: validating Docker stack ===")
+        
+        # Validate Docker containers (common to all KMS tests)
+        preflight_kms_stack()
+        
+        logger.info("=== KMS session setup: done ===")
+    
+    yield
+
+
 @pytest.fixture(scope="module", autouse=True)
 def _log_to_module_file(request):
     """Write logger.info (and above) to logs/<test_file_name>.log for each test module."""
