@@ -25,7 +25,7 @@ A Docker-based test execution framework that validates Apache Ranger service int
 | Suite | Description |
 |---|---|
 | **hdfs** | HDFS encryption lifecycle (KMS) and Ranger HDFS plugin path policies (`hdfs_policy` marker) |
-| **kms** | Test cases for KMS REST API functionality |
+| **kms** | KMS REST API functionality: key lifecycle, operations (rollover, DEK/EDEK, cache), policy enforcement, blacklisting, and validation (45 tests across 8 files) |
 | **xuserrest** | Test cases for Ranger Admin User/Group REST APIs |
 | **rolerest** | Test cases for Ranger Admin Role REST APIs |
 | **servicerest** | Test cases for Ranger Admin Service REST APIs |
@@ -223,6 +223,7 @@ Brought up based on what you enter at the containers prompt (or `SELECTED_CONTAI
 - `hive` and `hbase` start `ranger-hadoop` automatically. `kafka` starts `ranger-kafka`.
 - Example: `SELECTED_CONTAINERS="hive hbase kafka" ./run-tests.sh postgres hive hbase kafka`
 - **Shared plugin user/Kerberos setup** (session hook, markers, flow diagrams): [docs/plugin-enforcement-setup.md](docs/plugin-enforcement-setup.md)
+
 
 
 ### HDFS suite notes
