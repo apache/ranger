@@ -390,7 +390,48 @@ public class TestRangerHeaderPreAuthFilter {
         HttpServletResponse response = mock(HttpServletResponse.class);
 
         when(request.getHeader("X-Forwarded-User")).thenReturn("joeuser");
-        when(request.getHeader("X-Forwarded-Roles")).thenReturn("RANGER_ROLE_ADMIN, RANGER_ROLE_USER");
+        when(request.getHeader("X-Forwarded-Roles")).thenReturn("authz-role-admin, authz-role-user");
+
+        FilterChain chain = new FilterChain() {
+            @Override
+            public void doFilter(ServletRequest req, ServletResponse res) {
+                org.springframework.security.core.Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+
+                assertNotNull(auth);
+                assertTrue(auth instanceof RangerAuthenticationToken);
+                RangerAuthenticationToken rangerAuth = (RangerAuthenticationToken) auth;
+                assertEquals(XXAuthSession.AUTH_TYPE_TRUSTED_PROXY, rangerAuth.getAuthType());
+                assertEquals("joeuser", auth.getName());
+
+                Collection<?> authorities = auth.getAuthorities();
+                assertEquals(2, authorities.size());
+                assertTrue(authorities.stream().anyMatch(a -> "ROLE_SYS_ADMIN".equals(a.toString())));
+                assertTrue(authorities.stream().anyMatch(a -> "ROLE_USER".equals(a.toString())));
+            }
+        };
+
+        filter.doFilter(request, response, chain);
+
+        verify(userMgr, never()).getRolesByLoginId(anyString());
+    }
+
+    @Test
+    void testDoFilter_enabled_withExternalScopedRolesHeader_mapsToInternalRoles() throws Exception {
+        PropertiesUtil.getPropertiesMap().put(RangerHeaderPreAuthFilter.PROP_HEADER_AUTH_ENABLED, "true");
+        PropertiesUtil.getPropertiesMap().put(RangerHeaderPreAuthFilter.PROP_USERNAME_HEADER_NAME, "X-Forwarded-User");
+        PropertiesUtil.getPropertiesMap().put(RangerHeaderPreAuthFilter.PROP_ROLES_HEADER_NAME, "X-Forwarded-Roles");
+
+        RangerHeaderPreAuthFilter filter  = new RangerHeaderPreAuthFilter();
+        UserMgr                   userMgr = mock(UserMgr.class);
+
+        filter.userMgr = userMgr;
+        filter.initialize();
+
+        HttpServletRequest  request  = mock(HttpServletRequest.class);
+        HttpServletResponse response = mock(HttpServletResponse.class);
+
+        when(request.getHeader("X-Forwarded-User")).thenReturn("joeuser");
+        when(request.getHeader("X-Forwarded-Roles")).thenReturn("udf:authz-role-admin, udf:authz-role-user");
 
         FilterChain chain = new FilterChain() {
             @Override

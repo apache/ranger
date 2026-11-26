@@ -41,6 +41,7 @@ import org.apache.ranger.entity.XXUser;
 import org.apache.ranger.security.context.RangerContextHolder;
 import org.apache.ranger.security.context.RangerSecurityContext;
 import org.apache.ranger.security.listener.RangerHttpSessionListener;
+import org.apache.ranger.security.web.filter.RangerAuthenticationToken;
 import org.apache.ranger.security.web.filter.RangerSecurityContextFormationFilter;
 import org.apache.ranger.service.AuthSessionService;
 import org.apache.ranger.util.RestUtil;
@@ -51,6 +52,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.WebAuthenticationDetails;
 import org.springframework.stereotype.Component;
@@ -63,6 +65,7 @@ import javax.servlet.http.HttpSession;
 
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.HashSet;
@@ -775,6 +778,24 @@ public class SessionMgr {
             String userRole = gjUserRole.getUserRole();
 
             strRoleList.add(userRole);
+        }
+
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        if (authentication instanceof RangerAuthenticationToken && ((RangerAuthenticationToken) authentication).getAuthType() == XXAuthSession.AUTH_TYPE_TRUSTED_PROXY) {
+            Collection<? extends GrantedAuthority> grantedAuthorities = authentication.getAuthorities();
+
+            if (grantedAuthorities != null) {
+                for (GrantedAuthority grantedAuth : grantedAuthorities) {
+                    String roleName = grantedAuth.getAuthority();
+
+                    if (!strRoleList.contains(roleName)) {
+                        logger.debug("Adding header role {} to session user {}", roleName, userSession.getLoginId());
+
+                        strRoleList.add(roleName);
+                    }
+                }
+            }
         }
 
         if (strRoleList.contains(RangerConstants.ROLE_SYS_ADMIN)) {

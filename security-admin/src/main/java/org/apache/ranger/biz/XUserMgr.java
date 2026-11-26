@@ -81,8 +81,6 @@ import org.apache.ranger.plugin.model.UserInfo;
 import org.apache.ranger.plugin.store.EmbeddedServiceDefsUtil;
 import org.apache.ranger.plugin.util.PasswordUtils.PasswordGenerator;
 import org.apache.ranger.plugin.util.RangerUserStore;
-import org.apache.ranger.security.context.RangerContextHolder;
-import org.apache.ranger.security.context.RangerSecurityContext;
 import org.apache.ranger.security.web.filter.RangerAuthenticationToken;
 import org.apache.ranger.security.web.filter.RangerHeaderPreAuthFilter;
 import org.apache.ranger.service.RangerPolicyService;
@@ -2626,17 +2624,19 @@ public class XUserMgr extends XUserMgrBase {
     public boolean hasAccessToModule(String moduleName) {
         UserSessionBase userSession = ContextUtil.getCurrentUserSession();
 
-        if (userSession != null && userSession.isSuperUser()) {
-            return true;
-        }
+        if (userSession != null) {
+            if (RangerConstants.MODULE_KEY_MANAGER.equals(moduleName)) {
+                return userSession.isKeyAdmin() || userSession.isAuditKeyAdmin();
+            } else if (userSession.isSuperUser() || userSession.isUserAdmin()) {
+                return true;
+            } else if (userSession.getLoginId() != null) {
+                VXUser vxUser = xUserService.getXUserByUserName(userSession.getLoginId());
 
-        if (userSession != null && userSession.getLoginId() != null) {
-            VXUser vxUser = xUserService.getXUserByUserName(userSession.getLoginId());
+                if (vxUser != null) {
+                    List<String> permissionList = daoManager.getXXModuleDef().findAccessibleModulesByUserId(userSession.getUserId(), vxUser.getId());
 
-            if (vxUser != null) {
-                List<String> permissionList = daoManager.getXXModuleDef().findAccessibleModulesByUserId(userSession.getUserId(), vxUser.getId());
-
-                return permissionList != null && permissionList.contains(moduleName);
+                    return permissionList != null && permissionList.contains(moduleName);
+                }
             }
         }
 
@@ -3863,38 +3863,8 @@ public class XUserMgr extends XUserMgrBase {
         return ret;
     }
 
-    /**
-     * Creates the portal user with the supplied roles. When the roles originate from the trusted
-     * roles header ({@code trustedHeaderRoles}), the creation runs under a trusted system session
-     * (an admin session with no interactive user attached) so that non-public roles such as
-     * ROLE_SYS_ADMIN carried in the header are permitted during provisioning. No real user account
-     * is impersonated and the previous security context is always restored.
-     */
-    private XXPortalUser createExternalPortalUser(XXPortalUser xXPortalUser, List<String> roleList, boolean trustedHeaderRoles) {
-        if (!trustedHeaderRoles) {
-            return userMgr.createUser(xXPortalUser, RangerCommonEnums.STATUS_ENABLED, roleList);
-        }
-
-        RangerSecurityContext context         = RangerContextHolder.getSecurityContext();
-        UserSessionBase       originalSession = context != null ? context.getUserSession() : null;
-
-        if (context == null) {
-            context = new RangerSecurityContext();
-
-            RangerContextHolder.setSecurityContext(context);
-        }
-
-        try {
-            UserSessionBase systemSession = new UserSessionBase();
-
-            systemSession.setUserAdmin(true);
-
-            context.setUserSession(systemSession);
-
-            return userMgr.createUser(xXPortalUser, RangerCommonEnums.STATUS_ENABLED, roleList);
-        } finally {
-            context.setUserSession(originalSession);
-        }
+    private XXPortalUser createExternalPortalUser(XXPortalUser xXPortalUser, List<String> roleList) {
+        return userMgr.createUser(xXPortalUser, RangerCommonEnums.STATUS_ENABLED, roleList);
     }
 
     private class ExternalUserCreator implements Runnable {
@@ -3922,31 +3892,14 @@ public class XUserMgr extends XUserMgrBase {
                 vXPortalUser.setLoginId(userName);
                 vXPortalUser.setUserSource(RangerCommonEnums.USER_EXTERNAL);
 
-                Authentication    auth               = SecurityContextHolder.getContext().getAuthentication();
-                boolean           isSelfProvisioning = auth instanceof RangerAuthenticationToken && ((RangerAuthenticationToken) auth).getAuthType() == XXAuthSession.AUTH_TYPE_TRUSTED_PROXY && StringUtils.equalsIgnoreCase(auth.getName(), userName);
-                ArrayList<String> roleList           = new ArrayList<>();
-                boolean           useHeaderRoles     = false;
-
-                if (isSelfProvisioning) {
-                    List<String> headerRoles = getHeaderAuthRoles();
-
-                    if (CollectionUtils.isNotEmpty(headerRoles)) {
-                        useHeaderRoles = true;
-
-                        roleList.addAll(headerRoles);
-                    } else {
-                        roleList.add(RangerConstants.ROLE_USER);
-                    }
-                } else {
-                    roleList.add(RangerConstants.ROLE_USER);
-                }
+                List<String> roleList = Collections.singletonList(RangerConstants.ROLE_USER);
 
                 vXPortalUser.setUserRoleList(roleList);
 
                 xXPortalUser = userMgr.mapVXPortalUserToXXPortalUser(vXPortalUser);
 
                 try {
-                    xXPortalUser = createExternalPortalUser(xXPortalUser, roleList, useHeaderRoles);
+                    xXPortalUser = createExternalPortalUser(xXPortalUser, roleList);
 
                     logger.debug("createExternalUser(): Successfully created user {} in x_portal_user table with roles {}", xXPortalUser.getLoginId(), roleList);
                 } catch (Exception ex) {
