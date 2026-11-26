@@ -963,19 +963,25 @@ public class RangerPolicyAdminImpl implements RangerPolicyAdmin {
         if (CollectionUtils.isEmpty(conditions)) {
             return Collections.emptyList();
         }
-        // order of conditions, and of values within a condition, is not significant
+
+        // Condition order is not significant: every condition must match.
+        // Value order is significant: script conditions use values.get(0).
         List<List<String>> ret = new ArrayList<>(conditions.size());
+
         for (RangerPolicy.RangerPolicyItemCondition condition : conditions) {
             List<String> condKey = new ArrayList<>();
+
+            condKey.add(condition.getType());
+
             if (condition.getValues() != null) {
                 condKey.addAll(condition.getValues());
             }
-            condKey.sort(NULLS_FIRST);
-            condKey.add(0, condition.getType()); // type stays the first element, values follow in sorted order
+
             ret.add(condKey);
         }
 
         ret.sort(STRING_LIST_COMPARATOR);
+
         return new ArrayList<>(ret);
     }
 
