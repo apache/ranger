@@ -292,12 +292,23 @@ public class TestRangerPolicyAdminImpl {
                 new RangerPolicy.RangerPolicyItemCondition("hour", Collections.singletonList("9-17"))));
         when(serviceDBStore.getPolicy(64L)).thenReturn(policyWithItems(64L, Arrays.asList(storedTwoConds, userItem("dave", "delete")), Collections.emptyList()));
 
+        // condition order is not significant: every condition must match
         RangerPolicyItem reordered = groupItem("analysts", "consume");
         reordered.setConditions(Arrays.asList(
                 new RangerPolicy.RangerPolicyItemCondition("hour", Collections.singletonList("9-17")),
-                new RangerPolicy.RangerPolicyItemCondition("ip-range", Arrays.asList("172.16.*", "10.*"))));
+                new RangerPolicy.RangerPolicyItemCondition("ip-range", Arrays.asList("10.*", "172.16.*"))));
         RangerPolicy keepsConds = policyWithItems(64L, Arrays.asList(reordered, userItem("dave", "delete"), userItem("bob", "delete")), Collections.emptyList());
         assertTrue(admin.isDelegatedAdminAccessAllowedForModify(keepsConds, "alice", Collections.emptySet(), null, null));
+
+        // value order is significant: script conditions use values.get(0)
+        RangerPolicyItem storedOneCond = groupItem("analysts", "consume");
+        storedOneCond.setConditions(Collections.singletonList(new RangerPolicy.RangerPolicyItemCondition("script", Arrays.asList("return false;", "return true;"))));
+        when(serviceDBStore.getPolicy(68L)).thenReturn(policyWithItems(68L, Arrays.asList(storedOneCond, userItem("dave", "delete")), Collections.emptyList()));
+
+        RangerPolicyItem swappedValues = groupItem("analysts", "consume");
+        swappedValues.setConditions(Collections.singletonList(new RangerPolicy.RangerPolicyItemCondition("script", Arrays.asList("return true;", "return false;"))));
+        RangerPolicy swapped = policyWithItems(68L, Arrays.asList(swappedValues, userItem("dave", "delete"), userItem("bob", "delete")), Collections.emptyList());
+        assertFalse(admin.isDelegatedAdminAccessAllowedForModify(swapped, "alice", Collections.emptySet(), null, null));
 
         RangerPolicyItem joinedValue = groupItem("analysts", "consume");
         joinedValue.setConditions(Collections.singletonList(new RangerPolicy.RangerPolicyItemCondition("ip-range", Collections.singletonList("10.*, 192.168.7.7"))));
@@ -381,10 +392,17 @@ public class TestRangerPolicyAdminImpl {
     public void testGetAllModifiedAccessTypes_nullConditionValueIsHandled() throws Exception {
         RangerPolicy oldP = policyWithItems(92L, Collections.singletonList(userItem("dave", "read")),
                 Collections.singletonList(denyItemWithConditions(new RangerPolicy.RangerPolicyItemCondition("ip-range", Arrays.asList(null, "10.*")))));
+        // same values, including a null, plus an unrelated 'read' grant: delta is only 'read'
+        RangerPolicy sameP = policyWithItems(92L, Arrays.asList(userItem("dave", "read"), userItem("bob", "read")),
+                Collections.singletonList(denyItemWithConditions(new RangerPolicy.RangerPolicyItemCondition("ip-range", Arrays.asList(null, "10.*")))));
+
+        assertEquals(Collections.singleton("read"), getModifiedAccessTypes(oldP, sameP));
+
+        // value order is significant, and a null value must not fail the comparison
         RangerPolicy newP = policyWithItems(92L, Arrays.asList(userItem("dave", "read"), userItem("bob", "read")),
                 Collections.singletonList(denyItemWithConditions(new RangerPolicy.RangerPolicyItemCondition("ip-range", Arrays.asList("10.*", null)))));
 
-        assertEquals(Collections.singleton("read"), getModifiedAccessTypes(oldP, newP));
+        assertEquals(new HashSet<>(Arrays.asList("select", "read")), getModifiedAccessTypes(oldP, newP));
     }
 
     @Test
