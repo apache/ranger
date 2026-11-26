@@ -59,6 +59,7 @@ public class RangerHeaderPreAuthFilter extends GenericFilterBean {
     public static final String PROP_SPIFFE_HEADER_NAME     = "ranger.admin.authn.header.spiffe";
     public static final String PROP_REQUEST_ID_HEADER_NAME = "ranger.admin.authn.header.requestid";
     public static final String PROP_ROLES_HEADER_NAME      = "ranger.admin.authn.header.roles";
+    public static final String ROLE_NAMESPACE_SEP          = ":";
 
     /**
      * External-facing role names accepted in the configured roles header, mapped to Ranger's
@@ -69,11 +70,11 @@ public class RangerHeaderPreAuthFilter extends GenericFilterBean {
     static {
         Map<String, String> roleMap = new HashMap<>();
 
-        roleMap.put("RANGER_ROLE_ADMIN", RangerConstants.ROLE_SYS_ADMIN);
-        roleMap.put("RANGER_ROLE_AUDITOR", RangerConstants.ROLE_ADMIN_AUDITOR);
-        roleMap.put("RANGER_ROLE_USER", RangerConstants.ROLE_USER);
-        roleMap.put("RANGER_ROLE_KEY_ADMIN", RangerConstants.ROLE_KEY_ADMIN);
-        roleMap.put("RANGER_ROLE_KEY_ADMIN_AUDITOR", RangerConstants.ROLE_KEY_ADMIN_AUDITOR);
+        roleMap.put("authz-role-admin", RangerConstants.ROLE_SYS_ADMIN);
+        roleMap.put("authz-role-auditor", RangerConstants.ROLE_ADMIN_AUDITOR);
+        roleMap.put("authz-role-user", RangerConstants.ROLE_USER);
+        roleMap.put("authz-role-key-admin", RangerConstants.ROLE_KEY_ADMIN);
+        roleMap.put("authz-role-key-admin-auditor", RangerConstants.ROLE_KEY_ADMIN_AUDITOR);
 
         EXTERNAL_ROLE_TO_RANGER_ROLE = Collections.unmodifiableMap(roleMap);
     }
@@ -177,7 +178,7 @@ public class RangerHeaderPreAuthFilter extends GenericFilterBean {
 
     /**
      * Loads authorities from the configured roles header. External-facing role names
-     * ({@code RANGER_ROLE_ADMIN}, {@code RANGER_ROLE_AUDITOR}, etc.) are mapped to Ranger's
+     * ({@code authz-role-admin}, {@code authz-role-auditor}, etc.) are mapped to Ranger's
      * internal role constants before being added to the authentication token. Internal role
      * names from {@link RangerConstants#VALID_USER_ROLE_LIST} are also accepted; any other
      * value is ignored.
@@ -220,8 +221,18 @@ public class RangerHeaderPreAuthFilter extends GenericFilterBean {
         if (ret == null) {
             if (RangerConstants.VALID_USER_ROLE_LIST.contains(headerRole)) {
                 ret = headerRole;
+            } else {
+                int idxSep = headerRole.indexOf(ROLE_NAMESPACE_SEP);
+
+                if (idxSep != -1) {
+                    String roleName = headerRole.substring(idxSep + ROLE_NAMESPACE_SEP.length());
+
+                    ret = EXTERNAL_ROLE_TO_RANGER_ROLE.get(roleName);
+                }
             }
         }
+
+        LOG.debug("resolveRoleFromHeader({}): ret={}", headerRole, ret);
 
         return ret;
     }

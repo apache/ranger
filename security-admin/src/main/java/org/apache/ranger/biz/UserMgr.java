@@ -36,6 +36,7 @@ import org.apache.ranger.common.SearchUtil;
 import org.apache.ranger.common.StringUtil;
 import org.apache.ranger.common.UserSessionBase;
 import org.apache.ranger.db.RangerDaoManager;
+import org.apache.ranger.entity.XXAuthSession;
 import org.apache.ranger.entity.XXGroupPermission;
 import org.apache.ranger.entity.XXModuleDef;
 import org.apache.ranger.entity.XXPortalUser;
@@ -43,6 +44,7 @@ import org.apache.ranger.entity.XXPortalUserRole;
 import org.apache.ranger.entity.XXTrxLogV2;
 import org.apache.ranger.entity.XXUser;
 import org.apache.ranger.entity.XXUserPermission;
+import org.apache.ranger.security.web.filter.RangerAuthenticationToken;
 import org.apache.ranger.service.XGroupPermissionService;
 import org.apache.ranger.service.XPortalUserService;
 import org.apache.ranger.service.XUserPermissionService;
@@ -57,6 +59,9 @@ import org.apache.ranger.view.VXUserPermission;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.codec.Hex;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Propagation;
@@ -72,7 +77,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import static org.apache.ranger.service.RangerBaseModelService.OPERATION_UPDATE_CONTEXT;
 
@@ -648,6 +655,24 @@ public class UserMgr {
 
                     for (XXPortalUserRole userRole : gjUserRoleList) {
                         userRoleList.add(userRole.getUserRole());
+                    }
+
+                    Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+                    if (authentication instanceof RangerAuthenticationToken && ((RangerAuthenticationToken) authentication).getAuthType() == XXAuthSession.AUTH_TYPE_TRUSTED_PROXY) {
+                        Collection<? extends GrantedAuthority> grantedAuthorities = authentication.getAuthorities();
+
+                        if (grantedAuthorities != null) {
+                            for (GrantedAuthority grantedAuth : grantedAuthorities) {
+                                String roleName = grantedAuth.getAuthority();
+
+                                if (!userRoleList.contains(roleName)) {
+                                    logger.debug("Adding role {} to user profile {}", roleName, sess.getLoginId());
+
+                                    userRoleList.add(roleName);
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -1302,6 +1327,7 @@ public class UserMgr {
             }
 
             applyConfigSuperUserProfileOverrides(userProfile, sess, user);
+            applyHeaderAuthnProfileOverrides(userProfile, sess, user);
 
             userProfile.setFirstName(user.getFirstName());
             userProfile.setLastName(user.getLastName());
@@ -1355,6 +1381,61 @@ public class UserMgr {
         }
 
         userProfile.setUserPermList(effectiveModules);
+    }
+
+    private void applyHeaderAuthnProfileOverrides(final VXPortalUser userProfile, final UserSessionBase sess, final XXPortalUser user) {
+        if (sess == null || userProfile == null || user == null) {
+            return;
+        }
+
+        if (sess.getXXPortalUser() == null || !sess.getXXPortalUser().getId().equals(user.getId())) {
+            return;
+        }
+
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        if (authentication instanceof RangerAuthenticationToken && ((RangerAuthenticationToken) authentication).getAuthType() == XXAuthSession.AUTH_TYPE_TRUSTED_PROXY) {
+            Set<String>                            userRoles          = new HashSet<>();
+            Collection<? extends GrantedAuthority> grantedAuthorities = authentication.getAuthorities();
+
+            if (grantedAuthorities != null) {
+                for (GrantedAuthority grantedAuth : grantedAuthorities) {
+                    String roleName = grantedAuth.getAuthority();
+
+                    userRoles.add(roleName);
+
+                    logger.debug("Adding header role {} to session user {} in user profile", roleName, sess.getLoginId());
+                }
+            }
+
+            List<VXUserPermission> effectiveModules = new ArrayList<>();
+            List<String>           effectiveRoles   = new ArrayList<>(userRoles);
+
+            if (userRoles.contains(RangerConstants.ROLE_SYS_ADMIN) || userRoles.contains(RangerConstants.ROLE_ADMIN_AUDITOR)) {
+                List<XXModuleDef> moduleDefs = daoManager.getXXModuleDef().getAll();
+
+                if (CollectionUtils.isNotEmpty(moduleDefs)) {
+                    XXUser xUser = daoManager.getXXUser().findByPortalUserId(user.getId());
+                    Long xUserId = xUser != null ? xUser.getId() : null;
+
+                    for (XXModuleDef moduleDef : moduleDefs) {
+                        if (!RangerConstants.MODULE_KEY_MANAGER.equals(moduleDef.getModule())) {
+                            VXUserPermission vxUserPermission = new VXUserPermission();
+
+                            vxUserPermission.setModuleId(moduleDef.getId());
+                            vxUserPermission.setModuleName(moduleDef.getModule());
+                            vxUserPermission.setUserId(xUserId);
+                            vxUserPermission.setIsAllowed(RangerCommonEnums.IS_ALLOWED);
+
+                            effectiveModules.add(vxUserPermission);
+                        }
+                    }
+                }
+            }
+
+            userProfile.setUserRoleList(effectiveRoles);
+            userProfile.setUserPermList(effectiveModules);
+        }
     }
 
     /**

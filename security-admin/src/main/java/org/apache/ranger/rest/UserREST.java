@@ -19,6 +19,7 @@
 
 package org.apache.ranger.rest;
 
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.ranger.biz.UserMgr;
 import org.apache.ranger.biz.XUserMgr;
 import org.apache.ranger.common.MessageEnums;
@@ -62,6 +63,8 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -276,7 +279,26 @@ public class UserREST {
             configProperties.put("inactivityTimeout", Long.toString(inactivityTimeout));
             configProperties.put("spiffeAsUsernameEnabled", Boolean.toString(StringUtil.isSpiffeAsUsernameEnabled()));
 
-            VXPortalUser userProfile = userManager.getUserProfileByLoginId();
+            VXPortalUser       userProfile = userManager.getUserProfileByLoginId();
+            Collection<String> roles       = userProfile.getUserRoleList();
+
+            if (CollectionUtils.isEmpty(roles)) {
+                roles = Collections.singletonList(RangerConstants.ROLE_USER);
+            } else if (roles.size() > 1) {
+                if (roles.contains(RangerConstants.ROLE_SYS_ADMIN) || roles.contains(RangerConstants.ROLE_ADMIN)) {
+                    roles = Collections.singletonList(RangerConstants.ROLE_SYS_ADMIN);
+                } else if (roles.contains(RangerConstants.ROLE_KEY_ADMIN)) {
+                    roles = Collections.singletonList(RangerConstants.ROLE_KEY_ADMIN);
+                } else if (roles.contains(RangerConstants.ROLE_ADMIN_AUDITOR)) {
+                    roles = Collections.singletonList(RangerConstants.ROLE_ADMIN_AUDITOR);
+                } else if (roles.contains(RangerConstants.ROLE_KEY_ADMIN_AUDITOR)) {
+                    roles = Collections.singletonList(RangerConstants.ROLE_KEY_ADMIN_AUDITOR);
+                } else {
+                    roles = Collections.singletonList(RangerConstants.ROLE_USER);
+                }
+            }
+
+            userProfile.setUserRoleList(roles);
 
             userProfile.setConfigProperties(configProperties);
 
