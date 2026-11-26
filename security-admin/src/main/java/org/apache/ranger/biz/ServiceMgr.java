@@ -21,6 +21,7 @@ package org.apache.ranger.biz;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.hadoop.security.ProviderUtils;
 import org.apache.hadoop.security.SecureClientLogin;
 import org.apache.ranger.common.PropertiesUtil;
 import org.apache.ranger.common.TimedExecutor;
@@ -52,13 +53,16 @@ import java.net.InetAddress;
 import java.net.URI;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.net.URLDecoder;
 import java.net.UnknownHostException;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -83,6 +87,9 @@ public class ServiceMgr {
     private static final String HOST_NAME            = "ranger.service.host";
 
     public static final String PROP_SERVICE_CONFIG_VALIDATE_REQUIRE_SAVED_SERVICE = "ranger.serviceconfig.validate.require.saved.service";
+
+    private static final Set<String> NESTED_PROVIDER_SCHEMES  = Collections.singleton("kms");
+    private static final int         MAX_PERCENT_DECODE_DEPTH = 3;
 
     private static final long _DefaultTimeoutValue_Lookp          = 1000; // 1 s
     private static final long _DefaultTimeoutValue_ValidateConfig = 10000; // 10 s
@@ -730,7 +737,7 @@ public class ServiceMgr {
         }
     }
 
-    private static void validateOutboundServiceConfigs(Map<String, String> configs) throws Exception {
+    static void validateOutboundServiceConfigs(Map<String, String> configs) throws Exception {
         if (configs == null) {
             return;
         }
@@ -752,6 +759,15 @@ public class ServiceMgr {
                     String lowerVal = configValue.toLowerCase().trim();
                     if (lowerVal.contains("localhost") || lowerVal.contains("127.0.0.1") || lowerVal.contains("0.0.0.0") || lowerVal.contains("::1")) {
                         throw new Exception("Invalid value for configuration " + entry.getKey() + ": contains blocked keywords but could not be parsed securely.");
+                    }
+                }
+
+                // Check every host the client may actually dial: each member of a ';' or ',' separated
+                // host list, the host inside a nested provider URI such as kms://http@host:port/kms, and
+                // the same after percent-decoding.
+                for (String dialHost : extractDialHosts(configValue)) {
+                    if (isBlockedHost(dialHost)) {
+                        throw new Exception("Invalid value for configuration " + entry.getKey() + ": host " + dialHost + " is not allowed (blocked host detected)");
                     }
                 }
             }
@@ -824,11 +840,173 @@ public class ServiceMgr {
         }
     }
 
+    static Set<String> extractDialHosts(String configValue) {
+        Set<String> ret = new LinkedHashSet<>();
+
+        if (StringUtils.isBlank(configValue)) {
+            return ret;
+        }
+
+        String value = configValue.trim();
+
+        for (int depth = 0; depth <= MAX_PERCENT_DECODE_DEPTH && value != null; depth++) {
+            if (looksLikeEndpointList(value)) {
+                collectDialHosts(value, ret);
+            } else {
+                collectHostLikeListEntries(value, ret);
+            }
+
+            if (value.indexOf('%') < 0) {
+                break;
+            }
+
+            String decoded = percentDecode(value);
+
+            if (decoded == null || decoded.equals(value)) {
+                break;
+            }
+
+            value = decoded;
+        }
+
+        return ret;
+    }
+
+    private static void collectDialHosts(String value, Set<String> hosts) {
+        URI uri;
+
+        try {
+            uri = toConfigUri(value);
+        } catch (Exception e) {
+            LOG.debug("Failed to parse config value as URI: {}", value, e);
+
+            return;
+        }
+
+        if (uri.getHost() != null) {
+            hosts.add(stripBrackets(uri.getHost()));
+        } else {
+            addAuthorityHosts(uri.getAuthority(), hosts);
+        }
+
+        String scheme = uri.getScheme();
+
+        if (scheme != null && NESTED_PROVIDER_SCHEMES.contains(scheme.toLowerCase(Locale.ROOT))) {
+            try {
+                // Same unnesting the KMS clients use before connecting; it decodes the nested authority
+                URL inner = new URL(ProviderUtils.unnestUri(uri).toString());
+
+                addAuthorityHosts(inner.getAuthority(), hosts);
+            } catch (Exception e) {
+                LOG.debug("Failed to unnest provider URI: {}", value, e);
+            }
+        }
+    }
+
+    private static void addAuthorityHosts(String authority, Set<String> hosts) {
+        if (StringUtils.isBlank(authority)) {
+            return;
+        }
+
+        // Split the host list first, then drop userinfo per entry, matching how the KMS clients build per-host URLs
+        for (String token : authority.split("[;,]")) {
+            String entry = token.trim();
+            int    atIdx = entry.lastIndexOf('@');
+
+            if (atIdx >= 0) {
+                entry = entry.substring(atIdx + 1);
+            }
+
+            String host = stripPort(entry);
+
+            if (StringUtils.isNotBlank(host)) {
+                hosts.add(host);
+            }
+        }
+    }
+
+    // Lists that are not endpoint-shaped (e.g. a ZooKeeper quorum "zk1.example,zk2.example"): check only entries
+    // that look like a host name or IP literal, so values such as "hive,0" are not read as hosts
+    private static void collectHostLikeListEntries(String value, Set<String> hosts) {
+        if (value.indexOf(',') < 0 && value.indexOf(';') < 0) {
+            return; // a single value is covered by extractHost()
+        }
+        for (String token : value.split("[;,]")) {
+            String entry = token.trim();
+            int atIdx = entry.lastIndexOf('@');
+            if (atIdx >= 0) {
+                entry = entry.substring(atIdx + 1);
+            }
+            String host = stripPort(entry);
+            if (looksLikeHostName(host)) {
+                hosts.add(stripBrackets(host));
+            }
+        }
+    }
+
+    private static boolean looksLikeHostName(String host) {
+        if (StringUtils.isBlank(host) || host.indexOf(' ') >= 0) {
+            return false;
+        }
+        String lower = host.toLowerCase(Locale.ROOT);
+        return lower.indexOf('.') >= 0 || lower.indexOf(':') >= 0 || lower.startsWith("[")
+                || lower.startsWith("localhost") || lower.startsWith("ip6-");
+    }
+
+    private static boolean looksLikeEndpointList(String value) {
+        if (isConnectionEndpoint(value)) {
+            return true;
+        }
+        // One host:port entry is enough to treat the whole list as endpoints
+        for (String token : value.split("[;,]")) {
+            String entry = token.trim();
+            int    atIdx = entry.lastIndexOf('@');
+
+            if (looksLikeHostPortSegment(atIdx >= 0 ? entry.substring(atIdx + 1) : entry)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static String stripPort(String hostAndPort) {
+        if (hostAndPort.startsWith("[")) {
+            int closeBracket = hostAndPort.indexOf(']');
+
+            return closeBracket > 0 ? hostAndPort.substring(1, closeBracket) : hostAndPort.substring(1);
+        }
+
+        int firstColon = hostAndPort.indexOf(':');
+
+        if (firstColon >= 0 && firstColon == hostAndPort.lastIndexOf(':')) {
+            return hostAndPort.substring(0, firstColon);
+        }
+
+        return hostAndPort; // no port, or an unbracketed IPv6 literal
+    }
+
+    private static String stripBrackets(String host) {
+        return host.replaceAll("^\\[|\\]$", "");
+    }
+
+    private static String percentDecode(String value) {
+        try {
+            return URLDecoder.decode(value.replace("+", "%2B"), StandardCharsets.UTF_8.name());
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
     private static boolean isBlockedHost(String host) {
         if (host == null || host.trim().isEmpty()) {
             return false;
         }
         host = host.trim().toLowerCase();
+
+        // "localhost." and "127.0.0.1." name the same host as without the trailing dot
+        while (host.endsWith(".")) {
+            host = host.substring(0, host.length() - 1);
+        }
 
         // Expand POSIX shorthand IPs (e.g., 127.1 -> 127.0.0.1)
         String normalizedIP = normalizePOSIXIp(host);
