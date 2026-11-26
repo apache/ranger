@@ -1423,13 +1423,7 @@ public class UserMgr {
                         }
                     }
                 } else if (userRoles.contains(RangerConstants.ROLE_KEY_ADMIN) || userRoles.contains(RangerConstants.ROLE_KEY_ADMIN_AUDITOR)) {
-                    for (String moduleName : Arrays.asList(
-                            RangerConstants.MODULE_RESOURCE_BASED_POLICIES,
-                            RangerConstants.MODULE_REPORTS,
-                            RangerConstants.MODULE_AUDIT,
-                            RangerConstants.MODULE_USER_GROUPS,
-                            RangerConstants.MODULE_GOVERNED_DATA_SHARING,
-                            RangerConstants.MODULE_KEY_MANAGER)) {
+                    for (String moduleName : Arrays.asList(RangerConstants.MODULE_RESOURCE_BASED_POLICIES, RangerConstants.MODULE_REPORTS, RangerConstants.MODULE_AUDIT, RangerConstants.MODULE_USER_GROUPS, RangerConstants.MODULE_GOVERNED_DATA_SHARING, RangerConstants.MODULE_KEY_MANAGER)) {
                         XXModuleDef moduleDef = daoManager.getXXModuleDef().findByModuleName(moduleName);
 
                         if (moduleDef != null) {
