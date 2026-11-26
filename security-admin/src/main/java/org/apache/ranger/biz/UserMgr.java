@@ -1410,24 +1410,30 @@ public class UserMgr {
 
             List<VXUserPermission> effectiveModules = new ArrayList<>();
             List<String>           effectiveRoles   = new ArrayList<>(userRoles);
+            List<XXModuleDef>      moduleDefs       = daoManager.getXXModuleDef().getAll();
 
-            if (userRoles.contains(RangerConstants.ROLE_SYS_ADMIN) || userRoles.contains(RangerConstants.ROLE_ADMIN_AUDITOR)) {
-                List<XXModuleDef> moduleDefs = daoManager.getXXModuleDef().getAll();
+            if (CollectionUtils.isNotEmpty(moduleDefs)) {
+                XXUser xUser   = daoManager.getXXUser().findByPortalUserId(user.getId());
+                Long   xUserId = xUser != null ? xUser.getId() : null;
 
-                if (CollectionUtils.isNotEmpty(moduleDefs)) {
-                    XXUser xUser = daoManager.getXXUser().findByPortalUserId(user.getId());
-                    Long xUserId = xUser != null ? xUser.getId() : null;
-
+                if (userRoles.contains(RangerConstants.ROLE_SYS_ADMIN) || userRoles.contains(RangerConstants.ROLE_ADMIN_AUDITOR)) {
                     for (XXModuleDef moduleDef : moduleDefs) {
                         if (!RangerConstants.MODULE_KEY_MANAGER.equals(moduleDef.getModule())) {
-                            VXUserPermission vxUserPermission = new VXUserPermission();
+                            effectiveModules.add(buildAllowedModulePerm(moduleDef, xUserId));
+                        }
+                    }
+                } else if (userRoles.contains(RangerConstants.ROLE_KEY_ADMIN) || userRoles.contains(RangerConstants.ROLE_KEY_ADMIN_AUDITOR)) {
+                    for (String moduleName : Arrays.asList(
+                            RangerConstants.MODULE_RESOURCE_BASED_POLICIES,
+                            RangerConstants.MODULE_REPORTS,
+                            RangerConstants.MODULE_AUDIT,
+                            RangerConstants.MODULE_USER_GROUPS,
+                            RangerConstants.MODULE_GOVERNED_DATA_SHARING,
+                            RangerConstants.MODULE_KEY_MANAGER)) {
+                        XXModuleDef moduleDef = daoManager.getXXModuleDef().findByModuleName(moduleName);
 
-                            vxUserPermission.setModuleId(moduleDef.getId());
-                            vxUserPermission.setModuleName(moduleDef.getModule());
-                            vxUserPermission.setUserId(xUserId);
-                            vxUserPermission.setIsAllowed(RangerCommonEnums.IS_ALLOWED);
-
-                            effectiveModules.add(vxUserPermission);
+                        if (moduleDef != null) {
+                            effectiveModules.add(buildAllowedModulePerm(moduleDef, xUserId));
                         }
                     }
                 }
@@ -1436,6 +1442,17 @@ public class UserMgr {
             userProfile.setUserRoleList(effectiveRoles);
             userProfile.setUserPermList(effectiveModules);
         }
+    }
+
+    private VXUserPermission buildAllowedModulePerm(final XXModuleDef moduleDef, final Long xUserId) {
+        VXUserPermission vxUserPermission = new VXUserPermission();
+
+        vxUserPermission.setModuleId(moduleDef.getId());
+        vxUserPermission.setModuleName(moduleDef.getModule());
+        vxUserPermission.setUserId(xUserId);
+        vxUserPermission.setIsAllowed(RangerCommonEnums.IS_ALLOWED);
+
+        return vxUserPermission;
     }
 
     /**
