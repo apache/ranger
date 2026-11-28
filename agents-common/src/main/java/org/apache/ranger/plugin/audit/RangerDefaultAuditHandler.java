@@ -32,6 +32,7 @@ import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
 import org.apache.ranger.plugin.policyengine.RangerAccessResource;
 import org.apache.ranger.plugin.policyengine.RangerAccessResult;
 import org.apache.ranger.plugin.policyengine.RangerAccessResultProcessor;
+import org.apache.ranger.plugin.policyengine.RangerConstraintResult;
 import org.apache.ranger.plugin.policyengine.gds.GdsAccessResult;
 import org.apache.ranger.plugin.service.RangerBasePlugin;
 import org.apache.ranger.plugin.util.JsonUtilsV2;
@@ -43,6 +44,7 @@ import org.slf4j.LoggerFactory;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -52,6 +54,8 @@ import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class RangerDefaultAuditHandler implements RangerAccessResultProcessor {
+    public static final String ACCESS_TYPE_CONSTRAINT_PREFIX = "CONSTRAINT:";
+
     private static final Logger LOG = LoggerFactory.getLogger(RangerDefaultAuditHandler.class);
 
     private static final String  CONF_AUDIT_ID_STRICT_UUID    = "xasecure.audit.auditid.strict.uuid";
@@ -82,6 +86,7 @@ public class RangerDefaultAuditHandler implements RangerAccessResultProcessor {
         AuthzAuditEvent event = getAuthzEvents(result);
 
         logAuthzAudit(event);
+        logAuthzAudits(getConstraintAuditEvents(result, event));
 
         LOG.debug("<== RangerDefaultAuditHandler.processResult({})", result);
     }
@@ -173,10 +178,29 @@ public class RangerDefaultAuditHandler implements RangerAccessResultProcessor {
                 }
 
                 ret.add(event);
+                ret.addAll(getConstraintAuditEvents(result, event));
             }
         }
 
         LOG.debug("<== RangerDefaultAuditHandler.getAuthzEvents({}): {}", results, ret);
+
+        return ret;
+    }
+
+    public List<AuthzAuditEvent> getConstraintAuditEvents(RangerAccessResult result, AuthzAuditEvent accessEvent) {
+        if (accessEvent == null || result == null || !result.getIsAllowed() || result.getConstraints().isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        List<AuthzAuditEvent> ret = new ArrayList<>(result.getConstraints().size());
+
+        for (RangerConstraintResult constraint : result.getConstraints()) {
+            if (constraint != null) {
+                ret.add(createConstraintAuditEvent(accessEvent, constraint));
+            }
+        }
+
+        LOG.debug("RangerDefaultAuditHandler.getConstraintAuditEvents({}): {}", result, ret);
 
         return ret;
     }
@@ -210,6 +234,40 @@ public class RangerDefaultAuditHandler implements RangerAccessResultProcessor {
 
     public AuthzAuditEvent createAuthzAuditEvent() {
         return new AuthzAuditEvent();
+    }
+
+    protected AuthzAuditEvent createConstraintAuditEvent(AuthzAuditEvent accessEvent, RangerConstraintResult constraint) {
+        AuthzAuditEvent ret = createAuthzAuditEvent();
+
+        ret.setRepositoryName(accessEvent.getRepositoryName());
+        ret.setRepositoryType(accessEvent.getRepositoryType());
+        ret.setResourceType(accessEvent.getResourceType());
+        ret.setResourcePath(accessEvent.getResourcePath());
+        ret.setRequestData(accessEvent.getRequestData());
+        ret.setEventTime(accessEvent.getEventTime());
+        ret.setUser(accessEvent.getUser());
+        ret.setAction(accessEvent.getAction());
+        ret.setAccessResult(accessEvent.getAccessResult());
+        ret.setClientIP(accessEvent.getClientIP());
+        ret.setClientType(accessEvent.getClientType());
+        ret.setSessionId(accessEvent.getSessionId());
+        ret.setAclEnforcer(accessEvent.getAclEnforcer());
+        ret.setAgentId(accessEvent.getAgentId());
+        ret.setAgentHostname(accessEvent.getAgentHostname());
+        ret.setLogType(accessEvent.getLogType());
+        ret.setTags(accessEvent.getTags());
+        ret.setDatasets(accessEvent.getDatasets());
+        ret.setProjects(accessEvent.getProjects());
+        ret.setDatasetIds(accessEvent.getDatasetIds());
+        ret.setAdditionalInfo(accessEvent.getAdditionalInfo());
+        ret.setClusterName(accessEvent.getClusterName());
+        ret.setZoneName(accessEvent.getZoneName());
+
+        ret.setAccessType(ACCESS_TYPE_CONSTRAINT_PREFIX + constraint.getConstraintName());
+        ret.setPolicyId(constraint.getPolicyId());
+        ret.setPolicyVersion(constraint.getPolicyVersion());
+
+        return ret;
     }
 
     public final Set<String> getDatasets(RangerAccessRequest request) {
