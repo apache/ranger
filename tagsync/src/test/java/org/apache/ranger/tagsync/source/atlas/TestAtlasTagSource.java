@@ -286,8 +286,8 @@ class TestAtlasTagSource {
 
         invokeCommitOffsetsForMessages(consumerRunnable, batch);
 
-        verify(consumer).commit(new TopicPartition("ATLAS_ENTITIES", 0), 101L);
-        verify(consumer).commit(new TopicPartition("ATLAS_ENTITIES", 1), 50L);
+        verify(consumer).commit(new TopicPartition("ATLAS_ENTITIES", 0), 102L);
+        verify(consumer).commit(new TopicPartition("ATLAS_ENTITIES", 1), 51L);
         verify(consumer, times(2)).commit(any(TopicPartition.class), anyLong());
     }
 
@@ -301,8 +301,8 @@ class TestAtlasTagSource {
         invokeCommitOffsetsForMessages(consumerRunnable,
                 Collections.singletonList(kafkaMessage("ATLAS_ENTITIES", 0, 27L)));
 
-        verify(consumer).commit(new TopicPartition("ATLAS_ENTITIES", 9), 1000L);
-        verify(consumer).commit(new TopicPartition("ATLAS_ENTITIES", 0), 27L);
+        verify(consumer).commit(new TopicPartition("ATLAS_ENTITIES", 9), 1001L);
+        verify(consumer).commit(new TopicPartition("ATLAS_ENTITIES", 0), 28L);
     }
 
     @Test
@@ -320,7 +320,21 @@ class TestAtlasTagSource {
 
         verify(consumer, times(1)).commit(partitionCaptor.capture(), offsetCaptor.capture());
         assertEquals(new TopicPartition("ATLAS_ENTITIES", 5), partitionCaptor.getValue());
-        assertEquals(80L, offsetCaptor.getValue().longValue());
+        assertEquals(81L, offsetCaptor.getValue().longValue());
+    }
+
+    @Test
+    void testCommitOffsetsForMessages_commitsNextMessageAfterNextOffset() throws Exception {
+        NotificationConsumer<EntityNotification> consumer = mock(NotificationConsumer.class);
+        Object consumerRunnable = newConsumerRunnable(atlasTagSource, consumer);
+
+        invokeCommitOffsetsForMessages(consumerRunnable,
+                Collections.singletonList(kafkaMessage("ATLAS_ENTITIES", 2, 10L)));
+        invokeCommitOffsetsForMessages(consumerRunnable,
+                Collections.singletonList(kafkaMessage("ATLAS_ENTITIES", 2, 11L)));
+
+        verify(consumer).commit(new TopicPartition("ATLAS_ENTITIES", 2), 11L);
+        verify(consumer).commit(new TopicPartition("ATLAS_ENTITIES", 2), 12L);
     }
 
     private static Object newConsumerRunnable(AtlasTagSource source,
